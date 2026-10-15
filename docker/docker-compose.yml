@@ -1,15 +1,18 @@
 # ============================================================================
-# 本地开发基础设施编排：MySQL 8 + Redis 7 + Milvus standalone 2.5.5 + MinIO（文件服务）
+# 本地开发基础设施编排
+# 组件：MySQL 8 / Redis 7 / Milvus standalone 2.5.5（含 etcd + minio）/ MinIO（文件服务）
 # 用法（Docker Desktop 启动后，在本目录执行）：
-#   docker compose up -d          # 后台启动全部容器（首次会自动拉镜像）
+#   docker compose up -d          # 后台启动全部容器
 #   docker compose ps             # 查看状态
-#   docker compose down           # 停止（数据保留在 volumes/，不删除）
+#   docker compose down           # 停止（数据保留在 volumes/）
 #   docker compose down -v        # 停止并删除数据卷（重置环境）
-# 注意：
-#   - MySQL 首次初始化会按文件名序执行 sql 目录下的全部迁移脚本（挂载到 /docker-entrypoint-initdb.d）
-#   - MySQL 密码 root123 与 application.yml 保持一致
-#   - Milvus SDK 版本 2.5.5 与镜像 v2.5.5 对齐（worker 依赖钉版，见根 pom）
-#   - knowledge-minio 为文件服务模块（knowledge-file-center）专用对象存储，与 Milvus 内部用的 minio 分离
+# 说明：
+#   - MySQL 首次初始化执行 sql 目录下的脚本（挂载到 /docker-entrypoint-initdb.d）
+#   - MySQL 密码 root123，与 application.yml 一致
+#   - Milvus SDK 2.5.5 与镜像 v2.5.5 对齐（worker 依赖钉版，见根 pom）
+#   - knowledge-minio 为文件服务模块（knowledge-file-center）专用对象存储
+#   - milvus-minio 为 Milvus 内部对象存储，不映射宿主机端口
+#   - 宿主机 3306 / 6379 / 19530 / 9091 / 9000 / 9001 需空闲
 # ============================================================================
 name: knowledge
 
@@ -65,16 +68,21 @@ services:
 
   minio:
     container_name: milvus-minio
-    # MinIO 官方已弃用 Docker Hub 的 minio/minio（旧标签被清理），改用 quay.io 源
-    image: quay.io/minio/minio:RELEASE.2024-07-10T18-41-49Z
+    # Chainguard MinIO 镜像，digest 对应 RELEASE.2026-09-22T19-25-18Z（多架构清单）
+    image: cgr.dev/chainguard/minio@sha256:2136d593beacf4461187035eca949fe49abd589d5079735025c711ca58fee0c8
     environment:
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
+      # MinIO 根凭据
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      # mc 客户端别名，供健康检查使用
+      MC_HOST_local: http://minioadmin:minioadmin@localhost:9000
+    user: "0:0"
     volumes:
       - ./volumes/minio:/minio_data
-    command: minio server /minio_data --console-address ":9001"
+    command: server /minio_data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      # 用镜像自带的 mc 探活
+      test: ["CMD", "mc", "ls", "local"]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -82,18 +90,24 @@ services:
   knowledge-minio:
     container_name: knowledge-minio
     # 文件服务模块（knowledge-file-center）专用对象存储：源文件与处理产物
-    image: quay.io/minio/minio:RELEASE.2024-07-10T18-41-49Z
+    # 与 milvus-minio 同一镜像、同一 digest
+    image: cgr.dev/chainguard/minio@sha256:2136d593beacf4461187035eca949fe49abd589d5079735025c711ca58fee0c8
     environment:
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
+      # MinIO 根凭据
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      # mc 客户端别名，供健康检查使用
+      MC_HOST_local: http://minioadmin:minioadmin@localhost:9000
+    user: "0:0"
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
       - ./volumes/knowledge-minio:/data
-    command: minio server /data --console-address ":9001"
+    command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      # 用镜像自带的 mc 探活
+      test: ["CMD", "mc", "ls", "local"]
       interval: 30s
       timeout: 20s
       retries: 3
