@@ -152,14 +152,14 @@ function stringLines(content) {
 
 const reportStrings = process.argv.includes('--strings');
 const files = [
-  ...walk(join(ROOT, 'knowledge-biz')),
-  ...walk(join(ROOT, 'knowledge-common')),
-  ...walk(join(ROOT, 'knowledge-infra')),
-  ...walk(join(ROOT, 'knowledge-worker')),
-  ...walk(join(ROOT, 'knowledge-auth')),
-  ...walk(join(ROOT, 'knowledge-file-center')),
-  ...walk(join(ROOT, 'knowledge-model')),
-  ...walk(join(ROOT, 'knowledge-vector')),
+  ...walk(join(ROOT, 'workbuddy-biz')),
+  ...walk(join(ROOT, 'workbuddy-common')),
+  ...walk(join(ROOT, 'workbuddy-infra')),
+  ...walk(join(ROOT, 'workbuddy-worker')),
+  ...walk(join(ROOT, 'workbuddy-auth')),
+  ...walk(join(ROOT, 'workbuddy-file')),
+  ...walk(join(ROOT, 'workbuddy-model')),
+  ...walk(join(ROOT, 'workbuddy-vector')),
   ...walk(join(ROOT, 'web', 'src')),
   ...walk(join(ROOT, 'web', 'docs')),
   ...walk(join(ROOT, 'docs')),

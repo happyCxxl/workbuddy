@@ -9,7 +9,7 @@
 | 前端视图   | `../../../web/src/views/home/HomeView.vue`                                                                              |
 | 前端类型   | `../../../web/src/types/home.ts`                                                                                        |
 | 前端接口层 | `../../../web/src/api/home.ts`                                                                                          |
-| 后端       | `knowledge-biz` 模块的 `KnowledgeHomeController` / `KnowledgeHomeServiceImpl`                                           |
+| 后端       | `workbuddy-biz` 模块的 `KnowledgeHomeController` / `KnowledgeHomeServiceImpl`                                           |
 | 涉及接口   | `GET /home/summary`、`GET /home/recent-submits`                                                                         |
 | 涉及的表   | `kb_knowledge_base`、`kb_pipeline_strategy_version`、`kb_file_result`、`kb_submit_log`（外加反查用的 `kb_source_file`） |
 

@@ -12,10 +12,10 @@
     <relativePath/>
   </parent>
 
-  <groupId>com.knowledge</groupId>
-  <artifactId>knowledge</artifactId>
+  <groupId>com.workbuddy</groupId>
+  <artifactId>workbuddy</artifactId>
   <version>5.1.0</version>
-  <name>knowledge</name>
+  <name>workbuddy</name>
   <packaging>pom</packaging>
 
   <properties>
@@ -34,44 +34,44 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.knowledge</groupId>
-        <artifactId>knowledge-infra</artifactId>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy-infra</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.knowledge</groupId>
-        <artifactId>knowledge-auth</artifactId>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy-auth</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.knowledge</groupId>
-        <artifactId>knowledge-common</artifactId>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.knowledge</groupId>
-        <artifactId>knowledge-biz</artifactId>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy-biz</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
-        <groupId>com.knowledge</groupId>
-        <artifactId>knowledge-worker</artifactId>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy-worker</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.knowledge</groupId>
-        <artifactId>knowledge-file-center</artifactId>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy-file</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.knowledge</groupId>
-        <artifactId>knowledge-model</artifactId>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy-model</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.knowledge</groupId>
-        <artifactId>knowledge-vector</artifactId>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy-vector</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -347,14 +347,14 @@
   </build>
 
   <modules>
-    <module>knowledge-infra</module>
-    <module>knowledge-common</module>
-    <module>knowledge-file-center</module>
-    <module>knowledge-auth</module>
-    <module>knowledge-model</module>
-    <module>knowledge-vector</module>
-    <module>knowledge-worker</module>
-    <module>knowledge-biz</module>
+    <module>workbuddy-infra</module>
+    <module>workbuddy-common</module>
+    <module>workbuddy-file</module>
+    <module>workbuddy-auth</module>
+    <module>workbuddy-model</module>
+    <module>workbuddy-vector</module>
+    <module>workbuddy-worker</module>
+    <module>workbuddy-biz</module>
   </modules>
 
   <profiles>

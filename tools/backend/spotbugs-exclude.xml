@@ -18,12 +18,12 @@
     </Match>
     <!-- SpillBuffer：构造期 SHA-256 算法探测失败即抛（fail-fast 防御，JDK 必有该算法） -->
     <Match>
-        <Class name="com.knowledge.worker.input.SpillBuffer"/>
+        <Class name="com.workbuddy.worker.input.SpillBuffer"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
     <!-- PipelineTaskConsumer：执行池字段仅启动期同步写入、运行期只读（配合 volatile 可见性），按评审口径豁免 -->
     <Match>
-        <Class name="com.knowledge.biz.task.PipelineTaskConsumer"/>
+        <Class name="com.workbuddy.biz.task.PipelineTaskConsumer"/>
         <Bug pattern="IS2_INCONSISTENT_SYNC,UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>
     <!-- 分页查询 DTO 的页码兜底：字段由 Spring 数据绑定器反射写入、不靠构造器初始化，
@@ -32,12 +32,12 @@
          判空语义与原生 null 比较运行期等价，且 || 短路保证解引用时必非空。
          注意：该告警的主元素是**字段**，用 <Method> 限定匹配不上，必须按字段豁免 -->
     <Match>
-        <Class name="com.knowledge.common.dto.request.page.PageQueryDto"/>
+        <Class name="com.workbuddy.common.dto.request.page.PageQueryDto"/>
         <Field name="current"/>
         <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>
     <Match>
-        <Class name="com.knowledge.common.dto.request.page.PageQueryDto"/>
+        <Class name="com.workbuddy.common.dto.request.page.PageQueryDto"/>
         <Field name="size"/>
         <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>

@@ -15,7 +15,7 @@
 | 下游 | 切片环节（按 `PreprocessViewRules.CHUNK_SKIP_STATUSES` 跳过不进内容流的元素）；向量化、检索沿执行链继续                                                                               |
 | 落库 | 不在本环节内：`PreprocessPipeline` 是纯算法，不碰 DB 与对象存储；产物行与任务终态由 biz 侧编排完成                                                                                    |
 | 实现 | 八条规则固定顺序、逐条按策略开关与档位生效；策略在**触发时快照**，执行只读快照（可复现）                                                                                              |
-| 代码 | `knowledge-worker/src/main/java/com/knowledge/worker/preprocessing/`（全局默认值在 `PreprocessProperties`，前缀 `knowledge.preprocess`）                                              |
+| 代码 | `../../../workbuddy-worker/src/main/java/com/knowledge/worker/preprocessing/`（全局默认值在 `PreprocessProperties`，前缀 `knowledge.preprocess`）                                              |
 
 原文零改动是硬约束：处置只落在派生视图副本上（`rawText` 从不修改），视图元素带 `status` / `displayText` / `normalizedText` / `normalizedFields` / `preprocessTrace`。
 

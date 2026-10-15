@@ -10,16 +10,16 @@
 #   - MySQL 首次初始化执行 sql 目录下的脚本（挂载到 /docker-entrypoint-initdb.d）
 #   - MySQL 密码 root123，与 application.yml 一致
 #   - Milvus SDK 2.5.5 与镜像 v2.5.5 对齐（worker 依赖钉版，见根 pom）
-#   - knowledge-minio 为文件服务模块（knowledge-file-center）专用对象存储
+#   - workbuddy-minio 为文件服务模块（workbuddy-file）专用对象存储
 #   - milvus-minio 为 Milvus 内部对象存储，不映射宿主机端口
 #   - 宿主机 3306 / 6379 / 19530 / 9091 / 9000 / 9001 需空闲
 # ============================================================================
-name: knowledge
+name: workbuddy
 
 services:
 
   mysql:
-    container_name: knowledge-mysql
+    container_name: workbuddy-mysql
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: root123
@@ -31,7 +31,7 @@ services:
       - --collation-server=utf8mb4_general_ci
     volumes:
       - ./volumes/mysql:/var/lib/mysql
-      - ../knowledge-biz/src/main/resources/sql:/docker-entrypoint-initdb.d:ro
+      - ../workbuddy-biz/src/main/resources/sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot123"]
       interval: 5s
@@ -39,7 +39,7 @@ services:
       retries: 30
 
   redis:
-    container_name: knowledge-redis
+    container_name: workbuddy-redis
     image: redis:7-alpine
     ports:
       - "6379:6379"
@@ -87,9 +87,9 @@ services:
       timeout: 20s
       retries: 3
 
-  knowledge-minio:
-    container_name: knowledge-minio
-    # 文件服务模块（knowledge-file-center）专用对象存储：源文件与处理产物
+  workbuddy-minio:
+    container_name: workbuddy-minio
+    # 文件服务模块（workbuddy-file）专用对象存储：源文件与处理产物
     # 与 milvus-minio 同一镜像、同一 digest
     image: cgr.dev/chainguard/minio@sha256:2136d593beacf4461187035eca949fe49abd589d5079735025c711ca58fee0c8
     environment:
@@ -103,7 +103,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - ./volumes/knowledge-minio:/data
+      - ./volumes/workbuddy-minio:/data
     command: server /data --console-address ":9001"
     healthcheck:
       # 用镜像自带的 mc 探活

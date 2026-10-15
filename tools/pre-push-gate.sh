@@ -9,7 +9,7 @@
 #
 # 范围：本次推送范围（远端 sha..本地 sha）内变更的文件；新分支或远端基点不可得时退回全量检查。
 #
-# 指纹缓存：全部步骤通过后把指纹写进 .git/knowledge-prepush-ok。指纹 = 本地 sha + 远端 sha +
+# 指纹缓存：全部步骤通过后把指纹写进 .git/workbuddy-prepush-ok。指纹 = 本地 sha + 远端 sha +
 #   改动文件清单 + 本脚本/钩子/注释检查器/pom 的内容哈希。同一次推送重试时命中缓存直接跳过，
 #   任何文件改动（含钩子、检查器、pom）都会让指纹失效并全量重跑。
 #
@@ -19,7 +19,7 @@
 set -e
 
 root=$(git rev-parse --show-toplevel)
-cache_file=".git/knowledge-prepush-ok"
+cache_file=".git/workbuddy-prepush-ok"
 zero=0000000000000000000000000000000000000000
 
 # ---------- 1. 取推送范围 ----------
@@ -200,7 +200,7 @@ fi
 # 后端组：源码级分析（checkstyle / pmd / cpd）与字节码级分析（compile + spotbugs）。
 # 改动模块用 -pl <改动模块> -amd 展开「改动模块 + 依赖它的模块」；改到 pom 或 tools/backend 时全量。
 if [ "$run_source" = "1" ]; then
-  scoped=$(printf '%s\n' "$changed" | grep -oE '^knowledge-[a-z-]+' | sort -u | tr '\n' ',' | sed 's/,$//')
+  scoped=$(printf '%s\n' "$changed" | grep -oE '^workbuddy-[a-z-]+' | sort -u | tr '\n' ',' | sed 's/,$//')
   if [ -z "$scoped" ] || printf '%s\n' "$changed" | grep -qE '^(pom\.xml$|tools/backend/)'; then
     scope_arg=""
     bytecode_scope="全量 9 模块（改到了 pom 或 tools/backend，闭包即全量）"

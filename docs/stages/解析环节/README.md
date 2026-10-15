@@ -13,7 +13,7 @@
 | 下游 | 组装环节（消费 `ParseResult.sources`）                                                                            |
 | 落库 | 不在本环节内：`ParsePipeline` 是纯算法，不碰 DB 与对象存储，产物落库与任务状态回写由 biz 编排完成                 |
 | 实现 | 规则路径：PDFBox（PDF）+ POI（DOC / DOCX / XLS / XLSX）；模型能力（OCR / 版面 / 表格结构）当前零实现              |
-| 代码 | `knowledge-worker/src/main/java/com/knowledge/worker/parser/`（阈值在 `ParseProperties`，前缀 `knowledge.parse`） |
+| 代码 | `../../../workbuddy-worker/src/main/java/com/knowledge/worker/parser/`（阈值在 `ParseProperties`，前缀 `knowledge.parse`） |
 
 ## 文档导航
 

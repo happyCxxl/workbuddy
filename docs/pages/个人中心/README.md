@@ -8,7 +8,7 @@
 | 入口       | 侧栏主导航末项（人人可见）                                                                                                                        |
 | 前端视图   | `../../../web/src/views/profile/ProfileView.vue`                                                                                                  |
 | 前端接口层 | `../../../web/src/api/user.ts`                                                                                                                    |
-| 后端       | `knowledge-auth` 模块的 `UserController`（三个接口都不加 `@AdminOnly`，对本人开放）                                                               |
+| 后端       | `workbuddy-auth` 模块的 `UserController`（三个接口都不加 `@AdminOnly`，对本人开放）                                                               |
 | 涉及接口   | `GET /user/profile`、`PUT /user/profile`、`PUT /user/password`、`POST /user/avatar`、`DELETE /user/avatar`、`GET /user/avatar/{userId}`（免登录） |
 
 这三个接口按「谁在用它」的归属规则落在本页。

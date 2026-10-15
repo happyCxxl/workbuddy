@@ -45,7 +45,7 @@ cd D:\projects-personal\knowledge\docker
 docker compose up -d
 ```
 
-首次启动自动拉取镜像，并执行 `knowledge-biz/src/main/resources/sql/init.sql`（单文件初始化脚本：建库 +
+首次启动自动拉取镜像，并执行 `../workbuddy-biz/src/main/resources/sql/init.sql`（单文件初始化脚本：建库 +
 19 张表 + 必需初始数据，脚本自带 `DROP DATABASE` / `CREATE DATABASE` / `USE knowledge`），
 只在**数据卷为空**时执行一次；改了脚本想重来需 `docker compose down -v` 后再 `up -d`。
 
@@ -56,7 +56,7 @@ docker compose up -d
 | MySQL 8      | 3306                            | root / root123 | 首次启动自动建库 `knowledge` + 全部表 + 策略 seed                                        |
 | Redis 7      | 6379                            | 无密码         | 任务唤醒队列 / 启动补偿分布式锁                                                          |
 | Milvus 2.5.5 | 19530（gRPC）/ 9091（健康检查） | —              | 向量库；配套 etcd + minio 内部容器；应用启动时缺库自动建 `knowledge`（只自带 `default`） |
-| MinIO        | 9000（S3）/ 9001（控制台）      | minioadmin / minioadmin | 文件服务模块专用对象存储（`knowledge-minio`）；Milvus 自用的 minio 不对外映射端口 |
+| MinIO        | 9000（S3）/ 9001（控制台）      | minioadmin / minioadmin | 文件服务模块专用对象存储（`workbuddy-minio`）；Milvus 自用的 minio 不对外映射端口 |
 
 与 `application.yml` 的对应关系：
 

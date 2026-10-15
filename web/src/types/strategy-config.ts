@@ -214,7 +214,7 @@ export interface PreprocessConfig {
  * <p>`supported=false` 的是后端预留但未上线的算法（后端枚举里也是这样标的），
  * 下拉里**置灰可见**，并带上未上线原因（`reason`）。
  *
- * <p>参数的**键与范围**与后端 `knowledge-common/.../enums/chunk/ChunkParam` 同源
+ * <p>参数的**键与范围**与后端 `workbuddy-common/.../enums/chunk/ChunkParam` 同源
  * （那是保存校验的唯一事实源）；此处只补中文名与范围提示，改一处要同步另一处。
  */
 export interface ChunkParamHint {

@@ -7,7 +7,7 @@
 | 路由       | `/login`（`meta.public`，全站唯一免登录页）  |
 | 前端视图   | `../../../web/src/views/login/LoginView.vue` |
 | 前端接口层 | `../../../web/src/api/auth.ts`               |
-| 后端       | `knowledge-auth` 模块（`AuthController`）    |
+| 后端       | `workbuddy-auth` 模块（`AuthController`）    |
 | 涉及接口   | `POST /auth/login`、`POST /auth/register`    |
 
 ## 文档导航

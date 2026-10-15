@@ -8,6 +8,11 @@
 # 因此把钩子目录钉死为 LF：git 检出与入库都按 LF 处理，不再随 autocrlf 漂移。
 .husky/** text eol=lf
 
+# tools 下的 shell 脚本同样必须 LF：core.autocrlf=true 会把它们检出成 CRLF，
+# 而 CRLF 的 sh 脚本在本机 bash 下直接报 `syntax error near unexpected token '}'`
+# （pre-push-gate.sh 命中过：脚本本身语法没问题，只是行尾带 CR）。
+tools/**/*.sh text eol=lf
+
 # .mvn/jvm.config 同样必须 LF：它是"一行一个 JVM 参数"被逐行读进 java 命令行的
 # （Git Bash 版 mvn 用 `while read`、mvn.cmd 用 `for /F`），行尾带 CR 会把参数污染成
 # `-Dstdout.encoding=UTF-8\r` → JVM 直接 `Unrecognized option`。钩子里调用的正是 shell 版 mvn。

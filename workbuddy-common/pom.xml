@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.workbuddy</groupId>
+        <artifactId>workbuddy</artifactId>
+        <version>5.1.0</version>
+    </parent>
+
+    <artifactId>workbuddy-common</artifactId>
+    <name>workbuddy-common</name>
+    <packaging>jar</packaging>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- 安全上下文（SecurityUtils 读取当前用户） -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+        </dependency>
+
+        <!-- 客户端 IP 工具（ClientIpUtils 读取当前请求的远端地址） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- 方法级安全配置（测试用：验证 @AdminOnly 元注解经 AOP 真正生效） -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- AOP：方法级安全的测试需要 aspectjweaver 织入（切面已移至 workbuddy-infra，主代码不再需要） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- MyBatis-Plus 注解（实体映射，无运行时重依赖）；版本与根 pom mybatis-plus.version 对齐 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+            <version>${mybatis-plus.version}</version>
+        </dependency>
+
+        <!-- DTO 参数校验注解 -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- 单元测试（JUnit5 + Mockito） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- hutool 工具类（平台标准，版本与平台 BOM hutool.version 一致） -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-core</artifactId>
+            <version>5.8.22</version>
+        </dependency>
+
+        <!-- hutool JSON（5.8 起从 core 拆出；JsonUtil 用） -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-json</artifactId>
+            <version>5.8.22</version>
+        </dependency>
+
+        <!-- 空值注解（编译期可见、不进产物）：NullUtil 的参数标注 @Nullable，
+             SpotBugs 才能识别 hutool 判空方法接受的 null 值 -->
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <version>4.8.6</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jackson 序列化注解（VO 雪花 ID Long→String，zlzx 字段级 ToStringSerializer 惯例） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>21</release>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

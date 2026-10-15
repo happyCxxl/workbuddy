@@ -21,7 +21,7 @@ foreach ($p in 3306, 6379, 19530, 9091, 9000, 9001) {
 Write-Host "`n=== 组件功能 ===" -ForegroundColor Cyan
 
 # Redis
-$r = docker exec knowledge-redis redis-cli ping 2>&1
+$r = docker exec workbuddy-redis redis-cli ping 2>&1
 Report 'redis PING' ($r -match 'PONG') "$r"
 
 # Milvus 健康端点
@@ -34,8 +34,8 @@ try {
 $m = docker exec milvus-minio sh -c 'mc alias set local http://localhost:9000 minioadmin minioadmin >/dev/null 2>&1 && mc ls local >/dev/null 2>&1 && echo LIVEOK' 2>&1
 Report 'milvus-minio live' ($m -match 'LIVEOK') "$m"
 
-# knowledge-minio S3 写入 / 读取 / 删除
-$mc = docker exec knowledge-minio sh -c @'
+# workbuddy-minio S3 写入 / 读取 / 删除
+$mc = docker exec workbuddy-minio sh -c @'
 set -e
 mc alias set local http://localhost:9000 minioadmin minioadmin >/dev/null
 mc mb --ignore-existing local/healthcheck >/dev/null
@@ -45,13 +45,13 @@ mc cat local/healthcheck/probe.txt
 mc rm local/healthcheck/probe.txt >/dev/null
 mc rb local/healthcheck >/dev/null
 '@ 2>&1
-Report 'knowledge-minio S3 读写' ($mc -match 'probe-\d+') $(if ($mc -match 'probe-(\d+)') { "读写+删桶成功 ($($mc -replace '\s+$',''))" } else { "$mc" })
+Report 'workbuddy-minio S3 读写' ($mc -match 'probe-\d+') $(if ($mc -match 'probe-(\d+)') { "读写+删桶成功 ($($mc -replace '\s+$',''))" } else { "$mc" })
 
 # MySQL
-$my = docker exec knowledge-mysql mysqladmin ping -h localhost -proot123 2>&1
+$my = docker exec workbuddy-mysql mysqladmin ping -h localhost -proot123 2>&1
 Report 'mysql ping' ($my -match 'mysqld is alive') "$my"
 if ($my -match 'alive') {
-    $t = docker exec knowledge-mysql mysql -uroot -proot123 -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='knowledge';" 2>&1
+    $t = docker exec workbuddy-mysql mysql -uroot -proot123 -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='knowledge';" 2>&1
     Report 'mysql knowledge 表数' ($t -match '^\d+$' -and [int]$t -gt 0) "$t 张表"
 }
 

@@ -12,7 +12,7 @@ node tools/check-comments.mjs             # 全量：命中 ERROR 退出 1
 node tools/check-comments.mjs --strings    # 额外报告字符串字面量里的阶段词（只读，不判失败）
 ```
 
-覆盖范围：`knowledge-*/src`、`web/src`、`web/docs`、`docs`、`tools`、根 `README.md` 与 `.husky/pre-commit`、`.husky/pre-push`。
+覆盖范围：`workbuddy-*/src`、`web/src`、`web/docs`、`docs`、`tools`、根 `README.md` 与 `.husky/pre-commit`、`.husky/pre-push`。
 
 判定分两级：
 

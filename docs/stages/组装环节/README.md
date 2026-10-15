@@ -13,7 +13,7 @@
 | 下游 | 预处理环节（消费 `UnifiedDocument.elements` 与 `pages[].marks`）；切片、向量化、检索沿执行链继续                             |
 | 落库 | 不在本环节内：`AssemblerPipeline` 是纯算法，不碰 DB 与对象存储；产物落库与任务终态由 biz 侧编排完成                          |
 | 实现 | 规则路径：七道工艺全为固定规则；模型能力（标题判定兜底）当前零实现                                                           |
-| 代码 | `knowledge-worker/src/main/java/com/knowledge/worker/structure/`（阈值在 `StructureProperties`，前缀 `knowledge.structure`） |
+| 代码 | `../../../workbuddy-worker/src/main/java/com/knowledge/worker/structure/`（阈值在 `StructureProperties`，前缀 `knowledge.structure`） |
 
 ## 文档导航
 

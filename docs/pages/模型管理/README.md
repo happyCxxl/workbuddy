@@ -4,7 +4,7 @@
 
 口径的三条前提（见 `../../design/模型能力平台-方案设计.md` 的 §4.1 / §4.2 / §8）：
 
-- **厂商连接与密钥都在配置**（`knowledge.model.vendors.<厂商码>`，落在 `knowledge-biz/src/main/resources/config/knowledge-model.yml`），库里只有一张 `kb_model` 表、只存厂商码；**页面没有密钥与地址的任何入口**，厂商下拉的候选来自前端枚举（`MODEL_VENDORS`）、不可新建。
+- **厂商连接与密钥都在配置**（`knowledge.model.vendors.<厂商码>`，落在 `../../../workbuddy-biz/src/main/resources/config/workbuddy-model.yml`），库里只有一张 `kb_model` 表、只存厂商码；**页面没有密钥与地址的任何入口**，厂商下拉的候选来自前端枚举（`MODEL_VENDORS`，当前 `dashscope` 与 `deepseek`）、不可新建。
 - **限额只写在模型行上**（没有厂商级限额）；价格四列按能力对应（每百万 token / 按页 / 按千次），都能留空。
 - **路由参数在配置里**（`knowledge.model.route.*`），页面不做策略、不做灰度、不做人工优先级。
 
@@ -16,7 +16,7 @@
 | 前端视图   | `../../../web/src/views/model/ModelListView.vue`（模型清单）、`../../../web/src/views/model/ModelUsageView.vue`（用量与成本）                                                                                          |
 | 前端类型   | `../../../web/src/types/model.ts`（厂商枚举 `MODEL_VENDORS`、清单与用量明细 / 概览的契约，含能力、状态、路由原因的码值与展示名）                                                                                       |
 | 前端接口层 | `../../../web/src/api/model.ts`                                                                                                                                                                                        |
-| 后端       | `knowledge-biz` 模块的 `ModelAdminController`（模型清单 / 新增 / 编辑 / 启停四条，路径前缀 `/model`）与 `ModelUsageController`（用量两个只读接口，同前缀），服务层是 `ModelAdminServiceImpl` / `ModelUsageServiceImpl` |
+| 后端       | `workbuddy-biz` 模块的 `ModelAdminController`（模型清单 / 新增 / 编辑 / 启停四条，路径前缀 `/model`）与 `ModelUsageController`（用量两个只读接口，同前缀），服务层是 `ModelAdminServiceImpl` / `ModelUsageServiceImpl` |
 | 涉及接口   | `GET /model/models`、`POST /model/models`、`PUT /model/models/{id}`、`PATCH /model/models/{id}/status`、`GET /model/usage/summary`、`GET /model/usage/calls`                                                           |
 | 涉及的表   | `kb_model`（模型目录本体）、`kb_model_call_log`（用量与成本）、`kb_audit_log`（模型新增 / 修改 / 启停留痕）                                                                                                            |
 
@@ -26,15 +26,15 @@
 
 厂商下拉的候选来自**前端枚举**：`MODEL_VENDORS`（`../../../web/src/types/model.ts`）按「码 + 展示名」成对给出，码与后端配置 `knowledge.model.vendors` 的键一致，接入新厂商时两处同步。页面**不显示密钥状态** —— 密钥只在配置与部署环境变量里，接口与页面都没有密钥字段，也没有任何下发路径；轮换密钥与改地址走配置 + 重启。
 
-厂商连接（地址、认证方式、密钥、超时）写在 `knowledge-biz/src/main/resources/config/knowledge-model.yml`。密钥用**环境变量占位符**给出（写法 `api-key: ${DASHSCOPE_API_KEY:}`，带空默认），密钥本身不进仓库；占位符解析不出来时启动失败，错误信息带厂商码。
+厂商连接（地址、认证方式、密钥、超时）写在 `../../../workbuddy-biz/src/main/resources/config/workbuddy-model.yml`。密钥用**环境变量占位符**给出（写法 `api-key: ${DASHSCOPE_API_KEY:}`，带空默认），密钥本身不进仓库；占位符解析不出来时启动失败，错误信息带厂商码。
 
 保存模型时**厂商码必须出现在配置里**：不在配置里回 `40461`（`MODEL_VENDOR_UNKNOWN`），消息带配置键 `knowledge.model.vendors` 与当前已配置的厂商清单，避免"配错到运行期才发现"。枚举与配置不一致时，以后端配置为准。
 
-厂商的展示名在枚举里给出，与后端清单返回的 `vendorName` 取同一套取名（内置映射：`dashscope` → 阿里百炼、`self-ocr` → 自建推理、`openai` → OpenAI，未命中回落厂商码本身）。
+厂商的展示名在枚举里给出，与后端清单返回的 `vendorName` 取同一套取名（内置映射：`dashscope` → 阿里百炼、`deepseek` → DeepSeek、`openai` → OpenAI，未命中回落厂商码本身）。当前接入两家：**阿里百炼**（`dashscope`，base-url 留空取适配器内置的百炼兼容端点）与 **DeepSeek**（`deepseek`，base-url 必须显式写 `https://api.deepseek.com`；适配器内置默认地址是百炼的）。
 
 ## 两处口径差异（如实登记，不自行改口径）
 
-- **能力字典**：方案 §4.6 的字典含 `RERANK` / `IMAGE`，`knowledge-common` 的 `ModelCapability` 枚举只有 `CHAT` / `EMBEDDING` / `OCR` / `LAYOUT` / `TABLE_STRUCTURE` 五项。接口按枚举校验，页面也按五项给选项，**这两个取值当前会被拒**（差异登记见 `../../design/模型能力平台-待办清单.md` 第六节第 5 项）。
+- **能力字典**：方案 §4.6 的字典含 `RERANK` / `IMAGE`，`workbuddy-common` 的 `ModelCapability` 枚举只有 `CHAT` / `EMBEDDING` / `OCR` / `LAYOUT` / `TABLE_STRUCTURE` 五项。接口按枚举校验，页面也按五项给选项，**这两个取值当前会被拒**（差异登记见 `../../design/模型能力平台-待办清单.md` 第六节第 5 项）。
 - **明细的业务归属列**：`bizType` / `bizId` / `traceId` 当前写空（§4.5 v22 口径），明细表的「业务」列读作 `—`。
 
 ## 文档导航

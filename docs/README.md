@@ -83,7 +83,7 @@
 
 ### 一、响应体与 HTTP 状态码
 
-后端统一响应体 `R<T>`（`../knowledge-common/src/main/java/com/knowledge/common/dto/response/R.java`）：
+后端统一响应体 `R<T>`（`../workbuddy-common/src/main/java/com/knowledge/common/dto/response/R.java`）：
 
 | 字段        | 含义                                 |
 |-------------|--------------------------------------|
@@ -93,13 +93,13 @@
 | `timestamp` | 毫秒时间戳                           |
 
 - **HTTP 状态码恒为 200**（网络层故障除外）。业务错误、参数错误、未认证、无权限一律走 200 + `R.code`。浏览器会把裸 4xx 响应渲染成 `HTTP ERROR 403` 页面，前端也拿不到可判断的 code。
-- 三处出口共同保证这个口径：`GlobalExceptionHandler`（Controller 抛出的异常）、`RestAuthenticationEntryPoint`（未登录）、`RestAccessDeniedHandler`（已登录但无权限）。后两者位于 `knowledge-auth` 的 `config` 包，发生在 Controller 之前，不经过全局异常处理器。
+- 三处出口共同保证这个口径：`GlobalExceptionHandler`（Controller 抛出的异常）、`RestAuthenticationEntryPoint`（未登录）、`RestAccessDeniedHandler`（已登录但无权限）。后两者位于 `workbuddy-auth` 的 `config` 包，发生在 Controller 之前，不经过全局异常处理器。
 - 前端对应类型是 `../web/src/types/response.ts` 的 `R<T>`，分页数据对应 `PageResult<T>`。
 - `R.failed(msg)`（`code=1`）是通用失败码，**现有代码无人调用**；业务失败一律抛 `KnowledgeException`。
 
 ### 二、错误码
 
-登记在 `../knowledge-common/src/main/java/com/knowledge/common/error/ErrorCode.java`，**新错误码必须在此登记**。分段：`40001` 参数、`401xx` 认证、`402xx` 限流、`404xx` 业务、`40500` 系统兜底。下表「默认提示语」列为源码中的原文，前端未给自定义消息时展示它。
+登记在 `../workbuddy-common/src/main/java/com/knowledge/common/error/ErrorCode.java`，**新错误码必须在此登记**。分段：`40001` 参数、`401xx` 认证、`402xx` 限流、`404xx` 业务、`40500` 系统兜底。下表「默认提示语」列为源码中的原文，前端未给自定义消息时展示它。
 
 | code  | 常量                                   | 默认提示语                                           |
 |-------|----------------------------------------|------------------------------------------------------|
@@ -183,15 +183,15 @@
 - 令牌是 JWT（Hutool 签发，HS256），载荷为 `sub`（用户 ID）、`username`、`role`、`tv`（令牌版本）、`exp`。**有效期分两档**，登录请求用 `remember` 选档：不勾选「记住我」按 `knowledge.auth.jwt.ttl-days`（当前 1 天），勾选按 `ttl-days-remember`（当前 30 天）。密钥来自 `knowledge.auth.jwt.secret`（当前是占位值 `knowledge-jwt-secret-change-me-in-production`，**上生产必须替换**）。
 - 令牌是**无状态**的，签发后服务端无法提前作废单张令牌（只能靠 `token_version` 全量失效）；短期档到期即需重新登录，不随"还在用"自动续期。
 - 前端把令牌存进 localStorage（勾「记住我」）或 sessionStorage，**并把登录响应里的用户字段存成同一档的「用户快照」**（键 `knowledge-user`：`id` / `username` / `displayName` / `email` / `phone` / `status` / `role`）。界面展示与菜单渲染只读快照，**令牌载荷仅用于判断过期**（刷新后除令牌外没有别的凭据，`exp` 只能从令牌取），**真正的鉴权始终在后端**。store 初始化时会直接丢弃过期令牌。
-- 后端 `JwtAuthFilter`（`knowledge-auth` 的 `config` 包）每个请求都过一遍：验签 → 查过期 → **比对令牌版本**（库中当前值 vs 载荷 `tv`）。改密码、改角色、停用、删除都会让该账号已签发的令牌立即失效，代价是每个带令牌请求多一次主键查询。
+- 后端 `JwtAuthFilter`（`workbuddy-auth` 的 `config` 包）每个请求都过一遍：验签 → 查过期 → **比对令牌版本**（库中当前值 vs 载荷 `tv`）。改密码、改角色、停用、删除都会让该账号已签发的令牌立即失效，代价是每个带令牌请求多一次主键查询。
 - **登出没有接口**：客户端丢弃令牌即可（`AppLayout.handleLogout`）。
 - 路由守卫（`../web/src/router/index.ts`）：未登录访问受保护页 → 跳 `/login?redirect=<原路径>`；已登录访问 `/login` → 回 `/home`；非管理员访问标了 `meta.adminOnly` 的页 → 回 `/home`。
 - `redirect` 参数是登录后跳回原页面的唯一来源（守卫与接口层的 40101 硬跳转都写它），登录页只接受以 `/` 开头且不以 `//` 开头的站内路径，其余一律回落 `/home`——不校验会变成开放重定向。
 
 ### 五、权限控制
 
-- `SecurityConfig`（`knowledge-auth` 的 `config` 包）：无状态（STATELESS）、关 CSRF；放行 `/auth/login`、`/auth/register` 与 swagger 路径，**其余请求一律需要认证**。
-- 角色控制走方法注解，由 `@EnableMethodSecurity` 开启。`@AdminOnly`（`../knowledge-common/src/main/java/com/knowledge/common/annotation/AdminOnly.java`）以 `@PreAuthorize` 为元注解判 `ROLE_ADMIN`，**逐个标在管理类接口的方法上**（`UserController` 的查询/新增/编辑/删除四个方法即此写法，同控制器下的个人信息接口对本人开放）。新增管理方法必须一并标注，漏标即对普通用户开放。
+- `SecurityConfig`（`workbuddy-auth` 的 `config` 包）：无状态（STATELESS）、关 CSRF；放行 `/auth/login`、`/auth/register` 与 swagger 路径，**其余请求一律需要认证**。
+- 角色控制走方法注解，由 `@EnableMethodSecurity` 开启。`@AdminOnly`（`../workbuddy-common/src/main/java/com/knowledge/common/annotation/AdminOnly.java`）以 `@PreAuthorize` 为元注解判 `ROLE_ADMIN`，**逐个标在管理类接口的方法上**（`UserController` 的查询/新增/编辑/删除四个方法即此写法，同控制器下的个人信息接口对本人开放）。新增管理方法必须一并标注，漏标即对普通用户开放。
 - **模型管理不是管理员专项**：`ModelAdminController` 与 `ModelUsageController` 的八个方法对所有登录用户开放，方法上不标 `@AdminOnly`（口径见 `design/模型能力平台-方案设计.md` §8.1 与 `pages/模型管理/01-页面功能.md`）。
 - 过滤器写入安全上下文的权限串是 `ROLE_<role>`，必须与注解表达式对得上。
 
@@ -204,7 +204,7 @@
 | **接口级限流**   | 请求次数（不分成败）     | 客户端 IP + 接口名      | `40201 RATE_LIMITED`       |
 | **登录失败防护** | 连续失败次数（成功清零） | 账号 + IP 为主，IP 为辅 | `40111 LOGIN_TOO_FREQUENT` |
 
-- 接口级限流：方法上标 `@RateLimit(capacity, periodSeconds, message)`。注解在 `knowledge-common/annotation`（契约），切面与令牌桶实现在 `knowledge-infra/ratelimit`（基础设施，bucket4j，桶存 Redis、跨实例共享，并带 1 小时过期，窗口过后自动回收）。用法示例见 `AuthController.login`。
+- 接口级限流：方法上标 `@RateLimit(capacity, periodSeconds, message)`。注解在 `../workbuddy-common/annotation`（契约），切面与令牌桶实现在 `../workbuddy-infra/ratelimit`（基础设施，bucket4j，桶存 Redis、跨实例共享，并带 1 小时过期，窗口过后自动回收）。用法示例见 `AuthController.login`。
 - 登录失败防护：阈值与窗口由 `knowledge.auth.guard.*` 配置（默认账号+IP 维度 5 次、IP 维度 20 次、窗口 15 分钟）。实现见 `LoginAttemptGuard`。
 - **计数对不存在的用户名同样生效**。
 - **成功登录只清账号维度，不清 IP 维度**。
@@ -234,7 +234,7 @@
 
 ### 九、空值判定口径
 
-- 后端判空统一走 `NullUtil.isNull/isNotNull`（`../knowledge-common/src/main/java/com/knowledge/common/utils/NullUtil.java`）：参数标注可空、内部转发 Hutool `ObjectUtil`，语义与 Hutool 完全一致。
+- 后端判空统一走 `NullUtil.isNull/isNotNull`（`../workbuddy-common/src/main/java/com/knowledge/common/utils/NullUtil.java`）：参数标注可空、内部转发 Hutool `ObjectUtil`，语义与 Hutool 完全一致。
 - **不写裸 `== null` / `!= null`，也不直接调 `ObjectUtil.isNull/isNotNull`**：Hutool 判空方法的参数没有可空注解，SpotBugs 把"被静态证明为 null"的判空误报为空指针类告警（`NP_NONNULL_PARAM_VIOLATION` / `NP_LOAD_OF_KNOWN_NULL_VALUE`）；走 `NullUtil` 后这类告警不再出现。
 - **`tools/backend/spotbugs-exclude.xml` 不接受新增 `NP_*` 豁免**：撞上这类告警就改判空写法，别往豁免清单加条目。
 - 其它判空语义（`ObjectUtil.isEmpty` / `isNotEmpty` / `defaultIfNull` 等）不属于本口径，按原样使用。

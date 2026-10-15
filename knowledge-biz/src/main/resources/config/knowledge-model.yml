@@ -1,4 +1,0 @@
-# 模型环节配置的落点：厂商连接（knowledge.model.vendors）与路由参数（knowledge.model.route）。
-# 键的来源：knowledge-model 的 ModelVendorProperties（前缀 knowledge.model.vendors）与 ModelRouteProperties（前缀 knowledge.model.route）。
-# 当前没有生效键：vendors 整段缺省即无厂商、不带密钥也能启动；route 全键都有代码侧默认值，不写也能启动。
-# 接入厂商或调整路由参数时，键按上述两个配置类的形状写在此处维护（厂商密钥走环境变量占位符，带空默认）。

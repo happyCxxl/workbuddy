@@ -25,14 +25,14 @@ const ROOT = process.cwd();
 
 /** 扫描根：与注释门禁同一批根，另加 SQL 与容器编排目录 */
 const SCAN_ROOTS = [
-  'knowledge-common/src',
-  'knowledge-infra/src',
-  'knowledge-auth/src',
-  'knowledge-file-center/src',
-  'knowledge-model/src',
-  'knowledge-vector/src',
-  'knowledge-worker/src',
-  'knowledge-biz/src',
+  'workbuddy-common/src',
+  'workbuddy-infra/src',
+  'workbuddy-auth/src',
+  'workbuddy-file/src',
+  'workbuddy-model/src',
+  'workbuddy-vector/src',
+  'workbuddy-worker/src',
+  'workbuddy-biz/src',
   'web/src',
   'web/docs',
   'docs',
@@ -52,14 +52,14 @@ const TEXT_EXT = new Set([
 /** 构建文件不入 SCAN_ROOTS（那里只列了各模块的 src），单独补一轮 */
 const BUILD_FILES = [
   'pom.xml',
-  'knowledge-common/pom.xml',
-  'knowledge-infra/pom.xml',
-  'knowledge-auth/pom.xml',
-  'knowledge-file-center/pom.xml',
-  'knowledge-model/pom.xml',
-  'knowledge-vector/pom.xml',
-  'knowledge-worker/pom.xml',
-  'knowledge-biz/pom.xml',
+  'workbuddy-common/pom.xml',
+  'workbuddy-infra/pom.xml',
+  'workbuddy-auth/pom.xml',
+  'workbuddy-file/pom.xml',
+  'workbuddy-model/pom.xml',
+  'workbuddy-vector/pom.xml',
+  'workbuddy-worker/pom.xml',
+  'workbuddy-biz/pom.xml',
 ];
 
 /**

@@ -38,8 +38,7 @@ export const MODEL_CURRENCIES = ['CNY', 'USD'] as const;
  */
 export const MODEL_VENDORS = [
   { code: 'dashscope', displayName: '阿里百炼' },
-  { code: 'self-ocr', displayName: '自建推理' },
-  { code: 'openai', displayName: 'OpenAI' },
+  { code: 'deepseek', displayName: 'DeepSeek' },
 ] as const;
 
 /** 调用状态码值（后端 CallStatus） */

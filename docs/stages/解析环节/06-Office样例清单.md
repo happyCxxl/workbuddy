@@ -67,7 +67,7 @@ java "-Dfile.encoding=UTF-8" "-Dstdout.encoding=UTF-8" -cp "$mods;$cp" tools\sam
     Tee-Object samples\office-parse-00-核对输出.txt
 ```
 
-> 注意：`$mods` 必须排在依赖类路径之前 —— 本地仓库里安装的 `knowledge-common` 可能缺少当前源码里的新方法。
+> 注意：`$mods` 必须排在依赖类路径之前 —— 本地仓库里安装的 `workbuddy-common` 可能缺少当前源码里的新方法。
 
 ## 四、本次核对结论（样例产出摘要）
 

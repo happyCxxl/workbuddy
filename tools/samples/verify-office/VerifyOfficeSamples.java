@@ -5,16 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import com.knowledge.common.domain.input.FileReference;
-import com.knowledge.common.domain.parse.ParseElement;
-import com.knowledge.common.domain.parse.ParseSource;
-import com.knowledge.worker.parser.DocumentParserPort;
-import com.knowledge.worker.parser.ParseContext;
-import com.knowledge.worker.parser.ParseProperties;
-import com.knowledge.worker.parser.office.impl.DocDocumentParser;
-import com.knowledge.worker.parser.office.impl.DocxDocumentParser;
-import com.knowledge.worker.parser.office.impl.ExcelDocumentParser;
-import com.knowledge.worker.parser.office.impl.PptDocumentParser;
+import com.workbuddy.common.domain.input.FileReference;
+import com.workbuddy.common.domain.parse.ParseElement;
+import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.worker.parser.DocumentParserPort;
+import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.parser.ParseProperties;
+import com.workbuddy.worker.parser.office.impl.DocDocumentParser;
+import com.workbuddy.worker.parser.office.impl.DocxDocumentParser;
+import com.workbuddy.worker.parser.office.impl.ExcelDocumentParser;
+import com.workbuddy.worker.parser.office.impl.PptDocumentParser;
 
 /**
  * 用仓库里的解析器核对 samples/office-parse-* 样例：逐个文件打印关键产物（元素、表格行列与表头行、
