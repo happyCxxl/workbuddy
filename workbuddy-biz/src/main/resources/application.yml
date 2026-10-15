@@ -6,6 +6,7 @@ spring:
   # 顺序即覆盖顺序（后导入覆盖先导入）；清单里的文件必须存在，缺文件或名字写错时启动即报错。
   # 新增环节：平台级配置放 config/workbuddy-<域>.yml，知识库功能专属配置放 config/knowledge/knowledge-<域>.yml，在此加一行。
   # 某个环节整块搬到拥有它的模块时：文件内容与文件名不变，这一行也不用改（classpath: 在整个 classpath 上按唯一匹配定位）。
+  # 末行是本机密钥覆盖：optional: 前缀允许该文件缺失（它被 gitignore，别人机器上没有），有则加载、无则跳过。
   config:
     import:
       - classpath:config/workbuddy-auth.yml
@@ -14,6 +15,7 @@ spring:
       - classpath:config/knowledge/knowledge-task.yml
       - classpath:config/knowledge/knowledge-parse.yml
       - classpath:config/knowledge/knowledge-retrieval.yml
+      - optional:classpath:application-local.yml
   application:
     name: @artifactId@
   main:

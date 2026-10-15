@@ -2,6 +2,8 @@ package com.workbuddy.model.config;
 
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.startup.StartupCheckChain;
+import com.workbuddy.model.startup.ModelRouteValidator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -15,6 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author cxxl
  */
 class ModelRoutePropertiesTest {
+
+    /** 链的替身：不推进，用于断言失败路径不把控制权交给下一项 */
+    private static final StartupCheckChain NO_PROCEED = () -> {
+    };
 
     @Test
     void defaultsShouldMatchDesignTable() {
@@ -137,6 +143,6 @@ class ModelRoutePropertiesTest {
         ModelRouteProperties properties = new ModelRouteProperties();
         properties.setLatencyWindowSeconds(-5);
 
-        assertThrows(KnowledgeException.class, () -> new ModelRouteValidator(properties).run(null));
+        assertThrows(KnowledgeException.class, () -> new ModelRouteValidator(properties).check(NO_PROCEED));
     }
 }

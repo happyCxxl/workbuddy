@@ -1,7 +1,11 @@
-# 检索环节配置：能力分层解锁清单。
-# 键的来源：knowledge-biz 的 RetrievalCapabilityRegistry 注入点（retrieval.capabilities.enabled）。
+# 检索环节配置：能力分层解锁清单与运行记录开关。
+# 键的来源：knowledge-biz 的 RetrievalCapabilityProperties（retrieval.capabilities）与
+# RetrievalRunProperties（retrieval.run）；两处都是 @ConfigurationProperties，不再是裸 @Value 注入点。
 # 本环节配置的默认值在此处维护。
-# 检索能力分层解锁：预留能力清单（RetrievalCapability 枚举名，逗号分隔；解锁 = 加枚举名）
 retrieval:
+  # 能力分层解锁：预留能力清单（RetrievalCapability 枚举名，yaml 列表或逗号分隔；解锁 = 加枚举名）
   capabilities:
     enabled: ""
+  # 运行记录开关：测试台检索必记（不受本项影响）；生产检索是否落记录，默认关（逐查询记录量大）
+  run:
+    record-production: false

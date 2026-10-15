@@ -1,11 +1,12 @@
-package com.workbuddy.worker.parser;
+package com.workbuddy.worker.startup;
 
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.exception.ThrowUtil;
+import com.workbuddy.common.startup.StartupCheck;
+import com.workbuddy.common.startup.StartupCheckChain;
 import com.workbuddy.worker.input.FileValidationProperties;
+import com.workbuddy.worker.parser.DocumentParserPort;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -16,11 +17,13 @@ import java.util.List;
  * 白名单在文件侧、解析器在 worker 侧，靠人工对齐，漏接的格式在启动期就暴露，不留到解析时才失败。
  * 反向差异（有解析器但未进白名单）只打警告：文件侧不会放行这类文件。
  *
+ * <p>在启动校验链里排在 {@link #ORDER_ASSEMBLY} 档：它依赖容器把解析器装配齐全。
+ *
  * @author cxxl
  */
 @Slf4j
 @Component
-public class ParserWhitelistChecker implements ApplicationRunner {
+public class ParserWhitelistChecker implements StartupCheck {
 
     private final List<DocumentParserPort> parsers;
     private final FileValidationProperties properties;
@@ -31,12 +34,18 @@ public class ParserWhitelistChecker implements ApplicationRunner {
     }
 
     @Override
-    public void run(ApplicationArguments args) {
-        check(parsers, properties.getEnabledFormats());
+    public int order() {
+        return ORDER_ASSEMBLY;
+    }
+
+    @Override
+    public void check(StartupCheckChain next) {
+        checkWhitelist(parsers, properties.getEnabledFormats());
+        next.proceed();
     }
 
     /** 校验并返回结论；白名单里的格式没有解析器时抛异常阻断启动 */
-    void check(List<DocumentParserPort> parserPorts, List<String> enabledFormats) {
+    void checkWhitelist(List<DocumentParserPort> parserPorts, List<String> enabledFormats) {
         List<FileFormat> enabled = new ArrayList<>();
         for (String name : enabledFormats) {
             enabled.add(FileFormat.valueOf(name.trim().toUpperCase(java.util.Locale.ROOT)));

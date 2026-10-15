@@ -3,13 +3,13 @@ package com.workbuddy.auth.util;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTPayload;
 import cn.hutool.jwt.JWTUtil;
+import com.workbuddy.auth.config.JwtProperties;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -52,12 +52,10 @@ public class JwtUtil {
      */
     private final Duration rememberTtl;
 
-    public JwtUtil(@Value("${knowledge.auth.jwt.secret}") String secret,
-                   @Value("${knowledge.auth.jwt.ttl-days:1}") long ttlDays,
-                   @Value("${knowledge.auth.jwt.ttl-days-remember:30}") long rememberTtlDays) {
-        this.secret = secret.getBytes(StandardCharsets.UTF_8);
-        this.standardTtl = Duration.ofDays(ttlDays);
-        this.rememberTtl = Duration.ofDays(rememberTtlDays);
+    public JwtUtil(JwtProperties properties) {
+        this.secret = properties.getSecret().getBytes(StandardCharsets.UTF_8);
+        this.standardTtl = Duration.ofDays(properties.getTtlDays());
+        this.rememberTtl = Duration.ofDays(properties.getTtlDaysRemember());
     }
 
     /**

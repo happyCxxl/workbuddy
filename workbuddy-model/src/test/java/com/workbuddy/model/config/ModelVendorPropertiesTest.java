@@ -3,6 +3,7 @@ package com.workbuddy.model.config;
 import com.workbuddy.common.domain.model.AuthType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.model.startup.ModelVendorValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;

@@ -56,9 +56,9 @@ public final class EmbedAlgorithmSpec {
         if (NullUtil.isNull(strategy.getMaxRetries())) {
             strategy.setMaxRetries(properties.getMaxRetries());
         }
-        strategy.setCacheEnabled(enumOr(strategy.getCacheEnabled(), properties.getCacheEnabled()));
-        strategy.setIncludeParent(enumOr(strategy.getIncludeParent(), properties.getIncludeParent()));
-        strategy.setSkipEmpty(enumOr(strategy.getSkipEmpty(), properties.getSkipEmpty()));
+        strategy.setCacheEnabled(enumOr(strategy.getCacheEnabled(), properties.getCacheEnabled().name()));
+        strategy.setIncludeParent(enumOr(strategy.getIncludeParent(), properties.getIncludeParent().name()));
+        strategy.setSkipEmpty(enumOr(strategy.getSkipEmpty(), properties.getSkipEmpty().name()));
         stampCatalog(strategy, catalog);
         return strategy;
     }

@@ -1,9 +1,10 @@
-package com.workbuddy.model.config;
+package com.workbuddy.model.startup;
 
+import com.workbuddy.common.startup.StartupCheck;
+import com.workbuddy.common.startup.StartupCheckChain;
+import com.workbuddy.model.config.ModelRouteProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,17 +18,23 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ModelRouteValidator implements ApplicationRunner {
+public class ModelRouteValidator implements StartupCheck {
 
     private final ModelRouteProperties properties;
 
     @Override
-    public void run(ApplicationArguments args) {
+    public int order() {
+        return ORDER_PARAMETERS;
+    }
+
+    @Override
+    public void check(StartupCheckChain next) {
         properties.validate();
         log.info("模型路由参数校验通过, betaCapacity=[{}], betaLatency=[{}], capacityTriggerRatio=[{}], "
                         + "errorTriggerRatio=[{}], errorWindowSeconds=[{}], cooldownSeconds=[{}], slowStartSeconds=[{}]",
                 properties.getBetaCapacity(), properties.getBetaLatency(), properties.getCapacityTriggerRatio(),
                 properties.getErrorTriggerRatio(), properties.getErrorWindowSeconds(), properties.getCooldownSeconds(),
                 properties.getSlowStartSeconds());
+        next.proceed();
     }
 }

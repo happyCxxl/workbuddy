@@ -27,6 +27,11 @@ class ParsePropertiesConfigTest {
 
     private static final Path MAIN = RESOURCES.resolve("application.yml");
 
+    private static final String CLASSPATH = "classpath:";
+
+    /** 可选导入前缀：这类文件缺失即跳过（本机密钥覆盖文件被 gitignore，别的机器上没有） */
+    private static final String OPTIONAL = "optional:";
+
     @Test
     void applicationYmlShouldCoverAllParseProperties() throws Exception {
         Map<String, Object> parse = parseBlock();
@@ -67,7 +72,12 @@ class ParsePropertiesConfigTest {
         List<String> imports = importLocations(face);
         assertTrue(!imports.isEmpty(), () -> "主文件缺 spring.config.import 清单: " + MAIN.toAbsolutePath());
         for (String location : imports) {
-            Path file = RESOURCES.resolve(location.replace("classpath:", ""));
+            boolean optional = location.startsWith(OPTIONAL);
+            String resource = optional ? location.substring(OPTIONAL.length()) : location;
+            Path file = RESOURCES.resolve(resource.replace(CLASSPATH, ""));
+            if (optional && !Files.exists(file)) {
+                continue;
+            }
             assertTrue(Files.exists(file), () -> "导入清单里的文件不存在: " + location);
             merge(face, loadYaml(file));
         }

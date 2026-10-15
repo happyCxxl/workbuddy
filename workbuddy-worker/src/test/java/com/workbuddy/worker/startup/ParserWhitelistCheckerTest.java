@@ -1,4 +1,4 @@
-package com.workbuddy.worker.parser;
+package com.workbuddy.worker.startup;
 
 import com.workbuddy.worker.input.FileValidationProperties;
 import com.workbuddy.worker.parser.office.impl.DocDocumentParser;
@@ -6,6 +6,7 @@ import com.workbuddy.worker.parser.office.impl.DocxDocumentParser;
 import com.workbuddy.worker.parser.office.impl.ExcelDocumentParser;
 import com.workbuddy.worker.parser.pdf.PdfBoxDocumentParser;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
+import com.workbuddy.worker.parser.DocumentParserPort;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -28,14 +29,14 @@ class ParserWhitelistCheckerTest {
     /** 真实解析器集合 + 默认白名单：应通过 */
     @Test
     void defaultWhitelistShouldBeCoveredByRealParsers() {
-        assertDoesNotThrow(() -> checker.check(realParsers(), List.of("PDF", "DOC", "DOCX", "XLS", "XLSX")));
+        assertDoesNotThrow(() -> checker.checkWhitelist(realParsers(), List.of("PDF", "DOC", "DOCX", "XLS", "XLSX")));
     }
 
     /** 白名单里的格式没有解析器：启动期抛错（PPT/PPTX 已登记格式但无解析器） */
     @Test
     void whitelistWithoutParserShouldFailFast() {
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> checker.check(realParsers(), List.of("PDF", "PPTX")));
+                () -> checker.checkWhitelist(realParsers(), List.of("PDF", "PPTX")));
 
         assertTrue(error.getMessage().contains("PPTX"), () -> "message=" + error.getMessage());
     }
@@ -43,7 +44,7 @@ class ParserWhitelistCheckerTest {
     /** 白名单里的未知格式名：配置错误直接暴露 */
     @Test
     void unknownFormatNameShouldFailFast() {
-        assertThrows(IllegalArgumentException.class, () -> checker.check(realParsers(), List.of("PDFX")));
+        assertThrows(IllegalArgumentException.class, () -> checker.checkWhitelist(realParsers(), List.of("PDFX")));
     }
 
     private List<DocumentParserPort> realParsers() {

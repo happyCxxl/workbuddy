@@ -1,5 +1,6 @@
 package com.workbuddy.auth.util;
 
+import com.workbuddy.auth.config.JwtProperties;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
@@ -50,7 +51,7 @@ class JwtUtilTest {
 
     @Test
     void ttlShouldFollowConfiguration() {
-        JwtUtil jwtUtil = new JwtUtil(SECRET, 1, 30);
+        JwtUtil jwtUtil = new JwtUtil(jwtProperties(1));
 
         assertEquals(Duration.ofDays(1), jwtUtil.standardTtl());
         assertEquals(Duration.ofDays(30), jwtUtil.rememberTtl());
@@ -99,6 +100,15 @@ class JwtUtilTest {
     }
 
     private JwtUtil jwtUtil(long ttlDays) {
-        return new JwtUtil(SECRET, ttlDays, 30);
+        return new JwtUtil(jwtProperties(ttlDays));
+    }
+
+    /** 令牌配置替身：密钥固定，记住我档固定 30 天 */
+    private JwtProperties jwtProperties(long ttlDays) {
+        JwtProperties properties = new JwtProperties();
+        properties.setSecret(SECRET);
+        properties.setTtlDays(ttlDays);
+        properties.setTtlDaysRemember(30);
+        return properties;
     }
 }

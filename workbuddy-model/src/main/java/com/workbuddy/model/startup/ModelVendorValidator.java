@@ -1,13 +1,14 @@
-package com.workbuddy.model.config;
+package com.workbuddy.model.startup;
 
 import com.workbuddy.common.domain.model.AuthType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
+import com.workbuddy.common.startup.StartupCheck;
+import com.workbuddy.common.startup.StartupCheckChain;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.model.config.ModelVendorProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -24,12 +25,14 @@ import java.util.StringJoiner;
  * 错误信息带厂商码与配置键名。日志不打印密钥。厂商数量不设上限：嵌入入口按目录解析「模型 → 厂商」，
  * 多厂商配置与单厂商配置都直接放行。
  *
+ * <p>在启动校验链里排在 {@link #ORDER_CREDENTIALS} 档：它依赖密钥等外部凭据。
+ *
  * @author cxxl
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ModelVendorValidator implements ApplicationRunner {
+public class ModelVendorValidator implements StartupCheck {
 
     /** 当前支持的鉴权方式集合 */
     private static final Set<AuthType> SUPPORTED_AUTH_TYPES = Set.of(AuthType.BEARER);
@@ -40,8 +43,14 @@ public class ModelVendorValidator implements ApplicationRunner {
     private final ModelVendorProperties properties;
 
     @Override
-    public void run(ApplicationArguments args) {
+    public int order() {
+        return ORDER_CREDENTIALS;
+    }
+
+    @Override
+    public void check(StartupCheckChain next) {
         validate(properties);
+        next.proceed();
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.workbuddy.biz.config;
 
+import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -50,28 +51,44 @@ public class TaskQueueProperties {
     /** 停机时等待在跑任务结束的上限；到点中断仍未结束的任务 */
     private Duration shutdownWait = Duration.ofSeconds(30);
 
-    /** 单任务超时：按环节配置；未配置环节回退全局默认 */
-    private Map<String, Duration> timeout = new HashMap<>(Map.of(
-            "parse", Duration.ofMinutes(5),
-            "structure", Duration.ofMinutes(5),
-            "preprocess", Duration.ofMinutes(5),
-            "chunk", Duration.ofMinutes(5),
-            "embed", Duration.ofMinutes(10),
-            "build-index", Duration.ofMinutes(10)));
+    /**
+     * 单任务超时：按环节配置；未配置环节回退全局默认。
+     *
+     * <p>键是 {@link PipelineStage} 枚举：配置里写错环节名（如 `pars`）在绑定期直接失败，不再静默回退默认值。
+     * 配置键仍写 kebab 形式（`build-index`），宽松绑定认它。
+     */
+    private Map<PipelineStage, Duration> timeout = new HashMap<>(Map.of(
+            PipelineStage.PARSE, Duration.ofMinutes(5),
+            PipelineStage.STRUCTURE, Duration.ofMinutes(5),
+            PipelineStage.PREPROCESS, Duration.ofMinutes(5),
+            PipelineStage.CHUNK, Duration.ofMinutes(5),
+            PipelineStage.EMBED, Duration.ofMinutes(10),
+            PipelineStage.BUILD_INDEX, Duration.ofMinutes(10)));
 
     /**
-     * 取指定环节的单任务超时：先按原样查，再按归一化键查（小写 + 下划线转连字符）；
-     * 环节为空或未配置一律回退默认 5 分钟。
+     * 取指定环节的单任务超时：环节标识支持枚举名（BUILD_INDEX）与配置键（build-index）两种写法；
+     * 环节为空、认不出，或该环节未配置，一律回退默认 5 分钟。
      */
     public Duration timeoutOf(String stage) {
-        if (NullUtil.isNull(stage)) {
+        PipelineStage parsed = parseStage(stage);
+        if (NullUtil.isNull(parsed)) {
             return DEFAULT_TIMEOUT;
         }
-        Duration configured = timeout.get(stage);
-        if (NullUtil.isNull(configured)) {
-            // 枚举名 BUILD_INDEX → 配置键 build-index（其余环节本来同形）
-            configured = timeout.get(stage.toLowerCase(Locale.ROOT).replace('_', '-'));
-        }
+        Duration configured = timeout.get(parsed);
         return NullUtil.isNull(configured) ? DEFAULT_TIMEOUT : configured;
+    }
+
+    /** 环节标识归一化：去空格、转大写、连字符转下划线后按枚举名匹配，认不出返回 null */
+    private static PipelineStage parseStage(String stage) {
+        if (NullUtil.isNull(stage) || stage.isBlank()) {
+            return null;
+        }
+        String normalized = stage.trim().toUpperCase(Locale.ROOT).replace('-', '_');
+        for (PipelineStage candidate : PipelineStage.values()) {
+            if (candidate.name().equals(normalized)) {
+                return candidate;
+            }
+        }
+        return null;
     }
 }

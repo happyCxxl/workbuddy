@@ -1,6 +1,6 @@
 package com.workbuddy.worker.embedding;
 
-import com.workbuddy.worker.embedding.strategy.EmbedStrategy;
+import com.workbuddy.common.enums.embed.EmbedSwitch;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -26,13 +26,13 @@ public class EmbedProperties {
     private int maxRetries = 2;
 
     /** 复用开关默认（ON=启用账本复用） */
-    private String cacheEnabled = EmbedStrategy.ON;
+    private EmbedSwitch cacheEnabled = EmbedSwitch.ON;
 
     /** 父片向量化默认（OFF=只向量化子片） */
-    private String includeParent = EmbedStrategy.OFF;
+    private EmbedSwitch includeParent = EmbedSwitch.OFF;
 
     /** 空文本跳过默认 */
-    private String skipEmpty = EmbedStrategy.ON;
+    private EmbedSwitch skipEmpty = EmbedSwitch.ON;
 
     /** 账本复用回溯上限（新→旧最多回看多少个同策略账本） */
     private int reuseBacktrackLimit = 10;
