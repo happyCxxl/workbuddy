@@ -19,7 +19,7 @@ public interface CleanRule {
     String name();
 
     /**
-     * 子步骤名（进 kb_pipeline_step_log.step_name，如 编码规范化）。
+     * 子步骤名（进 wb_knowledge_pipeline_step_log.step_name，如 编码规范化）。
      */
     String stepName();
 

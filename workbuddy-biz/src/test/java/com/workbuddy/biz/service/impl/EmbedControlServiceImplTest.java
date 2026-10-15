@@ -1,15 +1,15 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbEmbeddingRecordDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.EmbedVoAssembler;
@@ -19,14 +19,14 @@ import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
-import com.workbuddy.common.domain.entity.KbEmbeddingRecord;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbStrategyBinding;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
+import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbStrategyBinding;
 import com.workbuddy.common.dto.response.embed.EmbedDetailVO;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
@@ -77,27 +77,27 @@ class EmbedControlServiceImplTest {
     private static final Long UPSTREAM_TASK_ID = 40L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
     private TaskQueueSupport taskQueue;
     @Mock
-    private KbEmbeddingSetDbService embeddingSetDbService;
+    private WbEmbeddingSetDbService embeddingSetDbService;
     @Mock
-    private KbEmbeddingRecordDbService embeddingRecordDbService;
+    private WbEmbeddingRecordDbService embeddingRecordDbService;
     @Mock
-    private KbStrategyBindingDbService strategyBindingDbService;
+    private WbStrategyBindingDbService strategyBindingDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private StorageRouter storageRouter;
     @Mock
@@ -127,8 +127,8 @@ class EmbedControlServiceImplTest {
     }
 
     /** 上游产物的产出任务（环节 CHUNK、归属文件结果 10） */
-    private KbPipelineTask upstreamTask(PipelineTaskStatus status) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask upstreamTask(PipelineTaskStatus status) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(UPSTREAM_TASK_ID);
         task.setFileResultId(10L);
         task.setStage(PipelineStage.CHUNK.name());
@@ -136,16 +136,16 @@ class EmbedControlServiceImplTest {
         return task;
     }
 
-    private KbFileResult fileResult() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResult() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;
     }
 
     /** CHUNK 产物（capabilitySnapshot 可指定切片策略快照；空=跳过窗口预检） */
-    private KbPipelineProduct chunkProduct(String capabilitySnapshot) {
-        KbPipelineProduct product = new KbPipelineProduct();
+    private WbPipelineProduct chunkProduct(String capabilitySnapshot) {
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setId(50L);
         product.setTaskId(UPSTREAM_TASK_ID);
         product.setFileResultId(10L);
@@ -172,14 +172,14 @@ class EmbedControlServiceImplTest {
     }
 
     /** 向量化执行键检查：文件结果 10 + 上游切片产物 + 策略版本（0 表示该环节无策略） */
-    private void existingEmbedTask(Long upstreamProductId, Long strategyVersionId, KbPipelineTask task) {
+    private void existingEmbedTask(Long upstreamProductId, Long strategyVersionId, WbPipelineTask task) {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.EMBED.name(), upstreamProductId,
                 strategyVersionId)).thenReturn(task);
     }
 
     /** 知识库夹具（绑定开关未显式关闭 → 视为开启） */
-    private KnowledgeBase knowledgeBase() {
-        KnowledgeBase kb = new KnowledgeBase();
+    private WbKnowledgeBase knowledgeBase() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(10L);
         kb.setStrategyBindingEnabled(1);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
@@ -187,8 +187,8 @@ class EmbedControlServiceImplTest {
     }
 
     /** 绑定开关关闭的知识库 */
-    private KnowledgeBase bindingOffKnowledgeBase() {
-        KnowledgeBase kb = new KnowledgeBase();
+    private WbKnowledgeBase bindingOffKnowledgeBase() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(10L);
         kb.setStrategyBindingEnabled(0);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
@@ -196,8 +196,8 @@ class EmbedControlServiceImplTest {
     }
 
     /** 有效绑定行：KB 10 绑定 EMBED 策略版本 66 */
-    private KbStrategyBinding binding() {
-        KbStrategyBinding binding = new KbStrategyBinding();
+    private WbStrategyBinding binding() {
+        WbStrategyBinding binding = new WbStrategyBinding();
         binding.setId(1L);
         binding.setKnowledgeBaseId(10L);
         binding.setStrategyType(EmbedStrategy.TYPE);
@@ -209,8 +209,8 @@ class EmbedControlServiceImplTest {
     void boundStrategyShouldDriveTaskSnapshotAndEnqueue() {
         stubCommon();
         existingEmbedTask(50L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(41L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(41L);
             return true;
         });
 
@@ -218,9 +218,9 @@ class EmbedControlServiceImplTest {
 
         assertEquals(41L, response.getPipelineTaskId());
         assertEquals("embed-bound-v3", response.getStrategyVersion());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
-        KbPipelineTask task = captor.getValue();
+        WbPipelineTask task = captor.getValue();
         assertEquals(PipelineStage.EMBED.name(), task.getStage());
         assertEquals(PipelineTaskStatus.QUEUED.name(), task.getStatus());
         assertEquals(50L, task.getUpstreamProductId());
@@ -296,8 +296,8 @@ class EmbedControlServiceImplTest {
     void boundStrategyShouldBeUsedWhenNoExplicitVersion() {
         stubCommon();
         existingEmbedTask(50L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(43L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(43L);
             return true;
         });
 
@@ -326,8 +326,8 @@ class EmbedControlServiceImplTest {
         when(strategyVersionDbService.getById(77L))
                 .thenReturn(embedVersion(77L, "embed-strict", "v2", RowStatus.ACTIVE.name()));
         existingEmbedTask(50L, 77L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(45L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(45L);
             return true;
         });
 
@@ -359,8 +359,8 @@ class EmbedControlServiceImplTest {
         stubBoundStrategy();
         when(pipelineProductDbService.getById(50L)).thenReturn(chunkProduct("{oops"));
         existingEmbedTask(50L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(46L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(46L);
             return true;
         });
 
@@ -375,8 +375,8 @@ class EmbedControlServiceImplTest {
     void windowCompatibleShouldProceed() {
         stubCommon();
         existingEmbedTask(50L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(44L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(44L);
             return true;
         });
 
@@ -388,7 +388,7 @@ class EmbedControlServiceImplTest {
     @Test
     void runningShouldReject40431() {
         stubCommon();
-        KbPipelineTask running = new KbPipelineTask();
+        WbPipelineTask running = new WbPipelineTask();
         running.setId(41L);
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         existingEmbedTask(50L, 66L, running);
@@ -405,7 +405,7 @@ class EmbedControlServiceImplTest {
     @Test
     void existingQueuedTaskShouldReject40431() {
         stubCommon();
-        KbPipelineTask queued = new KbPipelineTask();
+        WbPipelineTask queued = new WbPipelineTask();
         queued.setId(41L);
         queued.setStatus(PipelineTaskStatus.QUEUED.name());
         existingEmbedTask(50L, 66L, queued);
@@ -421,20 +421,20 @@ class EmbedControlServiceImplTest {
     @Test
     void detailShouldAssembleSummaryAndRecords() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(41L);
         task.setStage(PipelineStage.EMBED.name());
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.EMBED.name())).thenReturn(task);
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("abc".repeat(16));
         // 产物行记下对象位置：详情据此取向量集合
         product.setStorageType(StorageType.MINIO.getCode());
         product.setStorageSourceId(SOURCE_ID);
         product.setBucket("artifacts");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
-        KbEmbeddingSet set = new KbEmbeddingSet();
+        WbEmbeddingSet set = new WbEmbeddingSet();
         set.setId(70L);
         set.setEmbeddingSetId("es-cs-1-embed-default-v1");
         set.setStrategyVersion("embed-default-v1");
@@ -449,14 +449,14 @@ class EmbedControlServiceImplTest {
         set.setStorageSourceId(SOURCE_ID);
         set.setBucket("artifacts");
         when(embeddingSetDbService.getByArtifactId("abc".repeat(16))).thenReturn(set);
-        KbEmbeddingRecord cached = new KbEmbeddingRecord();
+        WbEmbeddingRecord cached = new WbEmbeddingRecord();
         cached.setEmbeddingId("emb-0001");
         cached.setStatus("CACHED");
         cached.setCacheHit(true);
-        KbEmbeddingRecord fresh = new KbEmbeddingRecord();
+        WbEmbeddingRecord fresh = new WbEmbeddingRecord();
         fresh.setEmbeddingId("emb-0002");
         fresh.setStatus("SUCCESS");
-        KbEmbeddingRecord skipped = new KbEmbeddingRecord();
+        WbEmbeddingRecord skipped = new WbEmbeddingRecord();
         skipped.setEmbeddingId("emb-0003");
         skipped.setStatus("SKIPPED");
         when(embeddingRecordDbService.listByEmbeddingSetId(70L)).thenReturn(List.of(cached, fresh, skipped));
@@ -484,8 +484,8 @@ class EmbedControlServiceImplTest {
         assertTrue(detail.getRecords().isEmpty());
     }
 
-    private KbPipelineStrategyVersion embedVersion(Long id, String name, String version, String status) {
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+    private WbPipelineStrategyVersion embedVersion(Long id, String name, String version, String status) {
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(id);
         row.setType(EmbedStrategy.TYPE);
         row.setName(name);
@@ -507,7 +507,7 @@ class EmbedControlServiceImplTest {
 
     /** 让指定知识库归当前登录用户所有（归属校验要能过） */
     private void boundKnowledgeBase(Long id) {
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(id);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);

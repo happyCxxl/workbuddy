@@ -143,7 +143,7 @@ public class ParsePipeline {
         evaluate(outcome, nativeSource, failedUnits, quality);
         summarizeQuality(nativeSource, quality); // ⑥ 坏页比例达门槛时补一条维度汇总告警
 
-        // 失败诊断留痕：告警明细进质量检查子步骤（落 kb_pipeline_step_log.error，可查询）
+        // 失败诊断留痕：告警明细进质量检查子步骤（落 wb_knowledge_pipeline_step_log.error，可查询）
         if (outcome.getSuggestedStatus() == PipelineTaskStatus.FAILED) {
             String summary = quality.getWarnings().stream()
                     .map(w -> w.getCode() + ":" + w.getMessage())

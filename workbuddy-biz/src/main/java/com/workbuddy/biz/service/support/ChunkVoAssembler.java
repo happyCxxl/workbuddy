@@ -3,8 +3,8 @@ package com.workbuddy.biz.service.support;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.chunk.Chunk;
-import com.workbuddy.common.domain.entity.KbChunk;
-import com.workbuddy.common.domain.entity.KbChunkSet;
+import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.dto.response.chunk.ChunkItemVO;
 import com.workbuddy.common.dto.response.chunk.ChunkSummaryVO;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
@@ -26,7 +26,7 @@ import java.util.Map;
 public class ChunkVoAssembler {
 
     /** 切片统计：总数/总字符/平均片长/父子数/类型分布（父子口径与 ChunkContentType 一致） */
-    public ChunkSummaryVO toSummary(KbChunkSet chunkSet, List<KbChunk> chunks) {
+    public ChunkSummaryVO toSummary(WbChunkSet chunkSet, List<WbChunk> chunks) {
         ChunkSummaryVO vo = new ChunkSummaryVO();
         vo.setChunkCount(chunkSet.getChunkCount());
         vo.setTotalChars(chunkSet.getTotalChars());
@@ -34,7 +34,7 @@ public class ChunkVoAssembler {
         int parentCount = 0;
         int childCount = 0;
         Map<String, Integer> typeCounts = new HashMap<>();
-        for (KbChunk chunk : chunks) {
+        for (WbChunk chunk : chunks) {
             if (ChunkContentType.SECTION.name().equals(chunk.getContentType())) {
                 parentCount++;
             } else if (StrUtil.isNotBlank(chunk.getParentChunkId())) {
@@ -58,8 +58,8 @@ public class ChunkVoAssembler {
      * @param chunks          切片行（DB）
      * @param productChunks   切片产物里的片（键 = chunkId）：来源元素个数与兜底原因只在产物里，DB 无这两列
      */
-    public List<ChunkItemVO> toChunkItemVOs(List<KbChunk> chunks, Map<String, Chunk> productChunks) {
-        return ObjectUtil.defaultIfNull(chunks, new ArrayList<KbChunk>()).stream()
+    public List<ChunkItemVO> toChunkItemVOs(List<WbChunk> chunks, Map<String, Chunk> productChunks) {
+        return ObjectUtil.defaultIfNull(chunks, new ArrayList<WbChunk>()).stream()
                 .map(chunk -> toChunkItemVO(chunk, productChunkOf(productChunks, chunk.getChunkId())))
                 .toList();
     }
@@ -69,7 +69,7 @@ public class ChunkVoAssembler {
         return NullUtil.isNull(productChunks) || NullUtil.isNull(chunkId) ? null : productChunks.get(chunkId);
     }
 
-    private ChunkItemVO toChunkItemVO(KbChunk chunk, Chunk productChunk) {
+    private ChunkItemVO toChunkItemVO(WbChunk chunk, Chunk productChunk) {
         ChunkItemVO vo = new ChunkItemVO();
         vo.setChunkId(chunk.getChunkId());
         vo.setParentChunkId(chunk.getParentChunkId());

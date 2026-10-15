@@ -1,10 +1,10 @@
 package com.workbuddy.biz.task.runner.persistence;
 
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.utils.JsonUtil;
@@ -29,8 +29,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ProductPersistence {
 
-    private final KbPipelineProductDbService pipelineProductDbService;
-    private final KbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
     private final ChainStorageSupport chainStorageSupport;
     private final FileStorage fileStorage;
 
@@ -50,10 +50,10 @@ public class ProductPersistence {
      * @param capabilitySnapshot 能力/策略版本快照（JSON 文本）
      * @param payload           产物本体（JSON 序列化后写产物存储）
      */
-    public KbPipelineProduct persist(KbPipelineTask task, PipelineStage stage, Long upstreamProductId,
+    public WbPipelineProduct persist(WbPipelineTask task, PipelineStage stage, Long upstreamProductId,
                                      String capabilitySnapshot, Object payload) {
         chainStorageSupport.requireStorageMatch(task.getFileResultId());
-        KbPipelineProduct existing = pipelineProductDbService.getByTaskId(task.getId());
+        WbPipelineProduct existing = pipelineProductDbService.getByTaskId(task.getId());
         if (NullUtil.isNotNull(existing)) {
             log.info("===> ProductPersistence 产物已存在，复用既有行, taskId={}, productId={}, artifactId={}",
                     task.getId(), existing.getId(), existing.getArtifactId());
@@ -64,7 +64,7 @@ public class ProductPersistence {
         byte[] content = json.getBytes(StandardCharsets.UTF_8);
         ObjectRef ref = fileStorage.putObject(content);
 
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setTaskId(task.getId());
         product.setFileResultId(task.getFileResultId());
         product.setStage(stage.name());

@@ -1,9 +1,9 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.RetrievalRuleResolver;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDto;
 import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDto;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
@@ -43,9 +43,9 @@ import static org.mockito.Mockito.when;
 class StrategyVersionServiceImplTest {
 
     @Mock
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
     @Mock
-    private KbStrategyBindingDbService strategyBindingDbService;
+    private WbStrategyBindingDbService strategyBindingDbService;
     @Mock
     private RetrievalRuleResolver retrievalRuleResolver;
 
@@ -57,8 +57,8 @@ class StrategyVersionServiceImplTest {
                 new StaticModelCatalog(), retrievalRuleResolver);
     }
 
-    private KbPipelineStrategyVersion row(Long id, String version, String status) {
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+    private WbPipelineStrategyVersion row(Long id, String version, String status) {
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(id);
         row.setType("CHUNK");
         row.setName("chunk-hybrid");
@@ -136,8 +136,8 @@ class StrategyVersionServiceImplTest {
 
     @Test
     void createShouldSaveAsActive() {
-        when(strategyVersionDbService.save(any(KbPipelineStrategyVersion.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineStrategyVersion.class).setId(11L);
+        when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineStrategyVersion.class).setId(11L);
             return true;
         });
 
@@ -158,7 +158,7 @@ class StrategyVersionServiceImplTest {
 
     @Test
     void createDuplicateKeyShouldReject() {
-        when(strategyVersionDbService.save(any(KbPipelineStrategyVersion.class)))
+        when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class)))
                 .thenThrow(new DuplicateKeyException("uk_type_name_version"));
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.create(createDto()));
@@ -169,7 +169,7 @@ class StrategyVersionServiceImplTest {
     @Test
     void updateShouldCopyAsNewVersion() {
         // 策略版本行不可变：编辑 = 复制新行（旧行原样保留，新行按 dto 注册且默认 ACTIVE）
-        KbPipelineStrategyVersion existing = row(9L, "v1", "INACTIVE");
+        WbPipelineStrategyVersion existing = row(9L, "v1", "INACTIVE");
         when(strategyVersionDbService.getById(9L)).thenReturn(existing);
 
         StrategyVersionVO vo = service.update(9L, updateDto());
@@ -178,11 +178,11 @@ class StrategyVersionServiceImplTest {
         assertEquals("v2", vo.getVersion());
         assertEquals("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\"}}}", vo.getConfigSnapshot());
         assertEquals("ACTIVE", vo.getStatus());
-        ArgumentCaptor<KbPipelineStrategyVersion> captor = ArgumentCaptor.forClass(KbPipelineStrategyVersion.class);
+        ArgumentCaptor<WbPipelineStrategyVersion> captor = ArgumentCaptor.forClass(WbPipelineStrategyVersion.class);
         verify(strategyVersionDbService).save(captor.capture());
         assertEquals("CHUNK", captor.getValue().getType());
         // 旧行未被改动
-        verify(strategyVersionDbService, never()).updateById(any(KbPipelineStrategyVersion.class));
+        verify(strategyVersionDbService, never()).updateById(any(WbPipelineStrategyVersion.class));
         assertEquals("chunk-hybrid", existing.getName());
         assertEquals("v1", existing.getVersion());
         assertEquals("INACTIVE", existing.getStatus());
@@ -206,7 +206,7 @@ class StrategyVersionServiceImplTest {
         StrategyVersionVO vo = service.enable(9L);
 
         assertEquals("ACTIVE", vo.getStatus());
-        verify(strategyVersionDbService).updateById(any(KbPipelineStrategyVersion.class));
+        verify(strategyVersionDbService).updateById(any(WbPipelineStrategyVersion.class));
     }
 
     @Test
@@ -217,7 +217,7 @@ class StrategyVersionServiceImplTest {
         StrategyVersionVO vo = service.disable(9L);
 
         assertEquals("INACTIVE", vo.getStatus());
-        verify(strategyVersionDbService).updateById(any(KbPipelineStrategyVersion.class));
+        verify(strategyVersionDbService).updateById(any(WbPipelineStrategyVersion.class));
     }
 
     @Test
@@ -265,8 +265,8 @@ class StrategyVersionServiceImplTest {
 
     @Test
     void createChunkWithValidConfigShouldSave() {
-        when(strategyVersionDbService.save(any(KbPipelineStrategyVersion.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineStrategyVersion.class).setId(12L);
+        when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineStrategyVersion.class).setId(12L);
             return true;
         });
 
@@ -343,8 +343,8 @@ class StrategyVersionServiceImplTest {
 
     @Test
     void createPreprocWithValidConfigShouldSave() {
-        when(strategyVersionDbService.save(any(KbPipelineStrategyVersion.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineStrategyVersion.class).setId(13L);
+        when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineStrategyVersion.class).setId(13L);
             return true;
         });
 
@@ -409,9 +409,9 @@ class StrategyVersionServiceImplTest {
 
     @Test
     void createEmbedWithValidConfigShouldSaveAndEnrichSnapshot() {
-        ArgumentCaptor<KbPipelineStrategyVersion> captor = ArgumentCaptor.forClass(KbPipelineStrategyVersion.class);
-        when(strategyVersionDbService.save(any(KbPipelineStrategyVersion.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineStrategyVersion.class).setId(14L);
+        ArgumentCaptor<WbPipelineStrategyVersion> captor = ArgumentCaptor.forClass(WbPipelineStrategyVersion.class);
+        when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineStrategyVersion.class).setId(14L);
             return true;
         });
 
@@ -482,8 +482,8 @@ class StrategyVersionServiceImplTest {
     @Test
     void createRetrievalWithValidConfigShouldSave() {
         when(retrievalRuleResolver.validate(anyString())).thenReturn(new RetrievalRuleSpec());
-        when(strategyVersionDbService.save(any(KbPipelineStrategyVersion.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineStrategyVersion.class).setId(15L);
+        when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineStrategyVersion.class).setId(15L);
             return true;
         });
 

@@ -1,6 +1,6 @@
 package com.workbuddy.common.dto.response.task;
 
-import com.workbuddy.common.domain.entity.KbPipelineStepLog;
+import com.workbuddy.common.domain.entity.WbPipelineStepLog;
 import com.workbuddy.common.domain.task.StepLogFields;
 import lombok.Data;
 
@@ -48,7 +48,7 @@ public class StepLogVO implements StepLogFields {
     private String error;
 
     /** 实体 → VO（公共字段拷贝）。 */
-    public static StepLogVO of(KbPipelineStepLog step) {
+    public static StepLogVO of(WbPipelineStepLog step) {
         StepLogVO vo = new StepLogVO();
         vo.copyFrom(step);
         return vo;

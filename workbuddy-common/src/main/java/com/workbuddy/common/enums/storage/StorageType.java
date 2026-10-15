@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 对象存储类型：记录里落库的后端标识，决定对象本体读到哪个后端取。
  *
- * <p>落库为码值字符串（`kb_file_object.storage_type` 与产物、切片、向量、头像表的同名列）。
+ * <p>落库为码值字符串（`wb_file_object.storage_type` 与产物、切片、向量、头像表的同名列）。
  * 新增一种存储类型 = 加一个枚举常量 + 一个 StorageProvider 实现 + 一段配置。
  *
  * <p>{@link #of(String)} 对空值与未知码值返回 null：读路径据此报「存储后端未配置」，

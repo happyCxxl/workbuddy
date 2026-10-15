@@ -6,23 +6,23 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
-import com.workbuddy.biz.service.db.KbAuditLogDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbIndexSetDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
-import com.workbuddy.biz.service.db.KbSubmitLogDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbIndexSetDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbSubmitLogDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.InputVoAssembler;
 import com.workbuddy.biz.service.support.TaskVoAssembler;
-import com.workbuddy.common.domain.entity.KbIndexSet;
-import com.workbuddy.common.domain.entity.KbIndexVersion;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbStrategyBinding;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbIndexSet;
+import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbStrategyBinding;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDto;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDto;
 import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDto;
@@ -79,25 +79,25 @@ class KnowledgeBaseServiceImplTest {
     /** 另一个用户：用于「看不到别人的库」的反向用例 */
     private static final long OTHER = 2002L;
 
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
 
-    private KbAuditLogDbService kbAuditLogDbService;
+    private WbAuditLogDbService kbAuditLogDbService;
 
-    private KbStrategyBindingDbService strategyBindingDbService;
+    private WbStrategyBindingDbService strategyBindingDbService;
 
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
 
-    private KbFileResultDbService kbFileResultDbService;
+    private WbFileResultDbService kbFileResultDbService;
 
-    private KbIndexSetDbService indexSetDbService;
+    private WbIndexSetDbService indexSetDbService;
 
-    private KbIndexVersionDbService indexVersionDbService;
+    private WbIndexVersionDbService indexVersionDbService;
 
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
 
-    private KbSubmitLogDbService submitLogDbService;
+    private WbSubmitLogDbService submitLogDbService;
 
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
 
     private FileValidatorPort fileValidator;
 
@@ -109,16 +109,16 @@ class KnowledgeBaseServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        knowledgeBaseDbService = mock(KnowledgeBaseDbService.class);
-        kbAuditLogDbService = mock(KbAuditLogDbService.class);
-        strategyBindingDbService = mock(KbStrategyBindingDbService.class);
-        strategyVersionDbService = mock(KbPipelineStrategyVersionDbService.class);
-        kbFileResultDbService = mock(KbFileResultDbService.class);
-        indexSetDbService = mock(KbIndexSetDbService.class);
-        indexVersionDbService = mock(KbIndexVersionDbService.class);
-        sourceFileDbService = mock(KbSourceFileDbService.class);
-        submitLogDbService = mock(KbSubmitLogDbService.class);
-        pipelineTaskDbService = mock(KbPipelineTaskDbService.class);
+        knowledgeBaseDbService = mock(WbKnowledgeBaseDbService.class);
+        kbAuditLogDbService = mock(WbAuditLogDbService.class);
+        strategyBindingDbService = mock(WbStrategyBindingDbService.class);
+        strategyVersionDbService = mock(WbPipelineStrategyVersionDbService.class);
+        kbFileResultDbService = mock(WbFileResultDbService.class);
+        indexSetDbService = mock(WbIndexSetDbService.class);
+        indexVersionDbService = mock(WbIndexVersionDbService.class);
+        sourceFileDbService = mock(WbSourceFileDbService.class);
+        submitLogDbService = mock(WbSubmitLogDbService.class);
+        pipelineTaskDbService = mock(WbPipelineTaskDbService.class);
         fileValidator = mock(FileValidatorPort.class);
         fileStorage = mock(FileStorage.class);
         storageRouter = mock(StorageRouter.class);
@@ -151,8 +151,8 @@ class KnowledgeBaseServiceImplTest {
                 .setAuthentication(new UsernamePasswordAuthenticationToken(user, null, List.of()));
     }
 
-    private KnowledgeBase kb(long id, int status) {
-        KnowledgeBase k = new KnowledgeBase();
+    private WbKnowledgeBase kb(long id, int status) {
+        WbKnowledgeBase k = new WbKnowledgeBase();
         k.setId(id);
         k.setName("库" + id);
         k.setStatus(status);
@@ -162,8 +162,8 @@ class KnowledgeBaseServiceImplTest {
     }
 
     /** 有效绑定行（KB 2 绑定 CHUNK） */
-    private KbStrategyBinding binding(Long versionId) {
-        KbStrategyBinding binding = new KbStrategyBinding();
+    private WbStrategyBinding binding(Long versionId) {
+        WbStrategyBinding binding = new WbStrategyBinding();
         binding.setId(1L);
         binding.setKnowledgeBaseId(2L);
         binding.setStrategyType("CHUNK");
@@ -172,8 +172,8 @@ class KnowledgeBaseServiceImplTest {
     }
 
     /** 启用中的 CHUNK 策略版本行 */
-    private KbPipelineStrategyVersion chunkVersion() {
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+    private WbPipelineStrategyVersion chunkVersion() {
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(66L);
         row.setType("CHUNK");
         row.setName("chunk-hybrid");
@@ -188,15 +188,15 @@ class KnowledgeBaseServiceImplTest {
         dto.setName("招投标知识库");
         dto.setDescription("招投标场景");
         doAnswer(inv -> {
-            KnowledgeBase k = inv.getArgument(0);
+            WbKnowledgeBase k = inv.getArgument(0);
             k.setId(1L);
             return true;
-        }).when(knowledgeBaseDbService).save(any(KnowledgeBase.class));
+        }).when(knowledgeBaseDbService).save(any(WbKnowledgeBase.class));
 
         Long id = service.create(dto);
 
         assertEquals(1L, id);
-        ArgumentCaptor<KnowledgeBase> kbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
+        ArgumentCaptor<WbKnowledgeBase> kbCaptor = ArgumentCaptor.forClass(WbKnowledgeBase.class);
         verify(knowledgeBaseDbService).save(kbCaptor.capture());
         assertEquals(KnowledgeBaseStatus.ACTIVE.getCode(), kbCaptor.getValue().getStatus());
         assertEquals("招投标知识库", kbCaptor.getValue().getName());
@@ -214,7 +214,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void detailShouldMapToVO() {
-        KnowledgeBase k = kb(2L, 1);
+        WbKnowledgeBase k = kb(2L, 1);
         k.setDescription("描述");
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(k);
 
@@ -228,7 +228,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void updateShouldChangeNameAndAudit() {
-        KnowledgeBase k = kb(3L, 1);
+        WbKnowledgeBase k = kb(3L, 1);
         when(knowledgeBaseDbService.getActiveById(3L)).thenReturn(k);
         KnowledgeBaseUpdateDto dto = new KnowledgeBaseUpdateDto();
         dto.setId(3L);
@@ -237,7 +237,7 @@ class KnowledgeBaseServiceImplTest {
 
         service.update(dto);
 
-        ArgumentCaptor<KnowledgeBase> cap = ArgumentCaptor.forClass(KnowledgeBase.class);
+        ArgumentCaptor<WbKnowledgeBase> cap = ArgumentCaptor.forClass(WbKnowledgeBase.class);
         verify(knowledgeBaseDbService).updateById(cap.capture());
         assertEquals("新名称", cap.getValue().getName());
         verify(kbAuditLogDbService).saveAudit(
@@ -250,7 +250,7 @@ class KnowledgeBaseServiceImplTest {
 
         service.disable(4L);
 
-        ArgumentCaptor<KnowledgeBase> cap = ArgumentCaptor.forClass(KnowledgeBase.class);
+        ArgumentCaptor<WbKnowledgeBase> cap = ArgumentCaptor.forClass(WbKnowledgeBase.class);
         verify(knowledgeBaseDbService).updateById(cap.capture());
         assertEquals(0, cap.getValue().getStatus());
         verify(kbAuditLogDbService).saveAudit(
@@ -273,7 +273,7 @@ class KnowledgeBaseServiceImplTest {
 
         service.enable(5L);
 
-        ArgumentCaptor<KnowledgeBase> cap = ArgumentCaptor.forClass(KnowledgeBase.class);
+        ArgumentCaptor<WbKnowledgeBase> cap = ArgumentCaptor.forClass(WbKnowledgeBase.class);
         verify(knowledgeBaseDbService).updateById(cap.capture());
         assertEquals(1, cap.getValue().getStatus());
         verify(kbAuditLogDbService).saveAudit(
@@ -297,14 +297,14 @@ class KnowledgeBaseServiceImplTest {
         // 若 lambda 引用写错（例如误用 name），解析出来会是别的列名而不报错，属于静默 bug。
         // 注意：脱离 Spring 上下文时 MPJ 没有 TableInfo 缓存，需先初始化
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""),
-                KnowledgeBase.class);
-        LambdaQueryWrapper<KnowledgeBase> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(false, KnowledgeBase::getName, null)
-                .eq(false, KnowledgeBase::getStatus, null)
+                WbKnowledgeBase.class);
+        LambdaQueryWrapper<WbKnowledgeBase> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(false, WbKnowledgeBase::getName, null)
+                .eq(false, WbKnowledgeBase::getStatus, null)
                 // 归属条件必须落在 user_id 上：Lambda 引用写错（例如误用 create_by）不报错，
                 // 只是静默变成"按别的列过滤"，那等于归属隔离失效
-                .eq(true, KnowledgeBase::getUserId, ME)
-                .orderByDesc(KnowledgeBase::getId);
+                .eq(true, WbKnowledgeBase::getUserId, ME)
+                .orderByDesc(WbKnowledgeBase::getId);
         String sql = wrapper.getSqlSegment();
 
         assertTrue(sql.contains("user_id ="), "归属过滤应落在 user_id 列，实际: " + sql);
@@ -313,21 +313,21 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void pageShouldFillPublishedIndexVersionWithBatchQueries() {
-        KnowledgeBase withIndex = kb(7L, 1);
+        WbKnowledgeBase withIndex = kb(7L, 1);
         withIndex.setPublishedIndexSetId(700L);
-        KnowledgeBase withoutIndex = kb(8L, 1);
-        Page<KnowledgeBase> page = new Page<>(1, 10);
+        WbKnowledgeBase withoutIndex = kb(8L, 1);
+        Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(2);
         page.setRecords(List.of(withIndex, withoutIndex));
         when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, null, ME)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of());
 
-        KbIndexSet set = new KbIndexSet();
+        WbIndexSet set = new WbIndexSet();
         set.setKnowledgeBaseId(7L);
         set.setCurrentPublishedVersionId(900L);
         when(indexSetDbService.listByKbIds(any())).thenReturn(Map.of(7L, set));
-        KbIndexVersion version = new KbIndexVersion();
+        WbIndexVersion version = new WbIndexVersion();
         version.setId(900L);
         version.setVersionNo("v3");
         when(indexVersionDbService.listByIds(any())).thenReturn(List.of(version));
@@ -344,7 +344,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void pageShouldSkipIndexLookupWhenNobodyPublished() {
-        Page<KnowledgeBase> page = new Page<>(1, 10);
+        Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
         when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, null, ME)).thenReturn(page);
@@ -361,7 +361,7 @@ class KnowledgeBaseServiceImplTest {
     @Test
     void pageShouldReturnMappedRecords() {
 
-        Page<KnowledgeBase> page = new Page<>(1, 10);
+        Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
         when(knowledgeBaseDbService.pageByCondition(1L, 10L, "库7", null, null, ME)).thenReturn(page);
@@ -373,13 +373,13 @@ class KnowledgeBaseServiceImplTest {
         assertEquals(1, result.getTotal());
         assertEquals(1, result.getRecords().size());
         assertEquals("库7", result.getRecords().getFirst().getName());
-        // 文档数按 kb_file_result 记录数回填；无记录的库补 0 而非 null
+        // 文档数按 wb_file_result 记录数回填；无记录的库补 0 而非 null
         assertEquals(3L, result.getRecords().getFirst().getDocumentCount());
     }
 
     @Test
     void pageShouldPassStatusFilterAndDefaultDocumentCountToZero() {
-        Page<KnowledgeBase> page = new Page<>(1, 10);
+        Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(8L, 0)));
         when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, 0, null, ME)).thenReturn(page);
@@ -433,7 +433,7 @@ class KnowledgeBaseServiceImplTest {
     void bindStrategyShouldReuseExistingRow() {
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
         when(strategyVersionDbService.getById(66L)).thenReturn(chunkVersion());
-        KbStrategyBinding existing = binding(55L);
+        WbStrategyBinding existing = binding(55L);
         existing.setDelFlag(DelFlag.DELETED.getCode());
         when(strategyBindingDbService.getAnyByKbAndType(2L, "CHUNK")).thenReturn(existing);
 
@@ -461,7 +461,7 @@ class KnowledgeBaseServiceImplTest {
 
         assertTrue(service.bindStrategy(2L, dto));
 
-        ArgumentCaptor<KbStrategyBinding> captor = ArgumentCaptor.forClass(KbStrategyBinding.class);
+        ArgumentCaptor<WbStrategyBinding> captor = ArgumentCaptor.forClass(WbStrategyBinding.class);
         verify(strategyBindingDbService).updateById(captor.capture());
         assertEquals(DelFlag.DELETED.getCode(), captor.getValue().getDelFlag());
         verify(kbAuditLogDbService).saveAudit(
@@ -471,7 +471,7 @@ class KnowledgeBaseServiceImplTest {
     @Test
     void bindStrategyWithInactiveVersionShouldReject() {
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
-        KbPipelineStrategyVersion inactive = chunkVersion();
+        WbPipelineStrategyVersion inactive = chunkVersion();
         inactive.setStatus("INACTIVE");
         when(strategyVersionDbService.getById(66L)).thenReturn(inactive);
 
@@ -508,7 +508,7 @@ class KnowledgeBaseServiceImplTest {
 
     /** 让三件套的版本查询都返回启用中的行（类型与入参一致） */
     private void stubActiveVersions(String type, Long versionId) {
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(versionId);
         row.setType(type);
         row.setName(type.toLowerCase() + "-x");
@@ -530,7 +530,7 @@ class KnowledgeBaseServiceImplTest {
 
         assertTrue(service.bindStrategies(2L, request));
 
-        verify(strategyBindingDbService, times(3)).save(any(KbStrategyBinding.class));
+        verify(strategyBindingDbService, times(3)).save(any(WbStrategyBinding.class));
     }
 
     @Test
@@ -563,7 +563,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void bindStrategiesWhenBindingDisabledShouldReject() {
-        KnowledgeBase disabled = kb(2L, 1);
+        WbKnowledgeBase disabled = kb(2L, 1);
         disabled.setStrategyBindingEnabled(0);
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(disabled);
 
@@ -592,7 +592,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void bindStrategyWhenBindingDisabledShouldReject() {
-        KnowledgeBase closed = kb(2L, 1);
+        WbKnowledgeBase closed = kb(2L, 1);
         closed.setStrategyBindingEnabled(0);
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(closed);
 
@@ -607,7 +607,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void detailShouldFillChunkBindingSummary() {
-        KnowledgeBase k = kb(2L, 1);
+        WbKnowledgeBase k = kb(2L, 1);
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(k);
         when(strategyBindingDbService.getByKbAndType(2L, "CHUNK")).thenReturn(binding(66L));
         when(strategyVersionDbService.getById(66L)).thenReturn(chunkVersion());
@@ -634,15 +634,15 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void detailShouldFillPreprocessBindingSummary() {
-        KnowledgeBase k = kb(2L, 1);
+        WbKnowledgeBase k = kb(2L, 1);
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(k);
-        KbStrategyBinding preprocessBinding = new KbStrategyBinding();
+        WbStrategyBinding preprocessBinding = new WbStrategyBinding();
         preprocessBinding.setId(2L);
         preprocessBinding.setKnowledgeBaseId(2L);
         preprocessBinding.setStrategyType("PREPROCESS");
         preprocessBinding.setStrategyVersionId(77L);
         when(strategyBindingDbService.getByKbAndType(2L, "PREPROCESS")).thenReturn(preprocessBinding);
-        KbPipelineStrategyVersion preprocessVersion = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion preprocessVersion = new WbPipelineStrategyVersion();
         preprocessVersion.setId(77L);
         preprocessVersion.setType("PREPROCESS");
         preprocessVersion.setName("preproc-strict");
@@ -667,13 +667,13 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeBaseCreateDto dto = new KnowledgeBaseCreateDto();
         dto.setName("我的库");
         doAnswer(inv -> {
-            inv.getArgument(0, KnowledgeBase.class).setId(1L);
+            inv.getArgument(0, WbKnowledgeBase.class).setId(1L);
             return true;
-        }).when(knowledgeBaseDbService).save(any(KnowledgeBase.class));
+        }).when(knowledgeBaseDbService).save(any(WbKnowledgeBase.class));
 
         service.create(dto);
 
-        ArgumentCaptor<KnowledgeBase> cap = ArgumentCaptor.forClass(KnowledgeBase.class);
+        ArgumentCaptor<WbKnowledgeBase> cap = ArgumentCaptor.forClass(WbKnowledgeBase.class);
         verify(knowledgeBaseDbService).save(cap.capture());
         assertEquals(Long.valueOf(ME), cap.getValue().getUserId(),
                 "知识库必须带归属：user_id 为空的行普通用户谁也看不见");
@@ -696,7 +696,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void detailOnOthersKbShouldBehaveAsNotFound() {
-        KnowledgeBase others = kb(9L, 1);
+        WbKnowledgeBase others = kb(9L, 1);
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(9L)).thenReturn(others);
 
@@ -708,7 +708,7 @@ class KnowledgeBaseServiceImplTest {
     @Test
     void detailOnLegacyKbWithoutOwnerShouldBeInvisibleToNormalUser() {
         // 存量 user_id = NULL 的早期数据：普通用户不可见（不是公共资产）
-        KnowledgeBase legacy = kb(9L, 1);
+        WbKnowledgeBase legacy = kb(9L, 1);
         legacy.setUserId(null);
         when(knowledgeBaseDbService.getActiveById(9L)).thenReturn(legacy);
 
@@ -719,7 +719,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void updateOnOthersKbShouldThrowAndNotUpdate() {
-        KnowledgeBase others = kb(3L, 1);
+        WbKnowledgeBase others = kb(3L, 1);
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(3L)).thenReturn(others);
         KnowledgeBaseUpdateDto dto = new KnowledgeBaseUpdateDto();
@@ -734,7 +734,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void disableOnOthersKbShouldThrowAndNotUpdate() {
-        KnowledgeBase others = kb(4L, 1);
+        WbKnowledgeBase others = kb(4L, 1);
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(4L)).thenReturn(others);
 
@@ -746,7 +746,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void deleteOnOthersKbShouldThrowAndNotRemove() {
-        KnowledgeBase others = kb(6L, 1);
+        WbKnowledgeBase others = kb(6L, 1);
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(6L)).thenReturn(others);
 
@@ -758,7 +758,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void bindStrategiesOnOthersKbShouldThrowAndNotSave() {
-        KnowledgeBase others = kb(2L, 1);
+        WbKnowledgeBase others = kb(2L, 1);
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(others);
         StrategyBindingsUpdateRequest request = bindRequest(
@@ -774,10 +774,10 @@ class KnowledgeBaseServiceImplTest {
     @Test
     void adminShouldAccessOthersKbAndSkipOwnerFilter() {
         login(ME, UserRole.ADMIN);
-        KnowledgeBase others = kb(9L, 1);
+        WbKnowledgeBase others = kb(9L, 1);
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(9L)).thenReturn(others);
-        Page<KnowledgeBase> page = new Page<>(1, 10);
+        Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
         // 管理员：归属条件为 null（不加 user_id 过滤）
@@ -794,7 +794,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void pageAndStatsShouldScopeToCurrentUser() {
-        Page<KnowledgeBase> page = new Page<>(1, 10);
+        Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(0);
         page.setRecords(List.of());
         when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, null, ME)).thenReturn(page);

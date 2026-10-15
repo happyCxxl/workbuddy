@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 策略类型（kb_pipeline_strategy_version.type）。
+ * 策略类型（wb_knowledge_pipeline_strategy_version.type）。
  *
  * <p>四类策略的**码值**集中在这里。
  *

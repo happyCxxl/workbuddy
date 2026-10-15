@@ -1,15 +1,15 @@
 package com.workbuddy.biz.task.runner;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
 import com.workbuddy.biz.task.support.TaskRunnerSupport;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbSourceFile;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseOutcome;
 import com.workbuddy.common.domain.parse.ParseResult;
@@ -33,7 +33,7 @@ import java.util.Objects;
 /**
  * 解析任务执行器（消费循环调用）：领任务 → 读文档输入环节建档数据 → 开流调 worker 解析管线 →
  * 写产物存储 + 落库（product/step_log）→ 回写任务终态。
- * 状态回写只更新 kb_pipeline_task 自身与产物引用，不回写领域规则。
+ * 状态回写只更新 wb_knowledge_pipeline_task 自身与产物引用，不回写领域规则。
  *
  * @author cxxl
  */
@@ -42,9 +42,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ParseTaskRunner {
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbFileResultDbService fileResultDbService;
-    private final KbSourceFileDbService sourceFileDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbFileResultDbService fileResultDbService;
+    private final WbSourceFileDbService sourceFileDbService;
     private final ProductPersistence productPersistence;
     private final FileStorage fileStorage;
     private final ParsePipeline parsePipeline;
@@ -55,18 +55,18 @@ public class ParseTaskRunner {
      * 执行单个解析任务（由消费循环提交，外层看门狗负责超时）。
      */
     public void run(Long taskId) {
-        KbPipelineTask task = TaskRunnerSupport.claim(pipelineTaskDbService, taskId);
+        WbPipelineTask task = TaskRunnerSupport.claim(pipelineTaskDbService, taskId);
         if (NullUtil.isNull(task)) {
             return;
         }
         try {
-            KbFileResult fileResult = fileResultDbService.getById(task.getFileResultId());
+            WbFileResult fileResult = fileResultDbService.getById(task.getFileResultId());
             if (NullUtil.isNull(fileResult)) {
                 finishFailed(taskId, PipelineTaskErrorCode.PARSE_FAILED.name(),
                         "文件结果不存在: " + task.getFileResultId());
                 return;
             }
-            KbSourceFile sourceFile = sourceFileDbService.getById(fileResult.getSourceFileId());
+            WbSourceFile sourceFile = sourceFileDbService.getById(fileResult.getSourceFileId());
             if (NullUtil.isNull(sourceFile)) {
                 finishFailed(taskId, PipelineTaskErrorCode.PARSE_FAILED.name(),
                         "来源文件不存在: " + fileResult.getSourceFileId());
@@ -104,9 +104,9 @@ public class ParseTaskRunner {
     }
 
     /** 写产物存储 + 阶段产物引用 + 子步骤记录（成功/PARTIAL_SUCCESS 路径） */
-    private void persistProduct(KbPipelineTask task, KbFileResult fileResult, ParseOutcome outcome) {
+    private void persistProduct(WbPipelineTask task, WbFileResult fileResult, ParseOutcome outcome) {
         ParseResult parseResult = Objects.requireNonNull(outcome.getParseResult(), "解析结果为空");
-        KbPipelineProduct product = productPersistence.persist(task, PipelineStage.PARSE, null,
+        WbPipelineProduct product = productPersistence.persist(task, PipelineStage.PARSE, null,
                 JsonUtil.toJsonStr(parseResult.getCapabilitySnapshot()), parseResult);
         stepLogPersistence.save(task.getId(), outcome.getStepLogs());
         TaskRunnerSupport.logPersisted(log, "ParseTaskRunner 解析完成", task, fileResult.getId(), outcome,
@@ -120,7 +120,7 @@ public class ParseTaskRunner {
         TaskRunnerSupport.finishFailed(pipelineTaskDbService, taskId, errorCode, errorMsg);
     }
 
-    private FileReference toFileRef(KbSourceFile sourceFile) {
+    private FileReference toFileRef(WbSourceFile sourceFile) {
         FileReference fileRef = new FileReference();
         fileRef.setFileId(sourceFile.getFileId());
         fileRef.setFileName(sourceFile.getFileName());

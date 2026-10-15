@@ -3,8 +3,8 @@ package com.workbuddy.biz.service.catalog;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
-import com.workbuddy.biz.mapper.KbModelMapper;
-import com.workbuddy.common.domain.entity.KbModel;
+import com.workbuddy.biz.mapper.WbModelMapper;
+import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.catalog.ModelCapability;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.error.ErrorCode;
@@ -39,18 +39,18 @@ import static org.mockito.Mockito.when;
  */
 class DbModelCatalogTest {
 
-    private KbModelMapper mapper;
+    private WbModelMapper mapper;
 
     private DbModelCatalog catalog;
 
     @BeforeAll
     static void initLambdaCache() {
-        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), KbModel.class);
+        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), WbModel.class);
     }
 
     @BeforeEach
     void setUp() {
-        mapper = mock(KbModelMapper.class);
+        mapper = mock(WbModelMapper.class);
         catalog = new DbModelCatalog();
         ReflectionTestUtils.setField(catalog, "baseMapper", mapper);
     }
@@ -80,7 +80,7 @@ class DbModelCatalogTest {
 
     @Test
     void multiCapabilityModelShouldAppearInEachCapabilityCandidates() {
-        KbModel multimodal = row(1L, "dashscope", "qwen-vl-max", "OCR,LAYOUT,TABLE_STRUCTURE");
+        WbModel multimodal = row(1L, "dashscope", "qwen-vl-max", "OCR,LAYOUT,TABLE_STRUCTURE");
         when(mapper.selectList(any())).thenReturn(List.of(multimodal));
 
         assertEquals(1, catalog.listByCapability(ModelCapability.OCR).size());
@@ -92,7 +92,7 @@ class DbModelCatalogTest {
 
     @Test
     void descriptorShouldCarryCapabilitiesPricesAndEmbedSpecs() {
-        KbModel embed = row(1L, "dashscope", "text-embedding-v4", "EMBEDDING");
+        WbModel embed = row(1L, "dashscope", "text-embedding-v4", "EMBEDDING");
         embed.setPricePerThousandCalls(new BigDecimal("0.000700"));
         embed.setCurrency("CNY");
         embed.setRpmLimit(600);
@@ -141,7 +141,7 @@ class DbModelCatalogTest {
 
         assertNotNull(descriptor);
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<Wrapper<KbModel>> captor = ArgumentCaptor.forClass(Wrapper.class);
+        ArgumentCaptor<Wrapper<WbModel>> captor = ArgumentCaptor.forClass(Wrapper.class);
         verify(mapper).selectOne(captor.capture());
         String sql = captor.getValue().getSqlSegment();
         assertTrue(sql.contains("vendor_code"), sql);
@@ -209,16 +209,16 @@ class DbModelCatalogTest {
     /** 取最近一次查询用的条件 */
     private String capturedListSql() {
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<Wrapper<KbModel>> captor = ArgumentCaptor.forClass(Wrapper.class);
+        ArgumentCaptor<Wrapper<WbModel>> captor = ArgumentCaptor.forClass(Wrapper.class);
         verify(mapper).selectList(captor.capture());
-        Wrapper<KbModel> wrapper = captor.getValue();
+        Wrapper<WbModel> wrapper = captor.getValue();
         assertNotNull(wrapper);
         return wrapper.getSqlSegment();
     }
 
     /** 目录行：状态启用、生效区间开放 */
-    private KbModel row(Long id, String vendorCode, String modelKey, String capabilities) {
-        KbModel row = new KbModel();
+    private WbModel row(Long id, String vendorCode, String modelKey, String capabilities) {
+        WbModel row = new WbModel();
         row.setId(id);
         row.setVendorCode(vendorCode);
         row.setModelKey(modelKey);

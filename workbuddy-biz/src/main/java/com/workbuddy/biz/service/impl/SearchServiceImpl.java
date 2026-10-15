@@ -2,20 +2,20 @@ package com.workbuddy.biz.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.SearchService;
-import com.workbuddy.biz.service.db.KbIndexSetDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbRetrievalRunDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbIndexSetDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbRetrievalRunDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.RetrievalRuleResolver;
 import com.workbuddy.biz.service.support.RetrievalRunSettings;
 import com.workbuddy.common.domain.embed.EmbeddingRequest;
 import com.workbuddy.common.domain.embed.EmbeddingResult;
-import com.workbuddy.common.domain.entity.KbIndexSet;
-import com.workbuddy.common.domain.entity.KbIndexVersion;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbRetrievalRun;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbIndexSet;
+import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbRetrievalRun;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.dto.request.retrieval.SearchRequest;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRunVO;
 import com.workbuddy.common.dto.response.retrieval.SearchHitVO;
@@ -63,13 +63,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SearchServiceImpl implements SearchService {
 
-    private final KbIndexSetDbService indexSetDbService;
+    private final WbIndexSetDbService indexSetDbService;
 
-    private final KbIndexVersionDbService indexVersionDbService;
+    private final WbIndexVersionDbService indexVersionDbService;
 
-    private final KnowledgeBaseDbService knowledgeBaseDbService;
+    private final WbKnowledgeBaseDbService knowledgeBaseDbService;
 
-    private final KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private final WbPipelineStrategyVersionDbService strategyVersionDbService;
 
     private final MilvusIndexPort milvusIndexPort;
 
@@ -79,7 +79,7 @@ public class SearchServiceImpl implements SearchService {
 
     private final RetrievalRuleResolver retrievalRuleResolver;
 
-    private final KbRetrievalRunDbService retrievalRunDbService;
+    private final WbRetrievalRunDbService retrievalRunDbService;
 
     private final RetrievalRunSettings runSettings;
 
@@ -91,8 +91,8 @@ public class SearchServiceImpl implements SearchService {
                 ErrorCode.PARAM_INVALID, "测试台检索需同时指定 versionId 与 ruleId");
 
         // ① 版本 + 规则（生产=在线+回退链；测试台=显式）
-        KbIndexVersion version = resolveVersion(knowledgeBaseId, request, bench);
-        KbPipelineStrategyVersion ruleRow = resolveRuleRow(knowledgeBaseId, version, request.getRuleId());
+        WbIndexVersion version = resolveVersion(knowledgeBaseId, request, bench);
+        WbPipelineStrategyVersion ruleRow = resolveRuleRow(knowledgeBaseId, version, request.getRuleId());
         // 引擎防御：预留项拒执行（注册侧已拦，双保险防数据篡改/历史数据）
         RetrievalRuleSpec spec = retrievalRuleResolver.validate(ruleRow.getConfigSnapshot());
         String collectionName = MilvusIndexPort.collectionName(knowledgeBaseId, version.getVersionNo());
@@ -158,9 +158,9 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public List<SearchVO> compareRuns(Long knowledgeBaseId, List<Long> runIds) {
         ThrowUtil.throwIf(NullUtil.isNull(runIds) || runIds.isEmpty(), ErrorCode.PARAM_INVALID, "runIds 不能为空");
-        List<KbRetrievalRun> runs = retrievalRunDbService.listByIdsOrdered(runIds);
+        List<WbRetrievalRun> runs = retrievalRunDbService.listByIdsOrdered(runIds);
         List<SearchVO> vos = new ArrayList<>(runs.size());
-        for (KbRetrievalRun run : runs) {
+        for (WbRetrievalRun run : runs) {
             ThrowUtil.throwIf(!knowledgeBaseId.equals(run.getKbId()),
                     ErrorCode.PARAM_INVALID, "运行记录不属于该知识库: " + run.getId());
             SearchVO vo = new SearchVO();
@@ -176,9 +176,9 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /** 运行记录落库（快照 = 命中列表全字段 JSON；baseline 规则行无 id → rule_id 记 NULL） */
-    private void recordRun(Long knowledgeBaseId, KbIndexVersion version, KbPipelineStrategyVersion ruleRow,
+    private void recordRun(Long knowledgeBaseId, WbIndexVersion version, WbPipelineStrategyVersion ruleRow,
                            SearchRequest request, SearchVO vo) {
-        KbRetrievalRun run = new KbRetrievalRun();
+        WbRetrievalRun run = new WbRetrievalRun();
         run.setKbId(knowledgeBaseId);
         run.setVersionId(version.getId());
         run.setVersionNo(version.getVersionNo());
@@ -191,7 +191,7 @@ public class SearchServiceImpl implements SearchService {
         vo.setRunId(run.getId());
     }
 
-    private RetrievalRunVO toRunVO(KbRetrievalRun run) {
+    private RetrievalRunVO toRunVO(WbRetrievalRun run) {
         RetrievalRunVO vo = new RetrievalRunVO();
         vo.setId(run.getId());
         vo.setVersionId(run.getVersionId());
@@ -205,37 +205,37 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /** 版本解析：测试台=显式版本行（含候选冻结集，READY/ONLINE 可检索）；生产=在线版本（未发布 40446） */
-    private KbIndexVersion resolveVersion(Long knowledgeBaseId, SearchRequest request, boolean bench) {
+    private WbIndexVersion resolveVersion(Long knowledgeBaseId, SearchRequest request, boolean bench) {
         if (bench) {
-            KbIndexVersion version = indexVersionDbService.getById(request.getVersionId());
+            WbIndexVersion version = indexVersionDbService.getById(request.getVersionId());
             ThrowUtil.throwIf(NullUtil.isNull(version), ErrorCode.INDEX_VERSION_NOT_FOUND);
             ThrowUtil.throwIf(!Set.of(IndexVersionStatus.READY.name(), IndexVersionStatus.ONLINE.name())
                             .contains(version.getStatus()),
                     ErrorCode.INDEX_BUILDING_CONFLICT, "仅就绪/在线版本可检索");
             return version;
         }
-        KbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
+        WbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
         ThrowUtil.throwIf(NullUtil.isNull(set) || NullUtil.isNull(set.getCurrentPublishedVersionId()),
                 ErrorCode.INDEX_NOT_PUBLISHED);
-        KbIndexVersion version = indexVersionDbService.getById(set.getCurrentPublishedVersionId());
+        WbIndexVersion version = indexVersionDbService.getById(set.getCurrentPublishedVersionId());
         ThrowUtil.throwIf(NullUtil.isNull(version), ErrorCode.INDEX_NOT_PUBLISHED);
         return version;
     }
 
     /** 规则解析：显式 ruleId → 版本行默认 → kb 默认 → 引擎基线（不落库常量） */
-    private KbPipelineStrategyVersion resolveRuleRow(Long knowledgeBaseId, KbIndexVersion version, Long explicitRuleId) {
+    private WbPipelineStrategyVersion resolveRuleRow(Long knowledgeBaseId, WbIndexVersion version, Long explicitRuleId) {
         Long ruleId = NullUtil.isNotNull(explicitRuleId) ? explicitRuleId : version.getDefaultRuleId();
         if (NullUtil.isNull(ruleId)) {
-            KnowledgeBase kb = knowledgeBaseDbService.getById(knowledgeBaseId);
+            WbKnowledgeBase kb = knowledgeBaseDbService.getById(knowledgeBaseId);
             ruleId = NullUtil.isNull(kb) ? null : kb.getDefaultRuleId();
         }
         if (NullUtil.isNotNull(ruleId)) {
-            KbPipelineStrategyVersion row = strategyVersionDbService.getById(ruleId);
+            WbPipelineStrategyVersion row = strategyVersionDbService.getById(ruleId);
             ThrowUtil.throwIf(NullUtil.isNull(row) || !"RETRIEVAL".equals(row.getType()),
                     ErrorCode.RETRIEVAL_RULE_NOT_FOUND);
             return row;
         }
-        KbPipelineStrategyVersion baseline = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion baseline = new WbPipelineStrategyVersion();
         baseline.setType("RETRIEVAL");
         baseline.setName("baseline");
         baseline.setVersion("v0");
@@ -248,13 +248,13 @@ public class SearchServiceImpl implements SearchService {
      *
      * <p>策略版本行配置快照缺失或损坏（解析抛异常）→ 同样返回 null：向量通道降级为空，不构造默认策略。
      */
-    private List<Float> embedQuery(KbIndexVersion version, String query) {
+    private List<Float> embedQuery(WbIndexVersion version, String query) {
         ComboSnapshot combo = JsonUtil.toObject(version.getComboSnapshot(), ComboSnapshot.class);
         if (NullUtil.isNull(combo) || !combo.hasCompleteStageStrategies()) {
             log.warn("===> SearchServiceImpl 查询向量化中止：组合快照缺失环节策略维度, versionId={}", version.getId());
             return null;
         }
-        KbPipelineStrategyVersion row = strategyVersionDbService.getByTypeAndNameAndVersion(
+        WbPipelineStrategyVersion row = strategyVersionDbService.getByTypeAndNameAndVersion(
                 "EMBED", strategyNameOf(combo.getEmbedStrategy()), strategyVersionOf(combo.getEmbedStrategy()));
         if (NullUtil.isNull(row)) {
             log.warn("===> SearchServiceImpl 查询向量化中止：EMBED 策略版本行不存在, strategy={}",

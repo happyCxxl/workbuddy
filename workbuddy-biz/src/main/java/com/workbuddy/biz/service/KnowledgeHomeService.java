@@ -10,7 +10,7 @@ import com.workbuddy.common.dto.response.home.HomeSummaryVO;
  *
  * <p>首页只承担两件事：**有多少资产** 与 **我最近提交了什么**。
  * 提交记录只含**当前登录用户**的（可见范围在服务端定）；
- * 审计动作（`kb_audit_log`）不在首页展示，数据照旧由审计链路写入。
+ * 审计动作（`wb_audit_log`）不在首页展示，数据照旧由审计链路写入。
  *
  * @author cxxl
  */

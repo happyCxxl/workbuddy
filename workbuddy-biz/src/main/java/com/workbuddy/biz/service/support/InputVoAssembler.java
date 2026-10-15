@@ -1,8 +1,8 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbSourceFile;
-import com.workbuddy.common.domain.entity.KbSubmitLog;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbSourceFile;
+import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitResponse;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * 文档输入 VO 组装器。
  *
  * <p>职责：提交日志/文件结果实体 → 输入环节对外 VO/响应的纯映射（不查库、不做业务判断）；
- * 需合成来源文件信息时 {@link KbSourceFile} 由外部传入，本类只做字段搬运。
+ * 需合成来源文件信息时 {@link WbSourceFile} 由外部传入，本类只做字段搬运。
  *
  * @author cxxl
  */
@@ -26,7 +26,7 @@ public class InputVoAssembler {
      * @param log 提交日志实体
      * @return 提交记录 VO
      */
-    public SubmitLogVO toSubmitLogVO(KbSubmitLog log) {
+    public SubmitLogVO toSubmitLogVO(WbSubmitLog log) {
         SubmitLogVO vo = new SubmitLogVO();
         vo.setId(log.getId());
         vo.setKnowledgeBaseId(log.getKnowledgeBaseId());
@@ -45,10 +45,10 @@ public class InputVoAssembler {
      * 提交日志实体 + 解析任务 ID → 提交响应（无任务传 null；纯映射不查库）。
      *
      * @param log         提交日志实体
-     * @param parseTaskId 解析任务 ID（kb_pipeline_task.id；无任务传 null）
+     * @param parseTaskId 解析任务 ID（wb_knowledge_pipeline_task.id；无任务传 null）
      * @return 提交响应
      */
-    public FileSubmitResponse toSubmitResponse(KbSubmitLog log, Long parseTaskId) {
+    public FileSubmitResponse toSubmitResponse(WbSubmitLog log, Long parseTaskId) {
         return new FileSubmitResponse(toSubmitLogVO(log), parseTaskId);
     }
 
@@ -59,7 +59,7 @@ public class InputVoAssembler {
      * @param sourceFile 来源文件实体（可为 null）
      * @return 文件结果 VO
      */
-    public FileResultVO toFileResultVO(KbFileResult result, KbSourceFile sourceFile) {
+    public FileResultVO toFileResultVO(WbFileResult result, WbSourceFile sourceFile) {
         FileResultVO vo = new FileResultVO();
         vo.setId(result.getId());
         vo.setKnowledgeBaseId(result.getKnowledgeBaseId());

@@ -1,10 +1,10 @@
 package com.workbuddy.common.domain.storage;
 
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileObject;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.User;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileObject;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
@@ -25,8 +25,8 @@ class ObjectRefTest {
     /** 数据源实例 ID */
     private static final Long SOURCE_ID = 7L;
 
-    private KbFileObject fileRow() {
-        KbFileObject row = new KbFileObject();
+    private WbFileObject fileRow() {
+        WbFileObject row = new WbFileObject();
         row.setStorageType(StorageType.MINIO.getCode());
         row.setStorageSourceId(SOURCE_ID);
         row.setBucket("files");
@@ -47,7 +47,7 @@ class ObjectRefTest {
 
     @Test
     void productRowShouldUseArtifactIdAsObjectKey() {
-        KbPipelineProduct row = new KbPipelineProduct();
+        WbPipelineProduct row = new WbPipelineProduct();
         row.setStorageType(StorageType.LOCAL.getCode());
         row.setStorageSourceId(SOURCE_ID);
         row.setBucket("artifacts");
@@ -61,12 +61,12 @@ class ObjectRefTest {
 
     @Test
     void chunkSetAndEmbeddingSetShouldUseArtifactId() {
-        KbChunkSet chunkSet = new KbChunkSet();
+        WbChunkSet chunkSet = new WbChunkSet();
         chunkSet.setStorageType(StorageType.MINIO.getCode());
         chunkSet.setStorageSourceId(SOURCE_ID);
         chunkSet.setBucket("artifacts");
         chunkSet.setArtifactId("chunk-artifact");
-        KbEmbeddingSet embeddingSet = new KbEmbeddingSet();
+        WbEmbeddingSet embeddingSet = new WbEmbeddingSet();
         embeddingSet.setStorageType(StorageType.MINIO.getCode());
         embeddingSet.setStorageSourceId(SOURCE_ID);
         embeddingSet.setBucket("artifacts");
@@ -78,7 +78,7 @@ class ObjectRefTest {
 
     @Test
     void avatarShouldCarrySourceIdAndBeNullWithoutKey() {
-        User user = new User();
+        WbUser user = new WbUser();
         user.setAvatar("avatar/1/ab.png");
         user.setAvatarStorageType(StorageType.LOCAL.getCode());
         user.setAvatarStorageSourceId(SOURCE_ID);
@@ -88,13 +88,13 @@ class ObjectRefTest {
 
         assertEquals(SOURCE_ID, ref.sourceId());
         assertEquals("avatar/1/ab.png", ref.objectKey());
-        assertNull(ObjectRef.ofAvatar(new User()));
+        assertNull(ObjectRef.ofAvatar(new WbUser()));
         assertNull(ObjectRef.ofAvatar(null));
     }
 
     @Test
     void missingSourceIdShouldReject40455() {
-        KbFileObject row = fileRow();
+        WbFileObject row = fileRow();
         row.setStorageSourceId(null);
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> ObjectRef.ofFile(row));

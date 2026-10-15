@@ -4,15 +4,15 @@
 
 ## 环节定位
 
-| 项   | 值                                                                                                                           |
-|------|------------------------------------------------------------------------------------------------------------------------------|
-| 上游 | 解析环节（`ParseResult.sources` 产物）；任务编排（biz 侧 `StructureTaskRunner` 领取组装任务）                                |
-| 输入 | `AssembleContext`（`taskId` / `fileResultId` / 源文件类型 / 组装阈值）+ 上游 `ParseResult`                                   |
-| 输出 | `UnifiedDocument`（`documentInfo` / `pages` / `elements` / `relations` / `quality`）+ 五个步骤日志 + 建议状态                |
-| 触发 | `KnowledgeFileStructureController` 的触发接口 → `TaskTriggerSupport` 建任务入队 → `StructureTaskRunner` 领取并调用管线       |
-| 下游 | 预处理环节（消费 `UnifiedDocument.elements` 与 `pages[].marks`）；切片、向量化、检索沿执行链继续                             |
-| 落库 | 不在本环节内：`AssemblerPipeline` 是纯算法，不碰 DB 与对象存储；产物落库与任务终态由 biz 侧编排完成                          |
-| 实现 | 规则路径：七道工艺全为固定规则；模型能力（标题判定兜底）当前零实现                                                           |
+| 项   | 值                                                                                                                                    |
+|------|---------------------------------------------------------------------------------------------------------------------------------------|
+| 上游 | 解析环节（`ParseResult.sources` 产物）；任务编排（biz 侧 `StructureTaskRunner` 领取组装任务）                                         |
+| 输入 | `AssembleContext`（`taskId` / `fileResultId` / 源文件类型 / 组装阈值）+ 上游 `ParseResult`                                            |
+| 输出 | `UnifiedDocument`（`documentInfo` / `pages` / `elements` / `relations` / `quality`）+ 五个步骤日志 + 建议状态                         |
+| 触发 | `KnowledgeFileStructureController` 的触发接口 → `TaskTriggerSupport` 建任务入队 → `StructureTaskRunner` 领取并调用管线                |
+| 下游 | 预处理环节（消费 `UnifiedDocument.elements` 与 `pages[].marks`）；切片、向量化、检索沿执行链继续                                      |
+| 落库 | 不在本环节内：`AssemblerPipeline` 是纯算法，不碰 DB 与对象存储；产物落库与任务终态由 biz 侧编排完成                                   |
+| 实现 | 规则路径：七道工艺全为固定规则；模型能力（标题判定兜底）当前零实现                                                                    |
 | 代码 | `../../../workbuddy-worker/src/main/java/com/knowledge/worker/structure/`（阈值在 `StructureProperties`，前缀 `knowledge.structure`） |
 
 ## 文档导航
@@ -63,7 +63,7 @@
 - **判定阈值是否上收为可调策略**：噪声页（无元素页 / 仅图片页 / 乱码率 > `noise-garbled-ratio`）、重复页与重复段（Jaccard 阈值 / 最小长度）目前只在 `knowledge.structure` 配置里（运维级，页面上看不到），预处理策略只按这些标记决定处置方式；是否把这几个判定阈值做成组装策略的可调项尚未决定，解析侧同类问题（页眉页脚判定）见 `../解析环节/README.md` 的待定项。
 - **噪声页清单的呈现方式**：产物告警是"计数 + 最多 3 条样例"，完整清单只进日志；是否改成结构化字段（前端逐条渲染、可点击跳到该页）尚未决定。
 - **组装报告不外发**：`AssembleReport` 只服务管线内判定与日志（不落产物、不落子步骤记录），详情页统计由产物现算；是否把关键计数并入产物质量区尚未决定。
-- **产物行的能力快照列语义**：组装环节没有独立能力快照，`kb_pipeline_product.capability_snapshot` 只承载产物 schemaVersion；是否统一为「环节策略快照」语义尚未决定。
+- **产物行的能力快照列语义**：组装环节没有独立能力快照，`wb_knowledge_pipeline_product.capability_snapshot` 只承载产物 schemaVersion；是否统一为「环节策略快照」语义尚未决定。
 - **预留字段的启用时机未定**：`assets`（二进制资源引用）、`orderCuts`（顺序切分数）、`candidateOrder`（候选顺序）、`headerRepeated`（页眉重复标记）、`rotation`（页面旋转）、`bboxes`（跨页分段框）都已在契约注释里标注为预留未实现或无消费方，启用时机随对应能力接入。
 - **页路径只对 PDF 生效**：`REPEATED_PAGE` / `NOISE_PAGE` 是页级标记，Word / Excel 没有页概念（Excel 有 sheet 章节但无页码）；Office 系是否补"虚拟页"口径尚未决定。
 - **`repeatSetCacheSize` 与文档规模的关系未验**：缓存命中率与文档规模的相关性没有实测数据，默认 64 属经验值。

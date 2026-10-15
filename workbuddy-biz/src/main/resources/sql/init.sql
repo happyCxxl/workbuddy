@@ -9,15 +9,15 @@
 -- 库重建后对象存储中的旧产物与新库不再对应，需一并清空（见同目录 README.md）。
 -- ============================================================================
 
-DROP DATABASE IF EXISTS knowledge;
-CREATE DATABASE knowledge DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE knowledge;
+DROP DATABASE IF EXISTS workbuddy;
+CREATE DATABASE workbuddy DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE workbuddy;
 
 -- ============================================================================
 -- 一、知识库
 -- ============================================================================
 
-CREATE TABLE kb_knowledge_base
+CREATE TABLE wb_knowledge_base
 (
     id                         BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     name                       VARCHAR(128) NOT NULL COMMENT '知识库名称',
@@ -26,8 +26,8 @@ CREATE TABLE kb_knowledge_base
     strategy_binding_enabled   TINYINT      NOT NULL DEFAULT 1 COMMENT '策略绑定开关：1 开启（触发默认走 KB 绑定策略）/ 0 关闭（触发必须显式选策略）',
     binding_profile_version_id BIGINT                DEFAULT NULL COMMENT '绑定处理策略版本（三件套之一）',
     index_config               varchar(1024)                  DEFAULT NULL COMMENT '索引配置（三件套之一）：自动建索引开关/形态/更新策略',
-    default_rule_id            BIGINT                DEFAULT NULL COMMENT '默认检索规则（三件套之一；kb_pipeline_strategy_version.id，type=RETRIEVAL）',
-    published_index_set_id     BIGINT                DEFAULT NULL COMMENT '当前发布索引（一级发布指针；kb_index_set.id）',
+    default_rule_id            BIGINT                DEFAULT NULL COMMENT '默认检索规则（三件套之一；wb_knowledge_pipeline_strategy_version.id，type=RETRIEVAL）',
+    published_index_set_id     BIGINT                DEFAULT NULL COMMENT '当前发布索引（一级发布指针；wb_knowledge_index_set.id）',
     user_id                    BIGINT                DEFAULT NULL COMMENT '创建用户ID',
     del_flag                   VARCHAR(1)   NOT NULL DEFAULT '0' COMMENT '删除标记：0 正常 / 1 已删',
     create_by                  VARCHAR(64)           DEFAULT NULL COMMENT '创建人',
@@ -39,7 +39,7 @@ CREATE TABLE kb_knowledge_base
 ) ENGINE = InnoDB
    COMMENT ='知识库：一个业务场景 = 一个知识库';
 
-CREATE TABLE kb_audit_log
+CREATE TABLE wb_audit_log
 (
     id             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     action_type    VARCHAR(32)  NOT NULL COMMENT '操作类型：见 AuditActionType 枚举（知识库 / 索引 / 检索规则 / 用户 / 系统设置）',
@@ -62,7 +62,7 @@ CREATE TABLE kb_audit_log
 -- 二、文件档案与文档输入
 -- ============================================================================
 
-CREATE TABLE kb_file_object
+CREATE TABLE wb_file_object
 (
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     file_id     VARCHAR(64)  NOT NULL                COMMENT '文件 ID（雪花字符串，对象存储键）',
@@ -71,7 +71,7 @@ CREATE TABLE kb_file_object
     file_size   BIGINT                DEFAULT NULL   COMMENT '文件大小（字节）',
     sha256       CHAR(64)     NOT NULL                COMMENT '内容指纹（sha256）',
     storage_type      VARCHAR(32)  NOT NULL                COMMENT '存储类型（StorageType 枚举码：minio / local；冗余留作展示与降级）',
-    storage_source_id BIGINT       NOT NULL                COMMENT '数据源实例 ID（kb_storage_source.id）：读取按它定位后端',
+    storage_source_id BIGINT       NOT NULL                COMMENT '数据源实例 ID（wb_storage_source.id）：读取按它定位后端',
     bucket            VARCHAR(64)  NOT NULL                COMMENT '存储桶名（local 下为一级子目录）',
     object_key  VARCHAR(128) NOT NULL                COMMENT '对象键',
     create_by   VARCHAR(64)           DEFAULT NULL   COMMENT '上传人',
@@ -80,7 +80,7 @@ CREATE TABLE kb_file_object
     UNIQUE KEY uk_file_id (file_id)
 ) COMMENT ='文件档案：上传文件元数据（append-only）';
 
-CREATE TABLE kb_source_file
+CREATE TABLE wb_source_file
 (
     id             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     file_id        VARCHAR(64)  NOT NULL                COMMENT '文件 ID',
@@ -97,7 +97,7 @@ CREATE TABLE kb_source_file
     KEY idx_sha256 (sha256)
 )  COMMENT ='来源文件：文件引用与指纹（append-only）';
 
-CREATE TABLE kb_file_result
+CREATE TABLE wb_file_result
 (
     id                BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     knowledge_base_id BIGINT      NOT NULL                COMMENT '所属知识库',
@@ -115,9 +115,9 @@ CREATE TABLE kb_file_result
     KEY idx_source (source_file_id),
     KEY idx_del_flag (del_flag),
     KEY idx_owner (owner)
-)  COMMENT ='文件结果：一次提交一行（同文件重复提交 = 多行，复用 kb_source_file）';
+)  COMMENT ='文件结果：一次提交一行（同文件重复提交 = 多行，复用 wb_source_file）';
 
-CREATE TABLE kb_submit_log
+CREATE TABLE wb_submit_log
 (
     id                BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     knowledge_base_id BIGINT       NOT NULL                COMMENT '目标知识库',
@@ -143,15 +143,15 @@ CREATE TABLE kb_submit_log
 -- 三、处理链
 -- ============================================================================
 
-CREATE TABLE kb_pipeline_task
+CREATE TABLE wb_knowledge_pipeline_task
 (
     id                  BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     file_result_id      BIGINT               DEFAULT NULL   COMMENT '所属文件结果（BUILD_INDEX 知识库级任务为空）',
     stage               VARCHAR(32) NOT NULL                COMMENT '环节：PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED/BUILD_INDEX',
     upstream_product_id BIGINT      NOT NULL DEFAULT 0      COMMENT '上游产物 ID（0 = 没有上游：解析是链路起点）',
-    strategy_version_id BIGINT      NOT NULL DEFAULT 0      COMMENT '策略版本 ID（0 = 该环节无策略：解析/组装；其余取 kb_pipeline_strategy_version.id）',
+    strategy_version_id BIGINT      NOT NULL DEFAULT 0      COMMENT '策略版本 ID（0 = 该环节无策略：解析/组装；其余取 wb_knowledge_pipeline_strategy_version.id）',
     strategy_snapshot   varchar(1024)                 DEFAULT NULL   COMMENT '环节策略快照（触发时固定）',
-    product_id          BIGINT               DEFAULT NULL   COMMENT '成功运行回写的产物 ID（kb_pipeline_product.id）',
+    product_id          BIGINT               DEFAULT NULL   COMMENT '成功运行回写的产物 ID（wb_knowledge_pipeline_product.id）',
     status              VARCHAR(32) NOT NULL DEFAULT 'QUEUED' COMMENT '状态：QUEUED/RUNNING/SUCCESS/PARTIAL_SUCCESS/FAILED',
     error_code          VARCHAR(64)          DEFAULT NULL   COMMENT '错误码',
     error_msg           VARCHAR(1024)        DEFAULT NULL   COMMENT '错误信息',
@@ -167,7 +167,7 @@ CREATE TABLE kb_pipeline_task
     KEY idx_status (status)
 )  COMMENT ='处理链任务：一次触发一条任务（机器表 append-only）';
 
-CREATE TABLE kb_pipeline_product
+CREATE TABLE wb_knowledge_pipeline_product
 (
     id                  BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     task_id             BIGINT       NOT NULL                COMMENT '产出该产物的任务（一次执行至多一份产物）',
@@ -177,7 +177,7 @@ CREATE TABLE kb_pipeline_product
     capability_snapshot varchar(1024)                  DEFAULT NULL   COMMENT '能力/策略版本快照',
     artifact_id         VARCHAR(255) NOT NULL                COMMENT '产物存储引用（sha256 寻址 key）',
     storage_type        VARCHAR(32)  NOT NULL                COMMENT '存储类型（StorageType 枚举码：minio / local；冗余留作展示与降级）',
-    storage_source_id   BIGINT       NOT NULL                COMMENT '数据源实例 ID（kb_storage_source.id）：读取按它定位后端',
+    storage_source_id   BIGINT       NOT NULL                COMMENT '数据源实例 ID（wb_storage_source.id）：读取按它定位后端',
     bucket              VARCHAR(64)  NOT NULL                COMMENT '存储桶名（local 下为一级子目录）',
     content_hash        CHAR(64)     NOT NULL                COMMENT '产物内容指纹（sha256）',
     create_time         DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
@@ -187,10 +187,10 @@ CREATE TABLE kb_pipeline_product
     KEY idx_fr_stage (file_result_id, stage)
 )  COMMENT ='阶段产物：本体在产物存储，表内存引用与血缘（机器表 append-only）';
 
-CREATE TABLE kb_pipeline_step_log
+CREATE TABLE wb_knowledge_pipeline_step_log
 (
     id                 BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
-    task_id            BIGINT       NOT NULL                COMMENT '所属处理链任务（kb_pipeline_task.id）',
+    task_id            BIGINT       NOT NULL                COMMENT '所属处理链任务（wb_knowledge_pipeline_task.id）',
     step_name          VARCHAR(64)  NOT NULL                COMMENT '子步骤名：文件级路由/原生解析/质量检查…',
     status             VARCHAR(32)  NOT NULL                COMMENT '步骤状态：SUCCESS/FAILED',
     capability_version VARCHAR(64)           DEFAULT NULL   COMMENT '能力/模型版本（如 pdfbox-3.0.4）',
@@ -213,7 +213,7 @@ CREATE TABLE kb_pipeline_step_log
 -- 四、环节策略版本与知识库绑定
 -- ============================================================================
 
-CREATE TABLE kb_pipeline_strategy_version
+CREATE TABLE wb_knowledge_pipeline_strategy_version
 (
     id              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     type            VARCHAR(32)  NOT NULL                COMMENT '策略类型：PREPROCESS/CHUNK/EMBED/RETRIEVAL',
@@ -226,12 +226,12 @@ CREATE TABLE kb_pipeline_strategy_version
     UNIQUE KEY idx_type_name_version (type, name, version)
 )  COMMENT ='环节策略版本（不可变，修改即新版本）';
 
-CREATE TABLE kb_strategy_binding
+CREATE TABLE wb_knowledge_strategy_binding
 (
     id                  BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     knowledge_base_id   BIGINT       NOT NULL COMMENT '知识库 ID',
     strategy_type       VARCHAR(32)  NOT NULL COMMENT '策略类型：PREPROCESS/CHUNK/EMBED',
-    strategy_version_id BIGINT       NOT NULL COMMENT '策略版本行 ID（kb_pipeline_strategy_version.id）',
+    strategy_version_id BIGINT       NOT NULL COMMENT '策略版本行 ID（wb_knowledge_pipeline_strategy_version.id）',
     del_flag            VARCHAR(1)   NOT NULL DEFAULT '0' COMMENT '删除标记：0 正常 / 1 已删（解绑）',
     create_by           VARCHAR(64)           DEFAULT NULL COMMENT '创建人',
     create_time         DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
@@ -245,7 +245,7 @@ CREATE TABLE kb_strategy_binding
 -- 五、切片与向量化
 -- ============================================================================
 
-CREATE TABLE kb_chunk_set
+CREATE TABLE wb_knowledge_chunk_set
 (
     id                     BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     file_result_id         BIGINT       NOT NULL                COMMENT '所属文件结果',
@@ -256,14 +256,14 @@ CREATE TABLE kb_chunk_set
     status                 VARCHAR(32)  NOT NULL DEFAULT 'ACTIVE' COMMENT '状态',
     artifact_id            VARCHAR(255) NOT NULL                COMMENT 'ChunkSet 归档 JSON 引用（sha256）',
     storage_type           VARCHAR(32)  NOT NULL                COMMENT '存储类型（StorageType 枚举码：minio / local；冗余留作展示与降级）',
-    storage_source_id      BIGINT       NOT NULL                COMMENT '数据源实例 ID（kb_storage_source.id）：读取按它定位后端',
+    storage_source_id      BIGINT       NOT NULL                COMMENT '数据源实例 ID（wb_storage_source.id）：读取按它定位后端',
     bucket                 VARCHAR(64)  NOT NULL                COMMENT '存储桶名（local 下为一级子目录）',
     create_time            DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     PRIMARY KEY (id),
     KEY idx_fr (file_result_id)
 )  COMMENT ='切片产物集合（一次切片策略运行；机器表 append-only）';
 
-CREATE TABLE kb_chunk
+CREATE TABLE wb_knowledge_chunk
 (
     id                 BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     chunk_set_id       BIGINT       NOT NULL                COMMENT '所属切片集合',
@@ -284,11 +284,11 @@ CREATE TABLE kb_chunk
     KEY idx_parent (chunk_set_id, parent_chunk_id)
 )  COMMENT ='切片：检索命中的最小单元（机器表 append-only）';
 
-CREATE TABLE kb_embedding_set
+CREATE TABLE wb_knowledge_embedding_set
 (
     id               BIGINT        NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     file_result_id   BIGINT        NOT NULL COMMENT '所属文件结果',
-    chunk_set_ref    BIGINT        DEFAULT NULL COMMENT '上游切片集合引用（kb_chunk_set.id）',
+    chunk_set_ref    BIGINT        DEFAULT NULL COMMENT '上游切片集合引用（wb_knowledge_chunk_set.id）',
     embedding_set_id VARCHAR(128)  NOT NULL COMMENT '集合ID（es-{chunkSetId}-{strategyVersion}，确定性）',
     strategy_version VARCHAR(64)   NOT NULL COMMENT 'EMBED 策略版本（如 embed-default-v1）',
     model            VARCHAR(128)  NOT NULL COMMENT '模型名（模型目录口径）',
@@ -300,7 +300,7 @@ CREATE TABLE kb_embedding_set
     status           VARCHAR(16)   NOT NULL DEFAULT 'ACTIVE' COMMENT '状态：ACTIVE',
     artifact_id      VARCHAR(255)  NOT NULL COMMENT 'EmbeddingSet 归档 JSON 引用（sha256）',
     storage_type     VARCHAR(32)   NOT NULL COMMENT '存储类型（StorageType 枚举码：minio / local；冗余留作展示与降级）',
-    storage_source_id BIGINT       NOT NULL COMMENT '数据源实例 ID（kb_storage_source.id）：读取按它定位后端',
+    storage_source_id BIGINT       NOT NULL COMMENT '数据源实例 ID（wb_storage_source.id）：读取按它定位后端',
     bucket           VARCHAR(64)   NOT NULL COMMENT '存储桶名（local 下为一级子目录）',
     create_time      DATETIME(3)   NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     PRIMARY KEY (id),
@@ -308,10 +308,10 @@ CREATE TABLE kb_embedding_set
     KEY idx_fr_sv (file_result_id, strategy_version)
 )  COMMENT ='向量产物集合：一次 EMBED 运行一行；本体在产物存储，本表存引用与血缘';
 
-CREATE TABLE kb_embedding_record
+CREATE TABLE wb_knowledge_embedding_record
 (
     id               BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
-    embedding_set_id BIGINT      NOT NULL COMMENT '所属集合（kb_embedding_set.id）',
+    embedding_set_id BIGINT      NOT NULL COMMENT '所属集合（wb_knowledge_embedding_set.id）',
     embedding_id     VARCHAR(32) NOT NULL COMMENT '记录ID（emb-0001，集合内唯一）',
     chunk_id         VARCHAR(32) NOT NULL COMMENT '切片ID（Chunk.chunkId）',
     content_type     VARCHAR(32) DEFAULT NULL COMMENT '切片内容类型（ChunkContentType 枚举名）',
@@ -331,7 +331,7 @@ CREATE TABLE kb_embedding_record
 -- 六、索引构建与发布
 -- ============================================================================
 
-CREATE TABLE kb_index_set
+CREATE TABLE wb_knowledge_index_set
 (
     id                           BIGINT      NOT NULL COMMENT '主键（雪花）',
     knowledge_base_id            BIGINT      NOT NULL COMMENT '所属知识库',
@@ -342,7 +342,7 @@ CREATE TABLE kb_index_set
 ) ENGINE = InnoDB
    COMMENT ='索引集合：一知识库一行，承载二级发布指针';
 
-CREATE TABLE kb_index_version
+CREATE TABLE wb_knowledge_index_version
 (
     id              BIGINT        NOT NULL COMMENT '主键（雪花）',
     index_set_id    BIGINT        NOT NULL COMMENT '所属索引集合',
@@ -351,9 +351,9 @@ CREATE TABLE kb_index_version
     chunk_count     INT           NOT NULL DEFAULT 0 COMMENT '纳入片数（活账本：随追加持续更新）',
     vector_count    INT           NOT NULL DEFAULT 0 COMMENT '纳入向量数（活账本）',
     status          VARCHAR(32)   NOT NULL DEFAULT 'CREATED' COMMENT '状态：CREATED/BUILDING/READY/ONLINE/FAILED/RETIRED',
-    default_rule_id BIGINT                 DEFAULT NULL COMMENT '默认检索规则（kb_pipeline_strategy_version.id，type=RETRIEVAL）',
+    default_rule_id BIGINT                 DEFAULT NULL COMMENT '默认检索规则（wb_knowledge_pipeline_strategy_version.id，type=RETRIEVAL）',
     build_error     VARCHAR(1024)          DEFAULT NULL COMMENT '失败原因（完整性缺口/维度不一致/一致性失败/写失败）',
-    task_id         BIGINT                 DEFAULT NULL COMMENT '构建任务 ID（kb_pipeline_task，stage=BUILD_INDEX）',
+    task_id         BIGINT                 DEFAULT NULL COMMENT '构建任务 ID（wb_knowledge_pipeline_task，stage=BUILD_INDEX）',
     validated_at    DATETIME(3)            DEFAULT NULL COMMENT '验证通过时间',
     published_at    DATETIME(3)            DEFAULT NULL COMMENT '发布时间',
     published_by    VARCHAR(64)            DEFAULT NULL COMMENT '发布人',
@@ -368,13 +368,13 @@ CREATE TABLE kb_index_version
 -- 七、检索运行记录
 -- ============================================================================
 
-CREATE TABLE kb_retrieval_run
+CREATE TABLE wb_knowledge_retrieval_run
 (
     id                BIGINT      NOT NULL COMMENT '主键（雪花）',
     kb_id             BIGINT      NOT NULL COMMENT '知识库 ID',
     version_id        BIGINT      NOT NULL COMMENT '索引版本行 ID',
     version_no        VARCHAR(32) NOT NULL COMMENT '版本号（快照冗余，展示用）',
-    rule_id           BIGINT               DEFAULT NULL COMMENT '规则行 ID（kb_pipeline_strategy_version；引擎基线规则无行 ID 时为 NULL）',
+    rule_id           BIGINT               DEFAULT NULL COMMENT '规则行 ID（wb_knowledge_pipeline_strategy_version；引擎基线规则无行 ID 时为 NULL）',
     rule_name_version VARCHAR(64) NOT NULL COMMENT '规则 name-version（快照冗余，展示用）',
     query             TEXT        NOT NULL COMMENT '查询文本',
     result_snapshot   JSON        NOT NULL COMMENT '结果快照（命中列表全字段，执行时刻快照=评测证据）',
@@ -389,7 +389,7 @@ CREATE TABLE kb_retrieval_run
 -- 八、用户
 -- ============================================================================
 
-CREATE TABLE kb_user
+CREATE TABLE wb_user
 (
     id            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     username      VARCHAR(64)  NOT NULL                COMMENT '登录用户名',
@@ -398,7 +398,7 @@ CREATE TABLE kb_user
     phone         VARCHAR(32)           DEFAULT NULL   COMMENT '手机号',
     avatar        VARCHAR(255)          DEFAULT NULL   COMMENT '头像对象 key：avatar/{userId}/{随机段}.{扩展名}',
     avatar_storage_type      VARCHAR(32)      DEFAULT NULL   COMMENT '头像存储类型（StorageType 枚举码：minio / local）；未设置头像为空',
-    avatar_storage_source_id BIGINT           DEFAULT NULL   COMMENT '头像数据源实例 ID（kb_storage_source.id）；未设置头像为空',
+    avatar_storage_source_id BIGINT           DEFAULT NULL   COMMENT '头像数据源实例 ID（wb_storage_source.id）；未设置头像为空',
     avatar_bucket            VARCHAR(64)      DEFAULT NULL   COMMENT '头像桶名（local 下为一级子目录）；未设置头像为空',
     password      VARCHAR(128) NOT NULL                COMMENT '密码（BCrypt 哈希）',
     status        TINYINT      NOT NULL DEFAULT 1      COMMENT '状态：1 启用 / 0 停用',
@@ -418,7 +418,7 @@ CREATE TABLE kb_user
 -- 九、系统设置与存储数据源
 -- ============================================================================
 
-CREATE TABLE kb_system_setting
+CREATE TABLE wb_system_setting
 (
     id            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     setting_key   VARCHAR(64)  NOT NULL COMMENT '配置键（SystemSettingKey 枚举名）',
@@ -431,7 +431,7 @@ CREATE TABLE kb_system_setting
     UNIQUE KEY uk_setting_key (setting_key)
 )  COMMENT ='系统设置：键值形态；新增设置只加枚举与领域服务，表结构不动';
 
-CREATE TABLE kb_storage_source
+CREATE TABLE wb_storage_source
 (
     id           BIGINT        NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     name         VARCHAR(64)   NOT NULL COMMENT '数据源名称（界面展示，全表唯一）',
@@ -457,7 +457,7 @@ CREATE TABLE kb_storage_source
 
 -- 模型目录：一行 = 一个可调用的模型。厂商连接与密钥在配置（knowledge.model.vendors.*），本表只存厂商码。
 -- capabilities 为多值（逗号分隔，取值 CHAT/EMBEDDING/OCR/LAYOUT/TABLE_STRUCTURE），候选集按能力筛，限额按模型行算。
-CREATE TABLE kb_model
+CREATE TABLE wb_model
 (
     id                        BIGINT         NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     vendor_code               VARCHAR(64)    NOT NULL COMMENT '厂商码（knowledge.model.vendors 配置里的键）',
@@ -497,7 +497,7 @@ CREATE TABLE kb_model
 -- 确实为零写 0，未知与零不混用。单价随行留档（计价时用的单价），一行成本可复算。
 -- latency_ms 是一次逻辑调用的整段耗时（含内部重试与退避等待）；retry_count 由真实 HTTP 层计数（尝试次数 − 1）。
 -- 不做日聚合表：概览、趋势与告警直接查本表，按时间范围走下面的索引。
-CREATE TABLE kb_model_call_log
+CREATE TABLE wb_model_call_log
 (
     id                BIGINT         NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     trace_id          VARCHAR(64)             DEFAULT NULL   COMMENT '链路标识（业务链路关联用，可空）',
@@ -541,29 +541,29 @@ CREATE TABLE kb_model_call_log
 -- ============================================================================
 
 -- 管理员账号：用户名 admin / 密码 Admin@123（BCrypt 哈希），首次登录后请立即改密
-INSERT INTO kb_user (id, username, display_name, password, status, role, token_version, del_flag)
+INSERT INTO wb_user (id, username, display_name, password, status, role, token_version, del_flag)
 VALUES (1, 'admin', '管理员', '$2a$10$Z/lASt5WwaaR.Y84fMsDkeoUtIxb4jiniyYaH5AmkTyh1oCVJc8Hq', 1, 'ADMIN', 1, '0');
 
 -- 预处理策略：页眉页脚/目录/噪声只标记，重复只留首份，字段/文本整理/编码开（策略版本行的初始参数，与代码侧模板同参）
-INSERT INTO kb_pipeline_strategy_version (type, name, version, config_snapshot, status)
+INSERT INTO wb_knowledge_pipeline_strategy_version (type, name, version, config_snapshot, status)
 VALUES ('PREPROCESS', 'preproc-default', 'v1',
         '{"rules":{"headerFooter":{"action":"MARK"},"toc":{"action":"MARK","params":{"minLinesPerPage":"3","runMinLength":"3"}},"noise":{"action":"MARK"},"repeat":{"action":"EXCLUDE"},"field":{"enabled":"ON","params":{"amount":"ON","date":"ON","area":"ON","certNo":"ON"}},"tidy":{"enabled":"ON","params":{"whitespace":"ON","joinLines":"ON","punct":"ON","dashes":"ON","bullets":"ON","urls":"ON"}},"encoding":{"enabled":"ON"}},"custom":{"enabled":"ON","rules":[]}}',
         'ACTIVE');
 
 -- 切片策略：段落聚合 + 行级表切片 + 递归兜底（策略版本行的初始参数，与代码侧模板同参）
-INSERT INTO kb_pipeline_strategy_version (type, name, version, config_snapshot, status)
+INSERT INTO wb_knowledge_pipeline_strategy_version (type, name, version, config_snapshot, status)
 VALUES ('CHUNK', 'chunk-hybrid', 'v1',
         '{"routes":{"body":{"algorithm":"paragraph-aggregate","params":{"targetMaxLen":"800","softMaxLen":"1000"}},"table":{"algorithm":"row-slice","params":{"groupThreshold":"30","groupSize":"3"}},"image":{"algorithm":"caption-placeholder"},"fallback":{"algorithm":"recursive-length","params":{"len":"500","overlap":"50"}}},"pipeline":{"titlePathMaxLevel":"3","parentChild":"ON","tableInBodyFlow":"OFF","minMergeLen":"300","structureOverlap":"0","titleInContent":"ON"}}',
         'ACTIVE');
 
 -- 向量化策略：默认模型 + 账本复用开（与内置默认同参）
-INSERT INTO kb_pipeline_strategy_version (type, name, version, config_snapshot, status)
+INSERT INTO wb_knowledge_pipeline_strategy_version (type, name, version, config_snapshot, status)
 VALUES ('EMBED', 'embed-default', 'v1',
         '{"model":"text-embedding-v4","docTemplate":"{content}","queryTemplate":"{query}","batchSize":32,"timeoutMs":30000,"maxRetries":2,"cacheEnabled":"ON","includeParent":"OFF","skipEmpty":"ON","dimension":1024,"metric":"COSINE","normalized":true,"contextWindowTokens":8192,"batchLimit":64}',
         'ACTIVE');
 
 -- 检索规则：混合 RRF + 父片展开（与引擎基线同参）
-INSERT INTO kb_pipeline_strategy_version (type, name, version, config_snapshot, status)
+INSERT INTO wb_knowledge_pipeline_strategy_version (type, name, version, config_snapshot, status)
 VALUES ('RETRIEVAL', 'hybrid-rrf-k60-top10-parent', 'v1',
         '{"channel":"HYBRID","fusion":{"mode":"RRF","rrfK":60,"perChannelLimit":50},"preprocess":{"mode":"NONE"},"rerank":{"mode":"NONE"},"postprocess":{"mode":"PARENT_EXPAND"},"topK":10,"scoreThreshold":0}',
         'ACTIVE');
@@ -571,7 +571,7 @@ VALUES ('RETRIEVAL', 'hybrid-rrf-k60-top10-parent', 'v1',
 -- 存储数据源：MinIO 与本地磁盘两行，参数与 application.yml 的 file-center.minio.* / file-center.local.* 同值
 -- 当前启用写在 is_current 上（全表至多一行为 1）；两列探测结论留空表示尚未探测，应用启动时探活当前启用那行并回写
 -- 表被清空时应用启动会按上述配置重新播种这两行，此处写入后应用只按 is_current 决定当前启用
-INSERT INTO kb_storage_source (id, name, storage_type, config_json, is_current, status, del_flag)
+INSERT INTO wb_storage_source (id, name, storage_type, config_json, is_current, status, del_flag)
 VALUES (1, 'MinIO', 'minio',
         '{"endpoint":"http://localhost:9000","accessKey":"minioadmin","secretKey":"minioadmin","fileBucket":"files","artifactBucket":"artifacts"}',
         1, 'ENABLED', '0'),

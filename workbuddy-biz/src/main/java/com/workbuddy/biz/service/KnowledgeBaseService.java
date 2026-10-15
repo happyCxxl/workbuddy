@@ -77,7 +77,7 @@ public interface KnowledgeBaseService {
      * 统计概览（仅未删除数据）：知识库总数、启用数、文档数。
      *
      * <p>三个数与 {@link #page} **同一可见范围**：文档数先取可见库 ID 再按集合计数
-     * （`kb_file_result` 没有归属列）。
+     * （`wb_file_result` 没有归属列）。
      */
     KnowledgeBaseStatsVO stats();
 
@@ -138,7 +138,7 @@ public interface KnowledgeBaseService {
 
     /**
      * 提交文件：幂等检查 → 归属校验 → 文件校验 → 建档三写
-     * （kb_source_file / kb_file_result / kb_submit_log，同一事务）。
+     * （wb_source_file / wb_file_result / wb_submit_log，同一事务）。
      *
      * @param knowledgeBaseId 知识库 ID
      * @param request         提交请求（fileId + requestId）
@@ -151,7 +151,7 @@ public interface KnowledgeBaseService {
     FileSubmitResponse submit(Long knowledgeBaseId, FileSubmitRequest request);
 
     /**
-     * 提交记录分页查询：数据源 kb_submit_log（PASS/FAIL 均记录），
+     * 提交记录分页查询：数据源 wb_submit_log（PASS/FAIL 均记录），
      * 支持按提交结果与文件名模糊筛选。
      *
      * @param current        当前页，从 1 开始

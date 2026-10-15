@@ -1,12 +1,12 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbStrategyBinding;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbStrategyBinding;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.rules.KnowledgeBaseRules;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.error.ErrorCode;
@@ -31,9 +31,9 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class StageStrategySupport {
 
-    private final KbPipelineStrategyVersionDbService strategyVersionDbService;
-    private final KbStrategyBindingDbService strategyBindingDbService;
-    private final KnowledgeBaseDbService knowledgeBaseDbService;
+    private final WbPipelineStrategyVersionDbService strategyVersionDbService;
+    private final WbStrategyBindingDbService strategyBindingDbService;
+    private final WbKnowledgeBaseDbService knowledgeBaseDbService;
 
     /**
      * 解析生效策略版本行：显式指定优先，否则取知识库绑定；两档都不命中（绑定开关关闭、未绑定、
@@ -45,19 +45,19 @@ public class StageStrategySupport {
      * @param stageLabel        环节中文名（失败文案用）
      * @return 生效的策略版本行（非空）
      */
-    public KbPipelineStrategyVersion resolve(KbFileResult fileResult, Long strategyVersionId,
+    public WbPipelineStrategyVersion resolve(WbFileResult fileResult, Long strategyVersionId,
                                              String type, String stageLabel) {
         if (NullUtil.isNotNull(strategyVersionId)) {
             return requireExplicit(strategyVersionId, type);
         }
-        KnowledgeBase kb = knowledgeBaseDbService.getActiveById(fileResult.getKnowledgeBaseId());
+        WbKnowledgeBase kb = knowledgeBaseDbService.getActiveById(fileResult.getKnowledgeBaseId());
         ThrowUtil.throwIf(!KnowledgeBaseRules.isStrategyBindingEnabled(kb), ErrorCode.TASK_STRATEGY_MISSING,
                 stageLabel + "未绑定策略，请显式选择策略后触发");
-        KbStrategyBinding binding = strategyBindingDbService
+        WbStrategyBinding binding = strategyBindingDbService
                 .getByKbAndType(fileResult.getKnowledgeBaseId(), type);
         ThrowUtil.throwIf(NullUtil.isNull(binding), ErrorCode.TASK_STRATEGY_MISSING,
                 stageLabel + "未绑定策略，请显式选择策略后触发");
-        KbPipelineStrategyVersion bound = strategyVersionDbService.getById(binding.getStrategyVersionId());
+        WbPipelineStrategyVersion bound = strategyVersionDbService.getById(binding.getStrategyVersionId());
         ThrowUtil.throwIf(NullUtil.isNull(bound) || !RowStatus.ACTIVE.name().equals(bound.getStatus()),
                 ErrorCode.TASK_STRATEGY_MISSING, stageLabel + "绑定的策略已停用或不存在，请重新绑定或显式选择策略");
         return bound;
@@ -69,8 +69,8 @@ public class StageStrategySupport {
      * @param strategyVersionId 策略版本行 ID（非空）
      * @param type              期望的策略类型
      */
-    public KbPipelineStrategyVersion requireExplicit(Long strategyVersionId, String type) {
-        KbPipelineStrategyVersion row = strategyVersionDbService.getById(strategyVersionId);
+    public WbPipelineStrategyVersion requireExplicit(Long strategyVersionId, String type) {
+        WbPipelineStrategyVersion row = strategyVersionDbService.getById(strategyVersionId);
         ThrowUtil.throwIf(NullUtil.isNull(row), ErrorCode.STRATEGY_VERSION_NOT_FOUND);
         ThrowUtil.throwIf(!type.equals(row.getType()),
                 ErrorCode.STRATEGY_VERSION_NOT_FOUND, "策略类型不匹配：期望 " + type);
@@ -87,7 +87,7 @@ public class StageStrategySupport {
      * @param row      策略版本行
      * @return 传入的策略实例（type/name/version 已回填）
      */
-    public <T extends StageStrategy> T bindMeta(T strategy, KbPipelineStrategyVersion row) {
+    public <T extends StageStrategy> T bindMeta(T strategy, WbPipelineStrategyVersion row) {
         strategy.setType(row.getType());
         strategy.setName(row.getName());
         strategy.setVersion(row.getVersion());
@@ -102,7 +102,7 @@ public class StageStrategySupport {
      * @param parse 该环节的配置快照解析器（切片/向量化用 parse，预处理用 parseConfig）
      * @return 生效的策略对象（元信息已按行回填）
      */
-    public <T extends StageStrategy> T bindRow(KbPipelineStrategyVersion row, Function<String, T> parse) {
+    public <T extends StageStrategy> T bindRow(WbPipelineStrategyVersion row, Function<String, T> parse) {
         try {
             return bindMeta(parse.apply(row.getConfigSnapshot()), row);
         } catch (RuntimeException e) {

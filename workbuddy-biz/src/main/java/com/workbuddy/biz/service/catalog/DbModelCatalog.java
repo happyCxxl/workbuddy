@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.catalog;
 
-import com.workbuddy.biz.mapper.KbModelMapper;
-import com.workbuddy.common.domain.entity.KbModel;
+import com.workbuddy.biz.mapper.WbModelMapper;
+import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.catalog.ModelCapability;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.enums.embed.EmbeddingModel;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 模型目录的库表实现（表：kb_model），按端口契约供 knowledge-model 的组件注入。
+ * 模型目录的库表实现（表：wb_model），按端口契约供 knowledge-model 的组件注入。
  *
  * <p>筛选口径两段：启用状态与生效区间在 SQL 里筛（走 idx_status_capabilities），能力在应用侧按逗号分隔串切分比对。
  * 能力不用 LIKE 的理由是子串会误命中（例如能力串里含 OCR 的行会被 TABLE_STRUCTURE 之外的短取值串到），
@@ -31,9 +31,9 @@ import java.util.Set;
  * @author cxxl
  */
 @Service
-public class DbModelCatalog extends InfraDbServiceImpl<KbModelMapper, KbModel> implements ModelCatalogPort {
+public class DbModelCatalog extends InfraDbServiceImpl<WbModelMapper, WbModel> implements ModelCatalogPort {
 
-    /** 启用状态码值（kb_model.status） */
+    /** 启用状态码值（wb_model.status） */
     private static final String STATUS_ENABLED = "ENABLED";
 
     @Override
@@ -41,17 +41,17 @@ public class DbModelCatalog extends InfraDbServiceImpl<KbModelMapper, KbModel> i
         if (NullUtil.isNull(capability)) {
             return List.of();
         }
-        List<KbModel> rows = this.lambdaQuery()
-                .eq(KbModel::getStatus, STATUS_ENABLED)
+        List<WbModel> rows = this.lambdaQuery()
+                .eq(WbModel::getStatus, STATUS_ENABLED)
                 // 生效区间：起点留空视为立即生效，终点留空视为长期有效，两端都按开放区间判定
-                .and(wrapper -> wrapper.isNull(KbModel::getEffectiveFrom)
-                        .or().le(KbModel::getEffectiveFrom, LocalDateTime.now()))
-                .and(wrapper -> wrapper.isNull(KbModel::getEffectiveTo)
-                        .or().gt(KbModel::getEffectiveTo, LocalDateTime.now()))
-                .orderByAsc(KbModel::getModelKey)
+                .and(wrapper -> wrapper.isNull(WbModel::getEffectiveFrom)
+                        .or().le(WbModel::getEffectiveFrom, LocalDateTime.now()))
+                .and(wrapper -> wrapper.isNull(WbModel::getEffectiveTo)
+                        .or().gt(WbModel::getEffectiveTo, LocalDateTime.now()))
+                .orderByAsc(WbModel::getModelKey)
                 .list();
         List<ModelDescriptor> candidates = new ArrayList<>();
-        for (KbModel row : rows) {
+        for (WbModel row : rows) {
             ModelDescriptor descriptor = toDescriptor(row);
             if (descriptor.supports(capability)) {
                 candidates.add(descriptor);
@@ -65,22 +65,22 @@ public class DbModelCatalog extends InfraDbServiceImpl<KbModelMapper, KbModel> i
         if (NullUtil.isNull(vendorCode) || NullUtil.isNull(modelKey)) {
             return null;
         }
-        KbModel row = this.lambdaQuery()
-                .eq(KbModel::getVendorCode, vendorCode)
-                .eq(KbModel::getModelKey, modelKey)
+        WbModel row = this.lambdaQuery()
+                .eq(WbModel::getVendorCode, vendorCode)
+                .eq(WbModel::getModelKey, modelKey)
                 .one();
         return NullUtil.isNull(row) ? null : toDescriptor(row);
     }
 
     @Override
     public ModelDescriptor findByModelKey(String modelKey) {
-        List<KbModel> rows = rowsByModelKey(modelKey, false);
+        List<WbModel> rows = rowsByModelKey(modelKey, false);
         return rows.isEmpty() ? null : toDescriptor(rows.getFirst());
     }
 
     @Override
     public ModelDescriptor findUniqueEnabledByModelKey(String modelKey) {
-        List<KbModel> rows = rowsByModelKey(modelKey, true);
+        List<WbModel> rows = rowsByModelKey(modelKey, true);
         if (rows.size() > 1) {
             throw new KnowledgeException(ErrorCode.MODEL_NOT_FOUND,
                     "模型：" + modelKey + " 在目录里有多个启用条目，厂商：" + vendors(rows));
@@ -89,29 +89,29 @@ public class DbModelCatalog extends InfraDbServiceImpl<KbModelMapper, KbModel> i
     }
 
     /** 按模型名查行：启用筛选开关打开时只取 ENABLED，命中多行按厂商码升序（同名的取值稳定） */
-    private List<KbModel> rowsByModelKey(String modelKey, boolean enabledOnly) {
+    private List<WbModel> rowsByModelKey(String modelKey, boolean enabledOnly) {
         if (NullUtil.isNull(modelKey) || modelKey.isBlank()) {
             return List.of();
         }
-        List<KbModel> rows = new ArrayList<>(this.lambdaQuery()
-                .eq(KbModel::getModelKey, modelKey)
-                .eq(enabledOnly, KbModel::getStatus, STATUS_ENABLED)
+        List<WbModel> rows = new ArrayList<>(this.lambdaQuery()
+                .eq(WbModel::getModelKey, modelKey)
+                .eq(enabledOnly, WbModel::getStatus, STATUS_ENABLED)
                 .list());
-        rows.sort(Comparator.comparing(KbModel::getVendorCode, Comparator.nullsLast(Comparator.naturalOrder())));
+        rows.sort(Comparator.comparing(WbModel::getVendorCode, Comparator.nullsLast(Comparator.naturalOrder())));
         return rows;
     }
 
     /** 同模型名命中的厂商码清单（错误信息里指出是哪几家） */
-    private String vendors(List<KbModel> rows) {
+    private String vendors(List<WbModel> rows) {
         List<String> codes = new ArrayList<>(rows.size());
-        for (KbModel row : rows) {
+        for (WbModel row : rows) {
             codes.add(row.getVendorCode());
         }
         return String.join(", ", codes);
     }
 
     /** 库表行 → 目录视图：能力串切分，向量编码能力再叠加枚举里的向量规格 */
-    private ModelDescriptor toDescriptor(KbModel row) {
+    private ModelDescriptor toDescriptor(WbModel row) {
         Set<ModelCapability> capabilities = ModelCapability.parse(row.getCapabilities());
         ModelDescriptor descriptor = new ModelDescriptor();
         descriptor.setVendorCode(row.getVendorCode());

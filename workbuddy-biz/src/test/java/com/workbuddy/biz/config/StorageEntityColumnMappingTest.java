@@ -4,12 +4,12 @@ import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileObject;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbStorageSource;
-import com.workbuddy.common.domain.entity.User;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileObject;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbStorageSource;
+import com.workbuddy.common.domain.entity.WbUser;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -30,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class StorageEntityColumnMappingTest {
 
-    private static final List<Class<?>> ENTITIES = List.of(KbStorageSource.class, KbFileObject.class,
-            KbPipelineProduct.class, KbChunkSet.class, KbEmbeddingSet.class, User.class);
+    private static final List<Class<?>> ENTITIES = List.of(WbStorageSource.class, WbFileObject.class,
+            WbPipelineProduct.class, WbChunkSet.class, WbEmbeddingSet.class, WbUser.class);
 
     @BeforeAll
     static void initTableInfo() {
@@ -52,27 +52,27 @@ class StorageEntityColumnMappingTest {
 
     @Test
     void storageSourceColumnsShouldMatchSchema() {
-        TableInfo info = TableInfoHelper.getTableInfo(KbStorageSource.class);
+        TableInfo info = TableInfoHelper.getTableInfo(WbStorageSource.class);
 
-        assertEquals("kb_storage_source", info.getTableName());
+        assertEquals("wb_storage_source", info.getTableName());
         assertEquals("id", info.getKeyColumn());
-        assertEquals("name", columnOf(KbStorageSource.class, "name"));
-        assertEquals("storage_type", columnOf(KbStorageSource.class, "storageType"));
-        assertEquals("config_json", columnOf(KbStorageSource.class, "configJson"));
-        assertEquals("is_current", columnOf(KbStorageSource.class, "isCurrent"));
-        assertEquals("status", columnOf(KbStorageSource.class, "status"));
-        assertEquals("last_probe_ok", columnOf(KbStorageSource.class, "lastProbeOk"));
-        assertEquals("last_probe_at", columnOf(KbStorageSource.class, "lastProbeAt"));
-        assertEquals("del_flag", columnOf(KbStorageSource.class, "delFlag"));
-        assertEquals("create_by", columnOf(KbStorageSource.class, "createBy"));
-        assertEquals("create_time", columnOf(KbStorageSource.class, "createTime"));
-        assertEquals("update_by", columnOf(KbStorageSource.class, "updateBy"));
-        assertEquals("update_time", columnOf(KbStorageSource.class, "updateTime"));
+        assertEquals("name", columnOf(WbStorageSource.class, "name"));
+        assertEquals("storage_type", columnOf(WbStorageSource.class, "storageType"));
+        assertEquals("config_json", columnOf(WbStorageSource.class, "configJson"));
+        assertEquals("is_current", columnOf(WbStorageSource.class, "isCurrent"));
+        assertEquals("status", columnOf(WbStorageSource.class, "status"));
+        assertEquals("last_probe_ok", columnOf(WbStorageSource.class, "lastProbeOk"));
+        assertEquals("last_probe_at", columnOf(WbStorageSource.class, "lastProbeAt"));
+        assertEquals("del_flag", columnOf(WbStorageSource.class, "delFlag"));
+        assertEquals("create_by", columnOf(WbStorageSource.class, "createBy"));
+        assertEquals("create_time", columnOf(WbStorageSource.class, "createTime"));
+        assertEquals("update_by", columnOf(WbStorageSource.class, "updateBy"));
+        assertEquals("update_time", columnOf(WbStorageSource.class, "updateTime"));
     }
 
     @Test
     void storageSourceShouldUseLogicDelete() {
-        TableInfo info = TableInfoHelper.getTableInfo(KbStorageSource.class);
+        TableInfo info = TableInfoHelper.getTableInfo(WbStorageSource.class);
 
         assertTrue(info.isWithLogicDelete(), "存储数据源按逻辑删除处理");
         assertEquals("del_flag", info.getLogicDeleteFieldInfo().getColumn());
@@ -82,20 +82,20 @@ class StorageEntityColumnMappingTest {
 
     @Test
     void objectTablesShouldCarryStorageSourceIdColumn() {
-        assertEquals("storage_source_id", columnOf(KbFileObject.class, "storageSourceId"));
-        assertEquals("storage_source_id", columnOf(KbPipelineProduct.class, "storageSourceId"));
-        assertEquals("storage_source_id", columnOf(KbChunkSet.class, "storageSourceId"));
-        assertEquals("storage_source_id", columnOf(KbEmbeddingSet.class, "storageSourceId"));
-        assertEquals("avatar_storage_source_id", columnOf(User.class, "avatarStorageSourceId"));
+        assertEquals("storage_source_id", columnOf(WbFileObject.class, "storageSourceId"));
+        assertEquals("storage_source_id", columnOf(WbPipelineProduct.class, "storageSourceId"));
+        assertEquals("storage_source_id", columnOf(WbChunkSet.class, "storageSourceId"));
+        assertEquals("storage_source_id", columnOf(WbEmbeddingSet.class, "storageSourceId"));
+        assertEquals("avatar_storage_source_id", columnOf(WbUser.class, "avatarStorageSourceId"));
     }
 
     @Test
     void objectTablesShouldKeepStorageTypeColumn() {
-        assertEquals("storage_type", columnOf(KbFileObject.class, "storageType"));
-        assertEquals("storage_type", columnOf(KbPipelineProduct.class, "storageType"));
-        assertEquals("storage_type", columnOf(KbChunkSet.class, "storageType"));
-        assertEquals("storage_type", columnOf(KbEmbeddingSet.class, "storageType"));
-        assertEquals("kb_file_object", TableInfoHelper.getTableInfo(KbFileObject.class).getTableName());
-        assertEquals("kb_user", TableInfoHelper.getTableInfo(User.class).getTableName());
+        assertEquals("storage_type", columnOf(WbFileObject.class, "storageType"));
+        assertEquals("storage_type", columnOf(WbPipelineProduct.class, "storageType"));
+        assertEquals("storage_type", columnOf(WbChunkSet.class, "storageType"));
+        assertEquals("storage_type", columnOf(WbEmbeddingSet.class, "storageType"));
+        assertEquals("wb_file_object", TableInfoHelper.getTableInfo(WbFileObject.class).getTableName());
+        assertEquals("wb_user", TableInfoHelper.getTableInfo(WbUser.class).getTableName());
     }
 }

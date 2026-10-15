@@ -5,10 +5,10 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.auth.db.UserDbService;
+import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.UserService;
 import com.workbuddy.auth.util.JwtUtil;
-import com.workbuddy.common.domain.entity.User;
+import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.request.user.PasswordUpdateRequest;
 import com.workbuddy.common.dto.request.user.ProfileUpdateRequest;
 import com.workbuddy.common.dto.request.user.UserCreateRequest;
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
     /** 补签令牌的有效期下限：改密后剩余时间过短时按它下发 */
     private static final Duration MIN_SESSION_TTL = Duration.ofHours(1);
 
-    private final UserDbService userDbService;
+    private final WbUserDbService userDbService;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public IPage<UserVO> pageUsers(long current, long size, String username, String role, Integer status) {
-        IPage<User> source = userDbService.pageByCondition(current, size, username, role, status);
+        IPage<WbUser> source = userDbService.pageByCondition(current, size, username, role, status);
         // 显式字段映射：密码等敏感字段不进入响应体
         Page<UserVO> target = new Page<>(source.getCurrent(), source.getSize(), source.getTotal());
         target.setRecords(source.getRecords().stream().map(UserServiceImpl::toUserVO).toList());
@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
     public Long addUser(UserCreateRequest request) {
         ThrowUtil.throwIf(NullUtil.isNotNull(userDbService.findActiveByUsername(request.getUsername())),
                 ErrorCode.USERNAME_EXISTS);
-        User user = new User();
+        WbUser user = new WbUser();
         user.setUsername(request.getUsername());
         user.setDisplayName(request.getDisplayName());
         user.setEmail(StrUtil.trimToNull(request.getEmail()));
@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUser(Long id, UserUpdateRequest request) {
-        User user = userDbService.getById(id);
+        WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         String beforeSummary = auditSummary(user);
         // 自保护：不允许改自己的角色或状态，避免管理员把自己锁在外面
@@ -143,7 +143,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        User user = userDbService.getById(id);
+        WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         // 自保护：不允许删除自己
         ThrowUtil.throwIf(isSelf(id), ErrorCode.USER_SELF_OPERATION_FORBIDDEN);
@@ -158,14 +158,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserVO getUserProfile(Long id) {
-        User user = userDbService.getById(id);
+        WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         return toUserVO(user);
     }
 
     @Override
     public void updateProfile(Long id, ProfileUpdateRequest request) {
-        User user = userDbService.getById(id);
+        WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         String beforeSummary = auditSummary(user);
         user.setDisplayName(request.getDisplayName());
@@ -178,7 +178,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String changePassword(Long id, PasswordUpdateRequest request) {
-        User user = userDbService.getById(id);
+        WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         ThrowUtil.throwIf(!passwordEncoder.matches(request.getOldPassword(), user.getPassword()),
                 ErrorCode.OLD_PASSWORD_MISMATCH);
@@ -208,7 +208,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /** 审计摘要：只带出 id/用户名/角色/状态与令牌版本，绝不包含密码 */
-    private String auditSummary(User user) {
+    private String auditSummary(WbUser user) {
         return JsonUtil.toJsonStr(Map.of(
                 "id", NullUtil.isNull(user.getId()) ? "" : String.valueOf(user.getId()),
                 "username", StrUtil.nullToEmpty(user.getUsername()),
@@ -235,7 +235,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /** 目标用户是否为启用状态的管理员 */
-    private boolean isEnabledAdmin(User user) {
+    private boolean isEnabledAdmin(WbUser user) {
         return isEnabledAdmin(user.getRole(), user.getStatus());
     }
 
@@ -247,15 +247,15 @@ public class UserServiceImpl implements UserService {
 
     /** 除指定用户外，仍在启用状态的管理员数量 */
     private long countOtherEnabledAdmins(Long excludeId) {
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getRole, UserRole.ADMIN.getCode())
-                .eq(User::getStatus, UserStatus.ENABLED.getCode())
-                .ne(User::getId, excludeId);
+        LambdaQueryWrapper<WbUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(WbUser::getRole, UserRole.ADMIN.getCode())
+                .eq(WbUser::getStatus, UserStatus.ENABLED.getCode())
+                .ne(WbUser::getId, excludeId);
         return userDbService.count(queryWrapper);
     }
 
     /** 递增令牌版本：null 视为 0（与库表默认值一致） */
-    private int nextTokenVersion(User user) {
+    private int nextTokenVersion(WbUser user) {
         return (NullUtil.isNull(user.getTokenVersion()) ? 0 : user.getTokenVersion()) + 1;
     }
 
@@ -277,7 +277,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /** 实体转视图对象：只带出可对外字段，避免密码泄漏 */
-    private static UserVO toUserVO(User user) {
+    private static UserVO toUserVO(WbUser user) {
         UserVO vo = new UserVO();
         BeanUtil.copyProperties(user, vo);
         // 库里存的是对象 key，对外一律换成可直接渲染的接口地址

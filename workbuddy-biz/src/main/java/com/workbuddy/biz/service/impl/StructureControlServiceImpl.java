@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.StructureControlService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.StatsSupport;
 import com.workbuddy.biz.service.support.StructureStatsSupport;
@@ -9,8 +9,8 @@ import com.workbuddy.biz.service.support.StructureVoAssembler;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.dto.response.structure.StructureDetailVO;
@@ -43,7 +43,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StructureControlServiceImpl implements StructureControlService {
 
-    private final KbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
     private final TaskTriggerSupport triggerSupport;
     private final TaskDetailSupport detailSupport;
     private final FileStorage fileStorage;
@@ -62,7 +62,7 @@ public class StructureControlServiceImpl implements StructureControlService {
     public StageTriggerVO structure(Long fileResultId, Long upstreamProductId) {
         accessGuard.requireExisting(fileResultId);
         // 上游解析产物：必须显式指定，校验存在/环节/归属；未指定直接拒绝（无按时间猜的兜底）。
-        KbPipelineProduct parseProduct = requireParseProduct(fileResultId, upstreamProductId);
+        WbPipelineProduct parseProduct = requireParseProduct(fileResultId, upstreamProductId);
         return triggerSupport.trigger(fileResultId, PipelineStage.STRUCTURE, parseProduct.getId(), null, null,
                 PipelineStage.STRUCTURE.getLabel());
     }
@@ -70,7 +70,7 @@ public class StructureControlServiceImpl implements StructureControlService {
     @Override
     public StructureDetailVO structureDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);
-        KbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.STRUCTURE, taskId,
+        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.STRUCTURE, taskId,
                 PipelineStage.STRUCTURE.getLabel());
 
         StructureDetailVO vo = new StructureDetailVO();
@@ -81,7 +81,7 @@ public class StructureControlServiceImpl implements StructureControlService {
         vo.setConflicts(new ArrayList<>());
         vo.setOutline(new ArrayList<>());
         UnifiedDocument document = null;
-        KbPipelineProduct product = detailSupport.productOfTask(task);
+        WbPipelineProduct product = detailSupport.productOfTask(task);
         if (NullUtil.isNotNull(product)) {
             detailSupport.withProductRef(vo, product);
             document = readDocument(product, vo);
@@ -95,10 +95,10 @@ public class StructureControlServiceImpl implements StructureControlService {
     }
 
     /** 上游解析产物校验：必须显式指定，校验存在/环节/归属；未指定直接拒绝（无按时间猜的兜底）。 */
-    private KbPipelineProduct requireParseProduct(Long fileResultId, Long productId) {
+    private WbPipelineProduct requireParseProduct(Long fileResultId, Long productId) {
         ThrowUtil.throwIf(NullUtil.isNull(productId) || productId == 0L, ErrorCode.TASK_UPSTREAM_MISSING,
                 "未指定上游解析产物，请从解析产物的卡片发起触发");
-        KbPipelineProduct product = pipelineProductDbService.getById(productId);
+        WbPipelineProduct product = pipelineProductDbService.getById(productId);
         ThrowUtil.throwIf(NullUtil.isNull(product), ErrorCode.FILE_RESULT_NOT_FOUND, "指定上游产物不存在");
         ThrowUtil.throwIf(!PipelineStage.PARSE.name().equals(product.getStage()), ErrorCode.FILE_RESULT_NOT_FOUND,
                 "指定产物环节不匹配：期望 PARSE");
@@ -116,7 +116,7 @@ public class StructureControlServiceImpl implements StructureControlService {
      *
      * @return 产物本体；读不到返回 null
      */
-    private UnifiedDocument readDocument(KbPipelineProduct product, StructureDetailVO vo) {
+    private UnifiedDocument readDocument(WbPipelineProduct product, StructureDetailVO vo) {
         try {
             byte[] content = fileStorage.getObject(ObjectRef.ofProduct(product));
             UnifiedDocument document = JsonUtil.toObject(

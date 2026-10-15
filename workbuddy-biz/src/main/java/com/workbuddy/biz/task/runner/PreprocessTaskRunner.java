@@ -1,15 +1,15 @@
 package com.workbuddy.biz.task.runner;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.task.support.TaskRunnerSupport;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.preprocess.PreprocessOutcome;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
@@ -42,9 +42,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class PreprocessTaskRunner {
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbFileResultDbService fileResultDbService;
-    private final KbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbFileResultDbService fileResultDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
     private final FileStorage fileStorage;
     private final PreprocessorPort preprocessor;
     private final PreprocessProperties preprocessProperties;
@@ -62,14 +62,14 @@ public class PreprocessTaskRunner {
         if (NullUtil.isNull(claimed)) {
             return;
         }
-        KbPipelineTask task = claimed.task();
-        KbFileResult fileResult = claimed.fileResult();
+        WbPipelineTask task = claimed.task();
+        WbFileResult fileResult = claimed.fileResult();
         log.info("===> PreprocessTaskRunner 领取预处理任务, taskId={}, fileResultId={}",
                 taskId, task.getFileResultId());
         try {
             // 上游组装产物：只认任务行上的显式引用，缺引用按任务失败处理
             // 上游组装产物：任务行缺引用与产出任务未成功都在助手里拒绝（门禁：未成功的运行不读也不落库）
-            KbPipelineProduct structureProduct = TaskRunnerSupport.requireUpstream(pipelineProductDbService,
+            WbPipelineProduct structureProduct = TaskRunnerSupport.requireUpstream(pipelineProductDbService,
                     upstreamProductGate, task, taskId, "任务未指定上游统一结构产物", this::finishFailed);
             if (NullUtil.isNull(structureProduct)) {
                 return;
@@ -118,10 +118,10 @@ public class PreprocessTaskRunner {
     }
 
     /** 写产物存储 + 阶段产物引用 + 子步骤记录（成功/PARTIAL_SUCCESS 路径） */
-    private void persistProduct(KbPipelineTask task, KbFileResult fileResult, KbPipelineProduct structureProduct,
+    private void persistProduct(WbPipelineTask task, WbFileResult fileResult, WbPipelineProduct structureProduct,
                                 PreprocessStrategy strategy, PreprocessOutcome outcome) {
         Objects.requireNonNull(outcome.getView(), "预处理结果为空");
-        KbPipelineProduct product = productPersistence.persist(task, PipelineStage.PREPROCESS,
+        WbPipelineProduct product = productPersistence.persist(task, PipelineStage.PREPROCESS,
                 structureProduct.getId(), JsonUtil.toJsonStr(strategy), outcome.getView());
         stepLogPersistence.save(task.getId(), outcome.getStepLogs());
         TaskRunnerSupport.logPersisted(log, "PreprocessTaskRunner 预处理完成", task, fileResult.getId(), outcome,

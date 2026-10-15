@@ -2,17 +2,17 @@
 
 平台级设置的**容器页**：页面按卡片分区，每张卡自己判权限与数据来源，卡片统一固定宽高（`.setting-cards` 的 `--setting-card-w: 275px` / `--setting-card-h: 305px`，卡片取这两个变量，描边盒正好 275×305），外层容器 `flex-wrap` 换行排布，新增卡片复用同一组变量；后续会加入所有登录用户都能改的卡片。当前的唯一一张卡是「存储源」，只做两件事：**列举存储源**与**启用其中一个**——启用某个存储源等于把当前启用的那个换掉，之后的新上传与新任务写到它，读取按对象记录里的数据源 ID 走。数据源**只由 `config/workbuddy-file.yml` 的 seed 或库内 SQL 维护**，页面不提供新增、编辑、停用、删除与连接测试入口。
 
-| 项         | 值                                                                                                                                                                            |
-|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 路由       | `/settings`（所有登录用户可进，路由不带 `meta.adminOnly`）                                                                                                                    |
-| 入口       | 侧栏一级叶子项「系统设置」，所有登录用户可见（菜单项不带 `adminOnly`）                                                                                                        |
-| 页内权限   | 卡片级：只有「存储源」这张卡按 `authStore.isAdmin` 渲染；非管理员只看到页标题与一行灰字空态「暂无你可以修改的设置」                                                           |
-| 前端视图   | `../../../web/src/views/system/SystemSettingView.vue`                                                                                                                         |
-| 前端类型   | `../../../web/src/types/system.ts`（清单与启用响应的契约）                                                                                                                    |
-| 前端接口层 | `../../../web/src/api/system.ts`                                                                                                                                              |
-| 后端       | `workbuddy-biz` 模块的 `StorageSourceController`（三个方法各自标了 `@AdminOnly`，路径前缀 `/system`）                                                                         |
-| 涉及接口   | `GET /system/storage-sources`、`POST /system/storage-sources/{id}/current/preview`、`POST /system/storage-sources/{id}/current`                                               |
-| 涉及的表   | `kb_storage_source`（数据源本体）、`kb_pipeline_task`（影响面统计）、`kb_file_result` / `kb_source_file` / `kb_file_object`（影响面按链取数据源）、`kb_audit_log`（切换留痕） |
+| 项         | 值                                                                                                                                                                                      |
+|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 路由       | `/settings`（所有登录用户可进，路由不带 `meta.adminOnly`）                                                                                                                              |
+| 入口       | 侧栏一级叶子项「系统设置」，所有登录用户可见（菜单项不带 `adminOnly`）                                                                                                                  |
+| 页内权限   | 卡片级：只有「存储源」这张卡按 `authStore.isAdmin` 渲染；非管理员只看到页标题与一行灰字空态「暂无你可以修改的设置」                                                                     |
+| 前端视图   | `../../../web/src/views/system/SystemSettingView.vue`                                                                                                                                   |
+| 前端类型   | `../../../web/src/types/system.ts`（清单与启用响应的契约）                                                                                                                              |
+| 前端接口层 | `../../../web/src/api/system.ts`                                                                                                                                                        |
+| 后端       | `workbuddy-biz` 模块的 `StorageSourceController`（三个方法各自标了 `@AdminOnly`，路径前缀 `/system`）                                                                                   |
+| 涉及接口   | `GET /system/storage-sources`、`POST /system/storage-sources/{id}/current/preview`、`POST /system/storage-sources/{id}/current`                                                         |
+| 涉及的表   | `wb_storage_source`（数据源本体）、`wb_knowledge_pipeline_task`（影响面统计）、`wb_file_result` / `wb_source_file` / `wb_file_object`（影响面按链取数据源）、`wb_audit_log`（切换留痕） |
 
 菜单与路由对所有登录用户开放，三个接口仍各自标着 `@AdminOnly`：非管理员进得来页面，但卡片不渲染、清单取不到、启用调不动（接口回 `40104`）。菜单可见与接口放行是两件事。
 
@@ -20,7 +20,7 @@
 
 卡内两段：**存储源下拉 + 「启用」按钮**（只列 `ENABLED` 的行，默认选中当前启用项；选中项就是当前启用项时按钮读「已启用」并置灰）与「**当前启用**」信息块（名称、类型、参数与状态四态，不带探测时间）。启用走「预览影响面 → 确认启用」两步；参数区单列铺开，按 `params` 完整展示，`accessKey` 与 `secretKey` 各占一行，页面上不做遮蔽，参数多到面板装不下时在面板内滚、卡片尺寸不变。
 
-`kb_system_setting` 这张键值表留在库里供以后的普通设置使用，本页的读写都不碰它。
+`wb_system_setting` 这张键值表留在库里供以后的普通设置使用，本页的读写都不碰它。
 
 ## 文档导航
 

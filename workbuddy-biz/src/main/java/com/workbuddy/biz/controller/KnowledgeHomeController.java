@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 首页 Controller：资产速览 + 最近提交。
  *
  * <p>独立于各业务 Controller：首页只读、跨模块聚合。数据来源是各资产表计数与
- * `kb_submit_log`（最近提交）。
+ * `wb_submit_log`（最近提交）。
  *
  * <p>**最近提交只返回当前登录用户的记录**：接口不接受"提交人"参数，提交人由服务端
  * 从安全上下文取。

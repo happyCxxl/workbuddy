@@ -89,7 +89,7 @@ export interface IndexVersionVO {
   status: IndexVersionStatus | string;
   /** 失败原因（后端只给一个字符串，不含结构化缺口） */
   buildError: string | null;
-  /** 构建任务 ID（kb_pipeline_task，stage=BUILD_INDEX） */
+  /** 构建任务 ID（wb_knowledge_pipeline_task，stage=BUILD_INDEX） */
   taskId: string | null;
   /** 最近一次全量对账时间（追加后也会更新，可当「最近追加」看） */
   validatedAt: string | null;

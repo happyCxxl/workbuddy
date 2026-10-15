@@ -1,20 +1,20 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.IndexComboReconciler;
 import com.workbuddy.biz.service.support.IndexLineageResolver;
 import com.workbuddy.biz.service.support.IndexRowAssembler;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbStrategyBinding;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbStrategyBinding;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.enums.index.IndexShape;
 import com.workbuddy.worker.indexing.ComboSnapshot;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,17 +41,17 @@ import static org.mockito.Mockito.when;
 class IndexComboServiceImplTest {
 
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
-    private KbStrategyBindingDbService strategyBindingDbService;
+    private WbStrategyBindingDbService strategyBindingDbService;
     @Mock
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbChunkSetDbService chunkSetDbService;
+    private WbChunkSetDbService chunkSetDbService;
     @Mock
-    private KbEmbeddingSetDbService embeddingSetDbService;
+    private WbEmbeddingSetDbService embeddingSetDbService;
     @Mock
     private IndexLineageResolver lineageResolver;
     @Mock
@@ -68,15 +68,15 @@ class IndexComboServiceImplTest {
                 strategyVersionDbService, fileResultDbService, reconciler);
     }
 
-    private KbFileResult file(Long id) {
-        KbFileResult f = new KbFileResult();
+    private WbFileResult file(Long id) {
+        WbFileResult f = new WbFileResult();
         f.setId(id);
         f.setKnowledgeBaseId(2L);
         return f;
     }
 
-    private KbChunkSet chunkSet(Long id, Long fileId, String strategy, Long upstreamProductId) {
-        KbChunkSet s = new KbChunkSet();
+    private WbChunkSet chunkSet(Long id, Long fileId, String strategy, Long upstreamProductId) {
+        WbChunkSet s = new WbChunkSet();
         s.setId(id);
         s.setFileResultId(fileId);
         s.setChunkStrategyVersion(strategy);
@@ -84,24 +84,24 @@ class IndexComboServiceImplTest {
         return s;
     }
 
-    private KbEmbeddingSet embedSet(Long id, Long fileId, String strategy) {
-        KbEmbeddingSet s = new KbEmbeddingSet();
+    private WbEmbeddingSet embedSet(Long id, Long fileId, String strategy) {
+        WbEmbeddingSet s = new WbEmbeddingSet();
         s.setId(id);
         s.setFileResultId(fileId);
         s.setStrategyVersion(strategy);
         return s;
     }
 
-    private KbPipelineStrategyVersion version(Long id, String name) {
-        KbPipelineStrategyVersion v = new KbPipelineStrategyVersion();
+    private WbPipelineStrategyVersion version(Long id, String name) {
+        WbPipelineStrategyVersion v = new WbPipelineStrategyVersion();
         v.setId(id);
         v.setName(name);
         v.setVersion("v1");
         return v;
     }
 
-    private KbStrategyBinding binding(String type, Long versionId) {
-        KbStrategyBinding b = new KbStrategyBinding();
+    private WbStrategyBinding binding(String type, Long versionId) {
+        WbStrategyBinding b = new WbStrategyBinding();
         b.setStrategyType(type);
         b.setStrategyVersionId(versionId);
         return b;
@@ -203,7 +203,7 @@ class IndexComboServiceImplTest {
 
     @Test
     void combosForShouldDispatchByBindingSwitch() {
-        KnowledgeBase kbOn = new KnowledgeBase();
+        WbKnowledgeBase kbOn = new WbKnowledgeBase();
         kbOn.setId(2L);
         kbOn.setStrategyBindingEnabled(1);
         when(knowledgeBaseDbService.getById(2L)).thenReturn(kbOn);
@@ -214,7 +214,7 @@ class IndexComboServiceImplTest {
         // 绑定开但绑定不齐全 → 空列表
         assertTrue(service.combosFor(2L).isEmpty());
 
-        KnowledgeBase kbOff = new KnowledgeBase();
+        WbKnowledgeBase kbOff = new WbKnowledgeBase();
         kbOff.setId(3L);
         kbOff.setStrategyBindingEnabled(0);
         when(knowledgeBaseDbService.getById(3L)).thenReturn(kbOff);

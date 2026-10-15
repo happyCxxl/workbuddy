@@ -25,6 +25,6 @@ public class KnowledgeBaseStatsVO implements Serializable {
     /** 其中启用中的知识库数（status=1） */
     private Long enabledCount;
 
-    /** 可见库下的文档总数：kb_file_result 记录数（一次提交 = 一个任务 = 一行） */
+    /** 可见库下的文档总数：wb_file_result 记录数（一次提交 = 一个任务 = 一行） */
     private Long documentCount;
 }

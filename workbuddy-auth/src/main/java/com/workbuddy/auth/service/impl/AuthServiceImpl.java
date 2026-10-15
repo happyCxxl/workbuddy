@@ -1,10 +1,10 @@
 package com.workbuddy.auth.service.impl;
 
-import com.workbuddy.auth.db.UserDbService;
+import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.AuthService;
 import com.workbuddy.auth.service.support.LoginAttemptGuard;
 import com.workbuddy.auth.util.JwtUtil;
-import com.workbuddy.common.domain.entity.User;
+import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.request.auth.LoginRequest;
 import com.workbuddy.common.dto.request.auth.RegisterRequest;
 import com.workbuddy.common.dto.response.auth.LoginVO;
@@ -31,7 +31,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserDbService userDbService;
+    private final WbUserDbService userDbService;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -45,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
         // 已锁定则直接拒绝：不查库、不跑 BCrypt（BCrypt 是慢哈希，放任尝试等于给对方一个 CPU 放大器）
         ThrowUtil.throwIf(loginAttemptGuard.isLocked(request.getUsername(), ip),
                 ErrorCode.LOGIN_TOO_FREQUENT);
-        User user = userDbService.findActiveByUsername(request.getUsername());
+        WbUser user = userDbService.findActiveByUsername(request.getUsername());
         boolean credentialsMatch = NullUtil.isNotNull(user)
                 && passwordEncoder.matches(request.getPassword(), user.getPassword());
         ThrowUtil.throwIf(!credentialsMatch, ErrorCode.LOGIN_FAILED,
@@ -73,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
     public void register(RegisterRequest request) {
         ThrowUtil.throwIf(userDbService.existsByUsername(request.getUsername()),
                 ErrorCode.USERNAME_EXISTS);
-        User user = new User();
+        WbUser user = new WbUser();
         user.setUsername(request.getUsername());
         user.setDisplayName(request.getDisplayName());
         user.setEmail(request.getEmail());

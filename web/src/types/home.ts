@@ -1,7 +1,7 @@
 /**
  * 首页的类型：资产速览 + 最近提交（仅本人）。
  *
- * <p>最近提交数据源是 `kb_submit_log`，`status` 是**提交校验结果** PASS/FAIL（不是处理链进度）；
+ * <p>最近提交数据源是 `wb_submit_log`，`status` 是**提交校验结果** PASS/FAIL（不是处理链进度）；
  * 可见范围由后端按当前登录用户限定，前端不传提交人。
  */
 
@@ -15,7 +15,7 @@ export interface HomeSummary {
   chunkVersionCount: number;
   embedVersionCount: number;
   retrievalVersionCount: number;
-  /** 已建档文档数（`kb_file_result` 行数；**文件校验失败的提交不建结果**，不计入） */
+  /** 已建档文档数（`wb_file_result` 行数；**文件校验失败的提交不建结果**，不计入） */
   documentCount: number;
 }
 

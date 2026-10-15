@@ -1,9 +1,9 @@
 package com.workbuddy.auth.service.impl;
 
-import com.workbuddy.auth.db.UserDbService;
+import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.support.LoginAttemptGuard;
 import com.workbuddy.auth.util.JwtUtil;
-import com.workbuddy.common.domain.entity.User;
+import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.request.auth.LoginRequest;
 import com.workbuddy.common.dto.request.auth.RegisterRequest;
 import com.workbuddy.common.dto.response.auth.LoginVO;
@@ -45,7 +45,7 @@ class AuthServiceTest {
     private static final Duration REMEMBER_TTL = Duration.ofDays(30);
 
     @Mock
-    private UserDbService userDbService;
+    private WbUserDbService userDbService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -93,7 +93,7 @@ class AuthServiceTest {
 
     @Test
     void loginShouldFallbackToUserRoleWhenRoleMissing() {
-        User plain = adminUser();
+        WbUser plain = adminUser();
         plain.setRole(null);
         when(userDbService.findActiveByUsername("admin")).thenReturn(plain);
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
@@ -107,7 +107,7 @@ class AuthServiceTest {
 
     @Test
     void loginShouldCarryCurrentTokenVersion() {
-        User user = adminUser();
+        WbUser user = adminUser();
         user.setTokenVersion(5);
         when(userDbService.findActiveByUsername("admin")).thenReturn(user);
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
@@ -158,7 +158,7 @@ class AuthServiceTest {
         authService.register(registerRequest());
 
         verify(passwordEncoder).encode("pass123456");
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).save(captor.capture());
         // 自助注册一律普通用户，不得自行获得管理员
         assertEquals(UserRole.USER.getCode(), captor.getValue().getRole());
@@ -234,8 +234,8 @@ class AuthServiceTest {
         return request;
     }
 
-    private User adminUser() {
-        User user = new User();
+    private WbUser adminUser() {
+        WbUser user = new WbUser();
         user.setId(1L);
         user.setUsername("admin");
         user.setDisplayName("管理员");

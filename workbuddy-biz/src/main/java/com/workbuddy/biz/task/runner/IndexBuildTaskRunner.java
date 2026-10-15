@@ -4,18 +4,18 @@ import com.workbuddy.biz.task.support.TaskRunnerSupport;
 import com.workbuddy.common.enums.knowledge.StrategyBindingSwitch;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.IndexSetService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.IndexComboReconciler;
 import com.workbuddy.biz.service.support.IndexRowAssembler;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbIndexVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.enums.index.IndexBuildTrigger;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
@@ -50,10 +50,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class IndexBuildTaskRunner {
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbIndexVersionDbService indexVersionDbService;
-    private final KnowledgeBaseDbService knowledgeBaseDbService;
-    private final KbFileResultDbService fileResultDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbIndexVersionDbService indexVersionDbService;
+    private final WbKnowledgeBaseDbService knowledgeBaseDbService;
+    private final WbFileResultDbService fileResultDbService;
     private final MilvusIndexPort milvusIndexPort;
     private final IndexSetService indexSetService;
     private final IndexComboReconciler indexComboReconciler;
@@ -61,12 +61,12 @@ public class IndexBuildTaskRunner {
 
     /** 执行单个索引构建任务（由消费循环提交，外层看门狗负责超时）。 */
     public void run(Long taskId) {
-        KbPipelineTask task = TaskRunnerSupport.claim(pipelineTaskDbService, taskId);
+        WbPipelineTask task = TaskRunnerSupport.claim(pipelineTaskDbService, taskId);
         if (NullUtil.isNull(task)) {
             return;
         }
         try {
-            KbIndexVersion version = indexVersionDbService.getByTaskId(taskId);
+            WbIndexVersion version = indexVersionDbService.getByTaskId(taskId);
             if (NullUtil.isNull(version)) {
                 finishFailed(taskId, PipelineTaskErrorCode.INDEX_BUILD_FAILED.name(), "索引版本行不存在");
                 return;
@@ -82,7 +82,7 @@ public class IndexBuildTaskRunner {
         } catch (Exception e) {
             log.error("索引构建任务执行异常, taskId={}", taskId, e);
             try {
-                KbIndexVersion version = indexVersionDbService.getByTaskId(taskId);
+                WbIndexVersion version = indexVersionDbService.getByTaskId(taskId);
                 if (NullUtil.isNotNull(version)
                         && !IndexVersionStatus.READY.name().equals(version.getStatus())
                         && !IndexVersionStatus.ONLINE.name().equals(version.getStatus())) {
@@ -97,7 +97,7 @@ public class IndexBuildTaskRunner {
     }
 
     /** 构建主流程：对账校验 → 集合生命周期 → 全量对账 → READY 收敛 → 发布判定 */
-    private void executeBuild(Long taskId, KbIndexVersion version, BuildOrder order) {
+    private void executeBuild(Long taskId, WbIndexVersion version, BuildOrder order) {
         ComboSnapshot combo = order.getComboSnapshot();
         Long kbId = order.getKnowledgeBaseId();
         version.setStatus(IndexVersionStatus.BUILDING.name());
@@ -175,8 +175,8 @@ public class IndexBuildTaskRunner {
         if (NullUtil.isNull(scope) || scope.isEmpty()) {
             return;
         }
-        Map<String, KbChunkSet> latestChunk = indexComboReconciler.latestChunkMap(scope);
-        Map<String, KbEmbeddingSet> latestEmbed = indexComboReconciler.latestEmbedMap(scope);
+        Map<String, WbChunkSet> latestChunk = indexComboReconciler.latestChunkMap(scope);
+        Map<String, WbEmbeddingSet> latestEmbed = indexComboReconciler.latestEmbedMap(scope);
         for (Long fileId : scope) {
             IndexComboReconciler.ComboProducts products = indexComboReconciler
                     .selectComboProducts(combo, fileId, latestChunk, latestEmbed);
@@ -185,7 +185,7 @@ public class IndexBuildTaskRunner {
                         fileId, products.gap());
                 continue;
             }
-            KbFileResult file = fileResultDbService.getById(fileId);
+            WbFileResult file = fileResultDbService.getById(fileId);
             List<IndexRow> rows = indexRowAssembler.assemble(fileId,
                     NullUtil.isNull(file) ? "" : StrUtil.blankToDefault(file.getOwner(), ""),
                     products.chunkRow(), products.embedRow());
@@ -207,13 +207,13 @@ public class IndexBuildTaskRunner {
             return true;
         }
         if (IndexBuildTrigger.INCREMENT.name().equals(trigger)) {
-            KnowledgeBase kb = knowledgeBaseDbService.getById(kbId);
+            WbKnowledgeBase kb = knowledgeBaseDbService.getById(kbId);
             return NullUtil.isNull(kb) || StrategyBindingSwitch.isOn(kb.getStrategyBindingEnabled());
         }
         return false;
     }
 
-    private void markFailed(KbIndexVersion version, String buildError) {
+    private void markFailed(WbIndexVersion version, String buildError) {
         version.setStatus(IndexVersionStatus.FAILED.name());
         version.setBuildError(truncate(buildError, 1024));
         indexVersionDbService.updateById(version);

@@ -1,17 +1,17 @@
 package com.workbuddy.biz.task.runner;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
 import com.workbuddy.biz.task.UpstreamProductGate;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.preprocess.PreprocessOutcome;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.storage.ObjectRef;
@@ -69,15 +69,15 @@ class PreprocessTaskRunnerTest {
     private static final Long UPSTREAM_TASK_ID = 40L;
 
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
     private FileStorage fileStorage;
     @Mock
@@ -103,8 +103,8 @@ class PreprocessTaskRunnerTest {
     }
 
     /** 上游产物的产出任务（环节 STRUCTURE） */
-    private KbPipelineTask upstreamTask(PipelineTaskStatus status) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask upstreamTask(PipelineTaskStatus status) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(UPSTREAM_TASK_ID);
         task.setFileResultId(10L);
         task.setStage(PipelineStage.STRUCTURE.name());
@@ -112,8 +112,8 @@ class PreprocessTaskRunnerTest {
         return task;
     }
 
-    private KbPipelineTask queuedTask() {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask queuedTask() {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(60L);
         task.setFileResultId(10L);
         task.setUpstreamProductId(50L);
@@ -124,8 +124,8 @@ class PreprocessTaskRunnerTest {
         return task;
     }
 
-    private KbPipelineProduct structureProduct() {
-        KbPipelineProduct product = new KbPipelineProduct();
+    private WbPipelineProduct structureProduct() {
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setId(50L);
         product.setTaskId(UPSTREAM_TASK_ID);
         product.setArtifactId("abc".repeat(22));
@@ -171,8 +171,8 @@ class PreprocessTaskRunnerTest {
         return outcome;
     }
 
-    private KbFileResult fileResult() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResult() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setSourceFileId(5L);
         return fileResult;
@@ -189,8 +189,8 @@ class PreprocessTaskRunnerTest {
         when(preprocessor.preprocess(any(PreprocessContext.class))).thenReturn(successOutcome());
         when(fileStorage.putObject(any(byte[].class)))
                 .thenReturn(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "def".repeat(21) + "0"));
-        when(pipelineProductDbService.save(any(KbPipelineProduct.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineProduct.class).setId(70L);
+        when(pipelineProductDbService.save(any(WbPipelineProduct.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineProduct.class).setId(70L);
             return true;
         });
 
@@ -201,7 +201,7 @@ class PreprocessTaskRunnerTest {
         assertEquals("doc-10", contextCaptor.getValue().getDocument().getDocumentInfo().getDocumentId());
         assertNotNull(contextCaptor.getValue().getStrategy());
 
-        ArgumentCaptor<KbPipelineProduct> productCaptor = ArgumentCaptor.forClass(KbPipelineProduct.class);
+        ArgumentCaptor<WbPipelineProduct> productCaptor = ArgumentCaptor.forClass(WbPipelineProduct.class);
         verify(pipelineProductDbService).save(productCaptor.capture());
         assertEquals(PipelineStage.PREPROCESS.name(), productCaptor.getValue().getStage());
         assertEquals(50L, productCaptor.getValue().getUpstreamProductId());
@@ -218,12 +218,12 @@ class PreprocessTaskRunnerTest {
 
     @Test
     void specifiedUpstreamProductShouldBePreferred() {
-        KbPipelineTask task = queuedTask();
+        WbPipelineTask task = queuedTask();
         task.setUpstreamProductId(88L);
         when(pipelineTaskDbService.getById(60L)).thenReturn(task);
         when(pipelineTaskDbService.claim(60L)).thenReturn(1);
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineProduct specified = structureProduct();
+        WbPipelineProduct specified = structureProduct();
         specified.setId(88L);
         specified.setArtifactId("spec".repeat(16));
         when(pipelineProductDbService.getById(88L)).thenReturn(specified);
@@ -232,8 +232,8 @@ class PreprocessTaskRunnerTest {
         when(preprocessor.preprocess(any(PreprocessContext.class))).thenReturn(successOutcome());
         when(fileStorage.putObject(any(byte[].class)))
                 .thenReturn(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "out".repeat(16)));
-        when(pipelineProductDbService.save(any(KbPipelineProduct.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineProduct.class).setId(70L);
+        when(pipelineProductDbService.save(any(WbPipelineProduct.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineProduct.class).setId(70L);
             return true;
         });
 
@@ -241,7 +241,7 @@ class PreprocessTaskRunnerTest {
 
         verify(fileStorage).getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "spec".repeat(16)));
         verify(pipelineProductDbService, never()).getByFileResultIdAndStage(any(), any());
-        ArgumentCaptor<KbPipelineProduct> productCaptor = ArgumentCaptor.forClass(KbPipelineProduct.class);
+        ArgumentCaptor<WbPipelineProduct> productCaptor = ArgumentCaptor.forClass(WbPipelineProduct.class);
         verify(pipelineProductDbService).save(productCaptor.capture());
         assertEquals(88L, productCaptor.getValue().getUpstreamProductId());
     }
@@ -283,7 +283,7 @@ class PreprocessTaskRunnerTest {
     @Test
     void corruptStrategySnapshotShouldFailPreprocessFailed() {
         // 快照坏（"{oops"）：解析抛异常被显式接住，任务落 PREPROCESS_FAILED 且文案干净可辨识
-        KbPipelineTask task = queuedTask();
+        WbPipelineTask task = queuedTask();
         task.setStrategySnapshot("{oops");
         when(pipelineTaskDbService.getById(60L)).thenReturn(task);
         when(pipelineTaskDbService.claim(60L)).thenReturn(1);

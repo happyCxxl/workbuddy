@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * 组合快照（策略集合模型）：
  * 组合身份 = 文件范围 × 索引形态 × 环节策略映射（stage → name-version，环节可扩展）。
- * 记入 kb_index_version.combo_snapshot（JSON）；组合全等判定 = 三部分全等（JSON 序列化确定性：
+ * 记入 wb_knowledge_index_version.combo_snapshot（JSON）；组合全等判定 = 三部分全等（JSON 序列化确定性：
  * stageStrategies 为 LinkedHashMap 保持插入序）。
  * 集合名 = kb_{kbId}_{versionNo}（versionNo = 组合注册序号），同组合复用同集合。
  * <p>

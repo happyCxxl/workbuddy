@@ -14,10 +14,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PreprocessTriggerVO {
 
-    /** 文件结果 ID（kb_file_result.id） */
+    /** 文件结果 ID（wb_file_result.id） */
     private Long fileResultId;
 
-    /** 处理链任务 ID（kb_pipeline_task.id） */
+    /** 处理链任务 ID（wb_knowledge_pipeline_task.id） */
     private Long pipelineTaskId;
 
     /** 生效策略版本（如 preproc-default-v1） */

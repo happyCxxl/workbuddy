@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
-import com.workbuddy.biz.mapper.KbModelCallLogMapper;
-import com.workbuddy.common.domain.entity.KbModelCallLog;
+import com.workbuddy.biz.mapper.WbModelCallLogMapper;
+import com.workbuddy.common.domain.entity.WbModelCallLog;
 import com.workbuddy.common.domain.model.calllog.ModelCallLogEntry;
 import com.workbuddy.common.domain.model.calllog.ModelCallLogQuery;
 import com.workbuddy.common.domain.model.calllog.ModelCallLogSummary;
@@ -58,31 +58,31 @@ class DbModelCallLogServiceTest {
 
     private static final LocalDateTime TO = LocalDateTime.of(2026, 10, 2, 0, 0);
 
-    private KbModelCallLogMapper mapper;
+    private WbModelCallLogMapper mapper;
 
     private DbModelCallLogService service;
 
     @BeforeAll
     static void initLambdaCache() {
-        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), KbModelCallLog.class);
+        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), WbModelCallLog.class);
     }
 
     @BeforeEach
     void setUp() {
-        mapper = mock(KbModelCallLogMapper.class);
+        mapper = mock(WbModelCallLogMapper.class);
         service = new DbModelCallLogService();
         ReflectionTestUtils.setField(service, "baseMapper", mapper);
     }
 
     @Test
     void recordShouldInsertRowWithDictionaryValuesAndUsage() {
-        when(mapper.insert(any(KbModelCallLog.class))).thenReturn(1);
+        when(mapper.insert(any(WbModelCallLog.class))).thenReturn(1);
 
         service.record(entry());
 
-        ArgumentCaptor<KbModelCallLog> captor = ArgumentCaptor.forClass(KbModelCallLog.class);
+        ArgumentCaptor<WbModelCallLog> captor = ArgumentCaptor.forClass(WbModelCallLog.class);
         verify(mapper).insert(captor.capture());
-        KbModelCallLog row = captor.getValue();
+        WbModelCallLog row = captor.getValue();
         assertEquals("CHAT", row.getCapability());
         assertEquals("dashscope", row.getVendor());
         assertEquals("qwen-max", row.getModel());
@@ -105,7 +105,7 @@ class DbModelCallLogServiceTest {
 
     @Test
     void recordShouldKeepUnknownUsageAsNull() {
-        when(mapper.insert(any(KbModelCallLog.class))).thenReturn(1);
+        when(mapper.insert(any(WbModelCallLog.class))).thenReturn(1);
         ModelCallLogEntry entry = new ModelCallLogEntry();
         entry.setCapability(ModelCapability.CHAT);
         entry.setVendor("dashscope");
@@ -117,9 +117,9 @@ class DbModelCallLogServiceTest {
 
         service.record(entry);
 
-        ArgumentCaptor<KbModelCallLog> captor = ArgumentCaptor.forClass(KbModelCallLog.class);
+        ArgumentCaptor<WbModelCallLog> captor = ArgumentCaptor.forClass(WbModelCallLog.class);
         verify(mapper).insert(captor.capture());
-        KbModelCallLog row = captor.getValue();
+        WbModelCallLog row = captor.getValue();
         assertEquals(1, row.getUsageUnknown());
         assertNull(row.getPromptTokens());
         assertNull(row.getTotalTokens());
@@ -132,7 +132,7 @@ class DbModelCallLogServiceTest {
         KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.record(null));
 
         assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
-        verify(mapper, never()).insert(any(KbModelCallLog.class));
+        verify(mapper, never()).insert(any(WbModelCallLog.class));
     }
 
     @Test
@@ -219,7 +219,7 @@ class DbModelCallLogServiceTest {
 
         ModelCallLogSummary summary = service.summarize(query(FROM, TO));
 
-        QueryWrapper<KbModelCallLog> wrapper = capturedSummaryWrapper();
+        QueryWrapper<WbModelCallLog> wrapper = capturedSummaryWrapper();
         String select = wrapper.getSqlSelect();
         assertTrue(select.contains("COUNT(*) AS calls"), select);
         assertTrue(select.contains("SUM(CASE WHEN status = 'SUCCESS'"), select);
@@ -316,10 +316,10 @@ class DbModelCallLogServiceTest {
     /** 取全部明细查询用的条件片段（按调用顺序） */
     private List<String> capturedListSqlSegments() {
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<Wrapper<KbModelCallLog>> captor = ArgumentCaptor.forClass(Wrapper.class);
+        ArgumentCaptor<Wrapper<WbModelCallLog>> captor = ArgumentCaptor.forClass(Wrapper.class);
         verify(mapper, atLeastOnce()).selectList(captor.capture());
         List<String> segments = new ArrayList<>();
-        for (Wrapper<KbModelCallLog> wrapper : captor.getAllValues()) {
+        for (Wrapper<WbModelCallLog> wrapper : captor.getAllValues()) {
             assertNotNull(wrapper);
             segments.add(wrapper.getSqlSegment());
         }
@@ -327,11 +327,11 @@ class DbModelCallLogServiceTest {
     }
 
     /** 取最近一次概览聚合用的条件 */
-    private QueryWrapper<KbModelCallLog> capturedSummaryWrapper() {
+    private QueryWrapper<WbModelCallLog> capturedSummaryWrapper() {
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<Wrapper<KbModelCallLog>> captor = ArgumentCaptor.forClass(Wrapper.class);
+        ArgumentCaptor<Wrapper<WbModelCallLog>> captor = ArgumentCaptor.forClass(Wrapper.class);
         verify(mapper).selectMaps(captor.capture());
-        return (QueryWrapper<KbModelCallLog>) captor.getValue();
+        return (QueryWrapper<WbModelCallLog>) captor.getValue();
     }
 
     /** 查询条件：时间范围按入参给值 */
@@ -366,8 +366,8 @@ class DbModelCallLogServiceTest {
     }
 
     /** 库表行：与明细入参同值 */
-    private KbModelCallLog row() {
-        KbModelCallLog row = new KbModelCallLog();
+    private WbModelCallLog row() {
+        WbModelCallLog row = new WbModelCallLog();
         row.setId(11L);
         row.setCapability("CHAT");
         row.setVendor("dashscope");

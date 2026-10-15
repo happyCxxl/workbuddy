@@ -4,20 +4,20 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.biz.service.StageContentQueryService;
-import com.workbuddy.biz.service.db.KbChunkDbService;
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingRecordDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbChunkDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.StatsSupport;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
-import com.workbuddy.common.domain.entity.KbChunk;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingRecord;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
@@ -63,11 +63,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StageContentQueryServiceImpl implements StageContentQueryService {
 
-    private final KbPipelineProductDbService pipelineProductDbService;
-    private final KbChunkSetDbService chunkSetDbService;
-    private final KbChunkDbService chunkDbService;
-    private final KbEmbeddingSetDbService embeddingSetDbService;
-    private final KbEmbeddingRecordDbService embeddingRecordDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
+    private final WbChunkSetDbService chunkSetDbService;
+    private final WbChunkDbService chunkDbService;
+    private final WbEmbeddingSetDbService embeddingSetDbService;
+    private final WbEmbeddingRecordDbService embeddingRecordDbService;
     private final FileStorage fileStorage;
     private final TaskDetailSupport detailSupport;
     private final FileResultAccessGuard accessGuard;
@@ -99,7 +99,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
         accessGuard.requireExisting(fileResultId);
         ThrowUtil.throwIf(StrUtil.isBlank(stage) || !PipelineStage.FILE_CHAIN_STAGES.contains(stage),
                 ErrorCode.PARAM_INVALID, "未知环节: " + stage);
-        KbPipelineTask task = detailSupport.resolveTask(fileResultId, stageOf(stage), taskId, stageLabel(stage));
+        WbPipelineTask task = detailSupport.resolveTask(fileResultId, stageOf(stage), taskId, stageLabel(stage));
 
         int pageNo = resolvePage(page);
         int pageSize = resolveLimit(limit);
@@ -118,7 +118,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
         }
         vo.setTaskId(task.getId());
         // latest = 该次运行产物内容是否可用：按 task.productId 精确取产物（历史任务同样可展示自己的内容）
-        KbPipelineProduct product = NullUtil.isNull(task) || NullUtil.isNull(task.getProductId()) ? null
+        WbPipelineProduct product = NullUtil.isNull(task) || NullUtil.isNull(task.getProductId()) ? null
                 : pipelineProductDbService.getById(task.getProductId());
         if (NullUtil.isNull(product) || StrUtil.isBlank(product.getArtifactId())) {
             return vo;
@@ -127,7 +127,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
 
         try {
             if (PipelineStage.CHUNK.name().equals(stage)) {
-                // 切片：过滤与分页都下推到 kb_chunk（切片集合可能很大），total 按过滤后的口径给
+                // 切片：过滤与分页都下推到 wb_knowledge_chunk（切片集合可能很大），total 按过滤后的口径给
                 fillChunkPage(vo, ObjectRef.ofProduct(product), chunkFilter, pageNo, pageSize);
             } else {
                 // 页码与状态过滤都先于分页：total 与翻页都按过滤后的口径给
@@ -193,7 +193,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
         return new ArrayList<>(all.subList(from, Math.min(from + limit, all.size())));
     }
 
-    private List<StageContentItemVO> buildItems(String stage, KbPipelineProduct product) {
+    private List<StageContentItemVO> buildItems(String stage, WbPipelineProduct product) {
         ObjectRef ref = ObjectRef.ofProduct(product);
         return switch (stage) {
             case "PARSE" -> parseItems(ref);
@@ -429,7 +429,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
                 .toList();
     }
 
-    // ---------------- 切片：kb_chunk 内容（按该次运行产物 artifactId 精确取集合） ----------------
+    // ---------------- 切片：wb_knowledge_chunk 内容（按该次运行产物 artifactId 精确取集合） ----------------
 
     /**
      * 切片分页内容：过滤（内容类型 / 是否兜底 / 有无父片）与分页都下推 DB，条目按集合内顺序给出对齐键。
@@ -438,13 +438,13 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      */
     private void fillChunkPage(StageContentVO vo, ObjectRef ref, ChunkContentFilter filter,
                                int pageNo, int pageSize) {
-        KbChunkSet chunkSet = chunkSetDbService.getByArtifactId(ref.objectKey());
+        WbChunkSet chunkSet = chunkSetDbService.getByArtifactId(ref.objectKey());
         if (NullUtil.isNull(chunkSet)) {
             return;
         }
-        IPage<KbChunk> chunkPage = chunkDbService.pageByChunkSetId(chunkSet.getId(), filter, pageNo, pageSize);
+        IPage<WbChunk> chunkPage = chunkDbService.pageByChunkSetId(chunkSet.getId(), filter, pageNo, pageSize);
         List<StageContentItemVO> items = new ArrayList<>();
-        for (KbChunk chunk : chunkPage.getRecords()) {
+        for (WbChunk chunk : chunkPage.getRecords()) {
             items.add(chunkItemOf(chunk));
         }
         vo.setTotal((int) chunkPage.getTotal());
@@ -452,7 +452,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     }
 
     /** 切片条目：对齐键取切片 ID（与详情侧的片同键，两侧互相定位） */
-    private StageContentItemVO chunkItemOf(KbChunk chunk) {
+    private StageContentItemVO chunkItemOf(WbChunk chunk) {
         StageContentItemVO item = itemOf(0, chunk.getContentType(), null, chunk.getContent(),
                 chunkExtra(chunk));
         item.setSeq(ObjectUtil.defaultIfNull(chunk.getOrderNo(), 0));
@@ -462,13 +462,13 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
 
     // ---------------- 向量化：记录列表（按该次运行产物 artifactId 精确取集合） ----------------
 
-    private List<StageContentItemVO> embedItemsBySet(KbEmbeddingSet embeddingSet) {
+    private List<StageContentItemVO> embedItemsBySet(WbEmbeddingSet embeddingSet) {
         List<StageContentItemVO> items = new ArrayList<>();
         if (NullUtil.isNull(embeddingSet)) {
             return items;
         }
         int seq = 1;
-        for (KbEmbeddingRecord record : embeddingRecordDbService.listByEmbeddingSetId(embeddingSet.getId())) {
+        for (WbEmbeddingRecord record : embeddingRecordDbService.listByEmbeddingSetId(embeddingSet.getId())) {
             items.add(itemOf(seq, record.getContentType(), record.getStatus(), record.getInputText(),
                     embedExtra(record)));
             seq++;
@@ -490,7 +490,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     }
 
     /** 切片环节专属字段（来源元素个数与兜底原因只在切片产物里，不进这里） */
-    private Map<String, Object> chunkExtra(KbChunk chunk) {
+    private Map<String, Object> chunkExtra(WbChunk chunk) {
         Map<String, Object> extra = new LinkedHashMap<>();
         extra.put("chunkId", chunk.getChunkId());
         extra.put("contentType", chunk.getContentType());
@@ -505,7 +505,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     }
 
     /** 向量化环节专属字段 */
-    private Map<String, Object> embedExtra(KbEmbeddingRecord record) {
+    private Map<String, Object> embedExtra(WbEmbeddingRecord record) {
         Map<String, Object> extra = new LinkedHashMap<>();
         extra.put("chunkId", record.getChunkId());
         extra.put("tokenCount", record.getTokenCount());

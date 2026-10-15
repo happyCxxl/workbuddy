@@ -54,7 +54,7 @@ public class KnowledgeFileStageController {
             + StageContentQueryService.DEFAULT_LIMIT + " 条，上限 " + StageContentQueryService.MAX_LIMIT
             + " 条），响应含 total 与 truncated；docPage 可选，只回该文档页的元素；"
             + "status 可选（逗号分隔的处置状态），只回这些状态的元素；"
-            + "contentType / fallback / hasParent 可选（只对 CHUNK 生效），过滤与分页都下推到 kb_chunk")
+            + "contentType / fallback / hasParent 可选（只对 CHUNK 生效），过滤与分页都下推到 wb_knowledge_chunk")
     public R<StageContentVO> stageContent(
             @Parameter(description = "文件结果ID", required = true) @PathVariable("fileResultId") Long fileResultId,
             @Parameter(description = "环节（PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED）", required = true)

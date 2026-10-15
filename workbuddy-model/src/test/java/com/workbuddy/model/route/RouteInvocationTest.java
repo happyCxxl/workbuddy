@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 以及容量优先的选型结论落到真实调用上。
  *
  * <p>驱动方式：假目录给候选，假适配器按模型名决定成功或失败，路由状态由用例直接构造读数，
- * 明细端口用内存实现（断言 kb_model_call_log 那一行的字段）。
+ * 明细端口用内存实现（断言 wb_model_call_log 那一行的字段）。
  *
  * @author cxxl
  */

@@ -1,6 +1,6 @@
 // 模型管理：模型目录与调用明细的类型与字典（与后端 VO / 字典逐字段对齐；厂商候选见 MODEL_VENDORS）
 
-/** 模型状态码值（kb_model.status，字典 ENABLED / DISABLED） */
+/** 模型状态码值（wb_model.status，字典 ENABLED / DISABLED） */
 export const MODEL_STATUS = {
   ENABLED: 'ENABLED',
   DISABLED: 'DISABLED',
@@ -29,7 +29,7 @@ export const MODEL_CAPABILITY_LABELS: Record<string, string> = {
   TABLE_STRUCTURE: '表格结构',
 };
 
-/** 币种码值（kb_model.currency） */
+/** 币种码值（wb_model.currency） */
 export const MODEL_CURRENCIES = ['CNY', 'USD'] as const;
 
 /**

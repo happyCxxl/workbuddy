@@ -1,13 +1,13 @@
 package com.workbuddy.biz.task;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
@@ -41,13 +41,13 @@ class ProductPersistenceTest {
     private static final Long SOURCE_ID = 1L;
 
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private FileStorage fileStorage;
     @Mock
@@ -64,8 +64,8 @@ class ProductPersistenceTest {
                 fileStorage);
     }
 
-    private KbPipelineTask task() {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask task() {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(70L);
         task.setFileResultId(10L);
         task.setStage(PipelineStage.CHUNK.name());
@@ -77,34 +77,34 @@ class ProductPersistenceTest {
         when(pipelineProductDbService.getByTaskId(70L)).thenReturn(null);
         when(fileStorage.putObject(any(byte[].class)))
                 .thenReturn(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "abc".repeat(22)));
-        when(pipelineProductDbService.save(any(KbPipelineProduct.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineProduct.class).setId(80L);
+        when(pipelineProductDbService.save(any(WbPipelineProduct.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineProduct.class).setId(80L);
             return true;
         });
 
-        KbPipelineProduct product = persistence.persist(task(), PipelineStage.CHUNK, 50L, "{}", Map.of("a", 1));
+        WbPipelineProduct product = persistence.persist(task(), PipelineStage.CHUNK, 50L, "{}", Map.of("a", 1));
 
         assertEquals(80L, product.getId());
         assertEquals(70L, product.getTaskId());
         assertEquals(PipelineStage.CHUNK.name(), product.getStage());
         verify(fileStorage).putObject(any(byte[].class));
-        verify(pipelineProductDbService).save(any(KbPipelineProduct.class));
+        verify(pipelineProductDbService).save(any(WbPipelineProduct.class));
         verify(pipelineTaskDbService).updateProductId(70L, 80L);
     }
 
     @Test
     void secondPersistShouldReuseExistingRowWithoutWritingAgain() {
-        KbPipelineProduct existing = new KbPipelineProduct();
+        WbPipelineProduct existing = new WbPipelineProduct();
         existing.setId(80L);
         existing.setTaskId(70L);
         existing.setArtifactId("abc".repeat(22));
         when(pipelineProductDbService.getByTaskId(70L)).thenReturn(existing);
 
-        KbPipelineProduct product = persistence.persist(task(), PipelineStage.CHUNK, 50L, "{}", Map.of("a", 1));
+        WbPipelineProduct product = persistence.persist(task(), PipelineStage.CHUNK, 50L, "{}", Map.of("a", 1));
 
         assertSame(existing, product);
         verify(fileStorage, never()).putObject(any(byte[].class));
-        verify(pipelineProductDbService, never()).save(any(KbPipelineProduct.class));
+        verify(pipelineProductDbService, never()).save(any(WbPipelineProduct.class));
         verify(pipelineTaskDbService, never()).updateProductId(any(), any());
     }
 }

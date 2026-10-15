@@ -16,7 +16,7 @@ public class StageDetailVO implements TaskStatusView {
     /** 文件结果 ID */
     private Long fileResultId;
 
-    /** 任务 ID（kb_pipeline_task.id；无任务时为空） */
+    /** 任务 ID（wb_knowledge_pipeline_task.id；无任务时为空） */
     private Long taskId;
 
     /** 环节 */

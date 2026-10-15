@@ -1,9 +1,9 @@
 package com.workbuddy.biz.task;
 
 import com.workbuddy.biz.config.TaskQueueProperties;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
@@ -38,7 +38,7 @@ class TaskStartupCompensatorTest {
     private static final String LOCK_KEY = "knowledge:task:queue:compensate-lock";
 
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
     private TaskQueueSupport taskQueue;
     @Mock
@@ -61,9 +61,9 @@ class TaskStartupCompensatorTest {
     @Test
     void onStartupShouldReEnqueueStaleQueuedTasks() {
         stubLockAcquired();
-        KbPipelineTask task1 = new KbPipelineTask();
+        WbPipelineTask task1 = new WbPipelineTask();
         task1.setId(1L);
-        KbPipelineTask task2 = new KbPipelineTask();
+        WbPipelineTask task2 = new WbPipelineTask();
         task2.setId(2L);
         when(pipelineTaskDbService.listStaleQueued(any(LocalDateTime.class))).thenReturn(List.of(task1, task2));
         when(pipelineTaskDbService.listStaleRunning(any(LocalDateTime.class))).thenReturn(List.of());
@@ -81,7 +81,7 @@ class TaskStartupCompensatorTest {
     void onStartupShouldRecoverStaleRunningOrphans() {
         stubLockAcquired();
         when(pipelineTaskDbService.listStaleQueued(any(LocalDateTime.class))).thenReturn(List.of());
-        KbPipelineTask orphan = new KbPipelineTask();
+        WbPipelineTask orphan = new WbPipelineTask();
         orphan.setId(7L);
         orphan.setStage(PipelineStage.PARSE.name());
         orphan.setStartedAt(LocalDateTime.now().minusMinutes(30));
@@ -99,7 +99,7 @@ class TaskStartupCompensatorTest {
     void orphanWithinStageTimeoutShouldNotBeRecovered() {
         stubLockAcquired();
         when(pipelineTaskDbService.listStaleQueued(any(LocalDateTime.class))).thenReturn(List.of());
-        KbPipelineTask fresh = new KbPipelineTask();
+        WbPipelineTask fresh = new WbPipelineTask();
         fresh.setId(8L);
         fresh.setStage(PipelineStage.PARSE.name());
         fresh.setStartedAt(LocalDateTime.now().minusSeconds(30));

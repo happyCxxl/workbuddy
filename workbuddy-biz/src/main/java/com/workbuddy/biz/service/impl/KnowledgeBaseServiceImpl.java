@@ -6,27 +6,27 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.KnowledgeBaseService;
 import com.workbuddy.biz.service.StrategyVersionService;
-import com.workbuddy.biz.service.db.KbAuditLogDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbIndexSetDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
-import com.workbuddy.biz.service.db.KbSubmitLogDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbIndexSetDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbSubmitLogDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.InputVoAssembler;
 import com.workbuddy.biz.service.support.TaskVoAssembler;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbIndexSet;
-import com.workbuddy.common.domain.entity.KbIndexVersion;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbSourceFile;
-import com.workbuddy.common.domain.entity.KbStrategyBinding;
-import com.workbuddy.common.domain.entity.KbSubmitLog;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbIndexSet;
+import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbSourceFile;
+import com.workbuddy.common.domain.entity.WbStrategyBinding;
+import com.workbuddy.common.domain.entity.WbSubmitLog;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.input.FileValidationResult;
 import com.workbuddy.common.domain.rules.KnowledgeBaseRules;
@@ -93,10 +93,10 @@ import java.util.stream.Collectors;
  * <ul>
  *   <li>幂等：requestId 唯一约束 + 查询返回已有；并发冲突（DuplicateKey）转幂等回放，不报系统错误；</li>
  *   <li>归属失败（知识库不存在/停用/已删）抛 KnowledgeException（40401/40421），不记提交日志；</li>
- *   <li>文件校验不通过（含文件不存在）只记 kb_submit_log(FAIL)，正常返回 FAIL 日志；</li>
- *   <li>建档三写（kb_source_file / kb_file_result / kb_submit_log）同一 {@code @Transactional}
+ *   <li>文件校验不通过（含文件不存在）只记 wb_submit_log(FAIL)，正常返回 FAIL 日志；</li>
+ *   <li>建档三写（wb_source_file / wb_file_result / wb_submit_log）同一 {@code @Transactional}
  *       （手动逐环节口径：不登记任务，解析由页面手动触发）；</li>
- *   <li>同一 fileId 复用 kb_source_file（uk_file_id；并发撞键时重查复用），每次提交新建 kb_file_result。</li>
+ *   <li>同一 fileId 复用 wb_source_file（uk_file_id；并发撞键时重查复用），每次提交新建 wb_file_result。</li>
  * </ul>
  *
  * @author cxxl
@@ -112,25 +112,25 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     /** 用户归属默认值（检索强制过滤口径，当前统一 ADMIN） */
     private static final String DEFAULT_OWNER = "ADMIN";
 
-    private final KnowledgeBaseDbService knowledgeBaseDbService;
+    private final WbKnowledgeBaseDbService knowledgeBaseDbService;
 
-    private final KbAuditLogDbService kbAuditLogDbService;
+    private final WbAuditLogDbService kbAuditLogDbService;
 
-    private final KbStrategyBindingDbService strategyBindingDbService;
+    private final WbStrategyBindingDbService strategyBindingDbService;
 
-    private final KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private final WbPipelineStrategyVersionDbService strategyVersionDbService;
 
-    private final KbFileResultDbService kbFileResultDbService;
+    private final WbFileResultDbService kbFileResultDbService;
 
-    private final KbIndexSetDbService indexSetDbService;
+    private final WbIndexSetDbService indexSetDbService;
 
-    private final KbIndexVersionDbService indexVersionDbService;
+    private final WbIndexVersionDbService indexVersionDbService;
 
-    private final KbSourceFileDbService sourceFileDbService;
+    private final WbSourceFileDbService sourceFileDbService;
 
-    private final KbSubmitLogDbService submitLogDbService;
+    private final WbSubmitLogDbService submitLogDbService;
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
 
     private final FileValidatorPort fileValidator;
 
@@ -145,7 +145,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(KnowledgeBaseCreateDto dto) {
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setName(dto.getName());
         kb.setDescription(dto.getDescription());
         kb.setStatus(KnowledgeBaseStatus.ACTIVE.getCode());
@@ -161,7 +161,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(KnowledgeBaseUpdateDto dto) {
-        KnowledgeBase kb = getAccessibleById(dto.getId());
+        WbKnowledgeBase kb = getAccessibleById(dto.getId());
         String beforeJson = JsonUtil.toJsonStr(kb);
         kb.setName(dto.getName());
         kb.setDescription(dto.getDescription());
@@ -185,7 +185,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     public IPage<KnowledgeBaseVO> page(long current, long size, String name, Integer status,
                                        KnowledgeBaseSort sort) {
         // 可见范围在服务端定：普通用户只查自己创建的，管理员不限（见 KnowledgeBaseRules.visibleOwnerId）
-        IPage<KnowledgeBase> page =
+        IPage<WbKnowledgeBase> page =
                 knowledgeBaseDbService.pageByCondition(current, size, name, status, sort, visibleOwnerId());
         Page<KnowledgeBaseVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         List<KnowledgeBaseVO> records = page.getRecords().stream()
@@ -215,8 +215,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     /**
      * 批量回填当页知识库的已发布索引版本号（两次查询覆盖整页，避免逐行查询）。
      *
-     * <p>链路：kb_knowledge_base.published_index_set_id → kb_index_set.current_published_version_id
-     * → kb_index_version.version_no。
+     * <p>链路：wb_knowledge_base.published_index_set_id → wb_knowledge_index_set.current_published_version_id
+     * → wb_knowledge_index_version.version_no。
      *
      * @param records 当页 VO（原地回填 publishedIndexVersion）
      */
@@ -228,9 +228,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         if (CollUtil.isEmpty(kbIds)) {
             return;
         }
-        Map<Long, KbIndexSet> setByKb = indexSetDbService.listByKbIds(kbIds);
+        Map<Long, WbIndexSet> setByKb = indexSetDbService.listByKbIds(kbIds);
         List<Long> versionIds = setByKb.values().stream()
-                .map(KbIndexSet::getCurrentPublishedVersionId)
+                .map(WbIndexSet::getCurrentPublishedVersionId)
                 .filter(NullUtil::isNotNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -238,9 +238,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
             return;
         }
         Map<Long, String> versionNoById = indexVersionDbService.listByIds(versionIds).stream()
-                .collect(Collectors.toMap(KbIndexVersion::getId, KbIndexVersion::getVersionNo, (a, b) -> a));
+                .collect(Collectors.toMap(WbIndexVersion::getId, WbIndexVersion::getVersionNo, (a, b) -> a));
         for (KnowledgeBaseVO vo : records) {
-            KbIndexSet set = setByKb.get(vo.getId());
+            WbIndexSet set = setByKb.get(vo.getId());
             if (NullUtil.isNull(set)) {
                 continue;
             }
@@ -267,7 +267,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean disable(Long id) {
-        KnowledgeBase kb = getAccessibleById(id);
+        WbKnowledgeBase kb = getAccessibleById(id);
         KnowledgeBaseRules.checkCanDisable(kb);
         String beforeJson = JsonUtil.toJsonStr(kb);
         kb.setStatus(KnowledgeBaseStatus.DISABLED.getCode());
@@ -281,7 +281,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean enable(Long id) {
-        KnowledgeBase kb = getAccessibleById(id);
+        WbKnowledgeBase kb = getAccessibleById(id);
         KnowledgeBaseRules.checkCanEnable(kb);
         String beforeJson = JsonUtil.toJsonStr(kb);
         kb.setStatus(KnowledgeBaseStatus.ACTIVE.getCode());
@@ -295,7 +295,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long id) {
-        KnowledgeBase kb = getAccessibleById(id);
+        WbKnowledgeBase kb = getAccessibleById(id);
         knowledgeBaseDbService.removeById(id);
         kbAuditLogDbService.saveAudit(AuditActionType.DELETE, AUDIT_OBJECT_TYPE, id, JsonUtil.toJsonStr(kb), null);
         log.info("===> KnowledgeBaseServiceImpl delete 逻辑删除知识库, id={}", id);
@@ -304,15 +304,15 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     @Override
     public StrategyBindingVO strategyBinding(Long id, String strategyType) {
-        KnowledgeBase kb = getAccessibleById(id);
+        WbKnowledgeBase kb = getAccessibleById(id);
         ThrowUtil.throwIf(StrUtil.isBlank(strategyType)
                         || !StrategyVersionService.BINDABLE_TYPES.contains(strategyType),
                 ErrorCode.PARAM_INVALID, "未知策略类型: " + strategyType);
         StrategyBindingVO vo = new StrategyBindingVO();
         vo.setStrategyType(strategyType);
-        KbStrategyBinding binding = strategyBindingDbService.getByKbAndType(kb.getId(), strategyType);
+        WbStrategyBinding binding = strategyBindingDbService.getByKbAndType(kb.getId(), strategyType);
         if (NullUtil.isNotNull(binding)) {
-            KbPipelineStrategyVersion version = strategyVersionDbService.getById(binding.getStrategyVersionId());
+            WbPipelineStrategyVersion version = strategyVersionDbService.getById(binding.getStrategyVersionId());
             if (NullUtil.isNotNull(version)) {
                 vo.setStrategyVersionId(version.getId());
                 vo.setStrategyName(version.getName());
@@ -330,19 +330,19 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
         // knowledgeBaseIds 传 null = 不限库，直接用一条 SQL 取回该类型下全部绑定行
         // （无需先查知识库列表，少一次查询）
-        List<KbStrategyBinding> bindings = strategyBindingDbService.listActiveByTypeAndKbIds(strategyType, null);
+        List<WbStrategyBinding> bindings = strategyBindingDbService.listActiveByTypeAndKbIds(strategyType, null);
         if (bindings.isEmpty()) {
             return List.of();
         }
 
         // 一次批量取版本，避免逐行查（N+1）
-        Map<Long, KbPipelineStrategyVersion> versionById = versionsOf(bindings);
+        Map<Long, WbPipelineStrategyVersion> versionById = versionsOf(bindings);
 
         List<StrategyBindingVO> result = new ArrayList<>(bindings.size());
-        for (KbStrategyBinding binding : bindings) {
+        for (WbStrategyBinding binding : bindings) {
             // 版本被删或已停用时跳过：与单体查询 strategyBinding 的口径一致
             // （它查不到版本时也只返回 strategyType，不返回半截数据）
-            KbPipelineStrategyVersion version = versionById.get(binding.getStrategyVersionId());
+            WbPipelineStrategyVersion version = versionById.get(binding.getStrategyVersionId());
             if (NullUtil.isNull(version)) {
                 continue;
             }
@@ -360,7 +360,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean bindStrategy(Long id, StrategyBindingUpdateDto dto) {
-        KnowledgeBase kb = getAccessibleById(id);
+        WbKnowledgeBase kb = getAccessibleById(id);
         ThrowUtil.throwIf(isBindingDisabled(kb),
                 ErrorCode.PARAM_INVALID, "该知识库已关闭策略绑定（评测模式），禁止绑定策略");
         String type = dto.getStrategyType();
@@ -369,7 +369,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
         // 解绑：绑定行逻辑删除（无绑定行时幂等成功）
         if (NullUtil.isNull(dto.getStrategyVersionId())) {
-            KbStrategyBinding existing = strategyBindingDbService.getByKbAndType(id, type);
+            WbStrategyBinding existing = strategyBindingDbService.getByKbAndType(id, type);
             String before = bindingSummary(existing);
             if (NullUtil.isNotNull(existing)) {
                 existing.setDelFlag(DelFlag.DELETED.getCode());
@@ -381,17 +381,17 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
             return true;
         }
 
-        KbPipelineStrategyVersion version = strategyVersionDbService.getById(dto.getStrategyVersionId());
+        WbPipelineStrategyVersion version = strategyVersionDbService.getById(dto.getStrategyVersionId());
         ThrowUtil.throwIf(NullUtil.isNull(version), ErrorCode.PARAM_INVALID, "策略版本不存在");
         ThrowUtil.throwIf(!type.equals(version.getType()), ErrorCode.PARAM_INVALID, "策略类型与所选版本不匹配");
         ThrowUtil.throwIf(!RowStatus.ACTIVE.name().equals(version.getStatus()),
                 ErrorCode.PARAM_INVALID, "策略已停用，请先启用后再绑定");
 
         // 绑定/重绑：复用原行（含已逻辑删除行），uk 不被占用
-        KbStrategyBinding existing = strategyBindingDbService.getAnyByKbAndType(id, type);
+        WbStrategyBinding existing = strategyBindingDbService.getAnyByKbAndType(id, type);
         String before = bindingSummary(existing);
         if (NullUtil.isNull(existing)) {
-            KbStrategyBinding binding = new KbStrategyBinding();
+            WbStrategyBinding binding = new WbStrategyBinding();
             binding.setKnowledgeBaseId(id);
             binding.setStrategyType(type);
             binding.setStrategyVersionId(dto.getStrategyVersionId());
@@ -412,7 +412,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean bindStrategies(Long id, StrategyBindingsUpdateRequest request) {
-        KnowledgeBase kb = getAccessibleById(id);
+        WbKnowledgeBase kb = getAccessibleById(id);
         ThrowUtil.throwIf(isBindingDisabled(kb),
                 ErrorCode.PARAM_INVALID, "该知识库已关闭策略绑定（评测模式），禁止绑定策略");
         List<StrategyBindingsUpdateRequest.StrategyBindItem> bindings = request.getBindings();
@@ -471,7 +471,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         ThrowUtil.throwIf(StrUtil.isBlank(request.getRequestId()), ErrorCode.REQUEST_ID_MISSING);
 
         // ① 幂等：同一请求重复到达返回已有记录
-        KbSubmitLog existing = submitLogDbService.getByRequestId(request.getRequestId());
+        WbSubmitLog existing = submitLogDbService.getByRequestId(request.getRequestId());
         if (NullUtil.isNotNull(existing)) {
             log.info("===> KnowledgeBaseServiceImpl submit 幂等回放, requestId={}", request.getRequestId());
             return inputVoAssembler.toSubmitResponse(existing, findParseTaskId(existing.getFileResultId()));
@@ -479,7 +479,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
         // ② 校验：存在/未删除 → 归属（非本人可访问的库按"不存在"处理，且先于状态校验，
         //    避免用错误码差异反推出别人某个库是启用还是停用）→ 启用
-        KnowledgeBase kb = getAccessibleById(knowledgeBaseId);
+        WbKnowledgeBase kb = getAccessibleById(knowledgeBaseId);
         KnowledgeBaseRules.checkCanSubmit(kb);
 
         // ③ 文件校验：失败只记 FAIL 日志，不建结果、不建任务
@@ -498,16 +498,16 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         FileMetadata metadata = fileStorage.metadata(request.getFileId());
         Long userId = currentUserId();
 
-        KbSourceFile sourceFile = findOrCreateSourceFile(request, validationResult, metadata, userId);
+        WbSourceFile sourceFile = findOrCreateSourceFile(request, validationResult, metadata, userId);
 
-        KbFileResult fileResult = new KbFileResult();
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setKnowledgeBaseId(kb.getId());
         fileResult.setOwner(DEFAULT_OWNER);
         fileResult.setSourceFileId(sourceFile.getId());
         fileResult.setUserId(userId);
         kbFileResultDbService.save(fileResult);
 
-        KbSubmitLog submitLog = new KbSubmitLog();
+        WbSubmitLog submitLog = new WbSubmitLog();
         submitLog.setKnowledgeBaseId(kb.getId());
         submitLog.setRequestId(request.getRequestId());
         submitLog.setFileId(request.getFileId());
@@ -521,7 +521,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         } catch (DuplicateKeyException e) {
             // 并发下同一 requestId 已被处理：回滚本事务，回放已有记录
             markRollbackOnly();
-            KbSubmitLog raced = submitLogDbService.getByRequestId(request.getRequestId());
+            WbSubmitLog raced = submitLogDbService.getByRequestId(request.getRequestId());
             if (NullUtil.isNull(raced)) {
                 log.warn("===> KnowledgeBaseServiceImpl submit 幂等冲突重查为空, requestId={}（唯一键冲突但未查到已有记录）",
                         request.getRequestId());
@@ -537,7 +537,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /**
-     * 提交记录分页查询：按知识库分页取 kb_submit_log 并转换为 VO（PASS/FAIL 均含，失败原因随行返回）。
+     * 提交记录分页查询：按知识库分页取 wb_submit_log 并转换为 VO（PASS/FAIL 均含，失败原因随行返回）。
      *
      * @param current        当前页，从 1 开始
      * @param size           每页条数
@@ -553,7 +553,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /**
-     * 文件结果分页查询：分页取 kb_file_result，批量装配来源文件信息、存储口径
+     * 文件结果分页查询：分页取 wb_file_result，批量装配来源文件信息、存储口径
      * 与五环节（PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED）最新任务状态。
      *
      * <p>stage 参数经 {@link StageFunnelRules#resolveUpstreamStage(String)} 做合法性校验（非法值 40001）；
@@ -568,19 +568,19 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     public IPage<FileResultVO> pageFileResults(long current, long size, Long knowledgeBaseId, String stage) {
         StageFunnelRules.resolveUpstreamStage(stage);
-        IPage<KbFileResult> page = kbFileResultDbService.pageByKb(current, size, knowledgeBaseId);
+        IPage<WbFileResult> page = kbFileResultDbService.pageByKb(current, size, knowledgeBaseId);
         List<Long> sourceIds = page.getRecords().stream()
-                .map(KbFileResult::getSourceFileId)
+                .map(WbFileResult::getSourceFileId)
                 .distinct()
                 .toList();
-        Map<Long, KbSourceFile> sourceMap = sourceIds.isEmpty() ? Map.of()
+        Map<Long, WbSourceFile> sourceMap = sourceIds.isEmpty() ? Map.of()
                 : sourceFileDbService.listByIds(sourceIds).stream()
-                        .collect(Collectors.toMap(KbSourceFile::getId, Function.identity()));
+                        .collect(Collectors.toMap(WbSourceFile::getId, Function.identity()));
         IPage<FileResultVO> voPage = page.convert(result -> inputVoAssembler.toFileResultVO(result, sourceMap.get(result.getSourceFileId())));
 
         // 存储口径：所属数据源按来源文件的 fileId 批量取档案，当前启用的数据源取运行时生效值
         List<String> chainFileIds = sourceMap.values().stream()
-                .map(KbSourceFile::getFileId)
+                .map(WbSourceFile::getFileId)
                 .filter(StrUtil::isNotBlank)
                 .distinct()
                 .toList();
@@ -606,11 +606,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         // ① 每环节一次 in 查询（id 倒序；按 fileResultId 去重取首条即最新任务）
         List<String> statusStages = List.of(PipelineStage.PARSE.name(), PipelineStage.STRUCTURE.name(),
                 PipelineStage.PREPROCESS.name(), PipelineStage.CHUNK.name(), PipelineStage.EMBED.name());
-        Map<String, Map<Long, KbPipelineTask>> stageTaskMaps = new HashMap<>();
+        Map<String, Map<Long, WbPipelineTask>> stageTaskMaps = new HashMap<>();
         for (String statusStage : statusStages) {
-            Map<Long, KbPipelineTask> byFileResult = resultIds.isEmpty() ? Map.of()
+            Map<Long, WbPipelineTask> byFileResult = resultIds.isEmpty() ? Map.of()
                     : pipelineTaskDbService.listByFileResultIdsAndStage(resultIds, statusStage).stream()
-                            .collect(Collectors.toMap(KbPipelineTask::getFileResultId, Function.identity(),
+                            .collect(Collectors.toMap(WbPipelineTask::getFileResultId, Function.identity(),
                                     (first, second) -> first));
             stageTaskMaps.put(statusStage, byFileResult);
         }
@@ -618,7 +618,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         voPage.getRecords().forEach(vo -> {
             List<StageStatusVO> statuses = new ArrayList<>();
             for (String statusStage : statusStages) {
-                KbPipelineTask task = stageTaskMaps.get(statusStage).get(vo.getId());
+                WbPipelineTask task = stageTaskMaps.get(statusStage).get(vo.getId());
                 if (NullUtil.isNotNull(task)) {
                     statuses.add(taskVoAssembler.toStageStatusVO(task));
                 }
@@ -641,15 +641,15 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /** 按 fileId 复用来源文件；并发撞 uk_file_id 时重查复用（同文件不重复建档）。 */
-    private KbSourceFile findOrCreateSourceFile(FileSubmitRequest request, FileValidationResult validationResult,
+    private WbSourceFile findOrCreateSourceFile(FileSubmitRequest request, FileValidationResult validationResult,
                                                 FileMetadata metadata, Long userId) {
-        KbSourceFile sourceFile = sourceFileDbService.findByFileId(request.getFileId());
+        WbSourceFile sourceFile = sourceFileDbService.findByFileId(request.getFileId());
         if (NullUtil.isNotNull(sourceFile)) {
             log.info("===> KnowledgeBaseServiceImpl submit 复用来源文件, fileId={}, sourceFileId={}",
                     request.getFileId(), sourceFile.getId());
             return sourceFile;
         }
-        sourceFile = new KbSourceFile();
+        sourceFile = new WbSourceFile();
         sourceFile.setFileId(request.getFileId());
         sourceFile.setSha256(validationResult.getSha256());
         sourceFile.setFileName(metadata.getFileName());
@@ -660,7 +660,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         try {
             sourceFileDbService.save(sourceFile);
         } catch (DuplicateKeyException e) {
-            KbSourceFile raced = sourceFileDbService.findByFileId(request.getFileId());
+            WbSourceFile raced = sourceFileDbService.findByFileId(request.getFileId());
             if (NullUtil.isNull(raced)) {
                 throw e;
             }
@@ -681,7 +681,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
             // 文件不存在等场景元数据不可得，fileName 留空
             log.debug("元数据不可得, 文件名留空, fileId={}", request.getFileId());
         }
-        KbSubmitLog failLog = new KbSubmitLog();
+        WbSubmitLog failLog = new WbSubmitLog();
         failLog.setKnowledgeBaseId(knowledgeBaseId);
         failLog.setRequestId(request.getRequestId());
         failLog.setFileId(request.getFileId());
@@ -698,11 +698,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /** 绑定摘要（审计用；null/已删 → 无） */
-    private String bindingSummary(KbStrategyBinding binding) {
+    private String bindingSummary(WbStrategyBinding binding) {
         if (NullUtil.isNull(binding) || DelFlag.isDeleted(binding.getDelFlag())) {
             return "无";
         }
-        KbPipelineStrategyVersion version = strategyVersionDbService.getById(binding.getStrategyVersionId());
+        WbPipelineStrategyVersion version = strategyVersionDbService.getById(binding.getStrategyVersionId());
         return NullUtil.isNull(version) ? "失效" : version.getName() + "-" + version.getVersion();
     }
 
@@ -725,19 +725,19 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     private void fillBindingForType(List<KnowledgeBaseVO> records, List<Long> kbIds, String type) {
-        Map<Long, KbStrategyBinding> bindingByKb = strategyBindingDbService
+        Map<Long, WbStrategyBinding> bindingByKb = strategyBindingDbService
                 .listActiveByTypeAndKbIds(type, kbIds).stream()
-                .collect(Collectors.toMap(KbStrategyBinding::getKnowledgeBaseId, Function.identity(), (a, b) -> a));
+                .collect(Collectors.toMap(WbStrategyBinding::getKnowledgeBaseId, Function.identity(), (a, b) -> a));
         if (bindingByKb.isEmpty()) {
             return;
         }
-        Map<Long, KbPipelineStrategyVersion> versionById = versionsOf(bindingByKb.values());
+        Map<Long, WbPipelineStrategyVersion> versionById = versionsOf(bindingByKb.values());
         for (KnowledgeBaseVO vo : records) {
-            KbStrategyBinding binding = bindingByKb.get(vo.getId());
+            WbStrategyBinding binding = bindingByKb.get(vo.getId());
             if (NullUtil.isNull(binding)) {
                 continue;
             }
-            KbPipelineStrategyVersion version = versionById.get(binding.getStrategyVersionId());
+            WbPipelineStrategyVersion version = versionById.get(binding.getStrategyVersionId());
             if (NullUtil.isNull(version)) {
                 continue;
             }
@@ -746,8 +746,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     private void fillBinding(KnowledgeBaseVO vo, String type) {
-        KbStrategyBinding binding = strategyBindingDbService.getByKbAndType(vo.getId(), type);
-        KbPipelineStrategyVersion version = NullUtil.isNull(binding)
+        WbStrategyBinding binding = strategyBindingDbService.getByKbAndType(vo.getId(), type);
+        WbPipelineStrategyVersion version = NullUtil.isNull(binding)
                 ? null : strategyVersionDbService.getById(binding.getStrategyVersionId());
         if (NullUtil.isNull(version)) {
             return;
@@ -756,17 +756,17 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /** 批量取策略版本并按 id 建索引（绑定行只取一次版本，避免逐行查的 N+1） */
-    private Map<Long, KbPipelineStrategyVersion> versionsOf(Collection<KbStrategyBinding> bindings) {
+    private Map<Long, WbPipelineStrategyVersion> versionsOf(Collection<WbStrategyBinding> bindings) {
         List<Long> versionIds = bindings.stream()
-                .map(KbStrategyBinding::getStrategyVersionId)
+                .map(WbStrategyBinding::getStrategyVersionId)
                 .distinct()
                 .toList();
         return strategyVersionDbService.listByIds(versionIds).stream()
-                .collect(Collectors.toMap(KbPipelineStrategyVersion::getId, Function.identity(), (a, b) -> a));
+                .collect(Collectors.toMap(WbPipelineStrategyVersion::getId, Function.identity(), (a, b) -> a));
     }
 
     /** 绑定摘要字段分发：按策略版本行类型落 VO 字段 */
-    private void applyBinding(KnowledgeBaseVO vo, KbPipelineStrategyVersion version) {
+    private void applyBinding(KnowledgeBaseVO vo, WbPipelineStrategyVersion version) {
         String fullVersion = version.getName() + "-" + version.getVersion();
         if (ChunkStrategy.TYPE.equals(version.getType())) {
             vo.setChunkStrategyVersionId(version.getId());
@@ -781,11 +781,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /** 绑定开关是否关闭（null 视为开启，兼容存量数据） */
-    private boolean isBindingDisabled(KnowledgeBase kb) {
+    private boolean isBindingDisabled(WbKnowledgeBase kb) {
         return NullUtil.isNotNull(kb) && StrategyBindingSwitch.isOff(kb.getStrategyBindingEnabled());
     }
 
-    private KnowledgeBaseVO toVO(KnowledgeBase kb) {
+    private KnowledgeBaseVO toVO(WbKnowledgeBase kb) {
         KnowledgeBaseVO vo = new KnowledgeBaseVO();
         vo.setId(kb.getId());
         vo.setName(kb.getName());
@@ -847,7 +847,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         if (NullUtil.isNull(fileResultId)) {
             return null;
         }
-        KbPipelineTask task = pipelineTaskDbService.getByFileResultIdAndStage(fileResultId, PipelineStage.PARSE.name());
+        WbPipelineTask task = pipelineTaskDbService.getByFileResultIdAndStage(fileResultId, PipelineStage.PARSE.name());
         return NullUtil.isNull(task) ? null : task.getId();
     }
 
@@ -862,8 +862,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 知识库实体
      * @throws com.workbuddy.common.exception.KnowledgeException 不存在/已删除（40401）或非本人可访问（40401）
      */
-    private KnowledgeBase getAccessibleById(Long id) {
-        KnowledgeBase kb = knowledgeBaseDbService.getActiveById(id);
+    private WbKnowledgeBase getAccessibleById(Long id) {
+        WbKnowledgeBase kb = knowledgeBaseDbService.getActiveById(id);
         KnowledgeBaseRules.checkAccessible(kb, SecurityUtil.getUser());
         return kb;
     }

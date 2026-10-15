@@ -22,7 +22,7 @@ public interface ChunkControlService {
     ChunkTriggerVO chunk(Long fileResultId, Long strategyVersionId, Long upstreamProductId);
 
     /**
-     * 切片详情：任务状态 + 子步骤 + 切片统计/切片列表/产物引用（来自最新切片集合与 kb_chunk）；
+     * 切片详情：任务状态 + 子步骤 + 切片统计/切片列表/产物引用（来自最新切片集合与 wb_knowledge_chunk）；
      * taskId 可选（缺省取最新任务，传了则查该次运行）。
      */
     ChunkDetailVO chunkDetail(Long fileResultId, Long taskId);

@@ -1,11 +1,11 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.StructureVoAssembler;
@@ -14,11 +14,11 @@ import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStepLog;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStepLog;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.structure.StructureDetailVO;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -63,19 +63,19 @@ class StructureControlServiceImplTest {
     private static final Long UPSTREAM_TASK_ID = 40L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
     private TaskQueueSupport taskQueue;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private StorageRouter storageRouter;
     @Mock
@@ -100,8 +100,8 @@ class StructureControlServiceImplTest {
     }
 
     /** 上游产物的产出任务（环节 PARSE、归属文件结果 10） */
-    private KbPipelineTask upstreamTask(PipelineTaskStatus status) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask upstreamTask(PipelineTaskStatus status) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(UPSTREAM_TASK_ID);
         task.setFileResultId(10L);
         task.setStage(PipelineStage.PARSE.name());
@@ -109,15 +109,15 @@ class StructureControlServiceImplTest {
         return task;
     }
 
-    private KbFileResult fileResult() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResult() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;
     }
 
     /** 组装执行键命中检查：文件结果 10 + 上游解析产物 + 无策略（0） */
-    private void existingStructureTask(Long upstreamProductId, KbPipelineTask task) {
+    private void existingStructureTask(Long upstreamProductId, WbPipelineTask task) {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.STRUCTURE.name(), upstreamProductId, 0L))
                 .thenReturn(task);
     }
@@ -125,7 +125,7 @@ class StructureControlServiceImplTest {
     @Test
     void structureShouldCreateTaskWithUpstream() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineProduct parseProduct = new KbPipelineProduct();
+        WbPipelineProduct parseProduct = new WbPipelineProduct();
         parseProduct.setId(50L);
         parseProduct.setTaskId(UPSTREAM_TASK_ID);
         parseProduct.setFileResultId(10L);
@@ -133,15 +133,15 @@ class StructureControlServiceImplTest {
         parseProduct.setArtifactId("abc");
         when(pipelineProductDbService.getById(50L)).thenReturn(parseProduct);
         existingStructureTask(50L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(51L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(51L);
             return true;
         });
 
         var response = service.structure(10L, 50L);
 
         assertEquals(51L, response.getPipelineTaskId());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
         assertEquals(PipelineStage.STRUCTURE.name(), captor.getValue().getStage());
         assertEquals(50L, captor.getValue().getUpstreamProductId());
@@ -153,7 +153,7 @@ class StructureControlServiceImplTest {
     @Test
     void structureShouldUseSpecifiedUpstreamProduct() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineProduct specified = new KbPipelineProduct();
+        WbPipelineProduct specified = new WbPipelineProduct();
         specified.setId(88L);
         specified.setTaskId(UPSTREAM_TASK_ID);
         specified.setFileResultId(10L);
@@ -161,15 +161,15 @@ class StructureControlServiceImplTest {
         // 指定路径：按 id 查产物并校验
         when(pipelineProductDbService.getById(88L)).thenReturn(specified);
         existingStructureTask(88L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(89L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(89L);
             return true;
         });
 
         var response = service.structure(10L, 88L);
 
         assertEquals(89L, response.getPipelineTaskId());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
         assertEquals(88L, captor.getValue().getUpstreamProductId());
     }
@@ -177,7 +177,7 @@ class StructureControlServiceImplTest {
     @Test
     void structureWithMismatchedProductShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineProduct wrongStage = new KbPipelineProduct();
+        WbPipelineProduct wrongStage = new WbPipelineProduct();
         wrongStage.setId(88L);
         wrongStage.setFileResultId(10L);
         wrongStage.setStage(PipelineStage.CHUNK.name());
@@ -191,7 +191,7 @@ class StructureControlServiceImplTest {
     @Test
     void structureWithFailedUpstreamTaskShouldThrow40439() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineProduct parseProduct = new KbPipelineProduct();
+        WbPipelineProduct parseProduct = new WbPipelineProduct();
         parseProduct.setId(50L);
         parseProduct.setTaskId(UPSTREAM_TASK_ID);
         parseProduct.setFileResultId(10L);
@@ -212,7 +212,7 @@ class StructureControlServiceImplTest {
     @Test
     void structureWithPartialSuccessUpstreamTaskShouldPass() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineProduct parseProduct = new KbPipelineProduct();
+        WbPipelineProduct parseProduct = new WbPipelineProduct();
         parseProduct.setId(50L);
         parseProduct.setTaskId(UPSTREAM_TASK_ID);
         parseProduct.setFileResultId(10L);
@@ -221,8 +221,8 @@ class StructureControlServiceImplTest {
         when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
                 .thenReturn(upstreamTask(PipelineTaskStatus.PARTIAL_SUCCESS));
         existingStructureTask(50L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(52L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(52L);
             return true;
         });
 
@@ -245,13 +245,13 @@ class StructureControlServiceImplTest {
     @Test
     void structureRunningShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineProduct parseProduct = new KbPipelineProduct();
+        WbPipelineProduct parseProduct = new WbPipelineProduct();
         parseProduct.setId(50L);
         parseProduct.setTaskId(UPSTREAM_TASK_ID);
         parseProduct.setFileResultId(10L);
         parseProduct.setStage(PipelineStage.PARSE.name());
         when(pipelineProductDbService.getById(50L)).thenReturn(parseProduct);
-        KbPipelineTask running = new KbPipelineTask();
+        WbPipelineTask running = new WbPipelineTask();
         running.setId(51L);
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         existingStructureTask(50L, running);
@@ -269,13 +269,13 @@ class StructureControlServiceImplTest {
     @Test
     void structureExistingQueuedTaskShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineProduct parseProduct = new KbPipelineProduct();
+        WbPipelineProduct parseProduct = new WbPipelineProduct();
         parseProduct.setId(50L);
         parseProduct.setTaskId(UPSTREAM_TASK_ID);
         parseProduct.setFileResultId(10L);
         parseProduct.setStage(PipelineStage.PARSE.name());
         when(pipelineProductDbService.getById(50L)).thenReturn(parseProduct);
-        KbPipelineTask queued = new KbPipelineTask();
+        WbPipelineTask queued = new WbPipelineTask();
         queued.setId(51L);
         queued.setStatus(PipelineTaskStatus.QUEUED.name());
         existingStructureTask(50L, queued);
@@ -291,13 +291,13 @@ class StructureControlServiceImplTest {
     @Test
     void detailShouldAssembleTaskStepsSummaryAndOutline() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(51L);
         task.setStage(PipelineStage.STRUCTURE.name());
         task.setStatus(PipelineTaskStatus.PARTIAL_SUCCESS.name());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.STRUCTURE.name())).thenReturn(task);
-        KbPipelineStepLog step = new KbPipelineStepLog();
+        WbPipelineStepLog step = new WbPipelineStepLog();
         step.setStepName("结构组装");
         step.setStatus("SUCCESS");
         step.setWarningCount(1);
@@ -305,7 +305,7 @@ class StructureControlServiceImplTest {
         step.setChangedCount(2);
         step.setAvgLen(400);
         when(stepLogDbService.listByTaskId(51L)).thenReturn(List.of(step));
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("def".repeat(16));
         product.setContentHash("def".repeat(16));
         // 产物行记下对象位置：详情读取按数据源与对象键定位
@@ -365,7 +365,7 @@ class StructureControlServiceImplTest {
     @Test
     void detailWithWrongStageTaskShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask parseTask = new KbPipelineTask();
+        WbPipelineTask parseTask = new WbPipelineTask();
         parseTask.setId(20L);
         parseTask.setFileResultId(10L);
         parseTask.setStage(PipelineStage.PARSE.name());
@@ -387,14 +387,14 @@ class StructureControlServiceImplTest {
     @Test
     void detailWithIncompleteProductLocationShouldReject40455() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(51L);
         task.setStage(PipelineStage.STRUCTURE.name());
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.STRUCTURE.name())).thenReturn(task);
         // 产物行缺 storageType / bucket：位置不完整，读取路径按「存储后端未配置」拒绝
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("def".repeat(16));
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
 
@@ -407,13 +407,13 @@ class StructureControlServiceImplTest {
     @Test
     void detailWithUnreadableProductShouldKeepOutlineEmpty() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(51L);
         task.setStage(PipelineStage.STRUCTURE.name());
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.STRUCTURE.name())).thenReturn(task);
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("def".repeat(16));
         product.setStorageType(StorageType.MINIO.getCode());
         product.setStorageSourceId(SOURCE_ID);
@@ -434,7 +434,7 @@ class StructureControlServiceImplTest {
 
     /** 让指定知识库归当前登录用户所有（归属校验要能过） */
     private void boundKnowledgeBase(Long id) {
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(id);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);

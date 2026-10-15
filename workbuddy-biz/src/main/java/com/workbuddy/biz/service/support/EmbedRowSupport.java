@@ -2,8 +2,8 @@ package com.workbuddy.biz.service.support;
 
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
 import com.workbuddy.common.domain.embed.EmbeddingSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingRecord;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.task.RowStatus;
 
@@ -27,9 +27,9 @@ public final class EmbedRowSupport {
      * @param strategyVersion 生效策略版本（种子注入用内置版本口径）
      * @param ref             产物对象位置
      */
-    public static KbEmbeddingSet setRow(Long fileResultId, EmbeddingSet set, String strategyVersion,
+    public static WbEmbeddingSet setRow(Long fileResultId, EmbeddingSet set, String strategyVersion,
                                         ObjectRef ref) {
-        KbEmbeddingSet row = new KbEmbeddingSet();
+        WbEmbeddingSet row = new WbEmbeddingSet();
         row.setFileResultId(fileResultId);
         row.setChunkSetRef(set.getChunkSetRef());
         row.setEmbeddingSetId(set.getEmbeddingSetId());
@@ -54,8 +54,8 @@ public final class EmbedRowSupport {
      * @param embeddingSetId 所属集合行 ID
      * @param record         向量化记录（环节产物元素）
      */
-    public static KbEmbeddingRecord recordRow(Long embeddingSetId, EmbeddingRecord record) {
-        KbEmbeddingRecord row = new KbEmbeddingRecord();
+    public static WbEmbeddingRecord recordRow(Long embeddingSetId, EmbeddingRecord record) {
+        WbEmbeddingRecord row = new WbEmbeddingRecord();
         row.setEmbeddingSetId(embeddingSetId);
         row.setEmbeddingId(record.getEmbeddingId());
         row.setChunkId(record.getChunkId());

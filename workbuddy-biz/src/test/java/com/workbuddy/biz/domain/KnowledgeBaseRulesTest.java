@@ -1,6 +1,6 @@
 package com.workbuddy.biz.domain;
 
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.rules.KnowledgeBaseRules;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.user.UserRole;
@@ -25,8 +25,8 @@ class KnowledgeBaseRulesTest {
 
     private static final long OTHER = 2002L;
 
-    private KnowledgeBase kb(Integer status) {
-        KnowledgeBase k = new KnowledgeBase();
+    private WbKnowledgeBase kb(Integer status) {
+        WbKnowledgeBase k = new WbKnowledgeBase();
         k.setStatus(status);
         return k;
     }
@@ -39,8 +39,8 @@ class KnowledgeBaseRulesTest {
     }
 
     /** 归 ME 所有的知识库 */
-    private KnowledgeBase ownedKb(Long ownerId) {
-        KnowledgeBase k = kb(KnowledgeBaseStatus.ACTIVE.getCode());
+    private WbKnowledgeBase ownedKb(Long ownerId) {
+        WbKnowledgeBase k = kb(KnowledgeBaseStatus.ACTIVE.getCode());
         k.setUserId(ownerId);
         return k;
     }

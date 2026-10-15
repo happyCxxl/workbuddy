@@ -1,6 +1,6 @@
 package com.workbuddy.common.domain.storage;
 
-import com.workbuddy.common.domain.entity.KbFileObject;
+import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.enums.storage.StorageType;
 
 /**
@@ -10,13 +10,13 @@ import com.workbuddy.common.enums.storage.StorageType;
  * 判定方按「取不到不拦」处理，读取阶段再按对象位置给出明确错误码。
  *
  * @param storageType 存储类型码值（StorageType 枚举码，可空/未知）
- * @param sourceId    数据源实例 ID（kb_storage_source.id，可空）
+ * @param sourceId    数据源实例 ID（wb_storage_source.id，可空）
  * @author cxxl
  */
 public record StorageRef(String storageType, Long sourceId) {
 
     /** 文件档案行的存储口径 */
-    public static StorageRef of(KbFileObject row) {
+    public static StorageRef of(WbFileObject row) {
         return new StorageRef(row.getStorageType(), row.getStorageSourceId());
     }
 

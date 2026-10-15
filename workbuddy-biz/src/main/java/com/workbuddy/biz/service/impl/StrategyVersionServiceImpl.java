@@ -2,10 +2,10 @@ package com.workbuddy.biz.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.StrategyVersionService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.RetrievalRuleResolver;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDto;
 import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDto;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
@@ -39,9 +39,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StrategyVersionServiceImpl implements StrategyVersionService {
 
-    private final KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private final WbPipelineStrategyVersionDbService strategyVersionDbService;
 
-    private final KbStrategyBindingDbService strategyBindingDbService;
+    private final WbStrategyBindingDbService strategyBindingDbService;
 
     private final ModelCatalogPort modelCatalog;
 
@@ -51,7 +51,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
     public List<StrategyVersionVO> list(String type, boolean includeInactive) {
         ThrowUtil.throwIf(StrUtil.isBlank(type) || !SUPPORTED_TYPES.contains(type),
                 ErrorCode.PARAM_INVALID, "未知策略类型: " + type);
-        List<KbPipelineStrategyVersion> rows = includeInactive
+        List<WbPipelineStrategyVersion> rows = includeInactive
                 ? strategyVersionDbService.listByType(type)
                 : strategyVersionDbService.listEnabledByType(type);
         return rows.stream().map(this::toVO).toList();
@@ -67,7 +67,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
     @Override
     public StrategyVersionVO update(Long id, StrategyVersionUpdateDto dto) {
         // 策略版本行不可变：编辑 = 复制新行（旧行原样保留；新版本号撞唯一键 → 40001）
-        KbPipelineStrategyVersion old = requireById(id);
+        WbPipelineStrategyVersion old = requireById(id);
         StrategyVersionVO vo = register(old.getType(), dto.getName(), dto.getVersion(), dto.getConfigSnapshot());
         log.info("===> StrategyVersionServiceImpl 策略编辑=复制新版本, oldId={}, oldVersion={}, newName={}, newVersion={}",
                 old.getId(), old.getVersion(), vo.getName(), vo.getVersion());
@@ -77,7 +77,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
     /** 注册新版本行（默认 ACTIVE；撞唯一键 40001） */
     private StrategyVersionVO register(String type, String name, String version, String configSnapshot) {
         String snapshot = resolveConfigSnapshot(type, configSnapshot);
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setType(type);
         row.setName(name.trim());
         row.setVersion(version.trim());
@@ -93,7 +93,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
 
     @Override
     public StrategyVersionVO enable(Long id) {
-        KbPipelineStrategyVersion row = requireById(id);
+        WbPipelineStrategyVersion row = requireById(id);
         row.setStatus(RowStatus.ACTIVE.name());
         strategyVersionDbService.updateById(row);
         return toVO(row);
@@ -101,7 +101,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
 
     @Override
     public StrategyVersionVO disable(Long id) {
-        KbPipelineStrategyVersion row = requireById(id);
+        WbPipelineStrategyVersion row = requireById(id);
         row.setStatus(RowStatus.INACTIVE.name());
         strategyVersionDbService.updateById(row);
         return toVO(row);
@@ -116,8 +116,8 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         return strategyVersionDbService.removeById(id);
     }
 
-    private KbPipelineStrategyVersion requireById(Long id) {
-        KbPipelineStrategyVersion row = strategyVersionDbService.getById(id);
+    private WbPipelineStrategyVersion requireById(Long id) {
+        WbPipelineStrategyVersion row = strategyVersionDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(row), ErrorCode.STRATEGY_VERSION_NOT_FOUND);
         return row;
     }
@@ -157,7 +157,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         ThrowUtil.throwIf(NullUtil.isNotNull(error), ErrorCode.PARAM_INVALID, error);
     }
 
-    private StrategyVersionVO toVO(KbPipelineStrategyVersion row) {
+    private StrategyVersionVO toVO(WbPipelineStrategyVersion row) {
         StrategyVersionVO vo = new StrategyVersionVO();
         vo.setId(row.getId());
         vo.setType(row.getType());

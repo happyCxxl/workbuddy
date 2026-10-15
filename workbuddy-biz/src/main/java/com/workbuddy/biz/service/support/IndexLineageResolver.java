@@ -1,8 +1,8 @@
 package com.workbuddy.biz.service.support;
 
 import cn.hutool.core.util.StrUtil;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class IndexLineageResolver {
 
-    private final KbPipelineProductDbService productDbService;
+    private final WbPipelineProductDbService productDbService;
 
     /**
      * 由切片产物的上游预处理产物 ID 解析预处理策略 name-version。
@@ -34,7 +34,7 @@ public class IndexLineageResolver {
         if (NullUtil.isNull(upstreamProductId)) {
             return null;
         }
-        KbPipelineProduct product = productDbService.getById(upstreamProductId);
+        WbPipelineProduct product = productDbService.getById(upstreamProductId);
         if (NullUtil.isNull(product) || StrUtil.isBlank(product.getCapabilitySnapshot())) {
             log.warn("===> IndexLineageResolver 预处理产物缺失或快照为空, upstreamProductId={}", upstreamProductId);
             return null;

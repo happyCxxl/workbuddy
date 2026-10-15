@@ -1,18 +1,18 @@
 package com.workbuddy.biz.task.runner;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
 import com.workbuddy.biz.task.UpstreamProductGate;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbSourceFile;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.storage.StorageRef;
@@ -63,15 +63,15 @@ class StructureTaskRunnerTest {
     private static final Long UPSTREAM_TASK_ID = 40L;
 
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private FileStorage fileStorage;
     @Mock
@@ -96,8 +96,8 @@ class StructureTaskRunnerTest {
     }
 
     /** 上游产物的产出任务（环节 PARSE） */
-    private KbPipelineTask upstreamTask(PipelineTaskStatus status) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask upstreamTask(PipelineTaskStatus status) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(UPSTREAM_TASK_ID);
         task.setFileResultId(10L);
         task.setStage(PipelineStage.PARSE.name());
@@ -105,8 +105,8 @@ class StructureTaskRunnerTest {
         return task;
     }
 
-    private KbPipelineTask queuedTask() {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask queuedTask() {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(60L);
         task.setFileResultId(10L);
         task.setUpstreamProductId(50L);
@@ -115,8 +115,8 @@ class StructureTaskRunnerTest {
         return task;
     }
 
-    private KbPipelineProduct parseProduct() {
-        KbPipelineProduct product = new KbPipelineProduct();
+    private WbPipelineProduct parseProduct() {
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setId(50L);
         product.setTaskId(UPSTREAM_TASK_ID);
         product.setArtifactId("abc".repeat(22));
@@ -134,16 +134,16 @@ class StructureTaskRunnerTest {
     }
 
     /** 链的一环：文件结果 10 → 来源文件 5 */
-    private KbFileResult fileResult() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResult() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setSourceFileId(5L);
         return fileResult;
     }
 
     /** 链的一环：来源文件 5 → 文件档案 F-88 */
-    private KbSourceFile sourceFile() {
-        KbSourceFile sourceFile = new KbSourceFile();
+    private WbSourceFile sourceFile() {
+        WbSourceFile sourceFile = new WbSourceFile();
         sourceFile.setId(5L);
         sourceFile.setFileId("F-88");
         return sourceFile;
@@ -160,14 +160,14 @@ class StructureTaskRunnerTest {
                 .thenReturn(successOutcome());
         when(fileStorage.putObject(any(byte[].class)))
                 .thenReturn(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "def".repeat(21) + "0"));
-        when(pipelineProductDbService.save(any(KbPipelineProduct.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineProduct.class).setId(70L);
+        when(pipelineProductDbService.save(any(WbPipelineProduct.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineProduct.class).setId(70L);
             return true;
         });
 
         runner.run(60L);
 
-        ArgumentCaptor<KbPipelineProduct> captor = ArgumentCaptor.forClass(KbPipelineProduct.class);
+        ArgumentCaptor<WbPipelineProduct> captor = ArgumentCaptor.forClass(WbPipelineProduct.class);
         verify(pipelineProductDbService).save(captor.capture());
         assertEquals(PipelineStage.STRUCTURE.name(), captor.getValue().getStage());
         assertEquals(50L, captor.getValue().getUpstreamProductId());
@@ -214,15 +214,15 @@ class StructureTaskRunnerTest {
                 .thenReturn(successOutcome());
         when(fileStorage.putObject(any(byte[].class)))
                 .thenReturn(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "def".repeat(21) + "0"));
-        when(pipelineProductDbService.save(any(KbPipelineProduct.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineProduct.class).setId(70L);
+        when(pipelineProductDbService.save(any(WbPipelineProduct.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineProduct.class).setId(70L);
             return true;
         });
 
         runner.run(60L);
 
         // 部分成功在放行集内：产物照常落库、任务落成功终态
-        verify(pipelineProductDbService).save(any(KbPipelineProduct.class));
+        verify(pipelineProductDbService).save(any(WbPipelineProduct.class));
         verify(pipelineTaskDbService).finish(60L, PipelineTaskStatus.SUCCESS, null, null);
     }
 

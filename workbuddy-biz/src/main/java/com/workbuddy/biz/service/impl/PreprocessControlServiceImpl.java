@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.PreprocessControlService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.PreprocessVoAssembler;
 import com.workbuddy.biz.service.support.StageStrategySupport;
@@ -10,10 +10,10 @@ import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.preprocess.PreprocessDetailVO;
@@ -49,7 +49,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PreprocessControlServiceImpl implements PreprocessControlService {
 
-    private final KbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
     private final StageStrategySupport strategySupport;
     private final TaskTriggerSupport triggerSupport;
     private final TaskDetailSupport detailSupport;
@@ -69,12 +69,12 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
      */
     @Override
     public PreprocessTriggerVO preprocess(Long fileResultId, Long strategyVersionId, Long upstreamProductId) {
-        KbFileResult fileResult = accessGuard.requireExisting(fileResultId);
-        KbPipelineStrategyVersion strategyRow = resolveStrategyRow(fileResult, strategyVersionId);
+        WbFileResult fileResult = accessGuard.requireExisting(fileResultId);
+        WbPipelineStrategyVersion strategyRow = resolveStrategyRow(fileResult, strategyVersionId);
         PreprocessStrategy strategy = toStrategy(strategyRow);
 
         // 上游组装产物：必须显式指定
-        KbPipelineProduct structureProduct = requireStructureProduct(fileResultId, upstreamProductId);
+        WbPipelineProduct structureProduct = requireStructureProduct(fileResultId, upstreamProductId);
 
         StageTriggerVO triggered = triggerSupport.trigger(fileResultId, PipelineStage.PREPROCESS,
                 structureProduct.getId(), strategyRow.getId(), JsonUtil.toJsonStr(strategy),
@@ -85,7 +85,7 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
     @Override
     public PreprocessDetailVO preprocessDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);
-        KbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.PREPROCESS, taskId,
+        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.PREPROCESS, taskId,
                 PipelineStage.PREPROCESS.getLabel());
 
         PreprocessDetailVO vo = new PreprocessDetailVO();
@@ -94,7 +94,7 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
         // 产物引用/统计/视图元素：按 task.productId 精确取该次运行的产物（历史任务同样可展示自己的产物；无任务/无产物留空）
         vo.setElements(new ArrayList<>());
         PreprocessView view = null;
-        KbPipelineProduct product = detailSupport.productOfTask(task);
+        WbPipelineProduct product = detailSupport.productOfTask(task);
         if (NullUtil.isNotNull(product)) {
             detailSupport.withProductRef(vo, product);
             view = readView(product, vo);
@@ -113,7 +113,7 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
      *
      * @return 产物本体；读不到返回 null（统计与摘要随之为空）
      */
-    private PreprocessView readView(KbPipelineProduct product, PreprocessDetailVO vo) {
+    private PreprocessView readView(WbPipelineProduct product, PreprocessDetailVO vo) {
         try {
             byte[] content = fileStorage.getObject(ObjectRef.ofProduct(product));
             PreprocessView view = JsonUtil.toObject(
@@ -136,16 +136,16 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
     }
 
     /** 策略解析两档：显式指定（40433 校验存在/类型/启用）→ 知识库绑定；两档都不命中一律拒绝 40438。 */
-    private KbPipelineStrategyVersion resolveStrategyRow(KbFileResult fileResult, Long strategyVersionId) {
+    private WbPipelineStrategyVersion resolveStrategyRow(WbFileResult fileResult, Long strategyVersionId) {
         return strategySupport.resolve(
                 fileResult, strategyVersionId, PreprocessStrategy.TYPE, "PreprocessControlServiceImpl 预处理");
     }
 
     /** 上游组装产物校验：必须显式指定，校验存在/环节/归属；未指定直接拒绝（无按时间猜的兜底）。 */
-    private KbPipelineProduct requireStructureProduct(Long fileResultId, Long productId) {
+    private WbPipelineProduct requireStructureProduct(Long fileResultId, Long productId) {
         ThrowUtil.throwIf(NullUtil.isNull(productId) || productId == 0L, ErrorCode.TASK_UPSTREAM_MISSING,
                 "未指定上游统一结构产物，请从组装产物的卡片发起触发");
-        KbPipelineProduct product = pipelineProductDbService.getById(productId);
+        WbPipelineProduct product = pipelineProductDbService.getById(productId);
         ThrowUtil.throwIf(NullUtil.isNull(product), ErrorCode.FILE_RESULT_NOT_FOUND, "指定上游产物不存在");
         ThrowUtil.throwIf(!PipelineStage.STRUCTURE.name().equals(product.getStage()), ErrorCode.FILE_RESULT_NOT_FOUND,
                 "指定产物环节不匹配：期望 STRUCTURE");
@@ -156,7 +156,7 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
         return product;
     }
 
-    private PreprocessStrategy toStrategy(KbPipelineStrategyVersion row) {
+    private PreprocessStrategy toStrategy(WbPipelineStrategyVersion row) {
         // configSnapshot 为 rules/custom 结构（无 name/version），解析补全默认后回填行信息；快照损坏按 40433 拒绝
         return strategySupport.bindRow(row, strategyParser::parseConfig);
     }

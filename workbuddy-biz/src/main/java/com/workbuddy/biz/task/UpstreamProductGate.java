@@ -1,8 +1,8 @@
 package com.workbuddy.biz.task;
 
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
@@ -28,16 +28,16 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UpstreamProductGate {
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
 
     /**
      * 校验上游产物可被下游消费：按产物行上的产出任务查状态，不在放行集内即拒绝。
      *
      * @param product 上游产物行（读 taskId 定位产出任务）
      */
-    public void requireConsumable(KbPipelineProduct product) {
+    public void requireConsumable(WbPipelineProduct product) {
         Long taskId = product.getTaskId();
-        KbPipelineTask task = NullUtil.isNull(taskId) ? null : pipelineTaskDbService.getById(taskId);
+        WbPipelineTask task = NullUtil.isNull(taskId) ? null : pipelineTaskDbService.getById(taskId);
         ThrowUtil.throwIf(NullUtil.isNull(task), ErrorCode.TASK_UPSTREAM_NOT_READY,
                 "上游产物的产出任务不存在，请重新触发上游环节");
         String status = task.getStatus();

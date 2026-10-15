@@ -47,7 +47,7 @@ public class KnowledgeFileEmbedController {
 
     @GetMapping("/{fileResultId}/embed-detail")
     @Operation(summary = "向量化详情", description = "任务状态 + 子步骤列表 + 集合摘要/记录 + 产物引用"
-            + "（kb_embedding_set/kb_embedding_record 数据源，向量本体不下发）；taskId 可选（缺省取最新任务）")
+            + "（wb_knowledge_embedding_set/wb_knowledge_embedding_record 数据源，向量本体不下发）；taskId 可选（缺省取最新任务）")
     public R<EmbedDetailVO> embedDetail(
             @Parameter(description = "文件结果ID", required = true) @PathVariable("fileResultId") Long fileResultId,
             @ParameterObject StageDetailQueryDto query) {

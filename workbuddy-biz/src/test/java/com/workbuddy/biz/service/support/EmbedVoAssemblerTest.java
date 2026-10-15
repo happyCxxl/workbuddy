@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.common.domain.entity.KbEmbeddingRecord;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
 import org.junit.jupiter.api.Test;
 
@@ -19,8 +19,8 @@ class EmbedVoAssemblerTest {
 
     private final EmbedVoAssembler assembler = new EmbedVoAssembler();
 
-    private KbEmbeddingSet embeddingSet() {
-        KbEmbeddingSet set = new KbEmbeddingSet();
+    private WbEmbeddingSet embeddingSet() {
+        WbEmbeddingSet set = new WbEmbeddingSet();
         set.setEmbeddingSetId("es-cs-1-embed-default-v1");
         set.setStrategyVersion("embed-default-v1");
         set.setModel("huawei-BGE-M3");
@@ -32,8 +32,8 @@ class EmbedVoAssemblerTest {
         return set;
     }
 
-    private KbEmbeddingRecord record(String embeddingId, String status) {
-        KbEmbeddingRecord record = new KbEmbeddingRecord();
+    private WbEmbeddingRecord record(String embeddingId, String status) {
+        WbEmbeddingRecord record = new WbEmbeddingRecord();
         record.setEmbeddingId(embeddingId);
         record.setChunkId("chunk-0001");
         record.setContentType("PARAGRAPH");
@@ -47,7 +47,7 @@ class EmbedVoAssemblerTest {
 
     @Test
     void summaryShouldCountThreeStatusesAndIgnoreCached() {
-        List<KbEmbeddingRecord> records = List.of(
+        List<WbEmbeddingRecord> records = List.of(
                 record("emb-0001", "SUCCESS"),
                 record("emb-0002", "SUCCESS"),
                 record("emb-0003", "CACHED"),
@@ -71,7 +71,7 @@ class EmbedVoAssemblerTest {
 
     @Test
     void summaryShouldCountFailedAndIgnoreUnknownStatus() {
-        List<KbEmbeddingRecord> records = List.of(
+        List<WbEmbeddingRecord> records = List.of(
                 record("emb-0001", "FAILED"),
                 record("emb-0002", "FAILED"),
                 record("emb-0003", "SUCCESS"));

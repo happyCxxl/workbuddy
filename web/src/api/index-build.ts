@@ -8,7 +8,7 @@ import type { IndexBuildOrder, IndexBuildTriggerVO, IndexValidateVO } from '@/ty
  * <p>三条必须记住的后端语义：
  *
  * <ol>
- *   <li>**发布是严格的「单在线」**：`kb_index_set.current_published_version_id` 是唯一裁决点，
+ *   <li>**发布是严格的「单在线」**：`wb_knowledge_index_set.current_published_version_id` 是唯一裁决点，
  *       发布时旧在线版本自动 RETIRED；回退要求当前已有一个在线版本（不满足时 40446）；</li>
  *   <li>**子集（LIST 范围）不可发布/回退**（40449）—— 业务规则：子集用于测试策略效果，
  *       每个知识库都是全量发布。发布/回退接口各自拦截，页面只按可用性置灰按钮；</li>

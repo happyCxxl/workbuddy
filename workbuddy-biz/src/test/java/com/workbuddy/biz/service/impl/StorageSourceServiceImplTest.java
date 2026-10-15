@@ -1,11 +1,11 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbAuditLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbStorageSourceDbService;
+import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbStorageSourceDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbStorageSource;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbStorageSource;
 import com.workbuddy.common.dto.response.setting.StorageSourceVO;
 import com.workbuddy.common.dto.response.setting.StorageSwitchPreviewVO;
 import com.workbuddy.common.dto.response.setting.StorageSwitchResultVO;
@@ -76,11 +76,11 @@ class StorageSourceServiceImplTest {
     Path root;
 
     @Mock
-    private KbStorageSourceDbService storageSourceDbService;
+    private WbStorageSourceDbService storageSourceDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbAuditLogDbService kbAuditLogDbService;
+    private WbAuditLogDbService kbAuditLogDbService;
     @Mock
     private StorageRouter storageRouter;
     @Mock
@@ -124,9 +124,9 @@ class StorageSourceServiceImplTest {
         return params;
     }
 
-    private KbStorageSource row(Long id, String name, StorageType type, Map<String, String> params,
+    private WbStorageSource row(Long id, String name, StorageType type, Map<String, String> params,
                                 StorageSourceStatus status, int isCurrent) {
-        KbStorageSource row = new KbStorageSource();
+        WbStorageSource row = new WbStorageSource();
         row.setId(id);
         row.setName(name);
         row.setStorageType(type.getCode());
@@ -136,13 +136,13 @@ class StorageSourceServiceImplTest {
         return row;
     }
 
-    private KbStorageSource localRow(Long id, String name, boolean current) {
+    private WbStorageSource localRow(Long id, String name, boolean current) {
         return row(id, name, StorageType.LOCAL, localParams(root.resolve("row-" + id).toString()),
                 StorageSourceStatus.ENABLED, current ? 1 : 0);
     }
 
-    private KbPipelineTask task(Long fileResultId, PipelineTaskStatus status) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask task(Long fileResultId, PipelineTaskStatus status) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setFileResultId(fileResultId);
         task.setStatus(status.name());
         return task;
@@ -156,17 +156,17 @@ class StorageSourceServiceImplTest {
 
         service.initialize();
 
-        ArgumentCaptor<KbStorageSource> rows = ArgumentCaptor.forClass(KbStorageSource.class);
+        ArgumentCaptor<WbStorageSource> rows = ArgumentCaptor.forClass(WbStorageSource.class);
         verify(storageSourceDbService, times(2)).save(rows.capture());
-        List<KbStorageSource> seeded = rows.getAllValues();
-        Map<String, KbStorageSource> byName = new LinkedHashMap<>();
+        List<WbStorageSource> seeded = rows.getAllValues();
+        Map<String, WbStorageSource> byName = new LinkedHashMap<>();
         seeded.forEach(item -> byName.put(item.getName(), item));
         assertEquals(2, byName.size());
         assertTrue(byName.containsKey("MinIO"), byName.keySet().toString());
         assertTrue(byName.containsKey("本地磁盘"), byName.keySet().toString());
         // 配置里的 storage-type = local：本地磁盘那一行置为当前启用
-        assertEquals(KbStorageSourceDbService.CURRENT_YES, byName.get("本地磁盘").getIsCurrent());
-        assertEquals(KbStorageSourceDbService.CURRENT_NO, byName.get("MinIO").getIsCurrent());
+        assertEquals(WbStorageSourceDbService.CURRENT_YES, byName.get("本地磁盘").getIsCurrent());
+        assertEquals(WbStorageSourceDbService.CURRENT_NO, byName.get("MinIO").getIsCurrent());
         assertEquals(StorageSourceStatus.ENABLED.getCode(), byName.get("MinIO").getStatus());
         assertNotNull(byName.get("本地磁盘").getConfigJson());
         // seed 出来的两行都注册进路由，当前启用那一行做标记并回写这次探活的结论
@@ -190,8 +190,8 @@ class StorageSourceServiceImplTest {
 
     @Test
     void initializeShouldRegisterEnabledRowsOnly() {
-        KbStorageSource enabled = localRow(LOCAL_ID, "本地磁盘", true);
-        KbStorageSource disabled = row(OTHER_ID, "归档 MinIO", StorageType.LOCAL,
+        WbStorageSource enabled = localRow(LOCAL_ID, "本地磁盘", true);
+        WbStorageSource disabled = row(OTHER_ID, "归档 MinIO", StorageType.LOCAL,
                 localParams(root.resolve("disabled").toString()), StorageSourceStatus.DISABLED, 0);
         when(storageSourceDbService.listAll()).thenReturn(List.of(enabled, disabled));
 
@@ -206,7 +206,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void initializeShouldFallBackToConfiguredTypeWithoutEnabledRow() {
-        KbStorageSource disabled = row(OTHER_ID, "本地磁盘", StorageType.LOCAL,
+        WbStorageSource disabled = row(OTHER_ID, "本地磁盘", StorageType.LOCAL,
                 localParams(root.resolve("disabled").toString()), StorageSourceStatus.DISABLED, 0);
         when(storageSourceDbService.listAll()).thenReturn(List.of(disabled));
 
@@ -221,7 +221,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void initializeShouldSkipRowsWithUnrecognizedType() {
-        KbStorageSource broken = row(OTHER_ID, "未知源", StorageType.LOCAL,
+        WbStorageSource broken = row(OTHER_ID, "未知源", StorageType.LOCAL,
                 localParams(root.resolve("broken").toString()), StorageSourceStatus.ENABLED, 0);
         broken.setStorageType("oss");
         when(storageSourceDbService.listAll()).thenReturn(List.of(broken));
@@ -237,7 +237,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void listShouldMarkCurrentRegisteredAndReturnMinioParamsWithKeys() {
-        KbStorageSource minio = row(LOCAL_ID, "演示 MinIO", StorageType.MINIO, minioParams(),
+        WbStorageSource minio = row(LOCAL_ID, "演示 MinIO", StorageType.MINIO, minioParams(),
                 StorageSourceStatus.ENABLED, 1);
         minio.setLastProbeOk(true);
         minio.setLastProbeAt(LocalDateTime.of(2026, 10, 9, 10, 30, 15, 123_000_000));
@@ -269,7 +269,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void listShouldReturnLocalParamsWithFullKeySet() {
-        KbStorageSource local = row(LOCAL_ID, "本地磁盘", StorageType.LOCAL,
+        WbStorageSource local = row(LOCAL_ID, "本地磁盘", StorageType.LOCAL,
                 localParams(root.resolve("local-full").toString()), StorageSourceStatus.ENABLED, 0);
         when(storageSourceDbService.listAll()).thenReturn(List.of(local));
 
@@ -284,7 +284,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void listShouldReportUnprobedSourceWithNullProbeColumns() {
-        KbStorageSource fresh = row(LOCAL_ID, "本地磁盘", StorageType.LOCAL,
+        WbStorageSource fresh = row(LOCAL_ID, "本地磁盘", StorageType.LOCAL,
                 localParams(root.resolve("fresh").toString()), StorageSourceStatus.ENABLED, 0);
         when(storageSourceDbService.listAll()).thenReturn(List.of(fresh));
 
@@ -297,7 +297,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void listShouldReportFailedProbe() {
-        KbStorageSource broken = localRow(LOCAL_ID, "本地磁盘", false);
+        WbStorageSource broken = localRow(LOCAL_ID, "本地磁盘", false);
         broken.setLastProbeOk(false);
         broken.setLastProbeAt(LocalDateTime.of(2026, 10, 9, 11, 0));
         when(storageSourceDbService.listAll()).thenReturn(List.of(broken));
@@ -312,7 +312,7 @@ class StorageSourceServiceImplTest {
     void listShouldReportIncompleteParams() {
         Map<String, String> incomplete = new LinkedHashMap<>();
         incomplete.put(StorageSourceDef.KEY_ENDPOINT, "http://127.0.0.1:1");
-        KbStorageSource minio = row(LOCAL_ID, "演示 MinIO", StorageType.MINIO, incomplete,
+        WbStorageSource minio = row(LOCAL_ID, "演示 MinIO", StorageType.MINIO, incomplete,
                 StorageSourceStatus.ENABLED, 0);
         when(storageSourceDbService.listAll()).thenReturn(List.of(minio));
 
@@ -324,7 +324,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void listShouldReportUnregisteredSourceWithoutCurrentMark() {
-        KbStorageSource row = row(LOCAL_ID, "未接入的 MinIO", StorageType.MINIO, minioParams(),
+        WbStorageSource row = row(LOCAL_ID, "未接入的 MinIO", StorageType.MINIO, minioParams(),
                 StorageSourceStatus.DISABLED, 0);
         when(storageSourceDbService.listAll()).thenReturn(List.of(row));
         when(storageRouter.registered(LOCAL_ID)).thenReturn(false);
@@ -366,7 +366,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void previewShouldRejectDisabledTarget() {
-        KbStorageSource stored = localRow(LOCAL_ID, "本地磁盘", false);
+        WbStorageSource stored = localRow(LOCAL_ID, "本地磁盘", false);
         stored.setStatus(StorageSourceStatus.DISABLED.getCode());
         when(storageSourceDbService.getById(LOCAL_ID)).thenReturn(stored);
 
@@ -449,7 +449,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void switchShouldNotPersistWhenProbeFails() {
-        KbStorageSource stored = row(LOCAL_ID, "演示 MinIO", StorageType.MINIO, minioParams(),
+        WbStorageSource stored = row(LOCAL_ID, "演示 MinIO", StorageType.MINIO, minioParams(),
                 StorageSourceStatus.ENABLED, 0);
         when(storageSourceDbService.getById(LOCAL_ID)).thenReturn(stored);
         when(storageRouter.currentSourceId()).thenReturn(OTHER_ID);
@@ -468,7 +468,7 @@ class StorageSourceServiceImplTest {
 
     @Test
     void switchShouldRejectDisabledTargetWith40458() {
-        KbStorageSource stored = localRow(LOCAL_ID, "本地磁盘", false);
+        WbStorageSource stored = localRow(LOCAL_ID, "本地磁盘", false);
         stored.setStatus(StorageSourceStatus.DISABLED.getCode());
         when(storageSourceDbService.getById(LOCAL_ID)).thenReturn(stored);
 

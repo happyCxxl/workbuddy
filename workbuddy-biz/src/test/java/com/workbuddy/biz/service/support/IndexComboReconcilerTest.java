@@ -1,13 +1,13 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
 import com.workbuddy.common.domain.embed.EmbeddingSet;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.worker.indexing.ComboSnapshot;
@@ -46,11 +46,11 @@ class IndexComboReconcilerTest {
     private static final Long SOURCE_ID = 1L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbChunkSetDbService chunkSetDbService;
+    private WbChunkSetDbService chunkSetDbService;
     @Mock
-    private KbEmbeddingSetDbService embeddingSetDbService;
+    private WbEmbeddingSetDbService embeddingSetDbService;
     @Mock
     private IndexLineageResolver lineageResolver;
     @Mock
@@ -64,8 +64,8 @@ class IndexComboReconcilerTest {
                 embeddingSetDbService, lineageResolver, indexRowAssembler);
     }
 
-    private KbChunkSet chunkRow(Long id, String strategy) {
-        KbChunkSet row = new KbChunkSet();
+    private WbChunkSet chunkRow(Long id, String strategy) {
+        WbChunkSet row = new WbChunkSet();
         row.setId(id);
         row.setFileResultId(10L);
         row.setChunkStrategyVersion(strategy);
@@ -73,8 +73,8 @@ class IndexComboReconcilerTest {
         return row;
     }
 
-    private KbEmbeddingSet embedRow() {
-        KbEmbeddingSet row = new KbEmbeddingSet();
+    private WbEmbeddingSet embedRow() {
+        WbEmbeddingSet row = new WbEmbeddingSet();
         row.setId(2L);
         row.setFileResultId(10L);
         row.setStrategyVersion("embed-default-v1");
@@ -109,8 +109,8 @@ class IndexComboReconcilerTest {
 
     @Test
     void selectComboProductsShouldReturnRowsWhenLineageMatches() {
-        KbChunkSet chunk = chunkRow(1L, "chunk-hybrid-v1");
-        KbEmbeddingSet embed = embedRow();
+        WbChunkSet chunk = chunkRow(1L, "chunk-hybrid-v1");
+        WbEmbeddingSet embed = embedRow();
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
 
         IndexComboReconciler.ComboProducts products = reconciler.selectComboProducts(
@@ -134,7 +134,7 @@ class IndexComboReconcilerTest {
 
     @Test
     void selectComboProductsShouldReportGapWhenLineageMismatch() {
-        KbChunkSet chunk = chunkRow(1L, "chunk-hybrid-v1");
+        WbChunkSet chunk = chunkRow(1L, "chunk-hybrid-v1");
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-other-v2");
 
         IndexComboReconciler.ComboProducts products = reconciler.selectComboProducts(
@@ -151,22 +151,22 @@ class IndexComboReconcilerTest {
         when(chunkSetDbService.listByFileResultIds(anyList())).thenReturn(List.of(
                 chunkRow(1L, "chunk-a-v1"), chunkRow(3L, "chunk-a-v1")));
 
-        Map<String, KbChunkSet> latest = reconciler.latestChunkMap(List.of(10L));
+        Map<String, WbChunkSet> latest = reconciler.latestChunkMap(List.of(10L));
 
         assertEquals(3L, latest.get("10#chunk-a-v1").getId());
     }
 
     @Test
     void computeExpectedShouldRespectListScope() {
-        KbFileResult file10 = new KbFileResult();
+        WbFileResult file10 = new WbFileResult();
         file10.setId(10L);
         file10.setKnowledgeBaseId(1L);
-        KbFileResult file11 = new KbFileResult();
+        WbFileResult file11 = new WbFileResult();
         file11.setId(11L);
         file11.setKnowledgeBaseId(1L);
         when(fileResultDbService.listByKb(1L)).thenReturn(List.of(file10, file11));
-        KbChunkSet chunk = chunkRow(1L, "chunk-hybrid-v1");
-        KbEmbeddingSet embed = embedRow();
+        WbChunkSet chunk = chunkRow(1L, "chunk-hybrid-v1");
+        WbEmbeddingSet embed = embedRow();
         embed.setArtifactId("artifact-2");
         embed.setDimension(1024);
         when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(chunk));

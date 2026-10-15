@@ -2,22 +2,22 @@ package com.workbuddy.biz.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.EmbedControlService;
-import com.workbuddy.biz.service.db.KbEmbeddingRecordDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.support.EmbedVoAssembler;
 import com.workbuddy.biz.service.support.StageStrategySupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
-import com.workbuddy.common.domain.entity.KbEmbeddingRecord;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.dto.response.embed.EmbedDetailVO;
 import com.workbuddy.common.dto.response.embed.EmbedTriggerVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
@@ -54,10 +54,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmbedControlServiceImpl implements EmbedControlService {
 
-    private final KbPipelineProductDbService pipelineProductDbService;
-    private final KbPipelineStepLogDbService stepLogDbService;
-    private final KbEmbeddingSetDbService embeddingSetDbService;
-    private final KbEmbeddingRecordDbService embeddingRecordDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineStepLogDbService stepLogDbService;
+    private final WbEmbeddingSetDbService embeddingSetDbService;
+    private final WbEmbeddingRecordDbService embeddingRecordDbService;
     private final EmbedVoAssembler voAssembler;
     private final EmbedStrategyParser strategyParser;
     private final ChunkStrategyParser chunkStrategyParser;
@@ -71,12 +71,12 @@ public class EmbedControlServiceImpl implements EmbedControlService {
 
     @Override
     public EmbedTriggerVO embed(Long fileResultId, Long strategyVersionId, Long upstreamProductId) {
-        KbFileResult fileResult = accessGuard.requireExisting(fileResultId);
-        KbPipelineStrategyVersion strategyRow = resolveStrategyRow(fileResult, strategyVersionId);
+        WbFileResult fileResult = accessGuard.requireExisting(fileResultId);
+        WbPipelineStrategyVersion strategyRow = resolveStrategyRow(fileResult, strategyVersionId);
         EmbedStrategy strategy = toStrategy(strategyRow);
 
         // 上游切片产物：必须显式指定
-        KbPipelineProduct chunkProduct = requireChunkProduct(fileResultId, upstreamProductId);
+        WbPipelineProduct chunkProduct = requireChunkProduct(fileResultId, upstreamProductId);
 
         // 窗口前置校验：切片策略最大片长 ≤ 模型窗口（不兼容即报错，不做兜底）
         precheckWindow(chunkProduct, strategy);
@@ -90,7 +90,7 @@ public class EmbedControlServiceImpl implements EmbedControlService {
     @Override
     public EmbedDetailVO embedDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);
-        KbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.EMBED, taskId,
+        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.EMBED, taskId,
                 PipelineStage.EMBED.getLabel());
 
         EmbedDetailVO vo = new EmbedDetailVO();
@@ -108,12 +108,12 @@ public class EmbedControlServiceImpl implements EmbedControlService {
         }
 
         // 集合摘要/记录：按 task.productId → 产物 → artifactId 精确取该次运行的集合（历史任务同样可展示自己的集合；无任务/无产物留空）
-        KbPipelineProduct product = NullUtil.isNull(task) || NullUtil.isNull(task.getProductId()) ? null
+        WbPipelineProduct product = NullUtil.isNull(task) || NullUtil.isNull(task.getProductId()) ? null
                 : pipelineProductDbService.getById(task.getProductId());
         if (NullUtil.isNotNull(product)) {
-            KbEmbeddingSet embeddingSet = embeddingSetDbService.getByArtifactId(product.getArtifactId());
+            WbEmbeddingSet embeddingSet = embeddingSetDbService.getByArtifactId(product.getArtifactId());
             if (NullUtil.isNotNull(embeddingSet)) {
-                List<KbEmbeddingRecord> records = embeddingRecordDbService.listByEmbeddingSetId(embeddingSet.getId());
+                List<WbEmbeddingRecord> records = embeddingRecordDbService.listByEmbeddingSetId(embeddingSet.getId());
                 vo.setSummary(voAssembler.toSummary(embeddingSet, records));
                 vo.setRecords(voAssembler.toRecordItemVOs(records));
             }
@@ -125,7 +125,7 @@ public class EmbedControlServiceImpl implements EmbedControlService {
     }
 
     /** 窗口前置校验（触发时明确报错；不可推算时跳过，任务期告警） */
-    private void precheckWindow(KbPipelineProduct chunkProduct, EmbedStrategy strategy) {
+    private void precheckWindow(WbPipelineProduct chunkProduct, EmbedStrategy strategy) {
         ChunkStrategy chunkStrategy = resolveChunkStrategy(chunkProduct.getCapabilitySnapshot());
         if (NullUtil.isNull(chunkStrategy)) {
             return;
@@ -140,10 +140,10 @@ public class EmbedControlServiceImpl implements EmbedControlService {
     }
 
     /** 上游切片产物校验：必须显式指定，校验存在/环节/归属；未指定直接拒绝（无按时间猜的兜底）。 */
-    private KbPipelineProduct requireChunkProduct(Long fileResultId, Long productId) {
+    private WbPipelineProduct requireChunkProduct(Long fileResultId, Long productId) {
         ThrowUtil.throwIf(NullUtil.isNull(productId) || productId == 0L, ErrorCode.TASK_UPSTREAM_MISSING,
                 "未指定上游切片产物，请从切片产物的卡片发起触发");
-        KbPipelineProduct product = pipelineProductDbService.getById(productId);
+        WbPipelineProduct product = pipelineProductDbService.getById(productId);
         ThrowUtil.throwIf(NullUtil.isNull(product), ErrorCode.FILE_RESULT_NOT_FOUND, "指定上游产物不存在");
         ThrowUtil.throwIf(!PipelineStage.CHUNK.name().equals(product.getStage()), ErrorCode.FILE_RESULT_NOT_FOUND,
                 "指定产物环节不匹配：期望 CHUNK");
@@ -175,12 +175,12 @@ public class EmbedControlServiceImpl implements EmbedControlService {
     }
 
     /** 策略解析两档：显式指定（40433 校验存在/类型/启用）→ 知识库绑定；两档都不命中一律拒绝 40438。 */
-    private KbPipelineStrategyVersion resolveStrategyRow(KbFileResult fileResult, Long strategyVersionId) {
+    private WbPipelineStrategyVersion resolveStrategyRow(WbFileResult fileResult, Long strategyVersionId) {
         return strategySupport.resolve(
                 fileResult, strategyVersionId, EmbedStrategy.TYPE, "EmbedControlServiceImpl 向量化");
     }
 
-    private EmbedStrategy toStrategy(KbPipelineStrategyVersion row) {
+    private EmbedStrategy toStrategy(WbPipelineStrategyVersion row) {
         return strategySupport.bindRow(row, strategyParser::parse);
     }
 }

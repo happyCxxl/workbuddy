@@ -1,14 +1,14 @@
 package com.workbuddy.biz.task.support;
 
 import cn.hutool.core.util.StrUtil;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.task.StageOutcome;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
@@ -45,8 +45,8 @@ public final class TaskRunnerSupport {
      * @param taskId                任务 ID
      * @return 领取到的任务；未领取到返回 null
      */
-    public static KbPipelineTask claim(KbPipelineTaskDbService pipelineTaskDbService, Long taskId) {
-        KbPipelineTask task = pipelineTaskDbService.getById(taskId);
+    public static WbPipelineTask claim(WbPipelineTaskDbService pipelineTaskDbService, Long taskId) {
+        WbPipelineTask task = pipelineTaskDbService.getById(taskId);
         if (NullUtil.isNull(task)
                 || !PipelineTaskStatus.QUEUED.name().equals(task.getStatus())) {
             return null;
@@ -55,7 +55,7 @@ public final class TaskRunnerSupport {
     }
 
     /** 领任务 + 取文件结果的结果对（领不到或文件结果缺失时为 null）。 */
-    public record Claimed(KbPipelineTask task, KbFileResult fileResult) {
+    public record Claimed(WbPipelineTask task, WbFileResult fileResult) {
     }
 
     /**
@@ -69,14 +69,14 @@ public final class TaskRunnerSupport {
      * @param finisher              该执行器的失败回写
      * @return 领取到的任务与文件结果；未领取到或文件结果缺失时返回 null
      */
-    public static Claimed claimFileResult(KbPipelineTaskDbService pipelineTaskDbService,
-                                          KbFileResultDbService fileResultDbService, Long taskId,
+    public static Claimed claimFileResult(WbPipelineTaskDbService pipelineTaskDbService,
+                                          WbFileResultDbService fileResultDbService, Long taskId,
                                           PipelineTaskErrorCode failureCode, FailedFinisher finisher) {
-        KbPipelineTask task = claim(pipelineTaskDbService, taskId);
+        WbPipelineTask task = claim(pipelineTaskDbService, taskId);
         if (NullUtil.isNull(task)) {
             return null;
         }
-        KbFileResult fileResult = fileResultDbService.getById(task.getFileResultId());
+        WbFileResult fileResult = fileResultDbService.getById(task.getFileResultId());
         if (NullUtil.isNull(fileResult)) {
             finisher.finish(taskId, failureCode.name(), "文件结果不存在: " + task.getFileResultId());
             return null;
@@ -92,8 +92,8 @@ public final class TaskRunnerSupport {
      * @param task             当前任务
      * @return 上游产物；没有上游或查不到时返回 null
      */
-    public static KbPipelineProduct resolveUpstreamProduct(KbPipelineProductDbService productDbService,
-                                                           KbPipelineTask task) {
+    public static WbPipelineProduct resolveUpstreamProduct(WbPipelineProductDbService productDbService,
+                                                           WbPipelineTask task) {
         Long upstreamProductId = upstreamOf(task);
         return NullUtil.isNull(upstreamProductId) ? null : productDbService.getById(upstreamProductId);
     }
@@ -110,10 +110,10 @@ public final class TaskRunnerSupport {
      * @param finisher         该执行器的失败回写
      * @return 上游产物；缺引用时返回 null
      */
-    public static KbPipelineProduct requireUpstream(KbPipelineProductDbService productDbService,
-                                                    UpstreamProductGate gate, KbPipelineTask task, Long taskId,
+    public static WbPipelineProduct requireUpstream(WbPipelineProductDbService productDbService,
+                                                    UpstreamProductGate gate, WbPipelineTask task, Long taskId,
                                                     String missingText, FailedFinisher finisher) {
-        KbPipelineProduct product = resolveUpstreamProduct(productDbService, task);
+        WbPipelineProduct product = resolveUpstreamProduct(productDbService, task);
         if (NullUtil.isNotNull(product)) {
             gate.requireConsumable(product);
             return product;
@@ -135,7 +135,7 @@ public final class TaskRunnerSupport {
      * @param <T>          策略类型
      * @return 解析后的策略；快照缺失或损坏时返回 null
      */
-    public static <T> T parseStrategy(KbPipelineTask task, Long taskId, PipelineTaskErrorCode strategyCode,
+    public static <T> T parseStrategy(WbPipelineTask task, Long taskId, PipelineTaskErrorCode strategyCode,
                                       String failureText, Function<String, T> parse, FailedFinisher finisher) {
         try {
             return parse.apply(task.getStrategySnapshot());
@@ -152,7 +152,7 @@ public final class TaskRunnerSupport {
      * @param task 当前任务
      * @return 上游产物 ID；没有上游时返回 null
      */
-    public static Long upstreamOf(KbPipelineTask task) {
+    public static Long upstreamOf(WbPipelineTask task) {
         Long upstreamProductId = NullUtil.isNull(task) ? null : task.getUpstreamProductId();
         return NullUtil.isNull(upstreamProductId) || upstreamProductId == 0L ? null : upstreamProductId;
     }
@@ -163,7 +163,7 @@ public final class TaskRunnerSupport {
      * @param task 当前任务
      * @return 策略版本 ID；该环节无策略时返回 null
      */
-    public static Long strategyVersionOf(KbPipelineTask task) {
+    public static Long strategyVersionOf(WbPipelineTask task) {
         Long strategyVersionId = NullUtil.isNull(task) ? null : task.getStrategyVersionId();
         return NullUtil.isNull(strategyVersionId) || strategyVersionId == 0L ? null : strategyVersionId;
     }
@@ -210,14 +210,14 @@ public final class TaskRunnerSupport {
      * @param errorCode             错误码（各环节自己的枚举码值）
      * @param errorMsg              失败原因（可空；超长截断，空串按 null 落库）
      */
-    public static void finishFailed(KbPipelineTaskDbService pipelineTaskDbService, Long taskId,
+    public static void finishFailed(WbPipelineTaskDbService pipelineTaskDbService, Long taskId,
                                     String errorCode, String errorMsg) {
         pipelineTaskDbService.finish(taskId, PipelineTaskStatus.FAILED, errorCode,
                 StrUtil.isBlank(errorMsg) ? null : StrUtil.maxLength(errorMsg, MAX_ERROR_MESSAGE_LENGTH));
     }
 
     /** 终态收尾：按建议状态分派成功/失败路径。 */
-    public static void complete(KbPipelineTaskDbService pipelineTaskDbService,
+    public static void complete(WbPipelineTaskDbService pipelineTaskDbService,
                                 StepLogPersistence stepLogPersistence, Long taskId,
                                 StageOutcome outcome, Runnable onSuccess, FailedFinisher onFailure) {
         switch (outcome.getSuggestedStatus()) {
@@ -236,7 +236,7 @@ public final class TaskRunnerSupport {
      * 完成日志（落库收尾共用）：label 传完整前缀（如 "ParseTaskRunner 解析完成"），logger 用调用方自己的，
      * 日志类别与文案仍留在各执行器上。
      */
-    public static void logPersisted(Logger log, String label, KbPipelineTask task, Long fileResultId,
+    public static void logPersisted(Logger log, String label, WbPipelineTask task, Long fileResultId,
                                     StageOutcome outcome, String artifactId) {
         log.info("===> {}, taskId={}, fileResultId={}, status={}, artifactId={}",
                 label, task.getId(), fileResultId, outcome.getSuggestedStatus().name(), artifactId);

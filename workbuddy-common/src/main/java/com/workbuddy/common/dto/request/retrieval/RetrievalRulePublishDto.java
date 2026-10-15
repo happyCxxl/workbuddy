@@ -15,7 +15,7 @@ public class RetrievalRulePublishDto {
     @NotNull(message = "versionId 不能为空")
     private Long versionId;
 
-    /** 规则行 ID（kb_pipeline_strategy_version，type=RETRIEVAL） */
+    /** 规则行 ID（wb_knowledge_pipeline_strategy_version，type=RETRIEVAL） */
     @NotNull(message = "ruleId 不能为空")
     private Long ruleId;
 }

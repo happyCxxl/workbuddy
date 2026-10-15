@@ -26,7 +26,7 @@ public class ChunkContext {
     /** 切片参数（knowledge.chunk 前缀，application.yml 同名 kebab-case 键） */
     private ChunkProperties properties;
 
-    /** 文件结果 ID（kb_file_result.id） */
+    /** 文件结果 ID（wb_file_result.id） */
     private Long fileResultId;
 
     /** 上游产物引用（PREPROCESS 视图产物 ID） */

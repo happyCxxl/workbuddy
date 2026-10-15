@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 子步骤记录信息：ParsePipeline 产出，由 biz 落 kb_pipeline_step_log。
+ * 子步骤记录信息：ParsePipeline 产出，由 biz 落 wb_knowledge_pipeline_step_log。
  *
  * @author cxxl
  */

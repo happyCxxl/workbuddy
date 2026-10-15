@@ -9,7 +9,7 @@ knowledge:
 
 # 文件服务：数据源首次初始化的缺省来源
 # 数据源表为空时按本段参数 seed 两行（MinIO / 本地磁盘），storage-type 指的那种类型置为当前启用；
-# 表里没有启用的数据源时按 storage-type 回落注册一条内置定义。连接参数的实际来源是 kb_storage_source.config_json。
+# 表里没有启用的数据源时按 storage-type 回落注册一条内置定义。连接参数的实际来源是 wb_storage_source.config_json。
 file-center:
   storage-type: minio
   minio:

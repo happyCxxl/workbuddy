@@ -1,17 +1,17 @@
 package com.workbuddy.biz.task.runner;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbSourceFile;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.parse.ParseOutcome;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.storage.ObjectRef;
@@ -54,19 +54,19 @@ import static org.mockito.Mockito.when;
 class ParseTaskRunnerTest {
 
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
 
     /** 档案与产物所在的数据源 */
     private static final Long SOURCE_ID = 1L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
     private FileStorage fileStorage;
     @Mock
@@ -87,8 +87,8 @@ class ParseTaskRunnerTest {
                 new ParseProperties(), new StepLogPersistence(stepLogDbService));
     }
 
-    private KbPipelineTask queuedTask() {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask queuedTask() {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(20L);
         task.setFileResultId(10L);
         task.setStatus(PipelineTaskStatus.QUEUED.name());
@@ -101,15 +101,15 @@ class ParseTaskRunnerTest {
         when(fileStorage.open("F-88")).thenReturn(new ByteArrayInputStream("x".getBytes(StandardCharsets.UTF_8)));
     }
 
-    private KbFileResult fileResult() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResult() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setSourceFileId(5L);
         return fileResult;
     }
 
-    private KbSourceFile sourceFile() {
-        KbSourceFile sourceFile = new KbSourceFile();
+    private WbSourceFile sourceFile() {
+        WbSourceFile sourceFile = new WbSourceFile();
         sourceFile.setFileId("F-88");
         sourceFile.setFileName("招标文件.pdf");
         sourceFile.setSha256("abc");
@@ -136,7 +136,7 @@ class ParseTaskRunnerTest {
 
     @Test
     void nonQueuedTaskShouldSkip() {
-        KbPipelineTask task = queuedTask();
+        WbPipelineTask task = queuedTask();
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
         when(pipelineTaskDbService.getById(20L)).thenReturn(task);
 
@@ -163,14 +163,14 @@ class ParseTaskRunnerTest {
         when(parsePipeline.run(any(ParseContext.class))).thenReturn(successOutcome());
         when(fileStorage.putObject(any(byte[].class)))
                 .thenReturn(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "9f2c".repeat(16)));
-        when(pipelineProductDbService.save(any(KbPipelineProduct.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineProduct.class).setId(40L);
+        when(pipelineProductDbService.save(any(WbPipelineProduct.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineProduct.class).setId(40L);
             return true;
         });
 
         runner.run(20L);
 
-        ArgumentCaptor<KbPipelineProduct> captor = ArgumentCaptor.forClass(KbPipelineProduct.class);
+        ArgumentCaptor<WbPipelineProduct> captor = ArgumentCaptor.forClass(WbPipelineProduct.class);
         verify(pipelineProductDbService).save(captor.capture());
         assertEquals(10L, captor.getValue().getFileResultId());
         assertEquals("PARSE", captor.getValue().getStage());
@@ -183,7 +183,7 @@ class ParseTaskRunnerTest {
         verify(pipelineTaskDbService).finish(20L, PipelineTaskStatus.SUCCESS, null, null);
         verify(pipelineTaskDbService).updateProductId(20L, 40L);
         // 手动逐环节口径：PARSE 完成后停在终态，不再自动登记 STRUCTURE
-        verify(pipelineTaskDbService, never()).save(any(KbPipelineTask.class));
+        verify(pipelineTaskDbService, never()).save(any(WbPipelineTask.class));
         verify(stepLogDbService).save(any());
     }
 

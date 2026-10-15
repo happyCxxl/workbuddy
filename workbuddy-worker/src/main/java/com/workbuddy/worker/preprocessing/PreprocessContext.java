@@ -23,7 +23,7 @@ public class PreprocessContext {
     /** 阈值配置（knowledge.preprocess 前缀，application.yml 同名 kebab-case 键） */
     private PreprocessProperties properties;
 
-    /** 文件结果 ID（kb_file_result.id） */
+    /** 文件结果 ID（wb_file_result.id） */
     private Long fileResultId;
 
     /** 上游产物引用（STRUCTURE 产物 ID） */

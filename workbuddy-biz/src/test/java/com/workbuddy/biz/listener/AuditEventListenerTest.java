@@ -1,6 +1,6 @@
 package com.workbuddy.biz.listener;
 
-import com.workbuddy.biz.service.db.KbAuditLogDbService;
+import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.security.audit.AuditEvent;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verify;
 class AuditEventListenerTest {
 
     @Mock
-    private KbAuditLogDbService kbAuditLogDbService;
+    private WbAuditLogDbService kbAuditLogDbService;
 
     @InjectMocks
     private AuditEventListener auditEventListener;

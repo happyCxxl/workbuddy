@@ -2,14 +2,14 @@ package com.workbuddy.biz.task;
 
 import com.workbuddy.biz.config.TaskExecutorConfig;
 import com.workbuddy.biz.config.TaskQueueProperties;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.runner.ChunkTaskRunner;
 import com.workbuddy.biz.task.runner.EmbedTaskRunner;
 import com.workbuddy.biz.task.runner.ParseTaskRunner;
 import com.workbuddy.biz.task.runner.PreprocessTaskRunner;
 import com.workbuddy.biz.task.runner.StructureTaskRunner;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
@@ -51,7 +51,7 @@ class PipelineTaskConsumerTest {
     @Mock
     private TaskQueueSupport taskQueue;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
     private ParseTaskRunner runner;
     @Mock
@@ -96,14 +96,14 @@ class PipelineTaskConsumerTest {
     }
 
     /** 叫醒一次并返回一批任务；后续阻塞弹出为空（消费循环空转等待） */
-    private void stubOneBatch(KbPipelineTask... tasks) {
+    private void stubOneBatch(WbPipelineTask... tasks) {
         AtomicBoolean woken = new AtomicBoolean(false);
         when(taskQueue.blockingPop()).thenAnswer(inv -> woken.compareAndSet(false, true) ? "1" : null);
         when(pipelineTaskDbService.listQueuedByStages(any(), anyInt())).thenReturn(List.of(tasks));
     }
 
-    private KbPipelineTask task(Long id, PipelineStage stage) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask task(Long id, PipelineStage stage) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(id);
         task.setStage(stage.name());
         task.setStatus(PipelineTaskStatus.QUEUED.name());
@@ -171,7 +171,7 @@ class PipelineTaskConsumerTest {
         CountDownLatch release = new CountDownLatch(1);
         runUntilReleased(1L, entered, release);
         // 索引构建环节不在消费循环的五路分发内：扫到了也不领批（分发与产物归 BUILD_INDEX 自身链路）
-        KbPipelineTask buildIndex = task(2L, PipelineStage.BUILD_INDEX);
+        WbPipelineTask buildIndex = task(2L, PipelineStage.BUILD_INDEX);
         stubOneBatch(task(1L, PipelineStage.PARSE), buildIndex);
 
         consumer.start();

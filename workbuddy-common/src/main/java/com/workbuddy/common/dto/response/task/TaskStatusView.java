@@ -1,6 +1,6 @@
 package com.workbuddy.common.dto.response.task;
 
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 
 import java.time.LocalDateTime;
 
@@ -27,7 +27,7 @@ public interface TaskStatusView {
     void setFinishedAt(LocalDateTime finishedAt);
 
     /** 任务实体 → 视图通用字段（纯映射）。 */
-    default void applyFrom(KbPipelineTask task) {
+    default void applyFrom(WbPipelineTask task) {
         setStage(task.getStage());
         setTaskId(task.getId());
         setStatus(task.getStatus());

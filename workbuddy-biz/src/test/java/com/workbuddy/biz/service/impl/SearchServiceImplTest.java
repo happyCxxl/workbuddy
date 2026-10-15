@@ -1,19 +1,19 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbIndexSetDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbRetrievalRunDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbIndexSetDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbRetrievalRunDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.RetrievalRuleResolver;
 import com.workbuddy.biz.service.support.RetrievalRunSettings;
 import com.workbuddy.common.domain.embed.EmbeddingRequest;
 import com.workbuddy.common.domain.embed.EmbeddingResult;
-import com.workbuddy.common.domain.entity.KbIndexSet;
-import com.workbuddy.common.domain.entity.KbIndexVersion;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbRetrievalRun;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbIndexSet;
+import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbRetrievalRun;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.dto.request.retrieval.SearchRequest;
 import com.workbuddy.common.dto.response.retrieval.SearchHitVO;
 import com.workbuddy.common.dto.response.retrieval.SearchVO;
@@ -62,13 +62,13 @@ import static org.mockito.Mockito.when;
 class SearchServiceImplTest {
 
     @Mock
-    private KbIndexSetDbService indexSetDbService;
+    private WbIndexSetDbService indexSetDbService;
     @Mock
-    private KbIndexVersionDbService indexVersionDbService;
+    private WbIndexVersionDbService indexVersionDbService;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
     @Mock
     private MilvusIndexPort milvusIndexPort;
     @Mock
@@ -78,7 +78,7 @@ class SearchServiceImplTest {
     @Mock
     private RetrievalRuleResolver retrievalRuleResolver;
     @Mock
-    private KbRetrievalRunDbService retrievalRunDbService;
+    private WbRetrievalRunDbService retrievalRunDbService;
     @Mock
     private RetrievalRunSettings runSettings;
 
@@ -91,8 +91,8 @@ class SearchServiceImplTest {
                 retrievalRuleResolver, retrievalRunDbService, runSettings);
     }
 
-    private KbIndexVersion versionRow(Long id, String versionNo, String status, ComboSnapshot combo) {
-        KbIndexVersion version = new KbIndexVersion();
+    private WbIndexVersion versionRow(Long id, String versionNo, String status, ComboSnapshot combo) {
+        WbIndexVersion version = new WbIndexVersion();
         version.setId(id);
         version.setVersionNo(versionNo);
         version.setStatus(status);
@@ -104,8 +104,8 @@ class SearchServiceImplTest {
         return ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
     }
 
-    private KbPipelineStrategyVersion ruleRow() {
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+    private WbPipelineStrategyVersion ruleRow() {
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(500L);
         row.setType("RETRIEVAL");
         row.setName("hybrid-rrf-k60-top10");
@@ -133,14 +133,14 @@ class SearchServiceImplTest {
     @Test
     void productionSearchShouldFallbackToBaselineWhenNoRuleBound() {
         // 回退链第三级：版本行无规则、kb 无默认 → 引擎基线；纯全文规则跳过向量化
-        KbIndexSet set = new KbIndexSet();
+        WbIndexSet set = new WbIndexSet();
         set.setId(5L);
         set.setKnowledgeBaseId(1L);
         set.setCurrentPublishedVersionId(20L);
         when(indexSetDbService.getByKb(1L)).thenReturn(set);
-        KbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.ONLINE.name(), comboAll());
+        WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.ONLINE.name(), comboAll());
         when(indexVersionDbService.getById(20L)).thenReturn(version);
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(1L);
         when(knowledgeBaseDbService.getById(1L)).thenReturn(kb);
         RetrievalRuleSpec spec = new RetrievalRuleSpec();
@@ -167,15 +167,15 @@ class SearchServiceImplTest {
         SearchRequest request = request();
         request.setVersionId(30L);
         request.setRuleId(500L);
-        KbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
+        WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
         when(indexVersionDbService.getById(30L)).thenReturn(version);
-        KbPipelineStrategyVersion rule = ruleRow();
+        WbPipelineStrategyVersion rule = ruleRow();
         when(strategyVersionDbService.getById(500L)).thenReturn(rule);
         RetrievalRuleSpec spec = new RetrievalRuleSpec();
         spec.setChannel(RetrievalRuleSpec.CHANNEL_HYBRID);
         when(retrievalRuleResolver.validate(rule.getConfigSnapshot())).thenReturn(spec);
         // 查询向量化：跟随集合 EMBED 策略
-        KbPipelineStrategyVersion embedRow = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion embedRow = new WbPipelineStrategyVersion();
         embedRow.setConfigSnapshot("{\"model\":\"text-embedding-v4\"}");
         when(strategyVersionDbService.getByTypeAndNameAndVersion("EMBED", "embed-default", "v1"))
                 .thenReturn(embedRow);
@@ -191,8 +191,8 @@ class SearchServiceImplTest {
                 .thenReturn(List.of(fullTextHit("c1"), fullTextHit("c2")));
         when(milvusIndexPort.searchVector(eq("kb_1_v9"), any(VectorQuery.class)))
                 .thenReturn(List.of(vectorHit("c2", null), vectorHit("c3", null)));
-        when(retrievalRunDbService.save(any(KbRetrievalRun.class))).thenAnswer(inv -> {
-            inv.<KbRetrievalRun>getArgument(0).setId(900L);
+        when(retrievalRunDbService.save(any(WbRetrievalRun.class))).thenAnswer(inv -> {
+            inv.<WbRetrievalRun>getArgument(0).setId(900L);
             return true;
         });
 
@@ -204,7 +204,7 @@ class SearchServiceImplTest {
         assertEquals(900L, vo.getRunId());
         assertEquals("v9", vo.getVersionNo());
         assertEquals("hybrid-rrf-k60-top10-v1", vo.getRuleNameVersion());
-        verify(retrievalRunDbService).save(any(KbRetrievalRun.class));
+        verify(retrievalRunDbService).save(any(WbRetrievalRun.class));
     }
 
     @Test
@@ -212,15 +212,15 @@ class SearchServiceImplTest {
         SearchRequest request = request();
         request.setVersionId(30L);
         request.setRuleId(500L);
-        KbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
+        WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
         when(indexVersionDbService.getById(30L)).thenReturn(version);
-        KbPipelineStrategyVersion rule = ruleRow();
+        WbPipelineStrategyVersion rule = ruleRow();
         when(strategyVersionDbService.getById(500L)).thenReturn(rule);
         RetrievalRuleSpec spec = new RetrievalRuleSpec();
         spec.setChannel(RetrievalRuleSpec.CHANNEL_VECTOR);
         spec.getPostprocess().setMode(RetrievalRuleSpec.MODE_PARENT_EXPAND);
         when(retrievalRuleResolver.validate(rule.getConfigSnapshot())).thenReturn(spec);
-        KbPipelineStrategyVersion embedRow = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion embedRow = new WbPipelineStrategyVersion();
         embedRow.setConfigSnapshot("{\"model\":\"text-embedding-v4\"}");
         when(strategyVersionDbService.getByTypeAndNameAndVersion("EMBED", "embed-default", "v1"))
                 .thenReturn(embedRow);
@@ -254,14 +254,14 @@ class SearchServiceImplTest {
         SearchRequest request = request();
         request.setVersionId(30L);
         request.setRuleId(500L);
-        KbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
+        WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
         when(indexVersionDbService.getById(30L)).thenReturn(version);
-        KbPipelineStrategyVersion rule = ruleRow();
+        WbPipelineStrategyVersion rule = ruleRow();
         when(strategyVersionDbService.getById(500L)).thenReturn(rule);
         RetrievalRuleSpec spec = new RetrievalRuleSpec();
         spec.setChannel(RetrievalRuleSpec.CHANNEL_HYBRID);
         when(retrievalRuleResolver.validate(rule.getConfigSnapshot())).thenReturn(spec);
-        KbPipelineStrategyVersion embedRow = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion embedRow = new WbPipelineStrategyVersion();
         embedRow.setConfigSnapshot("{oops");
         when(strategyVersionDbService.getByTypeAndNameAndVersion("EMBED", "embed-default", "v1"))
                 .thenReturn(embedRow);
@@ -269,7 +269,7 @@ class SearchServiceImplTest {
                 new IllegalStateException("向量化策略快照为空或已损坏，无法解析, snapshot={oops"));
         when(milvusIndexPort.searchFullText(eq("kb_1_v9"), any(FullTextQuery.class)))
                 .thenReturn(List.of(fullTextHit("c1")));
-        when(retrievalRunDbService.save(any(KbRetrievalRun.class))).thenReturn(true);
+        when(retrievalRunDbService.save(any(WbRetrievalRun.class))).thenReturn(true);
 
         SearchVO vo = service.search(1L, request);
 
@@ -284,9 +284,9 @@ class SearchServiceImplTest {
         SearchRequest request = request();
         request.setVersionId(30L);
         request.setRuleId(500L);
-        KbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
+        WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
         when(indexVersionDbService.getById(30L)).thenReturn(version);
-        KbPipelineStrategyVersion rule = ruleRow();
+        WbPipelineStrategyVersion rule = ruleRow();
         when(strategyVersionDbService.getById(500L)).thenReturn(rule);
         when(retrievalRuleResolver.validate(rule.getConfigSnapshot()))
                 .thenThrow(new KnowledgeException(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, "该检索能力尚未启用: 加权融合"));
@@ -319,7 +319,7 @@ class SearchServiceImplTest {
 
     @Test
     void compareRunsShouldReplaySnapshotsWithoutReExecuting() {
-        KbRetrievalRun run = new KbRetrievalRun();
+        WbRetrievalRun run = new WbRetrievalRun();
         run.setId(1L);
         run.setKbId(1L);
         run.setQuery("保证金");
@@ -342,7 +342,7 @@ class SearchServiceImplTest {
 
     @Test
     void compareRunsShouldRejectForeignRun() {
-        KbRetrievalRun run = new KbRetrievalRun();
+        WbRetrievalRun run = new WbRetrievalRun();
         run.setId(1L);
         run.setKbId(2L);
         run.setResultSnapshot("[]");

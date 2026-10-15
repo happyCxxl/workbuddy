@@ -1,8 +1,8 @@
 package com.workbuddy.biz.service.support;
 
 import com.workbuddy.common.domain.chunk.Chunk;
-import com.workbuddy.common.domain.entity.KbChunk;
-import com.workbuddy.common.domain.entity.KbChunkSet;
+import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import org.junit.jupiter.api.Test;
 
@@ -20,8 +20,8 @@ class ChunkVoAssemblerTest {
 
     private final ChunkVoAssembler assembler = new ChunkVoAssembler();
 
-    private KbChunk chunk(String id, String type, String parentChunkId, int chars) {
-        KbChunk chunk = new KbChunk();
+    private WbChunk chunk(String id, String type, String parentChunkId, int chars) {
+        WbChunk chunk = new WbChunk();
         chunk.setChunkId(id);
         chunk.setContentType(type);
         chunk.setParentChunkId(parentChunkId);
@@ -32,10 +32,10 @@ class ChunkVoAssemblerTest {
 
     @Test
     void toSummaryShouldCountParentChildTypesAndAvgChars() {
-        KbChunkSet chunkSet = new KbChunkSet();
+        WbChunkSet chunkSet = new WbChunkSet();
         chunkSet.setChunkCount(4);
         chunkSet.setTotalChars(1000);
-        List<KbChunk> chunks = List.of(
+        List<WbChunk> chunks = List.of(
                 chunk("c-1", ChunkContentType.SECTION.name(), null, 300),
                 chunk("c-2", ChunkContentType.PARAGRAPH.name(), "c-1", 300),
                 chunk("c-3", ChunkContentType.TABLE.name(), "c-1", 250),
@@ -54,7 +54,7 @@ class ChunkVoAssemblerTest {
 
     @Test
     void toChunkItemVOsShouldMapAllFields() {
-        KbChunk chunk = chunk("chunk-0001", ChunkContentType.PARAGRAPH.name(), "chunk-0000", 42);
+        WbChunk chunk = chunk("chunk-0001", ChunkContentType.PARAGRAPH.name(), "chunk-0000", 42);
         chunk.setTitlePath("第一章 > 第一节");
         chunk.setPageRange("1-2");
         chunk.setOrderNo(1);

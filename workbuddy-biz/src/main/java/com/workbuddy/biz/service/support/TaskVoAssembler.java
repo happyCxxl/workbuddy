@@ -1,6 +1,6 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.dto.response.task.StageStatusVO;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,7 @@ public class TaskVoAssembler {
      * @param task 处理链任务实体
      * @return 环节状态 VO
      */
-    public StageStatusVO toStageStatusVO(KbPipelineTask task) {
+    public StageStatusVO toStageStatusVO(WbPipelineTask task) {
         StageStatusVO vo = new StageStatusVO();
         vo.applyFrom(task);
         return vo;

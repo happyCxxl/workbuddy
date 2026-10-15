@@ -621,7 +621,7 @@ export interface ChunkSummary {
 }
 
 /**
- * 切片项（后端 ChunkItemVO）：kb_chunk 行的展示副本。
+ * 切片项（后端 ChunkItemVO）：wb_knowledge_chunk 行的展示副本。
  *
  * <p>`sourceElementCount` 只给个数不展开列表（父片的溯源是子片并集，条数无界）；
  * `fallbackReason` 只在兜底片上有值。

@@ -4,15 +4,15 @@
 
 ## 环节定位
 
-| 项   | 值                                                                                                                |
-|------|-------------------------------------------------------------------------------------------------------------------|
-| 上游 | 文件中心（`kb_file_result` 的源文件与 MIME）；任务编排（biz 侧领取解析任务）                                      |
-| 输入 | `ParseContext`（文件引用 + 输入流 + 解析阈值 + `fileResultId`）                                                   |
-| 输出 | `ParseOutcome`（解析产物 `ParseResult` + 三个步骤日志 + 建议状态 + 单元数 / 失败单元数）                          |
-| 触发 | `KnowledgeFileParseController` 的解析触发接口 → 建任务 → `ParseTaskRunner` 领取并调用管线                         |
-| 下游 | 组装环节（消费 `ParseResult.sources`）                                                                            |
-| 落库 | 不在本环节内：`ParsePipeline` 是纯算法，不碰 DB 与对象存储，产物落库与任务状态回写由 biz 编排完成                 |
-| 实现 | 规则路径：PDFBox（PDF）+ POI（DOC / DOCX / XLS / XLSX）；模型能力（OCR / 版面 / 表格结构）当前零实现              |
+| 项   | 值                                                                                                                         |
+|------|----------------------------------------------------------------------------------------------------------------------------|
+| 上游 | 文件中心（`wb_file_result` 的源文件与 MIME）；任务编排（biz 侧领取解析任务）                                               |
+| 输入 | `ParseContext`（文件引用 + 输入流 + 解析阈值 + `fileResultId`）                                                            |
+| 输出 | `ParseOutcome`（解析产物 `ParseResult` + 三个步骤日志 + 建议状态 + 单元数 / 失败单元数）                                   |
+| 触发 | `KnowledgeFileParseController` 的解析触发接口 → 建任务 → `ParseTaskRunner` 领取并调用管线                                  |
+| 下游 | 组装环节（消费 `ParseResult.sources`）                                                                                     |
+| 落库 | 不在本环节内：`ParsePipeline` 是纯算法，不碰 DB 与对象存储，产物落库与任务状态回写由 biz 编排完成                          |
+| 实现 | 规则路径：PDFBox（PDF）+ POI（DOC / DOCX / XLS / XLSX）；模型能力（OCR / 版面 / 表格结构）当前零实现                       |
 | 代码 | `../../../workbuddy-worker/src/main/java/com/knowledge/worker/parser/`（阈值在 `ParseProperties`，前缀 `knowledge.parse`） |
 
 ## 文档导航

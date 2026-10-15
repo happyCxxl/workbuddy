@@ -45,7 +45,7 @@ public class KnowledgeFileChunkController {
     }
 
     @GetMapping("/{fileResultId}/chunk-detail")
-    @Operation(summary = "切片详情", description = "任务状态 + 子步骤列表 + 切片统计/切片列表/产物引用（kb_chunk 数据源）；taskId 可选（缺省取最新任务，传了则查该次运行）")
+    @Operation(summary = "切片详情", description = "任务状态 + 子步骤列表 + 切片统计/切片列表/产物引用（wb_knowledge_chunk 数据源）；taskId 可选（缺省取最新任务，传了则查该次运行）")
     public R<ChunkDetailVO> chunkDetail(
             @Parameter(description = "文件结果ID", required = true) @PathVariable("fileResultId") Long fileResultId,
             @ParameterObject StageDetailQueryDto query) {

@@ -1,13 +1,13 @@
 package com.workbuddy.filecenter.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import com.workbuddy.common.domain.entity.KbFileObject;
+import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.db.KbFileObjectDbService;
+import com.workbuddy.filecenter.db.WbFileObjectDbService;
 import com.workbuddy.filecenter.provider.StorageProvider;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * 文件存储实现：fileId 寻址（对象写当前启用的数据源，元数据写 kb_file_object 档案表）；
+ * 文件存储实现：fileId 寻址（对象写当前启用的数据源，元数据写 wb_file_object 档案表）；
  * 内容寻址与指定 key 的对象读写继承自 {@link AbstractFileStorage}。
  *
  * <p>类名与后端无关：注入的 StorageRouter 按数据源定义决定字节落在 MinIO 还是本地磁盘。
@@ -28,7 +28,7 @@ import java.io.InputStream;
 @Service
 public class DefaultFileStorage extends AbstractFileStorage {
 
-    public DefaultFileStorage(StorageRouter router, KbFileObjectDbService fileObjectDbService) {
+    public DefaultFileStorage(StorageRouter router, WbFileObjectDbService fileObjectDbService) {
         super(router, fileObjectDbService);
     }
 
@@ -45,7 +45,7 @@ public class DefaultFileStorage extends AbstractFileStorage {
             throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "文件上传失败: " + file.getOriginalFilename());
         }
 
-        KbFileObject object = new KbFileObject();
+        WbFileObject object = new WbFileObject();
         object.setFileId(fileId);
         object.setFileName(file.getOriginalFilename());
         object.setMimeType(file.getContentType());
@@ -66,7 +66,7 @@ public class DefaultFileStorage extends AbstractFileStorage {
 
     @Override
     public FileMetadata metadata(String fileId) {
-        KbFileObject object = requireObject(fileId);
+        WbFileObject object = requireObject(fileId);
         FileMetadata metadata = new FileMetadata();
         metadata.setFileId(object.getFileId());
         metadata.setFileName(object.getFileName());

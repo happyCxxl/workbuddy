@@ -8,7 +8,7 @@ import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 审计事件：由业务模块发布，落库由持有 kb_audit_log 数据服务的模块监听处理。
+ * 审计事件：由业务模块发布，落库由持有 wb_audit_log 数据服务的模块监听处理。
  *
  * @author cxxl
  */

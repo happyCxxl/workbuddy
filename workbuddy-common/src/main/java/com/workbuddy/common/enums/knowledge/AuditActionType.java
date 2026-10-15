@@ -1,7 +1,7 @@
 package com.workbuddy.common.enums.knowledge;
 
 /**
- * 审计动作类型（kb_audit_log.action_type）。
+ * 审计动作类型（wb_audit_log.action_type）。
  *
  * @author cxxl
  */

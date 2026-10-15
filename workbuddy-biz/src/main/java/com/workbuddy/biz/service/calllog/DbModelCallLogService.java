@@ -3,8 +3,8 @@ package com.workbuddy.biz.service.calllog;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.workbuddy.biz.mapper.KbModelCallLogMapper;
-import com.workbuddy.common.domain.entity.KbModelCallLog;
+import com.workbuddy.biz.mapper.WbModelCallLogMapper;
+import com.workbuddy.common.domain.entity.WbModelCallLog;
 import com.workbuddy.common.domain.model.calllog.ModelCallLogEntry;
 import com.workbuddy.common.domain.model.calllog.ModelCallLogQuery;
 import com.workbuddy.common.domain.model.calllog.ModelCallLogSummary;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 调用明细的库表实现（表：kb_model_call_log），按端口契约写入与查询。
+ * 调用明细的库表实现（表：wb_model_call_log），按端口契约写入与查询。
  *
  * <p>写入口径：一次逻辑调用一行，成功与失败都落行，同步插入；入库量级小、实现简单，
  * 若将来写入量成为瓶颈，再评估异步批量或分区。
@@ -38,7 +38,7 @@ import java.util.Map;
  * @author cxxl
  */
 @Service
-public class DbModelCallLogService extends InfraDbServiceImpl<KbModelCallLogMapper, KbModelCallLog>
+public class DbModelCallLogService extends InfraDbServiceImpl<WbModelCallLogMapper, WbModelCallLog>
         implements ModelCallLogPort {
 
     /** 未知占比的小数位 */
@@ -59,21 +59,21 @@ public class DbModelCallLogService extends InfraDbServiceImpl<KbModelCallLogMapp
     @Override
     public List<ModelCallLogView> listCalls(ModelCallLogQuery query) {
         requireTimeRange(query);
-        LambdaQueryWrapper<KbModelCallLog> wrapper = new LambdaQueryWrapper<>();
-        wrapper.ge(KbModelCallLog::getCreateTime, query.getFrom())
-                .lt(KbModelCallLog::getCreateTime, query.getTo())
-                .eq(NullUtil.isNotNull(query.getTenantId()), KbModelCallLog::getTenantId, query.getTenantId())
-                .eq(NullUtil.isNotNull(query.getCapability()), KbModelCallLog::getCapability,
+        LambdaQueryWrapper<WbModelCallLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ge(WbModelCallLog::getCreateTime, query.getFrom())
+                .lt(WbModelCallLog::getCreateTime, query.getTo())
+                .eq(NullUtil.isNotNull(query.getTenantId()), WbModelCallLog::getTenantId, query.getTenantId())
+                .eq(NullUtil.isNotNull(query.getCapability()), WbModelCallLog::getCapability,
                         nameOf(query.getCapability()))
-                .eq(StrUtil.isNotBlank(query.getModel()), KbModelCallLog::getModel, query.getModel())
-                .eq(NullUtil.isNotNull(query.getRouteReason()), KbModelCallLog::getRouteReason,
+                .eq(StrUtil.isNotBlank(query.getModel()), WbModelCallLog::getModel, query.getModel())
+                .eq(NullUtil.isNotNull(query.getRouteReason()), WbModelCallLog::getRouteReason,
                         nameOf(query.getRouteReason()))
-                .eq(NullUtil.isNotNull(query.getStatus()), KbModelCallLog::getStatus, nameOf(query.getStatus()))
-                .orderByDesc(KbModelCallLog::getCreateTime)
+                .eq(NullUtil.isNotNull(query.getStatus()), WbModelCallLog::getStatus, nameOf(query.getStatus()))
+                .orderByDesc(WbModelCallLog::getCreateTime)
                 .last("LIMIT " + query.limitOrDefault());
-        List<KbModelCallLog> rows = list(wrapper);
+        List<WbModelCallLog> rows = list(wrapper);
         List<ModelCallLogView> views = new ArrayList<>(rows.size());
-        for (KbModelCallLog row : rows) {
+        for (WbModelCallLog row : rows) {
             views.add(toView(row));
         }
         return views;
@@ -82,7 +82,7 @@ public class DbModelCallLogService extends InfraDbServiceImpl<KbModelCallLogMapp
     @Override
     public ModelCallLogSummary summarize(ModelCallLogQuery query) {
         requireTimeRange(query);
-        QueryWrapper<KbModelCallLog> wrapper = new QueryWrapper<>();
+        QueryWrapper<WbModelCallLog> wrapper = new QueryWrapper<>();
         wrapper.select(aggregateColumns())
                 .ge("create_time", query.getFrom())
                 .lt("create_time", query.getTo())
@@ -139,8 +139,8 @@ public class DbModelCallLogService extends InfraDbServiceImpl<KbModelCallLogMapp
     }
 
     /** 明细入参 → 库表行：业务归属、链路标识与路由字段按传入值落库（本片留空） */
-    private KbModelCallLog toEntity(ModelCallLogEntry entry) {
-        KbModelCallLog row = new KbModelCallLog();
+    private WbModelCallLog toEntity(ModelCallLogEntry entry) {
+        WbModelCallLog row = new WbModelCallLog();
         row.setTraceId(entry.getTraceId());
         row.setTenantId(entry.getTenantId());
         row.setBizType(entry.getBizType());
@@ -168,7 +168,7 @@ public class DbModelCallLogService extends InfraDbServiceImpl<KbModelCallLogMapp
     }
 
     /** 库表行 → 明细视图：字典列按取值解析，未知取值留空 */
-    private ModelCallLogView toView(KbModelCallLog row) {
+    private ModelCallLogView toView(WbModelCallLog row) {
         ModelCallLogView view = new ModelCallLogView();
         view.setId(row.getId());
         view.setTraceId(row.getTraceId());

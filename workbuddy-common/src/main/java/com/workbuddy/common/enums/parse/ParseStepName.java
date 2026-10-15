@@ -1,7 +1,7 @@
 package com.workbuddy.common.enums.parse;
 
 /**
- * 解析子步骤名目录（落 kb_pipeline_step_log.step_name 的固定口径）。
+ * 解析子步骤名目录（落 wb_knowledge_pipeline_step_log.step_name 的固定口径）。
  * 落库值为中文展示值（value），前端详情页直接渲染。
  *
  * @author cxxl

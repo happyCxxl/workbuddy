@@ -2,16 +2,16 @@
 
 登录后的默认落地页，也是全局返回的终点。只读：**资产速览 + 最近提交（仅本人）**，回答「现在有什么、能用什么」与「我最近提交了什么」。
 
-| 项         | 值                                                                                                                      |
-|------------|-------------------------------------------------------------------------------------------------------------------------|
-| 路由       | `/home`（`meta` 无限制，登录即可访问）                                                                                  |
-| 入口       | 侧栏主导航首项；登录成功后落地此处，非管理员被守卫拦下时也回落此处                                                      |
-| 前端视图   | `../../../web/src/views/home/HomeView.vue`                                                                              |
-| 前端类型   | `../../../web/src/types/home.ts`                                                                                        |
-| 前端接口层 | `../../../web/src/api/home.ts`                                                                                          |
-| 后端       | `workbuddy-biz` 模块的 `KnowledgeHomeController` / `KnowledgeHomeServiceImpl`                                           |
-| 涉及接口   | `GET /home/summary`、`GET /home/recent-submits`                                                                         |
-| 涉及的表   | `kb_knowledge_base`、`kb_pipeline_strategy_version`、`kb_file_result`、`kb_submit_log`（外加反查用的 `kb_source_file`） |
+| 项         | 值                                                                                                                                |
+|------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| 路由       | `/home`（`meta` 无限制，登录即可访问）                                                                                            |
+| 入口       | 侧栏主导航首项；登录成功后落地此处，非管理员被守卫拦下时也回落此处                                                                |
+| 前端视图   | `../../../web/src/views/home/HomeView.vue`                                                                                        |
+| 前端类型   | `../../../web/src/types/home.ts`                                                                                                  |
+| 前端接口层 | `../../../web/src/api/home.ts`                                                                                                    |
+| 后端       | `workbuddy-biz` 模块的 `KnowledgeHomeController` / `KnowledgeHomeServiceImpl`                                                     |
+| 涉及接口   | `GET /home/summary`、`GET /home/recent-submits`                                                                                   |
+| 涉及的表   | `wb_knowledge_base`、`wb_knowledge_pipeline_strategy_version`、`wb_file_result`、`wb_submit_log`（外加反查用的 `wb_source_file`） |
 
 两个接口都**不加 `@AdminOnly`**：普通用户也要看资产概览与自己的提交记录。
 
@@ -24,8 +24,8 @@
 ## 与其他页面的关系
 
 - 「最近提交」的 `status` 是**提交校验结果**（PASS/FAIL），不是处理链进度；同一批文件在[切片阶段](../../README.md)页里才看得到各环节任务状态。
-- 资产带的「文档」数与[知识库列表](../../../web/src/views/knowledge-base/KnowledgeBaseView.vue)顶部的「文档数」**同源同口径**（`kb_file_result` 行数）。
-- 审计动作（`kb_audit_log`）**不在首页展示**：它属于管理视角；写入链路（`AuditEventListener`）与数据都照旧保留。
+- 资产带的「文档」数与[知识库列表](../../../web/src/views/knowledge-base/KnowledgeBaseView.vue)顶部的「文档数」**同源同口径**（`wb_file_result` 行数）。
+- 审计动作（`wb_audit_log`）**不在首页展示**：它属于管理视角；写入链路（`AuditEventListener`）与数据都照旧保留。
 
 ## 文档导航
 
@@ -41,5 +41,5 @@
 ## 待定项
 
 - **刷新节奏**：首页只在挂载时拉一次数据，没有刷新按钮也没有轮询 —— 停在首页时数据是静态的。各页刷新节奏统一约定后一并上移到根文档。
-- **失败行没有文件类型**：文件校验不通过时不建 `kb_source_file`，「文件类型」取不到 MIME，界面显示 `—`。要补上得在提交日志里存下校验时的格式（`FileValidationResult.format`），属独立改动。
+- **失败行没有文件类型**：文件校验不通过时不建 `wb_source_file`，「文件类型」取不到 MIME，界面显示 `—`。要补上得在提交日志里存下校验时的格式（`FileValidationResult.format`），属独立改动。
 - **"只看本人"的另一面**：最近提交对**管理员同样只显示自己的记录**（资产带的知识库与文档计数已按角色区分：管理员看全部库）。若要"管理员也看全部提交"，需要另加角色判断。

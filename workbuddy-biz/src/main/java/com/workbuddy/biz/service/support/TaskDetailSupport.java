@@ -1,10 +1,10 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.dto.response.task.StageDetailVO;
 import com.workbuddy.common.dto.response.task.StepLogVO;
 import com.workbuddy.common.enums.task.PipelineStage;
@@ -24,20 +24,20 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TaskDetailSupport {
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbPipelineStepLogDbService stepLogDbService;
-    private final KbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineStepLogDbService stepLogDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
 
     /**
      * 解析详情任务：taskId 指定则查该次运行并校验归属与环节（不匹配 40001）；缺省取该环节最新任务（可为空）。
      *
      * @param stageLabel 环节中文名（错误提示用）
      */
-    public KbPipelineTask resolveTask(Long fileResultId, PipelineStage stage, Long taskId, String stageLabel) {
+    public WbPipelineTask resolveTask(Long fileResultId, PipelineStage stage, Long taskId, String stageLabel) {
         if (NullUtil.isNull(taskId)) {
             return pipelineTaskDbService.getByFileResultIdAndStage(fileResultId, stage.name());
         }
-        KbPipelineTask task = pipelineTaskDbService.getById(taskId);
+        WbPipelineTask task = pipelineTaskDbService.getById(taskId);
         ThrowUtil.throwIf(NullUtil.isNull(task)
                 || !fileResultId.equals(task.getFileResultId())
                 || !stage.name().equals(task.getStage()), ErrorCode.PARAM_INVALID,
@@ -53,7 +53,7 @@ public class TaskDetailSupport {
      * @param task         该次运行任务（可为空）
      * @return 传入的 vo（状态与子步骤已回填）
      */
-    public <T extends StageDetailVO> T withTask(T vo, Long fileResultId, KbPipelineTask task) {
+    public <T extends StageDetailVO> T withTask(T vo, Long fileResultId, WbPipelineTask task) {
         vo.setFileResultId(fileResultId);
         if (NullUtil.isNotNull(task)) {
             vo.applyFrom(task);
@@ -65,7 +65,7 @@ public class TaskDetailSupport {
     /**
      * 该次运行的产物：按 {@code task.productId} 取；无任务或无产物时返回 null（各环节据此留空）。
      */
-    public KbPipelineProduct productOfTask(KbPipelineTask task) {
+    public WbPipelineProduct productOfTask(WbPipelineTask task) {
         return NullUtil.isNull(task) || NullUtil.isNull(task.getProductId()) ? null
                 : pipelineProductDbService.getById(task.getProductId());
     }
@@ -77,7 +77,7 @@ public class TaskDetailSupport {
      * @param product 该次运行的产物（非空）
      * @return 传入的 vo（产物三字段已回填）
      */
-    public <T extends StageDetailVO> T withProductRef(T vo, KbPipelineProduct product) {
+    public <T extends StageDetailVO> T withProductRef(T vo, WbPipelineProduct product) {
         vo.setArtifactId(product.getArtifactId());
         vo.setContentHash(product.getContentHash());
         vo.setCapabilitySnapshot(product.getCapabilitySnapshot());

@@ -1,13 +1,13 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.StrategyVersionService;
-import com.workbuddy.biz.service.db.KbAuditLogDbService;
-import com.workbuddy.biz.service.db.KbIndexSetDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.common.domain.entity.KbIndexSet;
-import com.workbuddy.common.domain.entity.KbIndexVersion;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
+import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.biz.service.db.WbIndexSetDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.common.domain.entity.WbIndexSet;
+import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.dto.request.retrieval.RetrievalRulePublishDto;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRulePublishVO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
@@ -40,13 +40,13 @@ class RetrievalRuleServiceImplTest {
     @Mock
     private StrategyVersionService strategyVersionService;
     @Mock
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
     @Mock
-    private KbIndexVersionDbService indexVersionDbService;
+    private WbIndexVersionDbService indexVersionDbService;
     @Mock
-    private KbIndexSetDbService indexSetDbService;
+    private WbIndexSetDbService indexSetDbService;
     @Mock
-    private KbAuditLogDbService kbAuditLogDbService;
+    private WbAuditLogDbService kbAuditLogDbService;
 
     private RetrievalRuleServiceImpl service;
 
@@ -56,23 +56,23 @@ class RetrievalRuleServiceImplTest {
                 indexVersionDbService, indexSetDbService, kbAuditLogDbService);
     }
 
-    private KbIndexVersion versionRow() {
-        KbIndexVersion version = new KbIndexVersion();
+    private WbIndexVersion versionRow() {
+        WbIndexVersion version = new WbIndexVersion();
         version.setId(20L);
         version.setIndexSetId(5L);
         version.setVersionNo("v2");
         return version;
     }
 
-    private KbIndexSet setRow(Long kbId) {
-        KbIndexSet set = new KbIndexSet();
+    private WbIndexSet setRow(Long kbId) {
+        WbIndexSet set = new WbIndexSet();
         set.setId(5L);
         set.setKnowledgeBaseId(kbId);
         return set;
     }
 
-    private KbPipelineStrategyVersion ruleRow(String type) {
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+    private WbPipelineStrategyVersion ruleRow(String type) {
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(500L);
         row.setType(type);
         row.setName("hybrid-rrf-k60-top10");
@@ -100,7 +100,7 @@ class RetrievalRuleServiceImplTest {
 
     @Test
     void publishShouldSwitchVersionDefaultRuleAndAudit() {
-        KbIndexVersion version = versionRow();
+        WbIndexVersion version = versionRow();
         when(indexVersionDbService.getById(20L)).thenReturn(version);
         when(indexSetDbService.getById(5L)).thenReturn(setRow(1L));
         when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow("RETRIEVAL"));

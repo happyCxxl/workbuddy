@@ -1,8 +1,8 @@
 package com.workbuddy.biz.task.support;
 
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TaskTriggerSupport {
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
     private final ChainStorageSupport chainStorageSupport;
     private final TaskQueueSupport taskQueue;
 
@@ -50,13 +50,13 @@ public class TaskTriggerSupport {
         chainStorageSupport.requireStorageMatch(fileResultId);
         long upstream = NullUtil.isNull(upstreamProductId) ? 0L : upstreamProductId;
         long strategyVersion = NullUtil.isNull(strategyVersionId) ? 0L : strategyVersionId;
-        KbPipelineTask existing = pipelineTaskDbService.getByExecKey(fileResultId, stage.name(),
+        WbPipelineTask existing = pipelineTaskDbService.getByExecKey(fileResultId, stage.name(),
                 upstream, strategyVersion);
         ThrowUtil.throwIf(NullUtil.isNotNull(existing), ErrorCode.TASK_ALREADY_PENDING,
                 NullUtil.isNull(existing) ? null
                         : stageLabel + "任务已创建（taskId=" + existing.getId() + "，状态 "
                         + existing.getStatus() + "），请勿重复触发");
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setFileResultId(fileResultId);
         task.setStage(stage.name());
         task.setStatus(PipelineTaskStatus.QUEUED.name());
@@ -73,7 +73,7 @@ public class TaskTriggerSupport {
     /**
      * 新任务入队：写不进队列时把任务落 FAILED（库里不留"永远排不上队"的 QUEUED），随后仍抛出（触发未成功）
      */
-    private void enqueueNewTask(KbPipelineTask task, String stageLabel, Long fileResultId) {
+    private void enqueueNewTask(WbPipelineTask task, String stageLabel, Long fileResultId) {
         try {
             taskQueue.enqueue(task.getId());
         } catch (Exception e) {

@@ -1,26 +1,26 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.StageContentQueryService;
-import com.workbuddy.biz.service.db.KbChunkDbService;
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingRecordDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbChunkDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
-import com.workbuddy.common.domain.entity.KbChunk;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingRecord;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
+import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
@@ -73,23 +73,23 @@ class StageContentQueryServiceImplTest {
     private static final Long SOURCE_ID = 1L;
 
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
-    private KbChunkSetDbService chunkSetDbService;
+    private WbChunkSetDbService chunkSetDbService;
     @Mock
-    private KbChunkDbService chunkDbService;
+    private WbChunkDbService chunkDbService;
     @Mock
-    private KbEmbeddingSetDbService embeddingSetDbService;
+    private WbEmbeddingSetDbService embeddingSetDbService;
     @Mock
-    private KbEmbeddingRecordDbService embeddingRecordDbService;
+    private WbEmbeddingRecordDbService embeddingRecordDbService;
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
     private FileStorage fileStorage;
 
@@ -106,8 +106,8 @@ class StageContentQueryServiceImplTest {
     }
 
     /** 产物行夹具：读取按记录里的数据源与桶名定位，行对象必须带上这两段 */
-    private KbPipelineProduct productRow(String artifactId) {
-        KbPipelineProduct product = new KbPipelineProduct();
+    private WbPipelineProduct productRow(String artifactId) {
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId(artifactId);
         product.setStorageType(StorageType.MINIO.getCode());
         product.setStorageSourceId(SOURCE_ID);
@@ -115,8 +115,8 @@ class StageContentQueryServiceImplTest {
         return product;
     }
 
-    private KbPipelineTask latestTask(String stage) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask latestTask(String stage) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(41L);
         task.setFileResultId(10L);
         task.setStage(stage);
@@ -138,20 +138,20 @@ class StageContentQueryServiceImplTest {
     void historyTaskShouldReturnOwnContent() {
         // 历史任务按 task.productId 精确取自己的产物内容（不再仅最新任务可展示）
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask task = latestTask(PipelineStage.CHUNK.name());
+        WbPipelineTask task = latestTask(PipelineStage.CHUNK.name());
         when(pipelineTaskDbService.getById(41L)).thenReturn(task);
-        KbPipelineProduct product = productRow("art-c1");
+        WbPipelineProduct product = productRow("art-c1");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
-        KbChunkSet chunkSet = new KbChunkSet();
+        WbChunkSet chunkSet = new WbChunkSet();
         chunkSet.setId(70L);
         when(chunkSetDbService.getByArtifactId("art-c1")).thenReturn(chunkSet);
-        KbChunk chunk = new KbChunk();
+        WbChunk chunk = new WbChunk();
         chunk.setChunkId("chunk-0001");
         chunk.setContent("正文片");
         chunk.setContentType("PARAGRAPH");
         chunk.setOrderNo(1);
         when(chunkDbService.pageByChunkSetId(eq(70L), any(), eq(1L), eq(200L)))
-                .thenReturn(new Page<KbChunk>(1, 200).setRecords(List.of(chunk)).setTotal(1));
+                .thenReturn(new Page<WbChunk>(1, 200).setRecords(List.of(chunk)).setTotal(1));
 
         StageContentVO vo = service.stageContent(10L, "CHUNK", 41L, null, null, null);
 
@@ -163,10 +163,10 @@ class StageContentQueryServiceImplTest {
     @Test
     void preprocessShouldMapDisplayNormalizedAndStatus() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask task = latestTask(PipelineStage.PREPROCESS.name());
+        WbPipelineTask task = latestTask(PipelineStage.PREPROCESS.name());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PREPROCESS.name()))
                 .thenReturn(task);
-        KbPipelineProduct product = productRow("art-p1");
+        WbPipelineProduct product = productRow("art-p1");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
         PreprocessView view = new PreprocessView();
         ViewElement kept = new ViewElement();
@@ -200,11 +200,11 @@ class StageContentQueryServiceImplTest {
     @Test
     void unconfiguredStorageShouldPropagate40455() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask task = latestTask(PipelineStage.PREPROCESS.name());
+        WbPipelineTask task = latestTask(PipelineStage.PREPROCESS.name());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PREPROCESS.name()))
                 .thenReturn(task);
         // 产物行缺 storageType/storageSourceId/bucket → 记录所属后端未配置：存储类读取失败向上抛，不吞成空条目
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("art-p1");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
 
@@ -217,10 +217,10 @@ class StageContentQueryServiceImplTest {
     @Test
     void nonStorageReadFailureShouldLeaveItemsEmpty() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask task = latestTask(PipelineStage.PREPROCESS.name());
+        WbPipelineTask task = latestTask(PipelineStage.PREPROCESS.name());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PREPROCESS.name()))
                 .thenReturn(task);
-        KbPipelineProduct product = productRow("art-p1");
+        WbPipelineProduct product = productRow("art-p1");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
         // 非存储类读取失败：记日志留空条目，不阻断（latest 仍为 true，total 归零）
         when(fileStorage.getObject(ObjectRef.ofProduct(product))).thenThrow(new IllegalStateException("boom"));
@@ -235,15 +235,15 @@ class StageContentQueryServiceImplTest {
     @Test
     void chunkShouldMapOrderAlignedItems() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask task = latestTask(PipelineStage.CHUNK.name());
+        WbPipelineTask task = latestTask(PipelineStage.CHUNK.name());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.CHUNK.name()))
                 .thenReturn(task);
-        KbPipelineProduct product = productRow("art-c1");
+        WbPipelineProduct product = productRow("art-c1");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
-        KbChunkSet chunkSet = new KbChunkSet();
+        WbChunkSet chunkSet = new WbChunkSet();
         chunkSet.setId(70L);
         when(chunkSetDbService.getByArtifactId("art-c1")).thenReturn(chunkSet);
-        KbChunk chunk = new KbChunk();
+        WbChunk chunk = new WbChunk();
         chunk.setChunkId("chunk-0001");
         chunk.setContent("正文片");
         chunk.setContentType("PARAGRAPH");
@@ -254,7 +254,7 @@ class StageContentQueryServiceImplTest {
         chunk.setOrderNo(1);
         // 过滤与分页都下推 DB：分页对象同时给出过滤后的总条数
         when(chunkDbService.pageByChunkSetId(eq(70L), any(), eq(1L), eq(200L)))
-                .thenReturn(new Page<KbChunk>(1, 200).setRecords(List.of(chunk)).setTotal(1));
+                .thenReturn(new Page<WbChunk>(1, 200).setRecords(List.of(chunk)).setTotal(1));
 
         StageContentVO vo = service.stageContent(10L, "CHUNK", null, null, null, null);
 
@@ -269,15 +269,15 @@ class StageContentQueryServiceImplTest {
     @Test
     void embedShouldMapRecordsWithCacheHit() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask task = latestTask(PipelineStage.EMBED.name());
+        WbPipelineTask task = latestTask(PipelineStage.EMBED.name());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.EMBED.name()))
                 .thenReturn(task);
-        KbPipelineProduct product = productRow("art-e1");
+        WbPipelineProduct product = productRow("art-e1");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
-        KbEmbeddingSet set = new KbEmbeddingSet();
+        WbEmbeddingSet set = new WbEmbeddingSet();
         set.setId(90L);
         when(embeddingSetDbService.getByArtifactId("art-e1")).thenReturn(set);
-        KbEmbeddingRecord cached = new KbEmbeddingRecord();
+        WbEmbeddingRecord cached = new WbEmbeddingRecord();
         cached.setChunkId("chunk-0001");
         cached.setContentType("PARAGRAPH");
         cached.setInputText("正文片");
@@ -318,7 +318,7 @@ class StageContentQueryServiceImplTest {
     @Test
     void taskIdOfWrongStageShouldReject40001() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask preprocessTask = new KbPipelineTask();
+        WbPipelineTask preprocessTask = new WbPipelineTask();
         preprocessTask.setId(41L);
         preprocessTask.setFileResultId(10L);
         preprocessTask.setStage(PipelineStage.PREPROCESS.name());
@@ -347,7 +347,7 @@ class StageContentQueryServiceImplTest {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name()))
                 .thenReturn(latestTask(PipelineStage.PARSE.name()));
-        KbPipelineProduct product = productRow("art-parse");
+        WbPipelineProduct product = productRow("art-parse");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
         ParseElement table = ParseElement.of("t1_0_0", ElementType.TABLE);
         table.setPage(1);
@@ -376,10 +376,10 @@ class StageContentQueryServiceImplTest {
     /** 造一份含 elementCount 个元素的解析产物，并让 41 号 PARSE 任务取到它 */
     private void stubParseArtifact(int elementCount) {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask task = latestTask(PipelineStage.PARSE.name());
+        WbPipelineTask task = latestTask(PipelineStage.PARSE.name());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name()))
                 .thenReturn(task);
-        KbPipelineProduct product = productRow("art-parse");
+        WbPipelineProduct product = productRow("art-parse");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
         ParseSource source = new ParseSource();
         source.setSource("native");
@@ -400,10 +400,10 @@ class StageContentQueryServiceImplTest {
     /** 造一份带坐标的解析产物：每页一个元素，坐标随页号变化 */
     private void stubParseArtifactWithBbox(int elementCount) {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        KbPipelineTask task = latestTask(PipelineStage.PARSE.name());
+        WbPipelineTask task = latestTask(PipelineStage.PARSE.name());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name()))
                 .thenReturn(task);
-        KbPipelineProduct product = productRow("art-parse");
+        WbPipelineProduct product = productRow("art-parse");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
         ParseSource source = new ParseSource();
         source.setSource("native");
@@ -552,15 +552,15 @@ class StageContentQueryServiceImplTest {
 
     /** 让指定知识库归当前登录用户所有（归属校验要能过） */
     private void boundKnowledgeBase(Long id) {
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(id);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);
     }
 
     /** 一次运行的文件结果（挂 10 号知识库，归属校验要能过） */
-    private KbFileResult fileResultOfKb10() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResultOfKb10() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;

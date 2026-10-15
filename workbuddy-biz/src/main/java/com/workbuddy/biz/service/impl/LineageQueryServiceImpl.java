@@ -3,22 +3,22 @@ package com.workbuddy.biz.service.impl;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.LineageQueryService;
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.ChunkStatsSupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.ParseStatsSupport;
 import com.workbuddy.biz.service.support.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.StatsSupport;
 import com.workbuddy.biz.service.support.StructureStatsSupport;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStepLog;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStepLog;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.parse.CapabilitySnapshot;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.chunk.ChunkSet;
@@ -66,11 +66,11 @@ public class LineageQueryServiceImpl implements LineageQueryService {
     private static final Set<String> STRATEGY_STAGES = Set.of(
             PipelineStage.PREPROCESS.name(), PipelineStage.CHUNK.name(), PipelineStage.EMBED.name());
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbPipelineProductDbService pipelineProductDbService;
-    private final KbPipelineStepLogDbService stepLogDbService;
-    private final KbChunkSetDbService chunkSetDbService;
-    private final KbEmbeddingSetDbService embeddingSetDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineStepLogDbService stepLogDbService;
+    private final WbChunkSetDbService chunkSetDbService;
+    private final WbEmbeddingSetDbService embeddingSetDbService;
     private final FileStorage fileStorage;
     private final FileResultAccessGuard accessGuard;
     private final ChunkStrategyParser chunkStrategyParser;
@@ -93,26 +93,26 @@ public class LineageQueryServiceImpl implements LineageQueryService {
     public LineageVO lineage(Long fileResultId) {
         accessGuard.requireExisting(fileResultId);
 
-        List<KbPipelineTask> tasks = pipelineTaskDbService.listByFileResultId(fileResultId).stream()
+        List<WbPipelineTask> tasks = pipelineTaskDbService.listByFileResultId(fileResultId).stream()
                 .filter(task -> PipelineStage.FILE_CHAIN_STAGES.contains(task.getStage()))
                 .toList();
-        List<KbPipelineProduct> products = pipelineProductDbService.listByFileResultId(fileResultId);
+        List<WbPipelineProduct> products = pipelineProductDbService.listByFileResultId(fileResultId);
 
-        Map<Long, KbPipelineProduct> productById = products.stream()
-                .collect(Collectors.toMap(KbPipelineProduct::getId, p -> p, (a, b) -> a));
+        Map<Long, WbPipelineProduct> productById = products.stream()
+                .collect(Collectors.toMap(WbPipelineProduct::getId, p -> p, (a, b) -> a));
         // 产物 ID → 产出任务 ID（血缘反查；task.productId 唯一）
         Map<Long, Long> taskIdByProductId = new HashMap<>();
-        for (KbPipelineTask task : tasks) {
+        for (WbPipelineTask task : tasks) {
             if (NullUtil.isNotNull(task.getProductId())) {
                 taskIdByProductId.put(task.getProductId(), task.getId());
             }
         }
 
-        Map<String, KbChunkSet> chunkSetByArtifact = chunkSetDbService.listByFileResultId(fileResultId).stream()
-                .collect(Collectors.toMap(KbChunkSet::getArtifactId, s -> s, (a, b) -> a));
-        Map<String, KbEmbeddingSet> embedSetByArtifact = embeddingSetDbService.listByFileResultId(fileResultId)
+        Map<String, WbChunkSet> chunkSetByArtifact = chunkSetDbService.listByFileResultId(fileResultId).stream()
+                .collect(Collectors.toMap(WbChunkSet::getArtifactId, s -> s, (a, b) -> a));
+        Map<String, WbEmbeddingSet> embedSetByArtifact = embeddingSetDbService.listByFileResultId(fileResultId)
                 .stream()
-                .collect(Collectors.toMap(KbEmbeddingSet::getArtifactId, s -> s, (a, b) -> a));
+                .collect(Collectors.toMap(WbEmbeddingSet::getArtifactId, s -> s, (a, b) -> a));
         Map<Long, long[]> stepAgg = aggregateStepLogs(tasks);
         Map<Long, ParseResult> parseResultByTaskId = readProductBodies(tasks, productById, PipelineStage.PARSE,
                 PipelineStage.PARSE.getLabel(),
@@ -133,7 +133,7 @@ public class LineageQueryServiceImpl implements LineageQueryService {
                 chunkSetByTaskId, upstreamViewByTaskId);
 
         // 节点：环节顺序（PARSE→…→EMBED）再按任务 id 升序
-        List<KbPipelineTask> ordered = tasks.stream()
+        List<WbPipelineTask> ordered = tasks.stream()
                 .sorted((a, b) -> {
                     int stageCompare = Integer.compare(stageOrder(a.getStage()), stageOrder(b.getStage()));
                     return stageCompare != 0 ? stageCompare : Long.compare(a.getId(), b.getId());
@@ -142,8 +142,8 @@ public class LineageQueryServiceImpl implements LineageQueryService {
 
         List<LineageNodeVO> nodes = new ArrayList<>();
         List<LineageEdgeVO> edges = new ArrayList<>();
-        for (KbPipelineTask task : ordered) {
-            KbPipelineProduct product = NullUtil.isNull(task.getProductId()) ? null : productById.get(task.getProductId());
+        for (WbPipelineTask task : ordered) {
+            WbPipelineProduct product = NullUtil.isNull(task.getProductId()) ? null : productById.get(task.getProductId());
             nodes.add(toNode(task, product, chunkSetByArtifact, embedSetByArtifact, stepAgg, artifacts));
             if (NullUtil.isNotNull(task.getUpstreamProductId())) {
                 Long fromTaskId = taskIdByProductId.get(task.getUpstreamProductId());
@@ -163,9 +163,9 @@ public class LineageQueryServiceImpl implements LineageQueryService {
         return vo;
     }
 
-    private LineageNodeVO toNode(KbPipelineTask task, KbPipelineProduct product,
-                                 Map<String, KbChunkSet> chunkSetByArtifact,
-                                 Map<String, KbEmbeddingSet> embedSetByArtifact,
+    private LineageNodeVO toNode(WbPipelineTask task, WbPipelineProduct product,
+                                 Map<String, WbChunkSet> chunkSetByArtifact,
+                                 Map<String, WbEmbeddingSet> embedSetByArtifact,
                                  Map<Long, long[]> stepAgg,
                                  NodeArtifacts artifacts) {
         LineageNodeVO node = new LineageNodeVO();
@@ -221,11 +221,11 @@ public class LineageQueryServiceImpl implements LineageQueryService {
      *
      * <p>上游产物已在本批读过，这里只做索引，不再重复读对象。
      */
-    private Map<Long, PreprocessView> upstreamViewsOf(List<KbPipelineTask> tasks,
+    private Map<Long, PreprocessView> upstreamViewsOf(List<WbPipelineTask> tasks,
                                                       Map<Long, Long> taskIdByProductId,
                                                       Map<Long, PreprocessView> viewByTaskId) {
         Map<Long, PreprocessView> views = new HashMap<>();
-        for (KbPipelineTask task : tasks) {
+        for (WbPipelineTask task : tasks) {
             if (!PipelineStage.CHUNK.name().equals(task.getStage()) || NullUtil.isNull(task.getUpstreamProductId())) {
                 continue;
             }
@@ -248,15 +248,15 @@ public class LineageQueryServiceImpl implements LineageQueryService {
      * @param reader      产物行 → 产物本体（读不到返回 null）
      * @return 任务 ID → 产物本体（无产物或读取失败的任务不出现在结果里）
      */
-    private <T> Map<Long, T> readProductBodies(List<KbPipelineTask> tasks,
-                                               Map<Long, KbPipelineProduct> productById, PipelineStage stage,
-                                               String label, Function<KbPipelineProduct, T> reader) {
+    private <T> Map<Long, T> readProductBodies(List<WbPipelineTask> tasks,
+                                               Map<Long, WbPipelineProduct> productById, PipelineStage stage,
+                                               String label, Function<WbPipelineProduct, T> reader) {
         Map<Long, T> result = new HashMap<>();
-        for (KbPipelineTask task : tasks) {
+        for (WbPipelineTask task : tasks) {
             if (!stage.name().equals(task.getStage()) || NullUtil.isNull(task.getProductId())) {
                 continue;
             }
-            KbPipelineProduct product = productById.get(task.getProductId());
+            WbPipelineProduct product = productById.get(task.getProductId());
             if (NullUtil.isNull(product) || StrUtil.isBlank(product.getArtifactId())) {
                 continue;
             }
@@ -271,14 +271,14 @@ public class LineageQueryServiceImpl implements LineageQueryService {
     }
 
     /** 解析节点统计与摘要行一并回填：指标行与构成图取统计字段，摘要行按统计与状态陈述 */
-    private void fillParseStats(LineageNodeVO node, KbPipelineTask task, ParseResult parseResult) {
+    private void fillParseStats(LineageNodeVO node, WbPipelineTask task, ParseResult parseResult) {
         LineageParseStatsVO stats = ParseStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(), parseResult);
         node.setParseStats(stats);
         node.setParseSummary(ParseStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
     }
 
     /** 组装节点统计与摘要行一并回填：统计进通用 stats，摘要走通用 stageSummary */
-    private void fillStructureStats(LineageNodeVO node, KbPipelineTask task, UnifiedDocument document) {
+    private void fillStructureStats(LineageNodeVO node, WbPipelineTask task, UnifiedDocument document) {
         Map<String, Object> stats =
                 StructureStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(), document);
         node.setStageSummary(StructureStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
@@ -291,7 +291,7 @@ public class LineageQueryServiceImpl implements LineageQueryService {
      * 预处理节点统计与摘要行一并回填：统计并入通用 stats（保留 step_log 聚合来的 matched/changed），
      * 摘要走通用 stageSummary。
      */
-    private void fillPreprocessStats(LineageNodeVO node, KbPipelineTask task, PreprocessView view) {
+    private void fillPreprocessStats(LineageNodeVO node, WbPipelineTask task, PreprocessView view) {
         Map<String, Object> stats =
                 PreprocessStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(), view);
         StatsSupport.mergeNodeStats(node, stats,
@@ -304,7 +304,7 @@ public class LineageQueryServiceImpl implements LineageQueryService {
      *
      * <p>快照缺失或损坏时策略取 null（不构造默认策略）：策略类口径整组留空，其余统计照常下发。
      */
-    private void fillChunkStats(LineageNodeVO node, KbPipelineTask task, NodeArtifacts artifacts) {
+    private void fillChunkStats(LineageNodeVO node, WbPipelineTask task, NodeArtifacts artifacts) {
         Map<String, Object> stats = ChunkStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(),
                 artifacts.chunkSets().get(task.getId()), chunkStrategyOf(task),
                 artifacts.upstreamViews().get(task.getId()));
@@ -318,7 +318,7 @@ public class LineageQueryServiceImpl implements LineageQueryService {
      * @param task 切片任务行
      * @return 补全后的切片策略；缺失或损坏返回 null
      */
-    private ChunkStrategy chunkStrategyOf(KbPipelineTask task) {
+    private ChunkStrategy chunkStrategyOf(WbPipelineTask task) {
         try {
             return chunkStrategyParser.parse(task.getStrategySnapshot());
         } catch (Exception e) {
@@ -328,17 +328,17 @@ public class LineageQueryServiceImpl implements LineageQueryService {
     }
 
     /** 统计摘要：CHUNK/EMBED 按 artifactId 匹配集合表；PREPROCESS 用 step_log 聚合 */
-    private void fillStats(Map<String, Object> stats, KbPipelineTask task, KbPipelineProduct product,
-                           Map<String, KbChunkSet> chunkSetByArtifact,
-                           Map<String, KbEmbeddingSet> embedSetByArtifact,
+    private void fillStats(Map<String, Object> stats, WbPipelineTask task, WbPipelineProduct product,
+                           Map<String, WbChunkSet> chunkSetByArtifact,
+                           Map<String, WbEmbeddingSet> embedSetByArtifact,
                            Map<Long, long[]> stepAgg) {
         if (PipelineStage.CHUNK.name().equals(task.getStage())) {
-            KbChunkSet chunkSet = chunkSetByArtifact.get(product.getArtifactId());
+            WbChunkSet chunkSet = chunkSetByArtifact.get(product.getArtifactId());
             if (NullUtil.isNotNull(chunkSet)) {
                 stats.put("chunkCount", chunkSet.getChunkCount());
             }
         } else if (PipelineStage.EMBED.name().equals(task.getStage())) {
-            KbEmbeddingSet embedSet = embedSetByArtifact.get(product.getArtifactId());
+            WbEmbeddingSet embedSet = embedSetByArtifact.get(product.getArtifactId());
             if (NullUtil.isNotNull(embedSet)) {
                 stats.put("recordCount", embedSet.getRecordCount());
                 stats.put("cachedCount", embedSet.getCachedCount());
@@ -351,16 +351,16 @@ public class LineageQueryServiceImpl implements LineageQueryService {
     }
 
     /** 预处理统计聚合（step_log）：[0]=matchedCount 合计、[1]=changedCount 合计 */
-    private Map<Long, long[]> aggregateStepLogs(List<KbPipelineTask> tasks) {
+    private Map<Long, long[]> aggregateStepLogs(List<WbPipelineTask> tasks) {
         List<Long> preprocessTaskIds = tasks.stream()
                 .filter(task -> PipelineStage.PREPROCESS.name().equals(task.getStage()))
-                .map(KbPipelineTask::getId)
+                .map(WbPipelineTask::getId)
                 .toList();
         if (preprocessTaskIds.isEmpty()) {
             return Map.of();
         }
         Map<Long, long[]> agg = new HashMap<>();
-        for (KbPipelineStepLog stepLog : stepLogDbService.listByTaskIds(preprocessTaskIds)) {
+        for (WbPipelineStepLog stepLog : stepLogDbService.listByTaskIds(preprocessTaskIds)) {
             long[] sum = agg.computeIfAbsent(stepLog.getTaskId(), k -> new long[] { 0, 0 });
             sum[0] += ObjectUtil.defaultIfNull(stepLog.getMatchedCount(), 0);
             sum[1] += ObjectUtil.defaultIfNull(stepLog.getChangedCount(), 0);

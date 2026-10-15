@@ -35,8 +35,8 @@
     },
     {
       "id": "task", "lane": "flow", "col": 2, "type": "database",
-      "label": "kb_pipeline_task", "sublabel": "QUEUED→RUNNING→终态", "width": 148,
-      "sources": [{ "path": "knowledge-biz/src/main/java/com/knowledge/biz/service/db/impl/KbPipelineTaskDbServiceImpl.java", "line": 1 }]
+      "label": "wb_knowledge_pipeline_task", "sublabel": "QUEUED→RUNNING→终态", "width": 148,
+      "sources": [{ "path": "knowledge-biz/src/main/java/com/knowledge/biz/service/db/impl/WbPipelineTaskDbServiceImpl.java", "line": 1 }]
     },
     {
       "id": "runner", "lane": "flow", "col": 3, "type": "backend",
@@ -77,7 +77,7 @@
       "dot": "cyan",
       "title": "队列只是叫醒手段",
       "items": [
-        "权威状态在 kb_pipeline_task：消费者重读 DB 并条件更新，终态回写同样靠条件更新互斥",
+        "权威状态在 wb_knowledge_pipeline_task：消费者重读 DB 并条件更新，终态回写同样靠条件更新互斥",
         "入库未入队、或入队后未被消费的任务由启动补偿与低频扫描补投（默认开启，多实例 Redis 锁防重）"
       ]
     },

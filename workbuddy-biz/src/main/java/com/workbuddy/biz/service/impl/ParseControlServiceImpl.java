@@ -5,8 +5,8 @@ import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.ParseStatsSupport;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.parse.ParseDetailVO;
@@ -56,7 +56,7 @@ public class ParseControlServiceImpl implements ParseControlService {
     @Override
     public ParseDetailVO parseDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);
-        KbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.PARSE, taskId,
+        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.PARSE, taskId,
                 PipelineStage.PARSE.getLabel());
 
         ParseDetailVO vo = new ParseDetailVO();
@@ -65,7 +65,7 @@ public class ParseControlServiceImpl implements ParseControlService {
         // 产物引用/告警/统计：按 task.productId 精确取该次运行的产物（历史任务同样可展示自己的产物；无任务/无产物留空）
         // 解析的统计结构固定（LineageParseStatsVO），走 parseStats；通用 stageStats 只给没有专属结构的环节
         vo.setWarnings(new ArrayList<>());
-        KbPipelineProduct product = detailSupport.productOfTask(task);
+        WbPipelineProduct product = detailSupport.productOfTask(task);
         if (NullUtil.isNotNull(product)) {
             detailSupport.withProductRef(vo, product);
             ParseResult parseResult = ParseStatsSupport.readArtifact(fileStorage, ObjectRef.ofProduct(product));

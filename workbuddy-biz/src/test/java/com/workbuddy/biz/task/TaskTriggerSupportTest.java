@@ -1,14 +1,14 @@
 package com.workbuddy.biz.task;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbSourceFile;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -52,11 +52,11 @@ class TaskTriggerSupportTest {
     private static final Long CURRENT_SOURCE = 2L;
 
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private FileStorage fileStorage;
     @Mock
@@ -75,11 +75,11 @@ class TaskTriggerSupportTest {
 
     /** 链的源文件档案：fileResult 10 → sourceFile 5 → fileId F-88 */
     private void stubFileChain() {
-        KbFileResult fileResult = new KbFileResult();
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setSourceFileId(5L);
         when(fileResultDbService.getById(10L)).thenReturn(fileResult);
-        KbSourceFile sourceFile = new KbSourceFile();
+        WbSourceFile sourceFile = new WbSourceFile();
         sourceFile.setId(5L);
         sourceFile.setFileId("F-88");
         when(sourceFileDbService.getById(5L)).thenReturn(sourceFile);
@@ -92,8 +92,8 @@ class TaskTriggerSupportTest {
     }
 
     private void savedTaskGetsId(long id) {
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(id);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(id);
             return true;
         });
     }
@@ -106,7 +106,7 @@ class TaskTriggerSupportTest {
         StageTriggerVO vo = triggerSupport.trigger(10L, PipelineStage.STRUCTURE, 50L, null, null, "组装");
 
         assertEquals(60L, vo.getPipelineTaskId());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
         assertEquals(PipelineTaskStatus.QUEUED.name(), captor.getValue().getStatus());
         assertEquals(50L, captor.getValue().getUpstreamProductId());
@@ -131,7 +131,7 @@ class TaskTriggerSupportTest {
 
     @Test
     void existingRunningTaskShouldReject40431() {
-        KbPipelineTask running = new KbPipelineTask();
+        WbPipelineTask running = new WbPipelineTask();
         running.setId(12L);
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.STRUCTURE.name(), 50L, 0L))
@@ -152,7 +152,7 @@ class TaskTriggerSupportTest {
     @Test
     void existingSucceededTaskShouldAlsoReject40431() {
         // 查重只看执行键、不看任务状态：成功任务同样占着这一档输入与策略
-        KbPipelineTask succeeded = new KbPipelineTask();
+        WbPipelineTask succeeded = new WbPipelineTask();
         succeeded.setId(13L);
         succeeded.setStatus(PipelineTaskStatus.SUCCESS.name());
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.STRUCTURE.name(), 50L, 0L))
@@ -176,7 +176,7 @@ class TaskTriggerSupportTest {
         StageTriggerVO vo = triggerSupport.trigger(10L, PipelineStage.PARSE, null, null, null, "解析");
 
         assertEquals(64L, vo.getPipelineTaskId());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
         assertEquals(0L, captor.getValue().getUpstreamProductId());
         assertEquals(0L, captor.getValue().getStrategyVersionId());

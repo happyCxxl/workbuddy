@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 public class ChatRequest {
 
-    /** 厂商侧模型名（kb_model.model_key） */
+    /** 厂商侧模型名（wb_model.model_key） */
     private String modelKey;
 
     /** 消息列表 */

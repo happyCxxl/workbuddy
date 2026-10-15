@@ -1,15 +1,15 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbChunkDbService;
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbChunkDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.ChunkVoAssembler;
@@ -21,14 +21,14 @@ import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
-import com.workbuddy.common.domain.entity.KbChunk;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbStrategyBinding;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbStrategyBinding;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.chunk.ChunkDetailVO;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -82,27 +82,27 @@ class ChunkControlServiceImplTest {
     private static final Long UPSTREAM_TASK_ID = 40L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
     private TaskQueueSupport taskQueue;
     @Mock
-    private KbChunkSetDbService chunkSetDbService;
+    private WbChunkSetDbService chunkSetDbService;
     @Mock
-    private KbChunkDbService chunkDbService;
+    private WbChunkDbService chunkDbService;
     @Mock
-    private KbStrategyBindingDbService strategyBindingDbService;
+    private WbStrategyBindingDbService strategyBindingDbService;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private StorageRouter storageRouter;
     @Mock
@@ -130,8 +130,8 @@ class ChunkControlServiceImplTest {
     }
 
     /** 上游产物的产出任务（环节 PREPROCESS、归属文件结果 10） */
-    private KbPipelineTask upstreamTask(PipelineTaskStatus status) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask upstreamTask(PipelineTaskStatus status) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(UPSTREAM_TASK_ID);
         task.setFileResultId(10L);
         task.setStage(PipelineStage.PREPROCESS.name());
@@ -139,15 +139,15 @@ class ChunkControlServiceImplTest {
         return task;
     }
 
-    private KbFileResult fileResult() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResult() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;
     }
 
-    private KbPipelineProduct preprocessProduct() {
-        KbPipelineProduct product = new KbPipelineProduct();
+    private WbPipelineProduct preprocessProduct() {
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setId(50L);
         product.setTaskId(UPSTREAM_TASK_ID);
         product.setFileResultId(10L);
@@ -172,14 +172,14 @@ class ChunkControlServiceImplTest {
     }
 
     /** 切片执行键检查：文件结果 10 + 上游预处理产物 + 策略版本（0 表示该环节无策略） */
-    private void existingChunkTask(Long upstreamProductId, Long strategyVersionId, KbPipelineTask task) {
+    private void existingChunkTask(Long upstreamProductId, Long strategyVersionId, WbPipelineTask task) {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.CHUNK.name(), upstreamProductId,
                 strategyVersionId)).thenReturn(task);
     }
 
     /** 知识库夹具（绑定开关未显式关闭 → 视为开启） */
-    private KnowledgeBase knowledgeBase() {
-        KnowledgeBase kb = new KnowledgeBase();
+    private WbKnowledgeBase knowledgeBase() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(10L);
         kb.setStrategyBindingEnabled(1);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
@@ -187,8 +187,8 @@ class ChunkControlServiceImplTest {
     }
 
     /** 绑定开关关闭的知识库 */
-    private KnowledgeBase bindingOffKnowledgeBase() {
-        KnowledgeBase kb = new KnowledgeBase();
+    private WbKnowledgeBase bindingOffKnowledgeBase() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(10L);
         kb.setStrategyBindingEnabled(0);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
@@ -196,8 +196,8 @@ class ChunkControlServiceImplTest {
     }
 
     /** 有效绑定行：KB 10 绑定 CHUNK 策略版本 66 */
-    private KbStrategyBinding binding() {
-        KbStrategyBinding binding = new KbStrategyBinding();
+    private WbStrategyBinding binding() {
+        WbStrategyBinding binding = new WbStrategyBinding();
         binding.setId(1L);
         binding.setKnowledgeBaseId(10L);
         binding.setStrategyType(ChunkStrategy.TYPE);
@@ -205,8 +205,8 @@ class ChunkControlServiceImplTest {
         return binding;
     }
 
-    private KbPipelineStrategyVersion chunkVersion(Long id, String name, String version) {
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+    private WbPipelineStrategyVersion chunkVersion(Long id, String name, String version) {
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(id);
         row.setType(ChunkStrategy.TYPE);
         row.setName(name);
@@ -220,8 +220,8 @@ class ChunkControlServiceImplTest {
     void boundStrategyShouldDriveTaskSnapshotAndEnqueue() {
         stubCommon();
         existingChunkTask(50L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(41L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(41L);
             return true;
         });
 
@@ -229,9 +229,9 @@ class ChunkControlServiceImplTest {
 
         assertEquals(41L, response.getPipelineTaskId());
         assertEquals("chunk-bound-v3", response.getStrategyVersion());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
-        KbPipelineTask task = captor.getValue();
+        WbPipelineTask task = captor.getValue();
         assertEquals(PipelineStage.CHUNK.name(), task.getStage());
         assertEquals(PipelineTaskStatus.QUEUED.name(), task.getStatus());
         assertEquals(50L, task.getUpstreamProductId());
@@ -310,15 +310,15 @@ class ChunkControlServiceImplTest {
         when(strategyVersionDbService.getById(77L))
                 .thenReturn(chunkVersion(77L, "chunk-strict", "v2"));
         existingChunkTask(50L, 77L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(42L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(42L);
             return true;
         });
 
         var response = service.chunk(10L, 77L, 50L);
 
         assertEquals("chunk-strict-v2", response.getStrategyVersion());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
         assertTrue(captor.getValue().getStrategySnapshot().contains("titleInContent"));
         assertEquals(77L, captor.getValue().getStrategyVersionId());
@@ -328,8 +328,8 @@ class ChunkControlServiceImplTest {
     void boundStrategyShouldBeUsedWhenNoExplicitVersion() {
         stubCommon();
         existingChunkTask(50L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(43L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(43L);
             return true;
         });
 
@@ -343,8 +343,8 @@ class ChunkControlServiceImplTest {
         stubCommon();
         when(strategyVersionDbService.getById(77L)).thenReturn(chunkVersion(77L, "chunk-explicit", "v4"));
         existingChunkTask(50L, 77L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(44L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(44L);
             return true;
         });
 
@@ -373,7 +373,7 @@ class ChunkControlServiceImplTest {
     void mismatchedStrategyTypeShouldReject() {
         // 显式策略按行 id 引用，类型不匹配拒绝
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineStrategyVersion wrongType = chunkVersion(77L, "chunk-x", "v1");
+        WbPipelineStrategyVersion wrongType = chunkVersion(77L, "chunk-x", "v1");
         wrongType.setType("PREPROCESS");
         when(strategyVersionDbService.getById(77L)).thenReturn(wrongType);
 
@@ -384,7 +384,7 @@ class ChunkControlServiceImplTest {
     @Test
     void runningShouldReject40431() {
         stubCommon();
-        KbPipelineTask running = new KbPipelineTask();
+        WbPipelineTask running = new WbPipelineTask();
         running.setId(41L);
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         existingChunkTask(50L, 66L, running);
@@ -402,7 +402,7 @@ class ChunkControlServiceImplTest {
     @Test
     void existingQueuedTaskShouldReject40431() {
         stubCommon();
-        KbPipelineTask queued = new KbPipelineTask();
+        WbPipelineTask queued = new WbPipelineTask();
         queued.setId(41L);
         queued.setStatus(PipelineTaskStatus.QUEUED.name());
         existingChunkTask(50L, 66L, queued);
@@ -418,20 +418,20 @@ class ChunkControlServiceImplTest {
     @Test
     void detailShouldAssembleChunkSetSummaryAndChunks() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(41L);
         task.setStage(PipelineStage.CHUNK.name());
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.CHUNK.name())).thenReturn(task);
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("abc".repeat(16));
         // 产物行记下对象位置：详情按它取切片集合
         product.setStorageType(StorageType.MINIO.getCode());
         product.setStorageSourceId(SOURCE_ID);
         product.setBucket("artifacts");
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
-        KbChunkSet chunkSet = new KbChunkSet();
+        WbChunkSet chunkSet = new WbChunkSet();
         chunkSet.setId(70L);
         chunkSet.setChunkCount(2);
         chunkSet.setTotalChars(300);
@@ -440,14 +440,14 @@ class ChunkControlServiceImplTest {
         chunkSet.setStorageSourceId(SOURCE_ID);
         chunkSet.setBucket("artifacts");
         when(chunkSetDbService.getByArtifactId("abc".repeat(16))).thenReturn(chunkSet);
-        KbChunk parent = new KbChunk();
+        WbChunk parent = new WbChunk();
         parent.setChunkId("c-1");
         parent.setContentType("SECTION");
         parent.setContent("章节父片");
         parent.setTitlePath("第一章");
         parent.setOrderNo(1);
         parent.setCharCount(200);
-        KbChunk child = new KbChunk();
+        WbChunk child = new WbChunk();
         child.setChunkId("c-1-1");
         child.setParentChunkId("c-1");
         child.setContentType("TABLE");
@@ -504,10 +504,10 @@ class ChunkControlServiceImplTest {
     }
 
     /** 详情用例共用桩：任务行 + 产物行 + 产物本体 + 集合行 + 一条切片；strategySnapshot 由用例指定 */
-    private void stubDetail(KbPipelineTask task) {
+    private void stubDetail(WbPipelineTask task) {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.CHUNK.name())).thenReturn(task);
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("abc".repeat(16));
         product.setStorageType(StorageType.MINIO.getCode());
         product.setStorageSourceId(SOURCE_ID);
@@ -524,7 +524,7 @@ class ChunkControlServiceImplTest {
         body.setChunks(List.of(chunk));
         when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "abc".repeat(16))))
                 .thenReturn(Objects.requireNonNull(JsonUtil.toJsonStr(body)).getBytes(StandardCharsets.UTF_8));
-        KbChunkSet chunkSet = new KbChunkSet();
+        WbChunkSet chunkSet = new WbChunkSet();
         chunkSet.setId(70L);
         chunkSet.setChunkCount(1);
         chunkSet.setArtifactId("abc".repeat(16));
@@ -532,7 +532,7 @@ class ChunkControlServiceImplTest {
         chunkSet.setStorageSourceId(SOURCE_ID);
         chunkSet.setBucket("artifacts");
         when(chunkSetDbService.getByArtifactId("abc".repeat(16))).thenReturn(chunkSet);
-        KbChunk child = new KbChunk();
+        WbChunk child = new WbChunk();
         child.setChunkId("c-1");
         child.setContentType("PARAGRAPH");
         child.setContent("正文片");
@@ -541,8 +541,8 @@ class ChunkControlServiceImplTest {
         when(chunkDbService.listByChunkSetId(70L)).thenReturn(List.of(child));
     }
 
-    private KbPipelineTask taskWithStrategySnapshot(String snapshot) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask taskWithStrategySnapshot(String snapshot) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(41L);
         task.setStage(PipelineStage.CHUNK.name());
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
@@ -565,7 +565,7 @@ class ChunkControlServiceImplTest {
     @Test
     void detailWithWrongStageTaskShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask preprocessTask = new KbPipelineTask();
+        WbPipelineTask preprocessTask = new WbPipelineTask();
         preprocessTask.setId(31L);
         preprocessTask.setFileResultId(10L);
         preprocessTask.setStage(PipelineStage.PREPROCESS.name());
@@ -578,14 +578,14 @@ class ChunkControlServiceImplTest {
     @Test
     void detailWithIncompleteProductLocationShouldReject40455() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(41L);
         task.setStage(PipelineStage.CHUNK.name());
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.CHUNK.name())).thenReturn(task);
         // 产物行缺 storageType / storageSourceId / bucket：位置不完整，详情按「存储后端未配置」拒绝
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("abc".repeat(16));
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
 
@@ -607,7 +607,7 @@ class ChunkControlServiceImplTest {
 
     /** 让指定知识库归当前登录用户所有（归属校验要能过） */
     private void boundKnowledgeBase(Long id) {
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(id);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);

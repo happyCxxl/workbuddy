@@ -1,8 +1,8 @@
 package com.workbuddy.auth.service.impl;
 
-import com.workbuddy.auth.db.UserDbService;
+import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.util.JwtUtil;
-import com.workbuddy.common.domain.entity.User;
+import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.request.user.PasswordUpdateRequest;
 import com.workbuddy.common.dto.request.user.ProfileUpdateRequest;
 import com.workbuddy.common.dto.request.user.UserCreateRequest;
@@ -52,7 +52,7 @@ import static org.mockito.Mockito.when;
 class UserServiceImplGuardTest {
 
     @Mock
-    private UserDbService userDbService;
+    private WbUserDbService userDbService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -87,9 +87,9 @@ class UserServiceImplGuardTest {
 
         userService.addUser(createRequest("newbie", "secret123", null, null));
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).save(captor.capture());
-        User saved = captor.getValue();
+        WbUser saved = captor.getValue();
         assertEquals("encoded", saved.getPassword());
         assertEquals(UserRole.USER.getCode(), saved.getRole());
         assertEquals(1, saved.getStatus());
@@ -172,7 +172,7 @@ class UserServiceImplGuardTest {
 
         userService.updateUser(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         assertEquals(UserRole.USER.getCode(), captor.getValue().getRole());
     }
@@ -204,7 +204,7 @@ class UserServiceImplGuardTest {
 
     @Test
     void updateUserShouldBumpTokenVersionWhenPasswordChanges() {
-        User target = plainUser(2L);
+        WbUser target = plainUser(2L);
         target.setTokenVersion(4);
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
@@ -215,7 +215,7 @@ class UserServiceImplGuardTest {
 
         userService.updateUser(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         // 改密码后旧令牌必须失效
         assertEquals(5, captor.getValue().getTokenVersion());
@@ -223,7 +223,7 @@ class UserServiceImplGuardTest {
 
     @Test
     void updateUserShouldBumpTokenVersionWhenRoleChanges() {
-        User target = plainUser(2L);
+        WbUser target = plainUser(2L);
         target.setTokenVersion(0);
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
@@ -233,14 +233,14 @@ class UserServiceImplGuardTest {
 
         userService.updateUser(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         assertEquals(1, captor.getValue().getTokenVersion());
     }
 
     @Test
     void updateUserShouldKeepTokenVersionWhenNothingSensitiveChanges() {
-        User target = plainUser(2L);
+        WbUser target = plainUser(2L);
         target.setTokenVersion(4);
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
@@ -250,7 +250,7 @@ class UserServiceImplGuardTest {
 
         userService.updateUser(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         assertEquals(4, captor.getValue().getTokenVersion());
     }
@@ -282,7 +282,7 @@ class UserServiceImplGuardTest {
 
         userService.updateUser(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         assertEquals(0, captor.getValue().getStatus());
     }
@@ -298,7 +298,7 @@ class UserServiceImplGuardTest {
 
         userService.updateUser(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         assertEquals("encoded-new", captor.getValue().getPassword());
     }
@@ -313,7 +313,7 @@ class UserServiceImplGuardTest {
 
         userService.updateUser(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         // 未传密码时不得重置为 null 或空
         assertEquals("bcrypt-hash", captor.getValue().getPassword());
@@ -382,7 +382,7 @@ class UserServiceImplGuardTest {
 
     @Test
     void updateUserShouldPublishUpdateAuditWithBeforeAndAfter() {
-        User target = plainUser(2L);
+        WbUser target = plainUser(2L);
         target.setTokenVersion(3);
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
@@ -436,9 +436,9 @@ class UserServiceImplGuardTest {
 
         userService.addUser(request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).save(captor.capture());
-        User saved = captor.getValue();
+        WbUser saved = captor.getValue();
         assertEquals("张三", saved.getDisplayName());
         assertEquals("zhangsan@example.com", saved.getEmail());
         assertEquals("13800000000", saved.getPhone());
@@ -456,7 +456,7 @@ class UserServiceImplGuardTest {
 
     @Test
     void getUserProfileShouldMapProfileFields() {
-        User user = plainUser(2L);
+        WbUser user = plainUser(2L);
         user.setDisplayName("李四");
         user.setEmail("lisi@example.com");
         when(userDbService.getById(2L)).thenReturn(user);
@@ -470,16 +470,16 @@ class UserServiceImplGuardTest {
 
     @Test
     void updateProfileShouldUpdateProfileFieldsAndAudit() {
-        User user = plainUser(2L);
+        WbUser user = plainUser(2L);
         user.setDisplayName("旧名");
         when(userDbService.getById(2L)).thenReturn(user);
         ProfileUpdateRequest request = profileRequest("新名", "new@example.com", "13900000000");
 
         userService.updateProfile(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
-        User updated = captor.getValue();
+        WbUser updated = captor.getValue();
         assertEquals("新名", updated.getDisplayName());
         assertEquals("new@example.com", updated.getEmail());
         assertEquals("13900000000", updated.getPhone());
@@ -499,7 +499,7 @@ class UserServiceImplGuardTest {
 
         userService.updateProfile(2L, request);
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         assertNull(captor.getValue().getEmail());
         assertNull(captor.getValue().getPhone());
@@ -531,7 +531,7 @@ class UserServiceImplGuardTest {
 
     @Test
     void changePasswordShouldEncodeBumpVersionAndResign() {
-        User user = plainUser(2L);
+        WbUser user = plainUser(2L);
         user.setTokenVersion(3);
         when(userDbService.getById(2L)).thenReturn(user);
         when(passwordEncoder.matches("oldpass123", "bcrypt-hash")).thenReturn(true);
@@ -544,7 +544,7 @@ class UserServiceImplGuardTest {
 
         // 递增令牌版本让旧令牌全部失效，同时用新版本补签一张给当前会话
         assertEquals("new-token", token);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).updateById(captor.capture());
         assertEquals("new-hash", captor.getValue().getPassword());
         assertEquals(4, captor.getValue().getTokenVersion());
@@ -603,8 +603,8 @@ class UserServiceImplGuardTest {
         return request;
     }
 
-    private User adminUser(Long id) {
-        User user = new User();
+    private WbUser adminUser(Long id) {
+        WbUser user = new WbUser();
         user.setId(id);
         user.setUsername("admin" + id);
         user.setPassword("bcrypt-hash");
@@ -613,8 +613,8 @@ class UserServiceImplGuardTest {
         return user;
     }
 
-    private User plainUser(Long id) {
-        User user = new User();
+    private WbUser plainUser(Long id) {
+        WbUser user = new WbUser();
         user.setId(id);
         user.setUsername("user" + id);
         user.setPassword("bcrypt-hash");

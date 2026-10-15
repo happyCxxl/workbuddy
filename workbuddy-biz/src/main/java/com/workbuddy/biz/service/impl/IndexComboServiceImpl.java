@@ -3,15 +3,15 @@ package com.workbuddy.biz.service.impl;
 import com.workbuddy.common.enums.knowledge.StrategyBindingSwitch;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.IndexComboService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.IndexComboReconciler;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbStrategyBinding;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbStrategyBinding;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.indexing.ComboSnapshot;
@@ -35,10 +35,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class IndexComboServiceImpl implements IndexComboService {
 
-    private final KnowledgeBaseDbService knowledgeBaseDbService;
-    private final KbStrategyBindingDbService strategyBindingDbService;
-    private final KbPipelineStrategyVersionDbService strategyVersionDbService;
-    private final KbFileResultDbService fileResultDbService;
+    private final WbKnowledgeBaseDbService knowledgeBaseDbService;
+    private final WbStrategyBindingDbService strategyBindingDbService;
+    private final WbPipelineStrategyVersionDbService strategyVersionDbService;
+    private final WbFileResultDbService fileResultDbService;
     private final IndexComboReconciler indexComboReconciler;
 
     @Override
@@ -56,11 +56,11 @@ public class IndexComboServiceImpl implements IndexComboService {
 
     /** 单环节绑定策略解析：绑定缺失/版本行缺失 → null */
     private String boundStrategyOf(Long knowledgeBaseId, String type) {
-        KbStrategyBinding binding = strategyBindingDbService.getByKbAndType(knowledgeBaseId, type);
+        WbStrategyBinding binding = strategyBindingDbService.getByKbAndType(knowledgeBaseId, type);
         if (NullUtil.isNull(binding)) {
             return null;
         }
-        KbPipelineStrategyVersion version = strategyVersionDbService.getById(binding.getStrategyVersionId());
+        WbPipelineStrategyVersion version = strategyVersionDbService.getById(binding.getStrategyVersionId());
         if (NullUtil.isNull(version)) {
             return null;
         }
@@ -71,11 +71,11 @@ public class IndexComboServiceImpl implements IndexComboService {
      * 绑定关闭场景：枚举「全部文件 × 已运行（chunk, embed）策略组合」中产物完整的组合。
      */
     public List<ComboSnapshot> enumerateCombos(Long knowledgeBaseId) {
-        List<KbFileResult> files = fileResultDbService.listByKb(knowledgeBaseId);
+        List<WbFileResult> files = fileResultDbService.listByKb(knowledgeBaseId);
         if (files.isEmpty()) {
             return List.of();
         }
-        return enumerateCombos(files.stream().map(KbFileResult::getId).toList());
+        return enumerateCombos(files.stream().map(WbFileResult::getId).toList());
     }
 
     /**
@@ -111,7 +111,7 @@ public class IndexComboServiceImpl implements IndexComboService {
      * 按知识库策略绑定开关分发：开=单组合（空列表表示绑定不齐全）；关=枚举完整组合。
      */
     public List<ComboSnapshot> combosFor(Long knowledgeBaseId) {
-        KnowledgeBase kb = knowledgeBaseDbService.getById(knowledgeBaseId);
+        WbKnowledgeBase kb = knowledgeBaseDbService.getById(knowledgeBaseId);
         boolean bindingEnabled = NullUtil.isNull(kb) || StrategyBindingSwitch.isOn(kb.getStrategyBindingEnabled());
         if (bindingEnabled) {
             ComboSnapshot bound = resolveBoundCombo(knowledgeBaseId);

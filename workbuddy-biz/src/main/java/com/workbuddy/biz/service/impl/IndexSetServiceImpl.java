@@ -6,29 +6,29 @@ import com.workbuddy.biz.service.ChunkControlService;
 import com.workbuddy.biz.service.IndexComboService;
 import com.workbuddy.biz.service.IndexSetService;
 import com.workbuddy.biz.service.PreprocessControlService;
-import com.workbuddy.biz.service.db.KbAuditLogDbService;
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbIndexSetDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbIndexSetDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.IndexComboReconciler;
 import com.workbuddy.biz.service.support.IndexLineageResolver;
 import com.workbuddy.biz.service.support.IndexRowAssembler;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbIndexSet;
-import com.workbuddy.common.domain.entity.KbIndexVersion;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbIndexSet;
+import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.dto.response.index.IndexBuildTriggerVO;
 import com.workbuddy.common.dto.response.index.IndexComboVO;
 import com.workbuddy.common.dto.response.index.IndexValidateItemVO;
@@ -85,19 +85,19 @@ public class IndexSetServiceImpl implements IndexSetService {
 
     private static final String AUDIT_OBJECT_TYPE = AuditObjectType.INDEX_VERSION.key();
 
-    private final KnowledgeBaseDbService knowledgeBaseDbService;
-    private final KbIndexSetDbService indexSetDbService;
-    private final KbIndexVersionDbService indexVersionDbService;
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbFileResultDbService fileResultDbService;
-    private final KbChunkSetDbService chunkSetDbService;
-    private final KbEmbeddingSetDbService embeddingSetDbService;
-    private final KbPipelineStrategyVersionDbService strategyVersionDbService;
-    private final KbAuditLogDbService kbAuditLogDbService;
+    private final WbKnowledgeBaseDbService knowledgeBaseDbService;
+    private final WbIndexSetDbService indexSetDbService;
+    private final WbIndexVersionDbService indexVersionDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbFileResultDbService fileResultDbService;
+    private final WbChunkSetDbService chunkSetDbService;
+    private final WbEmbeddingSetDbService embeddingSetDbService;
+    private final WbPipelineStrategyVersionDbService strategyVersionDbService;
+    private final WbAuditLogDbService kbAuditLogDbService;
     private final IndexComboService indexComboService;
     private final ChunkControlService chunkControlService;
     private final PreprocessControlService preprocessControlService;
-    private final KbPipelineProductDbService productDbService;
+    private final WbPipelineProductDbService productDbService;
     private final IndexLineageResolver lineageResolver;
     private final IndexRowAssembler indexRowAssembler;
     private final IndexComboReconciler indexComboReconciler;
@@ -108,7 +108,7 @@ public class IndexSetServiceImpl implements IndexSetService {
 
     @Override
     public void onFileProductsReady(Long fileResultId) {
-        KbFileResult file = fileResultDbService.getById(fileResultId);
+        WbFileResult file = fileResultDbService.getById(fileResultId);
         if (NullUtil.isNull(file)) {
             log.warn("===> IndexSetServiceImpl 文件产物就绪回调但文件结果不存在, fileResultId={}", fileResultId);
             return;
@@ -124,7 +124,7 @@ public class IndexSetServiceImpl implements IndexSetService {
 
         // ② 定位/复用组合集合（绑定关=评测模式不自动注册新组合；无活跃版本时跳过追加，
         //    规则三补齐与冻结集路由照常执行）
-        KbIndexVersion version = registerComboCollection(kbId, product.combo(), product.dimension());
+        WbIndexVersion version = registerComboCollection(kbId, product.combo(), product.dimension());
         List<IndexRow> rows = indexRowAssembler.assemble(fileResultId,
                 StrUtil.blankToDefault(file.getOwner(), ""), product.chunkRow(), product.embedRow());
         if (NullUtil.isNotNull(version)) {
@@ -158,17 +158,17 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /** 文件产物组合（血缘 + 维度 + 产物行） */
-    private record ProductCombo(ComboSnapshot combo, int dimension, KbChunkSet chunkRow, KbEmbeddingSet embedRow) {
+    private record ProductCombo(ComboSnapshot combo, int dimension, WbChunkSet chunkRow, WbEmbeddingSet embedRow) {
     }
 
     /** 血缘解析：最新 EMBED 行（EMBED 策略）→ 其 chunkSetRef 切片行（CHUNK 策略 + 上游链预处理策略）→ 组合 */
     private ProductCombo resolveProductCombo(Long fileResultId) {
-        List<KbEmbeddingSet> embedSets = embeddingSetDbService.listByFileResultIds(List.of(fileResultId));
-        KbEmbeddingSet embedRow = embedSets.stream().max(Comparator.comparing(KbEmbeddingSet::getId)).orElse(null);
+        List<WbEmbeddingSet> embedSets = embeddingSetDbService.listByFileResultIds(List.of(fileResultId));
+        WbEmbeddingSet embedRow = embedSets.stream().max(Comparator.comparing(WbEmbeddingSet::getId)).orElse(null);
         if (NullUtil.isNull(embedRow)) {
             return null;
         }
-        KbChunkSet chunkRow = NullUtil.isNull(embedRow.getChunkSetRef())
+        WbChunkSet chunkRow = NullUtil.isNull(embedRow.getChunkSetRef())
                 ? null : chunkSetDbService.getById(embedRow.getChunkSetRef());
         if (NullUtil.isNull(chunkRow)) {
             return null;
@@ -187,10 +187,10 @@ public class IndexSetServiceImpl implements IndexSetService {
      * 无活跃版本时——绑定开（生产就绪）自动注册版本行 + 建集合 + 预热 load；
      * 绑定关（评测模式）不自动注册（评测索引构建走手动 buildCandidate），返回 null。
      */
-    private KbIndexVersion registerComboCollection(Long kbId, ComboSnapshot combo, int dimension) {
-        KbIndexSet set = indexSetDbService.getOrCreateByKb(kbId);
+    private WbIndexVersion registerComboCollection(Long kbId, ComboSnapshot combo, int dimension) {
+        WbIndexSet set = indexSetDbService.getOrCreateByKb(kbId);
         String comboJson = JsonUtil.toJsonStr(combo);
-        KbIndexVersion active = findActiveVersion(set.getId(), comboJson);
+        WbIndexVersion active = findActiveVersion(set.getId(), comboJson);
         if (NullUtil.isNotNull(active)) {
             return active;
         }
@@ -199,7 +199,7 @@ public class IndexSetServiceImpl implements IndexSetService {
                     kbId, comboJson);
             return null;
         }
-        KbIndexVersion version = new KbIndexVersion();
+        WbIndexVersion version = new WbIndexVersion();
         version.setIndexSetId(set.getId());
         version.setVersionNo(indexVersionDbService.nextVersionNo(set.getId()));
         version.setComboSnapshot(comboJson);
@@ -227,7 +227,7 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /** 活账本：统计随追加持续更新（追加是常态动作，不流转状态） */
-    private void updateLedger(KbIndexVersion version, List<IndexRow> rows) {
+    private void updateLedger(WbIndexVersion version, List<IndexRow> rows) {
         version.setChunkCount(ObjectUtil.defaultIfNull(version.getChunkCount(), 0) + rows.size());
         int vectors = (int) rows.stream()
                 .filter(r -> NullUtil.isNotNull(r.getVector()) && !r.getVector().isEmpty()).count();
@@ -247,7 +247,7 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /** 追加后处置：批次对账通过 → 版本 READY（活账本）；绑定开且产物组合==绑定组合 → 自动发布 */
-    private void maybeAutoPublish(Long kbId, KbIndexVersion version, ComboSnapshot combo) {
+    private void maybeAutoPublish(Long kbId, WbIndexVersion version, ComboSnapshot combo) {
         if (combo.isListScope()) {
             return; // 评测冻结集永不自动发布（发布/回退亦拒 40449）
         }
@@ -278,11 +278,11 @@ public class IndexSetServiceImpl implements IndexSetService {
      */
     private void appendToFrozenScopes(Long kbId, Long fileResultId, ComboSnapshot productCombo,
                                       List<IndexRow> rows) {
-        KbIndexSet set = indexSetDbService.getByKb(kbId);
+        WbIndexSet set = indexSetDbService.getByKb(kbId);
         if (NullUtil.isNull(set)) {
             return;
         }
-        for (KbIndexVersion version : indexVersionDbService.listByIndexSetId(set.getId())) {
+        for (WbIndexVersion version : indexVersionDbService.listByIndexSetId(set.getId())) {
             if (!Set.of(IndexVersionStatus.CREATED.name(), IndexVersionStatus.BUILDING.name(),
                     IndexVersionStatus.READY.name(), IndexVersionStatus.FAILED.name())
                     .contains(version.getStatus())) {
@@ -314,7 +314,7 @@ public class IndexSetServiceImpl implements IndexSetService {
      * 缺少 stageStrategies 维度的快照在此拒绝（40448 需废弃重灌），下游不再散点防御；
      * 展示路径（toVersionVO）不走此处，保持宽松可读。
      */
-    private ComboSnapshot requireVersionCombo(KbIndexVersion version) {
+    private ComboSnapshot requireVersionCombo(WbIndexVersion version) {
         ComboSnapshot combo = JsonUtil.toObject(version.getComboSnapshot(), ComboSnapshot.class);
         ThrowUtil.throwIf(NullUtil.isNull(combo), ErrorCode.PARAM_INVALID, "版本组合快照缺失");
         combo.requireStageStrategies();
@@ -322,22 +322,22 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /** 按 id 取版本行（不存在 40441）：发布/回退/验证/回收共用入口校验 */
-    private KbIndexVersion requireVersion(Long versionId) {
-        KbIndexVersion version = indexVersionDbService.getById(versionId);
+    private WbIndexVersion requireVersion(Long versionId) {
+        WbIndexVersion version = indexVersionDbService.getById(versionId);
         ThrowUtil.throwIf(NullUtil.isNull(version), ErrorCode.INDEX_VERSION_NOT_FOUND);
         return version;
     }
 
     /** 版本行所属索引集合（缺失同样按 40441 处理，与版本不存在对外不可区分） */
-    private KbIndexSet requireSetOf(KbIndexVersion version) {
-        KbIndexSet set = indexSetDbService.getById(version.getIndexSetId());
+    private WbIndexSet requireSetOf(WbIndexVersion version) {
+        WbIndexSet set = indexSetDbService.getById(version.getIndexSetId());
         ThrowUtil.throwIf(NullUtil.isNull(set), ErrorCode.INDEX_VERSION_NOT_FOUND);
         return set;
     }
 
     /** 规则三：产物组合 ≠ 在线组合 → 按在线组合全链补齐该文件（从缺失的最上游环节投递） */
     private void maybeBackfillToOnline(Long kbId, Long fileResultId, ComboSnapshot productCombo) {
-        KbIndexVersion online = currentPublished(kbId);
+        WbIndexVersion online = currentPublished(kbId);
         if (NullUtil.isNull(online)) {
             return;
         }
@@ -355,11 +355,11 @@ public class IndexSetServiceImpl implements IndexSetService {
      */
     private void backfillFile(Long fileResultId, ComboSnapshot target) {
         String targetPreprocess = target.getPreprocessStrategy();
-        List<KbChunkSet> chunkSets = chunkSetDbService.listByFileResultIds(List.of(fileResultId));
+        List<WbChunkSet> chunkSets = chunkSetDbService.listByFileResultIds(List.of(fileResultId));
         boolean preprocessOk = chunkSets.stream().anyMatch(s ->
                 targetPreprocess.equals(lineageResolver.resolvePreprocessStrategy(s.getUpstreamProductId())));
         if (!preprocessOk) {
-            KbPipelineStrategyVersion strategyRow = strategyRowOf(PipelineStage.PREPROCESS.name(), targetPreprocess);
+            WbPipelineStrategyVersion strategyRow = strategyRowOf(PipelineStage.PREPROCESS.name(), targetPreprocess);
             if (NullUtil.isNull(strategyRow)) {
                 log.warn("===> IndexSetServiceImpl 补齐中止：目标预处理策略不存在, strategy={}", targetPreprocess);
                 return;
@@ -377,7 +377,7 @@ public class IndexSetServiceImpl implements IndexSetService {
                 target.getChunkStrategy().equals(s.getChunkStrategyVersion())
                         && targetPreprocess.equals(lineageResolver.resolvePreprocessStrategy(s.getUpstreamProductId())));
         if (!chunkOk) {
-            KbPipelineStrategyVersion strategyRow = strategyRowOf(PipelineStage.CHUNK.name(), target.getChunkStrategy());
+            WbPipelineStrategyVersion strategyRow = strategyRowOf(PipelineStage.CHUNK.name(), target.getChunkStrategy());
             if (NullUtil.isNull(strategyRow)) {
                 log.warn("===> IndexSetServiceImpl 补齐中止：目标切片策略不存在, strategy={}", target.getChunkStrategy());
                 return;
@@ -402,7 +402,7 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /** 策略 name-version → 策略版本行（无 → null） */
-    private KbPipelineStrategyVersion strategyRowOf(String type, String nameVersion) {
+    private WbPipelineStrategyVersion strategyRowOf(String type, String nameVersion) {
         if (StrUtil.isBlank(nameVersion)) {
             return null;
         }
@@ -414,7 +414,7 @@ public class IndexSetServiceImpl implements IndexSetService {
 
     /** 匹配目标预处理策略的预处理产物 ID（capabilitySnapshot 解析比对；无 → null） */
     private Long preprocessProductIdOf(Long fileResultId, String targetPreprocess) {
-        for (KbPipelineProduct product : productDbService.listByFileResultId(fileResultId)) {
+        for (WbPipelineProduct product : productDbService.listByFileResultId(fileResultId)) {
             if (!PipelineStage.PREPROCESS.name().equals(product.getStage())) {
                 continue;
             }
@@ -452,7 +452,7 @@ public class IndexSetServiceImpl implements IndexSetService {
             ThrowUtil.throwIf(NullUtil.isNull(fileIds) || fileIds.isEmpty(),
                     ErrorCode.PARAM_INVALID, "指定文件构建（LIST）需提供文件列表");
             Set<Long> kbFileIds = fileResultDbService.listByKb(kbId).stream()
-                    .map(KbFileResult::getId).collect(Collectors.toSet());
+                    .map(WbFileResult::getId).collect(Collectors.toSet());
             List<Long> foreign = fileIds.stream().filter(id -> !kbFileIds.contains(id)).toList();
             ThrowUtil.throwIf(!foreign.isEmpty(), ErrorCode.PARAM_INVALID, "文件列表包含非本知识库文件: " + foreign);
         } else {
@@ -481,10 +481,10 @@ public class IndexSetServiceImpl implements IndexSetService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publish(Long versionId) {
-        KbIndexVersion version = requireVersion(versionId);
+        WbIndexVersion version = requireVersion(versionId);
         ComboSnapshot versionCombo = requireVersionCombo(version);
         ThrowUtil.throwIf(versionCombo.isListScope(), ErrorCode.INDEX_FROZEN_SCOPE_PUBLISH_FORBIDDEN);
-        KbIndexSet set = requireSetOf(version);
+        WbIndexSet set = requireSetOf(version);
         Long currentId = set.getCurrentPublishedVersionId();
         if (Objects.equals(currentId, versionId)) {
             log.info("===> IndexSetServiceImpl 版本已在线，发布幂等跳过, versionId={}", versionId);
@@ -494,14 +494,14 @@ public class IndexSetServiceImpl implements IndexSetService {
                 ErrorCode.INDEX_BUILDING_CONFLICT, "仅就绪版本可发布");
 
         LocalDateTime now = LocalDateTime.now();
-        KbIndexVersion old = retireVersion(currentId, now);
+        WbIndexVersion old = retireVersion(currentId, now);
         indexSetDbService.updatePublishedVersion(set.getId(), versionId);
         version.setStatus(IndexVersionStatus.ONLINE.name());
         version.setPublishedAt(now);
         // publishedBy 占位 null（TODO 接认证后取登录用户）
         indexVersionDbService.updateById(version);
 
-        KnowledgeBase kb = knowledgeBaseDbService.getById(set.getKnowledgeBaseId());
+        WbKnowledgeBase kb = knowledgeBaseDbService.getById(set.getKnowledgeBaseId());
         if (NullUtil.isNotNull(kb) && NullUtil.isNull(kb.getPublishedIndexSetId())) {
             kb.setPublishedIndexSetId(set.getId());
             knowledgeBaseDbService.updateById(kb);
@@ -517,9 +517,9 @@ public class IndexSetServiceImpl implements IndexSetService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rollback(Long versionId) {
-        KbIndexVersion target = indexVersionDbService.getById(versionId);
+        WbIndexVersion target = indexVersionDbService.getById(versionId);
         ThrowUtil.throwIf(NullUtil.isNull(target), ErrorCode.INDEX_VERSION_NOT_FOUND);
-        KbIndexSet set = indexSetDbService.getById(target.getIndexSetId());
+        WbIndexSet set = indexSetDbService.getById(target.getIndexSetId());
         ThrowUtil.throwIf(NullUtil.isNull(set), ErrorCode.INDEX_VERSION_NOT_FOUND);
         ComboSnapshot targetCombo = requireVersionCombo(target);
         ThrowUtil.throwIf(targetCombo.isListScope(), ErrorCode.INDEX_FROZEN_SCOPE_PUBLISH_FORBIDDEN);
@@ -530,7 +530,7 @@ public class IndexSetServiceImpl implements IndexSetService {
                 ErrorCode.INDEX_BUILDING_CONFLICT, "目标版本构建中，无法回退");
 
         LocalDateTime now = LocalDateTime.now();
-        KbIndexVersion current = retireVersion(currentId, now);
+        WbIndexVersion current = retireVersion(currentId, now);
         indexSetDbService.updatePublishedVersion(set.getId(), versionId);
         // 目标复活：清退役留痕 + 重记发布时间
         target.setStatus(IndexVersionStatus.ONLINE.name());
@@ -548,8 +548,8 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /** 当前发布版本（versionNo → 集合名 kb_{kbId}_{versionNo} 直连检索）；无 → null */
-    public KbIndexVersion currentPublished(Long knowledgeBaseId) {
-        KbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
+    public WbIndexVersion currentPublished(Long knowledgeBaseId) {
+        WbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
         if (NullUtil.isNull(set) || NullUtil.isNull(set.getCurrentPublishedVersionId())) {
             return null;
         }
@@ -559,8 +559,8 @@ public class IndexSetServiceImpl implements IndexSetService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void recycle(Long versionId) {
-        KbIndexVersion version = requireVersion(versionId);
-        KbIndexSet set = requireSetOf(version);
+        WbIndexVersion version = requireVersion(versionId);
+        WbIndexSet set = requireSetOf(version);
         ThrowUtil.throwIf(Objects.equals(versionId, set.getCurrentPublishedVersionId()),
                 ErrorCode.INDEX_ONLINE_DELETE_FORBIDDEN);
         ThrowUtil.throwIf(IndexVersionStatus.BUILDING.name().equals(version.getStatus()),
@@ -579,7 +579,7 @@ public class IndexSetServiceImpl implements IndexSetService {
 
     @Override
     public List<IndexVersionVO> listVersions(Long knowledgeBaseId) {
-        KbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
+        WbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
         if (NullUtil.isNull(set)) {
             return List.of();
         }
@@ -590,9 +590,9 @@ public class IndexSetServiceImpl implements IndexSetService {
 
     @Override
     public IndexVersionVO versionDetail(Long knowledgeBaseId, Long versionId) {
-        KbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
+        WbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
         ThrowUtil.throwIf(NullUtil.isNull(set), ErrorCode.INDEX_VERSION_NOT_FOUND);
-        KbIndexVersion version = indexVersionDbService.getById(versionId);
+        WbIndexVersion version = indexVersionDbService.getById(versionId);
         ThrowUtil.throwIf(NullUtil.isNull(version) || !Objects.equals(set.getId(), version.getIndexSetId()),
                 ErrorCode.INDEX_VERSION_NOT_FOUND);
         return toVersionVO(version, Objects.equals(versionId, set.getCurrentPublishedVersionId()));
@@ -605,7 +605,7 @@ public class IndexSetServiceImpl implements IndexSetService {
         // 注意：与生产路径 enumerateCombos 的"全库交集"口径不同（本方法按成员子集返回，交集口径不动）。
         boolean scoped = NullUtil.isNotNull(fileResultIds) && !fileResultIds.isEmpty();
         List<Long> fileIds = scoped ? new ArrayList<>(fileResultIds)
-                : fileResultDbService.listByKb(knowledgeBaseId).stream().map(KbFileResult::getId).toList();
+                : fileResultDbService.listByKb(knowledgeBaseId).stream().map(WbFileResult::getId).toList();
         if (fileIds.isEmpty()) {
             return List.of();
         }
@@ -653,8 +653,8 @@ public class IndexSetServiceImpl implements IndexSetService {
 
     @Override
     public IndexValidateVO validate(Long versionId) {
-        KbIndexVersion version = requireVersion(versionId);
-        KbIndexSet set = requireSetOf(version);
+        WbIndexVersion version = requireVersion(versionId);
+        WbIndexSet set = requireSetOf(version);
         ThrowUtil.throwIf(!IndexVersionStatus.READY.name().equals(version.getStatus())
                         && !IndexVersionStatus.ONLINE.name().equals(version.getStatus())
                         && !IndexVersionStatus.RETIRED.name().equals(version.getStatus()),
@@ -705,7 +705,7 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /** 版本行 → VO（组合快照结构化展开；无快照字段留空） */
-    private IndexVersionVO toVersionVO(KbIndexVersion version, boolean online) {
+    private IndexVersionVO toVersionVO(WbIndexVersion version, boolean online) {
         IndexVersionVO vo = new IndexVersionVO();
         vo.setId(version.getId());
         vo.setVersionNo(version.getVersionNo());
@@ -737,20 +737,20 @@ public class IndexSetServiceImpl implements IndexSetService {
 
     /** 知识库策略绑定开关：关闭（0）→ true；开启/null 视为开启 → false */
     private boolean bindingDisabled(Long kbId) {
-        KnowledgeBase kb = knowledgeBaseDbService.getById(kbId);
+        WbKnowledgeBase kb = knowledgeBaseDbService.getById(kbId);
         return NullUtil.isNotNull(kb) && StrategyBindingSwitch.isOff(kb.getStrategyBindingEnabled());
     }
 
     /** 版本行失败回写（buildError 截断 1024） */
-    private void markFailed(KbIndexVersion version, String buildError) {
+    private void markFailed(WbIndexVersion version, String buildError) {
         version.setStatus(IndexVersionStatus.FAILED.name());
         version.setBuildError(StrUtil.maxLength(buildError, 1024));
         indexVersionDbService.updateById(version);
     }
 
     /** 退役在线版本（已退役跳过）；返回该版本行（无 → null；retiredBy 占位 null） */
-    private KbIndexVersion retireVersion(Long versionId, LocalDateTime now) {
-        KbIndexVersion version = NullUtil.isNull(versionId) ? null : indexVersionDbService.getById(versionId);
+    private WbIndexVersion retireVersion(Long versionId, LocalDateTime now) {
+        WbIndexVersion version = NullUtil.isNull(versionId) ? null : indexVersionDbService.getById(versionId);
         if (NullUtil.isNotNull(version) && !IndexVersionStatus.RETIRED.name().equals(version.getStatus())) {
             version.setStatus(IndexVersionStatus.RETIRED.name());
             version.setRetiredAt(now);
@@ -766,9 +766,9 @@ public class IndexSetServiceImpl implements IndexSetService {
      * NEW（绑定关候选）=同组合 CREATED/BUILDING/READY 均跳过（避免候选刷屏）。
      */
     private IndexBuildTriggerVO tryBuild(Long kbId, ComboSnapshot combo, String trigger, boolean explicit) {
-        KbIndexSet set = indexSetDbService.getOrCreateByKb(kbId);
+        WbIndexSet set = indexSetDbService.getOrCreateByKb(kbId);
         String comboJson = JsonUtil.toJsonStr(combo);
-        KbIndexVersion active = findActiveVersion(set.getId(), comboJson);
+        WbIndexVersion active = findActiveVersion(set.getId(), comboJson);
         if (NullUtil.isNotNull(active)) {
             boolean buildingLike = IndexVersionStatus.CREATED.name().equals(active.getStatus())
                     || IndexVersionStatus.BUILDING.name().equals(active.getStatus());
@@ -790,7 +790,7 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /** 同组合且未终结（CREATED/BUILDING/READY）的版本行（无 → null） */
-    private KbIndexVersion findActiveVersion(Long indexSetId, String comboJson) {
+    private WbIndexVersion findActiveVersion(Long indexSetId, String comboJson) {
         return indexVersionDbService.listByIndexSetId(indexSetId).stream()
                 .filter(v -> comboJson.equals(v.getComboSnapshot()))
                 .filter(v -> Set.of(IndexVersionStatus.CREATED.name(),
@@ -803,9 +803,9 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     private IndexBuildTriggerVO createVersionAndTask(Long kbId, ComboSnapshot combo, String trigger) {
-        KbIndexSet set = indexSetDbService.getOrCreateByKb(kbId);
+        WbIndexSet set = indexSetDbService.getOrCreateByKb(kbId);
         String versionNo = indexVersionDbService.nextVersionNo(set.getId());
-        KbIndexVersion version = new KbIndexVersion();
+        WbIndexVersion version = new WbIndexVersion();
         version.setIndexSetId(set.getId());
         version.setVersionNo(versionNo);
         version.setComboSnapshot(JsonUtil.toJsonStr(combo));
@@ -822,7 +822,7 @@ public class IndexSetServiceImpl implements IndexSetService {
         order.setKnowledgeBaseId(kbId);
         order.setComboSnapshot(combo);
         order.setTrigger(trigger);
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setStage(PipelineStage.BUILD_INDEX.name());
         task.setStatus(PipelineTaskStatus.QUEUED.name());
         task.setStrategySnapshot(JsonUtil.toJsonStr(order));
@@ -842,12 +842,12 @@ public class IndexSetServiceImpl implements IndexSetService {
      * （EMBED 仍手动逐环节，完成后 onFileProductsReady 自动构建+自动发布闭环）；
      * 无差异文件 → 直接投递 COMPENSATE 构建（自动发布）。
      */
-    private void compensate(KbIndexSet set, KbIndexVersion target) {
+    private void compensate(WbIndexSet set, WbIndexVersion target) {
         Long kbId = set.getKnowledgeBaseId();
         ComboSnapshot combo = requireVersionCombo(target);
         List<Long> scope = scopeFileIds(kbId, combo);
-        List<KbChunkSet> chunkSets = chunkSetDbService.listByFileResultIds(scope);
-        List<KbEmbeddingSet> embedSets = embeddingSetDbService.listByFileResultIds(scope);
+        List<WbChunkSet> chunkSets = chunkSetDbService.listByFileResultIds(scope);
+        List<WbEmbeddingSet> embedSets = embeddingSetDbService.listByFileResultIds(scope);
         Map<String, Long> latestEmbed = latestEmbedIdMap(embedSets);
 
         // 差异文件 = 缺目标组合产物（血缘感知：切片策略匹配且上游预处理血缘匹配才算齐）+ 缺向量产物
@@ -877,13 +877,13 @@ public class IndexSetServiceImpl implements IndexSetService {
         if ("LIST".equals(combo.getFileScopeMode()) && NullUtil.isNotNull(combo.getFileResultIds())) {
             return combo.getFileResultIds();
         }
-        return fileResultDbService.listByKb(kbId).stream().map(KbFileResult::getId).toList();
+        return fileResultDbService.listByKb(kbId).stream().map(WbFileResult::getId).toList();
     }
 
     /** 文件级「同策略最新成功」向量：append-only 表取 id 最大（与 IndexComboServiceImpl 同口径） */
-    private Map<String, Long> latestEmbedIdMap(List<KbEmbeddingSet> embedSets) {
+    private Map<String, Long> latestEmbedIdMap(List<WbEmbeddingSet> embedSets) {
         Map<String, Long> latest = new LinkedHashMap<>();
-        for (KbEmbeddingSet set : embedSets) {
+        for (WbEmbeddingSet set : embedSets) {
             String key = set.getFileResultId() + "#" + set.getStrategyVersion();
             latest.merge(key, set.getId(), Math::max);
         }

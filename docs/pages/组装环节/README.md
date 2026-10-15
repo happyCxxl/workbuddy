@@ -4,7 +4,7 @@
 
 | 项           | 值                                                                                                                                                                                                            |
 |--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 路由         | `/knowledge/:id/stages`（与其余环节共用同一路由，按执行链节点区分）                                                                                                                                      |
+| 路由         | `/knowledge/:id/stages`（与其余环节共用同一路由，按执行链节点区分）                                                                                                                                           |
 | 入口         | 知识库列表 → 某库的「切片阶段（执行链）」→ 组装环节卡片                                                                                                                                                       |
 | 前端视图     | `../../../web/src/views/knowledge-base/PipelineStageView.vue`（页面）                                                                                                                                         |
 | 前端组件     | `../../../web/src/components/pipeline/ChainNode.vue`（卡片）、`../../../web/src/components/pipeline/StageDetailDrawer.vue`（抽屉，各环节共用）、`../../../web/src/components/pipeline/ChainGraph.vue`（画布） |
@@ -35,7 +35,7 @@
 - **疑似续表按疑似计数展示**：卡片与体检清单的"疑似"值取 `suspectedContinuationCount`（关系 `detail` 标「疑似」的放宽规则命中数），说明里给全部 `continuationCount`；结论文案的"疑似续表 N 处"同源。
 - **预留字段的启用时机未定**：`assets`（二进制资源引用）、`orderCuts`（顺序切分数）、`candidateOrder`（候选顺序）、`headerRepeated`（页眉重复标记）、`rotation`（页面旋转）、`bboxes`（跨页分段框）都已在契约注释里标注为预留未实现或无消费方，启用时机随对应能力接入。
 - **组装报告不外发**：`AssembleReport` 只服务管线内判定与日志（不落产物、不落子步骤记录），详情页统计由产物现算；是否把关键计数并入产物质量区尚未决定。
-- **产物行的能力快照列语义**：组装环节没有独立能力快照，`kb_pipeline_product.capability_snapshot` 只承载产物 schemaVersion；是否统一为"阶段策略快照"语义尚未决定。
+- **产物行的能力快照列语义**：组装环节没有独立能力快照，`wb_knowledge_pipeline_product.capability_snapshot` 只承载产物 schemaVersion；是否统一为"阶段策略快照"语义尚未决定。
 - **标记分布未验**：`marks`（`REPEATED_SEGMENT` / `REPEATED_PAGE` / `NOISE_PAGE`）在代表性 PDF 样本上的分布尚未核对；跨页续表关系的 `#p页码` 后缀已改为合并前取号，不再出现空值页号。
 - **Excel 区域高亮粒度**：解析预览与组装文档里的表格都按单元格渲染，是否要按合并跨度画整块 / 整表框尚未决定。
 - **合并单元格的渲染**：产物单元格只有 `row` / `col` / `text` / `isHeader`，没有合并跨度，组装文档里的合并单元格按单格铺开；是否补跨度字段（属产物契约改动）尚未决定。

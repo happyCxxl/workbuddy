@@ -1,6 +1,6 @@
 package com.workbuddy.auth.config;
 
-import com.workbuddy.auth.db.UserDbService;
+import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.util.JwtUtil;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
@@ -38,7 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
-    private final UserDbService userDbService;
+    private final WbUserDbService userDbService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,

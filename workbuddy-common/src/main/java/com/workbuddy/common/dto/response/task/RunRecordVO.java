@@ -30,7 +30,7 @@ public class RunRecordVO {
     /** 生效策略版本（PREPROCESS/CHUNK，从任务策略快照推导；解析/组装为空） */
     private String strategyVersion;
 
-    /** 该次运行产出的产物 ID（kb_pipeline_product.id；历史任务为空，前端"以此产物触发下游"数据源） */
+    /** 该次运行产出的产物 ID（wb_knowledge_pipeline_product.id；历史任务为空，前端"以此产物触发下游"数据源） */
     private Long productId;
 
     /** 开始时间 */

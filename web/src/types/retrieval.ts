@@ -20,7 +20,7 @@ export interface SearchRequest {
   owner?: string;
   /** 按片类型过滤 */
   contentType?: string;
-  /** 检索规则行 ID（kb_pipeline_strategy_version，type=RETRIEVAL） */
+  /** 检索规则行 ID（wb_knowledge_pipeline_strategy_version，type=RETRIEVAL） */
   ruleId?: string;
   /** 索引版本行 ID */
   versionId?: string;

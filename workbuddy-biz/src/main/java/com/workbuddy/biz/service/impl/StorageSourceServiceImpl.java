@@ -1,12 +1,12 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.StorageSourceService;
-import com.workbuddy.biz.service.db.KbAuditLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbStorageSourceDbService;
+import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbStorageSourceDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbStorageSource;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbStorageSource;
 import com.workbuddy.common.dto.response.setting.StorageSourceVO;
 import com.workbuddy.common.dto.response.setting.StorageSwitchPreviewVO;
 import com.workbuddy.common.dto.response.setting.StorageSwitchResultVO;
@@ -61,9 +61,9 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     private static final List<PipelineTaskStatus> IMPACT_STATUSES =
             List.of(PipelineTaskStatus.QUEUED, PipelineTaskStatus.RUNNING);
 
-    private final KbStorageSourceDbService storageSourceDbService;
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbAuditLogDbService kbAuditLogDbService;
+    private final WbStorageSourceDbService storageSourceDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbAuditLogDbService kbAuditLogDbService;
     private final StorageRouter storageRouter;
     private final ChainStorageSupport chainStorageSupport;
     private final FileCenterConfig fileCenterConfig;
@@ -71,13 +71,13 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     /** 启动初始化：表为空按配置 seed 两行，注册未停用的行，标记当前启用的那一行 */
     @PostConstruct
     public void initialize() {
-        List<KbStorageSource> rows = storageSourceDbService.listAll();
+        List<WbStorageSource> rows = storageSourceDbService.listAll();
         if (rows.isEmpty()) {
             rows = seedRows();
         }
-        List<KbStorageSource> enabled = rows.stream().filter(this::isEnabled).toList();
+        List<WbStorageSource> enabled = rows.stream().filter(this::isEnabled).toList();
         enabled.forEach(this::registerRow);
-        KbStorageSource current = enabled.stream()
+        WbStorageSource current = enabled.stream()
                 .filter(this::isCurrent)
                 .filter(row -> NullUtil.isNotNull(StorageType.of(row.getStorageType())))
                 .findFirst()
@@ -115,14 +115,14 @@ public class StorageSourceServiceImpl implements StorageSourceService {
 
     @Override
     public StorageSwitchPreviewVO previewCurrent(Long id) {
-        KbStorageSource target = requireSwitchable(id);
+        WbStorageSource target = requireSwitchable(id);
         return toPreview(target, countImpact(id));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StorageSwitchResultVO switchCurrent(Long id, String operator) {
-        KbStorageSource target = requireSwitchable(id);
+        WbStorageSource target = requireSwitchable(id);
         Long beforeId = storageRouter.currentSourceId();
         if (id.equals(beforeId)) {
             return toResult(target, beforeId, new long[] {0, 0});
@@ -157,15 +157,15 @@ public class StorageSourceServiceImpl implements StorageSourceService {
      * @return 长度为 2 的计数数组：0 为排队中，1 为执行中
      */
     private long[] countImpact(Long targetSourceId) {
-        List<KbPipelineTask> tasks = pipelineTaskDbService.listByStatuses(IMPACT_STATUSES);
+        List<WbPipelineTask> tasks = pipelineTaskDbService.listByStatuses(IMPACT_STATUSES);
         Map<Long, Long> chainSourceIds = chainStorageSupport.chainSourceIdsOf(tasks.stream()
-                .map(KbPipelineTask::getFileResultId)
+                .map(WbPipelineTask::getFileResultId)
                 .filter(NullUtil::isNotNull)
                 .distinct()
                 .toList());
         long queued = 0;
         long running = 0;
-        for (KbPipelineTask task : tasks) {
+        for (WbPipelineTask task : tasks) {
             Long chainSourceId = chainSourceIds.get(task.getFileResultId());
             if (NullUtil.isNull(chainSourceId) || chainSourceId.equals(targetSourceId)) {
                 continue;
@@ -179,7 +179,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
         return new long[] {queued, running};
     }
 
-    private StorageSwitchPreviewVO toPreview(KbStorageSource target, long[] impact) {
+    private StorageSwitchPreviewVO toPreview(WbStorageSource target, long[] impact) {
         StorageSwitchPreviewVO vo = new StorageSwitchPreviewVO();
         fillTarget(vo, target);
         fillImpact(vo, impact);
@@ -188,7 +188,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
         return vo;
     }
 
-    private StorageSwitchResultVO toResult(KbStorageSource target, Long beforeId, long[] impact) {
+    private StorageSwitchResultVO toResult(WbStorageSource target, Long beforeId, long[] impact) {
         StorageSwitchResultVO vo = new StorageSwitchResultVO();
         fillTarget(vo, target);
         fillImpact(vo, impact);
@@ -205,7 +205,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     }
 
     /** 目标数据源与切换前的当前数据源 */
-    private void fillTarget(StorageSwitchPreviewVO vo, KbStorageSource target) {
+    private void fillTarget(StorageSwitchPreviewVO vo, WbStorageSource target) {
         Long currentId = storageRouter.currentSourceId();
         vo.setTargetSourceId(target.getId());
         vo.setTargetName(target.getName());
@@ -223,7 +223,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
 
     // ---------------- 视图组装 ----------------
 
-    private StorageSourceVO toVO(KbStorageSource row) {
+    private StorageSourceVO toVO(WbStorageSource row) {
         StorageType type = StorageType.of(row.getStorageType());
         Map<String, String> params = paramsOf(row);
         StorageSourceVO vo = new StorageSourceVO();
@@ -249,7 +249,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     // ---------------- 数据源定义与行 ----------------
 
     /** 行 → 运行时定义（主键与名称都取自库里那一行） */
-    private StorageSourceDef defOf(KbStorageSource row) {
+    private StorageSourceDef defOf(WbStorageSource row) {
         StorageType type = StorageType.of(row.getStorageType());
         ThrowUtil.throwIf(NullUtil.isNull(type), ErrorCode.STORAGE_BACKEND_UNCONFIGURED,
                 "存储数据源类型无法识别: " + row.getStorageType());
@@ -257,7 +257,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     }
 
     /** 行里的连接参数：config_json 解析后只留字符串值 */
-    private Map<String, String> paramsOf(KbStorageSource row) {
+    private Map<String, String> paramsOf(WbStorageSource row) {
         Map<String, String> params = new LinkedHashMap<>();
         JsonUtil.toMap(row.getConfigJson()).forEach((key, value) ->
                 params.put(key, NullUtil.isNull(value) ? null : String.valueOf(value)));
@@ -265,7 +265,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     }
 
     /** 注册一条数据源行：类型码值无法识别时告警跳过，不拦住启动 */
-    private void registerRow(KbStorageSource row) {
+    private void registerRow(WbStorageSource row) {
         StorageType type = StorageType.of(row.getStorageType());
         if (NullUtil.isNull(type)) {
             log.warn("===> StorageSourceServiceImpl registerRow 存储类型码值无法识别，跳过注册, id={}, storageType={}",
@@ -276,18 +276,18 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     }
 
     /** 表为空时的首次初始化：按 config/workbuddy-file.yml 的 file-center 段落两行，配置指明的类型置为当前启用 */
-    private List<KbStorageSource> seedRows() {
+    private List<WbStorageSource> seedRows() {
         StorageType seedType = fileCenterConfig.defaultType();
         List<StorageSourceDef> defs = FileCenterDefaults.seedDefs(fileCenterConfig);
-        List<KbStorageSource> rows = new ArrayList<>(defs.size());
+        List<WbStorageSource> rows = new ArrayList<>(defs.size());
         for (StorageSourceDef def : defs) {
-            KbStorageSource row = new KbStorageSource();
+            WbStorageSource row = new WbStorageSource();
             row.setId(def.id());
             row.setName(def.name());
             row.setStorageType(def.type().getCode());
             row.setConfigJson(JsonUtil.toJsonStr(def.params()));
             row.setIsCurrent(def.type() == seedType
-                    ? KbStorageSourceDbService.CURRENT_YES : KbStorageSourceDbService.CURRENT_NO);
+                    ? WbStorageSourceDbService.CURRENT_YES : WbStorageSourceDbService.CURRENT_NO);
             row.setStatus(StorageSourceStatus.ENABLED.getCode());
             storageSourceDbService.save(row);
             rows.add(row);
@@ -342,8 +342,8 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     }
 
     /** 可切换的目标：行存在、已启用、类型与参数可用 */
-    private KbStorageSource requireSwitchable(Long id) {
-        KbStorageSource row = requireRow(id);
+    private WbStorageSource requireSwitchable(Long id) {
+        WbStorageSource row = requireRow(id);
         ThrowUtil.throwIf(!isEnabled(row), ErrorCode.STORAGE_SOURCE_ILLEGAL,
                 "「" + row.getName() + "」已停用，请先启用再切换");
         requireParamsComplete(defOf(row));
@@ -351,8 +351,8 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     }
 
     /** 取数据源行，不存在按 40457 抛出 */
-    private KbStorageSource requireRow(Long id) {
-        KbStorageSource row = NullUtil.isNull(id) ? null : storageSourceDbService.getById(id);
+    private WbStorageSource requireRow(Long id) {
+        WbStorageSource row = NullUtil.isNull(id) ? null : storageSourceDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(row), ErrorCode.STORAGE_SOURCE_NOT_FOUND,
                 "存储数据源不存在: id=" + id);
         return row;
@@ -373,12 +373,12 @@ public class StorageSourceServiceImpl implements StorageSourceService {
         kbAuditLogDbService.saveAudit(AuditActionType.STORAGE_SWITCH, AUDIT_OBJECT_TYPE, sourceId, before, after);
     }
 
-    private boolean isEnabled(KbStorageSource row) {
+    private boolean isEnabled(WbStorageSource row) {
         return StorageSourceStatus.ENABLED == StorageSourceStatus.of(row.getStatus());
     }
 
-    private boolean isCurrent(KbStorageSource row) {
+    private boolean isCurrent(WbStorageSource row) {
         return NullUtil.isNotNull(row.getIsCurrent())
-                && row.getIsCurrent() == KbStorageSourceDbService.CURRENT_YES;
+                && row.getIsCurrent() == WbStorageSourceDbService.CURRENT_YES;
     }
 }

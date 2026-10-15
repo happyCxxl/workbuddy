@@ -43,7 +43,7 @@
 ## 交付自查清单（机器覆盖不到的条款）
 
 - [ ] 新增分支条件无"恒真/恒假"冗余判断（IDEA 数据流级，交付前人工核对）
-- [ ] 新增 Serializable 实体带 serialVersionUID 并标注 @Serial（对齐 KbStrategyBinding 先例）
+- [ ] 新增 Serializable 实体带 serialVersionUID 并标注 @Serial（对齐 WbStrategyBinding 先例）
 - [ ] 判空统一用 Hutool ObjectUtil（SpotBugs 误报走本文件排除清单，不改代码风格）
 - [ ] 布尔方法命名与调用方向一致（无"恒取反"调用；IDEA 该建议无 Maven 等价规则）
 - [ ] 新增子步骤/组装逻辑先查公共助手（StepLogHelper 等）再自行构造，避免低 token 重复片段

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>{@link #storageType} 指明的类型在数据源表为空时决定哪一行置为当前启用，表里没有可用行时
  * 按它回落注册一条内置定义。{@link #minio} 与 {@link #local} 是两类数据源的缺省连接参数，
- * 只在 seed 与回落时读取；连接参数的实际来源是 kb_storage_source.config_json。
+ * 只在 seed 与回落时读取；连接参数的实际来源是 wb_storage_source.config_json。
  *
  * @author cxxl
  */

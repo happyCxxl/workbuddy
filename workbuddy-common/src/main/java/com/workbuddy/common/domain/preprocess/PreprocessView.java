@@ -22,7 +22,7 @@ public class PreprocessView {
     /** 统一文档 ID（UnifiedDocument.documentInfo.documentId） */
     private String documentId;
 
-    /** 文件结果 ID（kb_file_result.id） */
+    /** 文件结果 ID（wb_file_result.id） */
     private Long fileResultId;
 
     /** 来源文件引用（file-manager 文件 ID） */

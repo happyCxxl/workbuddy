@@ -2,14 +2,14 @@ package com.workbuddy.biz.task;
 
 import cn.hutool.core.thread.ThreadFactoryBuilder;
 import com.workbuddy.biz.config.TaskQueueProperties;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.runner.ChunkTaskRunner;
 import com.workbuddy.biz.task.runner.EmbedTaskRunner;
 import com.workbuddy.biz.task.runner.ParseTaskRunner;
 import com.workbuddy.biz.task.runner.PreprocessTaskRunner;
 import com.workbuddy.biz.task.runner.StructureTaskRunner;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
@@ -45,7 +45,7 @@ import java.time.Duration;
 public class PipelineTaskConsumer {
 
     private final TaskQueueSupport taskQueue;
-    private final KbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
     private final TaskQueueProperties properties;
     private final ParseTaskRunner runner;
     private final StructureTaskRunner structureRunner;
@@ -61,7 +61,7 @@ public class PipelineTaskConsumer {
     private final Set<Long> inFlight = ConcurrentHashMap.newKeySet();
 
     /** 两个执行器 bean 同类型，构造参数按 bean 名限定（不用 Lombok 生成构造器，它不带走 @Qualifier） */
-    public PipelineTaskConsumer(TaskQueueSupport taskQueue, KbPipelineTaskDbService pipelineTaskDbService,
+    public PipelineTaskConsumer(TaskQueueSupport taskQueue, WbPipelineTaskDbService pipelineTaskDbService,
                              TaskQueueProperties properties, ParseTaskRunner runner,
                              StructureTaskRunner structureRunner, PreprocessTaskRunner preprocessRunner,
                              ChunkTaskRunner chunkRunner, EmbedTaskRunner embedRunner,
@@ -103,12 +103,12 @@ public class PipelineTaskConsumer {
                     continue;
                 }
                 // 消息内容仅参考（DB 是唯一账本）：被叫醒才扫库领批
-                List<KbPipelineTask> batch = pipelineTaskDbService.listQueuedByStages(
+                List<WbPipelineTask> batch = pipelineTaskDbService.listQueuedByStages(
                         List.of(PipelineStage.PARSE, PipelineStage.STRUCTURE,
                                 PipelineStage.PREPROCESS, PipelineStage.CHUNK,
                                 PipelineStage.EMBED),
                         properties.getClaimBatchSize());
-                for (KbPipelineTask task : batch) {
+                for (WbPipelineTask task : batch) {
                     if (!running) {
                         break;
                     }
@@ -122,7 +122,7 @@ public class PipelineTaskConsumer {
     }
 
     /** 按 stage 选 Runner 动作，提交看门狗池；未知环节跳过并告警 */
-    private void dispatch(KbPipelineTask task) {
+    private void dispatch(WbPipelineTask task) {
         Runnable action;
         if (PipelineStage.PARSE.name().equals(task.getStage())) {
             action = () -> runner.run(task.getId());

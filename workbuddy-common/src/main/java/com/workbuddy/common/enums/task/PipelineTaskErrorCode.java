@@ -1,7 +1,7 @@
 package com.workbuddy.common.enums.task;
 
 /**
- * 任务错误码：落 kb_pipeline_task.error_code，与 API 错误码（ErrorCode 40xxx）分层。
+ * 任务错误码：落 wb_knowledge_pipeline_task.error_code，与 API 错误码（ErrorCode 40xxx）分层。
  *
  * @author cxxl
  */
@@ -67,7 +67,7 @@ public enum PipelineTaskErrorCode {
     /** 向量化执行异常兜底 */
     EMBED_FAILED,
 
-    /** 索引构建：组合产物不完整（缺口明细见 kb_index_version.build_error） */
+    /** 索引构建：组合产物不完整（缺口明细见 wb_knowledge_index_version.build_error） */
     INDEX_INCOMPLETE,
 
     /** 索引构建：向量维度不一致（跨产物/与 collection 维度冲突） */

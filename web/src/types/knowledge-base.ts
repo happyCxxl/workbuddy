@@ -34,7 +34,7 @@ export interface KnowledgeBase {
   /** 状态码值：1 启用 / 0 停用 */
   status: number;
   /**
-   * 文档总数：kb_file_result 记录数。
+   * 文档总数：wb_file_result 记录数。
    * 一次提交 = 一个任务 = 一行，同一文件重复提交会各占一行，故为提交次数而非去重文件数。
    */
   documentCount: number | null;

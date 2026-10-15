@@ -2,14 +2,14 @@ package com.workbuddy.biz.service.support;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
 import com.workbuddy.common.domain.embed.EmbeddingSet;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.indexing.ComboSnapshot;
@@ -39,9 +39,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class IndexComboReconciler {
 
-    private final KbFileResultDbService fileResultDbService;
-    private final KbChunkSetDbService chunkSetDbService;
-    private final KbEmbeddingSetDbService embeddingSetDbService;
+    private final WbFileResultDbService fileResultDbService;
+    private final WbChunkSetDbService chunkSetDbService;
+    private final WbEmbeddingSetDbService embeddingSetDbService;
     private final IndexLineageResolver lineageResolver;
     private final IndexRowAssembler indexRowAssembler;
 
@@ -60,7 +60,7 @@ public class IndexComboReconciler {
      * 单文件组合产物（单一取数口径）：该文件在组合下的最新成功切片/向量行；
      * 缺口时 gap 非空（chunkRow/embedRow 为 null）。
      */
-    public record ComboProducts(KbChunkSet chunkRow, KbEmbeddingSet embedRow, String gap) {
+    public record ComboProducts(WbChunkSet chunkRow, WbEmbeddingSet embedRow, String gap) {
 
         public boolean complete() {
             return NullUtil.isNull(gap);
@@ -71,7 +71,7 @@ public class IndexComboReconciler {
      * 组合枚举取数目录（枚举/列表弹窗共用批次口径）：文件级最新切片/向量行 +
      * 候选三元组（预处理策略 × 切片策略）对 + 向量策略集（血统缺失的切片策略不参与）。
      */
-    public record ComboCatalog(Map<String, KbChunkSet> latestChunk, Map<String, KbEmbeddingSet> latestEmbed,
+    public record ComboCatalog(Map<String, WbChunkSet> latestChunk, Map<String, WbEmbeddingSet> latestEmbed,
                                Map<String, Set<String>> preprocessByChunk, Set<String> embedStrategies) {
     }
 
@@ -80,10 +80,10 @@ public class IndexComboReconciler {
      * 预处理策略由切片行的上游产物血缘解析（血统缺失 → 该切片策略不进入候选）。
      */
     public ComboCatalog catalog(List<Long> fileResultIds) {
-        Map<String, KbChunkSet> latestChunk = latestChunkMap(fileResultIds);
-        Map<String, KbEmbeddingSet> latestEmbed = latestEmbedMap(fileResultIds);
+        Map<String, WbChunkSet> latestChunk = latestChunkMap(fileResultIds);
+        Map<String, WbEmbeddingSet> latestEmbed = latestEmbedMap(fileResultIds);
         Map<String, Set<String>> preprocessByChunk = new LinkedHashMap<>();
-        for (KbChunkSet row : latestChunk.values()) {
+        for (WbChunkSet row : latestChunk.values()) {
             String preprocess = lineageResolver.resolvePreprocessStrategy(row.getUpstreamProductId());
             if (StrUtil.isBlank(preprocess)) {
                 continue;
@@ -92,15 +92,15 @@ public class IndexComboReconciler {
                     .add(preprocess);
         }
         Set<String> embedStrategies = latestEmbed.values().stream()
-                .map(KbEmbeddingSet::getStrategyVersion)
+                .map(WbEmbeddingSet::getStrategyVersion)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         return new ComboCatalog(latestChunk, latestEmbed, preprocessByChunk, embedStrategies);
     }
 
     /** 文件级「同策略最新成功」切片行（追加表取 id 最大；对账/回填/枚举共用批次口径） */
-    public Map<String, KbChunkSet> latestChunkMap(List<Long> fileResultIds) {
-        Map<String, KbChunkSet> latest = new LinkedHashMap<>();
-        for (KbChunkSet set : chunkSetDbService.listByFileResultIds(fileResultIds)) {
+    public Map<String, WbChunkSet> latestChunkMap(List<Long> fileResultIds) {
+        Map<String, WbChunkSet> latest = new LinkedHashMap<>();
+        for (WbChunkSet set : chunkSetDbService.listByFileResultIds(fileResultIds)) {
             String key = set.getFileResultId() + "#" + set.getChunkStrategyVersion();
             latest.merge(key, set, (a, b) -> a.getId() >= b.getId() ? a : b);
         }
@@ -108,9 +108,9 @@ public class IndexComboReconciler {
     }
 
     /** 文件级「同策略最新成功」向量行（追加表取 id 最大；对账/回填/枚举共用批次口径） */
-    public Map<String, KbEmbeddingSet> latestEmbedMap(List<Long> fileResultIds) {
-        Map<String, KbEmbeddingSet> latest = new LinkedHashMap<>();
-        for (KbEmbeddingSet set : embeddingSetDbService.listByFileResultIds(fileResultIds)) {
+    public Map<String, WbEmbeddingSet> latestEmbedMap(List<Long> fileResultIds) {
+        Map<String, WbEmbeddingSet> latest = new LinkedHashMap<>();
+        for (WbEmbeddingSet set : embeddingSetDbService.listByFileResultIds(fileResultIds)) {
             String key = set.getFileResultId() + "#" + set.getStrategyVersion();
             latest.merge(key, set, (a, b) -> a.getId() >= b.getId() ? a : b);
         }
@@ -123,10 +123,10 @@ public class IndexComboReconciler {
      * 切片血缘（上游预处理策略）必须匹配组合预处理策略——不匹配/缺失 → gap（血统纯净，不拿异血统顶替）。
      */
     public ComboProducts selectComboProducts(ComboSnapshot combo, Long fileResultId,
-                                             Map<String, KbChunkSet> latestChunk,
-                                             Map<String, KbEmbeddingSet> latestEmbed) {
-        KbChunkSet chunkRow = latestChunk.get(fileResultId + "#" + combo.getChunkStrategy());
-        KbEmbeddingSet embedRow = latestEmbed.get(fileResultId + "#" + combo.getEmbedStrategy());
+                                             Map<String, WbChunkSet> latestChunk,
+                                             Map<String, WbEmbeddingSet> latestEmbed) {
+        WbChunkSet chunkRow = latestChunk.get(fileResultId + "#" + combo.getChunkStrategy());
+        WbEmbeddingSet embedRow = latestEmbed.get(fileResultId + "#" + combo.getEmbedStrategy());
         if (NullUtil.isNull(chunkRow) || NullUtil.isNull(embedRow)) {
             return new ComboProducts(null, null, "文件 " + fileResultId + " 缺少组合产物（切片策略 "
                     + combo.getChunkStrategy() + " / 向量策略 " + combo.getEmbedStrategy() + "）");
@@ -145,8 +145,8 @@ public class IndexComboReconciler {
             return new ComboExpectation(Set.of(), 0, 0, false,
                     "组合缺失环节策略维度（需废弃重灌）", true, null, null, null);
         }
-        Map<Long, KbFileResult> filesById = new LinkedHashMap<>();
-        for (KbFileResult file : fileResultDbService.listByKb(kbId)) {
+        Map<Long, WbFileResult> filesById = new LinkedHashMap<>();
+        for (WbFileResult file : fileResultDbService.listByKb(kbId)) {
             filesById.put(file.getId(), file);
         }
         List<Long> scope;
@@ -165,8 +165,8 @@ public class IndexComboReconciler {
             }
         }
 
-        Map<String, KbChunkSet> latestChunk = latestChunkMap(scope);
-        Map<String, KbEmbeddingSet> latestEmbed = latestEmbedMap(scope);
+        Map<String, WbChunkSet> latestChunk = latestChunkMap(scope);
+        Map<String, WbEmbeddingSet> latestEmbed = latestEmbedMap(scope);
 
         Set<Integer> dims = new HashSet<>();
         Set<String> chunkIds = new HashSet<>();

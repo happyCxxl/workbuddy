@@ -1,13 +1,13 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.PreprocessVoAssembler;
@@ -17,13 +17,13 @@ import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStepLog;
-import com.workbuddy.common.domain.entity.KbPipelineStrategyVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbStrategyBinding;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStepLog;
+import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbStrategyBinding;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.preprocess.PreprocessDetailVO;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -74,27 +74,27 @@ class PreprocessControlServiceImplTest {
     private static final Long UPSTREAM_TASK_ID = 40L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
     private TaskQueueSupport taskQueue;
     @Mock
     private FileStorage fileStorage;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private StorageRouter storageRouter;
     @Mock
-    private KbStrategyBindingDbService strategyBindingDbService;
+    private WbStrategyBindingDbService strategyBindingDbService;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
 
     private PreprocessControlServiceImpl service;
 
@@ -117,8 +117,8 @@ class PreprocessControlServiceImplTest {
     }
 
     /** 上游产物的产出任务（环节 STRUCTURE、归属文件结果 10） */
-    private KbPipelineTask upstreamTask(PipelineTaskStatus status) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask upstreamTask(PipelineTaskStatus status) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(UPSTREAM_TASK_ID);
         task.setFileResultId(10L);
         task.setStage(PipelineStage.STRUCTURE.name());
@@ -126,15 +126,15 @@ class PreprocessControlServiceImplTest {
         return task;
     }
 
-    private KbFileResult fileResult() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResult() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;
     }
 
-    private KbPipelineProduct structureProduct() {
-        KbPipelineProduct product = new KbPipelineProduct();
+    private WbPipelineProduct structureProduct() {
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setId(50L);
         product.setTaskId(UPSTREAM_TASK_ID);
         product.setFileResultId(10L);
@@ -155,14 +155,14 @@ class PreprocessControlServiceImplTest {
     }
 
     /** 预处理执行键检查：文件结果 10 + 上游组装产物 + 策略版本（0 表示该环节无策略） */
-    private void existingPreprocessTask(Long upstreamProductId, Long strategyVersionId, KbPipelineTask task) {
+    private void existingPreprocessTask(Long upstreamProductId, Long strategyVersionId, WbPipelineTask task) {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.PREPROCESS.name(), upstreamProductId,
                 strategyVersionId)).thenReturn(task);
     }
 
     /** 知识库夹具（绑定开关未显式关闭 → 视为开启） */
-    private KnowledgeBase knowledgeBase() {
-        KnowledgeBase kb = new KnowledgeBase();
+    private WbKnowledgeBase knowledgeBase() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(10L);
         kb.setStrategyBindingEnabled(1);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
@@ -170,8 +170,8 @@ class PreprocessControlServiceImplTest {
     }
 
     /** 绑定开关关闭的知识库 */
-    private KnowledgeBase bindingOffKnowledgeBase() {
-        KnowledgeBase kb = new KnowledgeBase();
+    private WbKnowledgeBase bindingOffKnowledgeBase() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(10L);
         kb.setStrategyBindingEnabled(0);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
@@ -179,8 +179,8 @@ class PreprocessControlServiceImplTest {
     }
 
     /** 有效绑定行：KB 10 绑定 PREPROCESS 策略版本 66 */
-    private KbStrategyBinding binding() {
-        KbStrategyBinding binding = new KbStrategyBinding();
+    private WbStrategyBinding binding() {
+        WbStrategyBinding binding = new WbStrategyBinding();
         binding.setId(1L);
         binding.setKnowledgeBaseId(10L);
         binding.setStrategyType(PreprocessStrategy.TYPE);
@@ -189,8 +189,8 @@ class PreprocessControlServiceImplTest {
     }
 
     /** 绑定行指向的策略版本行（启用中） */
-    private KbPipelineStrategyVersion boundVersion() {
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+    private WbPipelineStrategyVersion boundVersion() {
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(66L);
         row.setType(PreprocessStrategy.TYPE);
         row.setName("preproc-bound");
@@ -204,8 +204,8 @@ class PreprocessControlServiceImplTest {
     void boundStrategyShouldDriveTaskSnapshotAndEnqueue() {
         stubCommon();
         existingPreprocessTask(50L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(31L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(31L);
             return true;
         });
 
@@ -214,9 +214,9 @@ class PreprocessControlServiceImplTest {
         assertEquals(10L, response.getFileResultId());
         assertEquals(31L, response.getPipelineTaskId());
         assertEquals("preproc-bound-v3", response.getStrategyVersion());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
-        KbPipelineTask task = captor.getValue();
+        WbPipelineTask task = captor.getValue();
         assertEquals(PipelineStage.PREPROCESS.name(), task.getStage());
         assertEquals(PipelineTaskStatus.QUEUED.name(), task.getStatus());
         assertEquals(50L, task.getUpstreamProductId());
@@ -255,7 +255,7 @@ class PreprocessControlServiceImplTest {
     @Test
     void explicitStrategyVersionShouldResolveAndValidate() {
         stubCommon();
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(77L);
         row.setType(PreprocessStrategy.TYPE);
         row.setName("preproc-strict");
@@ -264,8 +264,8 @@ class PreprocessControlServiceImplTest {
         row.setConfigSnapshot("{\"rules\":{\"toc\":{\"action\":\"EXCLUDE\"}}}");
         when(strategyVersionDbService.getById(77L)).thenReturn(row);
         existingPreprocessTask(50L, 77L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(33L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(33L);
             return true;
         });
 
@@ -279,8 +279,8 @@ class PreprocessControlServiceImplTest {
     void boundStrategyShouldBeUsedWhenNoExplicitVersion() {
         stubCommon();
         existingPreprocessTask(50L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(34L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(34L);
             return true;
         });
 
@@ -292,7 +292,7 @@ class PreprocessControlServiceImplTest {
     @Test
     void explicitStrategyShouldOverrideBinding() {
         stubCommon();
-        KbPipelineStrategyVersion row = new KbPipelineStrategyVersion();
+        WbPipelineStrategyVersion row = new WbPipelineStrategyVersion();
         row.setId(77L);
         row.setType(PreprocessStrategy.TYPE);
         row.setName("preproc-explicit");
@@ -301,8 +301,8 @@ class PreprocessControlServiceImplTest {
         row.setConfigSnapshot("{\"rules\":{\"headerFooter\":{\"action\":\"EXCLUDE\"}}}");
         when(strategyVersionDbService.getById(77L)).thenReturn(row);
         existingPreprocessTask(50L, 77L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(35L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(35L);
             return true;
         });
 
@@ -333,7 +333,7 @@ class PreprocessControlServiceImplTest {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
         when(knowledgeBaseDbService.getActiveById(10L)).thenReturn(knowledgeBase());
         when(strategyBindingDbService.getByKbAndType(10L, PreprocessStrategy.TYPE)).thenReturn(binding());
-        KbPipelineStrategyVersion disabled = boundVersion();
+        WbPipelineStrategyVersion disabled = boundVersion();
         disabled.setStatus(RowStatus.INACTIVE.name());
         when(strategyVersionDbService.getById(66L)).thenReturn(disabled);
 
@@ -369,7 +369,7 @@ class PreprocessControlServiceImplTest {
     void failedUpstreamTaskShouldThrow40439() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
         stubBoundStrategy();
-        KbPipelineProduct product = structureProduct();
+        WbPipelineProduct product = structureProduct();
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
         // 产出任务已失败，产物行却已经落盘（孤儿产物）：下游门禁拒绝消费
         when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID)).thenReturn(upstreamTask(PipelineTaskStatus.FAILED));
@@ -385,7 +385,7 @@ class PreprocessControlServiceImplTest {
     @Test
     void runningShouldReject40431() {
         stubCommon();
-        KbPipelineTask running = new KbPipelineTask();
+        WbPipelineTask running = new WbPipelineTask();
         running.setId(31L);
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         existingPreprocessTask(50L, 66L, running);
@@ -403,7 +403,7 @@ class PreprocessControlServiceImplTest {
     @Test
     void existingQueuedTaskShouldReject40431() {
         stubCommon();
-        KbPipelineTask queued = new KbPipelineTask();
+        WbPipelineTask queued = new WbPipelineTask();
         queued.setId(31L);
         queued.setStatus(PipelineTaskStatus.QUEUED.name());
         existingPreprocessTask(50L, 66L, queued);
@@ -419,7 +419,7 @@ class PreprocessControlServiceImplTest {
     @Test
     void succeededTaskShouldReject40431() {
         stubCommon();
-        KbPipelineTask succeeded = new KbPipelineTask();
+        WbPipelineTask succeeded = new WbPipelineTask();
         succeeded.setId(31L);
         succeeded.setStatus(PipelineTaskStatus.SUCCESS.name());
         existingPreprocessTask(50L, 66L, succeeded);
@@ -436,21 +436,21 @@ class PreprocessControlServiceImplTest {
     void specifiedUpstreamProductShouldBeStoredInTask() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
         stubBoundStrategy();
-        KbPipelineProduct specified = new KbPipelineProduct();
+        WbPipelineProduct specified = new WbPipelineProduct();
         specified.setId(88L);
         specified.setTaskId(UPSTREAM_TASK_ID);
         specified.setFileResultId(10L);
         specified.setStage(PipelineStage.STRUCTURE.name());
         when(pipelineProductDbService.getById(88L)).thenReturn(specified);
         existingPreprocessTask(88L, 66L, null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(34L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(34L);
             return true;
         });
 
         var response = service.preprocess(10L, null, 88L);
 
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
         assertEquals(88L, captor.getValue().getUpstreamProductId());
         assertEquals(34L, response.getPipelineTaskId());
@@ -459,19 +459,19 @@ class PreprocessControlServiceImplTest {
     @Test
     void detailShouldAssembleTaskStepsStrategyAndElements() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(31L);
         task.setStage(PipelineStage.PREPROCESS.name());
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PREPROCESS.name())).thenReturn(task);
-        KbPipelineStepLog step = new KbPipelineStepLog();
+        WbPipelineStepLog step = new WbPipelineStepLog();
         step.setStepName("字段标准化");
         step.setStatus("SUCCESS");
         step.setMatchedCount(3);
         step.setChangedCount(2);
         when(stepLogDbService.listByTaskId(31L)).thenReturn(List.of(step));
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("abc".repeat(16));
         // 产物行记下对象位置：详情读取按数据源与对象键定位
         product.setStorageType(StorageType.MINIO.getCode());
@@ -528,7 +528,7 @@ class PreprocessControlServiceImplTest {
     @Test
     void detailWithWrongStageTaskShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask structureTask = new KbPipelineTask();
+        WbPipelineTask structureTask = new WbPipelineTask();
         structureTask.setId(51L);
         structureTask.setFileResultId(10L);
         structureTask.setStage(PipelineStage.STRUCTURE.name());
@@ -541,14 +541,14 @@ class PreprocessControlServiceImplTest {
     @Test
     void detailWithIncompleteProductLocationShouldReject40455() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(31L);
         task.setStage(PipelineStage.PREPROCESS.name());
         task.setStatus(PipelineTaskStatus.SUCCESS.name());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PREPROCESS.name())).thenReturn(task);
         // 产物行缺 storageType / bucket：位置不完整，读取路径按「存储后端未配置」拒绝
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("abc".repeat(16));
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
 
@@ -570,7 +570,7 @@ class PreprocessControlServiceImplTest {
 
     /** 让指定知识库归当前登录用户所有（归属校验要能过） */
     private void boundKnowledgeBase(Long id) {
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(id);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);

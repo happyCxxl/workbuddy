@@ -23,7 +23,7 @@ public class EmbedContext {
     /** 上游切片产物（ChunkSet，只读） */
     private ChunkSet chunkSet;
 
-    /** 上游切片集合引用（kb_chunk_set.id，血缘回填集合头） */
+    /** 上游切片集合引用（wb_knowledge_chunk_set.id，血缘回填集合头） */
     private Long chunkSetRef;
 
     /** 切片策略快照（CHUNK 产物 capabilitySnapshot 解析；供窗口兼容校验推算最大片长，可空=跳过该校验） */
@@ -38,7 +38,7 @@ public class EmbedContext {
     /** 向量化参数（knowledge.embed 前缀，application.yml 同名 kebab-case 键） */
     private EmbedProperties properties;
 
-    /** 文件结果 ID（kb_file_result.id） */
+    /** 文件结果 ID（wb_file_result.id） */
     private Long fileResultId;
 
     /** 复用候选账本：同文件同策略历史 EmbeddingSet（createTime 新→旧，回溯上限内；空=首次运行全量算） */

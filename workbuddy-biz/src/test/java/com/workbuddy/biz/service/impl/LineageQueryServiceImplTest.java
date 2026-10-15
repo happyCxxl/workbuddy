@@ -1,22 +1,22 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStepLog;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStepLog;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
@@ -70,19 +70,19 @@ class LineageQueryServiceImplTest {
     private static final Long SOURCE_ID = 1L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
-    private KbChunkSetDbService chunkSetDbService;
+    private WbChunkSetDbService chunkSetDbService;
     @Mock
-    private KbEmbeddingSetDbService embeddingSetDbService;
+    private WbEmbeddingSetDbService embeddingSetDbService;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
     private FileStorage fileStorage;
 
@@ -98,8 +98,8 @@ class LineageQueryServiceImplTest {
                 fileStorage, accessGuard, new ChunkStrategyParser(new ChunkProperties()));
     }
 
-    private KbPipelineTask task(Long id, String stage, Long upstreamProductId, Long productId, String snapshot) {
-        KbPipelineTask task = new KbPipelineTask();
+    private WbPipelineTask task(Long id, String stage, Long upstreamProductId, Long productId, String snapshot) {
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(id);
         task.setFileResultId(10L);
         task.setStage(stage);
@@ -110,8 +110,8 @@ class LineageQueryServiceImplTest {
         return task;
     }
 
-    private KbPipelineProduct product(Long id, String stage, String artifactId, String capability) {
-        KbPipelineProduct product = new KbPipelineProduct();
+    private WbPipelineProduct product(Long id, String stage, String artifactId, String capability) {
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setId(id);
         product.setFileResultId(10L);
         product.setStage(stage);
@@ -152,16 +152,16 @@ class LineageQueryServiceImplTest {
                 product(40L, PipelineStage.CHUNK.name(), "art-c1", null),
                 product(70L, PipelineStage.CHUNK.name(), "art-c2", null),
                 product(50L, PipelineStage.EMBED.name(), "art-e1", null)));
-        KbChunkSet chunkSet1 = new KbChunkSet();
+        WbChunkSet chunkSet1 = new WbChunkSet();
         chunkSet1.setArtifactId("art-c1");
         chunkSet1.setChunkCount(156);
         when(chunkSetDbService.listByFileResultId(10L)).thenReturn(List.of(chunkSet1));
-        KbEmbeddingSet embedSet1 = new KbEmbeddingSet();
+        WbEmbeddingSet embedSet1 = new WbEmbeddingSet();
         embedSet1.setArtifactId("art-e1");
         embedSet1.setRecordCount(782);
         embedSet1.setCachedCount(12);
         when(embeddingSetDbService.listByFileResultId(10L)).thenReturn(List.of(embedSet1));
-        KbPipelineStepLog step1 = new KbPipelineStepLog();
+        WbPipelineStepLog step1 = new WbPipelineStepLog();
         step1.setTaskId(61L);
         step1.setMatchedCount(1200);
         step1.setChangedCount(64);
@@ -291,7 +291,7 @@ class LineageQueryServiceImplTest {
 
     @Test
     void parseNodeShouldCarryProductStats() {
-        KbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
+        WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
         parseTask.setStatus(PipelineTaskStatus.SUCCESS.name());
         parseTask.setStartedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 0));
         parseTask.setFinishedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 8));
@@ -336,7 +336,7 @@ class LineageQueryServiceImplTest {
 
     @Test
     void parseNodeWithoutArtifactShouldFallBackToPageCount() {
-        KbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
+        WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
         parseTask.setStatus(PipelineTaskStatus.SUCCESS.name());
         parseTask.setStartedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 0));
         parseTask.setFinishedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 8));
@@ -376,7 +376,7 @@ class LineageQueryServiceImplTest {
     @ParameterizedTest
     @EnumSource(value = PipelineTaskStatus.class, names = { "SUCCESS", "PARTIAL_SUCCESS" })
     void unreadableArtifactShouldLeaveParseStatsAndSummaryEmpty(PipelineTaskStatus status) {
-        KbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
+        WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
         parseTask.setStatus(status.name());
         parseTask.setStartedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 0));
         parseTask.setFinishedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 8));
@@ -404,7 +404,7 @@ class LineageQueryServiceImplTest {
      */
     @Test
     void missingStorageObjectShouldPropagate40454() {
-        KbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
+        WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
         when(pipelineTaskDbService.listByFileResultId(10L)).thenReturn(List.of(parseTask));
         when(pipelineProductDbService.listByFileResultId(10L)).thenReturn(List.of(
@@ -427,7 +427,7 @@ class LineageQueryServiceImplTest {
     @ParameterizedTest
     @EnumSource(value = PipelineTaskStatus.class, names = { "QUEUED", "RUNNING" })
     void pendingParseTaskWithoutProductShouldBeVisible(PipelineTaskStatus status) {
-        KbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, null, null);
+        WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, null, null);
         parseTask.setStatus(status.name());
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
         when(pipelineTaskDbService.listByFileResultId(10L)).thenReturn(List.of(parseTask));
@@ -463,15 +463,15 @@ class LineageQueryServiceImplTest {
 
     /** 让指定知识库归当前登录用户所有（归属校验要能过） */
     private void boundKnowledgeBase(Long id) {
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(id);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);
     }
 
     /** 一次运行的文件结果（挂 10 号知识库，归属校验要能过） */
-    private KbFileResult fileResultOfKb10() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResultOfKb10() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;

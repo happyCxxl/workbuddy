@@ -1,6 +1,6 @@
 # 模型环节配置的落点：厂商连接（knowledge.model.vendors）与路由参数（knowledge.model.route）。
 # 键的来源：knowledge-model 的 ModelVendorProperties（前缀 knowledge.model.vendors）与 ModelRouteProperties（前缀 knowledge.model.route）。
-# 接入的厂商：阿里百炼（dashscope）与 DeepSeek。厂商码即 Map 键，也是 kb_model.vendor_code 的取值：
+# 接入的厂商：阿里百炼（dashscope）与 DeepSeek。厂商码即 Map 键，也是 wb_model.vendor_code 的取值：
 # 保存模型时校验该键必须存在于本文件，页面下拉的候选（web/src/types/model.ts 的 MODEL_VENDORS）与之同名，新增厂商两处同步。
 # 密钥一律走环境变量占位符（带空默认）：解析不出来（未设置或为空）启动失败，错误信息带厂商码与配置键。
 

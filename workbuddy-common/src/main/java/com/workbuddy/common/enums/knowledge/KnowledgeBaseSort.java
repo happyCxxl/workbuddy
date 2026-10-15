@@ -3,7 +3,7 @@ package com.workbuddy.common.enums.knowledge;
 import com.workbuddy.common.utils.NullUtil;
 
 /**
- * 知识库列表排序口径（kb_knowledge_base 分页列表）。
+ * 知识库列表排序口径（wb_knowledge_base 分页列表）。
  *
  * <p>各口径独立生效，不叠加额外优先级。
  *

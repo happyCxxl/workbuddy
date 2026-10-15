@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 向量化详情 VO：任务状态 + 子步骤 + 集合摘要/记录（kb_embedding_set/kb_embedding_record 数据源）+ 产物引用。
+ * 向量化详情 VO：任务状态 + 子步骤 + 集合摘要/记录（wb_knowledge_embedding_set/wb_knowledge_embedding_record 数据源）+ 产物引用。
  * 向量本体不下发；集合按 task.productId 精确取该次运行的产物（历史任务同样可展示自己的集合）。
  *
  * @author cxxl

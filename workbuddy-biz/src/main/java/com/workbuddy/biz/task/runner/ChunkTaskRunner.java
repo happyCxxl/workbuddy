@@ -1,10 +1,10 @@
 package com.workbuddy.biz.task.runner;
 
-import com.workbuddy.biz.service.db.KbChunkDbService;
-import com.workbuddy.biz.service.db.KbChunkSetDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbChunkDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
 import com.workbuddy.biz.task.UpstreamProductGate;
@@ -12,11 +12,11 @@ import com.workbuddy.biz.task.support.TaskRunnerSupport;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkOutcome;
 import com.workbuddy.common.domain.chunk.ChunkSet;
-import com.workbuddy.common.domain.entity.KbChunk;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.rules.ChunkRules;
 import com.workbuddy.common.domain.storage.ObjectRef;
@@ -44,7 +44,7 @@ import java.util.Objects;
 /**
  * 切片任务执行器（消费循环调用）：领任务 → 读任务策略快照（触发时固定）→ 读最新 PREPROCESS 视图产物
  * （+ 其上游 STRUCTURE 统一文档作结构参照，缺失不阻断、titlePath/图注降级）→ 调 worker 切片管线 →
- * 写产物存储 + 落库（product/kb_chunk_set/kb_chunk 分批/6 条 step_log）→ 回写任务终态。
+ * 写产物存储 + 落库（product/wb_knowledge_chunk_set/wb_knowledge_chunk 分批/6 条 step_log）→ 回写任务终态。
  *
  * @author cxxl
  */
@@ -55,11 +55,11 @@ public class ChunkTaskRunner {
 
     private static final int BATCH_SIZE = 500;
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbFileResultDbService fileResultDbService;
-    private final KbPipelineProductDbService pipelineProductDbService;
-    private final KbChunkSetDbService chunkSetDbService;
-    private final KbChunkDbService chunkDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbFileResultDbService fileResultDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
+    private final WbChunkSetDbService chunkSetDbService;
+    private final WbChunkDbService chunkDbService;
     private final FileStorage fileStorage;
     private final ChunkerPort chunker;
     private final ChunkProperties chunkProperties;
@@ -77,13 +77,13 @@ public class ChunkTaskRunner {
         if (NullUtil.isNull(claimed)) {
             return;
         }
-        KbPipelineTask task = claimed.task();
-        KbFileResult fileResult = claimed.fileResult();
+        WbPipelineTask task = claimed.task();
+        WbFileResult fileResult = claimed.fileResult();
         log.info("===> ChunkTaskRunner 领取切片任务, taskId={}, fileResultId={}",
                 taskId, task.getFileResultId());
         try {
             // 上游预处理视图产物：任务行缺引用与产出任务未成功都在助手里拒绝（门禁：未成功的运行不读也不落库）
-            KbPipelineProduct preprocessProduct = TaskRunnerSupport.requireUpstream(pipelineProductDbService,
+            WbPipelineProduct preprocessProduct = TaskRunnerSupport.requireUpstream(pipelineProductDbService,
                     upstreamProductGate, task, taskId, ChunkRules.UPSTREAM_PREPROCESS_MISSING, this::finishFailed);
             if (NullUtil.isNull(preprocessProduct)) {
                 return;
@@ -133,12 +133,12 @@ public class ChunkTaskRunner {
     }
 
     /** 结构参照：PREPROCESS 产物上游的 STRUCTURE 产物（缺失不阻断，titlePath/图注降级） */
-    private UnifiedDocument readStructureDocument(KbPipelineProduct preprocessProduct) {
+    private UnifiedDocument readStructureDocument(WbPipelineProduct preprocessProduct) {
         if (NullUtil.isNull(preprocessProduct.getUpstreamProductId())) {
             return null;
         }
         try {
-            KbPipelineProduct structureProduct = pipelineProductDbService
+            WbPipelineProduct structureProduct = pipelineProductDbService
                     .getById(preprocessProduct.getUpstreamProductId());
             if (NullUtil.isNull(structureProduct)) {
                 return null;
@@ -152,14 +152,14 @@ public class ChunkTaskRunner {
         }
     }
 
-    /** 写产物存储 + product/kb_chunk_set/kb_chunk + 子步骤记录（成功/PARTIAL_SUCCESS 路径） */
-    private void persistProduct(KbPipelineTask task, KbFileResult fileResult, KbPipelineProduct preprocessProduct,
+    /** 写产物存储 + product/wb_knowledge_chunk_set/wb_knowledge_chunk + 子步骤记录（成功/PARTIAL_SUCCESS 路径） */
+    private void persistProduct(WbPipelineTask task, WbFileResult fileResult, WbPipelineProduct preprocessProduct,
                                 ChunkStrategy strategy, ChunkOutcome outcome) {
         ChunkSet chunkSet = Objects.requireNonNull(outcome.getChunkSet(), "切片结果为空");
-        KbPipelineProduct product = productPersistence.persist(task, PipelineStage.CHUNK,
+        WbPipelineProduct product = productPersistence.persist(task, PipelineStage.CHUNK,
                 preprocessProduct.getId(), JsonUtil.toJsonStr(strategy), chunkSet);
 
-        KbChunkSet chunkSetRow = new KbChunkSet();
+        WbChunkSet chunkSetRow = new WbChunkSet();
         chunkSetRow.setFileResultId(fileResult.getId());
         chunkSetRow.setUpstreamProductId(preprocessProduct.getId());
         chunkSetRow.setChunkStrategyVersion(strategy.fullVersion());
@@ -172,7 +172,7 @@ public class ChunkTaskRunner {
         chunkSetRow.setBucket(product.getBucket());
         chunkSetDbService.save(chunkSetRow);
 
-        List<KbChunk> chunkRows = new ArrayList<>();
+        List<WbChunk> chunkRows = new ArrayList<>();
         for (Chunk chunk : chunkSet.getChunks()) {
             chunkRows.add(toKbChunk(chunkSetRow.getId(), strategy.fullVersion(), chunk));
         }
@@ -184,8 +184,8 @@ public class ChunkTaskRunner {
                 product.getArtifactId());
     }
 
-    private KbChunk toKbChunk(Long chunkSetId, String strategyVersion, Chunk chunk) {
-        KbChunk row = new KbChunk();
+    private WbChunk toKbChunk(Long chunkSetId, String strategyVersion, Chunk chunk) {
+        WbChunk row = new WbChunk();
         row.setChunkSetId(chunkSetId);
         row.setChunkId(chunk.getChunkId());
         row.setParentChunkId(chunk.getParentChunkId());
@@ -193,7 +193,7 @@ public class ChunkTaskRunner {
         row.setContentType(chunk.getContentType());
         row.setTitlePath(chunk.getTitlePath());
         // 溯源不落 MySQL：父片溯源会随章节大小无界增长（实测单父片 3503 字符，
-        // 远超 kb_chunk.source_element_ids 的容量），且检索链路用的是 Milvus 里的那份，
+        // 远超 wb_knowledge_chunk.source_element_ids 的容量），且检索链路用的是 Milvus 里的那份，
         // 该列曾是纯冗余副本。全量溯源只在产物与 Milvus 中保存。
         row.setPageRange(formatPageRange(chunk.getPageRange()));
         row.setTableRef(chunk.getTableRef());

@@ -15,6 +15,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StageTriggerVO {
 
-    /** 处理链任务 ID（kb_pipeline_task.id） */
+    /** 处理链任务 ID（wb_knowledge_pipeline_task.id） */
     private Long pipelineTaskId;
 }

@@ -12,7 +12,7 @@ import java.util.Set;
  * 静态模型目录（测试用）：目录数据 = {@link EmbeddingModel} 枚举（common 单一事实源）。
  * 向量规格（维度 / 度量 / 归一化 / 窗口 / 批上限）与启停状态都取自该枚举，厂商码留空。
  *
- * <p>本类不是应用里的目录实现：应用装配的是 knowledge-biz 的库表实现（kb_model），
+ * <p>本类不是应用里的目录实现：应用装配的是 knowledge-biz 的库表实现（wb_model），
  * 本类只供不依赖库的用例按端口契约注入（单元测试与本地假端点用例）。
  *
  * @author cxxl

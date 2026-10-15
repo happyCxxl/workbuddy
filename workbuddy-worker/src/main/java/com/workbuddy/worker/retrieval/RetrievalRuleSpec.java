@@ -4,7 +4,7 @@ import lombok.Data;
 
 /**
  * 检索规则快照（检索策略模型）：一条规则 = 一张完整配置快照
- * （kb_pipeline_strategy_version.config_snapshot，type=RETRIEVAL，行不可变）。
+ * （wb_knowledge_pipeline_strategy_version.config_snapshot，type=RETRIEVAL，行不可变）。
  * 全目录建全、预留项锁定：未启用能力取值 NONE/0，注册校验（RetrievalRuleResolver）
  * 与执行引擎双保险拒绝；解锁只改能力开关，结构零迁移。
  *

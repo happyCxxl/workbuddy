@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 提交日志 VO：kb_submit_log 的对外视图（提交记录列表/提交响应用）。
+ * 提交日志 VO：wb_submit_log 的对外视图（提交记录列表/提交响应用）。
  * 仅映射展示所需字段；id 类字段由全局 Long 序列化口径转字符串（见 LongIdJsonConfig），防前端 JS 精度丢失。
  *
  * @author cxxl

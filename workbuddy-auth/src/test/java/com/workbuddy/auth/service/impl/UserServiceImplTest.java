@@ -2,8 +2,8 @@ package com.workbuddy.auth.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.auth.db.UserDbService;
-import com.workbuddy.common.domain.entity.User;
+import com.workbuddy.auth.db.WbUserDbService;
+import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.enums.user.UserRole;
 import org.junit.jupiter.api.Test;
@@ -32,14 +32,14 @@ import static org.mockito.Mockito.when;
 class UserServiceImplTest {
 
     @Mock
-    private UserDbService userDbService;
+    private WbUserDbService userDbService;
 
     @InjectMocks
     private UserServiceImpl userService;
 
     @Test
     void pageUsersShouldMapEntityToVo() {
-        Page<User> source = new Page<>(1, 10, 2);
+        Page<WbUser> source = new Page<>(1, 10, 2);
         source.setRecords(List.of(user(1L, "admin", UserRole.ADMIN), user(2L, "tom", UserRole.USER)));
         when(userDbService.pageByCondition(eq(1L), eq(10L), any(), any(), any())).thenReturn(source);
 
@@ -67,7 +67,7 @@ class UserServiceImplTest {
 
     @Test
     void pageUsersShouldPassFiltersThrough() {
-        Page<User> source = new Page<>(2, 5, 0);
+        Page<WbUser> source = new Page<>(2, 5, 0);
         source.setRecords(List.of());
         when(userDbService.pageByCondition(eq(2L), eq(5L), eq("tom"), eq("ADMIN"), eq(0))).thenReturn(source);
 
@@ -77,8 +77,8 @@ class UserServiceImplTest {
         assertEquals(2, result.getCurrent());
     }
 
-    private User user(Long id, String username, UserRole role) {
-        User user = new User();
+    private WbUser user(Long id, String username, UserRole role) {
+        WbUser user = new WbUser();
         user.setId(id);
         user.setUsername(username);
         user.setPassword("bcrypt-hash-should-never-leak");

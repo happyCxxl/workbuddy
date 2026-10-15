@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KbModelDbService;
-import com.workbuddy.common.domain.entity.KbModel;
+import com.workbuddy.biz.service.db.WbModelDbService;
+import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.AuthType;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
@@ -48,7 +48,7 @@ class ModelAdminServiceImplTest {
     /** 审计对象类型（与实现的取值一致） */
     private static final String AUDIT_OBJECT_TYPE = AuditObjectType.MODEL.key();
 
-    private KbModelDbService kbModelDbService;
+    private WbModelDbService kbModelDbService;
 
     private AuditEventPublisher auditEventPublisher;
 
@@ -58,7 +58,7 @@ class ModelAdminServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        kbModelDbService = mock(KbModelDbService.class);
+        kbModelDbService = mock(WbModelDbService.class);
         auditEventPublisher = mock(AuditEventPublisher.class);
         vendorProperties = new ModelVendorProperties();
         Map<String, ModelVendorProperties.Vendor> vendors = new LinkedHashMap<>();
@@ -126,7 +126,7 @@ class ModelAdminServiceImplTest {
 
         ModelItemVO item = service.create(dto);
 
-        KbModel saved = capturedSave();
+        WbModel saved = capturedSave();
         assertEquals("dashscope", saved.getVendorCode());
         assertEquals("qwen-max", saved.getModelKey());
         assertEquals("通义千问 Max", saved.getDisplayName());
@@ -274,7 +274,7 @@ class ModelAdminServiceImplTest {
         ModelItemVO item = service.update(5L, dto);
 
         assertEquals(5L, item.getId());
-        KbModel updated = capturedUpdate();
+        WbModel updated = capturedUpdate();
         assertEquals(5L, updated.getId());
         assertNull(updated.getPriceInPerM());
         assertEquals("通义千问 Max", updated.getDisplayName());
@@ -284,7 +284,7 @@ class ModelAdminServiceImplTest {
 
     @Test
     void updateShouldKeepStatusAndCurrencyWhenAbsent() {
-        KbModel existing = row(7L, "dashscope", "qwen-max", "CHAT", "DISABLED");
+        WbModel existing = row(7L, "dashscope", "qwen-max", "CHAT", "DISABLED");
         existing.setCurrency("USD");
         when(kbModelDbService.getExistingById(7L)).thenReturn(existing);
         when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", 7L)).thenReturn(false);
@@ -294,7 +294,7 @@ class ModelAdminServiceImplTest {
 
         service.update(7L, dto);
 
-        KbModel updated = capturedUpdate();
+        WbModel updated = capturedUpdate();
         assertEquals("DISABLED", updated.getStatus());
         assertEquals("USD", updated.getCurrency());
     }
@@ -363,8 +363,8 @@ class ModelAdminServiceImplTest {
     }
 
     /** 目录行：状态与能力由形参给出 */
-    private KbModel row(Long id, String vendorCode, String modelKey, String capabilities, String status) {
-        KbModel row = new KbModel();
+    private WbModel row(Long id, String vendorCode, String modelKey, String capabilities, String status) {
+        WbModel row = new WbModel();
         row.setId(id);
         row.setVendorCode(vendorCode);
         row.setModelKey(modelKey);
@@ -384,15 +384,15 @@ class ModelAdminServiceImplTest {
     }
 
     /** 取最近一次落库的新增行 */
-    private KbModel capturedSave() {
-        ArgumentCaptor<KbModel> captor = ArgumentCaptor.forClass(KbModel.class);
+    private WbModel capturedSave() {
+        ArgumentCaptor<WbModel> captor = ArgumentCaptor.forClass(WbModel.class);
         verify(kbModelDbService).save(captor.capture());
         return captor.getValue();
     }
 
     /** 取最近一次覆盖式更新的行 */
-    private KbModel capturedUpdate() {
-        ArgumentCaptor<KbModel> captor = ArgumentCaptor.forClass(KbModel.class);
+    private WbModel capturedUpdate() {
+        ArgumentCaptor<WbModel> captor = ArgumentCaptor.forClass(WbModel.class);
         verify(kbModelDbService).updateAll(captor.capture());
         return captor.getValue();
     }

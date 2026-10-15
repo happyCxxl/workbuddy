@@ -1,9 +1,9 @@
 package com.workbuddy.biz.task;
 
 import com.workbuddy.biz.config.TaskQueueProperties;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.NullUtil;
@@ -35,7 +35,7 @@ public class TaskStartupCompensator {
 
     private static final String LOCK_KEY_SUFFIX = ":compensate-lock";
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
     private final TaskQueueSupport taskQueue;
     private final RedisLock redisLock;
     private final TaskQueueProperties properties;
@@ -72,9 +72,9 @@ public class TaskStartupCompensator {
                     .min(Duration::compareTo)
                     .orElse(Duration.ofMinutes(5));
             LocalDateTime threshold = LocalDateTime.now().minus(minTimeout);
-            List<KbPipelineTask> stale = pipelineTaskDbService.listStaleRunning(threshold);
+            List<WbPipelineTask> stale = pipelineTaskDbService.listStaleRunning(threshold);
             int recovered = 0;
-            for (KbPipelineTask task : stale) {
+            for (WbPipelineTask task : stale) {
                 Duration stageTimeout = properties.timeoutOf(task.getStage());
                 if (NullUtil.isNotNull(task.getStartedAt())
                         && task.getStartedAt().isBefore(LocalDateTime.now().minus(stageTimeout))) {
@@ -100,8 +100,8 @@ public class TaskStartupCompensator {
         }
         try {
             LocalDateTime threshold = LocalDateTime.now().minus(properties.getCompensateThreshold());
-            List<KbPipelineTask> stale = pipelineTaskDbService.listStaleQueued(threshold);
-            for (KbPipelineTask task : stale) {
+            List<WbPipelineTask> stale = pipelineTaskDbService.listStaleQueued(threshold);
+            for (WbPipelineTask task : stale) {
                 taskQueue.enqueue(task.getId());
             }
             if (!stale.isEmpty()) {

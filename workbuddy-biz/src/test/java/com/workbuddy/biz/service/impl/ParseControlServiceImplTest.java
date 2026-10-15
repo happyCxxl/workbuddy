@@ -1,22 +1,22 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.ChainStorageSupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineStepLog;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineStepLog;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.parse.ParseDetailVO;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -59,19 +59,19 @@ class ParseControlServiceImplTest {
     private static final Long SOURCE_ID = 1L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbPipelineProductDbService pipelineProductDbService;
+    private WbPipelineProductDbService pipelineProductDbService;
     @Mock
-    private KbPipelineStepLogDbService stepLogDbService;
+    private WbPipelineStepLogDbService stepLogDbService;
     @Mock
     private TaskQueueSupport taskQueue;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private StorageRouter storageRouter;
     @Mock
@@ -93,15 +93,15 @@ class ParseControlServiceImplTest {
                 accessGuard);
     }
 
-    private KbFileResult fileResult() {
-        KbFileResult fileResult = new KbFileResult();
+    private WbFileResult fileResult() {
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;
     }
 
     /** 解析执行键：文件结果 10 + 无上游（0）+ 无策略（0） */
-    private void existingParseTask(KbPipelineTask task) {
+    private void existingParseTask(WbPipelineTask task) {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.PARSE.name(), 0L, 0L)).thenReturn(task);
     }
 
@@ -109,15 +109,15 @@ class ParseControlServiceImplTest {
     void parseShouldCreateTaskAndEnqueue() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
         existingParseTask(null);
-        when(pipelineTaskDbService.save(any(KbPipelineTask.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbPipelineTask.class).setId(21L);
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbPipelineTask.class).setId(21L);
             return true;
         });
 
         var response = service.parse(10L);
 
         assertEquals(21L, response.getPipelineTaskId());
-        ArgumentCaptor<KbPipelineTask> captor = ArgumentCaptor.forClass(KbPipelineTask.class);
+        ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(captor.capture());
         assertEquals(PipelineTaskStatus.QUEUED.name(), captor.getValue().getStatus());
         assertEquals(PipelineStage.PARSE.name(), captor.getValue().getStage());
@@ -130,7 +130,7 @@ class ParseControlServiceImplTest {
     @Test
     void parseRunningShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask running = new KbPipelineTask();
+        WbPipelineTask running = new WbPipelineTask();
         running.setId(21L);
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         existingParseTask(running);
@@ -144,7 +144,7 @@ class ParseControlServiceImplTest {
     @Test
     void parseQueuedShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask queued = new KbPipelineTask();
+        WbPipelineTask queued = new WbPipelineTask();
         queued.setId(21L);
         queued.setStatus(PipelineTaskStatus.QUEUED.name());
         existingParseTask(queued);
@@ -160,7 +160,7 @@ class ParseControlServiceImplTest {
     @Test
     void parseSuccessShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask success = new KbPipelineTask();
+        WbPipelineTask success = new WbPipelineTask();
         success.setId(21L);
         success.setStatus(PipelineTaskStatus.SUCCESS.name());
         existingParseTask(success);
@@ -174,7 +174,7 @@ class ParseControlServiceImplTest {
     @Test
     void parsePartialSuccessShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask partial = new KbPipelineTask();
+        WbPipelineTask partial = new WbPipelineTask();
         partial.setId(21L);
         partial.setStatus(PipelineTaskStatus.PARTIAL_SUCCESS.name());
         existingParseTask(partial);
@@ -187,7 +187,7 @@ class ParseControlServiceImplTest {
     @Test
     void parseFailedShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask failed = new KbPipelineTask();
+        WbPipelineTask failed = new WbPipelineTask();
         failed.setId(21L);
         failed.setStatus(PipelineTaskStatus.FAILED.name());
         existingParseTask(failed);
@@ -211,14 +211,14 @@ class ParseControlServiceImplTest {
     @Test
     void detailShouldAssembleTaskStepsAndWarnings() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(20L);
         task.setStage(PipelineStage.PARSE.name());
         task.setStatus(PipelineTaskStatus.PARTIAL_SUCCESS.name());
         task.setStartedAt(LocalDateTime.now());
         task.setProductId(50L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name())).thenReturn(task);
-        KbPipelineStepLog step = new KbPipelineStepLog();
+        WbPipelineStepLog step = new WbPipelineStepLog();
         step.setStepName("原生解析");
         step.setStatus("SUCCESS");
         step.setWarningCount(2);
@@ -226,7 +226,7 @@ class ParseControlServiceImplTest {
         step.setChangedCount(3);
         step.setAvgLen(512);
         when(stepLogDbService.listByTaskId(20L)).thenReturn(List.of(step));
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("9f2c".repeat(16));
         product.setContentHash("9f2c".repeat(16));
         // 产物行记下对象位置：详情读取按数据源与对象键定位
@@ -254,7 +254,7 @@ class ParseControlServiceImplTest {
 
     @Test
     void detailWithIncompleteProductLocationShouldReject40455() {
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(20L);
         task.setFileResultId(10L);
         task.setStage(PipelineStage.PARSE.name());
@@ -263,7 +263,7 @@ class ParseControlServiceImplTest {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name())).thenReturn(task);
         // 产物行缺 storageType / storageSourceId / bucket：位置不完整，读取路径按「存储后端未配置」拒绝
-        KbPipelineProduct product = new KbPipelineProduct();
+        WbPipelineProduct product = new WbPipelineProduct();
         product.setArtifactId("9f2c".repeat(16));
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
 
@@ -306,7 +306,7 @@ class ParseControlServiceImplTest {
 
     /** 让指定知识库归当前登录用户所有（归属校验要能过） */
     private void boundKnowledgeBase(Long id) {
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(id);
         kb.setUserId(SecurityTestSupport.VIEWER_ID);
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);

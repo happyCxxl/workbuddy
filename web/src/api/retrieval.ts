@@ -26,7 +26,7 @@ export async function getSearchResult(
 /**
  * 测试台检索：**必须显式传 versionId + ruleId**（可检索候选冻结集）。
  *
- * <p>执行即落运行记录（`kb_retrieval_run`，append-only 机器表），
+ * <p>执行即落运行记录（`wb_knowledge_retrieval_run`，append-only 机器表），
  * 后续的勾选对比就回放这些记录里的快照 —— **不重跑**。
  * 这是评测页的主路径。
  */

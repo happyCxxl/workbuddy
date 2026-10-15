@@ -4,7 +4,7 @@ import com.workbuddy.common.utils.NullUtil;
 import lombok.Getter;
 
 /**
- * 用户账号状态（kb_user.status，TINYINT 码值）。
+ * 用户账号状态（wb_user.status，TINYINT 码值）。
  * 1 启用（ENABLED）/ 0 停用（DISABLED）；逻辑删除由 del_flag 承载，与本枚举无关。
  *
  * @author cxxl

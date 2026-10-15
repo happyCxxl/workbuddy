@@ -49,12 +49,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChunkControlServiceImpl implements ChunkControlService {
 
-    private final KbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
     private final StageStrategySupport strategySupport;
     private final TaskTriggerSupport triggerSupport;
     private final TaskDetailSupport detailSupport;
-    private final KbChunkSetDbService chunkSetDbService;
-    private final KbChunkDbService chunkDbService;
+    private final WbChunkSetDbService chunkSetDbService;
+    private final WbChunkDbService chunkDbService;
     private final ChunkStrategyParser strategyParser;
     private final ChunkVoAssembler voAssembler;
     private final FileStorage fileStorage;
@@ -71,12 +71,12 @@ public class ChunkControlServiceImpl implements ChunkControlService {
      */
     @Override
     public ChunkTriggerVO chunk(Long fileResultId, Long strategyVersionId, Long upstreamProductId) {
-        KbFileResult fileResult = accessGuard.requireExisting(fileResultId);
-        KbPipelineStrategyVersion strategyRow = resolveStrategyRow(fileResult, strategyVersionId);
+        WbFileResult fileResult = accessGuard.requireExisting(fileResultId);
+        WbPipelineStrategyVersion strategyRow = resolveStrategyRow(fileResult, strategyVersionId);
         ChunkStrategy strategy = toStrategy(strategyRow);
 
         // 上游预处理产物：必须显式指定
-        KbPipelineProduct preprocessProduct = requirePreprocessProduct(fileResultId, upstreamProductId);
+        WbPipelineProduct preprocessProduct = requirePreprocessProduct(fileResultId, upstreamProductId);
 
         StageTriggerVO triggered = triggerSupport.trigger(fileResultId, PipelineStage.CHUNK,
                 preprocessProduct.getId(), strategyRow.getId(), JsonUtil.toJsonStr(strategy),
@@ -87,7 +87,7 @@ public class ChunkControlServiceImpl implements ChunkControlService {
     @Override
     public ChunkDetailVO chunkDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);
-        KbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.CHUNK, taskId,
+        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.CHUNK, taskId,
                 PipelineStage.CHUNK.getLabel());
 
         ChunkDetailVO vo = new ChunkDetailVO();
@@ -96,13 +96,13 @@ public class ChunkControlServiceImpl implements ChunkControlService {
         // 切片集合/切片列表：按 task.productId → 产物 → artifactId 精确取该次运行的集合（历史任务同样可展示自己的集合；无任务/无产物留空）
         vo.setChunks(new ArrayList<>());
         ChunkSet chunkSet = null;
-        KbPipelineProduct product = detailSupport.productOfTask(task);
+        WbPipelineProduct product = detailSupport.productOfTask(task);
         if (NullUtil.isNotNull(product)) {
-            // 产物侧现读一次：统计与来源元素个数 / 兜底原因都只在这份产物里（kb_chunk 无对应列）
+            // 产物侧现读一次：统计与来源元素个数 / 兜底原因都只在这份产物里（wb_knowledge_chunk 无对应列）
             chunkSet = ChunkStatsSupport.readChunkSet(fileStorage, ObjectRef.ofProduct(product));
-            KbChunkSet chunkSetRow = chunkSetDbService.getByArtifactId(product.getArtifactId());
+            WbChunkSet chunkSetRow = chunkSetDbService.getByArtifactId(product.getArtifactId());
             if (NullUtil.isNotNull(chunkSetRow)) {
-                List<KbChunk> chunks = chunkDbService.listByChunkSetId(chunkSetRow.getId());
+                List<WbChunk> chunks = chunkDbService.listByChunkSetId(chunkSetRow.getId());
                 vo.setSummary(voAssembler.toSummary(chunkSetRow, chunks));
                 vo.setChunks(voAssembler.toChunkItemVOs(chunks, productChunks(chunkSet)));
             }
@@ -122,7 +122,7 @@ public class ChunkControlServiceImpl implements ChunkControlService {
      * <p>无任务、快照缺失或快照损坏一律返回 null（不构造默认策略）：这几个策略口径整组留空，
      * 页面上如实表现为无策略快照，其余统计项照常下发。
      */
-    private ChunkStrategy strategyOf(KbPipelineTask task) {
+    private ChunkStrategy strategyOf(WbPipelineTask task) {
         if (NullUtil.isNull(task)) {
             return null;
         }
@@ -145,26 +145,26 @@ public class ChunkControlServiceImpl implements ChunkControlService {
     }
 
     /** 读上游预处理视图（"进入切片 / 跳过"元素数的口径来源；取不到返回 null） */
-    private PreprocessView readUpstreamView(KbPipelineTask task) {
+    private PreprocessView readUpstreamView(WbPipelineTask task) {
         if (NullUtil.isNull(task) || NullUtil.isNull(task.getUpstreamProductId())) {
             return null;
         }
-        KbPipelineProduct upstream = pipelineProductDbService.getById(task.getUpstreamProductId());
+        WbPipelineProduct upstream = pipelineProductDbService.getById(task.getUpstreamProductId());
         return NullUtil.isNull(upstream)
                 ? null : PreprocessStatsSupport.readView(fileStorage, ObjectRef.ofProduct(upstream));
     }
 
     /** 策略解析两档：显式指定（40433 校验存在/类型/启用）→ 知识库绑定；两档都不命中一律拒绝 40438。 */
-    private KbPipelineStrategyVersion resolveStrategyRow(KbFileResult fileResult, Long strategyVersionId) {
+    private WbPipelineStrategyVersion resolveStrategyRow(WbFileResult fileResult, Long strategyVersionId) {
         return strategySupport.resolve(
                 fileResult, strategyVersionId, ChunkStrategy.TYPE, "ChunkControlServiceImpl 切片");
     }
 
     /** 上游预处理产物校验：必须显式指定，校验存在/环节/归属；未指定直接拒绝（无按时间猜的兜底）。 */
-    private KbPipelineProduct requirePreprocessProduct(Long fileResultId, Long productId) {
+    private WbPipelineProduct requirePreprocessProduct(Long fileResultId, Long productId) {
         ThrowUtil.throwIf(NullUtil.isNull(productId) || productId == 0L, ErrorCode.TASK_UPSTREAM_MISSING,
                 "未指定上游预处理视图产物，请从预处理产物的卡片发起触发");
-        KbPipelineProduct product = pipelineProductDbService.getById(productId);
+        WbPipelineProduct product = pipelineProductDbService.getById(productId);
         ThrowUtil.throwIf(NullUtil.isNull(product), ErrorCode.FILE_RESULT_NOT_FOUND, "指定上游产物不存在");
         ThrowUtil.throwIf(!PipelineStage.PREPROCESS.name().equals(product.getStage()), ErrorCode.FILE_RESULT_NOT_FOUND,
                 "指定产物环节不匹配：期望 PREPROCESS");
@@ -175,7 +175,7 @@ public class ChunkControlServiceImpl implements ChunkControlService {
         return product;
     }
 
-    private ChunkStrategy toStrategy(KbPipelineStrategyVersion row) {
+    private ChunkStrategy toStrategy(WbPipelineStrategyVersion row) {
         // configSnapshot 为 routes/pipeline 结构（无 name/version），解析补全默认后回填行信息；快照损坏按 40433 拒绝
         return strategySupport.bindRow(row, strategyParser::parse);
     }

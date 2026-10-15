@@ -1,7 +1,7 @@
 package com.workbuddy.auth.controller;
 
-import com.workbuddy.auth.db.UserDbService;
-import com.workbuddy.common.domain.entity.User;
+import com.workbuddy.auth.db.WbUserDbService;
+import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.R;
 import com.workbuddy.common.error.ErrorCode;
@@ -49,7 +49,7 @@ public class AvatarController {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private final UserDbService userDbService;
+    private final WbUserDbService userDbService;
 
     private final FileStorage fileStorage;
 
@@ -59,7 +59,7 @@ public class AvatarController {
         ThrowUtil.throwIf(NullUtil.isNull(file) || file.isEmpty(), ErrorCode.PARAM_INVALID, "请选择头像文件");
         ThrowUtil.throwIf(file.getSize() > MAX_BYTES, ErrorCode.PARAM_INVALID, "头像不能超过 2MB");
         String extension = resolveExtension(file);
-        User user = currentUser();
+        WbUser user = currentUser();
         // 每次上传换一个新 key：路径不可变，浏览器可长缓存，也天然解决"换了头像还在用旧图"
         String key = AvatarUrlUtil.KEY_PREFIX + user.getId() + "/" + randomSegment() + "." + extension;
         ObjectRef ref;
@@ -80,7 +80,7 @@ public class AvatarController {
     /** 移除头像：四列一并清空（key + 存储类型 + 数据源 + 桶名）；已上传的对象留待清理，存储端口暂未提供删除能力 */
     @DeleteMapping
     public R<Void> remove() {
-        User user = currentUser();
+        WbUser user = currentUser();
         user.setAvatar(null);
         user.setAvatarStorageType(null);
         user.setAvatarStorageSourceId(null);
@@ -97,7 +97,7 @@ public class AvatarController {
      */
     @GetMapping("/{userId}")
     public ResponseEntity<byte[]> read(@PathVariable Long userId) {
-        User user = userDbService.getById(userId);
+        WbUser user = userDbService.getById(userId);
         try {
             ObjectRef ref = ObjectRef.ofAvatar(user);
             if (NullUtil.isNull(ref)) {
@@ -115,10 +115,10 @@ public class AvatarController {
         }
     }
 
-    private User currentUser() {
+    private WbUser currentUser() {
         Long id = NullUtil.isNull(SecurityUtil.getUser()) ? null : SecurityUtil.getUser().getId();
         ThrowUtil.throwIf(NullUtil.isNull(id), ErrorCode.UNAUTHORIZED);
-        User user = userDbService.getById(id);
+        WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         return user;
     }

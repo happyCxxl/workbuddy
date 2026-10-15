@@ -2,23 +2,23 @@ package com.workbuddy.biz.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.biz.service.db.KbAuditLogDbService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbIndexSetDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineStrategyVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
-import com.workbuddy.biz.service.db.KbStrategyBindingDbService;
-import com.workbuddy.biz.service.db.KbSubmitLogDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbIndexSetDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
+import com.workbuddy.biz.service.db.WbSubmitLogDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.InputVoAssembler;
 import com.workbuddy.biz.service.support.TaskVoAssembler;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KbSourceFile;
-import com.workbuddy.common.domain.entity.KbSubmitLog;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbSourceFile;
+import com.workbuddy.common.domain.entity.WbSubmitLog;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.input.FileValidationResult;
 import com.workbuddy.common.domain.storage.StorageRef;
@@ -75,25 +75,25 @@ import static org.mockito.Mockito.when;
 class KnowledgeBaseFileSubmitTest {
 
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
-    private KbAuditLogDbService kbAuditLogDbService;
+    private WbAuditLogDbService kbAuditLogDbService;
     @Mock
-    private KbStrategyBindingDbService strategyBindingDbService;
+    private WbStrategyBindingDbService strategyBindingDbService;
     @Mock
-    private KbPipelineStrategyVersionDbService strategyVersionDbService;
+    private WbPipelineStrategyVersionDbService strategyVersionDbService;
     @Mock
-    private KbFileResultDbService kbFileResultDbService;
+    private WbFileResultDbService kbFileResultDbService;
     @Mock
-    private KbIndexSetDbService indexSetDbService;
+    private WbIndexSetDbService indexSetDbService;
     @Mock
-    private KbIndexVersionDbService indexVersionDbService;
+    private WbIndexVersionDbService indexVersionDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
-    private KbSubmitLogDbService submitLogDbService;
+    private WbSubmitLogDbService submitLogDbService;
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
     private FileValidatorPort fileValidator;
     @Mock
@@ -145,8 +145,8 @@ class KnowledgeBaseFileSubmitTest {
         return request;
     }
 
-    private KnowledgeBase activeKb() {
-        KnowledgeBase kb = new KnowledgeBase();
+    private WbKnowledgeBase activeKb() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(1L);
         kb.setStatus(KnowledgeBaseStatus.ACTIVE.getCode());
         kb.setUserId(ME);
@@ -166,16 +166,16 @@ class KnowledgeBaseFileSubmitTest {
 
     private void stubSuccessWrites() {
         when(sourceFileDbService.findByFileId("88")).thenReturn(null);
-        when(sourceFileDbService.save(any(KbSourceFile.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbSourceFile.class).setId(1L);
+        when(sourceFileDbService.save(any(WbSourceFile.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSourceFile.class).setId(1L);
             return true;
         });
-        when(kbFileResultDbService.save(any(KbFileResult.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbFileResult.class).setId(10L);
+        when(kbFileResultDbService.save(any(WbFileResult.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbFileResult.class).setId(10L);
             return true;
         });
-        when(submitLogDbService.save(any(KbSubmitLog.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbSubmitLog.class).setId(30L);
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSubmitLog.class).setId(30L);
             return true;
         });
     }
@@ -194,8 +194,8 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals(SubmitStatus.PASS.name(), response.getSubmitLog().getStatus());
         // 手动逐环节口径：提交只建档三写，不登记任务（解析由页面触发）
         assertNull(response.getPipelineTaskId());
-        verify(kbFileResultDbService).save(any(KbFileResult.class));
-        verify(pipelineTaskDbService, never()).save(any(KbPipelineTask.class));
+        verify(kbFileResultDbService).save(any(WbFileResult.class));
+        verify(pipelineTaskDbService, never()).save(any(WbPipelineTask.class));
     }
 
     @Test
@@ -204,8 +204,8 @@ class KnowledgeBaseFileSubmitTest {
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
         when(fileValidator.validate("88"))
                 .thenReturn(FileValidationResult.fail(FileValidationFailReason.FORMAT_NOT_ALLOWED));
-        when(submitLogDbService.save(any(KbSubmitLog.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbSubmitLog.class).setId(30L);
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSubmitLog.class).setId(30L);
             return true;
         });
 
@@ -214,8 +214,8 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals(SubmitStatus.FAIL.name(), response.getSubmitLog().getStatus());
         assertEquals(FileValidationFailReason.FORMAT_NOT_ALLOWED.name(), response.getSubmitLog().getFailReason());
         assertNull(response.getPipelineTaskId());
-        verify(kbFileResultDbService, never()).save(any(KbFileResult.class));
-        verify(pipelineTaskDbService, never()).save(any(KbPipelineTask.class));
+        verify(kbFileResultDbService, never()).save(any(WbFileResult.class));
+        verify(pipelineTaskDbService, never()).save(any(WbPipelineTask.class));
     }
 
     @Test
@@ -224,8 +224,8 @@ class KnowledgeBaseFileSubmitTest {
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
         when(fileValidator.validate("88"))
                 .thenReturn(FileValidationResult.fail(FileValidationFailReason.FILE_NOT_FOUND));
-        when(submitLogDbService.save(any(KbSubmitLog.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbSubmitLog.class).setId(30L);
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSubmitLog.class).setId(30L);
             return true;
         });
 
@@ -233,18 +233,18 @@ class KnowledgeBaseFileSubmitTest {
 
         assertEquals(SubmitStatus.FAIL.name(), response.getSubmitLog().getStatus());
         assertEquals(FileValidationFailReason.FILE_NOT_FOUND.name(), response.getSubmitLog().getFailReason());
-        verify(kbFileResultDbService, never()).save(any(KbFileResult.class));
+        verify(kbFileResultDbService, never()).save(any(WbFileResult.class));
     }
 
     @Test
     void submitIdempotentReplayShouldReturnExisting() {
-        KbSubmitLog existing = new KbSubmitLog();
+        WbSubmitLog existing = new WbSubmitLog();
         existing.setId(30L);
         existing.setRequestId("req-1");
         existing.setFileResultId(10L);
         existing.setStatus(SubmitStatus.PASS.name());
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(existing);
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(20L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name())).thenReturn(task);
 
@@ -262,23 +262,23 @@ class KnowledgeBaseFileSubmitTest {
         when(fileValidator.validate("88")).thenReturn(passResult());
         when(fileStorage.metadata("88")).thenReturn(metadata());
         when(sourceFileDbService.findByFileId("88")).thenReturn(null);
-        when(sourceFileDbService.save(any(KbSourceFile.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbSourceFile.class).setId(1L);
+        when(sourceFileDbService.save(any(WbSourceFile.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSourceFile.class).setId(1L);
             return true;
         });
-        when(kbFileResultDbService.save(any(KbFileResult.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbFileResult.class).setId(10L);
+        when(kbFileResultDbService.save(any(WbFileResult.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbFileResult.class).setId(10L);
             return true;
         });
         // 并发冲突：save 撞唯一键，重查拿到对方已提交记录
-        when(submitLogDbService.save(any(KbSubmitLog.class))).thenThrow(new DuplicateKeyException("uk_request_id"));
-        KbSubmitLog raced = new KbSubmitLog();
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenThrow(new DuplicateKeyException("uk_request_id"));
+        WbSubmitLog raced = new WbSubmitLog();
         raced.setId(30L);
         raced.setRequestId("req-1");
         raced.setFileResultId(10L);
         raced.setStatus(SubmitStatus.PASS.name());
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null, raced);
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(20L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name())).thenReturn(task);
 
@@ -295,24 +295,24 @@ class KnowledgeBaseFileSubmitTest {
         when(fileValidator.validate("88")).thenReturn(passResult());
         when(fileStorage.metadata("88")).thenReturn(metadata());
         // 同 fileId 并发建档：先查无、保存撞 uk_file_id、重查复用
-        when(sourceFileDbService.save(any(KbSourceFile.class))).thenThrow(new DuplicateKeyException("uk_file_id"));
-        KbSourceFile existing = new KbSourceFile();
+        when(sourceFileDbService.save(any(WbSourceFile.class))).thenThrow(new DuplicateKeyException("uk_file_id"));
+        WbSourceFile existing = new WbSourceFile();
         existing.setId(7L);
         existing.setFileId("88");
         when(sourceFileDbService.findByFileId("88")).thenReturn(null, existing);
-        when(kbFileResultDbService.save(any(KbFileResult.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbFileResult.class).setId(10L);
+        when(kbFileResultDbService.save(any(WbFileResult.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbFileResult.class).setId(10L);
             return true;
         });
-        when(submitLogDbService.save(any(KbSubmitLog.class))).thenAnswer(inv -> {
-            inv.getArgument(0, KbSubmitLog.class).setId(30L);
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSubmitLog.class).setId(30L);
             return true;
         });
 
         FileSubmitResponse response = service.submit(1L, request());
 
         assertNull(response.getPipelineTaskId());
-        ArgumentCaptor<KbFileResult> captor = ArgumentCaptor.forClass(KbFileResult.class);
+        ArgumentCaptor<WbFileResult> captor = ArgumentCaptor.forClass(WbFileResult.class);
         verify(kbFileResultDbService).save(captor.capture());
         assertEquals(7L, captor.getValue().getSourceFileId());
     }
@@ -320,7 +320,7 @@ class KnowledgeBaseFileSubmitTest {
     @Test
     void submitToDisabledKbShouldThrow() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
-        KnowledgeBase disabled = new KnowledgeBase();
+        WbKnowledgeBase disabled = new WbKnowledgeBase();
         disabled.setId(1L);
         disabled.setStatus(KnowledgeBaseStatus.DISABLED.getCode());
         disabled.setUserId(ME);
@@ -334,14 +334,14 @@ class KnowledgeBaseFileSubmitTest {
     void submitToOthersKbShouldBehaveAsNotFound() {
         // 看不到的库也不能往里塞文档
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
-        KnowledgeBase others = activeKb();
+        WbKnowledgeBase others = activeKb();
         others.setUserId(ME + 1);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(others);
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.submit(1L, request()));
 
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
-        verify(sourceFileDbService, never()).save(any(KbSourceFile.class));
+        verify(sourceFileDbService, never()).save(any(WbSourceFile.class));
     }
 
     @Test
@@ -355,16 +355,16 @@ class KnowledgeBaseFileSubmitTest {
 
     @Test
     void pageFileResultsShouldAttachLatestStageStatuses() {
-        KbFileResult fr10 = new KbFileResult();
+        WbFileResult fr10 = new WbFileResult();
         fr10.setId(10L);
         fr10.setSourceFileId(1L);
-        KbFileResult fr11 = new KbFileResult();
+        WbFileResult fr11 = new WbFileResult();
         fr11.setId(11L);
         fr11.setSourceFileId(1L);
-        Page<KbFileResult> page = new Page<>(1, 10);
+        Page<WbFileResult> page = new Page<>(1, 10);
         page.setRecords(List.of(fr10, fr11));
         when(kbFileResultDbService.pageByKb(1L, 10L, 1L)).thenReturn(page);
-        KbSourceFile source = new KbSourceFile();
+        WbSourceFile source = new WbSourceFile();
         source.setId(1L);
         source.setFileId("88");
         source.setFileName("招标文件.pdf");
@@ -376,45 +376,45 @@ class KnowledgeBaseFileSubmitTest {
         when(storageRouter.writeType()).thenReturn(StorageType.LOCAL);
 
         // 模拟 DB 倒序契约：同一 fileResult 两条任务时列表第一条即最新
-        KbPipelineTask parseOld = new KbPipelineTask();
+        WbPipelineTask parseOld = new WbPipelineTask();
         parseOld.setId(2L);
         parseOld.setFileResultId(10L);
         parseOld.setStage(PipelineStage.PARSE.name());
         parseOld.setStatus(PipelineTaskStatus.FAILED.name());
-        KbPipelineTask parseNew = new KbPipelineTask();
+        WbPipelineTask parseNew = new WbPipelineTask();
         parseNew.setId(21L);
         parseNew.setFileResultId(10L);
         parseNew.setStage(PipelineStage.PARSE.name());
         parseNew.setStatus(PipelineTaskStatus.SUCCESS.name());
-        KbPipelineTask fr11Parse = new KbPipelineTask();
+        WbPipelineTask fr11Parse = new WbPipelineTask();
         fr11Parse.setId(22L);
         fr11Parse.setFileResultId(11L);
         fr11Parse.setStage(PipelineStage.PARSE.name());
         fr11Parse.setStatus(PipelineTaskStatus.RUNNING.name());
         when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.PARSE.name()))
                 .thenReturn(List.of(parseNew, parseOld, fr11Parse));
-        KbPipelineTask structure = new KbPipelineTask();
+        WbPipelineTask structure = new WbPipelineTask();
         structure.setId(51L);
         structure.setFileResultId(10L);
         structure.setStage(PipelineStage.STRUCTURE.name());
         structure.setStatus(PipelineTaskStatus.SUCCESS.name());
         when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.STRUCTURE.name()))
                 .thenReturn(List.of(structure));
-        KbPipelineTask preprocess = new KbPipelineTask();
+        WbPipelineTask preprocess = new WbPipelineTask();
         preprocess.setId(61L);
         preprocess.setFileResultId(10L);
         preprocess.setStage(PipelineStage.PREPROCESS.name());
         preprocess.setStatus(PipelineTaskStatus.SUCCESS.name());
         when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.PREPROCESS.name()))
                 .thenReturn(List.of(preprocess));
-        KbPipelineTask chunk = new KbPipelineTask();
+        WbPipelineTask chunk = new WbPipelineTask();
         chunk.setId(71L);
         chunk.setFileResultId(10L);
         chunk.setStage(PipelineStage.CHUNK.name());
         chunk.setStatus(PipelineTaskStatus.SUCCESS.name());
         when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.CHUNK.name()))
                 .thenReturn(List.of(chunk));
-        KbPipelineTask embed = new KbPipelineTask();
+        WbPipelineTask embed = new WbPipelineTask();
         embed.setId(81L);
         embed.setFileResultId(10L);
         embed.setStage(PipelineStage.EMBED.name());
@@ -460,13 +460,13 @@ class KnowledgeBaseFileSubmitTest {
      * @param currentSourceName 当前启用数据源的显示名（未启用或未注册时传 null）
      */
     private void stubStorageNames(String storageSourceName, String currentSourceName) {
-        KbFileResult fileResult = new KbFileResult();
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setSourceFileId(1L);
-        Page<KbFileResult> page = new Page<>(1, 10);
+        Page<WbFileResult> page = new Page<>(1, 10);
         page.setRecords(List.of(fileResult));
         when(kbFileResultDbService.pageByKb(1L, 10L, 1L)).thenReturn(page);
-        KbSourceFile source = new KbSourceFile();
+        WbSourceFile source = new WbSourceFile();
         source.setId(1L);
         source.setFileId("88");
         when(sourceFileDbService.listByIds(List.of(1L))).thenReturn(List.of(source));

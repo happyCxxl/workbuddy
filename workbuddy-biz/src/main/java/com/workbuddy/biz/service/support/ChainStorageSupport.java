@@ -1,10 +1,10 @@
 package com.workbuddy.biz.service.support;
 
 import cn.hutool.core.util.StrUtil;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbSourceFile;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChainStorageSupport {
 
-    private final KbFileResultDbService fileResultDbService;
-    private final KbSourceFileDbService sourceFileDbService;
+    private final WbFileResultDbService fileResultDbService;
+    private final WbSourceFileDbService sourceFileDbService;
     private final FileStorage fileStorage;
     private final StorageRouter storageRouter;
 
@@ -50,11 +50,11 @@ public class ChainStorageSupport {
      * @return 源文件档案的数据源 ID；链路缺环、fileId 为空或档案无数据源返回 null
      */
     public Long chainSourceIdOf(Long fileResultId) {
-        KbFileResult fileResult = fileResultDbService.getById(fileResultId);
+        WbFileResult fileResult = fileResultDbService.getById(fileResultId);
         if (NullUtil.isNull(fileResult) || NullUtil.isNull(fileResult.getSourceFileId())) {
             return null;
         }
-        KbSourceFile sourceFile = sourceFileDbService.getById(fileResult.getSourceFileId());
+        WbSourceFile sourceFile = sourceFileDbService.getById(fileResult.getSourceFileId());
         return NullUtil.isNull(sourceFile) ? null : storageSourceIdOfFile(sourceFile.getFileId());
     }
 
@@ -72,24 +72,24 @@ public class ChainStorageSupport {
         if (distinctIds.isEmpty()) {
             return Map.of();
         }
-        List<KbFileResult> fileResults = fileResultDbService.listByIds(distinctIds);
+        List<WbFileResult> fileResults = fileResultDbService.listByIds(distinctIds);
         List<Long> sourceIds = fileResults.stream()
-                .map(KbFileResult::getSourceFileId)
+                .map(WbFileResult::getSourceFileId)
                 .filter(NullUtil::isNotNull)
                 .distinct()
                 .toList();
-        Map<Long, KbSourceFile> sourceFiles = sourceIds.isEmpty() ? Map.of()
+        Map<Long, WbSourceFile> sourceFiles = sourceIds.isEmpty() ? Map.of()
                 : sourceFileDbService.listByIds(sourceIds).stream()
-                        .collect(Collectors.toMap(KbSourceFile::getId, Function.identity()));
+                        .collect(Collectors.toMap(WbSourceFile::getId, Function.identity()));
         List<String> fileIds = sourceFiles.values().stream()
-                .map(KbSourceFile::getFileId)
+                .map(WbSourceFile::getFileId)
                 .filter(StrUtil::isNotBlank)
                 .distinct()
                 .toList();
         Map<String, StorageRef> archiveRefs = fileIds.isEmpty() ? Map.of() : fileStorage.refsOf(fileIds);
         Map<Long, Long> chainSourceIds = new HashMap<>();
         fileResults.forEach(fileResult -> {
-            KbSourceFile sourceFile = sourceFiles.get(fileResult.getSourceFileId());
+            WbSourceFile sourceFile = sourceFiles.get(fileResult.getSourceFileId());
             StorageRef ref = NullUtil.isNull(sourceFile) ? null : archiveRefs.get(sourceFile.getFileId());
             if (NullUtil.isNotNull(ref) && NullUtil.isNotNull(ref.sourceId())) {
                 chainSourceIds.put(fileResult.getId(), ref.sourceId());

@@ -4,8 +4,8 @@ import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
 import com.workbuddy.common.domain.embed.EmbeddingSet;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
@@ -39,7 +39,7 @@ public class IndexRowAssembler {
      *
      * @return 产物读取失败 → null；无 SUCCESS/CACHED 记录 → 空列表
      */
-    public List<IndexRow> assemble(Long fileResultId, String owner, KbChunkSet chunkRow, KbEmbeddingSet embedRow) {
+    public List<IndexRow> assemble(Long fileResultId, String owner, WbChunkSet chunkRow, WbEmbeddingSet embedRow) {
         EmbeddingSet embedSet = readEmbeddingSet(ObjectRef.ofEmbeddingSet(embedRow));
         if (NullUtil.isNull(embedSet) || NullUtil.isNull(embedSet.getRecords())) {
             log.warn("===> IndexRowAssembler 向量产物缺失或记录为空, artifactId={}", embedRow.getArtifactId());

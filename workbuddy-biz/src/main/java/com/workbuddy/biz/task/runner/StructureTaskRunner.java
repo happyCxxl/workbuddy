@@ -1,13 +1,13 @@
 package com.workbuddy.biz.task.runner;
 
-import com.workbuddy.biz.service.db.KbPipelineProductDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.task.support.TaskRunnerSupport;
-import com.workbuddy.common.domain.entity.KbPipelineProduct;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.structure.AssembleOutcome;
@@ -42,8 +42,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class StructureTaskRunner {
 
-    private final KbPipelineTaskDbService pipelineTaskDbService;
-    private final KbPipelineProductDbService pipelineProductDbService;
+    private final WbPipelineTaskDbService pipelineTaskDbService;
+    private final WbPipelineProductDbService pipelineProductDbService;
     private final FileStorage fileStorage;
     private final DocumentAssemblerPort documentAssembler;
     private final StructureProperties structureProperties;
@@ -55,7 +55,7 @@ public class StructureTaskRunner {
      * 执行单个组装任务（由消费循环提交，外层看门狗负责超时）。
      */
     public void run(Long taskId) {
-        KbPipelineTask task = TaskRunnerSupport.claim(pipelineTaskDbService, taskId);
+        WbPipelineTask task = TaskRunnerSupport.claim(pipelineTaskDbService, taskId);
         if (NullUtil.isNull(task)) {
             return;
         }
@@ -63,7 +63,7 @@ public class StructureTaskRunner {
                 taskId, task.getFileResultId());
         try {
             // 上游解析产物：只认任务行上的显式引用，缺引用按任务失败处理
-            KbPipelineProduct parseProduct = resolveParseProduct(task);
+            WbPipelineProduct parseProduct = resolveParseProduct(task);
             if (NullUtil.isNull(parseProduct)) {
                 log.warn("===> StructureTaskRunner 组装失败：任务未指定上游解析产物, taskId={}, fileResultId={}",
                         taskId, task.getFileResultId());
@@ -120,14 +120,14 @@ public class StructureTaskRunner {
     }
 
     /** 上游解析产物解析：任务指定 upstreamProductId 优先，查不到或缺省回退该环节最新产物。 */
-    private KbPipelineProduct resolveParseProduct(KbPipelineTask task) {
+    private WbPipelineProduct resolveParseProduct(WbPipelineTask task) {
         return TaskRunnerSupport.resolveUpstreamProduct(pipelineProductDbService, task);
     }
 
-    private void persistProduct(KbPipelineTask task, KbPipelineProduct parseProduct, AssembleOutcome outcome) {
+    private void persistProduct(WbPipelineTask task, WbPipelineProduct parseProduct, AssembleOutcome outcome) {
         UnifiedDocument document = Objects.requireNonNull(outcome.getDocument(), "组装结果为空");
         // 组装环节没有独立能力快照：产物行该列只承载 schemaVersion（解析环节的能力快照在 documentInfo 里）
-        KbPipelineProduct product = productPersistence.persist(task, PipelineStage.STRUCTURE, parseProduct.getId(),
+        WbPipelineProduct product = productPersistence.persist(task, PipelineStage.STRUCTURE, parseProduct.getId(),
                 JsonUtil.toJsonStr(Map.of("schemaVersion", UnifiedDocument.SCHEMA_VERSION)), document);
         stepLogPersistence.save(task.getId(), outcome.getStepLogs());
         TaskRunnerSupport.logPersisted(log, "StructureTaskRunner 组装完成", task, task.getFileResultId(), outcome,

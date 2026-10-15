@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.common.domain.entity.KbEmbeddingRecord;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.dto.response.embed.EmbedRecordItemVO;
 import com.workbuddy.common.dto.response.embed.EmbedSummaryVO;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
@@ -21,7 +21,7 @@ import java.util.List;
 public class EmbedVoAssembler {
 
     /** 集合摘要：基础字段直搬 + 记录三态统计（SUCCESS/FAILED/SKIPPED） */
-    public EmbedSummaryVO toSummary(KbEmbeddingSet set, List<KbEmbeddingRecord> records) {
+    public EmbedSummaryVO toSummary(WbEmbeddingSet set, List<WbEmbeddingRecord> records) {
         EmbedSummaryVO vo = new EmbedSummaryVO();
         vo.setEmbeddingSetId(set.getEmbeddingSetId());
         vo.setStrategyVersion(set.getStrategyVersion());
@@ -34,7 +34,7 @@ public class EmbedVoAssembler {
         int success = 0;
         int failed = 0;
         int skipped = 0;
-        for (KbEmbeddingRecord record : records) {
+        for (WbEmbeddingRecord record : records) {
             EmbedRecordStatus status = EmbedRecordStatus.of(record.getStatus());
             if (NullUtil.isNull(status)) {
                 continue;
@@ -55,11 +55,11 @@ public class EmbedVoAssembler {
     }
 
     /** 记录行 → 记录条目 VO 列表 */
-    public List<EmbedRecordItemVO> toRecordItemVOs(List<KbEmbeddingRecord> records) {
+    public List<EmbedRecordItemVO> toRecordItemVOs(List<WbEmbeddingRecord> records) {
         return records.stream().map(this::toRecordItemVO).toList();
     }
 
-    private EmbedRecordItemVO toRecordItemVO(KbEmbeddingRecord record) {
+    private EmbedRecordItemVO toRecordItemVO(WbEmbeddingRecord record) {
         EmbedRecordItemVO vo = new EmbedRecordItemVO();
         vo.setEmbeddingId(record.getEmbeddingId());
         vo.setChunkId(record.getChunkId());

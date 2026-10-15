@@ -51,8 +51,8 @@ Report 'workbuddy-minio S3 读写' ($mc -match 'probe-\d+') $(if ($mc -match 'pr
 $my = docker exec workbuddy-mysql mysqladmin ping -h localhost -proot123 2>&1
 Report 'mysql ping' ($my -match 'mysqld is alive') "$my"
 if ($my -match 'alive') {
-    $t = docker exec workbuddy-mysql mysql -uroot -proot123 -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='knowledge';" 2>&1
-    Report 'mysql knowledge 表数' ($t -match '^\d+$' -and [int]$t -gt 0) "$t 张表"
+    $t = docker exec workbuddy-mysql mysql -uroot -proot123 -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='workbuddy';" 2>&1
+    Report 'mysql workbuddy 表数' ($t -match '^\d+$' -and [int]$t -gt 0) "$t 张表"
 }
 
 Write-Host "`n=== 结果: $ok 项正常, $bad 项异常 ===" -ForegroundColor $(if ($bad -eq 0) { 'Green' } else { 'Yellow' })

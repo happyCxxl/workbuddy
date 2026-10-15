@@ -92,7 +92,7 @@ public class KnowledgeBaseController {
     }
 
     /**
-     * 知识库详情：基础字段 + 预处理/切片/向量化策略绑定摘要 + 文档数（kb_file_result 计数）。
+     * 知识库详情：基础字段 + 预处理/切片/向量化策略绑定摘要 + 文档数（wb_file_result 计数）。
      *
      * <p>已逻辑删除不可见；非本人可访问的库按「不存在」处理（40401），不返回 40104
      * —— 后者等于确认该库存在，会把别人的库 ID 变成可探测的信息。
@@ -137,7 +137,7 @@ public class KnowledgeBaseController {
      * 统计概览：知识库总数、启用数、文档总数，仅统计未删除数据。
      *
      * <p>三个数与分页列表**同一可见范围**：文档数先取当前用户可见的库 ID 再按集合计数
-     * （kb_file_result 没有归属列，不能直接按用户过滤）。
+     * （wb_file_result 没有归属列，不能直接按用户过滤）。
      *
      * @return 统计概览 VO
      */
@@ -198,7 +198,7 @@ public class KnowledgeBaseController {
 
     /**
      * 提交文件：对文件引用做归属校验与文件校验后完成建档三写
-     * （kb_source_file / kb_file_result / kb_submit_log，同一事务）；
+     * （wb_source_file / wb_file_result / wb_submit_log，同一事务）；
      * 本接口只建档，不创建处理任务——解析由页面在文件结果页手动触发（手动逐环节口径）。
      *
      * <p>幂等语义：以 requestId 为幂等键；同键重复请求返回首次提交记录，
@@ -220,7 +220,7 @@ public class KnowledgeBaseController {
     }
 
     /**
-     * 提交记录分页查询：按知识库分页返回提交流水（PASS/FAIL 均记录，数据源 kb_submit_log），
+     * 提交记录分页查询：按知识库分页返回提交流水（PASS/FAIL 均记录，数据源 wb_submit_log），
      * 支持按提交结果与文件名模糊筛选；失败原因随记录一并返回。
      *
      * @param id        知识库 ID（路径参数）

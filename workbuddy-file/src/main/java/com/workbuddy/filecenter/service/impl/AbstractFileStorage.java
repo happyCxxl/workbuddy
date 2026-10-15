@@ -1,13 +1,13 @@
 package com.workbuddy.filecenter.service.impl;
 
-import com.workbuddy.common.domain.entity.KbFileObject;
+import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.db.KbFileObjectDbService;
+import com.workbuddy.filecenter.db.WbFileObjectDbService;
 import com.workbuddy.filecenter.provider.StorageProvider;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.service.FileStorage;
@@ -34,9 +34,9 @@ public abstract class AbstractFileStorage implements FileStorage {
 
     protected final StorageRouter router;
 
-    protected final KbFileObjectDbService fileObjectDbService;
+    protected final WbFileObjectDbService fileObjectDbService;
 
-    protected AbstractFileStorage(StorageRouter router, KbFileObjectDbService fileObjectDbService) {
+    protected AbstractFileStorage(StorageRouter router, WbFileObjectDbService fileObjectDbService) {
         this.router = router;
         this.fileObjectDbService = fileObjectDbService;
     }
@@ -93,7 +93,7 @@ public abstract class AbstractFileStorage implements FileStorage {
     @Override
     public Map<String, StorageRef> refsOf(Collection<String> fileIds) {
         Map<String, StorageRef> refs = new HashMap<>();
-        for (KbFileObject row : fileObjectDbService.listByFileIds(fileIds)) {
+        for (WbFileObject row : fileObjectDbService.listByFileIds(fileIds)) {
             refs.put(row.getFileId(), StorageRef.of(row));
         }
         return refs;
@@ -111,8 +111,8 @@ public abstract class AbstractFileStorage implements FileStorage {
     }
 
     /** 取档案，不存在抛业务错误 */
-    protected KbFileObject requireObject(String fileId) {
-        KbFileObject object = fileObjectDbService.getByFileId(fileId);
+    protected WbFileObject requireObject(String fileId) {
+        WbFileObject object = fileObjectDbService.getByFileId(fileId);
         ThrowUtil.throwIf(NullUtil.isNull(object), ErrorCode.FILE_NOT_FOUND);
         return object;
     }

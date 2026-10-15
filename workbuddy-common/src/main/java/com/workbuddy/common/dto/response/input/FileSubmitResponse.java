@@ -21,6 +21,6 @@ public class FileSubmitResponse {
     /** 提交日志（整条回显） */
     private SubmitLogVO submitLog;
 
-    /** 处理链任务 ID（实际为 PARSE 环节任务 kb_pipeline_task.id；首次提交/校验失败/无任务时为空） */
+    /** 处理链任务 ID（实际为 PARSE 环节任务 wb_knowledge_pipeline_task.id；首次提交/校验失败/无任务时为空） */
     private Long pipelineTaskId;
 }

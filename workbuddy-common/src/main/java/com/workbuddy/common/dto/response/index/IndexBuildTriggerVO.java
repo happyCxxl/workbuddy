@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class IndexBuildTriggerVO {
 
-    /** 索引版本行 ID（kb_index_version.id） */
+    /** 索引版本行 ID（wb_knowledge_index_version.id） */
     private Long versionId;
 
     /** 版本号（v1、v2…） */
     private String versionNo;
 
-    /** 构建任务 ID（kb_pipeline_task.id，stage=BUILD_INDEX） */
+    /** 构建任务 ID（wb_knowledge_pipeline_task.id，stage=BUILD_INDEX） */
     private Long pipelineTaskId;
 }

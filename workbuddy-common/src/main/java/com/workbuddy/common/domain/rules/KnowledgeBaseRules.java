@@ -1,7 +1,7 @@
 package com.workbuddy.common.domain.rules;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.knowledge.StrategyBindingSwitch;
 import com.workbuddy.common.enums.user.UserRole;
@@ -27,7 +27,7 @@ public final class KnowledgeBaseRules {
      * @param kb 知识库实体
      * @throws KnowledgeException 非启用状态（KB_STATUS_ILLEGAL 40402）
      */
-    public static void checkCanDisable(KnowledgeBase kb) {
+    public static void checkCanDisable(WbKnowledgeBase kb) {
         requireStatus(kb, KnowledgeBaseStatus.ACTIVE, ErrorCode.KB_STATUS_ILLEGAL, "仅启用状态的知识库可以停用");
     }
 
@@ -37,7 +37,7 @@ public final class KnowledgeBaseRules {
      * @param kb 知识库实体
      * @throws KnowledgeException 非停用状态（KB_STATUS_ILLEGAL 40402）
      */
-    public static void checkCanEnable(KnowledgeBase kb) {
+    public static void checkCanEnable(WbKnowledgeBase kb) {
         requireStatus(kb, KnowledgeBaseStatus.DISABLED, ErrorCode.KB_STATUS_ILLEGAL, "仅停用状态的知识库可以启用");
     }
 
@@ -47,7 +47,7 @@ public final class KnowledgeBaseRules {
      * @param kb 知识库实体
      * @throws KnowledgeException 非启用状态（KB_NOT_ACTIVE 40421）
      */
-    public static void checkCanSubmit(KnowledgeBase kb) {
+    public static void checkCanSubmit(WbKnowledgeBase kb) {
         requireStatus(kb, KnowledgeBaseStatus.ACTIVE, ErrorCode.KB_NOT_ACTIVE, null);
     }
 
@@ -70,7 +70,7 @@ public final class KnowledgeBaseRules {
     /**
      * 归属校验：当前用户能否读写该知识库。
      *
-     * <p>管理员放行全部，普通用户仅限自己创建的（`kb_knowledge_base.user_id` 与本人一致）；
+     * <p>管理员放行全部，普通用户仅限自己创建的（`wb_knowledge_base.user_id` 与本人一致）；
      * 存量 `user_id = NULL` 的数据对普通用户不可见（知识库归属创建者，无归属的行不视为公共资产）。
      *
      * <p>不可访问时抛 {@link ErrorCode#KB_NOT_FOUND}：越权访问与库不存在在响应上完全一致，
@@ -80,7 +80,7 @@ public final class KnowledgeBaseRules {
      * @param user 当前登录用户
      * @throws KnowledgeException 无登录上下文（UNAUTHORIZED 40101）或不可访问（KB_NOT_FOUND 40401）
      */
-    public static void checkAccessible(KnowledgeBase kb, KnowledgeUser user) {
+    public static void checkAccessible(WbKnowledgeBase kb, KnowledgeUser user) {
         requireLogin(user);
         if (isAdmin(user)) {
             return;
@@ -100,7 +100,7 @@ public final class KnowledgeBaseRules {
     }
 
     /** 状态闸门公共实现：状态缺失或非预期即抛对应错误码 */
-    private static void requireStatus(KnowledgeBase kb, KnowledgeBaseStatus expected, ErrorCode errorCode,
+    private static void requireStatus(WbKnowledgeBase kb, KnowledgeBaseStatus expected, ErrorCode errorCode,
                                       String message) {
         if (NullUtil.isNull(kb.getStatus()) || !ObjectUtil.equal(kb.getStatus(), expected.getCode())) {
             if (NullUtil.isNull(message)) {
@@ -113,7 +113,7 @@ public final class KnowledgeBaseRules {
     /**
      * 策略绑定开关判定：null 或非 0 视为开启（兼容存量数据）。
      */
-    public static boolean isStrategyBindingEnabled(KnowledgeBase kb) {
+    public static boolean isStrategyBindingEnabled(WbKnowledgeBase kb) {
         return NullUtil.isNull(kb) || StrategyBindingSwitch.isOn(kb.getStrategyBindingEnabled());
     }
 }

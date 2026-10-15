@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 存储数据源定义：运行时持有的一份连接参数（kb_storage_source.config_json 解析后的形态）。
+ * 存储数据源定义：运行时持有的一份连接参数（wb_storage_source.config_json 解析后的形态）。
  *
  * <p>参数按存储类型定义，键与值都是字符串，键名与页面提交的一致：
  * MinIO 取 {@link #KEY_ENDPOINT}、{@link #KEY_ACCESS_KEY}、{@link #KEY_SECRET_KEY}、
  * {@link #KEY_FILE_BUCKET}、{@link #KEY_ARTIFACT_BUCKET}；
  * 本地磁盘取 {@link #KEY_ROOT_DIR}、{@link #KEY_FILE_DIR}、{@link #KEY_ARTIFACT_DIR}。
  *
- * @param id     数据源实例 ID（kb_storage_source.id）
+ * @param id     数据源实例 ID（wb_storage_source.id）
  * @param name   数据源名称（日志与提示文案用）
  * @param type   存储类型
  * @param params 连接参数（按键取值，缺失返回 null）

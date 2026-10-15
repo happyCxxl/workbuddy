@@ -1,4 +1,4 @@
-/** 提交结果状态：后端 kb_submit_log.status */
+/** 提交结果状态：后端 wb_submit_log.status */
 export type SubmitStatus = 'PASS' | 'FAIL';
 
 /** 提交日志（后端 SubmitLogVO）：提交记录列表与提交响应的数据源 */

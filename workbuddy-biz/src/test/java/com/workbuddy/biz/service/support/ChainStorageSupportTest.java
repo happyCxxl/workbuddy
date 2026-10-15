@@ -1,9 +1,9 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbSourceFileDbService;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbSourceFile;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
@@ -43,9 +43,9 @@ class ChainStorageSupportTest {
     private static final Long CURRENT_SOURCE = 2L;
 
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
-    private KbSourceFileDbService sourceFileDbService;
+    private WbSourceFileDbService sourceFileDbService;
     @Mock
     private FileStorage fileStorage;
     @Mock
@@ -60,11 +60,11 @@ class ChainStorageSupportTest {
 
     /** 链的各环齐全：文件结果 10 → 来源文件 5 → 文件档案 F-88 */
     private void stubChain() {
-        KbFileResult fileResult = new KbFileResult();
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setSourceFileId(5L);
         when(fileResultDbService.getById(10L)).thenReturn(fileResult);
-        KbSourceFile sourceFile = new KbSourceFile();
+        WbSourceFile sourceFile = new WbSourceFile();
         sourceFile.setId(5L);
         sourceFile.setFileId("F-88");
         when(sourceFileDbService.getById(5L)).thenReturn(sourceFile);
@@ -87,7 +87,7 @@ class ChainStorageSupportTest {
 
     @Test
     void chainSourceIdShouldBeNullWhenSourceFileMissing() {
-        KbFileResult fileResult = new KbFileResult();
+        WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
         fileResult.setSourceFileId(5L);
         when(fileResultDbService.getById(10L)).thenReturn(fileResult);
@@ -129,20 +129,20 @@ class ChainStorageSupportTest {
 
     @Test
     void batchChainSourceIdsShouldResolveEachResultFromArchive() {
-        KbFileResult fr10 = new KbFileResult();
+        WbFileResult fr10 = new WbFileResult();
         fr10.setId(10L);
         fr10.setSourceFileId(5L);
-        KbFileResult fr11 = new KbFileResult();
+        WbFileResult fr11 = new WbFileResult();
         fr11.setId(11L);
         fr11.setSourceFileId(6L);
-        KbFileResult fr12 = new KbFileResult();
+        WbFileResult fr12 = new WbFileResult();
         fr12.setId(12L);
         fr12.setSourceFileId(null);
         when(fileResultDbService.listByIds(List.of(10L, 11L, 12L))).thenReturn(List.of(fr10, fr11, fr12));
-        KbSourceFile source5 = new KbSourceFile();
+        WbSourceFile source5 = new WbSourceFile();
         source5.setId(5L);
         source5.setFileId("F-88");
-        KbSourceFile source6 = new KbSourceFile();
+        WbSourceFile source6 = new WbSourceFile();
         source6.setId(6L);
         source6.setFileId("F-99");
         when(sourceFileDbService.listByIds(List.of(5L, 6L))).thenReturn(List.of(source5, source6));

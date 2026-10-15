@@ -40,6 +40,6 @@ public class HomeSummaryVO implements Serializable {
     /** 检索策略版本数 */
     private Long retrievalVersionCount;
 
-    /** 文档数：可见库下的 kb_file_result 行数（已建档文档，**不含文件校验失败**） */
+    /** 文档数：可见库下的 wb_file_result 行数（已建档文档，**不含文件校验失败**） */
     private Long documentCount;
 }

@@ -1,4 +1,4 @@
-// 用户契约（与后端 UserVO/kb_user 对齐；响应不含密码）
+// 用户契约（与后端 UserVO/wb_user 对齐；响应不含密码）
 
 /** 用户状态码值（与后端 UserStatus 对齐） */
 export const USER_STATUS = {

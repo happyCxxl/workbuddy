@@ -4,13 +4,13 @@
 
 | 项           | 值                                                                                                                                                                                                            |
 |--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 路由         | `/knowledge/:id/stages`（与其余环节共用同一路由，按执行链节点区分）                                                                                                                                      |
+| 路由         | `/knowledge/:id/stages`（与其余环节共用同一路由，按执行链节点区分）                                                                                                                                           |
 | 入口         | 知识库列表 → 某库的「切片阶段（执行链）」→ 切片环节卡片                                                                                                                                                       |
 | 前端视图     | `../../../web/src/views/knowledge-base/PipelineStageView.vue`（页面）                                                                                                                                         |
 | 前端组件     | `../../../web/src/components/pipeline/ChainNode.vue`（卡片）、`../../../web/src/components/pipeline/StageDetailDrawer.vue`（抽屉，各环节共用）、`../../../web/src/components/pipeline/ChainGraph.vue`（画布） |
 | 环节展示口径 | `../../../web/src/types/pipeline-stage-view.ts`（卡片指标 / 体检清单 / 页签 / 左栏形态的配置表，按环节取值）                                                                                                  |
 | 前端接口层   | `../../../web/src/api/pipeline.ts`                                                                                                                                                                            |
-| 后端         | `KnowledgeFileChunkController`（触发切片 / 切片详情）、`KnowledgeFileStageController`（各环节共用的产物内容）、`ChunkTaskRunner`（执行器：落产物与 kb_chunk）、`ChunkPipeline`（切片管线）                    |
+| 后端         | `KnowledgeFileChunkController`（触发切片 / 切片详情）、`KnowledgeFileStageController`（各环节共用的产物内容）、`ChunkTaskRunner`（执行器：落产物与 wb_knowledge_chunk）、`ChunkPipeline`（切片管线）          |
 | 涉及接口     | `POST /file-results/{id}/chunk`、`GET /file-results/{id}/chunk-detail`、`GET /file-results/{id}/stage-content?stage=CHUNK`（支持按类型 / 兜底 / 父子过滤）                                                    |
 
 卡片与抽屉是**各环节共用**的一套结构（`ChainNode` + `StageDetailDrawer`），差异全部由 `../../../web/src/types/pipeline-stage-view.ts` 的环节配置给出。抽屉的四个固定分区、分隔条、底部下载、`stage-content` 的分页参数与解析环节共用同一套实现，本目录不复述，见 `../解析环节/01-页面功能.md` 与 `../解析环节/02-接口交互.md`。上游清洗结果（预处理派生视图）在切片环节**只读**：切片只产出片，不回写上游产物。
@@ -28,11 +28,11 @@
 
 ## 待定项
 
-- **`sourceElementCount` / `fallbackReason` 只在详情下发**：来源元素个数与兜底原因只在切片产物里（`kb_chunk` 无对应列），`chunk-detail` 随每片给出；`stage-content` 的 `extra` 没有这两个键（要带上就得每次请求再读一遍切片产物），是否补进 `extra` 尚未决定。
+- **`sourceElementCount` / `fallbackReason` 只在详情下发**：来源元素个数与兜底原因只在切片产物里（`wb_knowledge_chunk` 无对应列），`chunk-detail` 随每片给出；`stage-content` 的 `extra` 没有这两个键（要带上就得每次请求再读一遍切片产物），是否补进 `extra` 尚未决定。
 - **片数含不产向量的父片**：卡片「切片条数」是含父片的总数，父片在向量化时被跳过（`includeParent=OFF`），是否要在片数旁并列一个"产向量片数"尚未决定。
 - **长度分布未上卡片**：`maxChars` / 超目标上限与超软上限的片数已在统计里，卡片只报了超限片数，是否要给长度分桶尚未决定。
 - **父片溯源的展示粒度**：父片的 `sourceElementIds` 是全部子片的并集（条数随章节大小无界），接口只给个数，是否要按章节/类型再聚合尚未决定。
 - **`stage-content` 的过滤维度**：当前只有内容类型 / 兜底 / 有无父片三项，是否要扩到标题路径、字数区间等尚未决定。
-- **`kb_chunk` 没有溯源列**：溯源只在切片产物与向量库索引里，DB 侧做不了"按来源元素反查片"；是否改表尚未决定。
+- **`wb_knowledge_chunk` 没有溯源列**：溯源只在切片产物与向量库索引里，DB 侧做不了"按来源元素反查片"；是否改表尚未决定。
 - **策略页没有文档族**：`../../README.md` 的页面清单里「策略管理」仍是"待梳理"，切片配置页（四路由算法下拉 + 参数范围 + 流程开关）的口径暂时记在 `03-接口逻辑.md` 的参数范围表与 `04-自测清单.md` 的策略页一节。
 - **欠长片数是否上页面未定**：统计里已给出 `underMinMergeCount` 与 `minMergeLen`（与超目标 / 超软上限片数成对），卡片与详情是否展示尚未决定。

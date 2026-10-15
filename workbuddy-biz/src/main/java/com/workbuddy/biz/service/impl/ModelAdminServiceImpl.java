@@ -2,8 +2,8 @@ package com.workbuddy.biz.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.ModelAdminService;
-import com.workbuddy.biz.service.db.KbModelDbService;
-import com.workbuddy.common.domain.entity.KbModel;
+import com.workbuddy.biz.service.db.WbModelDbService;
+import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.catalog.ModelCapability;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
@@ -39,7 +39,7 @@ import java.util.Set;
  * 模型管理服务实现：模型目录的清单与写入、启停。
  *
  * <p>校验都在本类一处完成：厂商码必须出现在配置里、唯一键不冲突、价格与限额非负、能力与状态取值在字典内、
- * 生效区间的开始早于结束。写入只落 `kb_model` 的业务列与审计，配置与密钥都不经过本类。
+ * 生效区间的开始早于结束。写入只落 `wb_model` 的业务列与审计，配置与密钥都不经过本类。
  *
  * @author cxxl
  */
@@ -57,13 +57,13 @@ public class ModelAdminServiceImpl implements ModelAdminService {
     /** 状态字典取值集 */
     private static final Set<String> STATUS_DICT = Set.of(STATUS_ENABLED, STATUS_DISABLED);
 
-    /** 币种字典取值集（kb_model.currency） */
+    /** 币种字典取值集（wb_model.currency） */
     private static final Set<String> CURRENCY_DICT = Set.of("CNY", "USD");
 
     /** 币种留空时的取值 */
     private static final String CURRENCY_DEFAULT = "CNY";
 
-    /** 文本列宽上限（与 kb_model 的列定义一致） */
+    /** 文本列宽上限（与 wb_model 的列定义一致） */
     private static final int VENDOR_CODE_MAX = 64;
     private static final int MODEL_KEY_MAX = 128;
     private static final int DISPLAY_NAME_MAX = 128;
@@ -79,10 +79,10 @@ public class ModelAdminServiceImpl implements ModelAdminService {
             "deepseek", "DeepSeek",
             "openai", "OpenAI");
 
-    /** 审计对象类型（kb_audit_log.object_type） */
+    /** 审计对象类型（wb_audit_log.object_type） */
     private static final String AUDIT_OBJECT_TYPE = AuditObjectType.MODEL.key();
 
-    private final KbModelDbService kbModelDbService;
+    private final WbModelDbService kbModelDbService;
 
     private final ModelVendorProperties modelVendorProperties;
 
@@ -93,9 +93,9 @@ public class ModelAdminServiceImpl implements ModelAdminService {
         ModelQueryDto source = NullUtil.isNull(query) ? new ModelQueryDto() : query;
         ModelCapability capability = capabilityOf(source.getCapability());
         String status = statusOf(source.getStatus(), null);
-        List<KbModel> rows = kbModelDbService.listByCondition(status, StrUtil.trimToNull(source.getKeyword()));
+        List<WbModel> rows = kbModelDbService.listByCondition(status, StrUtil.trimToNull(source.getKeyword()));
         List<ModelItemVO> items = new ArrayList<>();
-        for (KbModel row : rows) {
+        for (WbModel row : rows) {
             ModelItemVO item = toItem(row);
             if (NullUtil.isNull(capability) || item.getCapabilities().contains(capability.name())) {
                 items.add(item);
@@ -107,7 +107,7 @@ public class ModelAdminServiceImpl implements ModelAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO create(ModelSaveDto dto) {
-        KbModel row = new KbModel();
+        WbModel row = new WbModel();
         fill(row, dto, null, STATUS_ENABLED, CURRENCY_DEFAULT);
         kbModelDbService.save(row);
         auditEventPublisher.publish(AuditActionType.MODEL_CREATE, AUDIT_OBJECT_TYPE, row.getId(), null,
@@ -120,9 +120,9 @@ public class ModelAdminServiceImpl implements ModelAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO update(Long id, ModelSaveDto dto) {
-        KbModel before = requireRow(id);
+        WbModel before = requireRow(id);
         String beforeJson = JsonUtil.toJsonStr(before);
-        KbModel after = new KbModel();
+        WbModel after = new WbModel();
         after.setId(id);
         fill(after, dto, id, before.getStatus(), before.getCurrency());
         kbModelDbService.updateAll(after);
@@ -136,7 +136,7 @@ public class ModelAdminServiceImpl implements ModelAdminService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO updateStatus(Long id, ModelStatusDto dto) {
-        KbModel row = requireRow(id);
+        WbModel row = requireRow(id);
         String beforeJson = JsonUtil.toJsonStr(row);
         String status = requiredStatus(NullUtil.isNull(dto) ? null : dto.getStatus());
         kbModelDbService.updateStatus(id, status);
@@ -157,7 +157,7 @@ public class ModelAdminServiceImpl implements ModelAdminService {
      * @param statusFallback  状态留空时的取值
      * @param currencyFallback 币种留空时的取值
      */
-    private void fill(KbModel row, ModelSaveDto dto, Long excludeId, String statusFallback, String currencyFallback) {
+    private void fill(WbModel row, ModelSaveDto dto, Long excludeId, String statusFallback, String currencyFallback) {
         ThrowUtil.throwIf(NullUtil.isNull(dto), ErrorCode.PARAM_INVALID, "请求体不能为空");
         String vendorCode = requiredVendorCode(dto.getVendorCode());
         String modelKey = text(dto.getModelKey(), "模型名", MODEL_KEY_MAX, true);
@@ -196,7 +196,7 @@ public class ModelAdminServiceImpl implements ModelAdminService {
         return vendorCode;
     }
 
-    /** 展示名：可留空，留空取模型名（kb_model.display_name 为非空列） */
+    /** 展示名：可留空，留空取模型名（wb_model.display_name 为非空列） */
     private String displayName(String value, String modelKey) {
         String displayName = text(value, "展示名", DISPLAY_NAME_MAX, false);
         return NullUtil.isNull(displayName) ? modelKey : displayName;
@@ -300,14 +300,14 @@ public class ModelAdminServiceImpl implements ModelAdminService {
     }
 
     /** 取一行现有记录；查不到即按模型不存在拒绝 */
-    private KbModel requireRow(Long id) {
-        KbModel row = kbModelDbService.getExistingById(id);
+    private WbModel requireRow(Long id) {
+        WbModel row = kbModelDbService.getExistingById(id);
         ThrowUtil.throwIf(NullUtil.isNull(row), ErrorCode.MODEL_NOT_FOUND, "模型不存在：id=" + id);
         return row;
     }
 
     /** 库表行 → 清单条目：能力串切成字典名清单，厂商展示名按内置映射补齐 */
-    private ModelItemVO toItem(KbModel row) {
+    private ModelItemVO toItem(WbModel row) {
         ModelItemVO item = new ModelItemVO();
         item.setId(row.getId());
         item.setVendorCode(row.getVendorCode());

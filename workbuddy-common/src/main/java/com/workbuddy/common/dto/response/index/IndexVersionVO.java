@@ -10,14 +10,14 @@ import java.util.Map;
 /**
  * 索引版本视图（列表与详情共用）：
  * 组合快照结构化展开（文件范围/切片策略/向量策略/形态）+ 状态机 + 统计 + 发布/退役留痕 + 在线标记。
- * 在线口径：kb_index_set.currentPublishedVersionId 命中（online=true），与状态值解耦。
+ * 在线口径：wb_knowledge_index_set.currentPublishedVersionId 命中（online=true），与状态值解耦。
  *
  * @author cxxl
  */
 @Data
 public class IndexVersionVO {
 
-    /** 版本行 ID（kb_index_version.id） */
+    /** 版本行 ID（wb_knowledge_index_version.id） */
     private Long id;
 
     /** 版本号（v1、v2…；组合注册序号，集合名 kb_{kbId}_{versionNo} 组成部分） */
@@ -53,7 +53,7 @@ public class IndexVersionVO {
     /** 失败原因（完整性缺口/维度不一致/一致性失败/写失败） */
     private String buildError;
 
-    /** 构建任务 ID（kb_pipeline_task，stage=BUILD_INDEX） */
+    /** 构建任务 ID（wb_knowledge_pipeline_task，stage=BUILD_INDEX） */
     private Long taskId;
 
     /** 验证通过时间 */

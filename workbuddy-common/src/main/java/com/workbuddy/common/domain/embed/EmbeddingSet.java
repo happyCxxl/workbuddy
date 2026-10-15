@@ -17,10 +17,10 @@ public class EmbeddingSet {
     /** 集合 ID = "es-" + chunkSetId + "-" + strategyVersion（确定性） */
     private String embeddingSetId;
 
-    /** 文件结果 ID（kb_file_result.id） */
+    /** 文件结果 ID（wb_file_result.id） */
     private Long fileResultId;
 
-    /** 上游切片集合引用（kb_chunk_set.id） */
+    /** 上游切片集合引用（wb_knowledge_chunk_set.id） */
     private Long chunkSetRef;
 
     /** 上游切片集合 ID（ChunkSet.chunkSetId，血缘） */

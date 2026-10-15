@@ -4,14 +4,14 @@
 
 | 项         | 值                                                                                                                                                                                                                                                                                                                                                                                          |
 |------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 路由       | `/knowledge/manager`（`meta` 无限制，登录即可访问）；本库的三个下钻页路由是 `/knowledge/:id/stages`、`/knowledge/:id/index`、`/knowledge/:id/retrieval`                                                                                                                                                                                                                                  |
+| 路由       | `/knowledge/manager`（`meta` 无限制，登录即可访问）；本库的三个下钻页路由是 `/knowledge/:id/stages`、`/knowledge/:id/index`、`/knowledge/:id/retrieval`                                                                                                                                                                                                                                     |
 | 入口       | 侧栏一级「知识库」下的二级项「知识库管理」；首页动作卡会带 `?action=create` / `?action=import` 跳进来                                                                                                                                                                                                                                                                                       |
 | 前端视图   | `../../../web/src/views/knowledge-base/KnowledgeBaseView.vue`（页面）与 `../../../web/src/components/knowledge-base/KnowledgeBaseCard.vue`（单卡）                                                                                                                                                                                                                                          |
 | 前端类型   | `../../../web/src/types/knowledge-base.ts`                                                                                                                                                                                                                                                                                                                                                  |
 | 前端接口层 | `../../../web/src/api/knowledge-base.ts`、`../../../web/src/api/strategy.ts`（策略绑定）、`../../../web/src/api/file.ts`（导入）                                                                                                                                                                                                                                                            |
-| 后端       | `workbuddy-biz` 模块的 `KnowledgeBaseController` / `KnowledgeBaseServiceImpl` / `KnowledgeBaseDbServiceImpl`（文档提交与文件结果的业务编排同在 `KnowledgeBaseServiceImpl`）                                                                                                                                                                                                                 |
+| 后端       | `workbuddy-biz` 模块的 `KnowledgeBaseController` / `KnowledgeBaseServiceImpl` / `WbKnowledgeBaseDbServiceImpl`（文档提交与文件结果的业务编排同在 `KnowledgeBaseServiceImpl`）                                                                                                                                                                                                               |
 | 涉及接口   | `GET /knowledge-base/page`、`GET /knowledge-base/stats`、`GET /knowledge-base/{id}`、`POST /knowledge-base`、`PUT /knowledge-base/{id}`、`POST /knowledge-base/{id}/disable`、`POST /knowledge-base/{id}/enable`、`DELETE /knowledge-base/{id}`、`PUT /knowledge-base/{id}/strategy-bindings`、`GET /strategy-versions`，以及导入弹窗的 `POST /files` 与 `POST /knowledge-base/{id}/submit` |
-| 涉及的表   | `kb_knowledge_base`、`kb_strategy_binding`、`kb_file_result`、`kb_index_set`、`kb_index_version`、`kb_audit_log`（写审计）                                                                                                                                                                                                                                                                  |
+| 涉及的表   | `wb_knowledge_base`、`wb_knowledge_strategy_binding`、`wb_file_result`、`wb_knowledge_index_set`、`wb_knowledge_index_version`、`wb_audit_log`（写审计）                                                                                                                                                                                                                                    |
 
 ## 可见范围：每个人只看到自己创建的知识库
 
@@ -40,8 +40,8 @@
 
 - 卡片点击进入[切片阶段（执行链）](../../README.md)页；「索引与发布」「评测」分别进对应页 —— 三页都按 `:id` 定位单个库，**入口只在本页**（它们是本页的下钻，不是并列导航）。
 - 「导入文档」弹窗归本页：首页的动作卡只是带 `?action=import` 跳过来，真正实现（含候选库列表）在本页组件里。
-- 顶部的「文档数」与[首页](../首页/README.md)资产带的「文档」**同源同口径**（`kb_file_result` 行数，且都按同一可见范围过滤）。
-- 策略绑定写入 `kb_strategy_binding`，卡片上的三行策略摘要就来自它；策略的增删改在[策略管理](../../README.md)页。
+- 顶部的「文档数」与[首页](../首页/README.md)资产带的「文档」**同源同口径**（`wb_file_result` 行数，且都按同一可见范围过滤）。
+- 策略绑定写入 `wb_knowledge_strategy_binding`，卡片上的三行策略摘要就来自它；策略的增删改在[策略管理](../../README.md)页。
 
 ## 文档导航
 
@@ -56,7 +56,7 @@
 
 ## 待定项
 
-- **归属校验已覆盖：本页、提交入口、环节页全部按 `fileResultId` 直取的 12 个接口**。环节页那批（解析触发/解析详情/产物内容/血缘，以及组装/预处理/切片/向量化各自的触发与详情）由 `workbuddy-biz` 的 `FileResultAccessGuard` 在**服务层入口**统一校验：按 `kb_file_result.knowledge_base_id` 反查知识库，再走 `KnowledgeBaseRules.checkAccessible`，越权与不存在同样返回 `KB_NOT_FOUND`（40401），未登录 40101；口径见 `../解析环节/03-接口逻辑.md`。**仍未逐个审的是索引页与评测页**：它们按 `knowledgeBaseId` 访问（`IndexSetServiceImpl`、`RetrievalController` 那批），目前只做存在性判断（`getById` 判空），没有归属校验，拿别人的库 ID 仍可访问；收口要逐接口加校验，属独立一轮。
+- **归属校验已覆盖：本页、提交入口、环节页全部按 `fileResultId` 直取的 12 个接口**。环节页那批（解析触发/解析详情/产物内容/血缘，以及组装/预处理/切片/向量化各自的触发与详情）由 `workbuddy-biz` 的 `FileResultAccessGuard` 在**服务层入口**统一校验：按 `wb_file_result.knowledge_base_id` 反查知识库，再走 `KnowledgeBaseRules.checkAccessible`，越权与不存在同样返回 `KB_NOT_FOUND`（40401），未登录 40101；口径见 `../解析环节/03-接口逻辑.md`。**仍未逐个审的是索引页与评测页**：它们按 `knowledgeBaseId` 访问（`IndexSetServiceImpl`、`RetrievalController` 那批），目前只做存在性判断（`getById` 判空），没有归属校验，拿别人的库 ID 仍可访问；收口要逐接口加校验，属独立一轮。
 - **批量查绑定未按归属过滤**：`GET /knowledge-base/strategy-bindings` 返回的是全平台绑定行，响应里只有 `knowledgeBaseId` 与策略版本信息（**不含库名与内容**），前端只与自己可见的库求交集。要彻底收口需再查一次可见库 ID，收益有限，先记在这里。
 - **`page` 的 `size` 没有上限**：导入弹窗按 `size=500` 一次拉全库；加限制时必须 ≥500。
 - **筛选条件不持久**：刷新或离开再回来会重置为「已启用 + 默认排序」。要做可考虑写进 URL（可分享、可后退），与处理链页那种"折叠状态存 localStorage"不是一类。

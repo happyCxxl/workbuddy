@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 存储数据源状态：决定该数据源是否接入运行时。
  *
- * <p>落库为码值字符串（kb_storage_source.status）；停用的数据源不注册进存储路由，
+ * <p>落库为码值字符串（wb_storage_source.status）；停用的数据源不注册进存储路由，
  * 读取落在它上面的对象会按「存储后端未配置」报错。
  *
  * @author cxxl

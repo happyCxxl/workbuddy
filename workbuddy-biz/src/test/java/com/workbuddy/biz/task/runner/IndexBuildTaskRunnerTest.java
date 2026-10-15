@@ -1,18 +1,18 @@
 package com.workbuddy.biz.task.runner;
 
 import com.workbuddy.biz.service.IndexSetService;
-import com.workbuddy.biz.service.db.KbFileResultDbService;
-import com.workbuddy.biz.service.db.KbIndexVersionDbService;
-import com.workbuddy.biz.service.db.KbPipelineTaskDbService;
-import com.workbuddy.biz.service.db.KnowledgeBaseDbService;
+import com.workbuddy.biz.service.db.WbFileResultDbService;
+import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.IndexComboReconciler;
 import com.workbuddy.biz.service.support.IndexRowAssembler;
-import com.workbuddy.common.domain.entity.KbChunkSet;
-import com.workbuddy.common.domain.entity.KbEmbeddingSet;
-import com.workbuddy.common.domain.entity.KbFileResult;
-import com.workbuddy.common.domain.entity.KbIndexVersion;
-import com.workbuddy.common.domain.entity.KbPipelineTask;
-import com.workbuddy.common.domain.entity.KnowledgeBase;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbFileResult;
+import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.enums.index.IndexBuildTrigger;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.enums.task.PipelineStage;
@@ -63,13 +63,13 @@ import static org.mockito.Mockito.when;
 class IndexBuildTaskRunnerTest {
 
     @Mock
-    private KbPipelineTaskDbService pipelineTaskDbService;
+    private WbPipelineTaskDbService pipelineTaskDbService;
     @Mock
-    private KbIndexVersionDbService indexVersionDbService;
+    private WbIndexVersionDbService indexVersionDbService;
     @Mock
-    private KnowledgeBaseDbService knowledgeBaseDbService;
+    private WbKnowledgeBaseDbService knowledgeBaseDbService;
     @Mock
-    private KbFileResultDbService fileResultDbService;
+    private WbFileResultDbService fileResultDbService;
     @Mock
     private MilvusIndexPort milvusIndexPort;
     @Mock
@@ -92,12 +92,12 @@ class IndexBuildTaskRunnerTest {
         return ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
     }
 
-    private KbPipelineTask queuedBuildTask(String trigger) {
+    private WbPipelineTask queuedBuildTask(String trigger) {
         BuildOrder order = new BuildOrder();
         order.setKnowledgeBaseId(1L);
         order.setComboSnapshot(comboAll());
         order.setTrigger(trigger);
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(1L);
         task.setStage(PipelineStage.BUILD_INDEX.name());
         task.setStatus(PipelineTaskStatus.QUEUED.name());
@@ -106,7 +106,7 @@ class IndexBuildTaskRunnerTest {
     }
 
     /** LIST 冻结集构建任务：范围 = 文件 10 */
-    private KbPipelineTask queuedListBuildTask(String trigger) {
+    private WbPipelineTask queuedListBuildTask(String trigger) {
         ComboSnapshot combo = comboAll();
         combo.setFileScopeMode("LIST");
         combo.setFileResultIds(new ArrayList<>(List.of(10L)));
@@ -114,7 +114,7 @@ class IndexBuildTaskRunnerTest {
         order.setKnowledgeBaseId(1L);
         order.setComboSnapshot(combo);
         order.setTrigger(trigger);
-        KbPipelineTask task = new KbPipelineTask();
+        WbPipelineTask task = new WbPipelineTask();
         task.setId(1L);
         task.setStage(PipelineStage.BUILD_INDEX.name());
         task.setStatus(PipelineTaskStatus.QUEUED.name());
@@ -122,8 +122,8 @@ class IndexBuildTaskRunnerTest {
         return task;
     }
 
-    private KbIndexVersion versionRow() {
-        KbIndexVersion version = new KbIndexVersion();
+    private WbIndexVersion versionRow() {
+        WbIndexVersion version = new WbIndexVersion();
         version.setId(100L);
         version.setVersionNo("v1");
         version.setStatus(IndexVersionStatus.CREATED.name());
@@ -136,14 +136,14 @@ class IndexBuildTaskRunnerTest {
     }
 
     /** 冻结集回填桩：范围文件 10 的切片/向量产物齐 + 装配一行 */
-    private void stubFrozenBackfill(KbChunkSet chunkRow, KbEmbeddingSet embedRow) {
+    private void stubFrozenBackfill(WbChunkSet chunkRow, WbEmbeddingSet embedRow) {
         when(indexComboReconciler.latestChunkMap(List.of(10L)))
                 .thenReturn(Map.of("10#chunk-hybrid-v1", chunkRow));
         when(indexComboReconciler.latestEmbedMap(List.of(10L)))
                 .thenReturn(Map.of("10#embed-default-v1", embedRow));
         when(indexComboReconciler.selectComboProducts(any(ComboSnapshot.class), eq(10L), anyMap(), anyMap()))
                 .thenReturn(new IndexComboReconciler.ComboProducts(chunkRow, embedRow, null));
-        KbFileResult file = new KbFileResult();
+        WbFileResult file = new WbFileResult();
         file.setId(10L);
         file.setOwner("userA");
         when(fileResultDbService.getById(10L)).thenReturn(file);
@@ -155,8 +155,8 @@ class IndexBuildTaskRunnerTest {
 
     @Test
     void runShouldFailWhenComboIncomplete() {
-        KbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
@@ -177,8 +177,8 @@ class IndexBuildTaskRunnerTest {
 
     @Test
     void runShouldFailWhenLineageMismatch() {
-        KbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
@@ -196,8 +196,8 @@ class IndexBuildTaskRunnerTest {
 
     @Test
     void runShouldFailWhenDimensionMismatch() {
-        KbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
@@ -215,8 +215,8 @@ class IndexBuildTaskRunnerTest {
 
     @Test
     void runShouldFailConsistencyAndKeepCollection() {
-        KbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
@@ -238,8 +238,8 @@ class IndexBuildTaskRunnerTest {
 
     @Test
     void runShouldFailWhenCollectionInitThrows() {
-        KbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
@@ -258,8 +258,8 @@ class IndexBuildTaskRunnerTest {
 
     @Test
     void runShouldBecomeReadyAndAutoPublishOnCompensate() {
-        KbPipelineTask task = queuedBuildTask(IndexBuildTrigger.COMPENSATE.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.COMPENSATE.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
@@ -279,8 +279,8 @@ class IndexBuildTaskRunnerTest {
 
     @Test
     void runShouldBecomeReadyButNotPublishOnRebuild() {
-        KbPipelineTask task = queuedBuildTask(IndexBuildTrigger.REBUILD.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.REBUILD.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
@@ -297,15 +297,15 @@ class IndexBuildTaskRunnerTest {
 
     @Test
     void runShouldBecomeReadyAndAutoPublishOnIncrementWithBindingOn() {
-        KbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
         when(indexComboReconciler.computeExpected(eq(1L), any(ComboSnapshot.class)))
                 .thenReturn(completeExpectation());
         when(milvusIndexPort.listChunkIds("kb_1_v1")).thenReturn(List.of("chunk-1"));
-        KnowledgeBase kb = new KnowledgeBase();
+        WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setId(1L);
         kb.setStrategyBindingEnabled(1);
         when(knowledgeBaseDbService.getById(1L)).thenReturn(kb);
@@ -318,19 +318,19 @@ class IndexBuildTaskRunnerTest {
     @Test
     void runShouldBackfillFrozenScopeAndBecomeReady() {
         // LIST 冻结集构建 → 回填范围文件行 → 对账通过 → READY（REBUILD 停留不发布）
-        KbPipelineTask task = queuedListBuildTask(IndexBuildTrigger.REBUILD.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedListBuildTask(IndexBuildTrigger.REBUILD.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
         when(indexComboReconciler.computeExpected(eq(1L), any(ComboSnapshot.class)))
                 .thenReturn(completeExpectation());
-        KbChunkSet chunkRow = new KbChunkSet();
+        WbChunkSet chunkRow = new WbChunkSet();
         chunkRow.setId(1L);
         chunkRow.setFileResultId(10L);
         chunkRow.setChunkStrategyVersion("chunk-hybrid-v1");
         chunkRow.setUpstreamProductId(100L);
-        KbEmbeddingSet embedRow = new KbEmbeddingSet();
+        WbEmbeddingSet embedRow = new WbEmbeddingSet();
         embedRow.setId(2L);
         embedRow.setFileResultId(10L);
         embedRow.setStrategyVersion("embed-default-v1");
@@ -350,19 +350,19 @@ class IndexBuildTaskRunnerTest {
     @Test
     void runShouldNotAutoPublishFrozenScopeEvenOnCompensate() {
         // LIST 冻结集永不自动发布——即使 COMPENSATE 触发也停留 READY
-        KbPipelineTask task = queuedListBuildTask(IndexBuildTrigger.COMPENSATE.name());
-        KbIndexVersion version = versionRow();
+        WbPipelineTask task = queuedListBuildTask(IndexBuildTrigger.COMPENSATE.name());
+        WbIndexVersion version = versionRow();
         when(pipelineTaskDbService.getById(1L)).thenReturn(task);
         when(pipelineTaskDbService.claim(1L)).thenReturn(1);
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
         when(indexComboReconciler.computeExpected(eq(1L), any(ComboSnapshot.class)))
                 .thenReturn(completeExpectation());
-        KbChunkSet chunkRow = new KbChunkSet();
+        WbChunkSet chunkRow = new WbChunkSet();
         chunkRow.setId(1L);
         chunkRow.setFileResultId(10L);
         chunkRow.setChunkStrategyVersion("chunk-hybrid-v1");
         chunkRow.setUpstreamProductId(100L);
-        KbEmbeddingSet embedRow = new KbEmbeddingSet();
+        WbEmbeddingSet embedRow = new WbEmbeddingSet();
         embedRow.setId(2L);
         embedRow.setFileResultId(10L);
         embedRow.setStrategyVersion("embed-default-v1");

@@ -4,21 +4,21 @@
 
 口径的三条前提（见 `../../design/模型能力平台-方案设计.md` 的 §4.1 / §4.2 / §8）：
 
-- **厂商连接与密钥都在配置**（`knowledge.model.vendors.<厂商码>`，落在 `../../../workbuddy-biz/src/main/resources/config/workbuddy-model.yml`），库里只有一张 `kb_model` 表、只存厂商码；**页面没有密钥与地址的任何入口**，厂商下拉的候选来自前端枚举（`MODEL_VENDORS`，当前 `dashscope` 与 `deepseek`）、不可新建。
+- **厂商连接与密钥都在配置**（`knowledge.model.vendors.<厂商码>`，落在 `../../../workbuddy-biz/src/main/resources/config/workbuddy-model.yml`），库里只有一张 `wb_model` 表、只存厂商码；**页面没有密钥与地址的任何入口**，厂商下拉的候选来自前端枚举（`MODEL_VENDORS`，当前 `dashscope` 与 `deepseek`）、不可新建。
 - **限额只写在模型行上**（没有厂商级限额）；价格四列按能力对应（每百万 token / 按页 / 按千次），都能留空。
 - **路由参数在配置里**（`knowledge.model.route.*`），页面不做策略、不做灰度、不做人工优先级。
 
 | 项         | 值                                                                                                                                                                                                                     |
 |------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 路由       | 模型清单 `/model/manager`、用量与成本 `/model/usage`（都不带 `meta.adminOnly`，所有登录用户可进）                                                                                                                      |
-| 入口       | 侧栏一级分组「模型管理」（自身不下钻）下的两个二级项，所有登录用户可见，排在「用户管理」之后                                                                                                                             |
+| 入口       | 侧栏一级分组「模型管理」（自身不下钻）下的两个二级项，所有登录用户可见，排在「用户管理」之后                                                                                                                           |
 | 页内权限   | 页面与六条接口对所有登录用户开放；方法上都没有 `AdminOnly` 注解，未登录调用回 `40101`                                                                                                                                  |
 | 前端视图   | `../../../web/src/views/model/ModelListView.vue`（模型清单）、`../../../web/src/views/model/ModelUsageView.vue`（用量与成本）                                                                                          |
 | 前端类型   | `../../../web/src/types/model.ts`（厂商枚举 `MODEL_VENDORS`、清单与用量明细 / 概览的契约，含能力、状态、路由原因的码值与展示名）                                                                                       |
 | 前端接口层 | `../../../web/src/api/model.ts`                                                                                                                                                                                        |
 | 后端       | `workbuddy-biz` 模块的 `ModelAdminController`（模型清单 / 新增 / 编辑 / 启停四条，路径前缀 `/model`）与 `ModelUsageController`（用量两个只读接口，同前缀），服务层是 `ModelAdminServiceImpl` / `ModelUsageServiceImpl` |
 | 涉及接口   | `GET /model/models`、`POST /model/models`、`PUT /model/models/{id}`、`PATCH /model/models/{id}/status`、`GET /model/usage/summary`、`GET /model/usage/calls`                                                           |
-| 涉及的表   | `kb_model`（模型目录本体）、`kb_model_call_log`（用量与成本）、`kb_audit_log`（模型新增 / 修改 / 启停留痕）                                                                                                            |
+| 涉及的表   | `wb_model`（模型目录本体）、`wb_model_call_log`（用量与成本）、`wb_audit_log`（模型新增 / 修改 / 启停留痕）                                                                                                            |
 
 `^/model/` 已在 Vite 开发代理里配好（`../../../web/vite.config.ts`）：`/model/manager` 与 `/model/usage` 同时是页面路由，代理只匹配带子路径的接口；漏配时接口请求会落到 SPA 回退，页面拿到一坨 HTML、表格全空且控制台不报错。
 
@@ -41,7 +41,7 @@
 
 | 文档             | 管什么                                                                            | 什么时候看           |
 |------------------|-----------------------------------------------------------------------------------|----------------------|
-| `01-页面功能.md` | 两个页面的构成、筛选与表格列、抽屉字段与校验、用量概览卡与明细列、空态                  | 改页面、调交互       |
+| `01-页面功能.md` | 两个页面的构成、筛选与表格列、抽屉字段与校验、用量概览卡与明细列、空态            | 改页面、调交互       |
 | `02-接口交互.md` | 六条接口的触发时机 / 请求字段 / 响应字段 / 错误码、下线路径的口径、密钥字段的缺失 | 前端联调、改接口     |
 | `03-接口逻辑.md` | 校验顺序、唯一键、覆盖式更新的清空语义、审计与涉及的表                            | 改后端、排查线上问题 |
 | `04-自测清单.md` | 改完要手工验哪些点、期望结果                                                      | 每次交付前           |
