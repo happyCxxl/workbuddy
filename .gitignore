@@ -30,3 +30,7 @@ Thumbs.db
 /knowledge-biz/data/
 /.archify/
 /samples/
+
+# 本地密钥配置（真实密钥不入库；文件名固定，缺失时该 profile 的键不存在，
+# 由 config/workbuddy-model.yml 的 ${ENV_VAR:} 空默认回落，交给启动期校验报错）
+application-local.*

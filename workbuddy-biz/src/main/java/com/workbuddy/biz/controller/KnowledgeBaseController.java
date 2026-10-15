@@ -16,13 +16,9 @@ import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
 import com.workbuddy.common.dto.response.knowledge.StrategyBindingVO;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,7 +44,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/knowledge-base")
-@Tag(name = "知识库管理", description = "知识库管理闭环接口（含文档提交、提交记录与文件结果查询）")
 public class KnowledgeBaseController {
 
     private final KnowledgeBaseService knowledgeBaseService;
@@ -64,7 +59,6 @@ public class KnowledgeBaseController {
      * @return 新知识库 ID（雪花 ID 以字符串返回，避免前端 JS 大整数精度丢失）
      */
     @PostMapping
-    @Operation(summary = "创建知识库", description = "创建一个新的知识库，默认启用状态、归属为当前登录用户；返回新库 ID（字符串）")
     public R<String> create(@Valid @RequestBody KnowledgeBaseCreateDto dto) {
         log.info("===> KnowledgeBaseController create 创建知识库, name={}", dto.getName());
         return R.ok(String.valueOf(knowledgeBaseService.create(dto)), "创建成功");
@@ -82,9 +76,8 @@ public class KnowledgeBaseController {
      * @return 是否更新成功（恒 true，失败以业务异常表达）
      */
     @PutMapping("/{id}")
-    @Operation(summary = "更新知识库", description = "更新知识库名称、业务场景说明与策略绑定开关；仅本人可访问的库可改")
     public R<Boolean> update(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody KnowledgeBaseUpdateDto dto) {
         dto.setId(id);
         log.info("===> KnowledgeBaseController update 更新知识库, id={}", id);
@@ -101,9 +94,8 @@ public class KnowledgeBaseController {
      * @return 知识库详情 VO
      */
     @GetMapping("/{id}")
-    @Operation(summary = "知识库详情", description = "查询单个知识库详情（已删除不可见；非本人可访问的按「不存在」处理，返回 40401）")
     public R<KnowledgeBaseVO> detail(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id) {
+            @PathVariable("id") Long id) {
         return R.ok(knowledgeBaseService.detail(id));
     }
 
@@ -121,13 +113,10 @@ public class KnowledgeBaseController {
      * @return 知识库分页 VO（不含已删除）
      */
     @GetMapping("/page")
-    @Operation(summary = "分页查询知识库", description = "分页列表，支持名称模糊查询、状态过滤与排序，不含已删除")
     public R<IPage<KnowledgeBaseVO>> page(
-            @ParameterObject PageQueryDto pageQuery,
-            @Parameter(description = "名称（模糊查询）") @RequestParam(value = "name", required = false) String name,
-            @Parameter(description = "状态：1 启用 / 0 停用；不传不过滤")
+            PageQueryDto pageQuery,
+            @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "status", required = false) Integer status,
-            @Parameter(description = "排序口径：DEFAULT 默认 / UPDATED 最近更新 / NAME 名称；未知值按默认")
             @RequestParam(value = "sort", required = false) String sort) {
         return R.ok(knowledgeBaseService.page(pageQuery.currentOrDefault(), pageQuery.sizeOrDefault(), name, status,
                 KnowledgeBaseSort.of(sort)));
@@ -142,7 +131,6 @@ public class KnowledgeBaseController {
      * @return 统计概览 VO
      */
     @GetMapping("/stats")
-    @Operation(summary = "知识库统计概览", description = "知识库总数、启用数、文档总数；仅统计未删除数据")
     public R<KnowledgeBaseStatsVO> stats() {
         return R.ok(knowledgeBaseService.stats());
     }
@@ -157,9 +145,8 @@ public class KnowledgeBaseController {
      * @return 是否停用成功（恒 true，失败以业务异常表达）
      */
     @PostMapping("/{id}/disable")
-    @Operation(summary = "停用知识库", description = "停用后拒绝新文件接入与检索；仅启用状态可停用")
     public R<Boolean> disable(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id) {
+            @PathVariable("id") Long id) {
         log.info("===> KnowledgeBaseController disable 停用知识库, id={}", id);
         return R.ok(knowledgeBaseService.disable(id), "停用成功");
     }
@@ -171,9 +158,8 @@ public class KnowledgeBaseController {
      * @return 是否启用成功（恒 true，失败以业务异常表达）
      */
     @PostMapping("/{id}/enable")
-    @Operation(summary = "启用知识库", description = "重新启用；仅停用状态可启用")
     public R<Boolean> enable(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id) {
+            @PathVariable("id") Long id) {
         log.info("===> KnowledgeBaseController enable 启用知识库, id={}", id);
         return R.ok(knowledgeBaseService.enable(id), "启用成功");
     }
@@ -188,9 +174,8 @@ public class KnowledgeBaseController {
      * @return 是否删除成功（恒 true，失败以业务异常表达）
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除知识库", description = "逻辑删除，无恢复接口")
     public R<Boolean> delete(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id) {
+            @PathVariable("id") Long id) {
         log.info("===> KnowledgeBaseController delete 删除知识库, id={}", id);
         return R.ok(knowledgeBaseService.delete(id), "删除成功");
     }
@@ -209,10 +194,8 @@ public class KnowledgeBaseController {
      * @return 提交响应：新建提交 pipelineTaskId 为 null；幂等回放时回填该文件结果已有的解析任务 ID（可能为 null）
      */
     @PostMapping("/{id}/submit")
-    @Operation(summary = "提交文件", description = "提交文件引用：校验、建档三写；"
-            + "解析由页面手动触发；幂等键 requestId")
     public R<FileSubmitResponse> submit(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody FileSubmitRequest request) {
         log.info("===> KnowledgeBaseController submit 提交文件, kbId={}, fileId={}, requestId={}",
                 id, request.getFileId(), request.getRequestId());
@@ -230,12 +213,11 @@ public class KnowledgeBaseController {
      * @return 提交记录分页 VO
      */
     @GetMapping("/{id}/submit-logs")
-    @Operation(summary = "提交记录列表", description = "分页查询提交日志（含失败原因），支持 status/文件名筛选")
     public R<IPage<SubmitLogVO>> submitLogs(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id,
-            @ParameterObject PageQueryDto pageQuery,
-            @Parameter(description = "提交结果（PASS/FAIL）") @RequestParam(value = "status", required = false) String status,
-            @Parameter(description = "文件名（模糊查询）") @RequestParam(value = "fileName", required = false) String fileName) {
+            @PathVariable("id") Long id,
+            PageQueryDto pageQuery,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "fileName", required = false) String fileName) {
         return R.ok(knowledgeBaseService.pageSubmitLogs(pageQuery.currentOrDefault(), pageQuery.sizeOrDefault(), id,
                 status, fileName));
     }
@@ -250,11 +232,10 @@ public class KnowledgeBaseController {
      * @return 文件结果分页 VO（含来源文件信息与各环节状态列表）
      */
     @GetMapping("/{id}/file-results")
-    @Operation(summary = "文件结果列表", description = "分页查询文件结果（含各环节最新任务状态）；stage 可选")
     public R<IPage<FileResultVO>> fileResults(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id,
-            @ParameterObject PageQueryDto pageQuery,
-            @Parameter(description = "环节（可选）") @RequestParam(value = "stage", required = false) String stage) {
+            @PathVariable("id") Long id,
+            PageQueryDto pageQuery,
+            @RequestParam(value = "stage", required = false) String stage) {
         return R.ok(knowledgeBaseService.pageFileResults(pageQuery.currentOrDefault(), pageQuery.sizeOrDefault(), id,
                 stage));
     }
@@ -271,10 +252,9 @@ public class KnowledgeBaseController {
      * @return 策略绑定 VO（未绑定或版本失效时仅含 strategyType）
      */
     @GetMapping("/{id}/strategy-binding")
-    @Operation(summary = "查询知识库策略绑定", description = "按策略类型查知识库绑定（未绑定返回仅含 strategyType）")
     public R<StrategyBindingVO> strategyBinding(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id,
-            @Parameter(description = "策略类型（CHUNK）", required = true) @RequestParam("strategyType") String strategyType) {
+            @PathVariable("id") Long id,
+            @RequestParam("strategyType") String strategyType) {
         return R.ok(knowledgeBaseService.strategyBinding(id, strategyType));
     }
 
@@ -289,10 +269,8 @@ public class KnowledgeBaseController {
      * @return 每条含 knowledgeBaseId / strategyVersionId / 策略名与版本号；无绑定时空列表
      */
     @GetMapping("/strategy-bindings")
-    @Operation(summary = "批量查询策略绑定",
-            description = "按策略类型查所有已绑定的知识库（一次查询，每条含 knowledgeBaseId）")
     public R<List<StrategyBindingVO>> strategyBindings(
-            @Parameter(description = "策略类型（CHUNK）", required = true) @RequestParam("strategyType") String strategyType) {
+            @RequestParam("strategyType") String strategyType) {
         return R.ok(knowledgeBaseService.strategyBindings(strategyType));
     }
 
@@ -309,9 +287,8 @@ public class KnowledgeBaseController {
      * @return 是否绑定成功（恒 true，失败以业务异常表达）
      */
     @PutMapping("/{id}/strategy-binding")
-    @Operation(summary = "绑定/解绑知识库策略", description = "strategyVersionId 为 null 解绑；绑定校验类型/版本/启用状态")
     public R<Boolean> bindStrategy(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody StrategyBindingUpdateDto dto) {
         log.info("===> KnowledgeBaseController bindStrategy 绑定知识库策略, id={}, type={}", id, dto.getStrategyType());
         return R.ok(knowledgeBaseService.bindStrategy(id, dto), "绑定成功");
@@ -330,9 +307,8 @@ public class KnowledgeBaseController {
      * @return 是否绑定成功（恒 true，失败以业务异常表达）
      */
     @PutMapping("/{id}/strategy-bindings")
-    @Operation(summary = "批量设置知识库策略集合", description = "一次调用设置整套（发布=知识库策略集合）；strategyVersionId 为 null 解绑")
     public R<Boolean> bindStrategies(
-            @Parameter(description = "知识库ID", required = true) @PathVariable("id") Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody StrategyBindingsUpdateRequest request) {
         log.info("===> KnowledgeBaseController bindStrategies 批量绑定知识库策略集合, id={}", id);
         return R.ok(knowledgeBaseService.bindStrategies(id, request), "绑定成功");

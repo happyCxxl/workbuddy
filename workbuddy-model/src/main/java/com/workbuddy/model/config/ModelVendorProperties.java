@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * 模型厂商连接配置（`knowledge.model.vendors.<厂商码>` 前缀，厂商码即 Map 键）。
+ * 模型厂商连接配置（配置键 `knowledge.model.vendors.<厂商码>`，厂商码即 Map 键）。
  *
  * <p>整段可缺省：不配即没有厂商进入运行时，本地与 CI 无需密钥即可启动。字段留空的口径见各字段说明。
  *
@@ -17,7 +17,7 @@ import java.util.TreeMap;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "knowledge.model.vendors")
+@ConfigurationProperties(prefix = "knowledge.model")
 public class ModelVendorProperties {
 
     /** 厂商码 → 连接配置；按厂商码排序，校验与日志的遍历顺序固定 */

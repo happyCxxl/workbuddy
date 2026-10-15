@@ -54,18 +54,19 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- 接口文档（springdoc openapi + swagger 注解，版本与 workbuddy-biz 对齐） -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.3.0</version>
-        </dependency>
-
         <!-- JWT 令牌（与项目 hutool 版本对齐） -->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-jwt</artifactId>
             <version>5.8.22</version>
+        </dependency>
+
+        <!-- 配置属性元数据（生成 META-INF/spring-configuration-metadata.json，IDE 按它解析本模块的键；
+             optional：不进依赖方的运行时类路径） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Lombok -->

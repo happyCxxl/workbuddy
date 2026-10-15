@@ -34,7 +34,7 @@ public class SecurityConfig {
 
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
-    /** 安全过滤链：登录/注册、接口文档与健康探针放行；其余请求需登录，角色由方法注解判定 */
+    /** 安全过滤链：登录/注册与健康探针放行；其余请求需登录，角色由方法注解判定 */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
@@ -43,7 +43,6 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
                 // 头像读取免登录：<img src> 不会带 Authorization 头，写接口仍要求登录
                 .requestMatchers(HttpMethod.GET, "/user/avatar/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // 健康探针与指标端点免认证（本地排查用；对外暴露前请自行收紧）
                         .requestMatchers("/actuator/health", "/actuator/metrics").permitAll()
                         .anyRequest().authenticated())

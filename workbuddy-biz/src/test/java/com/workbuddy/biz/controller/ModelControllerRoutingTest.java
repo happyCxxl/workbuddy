@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @author cxxl
  */
-class ModelAdminControllerRoutingTest {
+class ModelControllerRoutingTest {
 
     private ModelAdminService modelAdminService;
 
@@ -48,7 +48,7 @@ class ModelAdminControllerRoutingTest {
     @BeforeEach
     void setUp() {
         modelAdminService = mock(ModelAdminService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new ModelAdminController(modelAdminService)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new ModelController(modelAdminService)).build();
     }
 
     @Test
@@ -134,7 +134,7 @@ class ModelAdminControllerRoutingTest {
 
     /** 按名字取 Controller 上的方法：取不到即用例失败 */
     private Method declaredMethod(String methodName) {
-        for (Method method : ModelAdminController.class.getDeclaredMethods()) {
+        for (Method method : ModelController.class.getDeclaredMethods()) {
             if (method.getName().equals(methodName)) {
                 return method;
             }

@@ -5,12 +5,8 @@ import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;
 import com.workbuddy.common.dto.response.R;
 import com.workbuddy.common.dto.response.parse.ParseDetailVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/file-results")
-@Tag(name = "解析控制", description = "解析触发与解析详情")
 public class KnowledgeFileParseController {
 
     private final ParseControlService parseControlService;
@@ -44,10 +39,8 @@ public class KnowledgeFileParseController {
      * @apiNote 文件结果不存在 40432；已有任务（含执行中）40431
      */
     @PostMapping("/{fileResultId}/parse")
-    @Operation(summary = "触发解析", description = "触发解析（手动逐环节，链路起点）：执行键 = 文件结果，"
-            + "已有任务（任何状态）一律拒绝 40431，没有才新建入队；旧任务/旧产物保留")
     public R<StageTriggerVO> parse(
-            @Parameter(description = "文件结果ID", required = true) @PathVariable("fileResultId") Long fileResultId) {
+            @PathVariable("fileResultId") Long fileResultId) {
         log.info("===> KnowledgeFileParseController parse 触发解析, fileResultId={}", fileResultId);
         return R.ok(parseControlService.parse(fileResultId));
     }
@@ -60,11 +53,9 @@ public class KnowledgeFileParseController {
      * @return 解析详情 VO（无任务时 taskId/步骤/统计为空，告警为空列表）
      */
     @GetMapping("/{fileResultId}/parse-detail")
-    @Operation(summary = "解析详情", description = "任务状态 + 子步骤列表 + 产物引用/告警/统计；"
-            + "taskId 可选（缺省取最新任务，传了则查该次运行）")
     public R<ParseDetailVO> parseDetail(
-            @Parameter(description = "文件结果ID", required = true) @PathVariable("fileResultId") Long fileResultId,
-            @ParameterObject StageDetailQueryDto query) {
+            @PathVariable("fileResultId") Long fileResultId,
+            StageDetailQueryDto query) {
         return R.ok(parseControlService.parseDetail(fileResultId, query.getTaskId()));
     }
 }
