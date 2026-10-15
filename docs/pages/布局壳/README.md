@@ -1,12 +1,12 @@
 # 布局壳（菜单 / 返回 / 退出登录）
 
-壳**没有独立路由**：它是父路由 `/`（`redirect: /home`），9 个子页面都渲染在它的内容区里。壳自身不调任何后端接口——账号相关能力（个人信息、修改密码）已是独立页面，见 `../个人中心/`。
+壳**没有独立路由**：它是父路由 `/`（`redirect: /home`），10 个子页面都渲染在它的内容区里。壳自身不调任何后端接口——账号相关能力（个人信息、修改密码）已是独立页面，见 `../个人中心/`。
 
 | 项         | 值                                                                                                                             |
 |------------|--------------------------------------------------------------------------------------------------------------------------------|
 | 路由       | 无独立路由（父路由 `/`，`redirect: /home`）                                                                                    |
 | 前端视图   | `../../../web/src/layouts/AppLayout.vue`                                                                                       |
-| 子页面     | `home`、`knowledge-base`、`knowledge-base/:id/stages`、`.../index`、`.../retrieval`、`strategy`、`user`、`settings`、`profile` |
+| 子页面     | `home`、`knowledge/manager`、`knowledge/:id/stages`、`.../index`、`.../retrieval`、`knowledge/strategy`、`user`、`model/manager`、`model/usage`、`settings`、`profile` |
 | 路由与守卫 | `../../../web/src/router/index.ts`（守卫口径见 `../../README.md` 的「全局约定」章第四节）                                      |
 | 涉及接口   | 无（壳只管骨架；账号信息与改密见 `../个人中心/`）                                                                              |
 

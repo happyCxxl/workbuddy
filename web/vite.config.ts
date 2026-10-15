@@ -54,7 +54,8 @@ export default defineConfig({
       '/files': { target: BACKEND, bypass: bypassNavigation },
       // 执行链与各环节详情：/file-results/{id}/lineage、{stage}、{stage}-detail、stage-content
       '/file-results': { target: BACKEND, bypass: bypassNavigation },
-      // /knowledge-base 与 SPA 路由同名，必须靠 bypass 区分导航与接口
+      // 知识库接口：/knowledge-base 只是接口前缀，对应的 SPA 路由已改为 /knowledge/*，
+      // 这里保留 bypass 是为了口径统一、防未来重名
       '/knowledge-base': { target: BACKEND, bypass: bypassNavigation },
       // /strategy-versions 目前仅接口使用，加 bypass 是为了口径统一、防未来重名
       '/strategy-versions': { target: BACKEND, bypass: bypassNavigation },

@@ -819,7 +819,7 @@ async function retryBuild(version: IndexVersionVO): Promise<void> {
 }
 
 function goStages(): void {
-  void router.push(`/knowledge-base/${knowledgeBaseId.value}/stages`);
+  void router.push(`/knowledge/${knowledgeBaseId.value}/stages`);
 }
 </script>
 

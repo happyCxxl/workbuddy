@@ -45,19 +45,20 @@
 | 壳   | 布局壳（菜单 / 返回 / 退出登录 / 账号区入口）       | 无独立路由                      | `../web/src/layouts/AppLayout.vue`                      | —                                                                                                                                                                                                                                                                                                          | 已梳理 |
 | 01   | 认证（登录 / 注册）                                 | `/login`                        | `../web/src/views/login/LoginView.vue`                  | `AuthController`                                                                                                                                                                                                                                                                                           | 已梳理 |
 | 02   | 首页                                                | `/home`                         | `../web/src/views/home/HomeView.vue`                    | `KnowledgeHomeController`                                                                                                                                                                                                                                                                                  | 已梳理 |
-| 03   | 知识库列表                                          | `/knowledge-base`               | `../web/src/views/knowledge-base/KnowledgeBaseView.vue` | `KnowledgeBaseController`（含文档提交 / 提交记录 / 文件结果三条接口）                                                                                                                                                                                                                                      | 已梳理 |
-| 04-0 | 执行链壳（链图 / 触发弹窗 / 图例 / 轮询）           | `/knowledge-base/:id/stages`    | `../web/src/views/knowledge-base/PipelineStageView.vue` | `LineageController`（血缘 `GET /file-results/{id}/lineage`）、`KnowledgeFileStructureController`、`KnowledgeFilePreprocessController`、`KnowledgeFileChunkController`、`KnowledgeFileEmbedController`、`FileController`（列表数据源 `/knowledge-base/{id}/file-results` 已并入 `KnowledgeBaseController`） | 待梳理 |
-| 04-1 | 解析环节（卡片 / 触发 / 详情抽屉 / 原文预览）       | `/knowledge-base/:id/stages`    | `../web/src/views/knowledge-base/PipelineStageView.vue` | `KnowledgeFileParseController`（解析触发 `POST /{fileResultId}/parse`、解析详情 `GET /{fileResultId}/parse-detail`）、`KnowledgeFileStageController`（各环节共用的产物内容 `GET /{fileResultId}/stage-content`）、`FileController`（原文件字节 `GET /files/{fileId}`）                                     | 已梳理 |
-| 04-2 | 组装环节（卡片 / 触发 / 详情抽屉 / 组装文档）       | `/knowledge-base/:id/stages`    | `../web/src/views/knowledge-base/PipelineStageView.vue` | `KnowledgeFileStructureController`（组装触发 `POST /{fileResultId}/structure`、组装详情 `GET /{fileResultId}/structure-detail`）、`KnowledgeFileStageController`（各环节共用的产物内容 `GET /{fileResultId}/stage-content`）                                                                               | 已梳理 |
-| 04-3 | 预处理环节（卡片 / 触发 / 详情抽屉 / 清洗后的正文） | `/knowledge-base/:id/stages`    | `../web/src/views/knowledge-base/PipelineStageView.vue` | `KnowledgeFilePreprocessController`（预处理触发 `POST /{fileResultId}/preprocess`、预处理详情 `GET /{fileResultId}/preprocess-detail`）、`KnowledgeFileStageController`（各环节共用的产物内容 `GET /{fileResultId}/stage-content`，支持 `status` 过滤）                                                    | 已梳理 |
-| 04-4 | 切片环节（卡片 / 触发 / 详情抽屉 / 切片结果）       | `/knowledge-base/:id/stages`    | `../web/src/views/knowledge-base/PipelineStageView.vue` | `KnowledgeFileChunkController`（切片触发 `POST /{fileResultId}/chunk`、切片详情 `GET /{fileResultId}/chunk-detail`）、`KnowledgeFileStageController`（各环节共用的产物内容 `GET /{fileResultId}/stage-content`，支持按类型 / 兜底 / 父子过滤）                                                             | 已梳理 |
-| 05   | 索引与发布                                          | `/knowledge-base/:id/index`     | `../web/src/views/knowledge-base/IndexBuildView.vue`    | `KnowledgeFileIndexController`                                                                                                                                                                                                                                                                             | 待梳理 |
-| 06   | 检索评测                                            | `/knowledge-base/:id/retrieval` | `../web/src/views/knowledge-base/RetrievalEvalView.vue` | `RetrievalController`                                                                                                                                                                                                                                                                                      | 待梳理 |
-| 07   | 策略管理                                            | `/strategy`                     | `../web/src/views/strategy/StrategyManagementView.vue`  | `StrategyVersionController`                                                                                                                                                                                                                                                                                | 待梳理 |
+| 03   | 知识库列表                                          | `/knowledge/manager`            | `../web/src/views/knowledge-base/KnowledgeBaseView.vue` | `KnowledgeBaseController`（含文档提交 / 提交记录 / 文件结果三条接口）                                                                                                                                                                                                                                      | 已梳理 |
+| 04-0 | 执行链壳（链图 / 触发弹窗 / 图例 / 轮询）           | `/knowledge/:id/stages`         | `../web/src/views/knowledge-base/PipelineStageView.vue` | `LineageController`（血缘 `GET /file-results/{id}/lineage`）、`KnowledgeFileStructureController`、`KnowledgeFilePreprocessController`、`KnowledgeFileChunkController`、`KnowledgeFileEmbedController`、`FileController`（列表数据源 `/knowledge-base/{id}/file-results` 已并入 `KnowledgeBaseController`） | 待梳理 |
+| 04-1 | 解析环节（卡片 / 触发 / 详情抽屉 / 原文预览）       | `/knowledge/:id/stages`         | `../web/src/views/knowledge-base/PipelineStageView.vue` | `KnowledgeFileParseController`（解析触发 `POST /{fileResultId}/parse`、解析详情 `GET /{fileResultId}/parse-detail`）、`KnowledgeFileStageController`（各环节共用的产物内容 `GET /{fileResultId}/stage-content`）、`FileController`（原文件字节 `GET /files/{fileId}`）                                     | 已梳理 |
+| 04-2 | 组装环节（卡片 / 触发 / 详情抽屉 / 组装文档）       | `/knowledge/:id/stages`         | `../web/src/views/knowledge-base/PipelineStageView.vue` | `KnowledgeFileStructureController`（组装触发 `POST /{fileResultId}/structure`、组装详情 `GET /{fileResultId}/structure-detail`）、`KnowledgeFileStageController`（各环节共用的产物内容 `GET /{fileResultId}/stage-content`）                                                                               | 已梳理 |
+| 04-3 | 预处理环节（卡片 / 触发 / 详情抽屉 / 清洗后的正文） | `/knowledge/:id/stages`         | `../web/src/views/knowledge-base/PipelineStageView.vue` | `KnowledgeFilePreprocessController`（预处理触发 `POST /{fileResultId}/preprocess`、预处理详情 `GET /{fileResultId}/preprocess-detail`）、`KnowledgeFileStageController`（各环节共用的产物内容 `GET /{fileResultId}/stage-content`，支持 `status` 过滤）                                                    | 已梳理 |
+| 04-4 | 切片环节（卡片 / 触发 / 详情抽屉 / 切片结果）       | `/knowledge/:id/stages`         | `../web/src/views/knowledge-base/PipelineStageView.vue` | `KnowledgeFileChunkController`（切片触发 `POST /{fileResultId}/chunk`、切片详情 `GET /{fileResultId}/chunk-detail`）、`KnowledgeFileStageController`（各环节共用的产物内容 `GET /{fileResultId}/stage-content`，支持按类型 / 兜底 / 父子过滤）                                                             | 已梳理 |
+| 05   | 索引与发布                                          | `/knowledge/:id/index`          | `../web/src/views/knowledge-base/IndexBuildView.vue`    | `KnowledgeFileIndexController`                                                                                                                                                                                                                                                                             | 待梳理 |
+| 06   | 检索评测                                            | `/knowledge/:id/retrieval`      | `../web/src/views/knowledge-base/RetrievalEvalView.vue` | `RetrievalController`                                                                                                                                                                                                                                                                                      | 待梳理 |
+| 07   | 策略管理                                            | `/knowledge/strategy`           | `../web/src/views/strategy/StrategyManagementView.vue`  | `StrategyVersionController`                                                                                                                                                                                                                                                                                | 待梳理 |
 | 08   | 用户管理（仅管理员）                                | `/user`                         | `../web/src/views/user/UserManagementView.vue`          | `UserController`                                                                                                                                                                                                                                                                                           | 待梳理 |
 | 09   | 个人中心                                            | `/profile`                      | `../web/src/views/profile/ProfileView.vue`              | `UserController`（个人信息与改密，仅本人）                                                                                                                                                                                                                                                                 | 已梳理 |
 | 10   | 系统设置（所有用户可见，卡片按权限）                | `/settings`                     | `../web/src/views/system/SystemSettingView.vue`         | `StorageSourceController`（存储数据源：列举存储源并启用）                                                                                                                                                                                                                                                  | 已梳理 |
-| 11   | 模型管理                                            | `/model`                        | `../web/src/views/model/ModelManagementView.vue`        | `ModelAdminController`（模型清单 / 新增 / 编辑 / 启停）、`ModelUsageController`（用量概览与调用明细）                                                                                                                                                                                                      | 已梳理 |
+| 11-0 | 模型清单（模型目录维护 / 新增 / 编辑 / 启停）       | `/model/manager`                | `../web/src/views/model/ModelListView.vue`              | `ModelAdminController`（模型清单 / 新增 / 编辑 / 启停四条）                                                                                                                                                                                                                                                | 已梳理 |
+| 11-1 | 用量与成本（调用概览与明细，只读）                  | `/model/usage`                  | `../web/src/views/model/ModelUsageView.vue`             | `ModelUsageController`（用量概览与调用明细）                                                                                                                                                                                                                                                               | 已梳理 |
 
 顺序按用户使用动线排。一个路由里若装了互相独立的功能，会拆成多份文件；「Controller（初判）」是文件归属的初步判断，逐页梳理时以实际调用为准，可能修正。
 
@@ -227,8 +228,8 @@
 ### 八、开发期联调
 
 - 前端 dev server：`127.0.0.1:5173`（Vite）；后端：`localhost:4388`。
-- 跨域靠 Vite 代理（`../web/vite.config.ts`），已配置前缀：`/auth`、`/files`、`/file-results`、`/knowledge-base`、`/strategy-versions`、`/system`、`^/user/`、`^/home/`。
-- **`/knowledge-base`、`/home`、`/user` 既是 SPA 路由又是接口前缀**，靠 `bypass` 按 `Accept` 头区分：含 `text/html` 的导航请求交回 SPA 回退，接口请求才转发后端。
+- 跨域靠 Vite 代理（`../web/vite.config.ts`），已配置前缀：`/auth`、`/files`、`/file-results`、`/knowledge-base`、`/strategy-versions`、`/system`、`^/user/`、`^/home/`、`^/model/`。
+- **`/home`、`/user`、`/model` 既是 SPA 路由又是接口前缀**，靠 `bypass` 按 `Accept` 头区分：含 `text/html` 的导航请求交回 SPA 回退，接口请求才转发后端。`/knowledge` 只作 SPA 路由前缀（接口前缀是 `/knowledge-base`），无需代理。
 - 新增接口前缀必须同时加代理。漏加时代理不生效：请求落到 SPA 回退，前端拿到 HTML、页面数据全空，**控制台不报错**。
 
 ### 九、空值判定口径
@@ -242,18 +243,20 @@
 
 侧栏是**两级菜单**（`../web/src/layouts/AppLayout.vue` 的 `navItems`）：没有二级项的是一级叶子项，带二级项的是一级分组（自身不下钻，点标题开合）。当前结构：
 
-| 层级 | 菜单       | 路由              | 可见性                     |
-|------|------------|-------------------|----------------------------|
-| 一级 | 首页       | `/home`           | 全部                       |
-| 一级 | 知识库     | 分组，无自身路由  | 全部                       |
-| 二级 | 知识库管理 | `/knowledge-base` | 全部                       |
-| 二级 | 策略管理   | `/strategy`       | 全部                       |
-| 一级 | 用户管理   | `/user`           | 仅管理员                   |
-| 一级 | 模型管理   | `/model`          | 全部                       |
-| 一级 | 系统设置   | `/settings`       | 全部（页内卡片按权限显示） |
-| 一级 | 个人中心   | `/profile`        | 全部                       |
+| 层级 | 菜单       | 路由                | 可见性                     |
+|------|------------|---------------------|----------------------------|
+| 一级 | 首页       | `/home`             | 全部                       |
+| 一级 | 知识库     | 分组，无自身路由    | 全部                       |
+| 二级 | 知识库管理 | `/knowledge/manager` | 全部                       |
+| 二级 | 策略管理   | `/knowledge/strategy` | 全部                       |
+| 一级 | 用户管理   | `/user`             | 仅管理员                   |
+| 一级 | 模型管理   | 分组，无自身路由    | 全部                       |
+| 二级 | 模型清单   | `/model/manager`    | 全部                       |
+| 二级 | 用量与成本 | `/model/usage`      | 全部                       |
+| 一级 | 系统设置   | `/settings`         | 全部（页内卡片按权限显示） |
+| 一级 | 个人中心   | `/profile`          | 全部                       |
 
-- 下钻页（`/knowledge-base/:id/stages`、`.../index`、`.../retrieval`）**不单独占菜单项**，归到二级「知识库管理」下点亮。
+- 下钻页（`/knowledge/:id/stages`、`.../index`、`.../retrieval`）**不单独占菜单项**，归到二级「知识库管理」下点亮。
 - **新增一级模块**（提示词版本管理、Agent 对话等）在 `navItems` 里加一项：内容多就照「知识库」的样子加一个分组，只有一个页面就用叶子项。
 - **菜单可见性有两处声明**（菜单项的 `adminOnly` 与路由的 `meta.adminOnly`），新增管理类页面要同步改两处（见 `pages/布局壳/README.md` 的待定项）。
 - 菜单开合、选中态级联与折叠态浮出面板的交互口径见 `pages/布局壳/01-页面功能.md`。

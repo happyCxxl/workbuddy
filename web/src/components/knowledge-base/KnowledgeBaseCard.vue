@@ -121,19 +121,19 @@ const router = useRouter();
 
 /** 点卡片（或回车/空格）进入该库的文件处理链页 */
 function openStages(): void {
-  void router.push(`/knowledge-base/${props.kb.id}/stages`);
+  void router.push(`/knowledge/${props.kb.id}/stages`);
 }
 
 /** 进入该库的索引与发布页（组合版本、发布与回退） */
 function openIndex(): void {
-  void router.push(`/knowledge-base/${props.kb.id}/index`);
+  void router.push(`/knowledge/${props.kb.id}/index`);
 }
 
 /**
  * 进入该库的检索评测页（测试台检索 + 运行记录并排对比 + 规则选优发布）。
  */
 function openRetrieval(): void {
-  void router.push(`/knowledge-base/${props.kb.id}/retrieval`);
+  void router.push(`/knowledge/${props.kb.id}/retrieval`);
 }
 
 const statusText = computed(() => (props.kb.status === KB_STATUS_ACTIVE ? '已启用' : '已停用'));

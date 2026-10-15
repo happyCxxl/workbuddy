@@ -650,7 +650,7 @@ function applyEntryAction(): void {
   } else {
     openImport();
   }
-  void router.replace({ path: '/knowledge-base' });
+  void router.replace({ path: '/knowledge/manager' });
 }
 </script>
 

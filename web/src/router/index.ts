@@ -32,35 +32,36 @@ const router = createRouter({
           meta: { title: '首页' },
         },
         {
-          path: 'knowledge-base',
+          // 知识库管理：列表页与它的三个下钻页（执行链 / 索引与发布 / 检索评测）共用这一项
+          path: 'knowledge/manager',
           name: 'KnowledgeBase',
           component: () => import('@/views/knowledge-base/KnowledgeBaseView.vue'),
           meta: { title: '知识库' },
         },
         {
           // 执行链：左侧文件列表 + 右侧链图，四个环节的卡片与详情抽屉都在这里
-          path: 'knowledge-base/:id/stages',
+          path: 'knowledge/:id/stages',
           name: 'PipelineStage',
           component: () => import('@/views/knowledge-base/PipelineStageView.vue'),
           meta: { title: '执行链' },
         },
         {
           // 索引与发布：同一知识库的策略组合版本、发布与回退
-          path: 'knowledge-base/:id/index',
+          path: 'knowledge/:id/index',
           name: 'IndexBuild',
           component: () => import('@/views/knowledge-base/IndexBuildView.vue'),
           meta: { title: '索引与发布' },
         },
         {
           // 检索评测：测试台检索 + 运行记录并排对比 + 规则选优发布
-          path: 'knowledge-base/:id/retrieval',
+          path: 'knowledge/:id/retrieval',
           name: 'RetrievalEval',
           component: () => import('@/views/knowledge-base/RetrievalEvalView.vue'),
           meta: { title: '检索评测' },
         },
         {
           // 策略管理：四类策略（预处理/切片/向量化/检索）的版本管理
-          path: 'strategy',
+          path: 'knowledge/strategy',
           name: 'StrategyManagement',
           component: () => import('@/views/strategy/StrategyManagementView.vue'),
           meta: { title: '策略管理' },
@@ -73,11 +74,18 @@ const router = createRouter({
           meta: { title: '用户管理', adminOnly: true },
         },
         {
-          // 模型管理：厂商来自配置的模型目录维护、连通性测试与用量成本；页面与接口对所有登录用户开放
-          path: 'model',
-          name: 'ModelManagement',
-          component: () => import('@/views/model/ModelManagementView.vue'),
-          meta: { title: '模型管理' },
+          // 模型清单：模型目录维护（新增 / 编辑 / 启停）；页面与接口对所有登录用户开放
+          path: 'model/manager',
+          name: 'ModelList',
+          component: () => import('@/views/model/ModelListView.vue'),
+          meta: { title: '模型清单' },
+        },
+        {
+          // 用量与成本：调用概览与明细；与模型清单同属「模型管理」菜单
+          path: 'model/usage',
+          name: 'ModelUsage',
+          component: () => import('@/views/model/ModelUsageView.vue'),
+          meta: { title: '用量与成本' },
         },
         {
           // 系统设置：平台级开关，登录用户都能进；页面内各设置卡按权限自行决定是否渲染

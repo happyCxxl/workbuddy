@@ -324,7 +324,7 @@ const navItems: NavItem[] = [
       // 知识库管理：列表页与它的三个下钻页（执行链 / 索引与发布 / 检索评测）共用这一项
       {
         label: '知识库管理',
-        path: '/knowledge-base',
+        path: '/knowledge/manager',
         iconPaths: [
           'M2.2 5.2 8 2l5.8 3.2v5.6L8 14 2.2 10.8V5.2Z',
           'M2.2 5.2 8 8.4l5.8-3.2M8 8.4V14',
@@ -333,7 +333,7 @@ const navItems: NavItem[] = [
       // 策略管理：预处理/切片/向量化/检索四类策略的版本管理
       {
         label: '策略管理',
-        path: '/strategy',
+        path: '/knowledge/strategy',
         iconPaths: [
           'M2.6 4.4h10.8M2.6 8h10.8M2.6 11.6h10.8',
           'M5.6 2.8v3.2M10.4 6.4v3.2M6.8 10v3.2',
@@ -350,11 +350,24 @@ const navItems: NavItem[] = [
     adminOnly: true,
   },
   {
-    kind: 'leaf',
-    // 模型管理：模型目录维护、试连与用量成本；页面与接口对所有登录用户开放
+    kind: 'group',
+    // 模型管理：模型目录维护与用量成本；页面与接口对所有登录用户开放
     label: '模型管理',
-    path: '/model',
     iconPaths: ['M5.2 5.2h5.6v5.6H5.2z', 'M8 2.4v2.8M8 10.8v2.8M2.4 8h2.8M10.8 8h2.8'],
+    children: [
+      // 模型清单：模型目录维护（新增 / 编辑 / 启停）
+      {
+        label: '模型清单',
+        path: '/model/manager',
+        iconPaths: ['M3.2 4.6h9.6M3.2 8h9.6M3.2 11.4h9.6', 'M5.6 3.2v10.8'],
+      },
+      // 用量与成本：调用概览与明细，只读
+      {
+        label: '用量与成本',
+        path: '/model/usage',
+        iconPaths: ['M2.4 13.2h11.2', 'M4.4 13.2V8.4M7.4 13.2V4.4M10.4 13.2V10'],
+      },
+    ],
   },
   {
     kind: 'leaf',
@@ -391,7 +404,7 @@ function isNavActive(path: string): boolean {
   if (route.path === path) {
     return true;
   }
-  // 子页面归到所属菜单：/knowledge-base/xxx/stages 也要点亮「知识库」
+  // 子页面归到所属菜单：/knowledge/xxx/stages 也要点亮「知识库管理」
   return path !== '/home' && route.path.startsWith(`${path}/`);
 }
 
@@ -431,17 +444,18 @@ function toggleGroup(item: NavGroup): void {
 /**
  * 返回目标的集中定义：key 为当前路由名，value 为上一层。
  *
- * <p>层级：处理链页 → 知识库列表 → 首页；用户管理 → 首页；系统设置 → 首页；首页无上层。
- * 用表而不是逐页写按钮，保证全局只有一处逻辑。
+ * <p>层级：处理链页 → 知识库列表 → 首页；模型清单与用量成本 → 首页；用户管理 → 首页；
+ * 系统设置 → 首页；首页无上层。用表而不是逐页写按钮，保证全局只有一处逻辑。
  */
 const BACK_TARGETS: Record<string, { path: string; label: string }> = {
   KnowledgeBase: { path: '/home', label: '首页' },
-  PipelineStage: { path: '/knowledge-base', label: '知识库' },
-  IndexBuild: { path: '/knowledge-base', label: '知识库' },
-  RetrievalEval: { path: '/knowledge-base', label: '知识库' },
+  PipelineStage: { path: '/knowledge/manager', label: '知识库管理' },
+  IndexBuild: { path: '/knowledge/manager', label: '知识库管理' },
+  RetrievalEval: { path: '/knowledge/manager', label: '知识库管理' },
   StrategyManagement: { path: '/home', label: '首页' },
   UserManagement: { path: '/home', label: '首页' },
-  ModelManagement: { path: '/home', label: '首页' },
+  ModelList: { path: '/home', label: '首页' },
+  ModelUsage: { path: '/home', label: '首页' },
   SystemSetting: { path: '/home', label: '首页' },
   Profile: { path: '/home', label: '首页' },
 };
@@ -709,11 +723,6 @@ function handleLogout(): void {
 
 /* 折叠态改用浮出面板，二级列表让位 */
 .layout-side-collapsed .layout-nav-sub {
-  display: none;
-}
-
-/* 组收起时二级项让位 */
-.layout-nav-group:not(.is-open) > .layout-nav-sub {
   display: none;
 }
 

@@ -526,7 +526,7 @@ function switchType(type: StrategyType): void {
   activeType.value = type;
   selectedId.value = '';
   editing.value = false;
-  void router.replace({ path: '/strategy', query: { type } });
+  void router.replace({ path: '/knowledge/strategy', query: { type } });
   void loadVersions();
 }
 
