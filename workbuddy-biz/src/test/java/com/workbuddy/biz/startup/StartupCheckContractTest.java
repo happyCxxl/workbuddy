@@ -8,9 +8,7 @@ import com.workbuddy.biz.config.TaskQueueProperties;
 import com.workbuddy.common.startup.StartupCheck;
 import com.workbuddy.filecenter.config.FileCenterConfig;
 import com.workbuddy.filecenter.startup.StorageTypeCheck;
-import com.workbuddy.model.config.ModelRouteProperties;
 import com.workbuddy.model.config.ModelVendorProperties;
-import com.workbuddy.model.startup.ModelRouteValidator;
 import com.workbuddy.model.startup.ModelVendorValidator;
 import com.workbuddy.worker.input.FileValidationProperties;
 import com.workbuddy.worker.parser.DocumentParserPort;
@@ -40,7 +38,6 @@ class StartupCheckContractTest {
 
     @Test
     void realChecksShouldProceedOnPassPath() {
-        assertProceeds(new ModelRouteValidator(new ModelRouteProperties()));
         assertProceeds(new ModelVendorValidator(new ModelVendorProperties()));
         assertProceeds(new ParserWhitelistChecker(realParsers(), new FileValidationProperties()));
         assertProceeds(new RetrievalCapabilityCheck(new RetrievalCapabilityProperties()));
@@ -51,7 +48,6 @@ class StartupCheckContractTest {
 
     @Test
     void knownChecksShouldKeepTheirOrderTier() {
-        assertEquals(StartupCheck.ORDER_PARAMETERS, new ModelRouteValidator(new ModelRouteProperties()).order());
         assertEquals(StartupCheck.ORDER_CREDENTIALS, new ModelVendorValidator(new ModelVendorProperties()).order());
         assertEquals(StartupCheck.ORDER_ASSEMBLY,
                 new ParserWhitelistChecker(List.of(), new FileValidationProperties()).order());
