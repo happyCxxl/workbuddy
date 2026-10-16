@@ -38,22 +38,22 @@ public class ModelController {
 
     private final ModelAdminService modelAdminService;
 
-    @GetMapping("/models")
-    public R<List<ModelItemVO>> models(ModelQueryDto query) {
+    @GetMapping("/list")
+    public R<List<ModelItemVO>> list(ModelQueryDto query) {
         return R.ok(modelAdminService.list(query));
     }
 
-    @PostMapping("/models")
+    @PostMapping("/create")
     public R<ModelItemVO> create(@RequestBody ModelSaveDto dto) {
         return R.ok(modelAdminService.create(dto), "新增成功");
     }
 
-    @PutMapping("/models/{id}")
+    @PutMapping("/update/{id}")
     public R<ModelItemVO> update(@PathVariable Long id, @RequestBody ModelSaveDto dto) {
         return R.ok(modelAdminService.update(id, dto), "保存成功");
     }
 
-    @PatchMapping("/models/{id}/status")
+    @PatchMapping("/updateStatus/{id}")
     public R<ModelItemVO> updateStatus(@PathVariable Long id, @RequestBody ModelStatusDto dto) {
         return R.ok(modelAdminService.updateStatus(id, dto), "状态已更新");
     }

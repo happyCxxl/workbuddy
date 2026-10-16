@@ -1,6 +1,5 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.model;
 
-import com.workbuddy.biz.controller.model.ModelController;
 import com.workbuddy.biz.service.ModelAdminService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
@@ -56,7 +55,7 @@ class ModelControllerRoutingTest {
     void listPathShouldRouteToServiceWithBoundQuery() throws Exception {
         when(modelAdminService.list(any())).thenReturn(List.of(new ModelItemVO()));
 
-        mockMvc.perform(get("/model/models")
+        mockMvc.perform(get("/model/list")
                 .param("capability", "CHAT")
                 .param("status", "ENABLED")
                 .param("keyword", "qwen")).andExpect(status().isOk());
@@ -72,7 +71,7 @@ class ModelControllerRoutingTest {
     void createPathShouldRouteToServiceWithBody() throws Exception {
         when(modelAdminService.create(any())).thenReturn(new ModelItemVO());
 
-        mockMvc.perform(post("/model/models")
+        mockMvc.perform(post("/model/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"vendorCode\":\"dashscope\",\"modelKey\":\"qwen-max\","
                         + "\"capabilities\":[\"CHAT\"],\"priceInPerM\":20,\"rpmLimit\":600}"))
@@ -89,7 +88,7 @@ class ModelControllerRoutingTest {
     void updatePathShouldRouteToServiceWithIdAndBody() throws Exception {
         when(modelAdminService.update(any(), any())).thenReturn(new ModelItemVO());
 
-        mockMvc.perform(put("/model/models/5")
+        mockMvc.perform(put("/model/update/5")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"vendorCode\":\"dashscope\",\"modelKey\":\"qwen-plus\",\"capabilities\":[\"CHAT\"]}"))
                 .andExpect(status().isOk());
@@ -105,7 +104,7 @@ class ModelControllerRoutingTest {
     void statusPathShouldRouteToServiceWithStatus() throws Exception {
         when(modelAdminService.updateStatus(any(), any())).thenReturn(new ModelItemVO());
 
-        mockMvc.perform(patch("/model/models/6/status")
+        mockMvc.perform(patch("/model/updateStatus/6")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"DISABLED\"}")).andExpect(status().isOk());
 
@@ -119,15 +118,15 @@ class ModelControllerRoutingTest {
         mockMvc.perform(get("/model/credentials")).andExpect(status().isNotFound());
         mockMvc.perform(post("/model/credentials")).andExpect(status().isNotFound());
         mockMvc.perform(get("/model/route-policies")).andExpect(status().isNotFound());
-        mockMvc.perform(post("/model/models/1/rotate")).andExpect(status().isNotFound());
-        mockMvc.perform(put("/model/models")).andExpect(status().isMethodNotAllowed());
+        mockMvc.perform(post("/model/create/1/rotate")).andExpect(status().isNotFound());
+        mockMvc.perform(put("/model/update")).andExpect(status().isNotFound());
 
         verifyNoInteractions(modelAdminService);
     }
 
     @Test
     void everyEndpointShouldBeOpenToAnyLoggedInUser() {
-        for (String name : List.of("models", "create", "update", "updateStatus")) {
+        for (String name : List.of("list", "create", "update", "updateStatus")) {
             assertFalse(hasAdminOnly(declaredMethod(name)),
                     name + " 不应挂 @AdminOnly：模型管理对所有登录用户开放");
         }
