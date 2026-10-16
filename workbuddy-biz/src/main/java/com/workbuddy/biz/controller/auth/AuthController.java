@@ -1,4 +1,4 @@
-package com.workbuddy.auth.controller;
+package com.workbuddy.biz.controller.auth;
 
 import com.workbuddy.auth.service.AuthService;
 import com.workbuddy.common.dto.response.R;

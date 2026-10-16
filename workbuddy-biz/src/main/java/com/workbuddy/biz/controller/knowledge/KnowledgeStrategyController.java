@@ -1,4 +1,4 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.StrategyVersionService;
 import com.workbuddy.common.dto.response.R;
@@ -29,7 +29,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/strategy-versions")
-public class StrategyVersionController {
+public class KnowledgeStrategyController {
 
     private final StrategyVersionService strategyVersionService;
 

@@ -56,7 +56,7 @@
 
 ## 待定项
 
-- **归属校验已覆盖：本页、提交入口、环节页全部按 `fileResultId` 直取的 12 个接口**。环节页那批（解析触发/解析详情/产物内容/血缘，以及组装/预处理/切片/向量化各自的触发与详情）由 `workbuddy-biz` 的 `FileResultAccessGuard` 在**服务层入口**统一校验：按 `wb_file_result.knowledge_base_id` 反查知识库，再走 `KnowledgeBaseRules.checkAccessible`，越权与不存在同样返回 `KB_NOT_FOUND`（40401），未登录 40101；口径见 `../解析环节/03-接口逻辑.md`。**仍未逐个审的是索引页与评测页**：它们按 `knowledgeBaseId` 访问（`IndexSetServiceImpl`、`RetrievalController` 那批），目前只做存在性判断（`getById` 判空），没有归属校验，拿别人的库 ID 仍可访问；收口要逐接口加校验，属独立一轮。
+- **归属校验已覆盖：本页、提交入口、环节页全部按 `fileResultId` 直取的 12 个接口**。环节页那批（解析触发/解析详情/产物内容/血缘，以及组装/预处理/切片/向量化各自的触发与详情）由 `workbuddy-biz` 的 `FileResultAccessGuard` 在**服务层入口**统一校验：按 `wb_file_result.knowledge_base_id` 反查知识库，再走 `KnowledgeBaseRules.checkAccessible`，越权与不存在同样返回 `KB_NOT_FOUND`（40401），未登录 40101；口径见 `../解析环节/03-接口逻辑.md`。**仍未逐个审的是索引页与评测页**：它们按 `knowledgeBaseId` 访问（`IndexSetServiceImpl`、`KnowledgeRetrievalController` 那批），目前只做存在性判断（`getById` 判空），没有归属校验，拿别人的库 ID 仍可访问；收口要逐接口加校验，属独立一轮。
 - **批量查绑定未按归属过滤**：`GET /knowledge-base/strategy-bindings` 返回的是全平台绑定行，响应里只有 `knowledgeBaseId` 与策略版本信息（**不含库名与内容**），前端只与自己可见的库求交集。要彻底收口需再查一次可见库 ID，收益有限，先记在这里。
 - **`page` 的 `size` 没有上限**：导入弹窗按 `size=500` 一次拉全库；加限制时必须 ≥500。
 - **筛选条件不持久**：刷新或离开再回来会重置为「已启用 + 默认排序」。要做可考虑写进 URL（可分享、可后退），与处理链页那种"折叠状态存 localStorage"不是一类。

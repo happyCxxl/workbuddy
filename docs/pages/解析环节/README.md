@@ -9,7 +9,7 @@
 | 前端视图   | `../../../web/src/views/knowledge-base/PipelineStageView.vue`（页面）                                                                                                   |
 | 前端组件   | `../../../web/src/components/pipeline/ChainNode.vue`（卡片）、`StageDetailDrawer.vue`（抽屉）                                                                           |
 | 前端接口层 | `../../../web/src/api/pipeline.ts`                                                                                                                                      |
-| 后端       | `KnowledgeFileParseController`（解析触发 / 解析详情）、`KnowledgeFileStageController`（产物内容）、`LineageController`（血缘）                                          |
+| 后端       | `KnowledgeFileParseController`（解析触发 / 解析详情）、`KnowledgeFileStageController`（产物内容）、`KnowledgeLineageController`（血缘）                                          |
 | 涉及接口   | `GET /file-results/{id}/lineage`、`POST /file-results/{id}/parse`、`GET /file-results/{id}/parse-detail`、`GET /file-results/{id}/stage-content`、`GET /files/{fileId}` |
 
 链图的画布、触发弹窗、图例与轮询属执行链壳，归 `../知识库列表/README.md` 与本文档的卡片条目共同覆盖；其余四个环节（组装 / 预处理 / 切片 / 向量化）共用同一套卡片与抽屉结构，本文档只写解析环节特有的部分。

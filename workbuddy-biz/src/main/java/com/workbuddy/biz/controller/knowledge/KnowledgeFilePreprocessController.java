@@ -1,4 +1,4 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.PreprocessControlService;
 import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;

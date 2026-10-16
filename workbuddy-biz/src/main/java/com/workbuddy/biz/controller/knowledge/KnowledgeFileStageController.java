@@ -1,4 +1,4 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.StageContentQueryService;
 import com.workbuddy.common.dto.request.stage.ChunkContentFilter;

@@ -790,13 +790,6 @@ onMounted(async () => {
 }
 
 /* ==================== 抽屉表单 ==================== */
-.model-hint {
-  margin: 0 0 10px;
-  color: var(--kb-text-3);
-  font-size: 11px;
-  line-height: 1.7;
-}
-
 .model-form-item {
   margin-bottom: 14px;
 }

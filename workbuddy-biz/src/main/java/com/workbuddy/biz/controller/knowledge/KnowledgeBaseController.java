@@ -1,4 +1,4 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.knowledge;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.biz.service.KnowledgeBaseService;

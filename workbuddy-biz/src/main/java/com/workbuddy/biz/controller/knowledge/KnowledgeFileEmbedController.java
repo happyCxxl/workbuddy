@@ -1,4 +1,4 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;
 import com.workbuddy.common.dto.request.stage.StageTriggerQueryDto;

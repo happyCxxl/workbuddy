@@ -38,14 +38,19 @@
             <artifactId>workbuddy-file</artifactId>
         </dependency>
 
-        <!-- Web 控制器与参数校验 -->
+        <!-- Web 过滤链基类（OncePerRequestFilter）：接口层已收拢到 biz，
+             本模块不再声明 Web 起步依赖，Servlet 容器由 biz 提供 -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
         </dependency>
+
+        <!-- servlet API：过滤链与两个安全处理器收了 servlet 类型，编译期需要；
+             容器在 biz，运行期由它提供（与 common 同口径） -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- 安全框架（过滤链 + BCrypt） -->

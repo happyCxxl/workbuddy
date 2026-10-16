@@ -1,9 +1,10 @@
-package com.workbuddy.filecenter.controller;
+package com.workbuddy.biz.controller.file;
 
 import com.workbuddy.common.dto.response.R;
 import com.workbuddy.filecenter.service.FileService;
 import com.workbuddy.filecenter.service.FileStorage;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,16 +22,11 @@ import java.io.IOException;
  */
 @RestController
 @RequestMapping("/files")
+@RequiredArgsConstructor
 public class FileController {
 
     private final FileStorage fileStorage;
-
     private final FileService fileService;
-
-    public FileController(FileStorage fileStorage, FileService fileService) {
-        this.fileStorage = fileStorage;
-        this.fileService = fileService;
-    }
 
     /** 上传文件，返回 fileId */
     @PostMapping

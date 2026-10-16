@@ -1,4 +1,4 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.common.dto.response.R;
 import com.workbuddy.biz.service.LineageQueryService;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/file-results")
-public class LineageController {
+public class KnowledgeLineageController {
 
     private final LineageQueryService lineageQueryService;
 

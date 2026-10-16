@@ -1,4 +1,4 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.common.dto.response.R;
 import com.workbuddy.biz.service.RetrievalRuleService;
@@ -32,7 +32,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/knowledge-base")
-public class RetrievalController {
+public class KnowledgeRetrievalController {
 
     private final SearchService searchService;
 

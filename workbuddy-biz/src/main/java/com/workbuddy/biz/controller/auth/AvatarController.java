@@ -1,4 +1,4 @@
-package com.workbuddy.auth.controller;
+package com.workbuddy.biz.controller.auth;
 
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.common.domain.entity.WbUser;

@@ -1,4 +1,4 @@
-package com.workbuddy.auth.controller;
+package com.workbuddy.biz.controller.auth;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.auth.service.UserService;
