@@ -5,6 +5,7 @@ import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;
+import com.workbuddy.common.dto.request.model.ModelUpdateDto;
 import com.workbuddy.common.dto.response.R;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
 import jakarta.validation.Valid;
@@ -49,8 +50,8 @@ public class ModelController {
     }
 
     @PutMapping("/update/{id}")
-    public R<ModelItemVO> update(@PathVariable Long id, @Valid @RequestBody ModelSaveDto dto) {
-        return R.ok(modelService.update(id, dto), "保存成功");
+    public R<ModelItemVO> update(@PathVariable Long id, @Valid @RequestBody ModelUpdateDto dto) {
+        return R.ok(modelService.update(id, dto), "更新成功");
     }
 
     @PatchMapping("/updateStatus/{id}")

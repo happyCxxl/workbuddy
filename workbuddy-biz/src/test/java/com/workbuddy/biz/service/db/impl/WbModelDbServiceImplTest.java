@@ -160,7 +160,7 @@ class WbModelDbServiceImplTest {
         row.setRpmLimit(null);
         row.setInputLimit(null);
 
-        dbService.updateAll(row);
+        dbService.updateModel(row);
 
         ArgumentCaptor<WbModel> entityCaptor = ArgumentCaptor.forClass(WbModel.class);
         ArgumentCaptor<Wrapper<WbModel>> wrapperCaptor = ArgumentCaptor.forClass(Wrapper.class);

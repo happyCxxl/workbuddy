@@ -59,7 +59,7 @@ public interface WbModelDbService extends InfraDbService<WbModel> {
      *
      * @param row 目标行（主键必填，业务列按覆盖口径写入）
      */
-    void updateAll(WbModel row);
+    void updateModel(WbModel row);
 
     /**
      * 回写状态（只动这一列）。

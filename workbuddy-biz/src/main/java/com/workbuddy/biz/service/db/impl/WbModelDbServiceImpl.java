@@ -63,7 +63,7 @@ public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbMo
     }
 
     @Override
-    public void updateAll(WbModel row) {
+    public void updateModel(WbModel row) {
         LambdaUpdateWrapper<WbModel> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(WbModel::getId, row.getId());
         clearIfNull(wrapper, WbModel::getInputLimit, row.getInputLimit());

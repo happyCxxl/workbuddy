@@ -78,18 +78,33 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(illegal), "thinkingEnabled");
     }
 
-    /** 币种大小写不敏感、留空合法，字典外取值拒绝 */
+    /** 厂商码大小写不敏感；与配置清单外的取值拒绝（含曾配置后停用的厂商） */
+    @Test
+    void vendorCodeShouldMatchConfiguredSet() {
+        ModelSaveDto upper = saveDto();
+        upper.setVendorCode("DEEPSEEK");
+        ModelSaveDto unconfigured = saveDto();
+        unconfigured.setVendorCode("dashscope");
+        ModelSaveDto unknown = saveDto();
+        unknown.setVendorCode("no-such-vendor");
+
+        assertTrue(VALIDATOR.validate(upper).isEmpty());
+        assertPropertyViolated(VALIDATOR.validate(unconfigured), "vendorCode");
+        assertPropertyViolated(VALIDATOR.validate(unknown), "vendorCode");
+    }
+
+    /** 币种必填、只认 CNY / USD 精确大小写 */
     @Test
     void currencyShouldMatchDictionary() {
-        ModelSaveDto lower = saveDto();
-        lower.setCurrency("usd");
         ModelSaveDto absent = saveDto();
         absent.setCurrency(null);
+        ModelSaveDto lower = saveDto();
+        lower.setCurrency("usd");
         ModelSaveDto illegal = saveDto();
         illegal.setCurrency("EUR");
 
-        assertTrue(VALIDATOR.validate(lower).isEmpty());
-        assertTrue(VALIDATOR.validate(absent).isEmpty());
+        assertPropertyViolated(VALIDATOR.validate(absent), "currency");
+        assertPropertyViolated(VALIDATOR.validate(lower), "currency");
         assertPropertyViolated(VALIDATOR.validate(illegal), "currency");
     }
 
@@ -128,7 +143,7 @@ class ModelDtoValidationTest {
     /** 字段齐全的合法收参 */
     private ModelSaveDto saveDto() {
         ModelSaveDto dto = new ModelSaveDto();
-        dto.setVendorCode("dashscope");
+        dto.setVendorCode("deepseek");
         dto.setModelKey("qwen-max");
         dto.setCapabilities(List.of("CHAT", "EMBEDDING"));
         dto.setThinkingEnabled(1);

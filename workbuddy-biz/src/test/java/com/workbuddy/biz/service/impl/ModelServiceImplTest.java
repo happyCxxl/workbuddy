@@ -7,6 +7,7 @@ import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.enums.model.AuthType;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
+import com.workbuddy.common.dto.request.model.ModelUpdateDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
@@ -92,7 +93,6 @@ class ModelServiceImplTest {
 
     @Test
     void createShouldFillColumnsAndWriteAudit() {
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
         ModelSaveDto dto = saveDto();
 
         ModelItemVO item = service.create(dto);
@@ -121,7 +121,6 @@ class ModelServiceImplTest {
 
     @Test
     void createShouldDefaultThinkingFlagToDisabled() {
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
         ModelSaveDto dto = saveDto();
         dto.setThinkingEnabled(null);
 
@@ -131,42 +130,12 @@ class ModelServiceImplTest {
     }
 
     @Test
-    void createShouldRejectVendorCodeAbsentFromConfig() {
-        ModelSaveDto dto = saveDto();
-        dto.setVendorCode("no-such-vendor");
-
-        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.create(dto));
-
-        assertEquals(ErrorCode.MODEL_VENDOR_UNKNOWN, error.getErrorCode());
-        assertTrue(error.getMessage().contains("workbuddy.model.vendors"), error.getMessage());
-        assertTrue(error.getMessage().contains("no-such-vendor"), error.getMessage());
-        verify(kbModelDbService, never()).save(any());
-        verify(auditEventPublisher, never()).publish(any(), anyString(), any(), any(), any());
-    }
-
-    @Test
-    void createShouldRejectDuplicateVendorAndModelKey() {
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(true);
-
-        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.create(saveDto()));
-
-        assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
-        assertTrue(error.getMessage().contains("唯一键"), error.getMessage());
-        verify(kbModelDbService, never()).save(any());
-    }
-
-    @Test
     void createShouldRejectIllegalCapability() {
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
-        ModelSaveDto empty = saveDto();
-        empty.setCapabilities(List.of());
         ModelSaveDto unknown = saveDto();
         unknown.setCapabilities(List.of("RERANK"));
 
-        KnowledgeException emptyError = assertThrows(KnowledgeException.class, () -> service.create(empty));
         KnowledgeException unknownError = assertThrows(KnowledgeException.class, () -> service.create(unknown));
 
-        assertEquals(ErrorCode.PARAM_INVALID, emptyError.getErrorCode());
         assertEquals(ErrorCode.PARAM_INVALID, unknownError.getErrorCode());
         assertTrue(unknownError.getMessage().contains("RERANK"), unknownError.getMessage());
         verify(kbModelDbService, never()).save(any());
@@ -174,19 +143,16 @@ class ModelServiceImplTest {
 
     @Test
     void createShouldAlwaysSaveEnabled() {
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
-
         service.create(saveDto());
 
         assertEquals("ENABLED", capturedSave().getStatus());
     }
 
     @Test
-    void updateShouldExcludeSelfAndOverwriteColumns() {
+    void updateShouldOverwriteColumns() {
         when(kbModelDbService.getExistingById(5L))
                 .thenReturn(row(5L, "dashscope", "qwen-max", "CHAT", "ENABLED"));
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", 5L)).thenReturn(false);
-        ModelSaveDto dto = saveDto();
+        ModelUpdateDto dto = updateDto();
         dto.setPriceInPerM(null);
 
         ModelItemVO item = service.update(5L, dto);
@@ -199,31 +165,29 @@ class ModelServiceImplTest {
                 anyString(), anyString());
     }
 
-    /** 编辑不改状态：停用行编辑后保持停用（启停只走专用接口） */
+    /** 编辑不改状态：停用行编辑后保持停用（启停只走专用接口）；币种按收参原样覆盖 */
     @Test
     void updateShouldKeepStatusWhenAbsent() {
         WbModel existing = row(7L, "dashscope", "qwen-max", "CHAT", "DISABLED");
         existing.setCurrency("USD");
         when(kbModelDbService.getExistingById(7L)).thenReturn(existing);
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", 7L)).thenReturn(false);
-        ModelSaveDto dto = saveDto();
-        dto.setCurrency(null);
+        ModelUpdateDto dto = updateDto();
 
         service.update(7L, dto);
 
         WbModel updated = capturedUpdate();
         assertEquals("DISABLED", updated.getStatus());
-        assertEquals("USD", updated.getCurrency());
+        assertEquals("CNY", updated.getCurrency());
     }
 
     @Test
     void updateShouldRejectMissingRow() {
         when(kbModelDbService.getExistingById(9L)).thenReturn(null);
 
-        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.update(9L, saveDto()));
+        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.update(9L, updateDto()));
 
         assertEquals(ErrorCode.MODEL_NOT_FOUND, error.getErrorCode());
-        verify(kbModelDbService, never()).updateAll(any());
+        verify(kbModelDbService, never()).updateModel(any());
     }
 
     @Test
@@ -240,9 +204,22 @@ class ModelServiceImplTest {
                 anyString(), anyString());
     }
 
-    /** 字段齐全的收参：覆盖长度四列、价格三列与限额两列 */
+    /** 字段齐全的新增收参：覆盖长度四列、价格三列与限额两列 */
     private ModelSaveDto saveDto() {
         ModelSaveDto dto = new ModelSaveDto();
+        applyFullFields(dto);
+        return dto;
+    }
+
+    /** 字段齐全的编辑收参：字段口径与新增一致 */
+    private ModelUpdateDto updateDto() {
+        ModelUpdateDto dto = new ModelUpdateDto();
+        applyFullFields(dto);
+        return dto;
+    }
+
+    /** 全字段赋值（新增 / 编辑收参共用） */
+    private void applyFullFields(ModelSaveDto dto) {
         dto.setVendorCode("dashscope");
         dto.setModelKey("qwen-max");
         dto.setCapabilities(List.of("CHAT", "EMBEDDING"));
@@ -258,7 +235,6 @@ class ModelServiceImplTest {
         dto.setCurrency("CNY");
         dto.setRpmLimit(600);
         dto.setTpmLimit(120000);
-        return dto;
     }
 
     /** 目录行：状态与能力由形参给出 */
@@ -310,7 +286,7 @@ class ModelServiceImplTest {
     /** 取最近一次覆盖式更新的行 */
     private WbModel capturedUpdate() {
         ArgumentCaptor<WbModel> captor = ArgumentCaptor.forClass(WbModel.class);
-        verify(kbModelDbService).updateAll(captor.capture());
+        verify(kbModelDbService).updateModel(captor.capture());
         return captor.getValue();
     }
 }

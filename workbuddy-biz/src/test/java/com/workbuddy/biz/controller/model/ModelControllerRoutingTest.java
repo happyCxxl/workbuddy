@@ -5,6 +5,7 @@ import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;
+import com.workbuddy.common.dto.request.model.ModelUpdateDto;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,12 +79,12 @@ class ModelControllerRoutingTest {
 
         mockMvc.perform(post("/model/create")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"vendorCode\":\"dashscope\",\"modelKey\":\"qwen-max\","
-                        + "\"capabilities\":[\"CHAT\"],\"priceInPerM\":20,\"rpmLimit\":600}"))
+                .content("{\"vendorCode\":\"deepseek\",\"modelKey\":\"qwen-max\","
+                        + "\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\",\"priceInPerM\":20,\"rpmLimit\":600}"))
                 .andExpect(status().isOk());
 
         ModelSaveDto dto = capturedSave();
-        assertEquals("dashscope", dto.getVendorCode());
+        assertEquals("deepseek", dto.getVendorCode());
         assertEquals("qwen-max", dto.getModelKey());
         assertEquals(List.of("CHAT"), dto.getCapabilities());
         assertEquals(600, dto.getRpmLimit());
@@ -95,11 +96,11 @@ class ModelControllerRoutingTest {
 
         mockMvc.perform(put("/model/update/5")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"vendorCode\":\"dashscope\",\"modelKey\":\"qwen-plus\",\"capabilities\":[\"CHAT\"]}"))
+                .content("{\"vendorCode\":\"deepseek\",\"modelKey\":\"qwen-plus\",\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\"}"))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<ModelSaveDto> dtoCaptor = ArgumentCaptor.forClass(ModelSaveDto.class);
+        ArgumentCaptor<ModelUpdateDto> dtoCaptor = ArgumentCaptor.forClass(ModelUpdateDto.class);
         verify(modelService).update(idCaptor.capture(), dtoCaptor.capture());
         assertEquals(5L, idCaptor.getValue());
         assertEquals("qwen-plus", dtoCaptor.getValue().getModelKey());

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;
+import com.workbuddy.common.dto.request.model.ModelUpdateDto;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
 
 /**
@@ -36,10 +37,10 @@ public interface ModelService {
      * 编辑模型：校验口径与新增一致，唯一键判定排除本行；状态沿用原值。
      *
      * @param id  主键
-     * @param dto 模型收参
+     * @param dto 模型编辑收参
      * @return 覆盖写之后的模型
      */
-    ModelItemVO update(Long id, ModelSaveDto dto);
+    ModelItemVO update(Long id, ModelUpdateDto dto);
 
     /**
      * 启停模型：只改状态列。
