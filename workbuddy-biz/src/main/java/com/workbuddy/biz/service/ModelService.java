@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @author cxxl
  */
-public interface ModelAdminService {
+public interface ModelService {
 
     /**
      * 模型清单：按能力 / 状态 / 关键字过滤，返回目录视图字段。

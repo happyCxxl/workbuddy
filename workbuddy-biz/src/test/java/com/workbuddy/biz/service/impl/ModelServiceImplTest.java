@@ -16,25 +16,15 @@ import com.workbuddy.model.config.ModelVendorProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * 模型管理服务单测（数据访问打桩）：清单过滤与字段映射、新增与编辑的校验逐条、
@@ -42,7 +32,7 @@ import static org.mockito.Mockito.when;
  *
  * @author cxxl
  */
-class ModelAdminServiceImplTest {
+class ModelServiceImplTest {
 
     /** 审计对象类型（与实现的取值一致） */
     private static final String AUDIT_OBJECT_TYPE = AuditObjectType.MODEL.key();
@@ -53,7 +43,7 @@ class ModelAdminServiceImplTest {
 
     private ModelVendorProperties vendorProperties;
 
-    private ModelAdminServiceImpl service;
+    private ModelServiceImpl service;
 
     @BeforeEach
     void setUp() {
@@ -64,7 +54,7 @@ class ModelAdminServiceImplTest {
         vendors.put("dashscope", vendor("sk-dashscope"));
         vendors.put("self-ocr", vendor(null));
         vendorProperties.setVendors(vendors);
-        service = new ModelAdminServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher);
+        service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher);
     }
 
     @Test

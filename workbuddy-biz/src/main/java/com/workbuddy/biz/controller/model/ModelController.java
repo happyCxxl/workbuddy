@@ -1,6 +1,6 @@
 package com.workbuddy.biz.controller.model;
 
-import com.workbuddy.biz.service.ModelAdminService;
+import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;
@@ -36,25 +36,25 @@ import java.util.List;
 @RequestMapping("/model")
 public class ModelController {
 
-    private final ModelAdminService modelAdminService;
+    private final ModelService modelService;
 
     @GetMapping("/list")
     public R<List<ModelItemVO>> list(ModelQueryDto query) {
-        return R.ok(modelAdminService.list(query));
+        return R.ok(modelService.list(query));
     }
 
     @PostMapping("/create")
     public R<ModelItemVO> create(@RequestBody ModelSaveDto dto) {
-        return R.ok(modelAdminService.create(dto), "新增成功");
+        return R.ok(modelService.create(dto), "新增成功");
     }
 
     @PutMapping("/update/{id}")
     public R<ModelItemVO> update(@PathVariable Long id, @RequestBody ModelSaveDto dto) {
-        return R.ok(modelAdminService.update(id, dto), "保存成功");
+        return R.ok(modelService.update(id, dto), "保存成功");
     }
 
     @PatchMapping("/updateStatus/{id}")
     public R<ModelItemVO> updateStatus(@PathVariable Long id, @RequestBody ModelStatusDto dto) {
-        return R.ok(modelAdminService.updateStatus(id, dto), "状态已更新");
+        return R.ok(modelService.updateStatus(id, dto), "状态已更新");
     }
 }

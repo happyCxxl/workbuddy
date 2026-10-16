@@ -1,6 +1,6 @@
 package com.workbuddy.biz.controller.model;
 
-import com.workbuddy.biz.service.ModelAdminService;
+import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;
@@ -41,19 +41,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class ModelControllerRoutingTest {
 
-    private ModelAdminService modelAdminService;
+    private ModelService modelService;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        modelAdminService = mock(ModelAdminService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new ModelController(modelAdminService)).build();
+        modelService = mock(ModelService.class);
+        mockMvc = MockMvcBuilders.standaloneSetup(new ModelController(modelService)).build();
     }
 
     @Test
     void listPathShouldRouteToServiceWithBoundQuery() throws Exception {
-        when(modelAdminService.list(any())).thenReturn(List.of(new ModelItemVO()));
+        when(modelService.list(any())).thenReturn(List.of(new ModelItemVO()));
 
         mockMvc.perform(get("/model/list")
                 .param("capability", "CHAT")
@@ -64,12 +64,12 @@ class ModelControllerRoutingTest {
         assertEquals("CHAT", query.getCapability());
         assertEquals("ENABLED", query.getStatus());
         assertEquals("qwen", query.getKeyword());
-        verify(modelAdminService, never()).create(any());
+        verify(modelService, never()).create(any());
     }
 
     @Test
     void createPathShouldRouteToServiceWithBody() throws Exception {
-        when(modelAdminService.create(any())).thenReturn(new ModelItemVO());
+        when(modelService.create(any())).thenReturn(new ModelItemVO());
 
         mockMvc.perform(post("/model/create")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +86,7 @@ class ModelControllerRoutingTest {
 
     @Test
     void updatePathShouldRouteToServiceWithIdAndBody() throws Exception {
-        when(modelAdminService.update(any(), any())).thenReturn(new ModelItemVO());
+        when(modelService.update(any(), any())).thenReturn(new ModelItemVO());
 
         mockMvc.perform(put("/model/update/5")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -95,21 +95,21 @@ class ModelControllerRoutingTest {
 
         ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<ModelSaveDto> dtoCaptor = ArgumentCaptor.forClass(ModelSaveDto.class);
-        verify(modelAdminService).update(idCaptor.capture(), dtoCaptor.capture());
+        verify(modelService).update(idCaptor.capture(), dtoCaptor.capture());
         assertEquals(5L, idCaptor.getValue());
         assertEquals("qwen-plus", dtoCaptor.getValue().getModelKey());
     }
 
     @Test
     void statusPathShouldRouteToServiceWithStatus() throws Exception {
-        when(modelAdminService.updateStatus(any(), any())).thenReturn(new ModelItemVO());
+        when(modelService.updateStatus(any(), any())).thenReturn(new ModelItemVO());
 
         mockMvc.perform(patch("/model/updateStatus/6")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"DISABLED\"}")).andExpect(status().isOk());
 
         ArgumentCaptor<ModelStatusDto> captor = ArgumentCaptor.forClass(ModelStatusDto.class);
-        verify(modelAdminService).updateStatus(eq(6L), captor.capture());
+        verify(modelService).updateStatus(eq(6L), captor.capture());
         assertEquals("DISABLED", captor.getValue().getStatus());
     }
 
@@ -121,7 +121,7 @@ class ModelControllerRoutingTest {
         mockMvc.perform(post("/model/create/1/rotate")).andExpect(status().isNotFound());
         mockMvc.perform(put("/model/update")).andExpect(status().isNotFound());
 
-        verifyNoInteractions(modelAdminService);
+        verifyNoInteractions(modelService);
     }
 
     @Test
@@ -155,14 +155,14 @@ class ModelControllerRoutingTest {
     /** 取最近一次清单接口的收参 */
     private ModelQueryDto capturedListQuery() {
         ArgumentCaptor<ModelQueryDto> captor = ArgumentCaptor.forClass(ModelQueryDto.class);
-        verify(modelAdminService).list(captor.capture());
+        verify(modelService).list(captor.capture());
         return captor.getValue();
     }
 
     /** 取最近一次新增接口的收参 */
     private ModelSaveDto capturedSave() {
         ArgumentCaptor<ModelSaveDto> captor = ArgumentCaptor.forClass(ModelSaveDto.class);
-        verify(modelAdminService).create(captor.capture());
+        verify(modelService).create(captor.capture());
         return captor.getValue();
     }
 }

@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import com.workbuddy.biz.service.ModelAdminService;
+import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.catalog.ModelCapability;
@@ -36,7 +36,7 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ModelAdminServiceImpl implements ModelAdminService {
+public class ModelServiceImpl implements ModelService {
 
     /** 状态字典：启用（§4.6） */
     private static final String STATUS_ENABLED = "ENABLED";
