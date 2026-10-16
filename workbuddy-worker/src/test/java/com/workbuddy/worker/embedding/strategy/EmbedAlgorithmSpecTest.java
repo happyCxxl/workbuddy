@@ -1,6 +1,6 @@
 package com.workbuddy.worker.embedding.strategy;
 
-import com.workbuddy.model.catalog.StaticModelCatalog;
+import com.workbuddy.worker.testsupport.catalog.StaticModelCatalog;
 
 import org.junit.jupiter.api.Test;
 

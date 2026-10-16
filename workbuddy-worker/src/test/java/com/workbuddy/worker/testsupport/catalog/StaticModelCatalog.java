@@ -1,7 +1,8 @@
-package com.workbuddy.model.catalog;
+package com.workbuddy.worker.testsupport.catalog;
 
 import com.workbuddy.common.domain.model.catalog.ModelCapability;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
+import com.workbuddy.model.catalog.ModelCatalogPort;
 import com.workbuddy.common.enums.embed.EmbeddingModel;
 
 import java.util.ArrayList;

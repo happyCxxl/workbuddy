@@ -2,7 +2,7 @@ package com.workbuddy.worker.embedding.strategy;
 
 import com.workbuddy.common.enums.embed.EmbedMetric;
 import com.workbuddy.common.enums.embed.EmbeddingModel;
-import com.workbuddy.model.catalog.StaticModelCatalog;
+import com.workbuddy.worker.testsupport.catalog.StaticModelCatalog;
 import com.workbuddy.worker.embedding.EmbedProperties;
 
 import org.junit.jupiter.api.Test;

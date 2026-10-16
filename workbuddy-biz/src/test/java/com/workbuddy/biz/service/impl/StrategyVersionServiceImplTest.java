@@ -10,7 +10,7 @@ import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
-import com.workbuddy.model.catalog.StaticModelCatalog;
+import com.workbuddy.biz.testsupport.catalog.StaticModelCatalog;
 import com.workbuddy.worker.retrieval.RetrievalRuleSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
