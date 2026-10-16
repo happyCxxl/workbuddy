@@ -2,6 +2,7 @@ package com.workbuddy.biz.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.workbuddy.common.dto.request.knowledge.FileResultQueryDto;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
@@ -422,7 +423,7 @@ class KnowledgeBaseFileSubmitTest {
         when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.EMBED.name()))
                 .thenReturn(List.of(embed));
 
-        IPage<FileResultVO> result = service.pageFileResults(1L, 10L, 1L, null);
+        IPage<FileResultVO> result = service.pageFileResults(1L, fileResultQuery(null));
 
         List<FileResultVO> records = result.getRecords();
         assertEquals(2, records.size());
@@ -487,7 +488,7 @@ class KnowledgeBaseFileSubmitTest {
     void pageFileResultsShouldAttachSourceNames() {
         stubStorageNames("MinIO-A", "MinIO-B");
 
-        FileResultVO record = service.pageFileResults(1L, 10L, 1L, null).getRecords().getFirst();
+        FileResultVO record = service.pageFileResults(1L, fileResultQuery(null)).getRecords().getFirst();
 
         // 两个数据源实例同类型（minio）：显示名才是区分它们的字段
         assertEquals("MinIO-A", record.getStorageSourceName());
@@ -499,7 +500,7 @@ class KnowledgeBaseFileSubmitTest {
         // 数据源已删：档案仍记着 ID，注册表给不出显示名
         stubStorageNames(null, null);
 
-        FileResultVO record = service.pageFileResults(1L, 10L, 1L, null).getRecords().getFirst();
+        FileResultVO record = service.pageFileResults(1L, fileResultQuery(null)).getRecords().getFirst();
 
         assertEquals(SOURCE_ID, record.getStorageSourceId());
         assertNull(record.getStorageSourceName());
@@ -512,10 +513,10 @@ class KnowledgeBaseFileSubmitTest {
                 .thenReturn(new Page<>(1, 10));
 
         // 合法 stage（PARSE/STRUCTURE/空）只做合法性校验；按上游产物过滤在解析环节落地后启用
-        service.pageFileResults(1L, 10L, 1L, "PARSE");
-        service.pageFileResults(1L, 10L, 1L, "STRUCTURE");
-        service.pageFileResults(1L, 10L, 1L, null);
-        service.pageFileResults(1L, 10L, 1L, "");
+        service.pageFileResults(1L, fileResultQuery("PARSE"));
+        service.pageFileResults(1L, fileResultQuery("STRUCTURE"));
+        service.pageFileResults(1L, fileResultQuery(null));
+        service.pageFileResults(1L, fileResultQuery(""));
 
         verify(kbFileResultDbService, times(4)).pageByKb(1L, 10L, 1L);
     }
@@ -523,8 +524,15 @@ class KnowledgeBaseFileSubmitTest {
     @Test
     void pageFileResultsShouldRejectUnknownStage() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
-                () -> service.pageFileResults(1L, 10L, 1L, "INDEX"));
+                () -> service.pageFileResults(1L, fileResultQuery("INDEX")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         verify(kbFileResultDbService, never()).pageByKb(anyLong(), anyLong(), any());
+    }
+
+    /** 文件结果分页查询条件（环节可空） */
+    private FileResultQueryDto fileResultQuery(String stage) {
+        FileResultQueryDto query = new FileResultQueryDto();
+        query.setStage(stage);
+        return query;
     }
 }

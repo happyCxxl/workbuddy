@@ -22,13 +22,7 @@ public enum ModelCapability {
     EMBEDDING,
 
     /** 文字识别 */
-    OCR,
-
-    /** 版面分析 */
-    LAYOUT,
-
-    /** 表格结构 */
-    TABLE_STRUCTURE;
+    OCR;
 
     /**
      * 解析逗号分隔的能力清单：空段与未知取值跳过，重复取值只留一个。

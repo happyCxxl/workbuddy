@@ -12,28 +12,20 @@ export const MODEL_STATUS = {
  * <p>方案 §4.6 的能力字典另有 `RERANK` / `IMAGE` 两个取值，`common` 的枚举里没有，
  * 接口按枚举校验会拒绝这两个值，页面不列这两个取值。
  */
-export const MODEL_CAPABILITIES = [
-  'CHAT',
-  'EMBEDDING',
-  'OCR',
-  'LAYOUT',
-  'TABLE_STRUCTURE',
-] as const;
+export const MODEL_CAPABILITIES = ['CHAT', 'EMBEDDING', 'OCR'] as const;
 
 /** 能力展示名（页面标签与下拉文案） */
 export const MODEL_CAPABILITY_LABELS: Record<string, string> = {
   CHAT: '对话',
   EMBEDDING: '向量编码',
   OCR: '文字识别',
-  LAYOUT: '版面分析',
-  TABLE_STRUCTURE: '表格结构',
 };
 
 /** 币种码值（wb_model.currency） */
 export const MODEL_CURRENCIES = ['CNY', 'USD'] as const;
 
 /**
- * 厂商候选：码与后端配置 `knowledge.model.vendors` 的键一致，展示名与后端清单里的取名一致；
+ * 厂商候选：码与后端配置 `workbuddy.model.vendors` 的键一致，展示名与后端清单里的取名一致；
  * 新增厂商时同步该配置与这份枚举，两边都不在页面里增删。
  */
 export const MODEL_VENDORS = [
@@ -82,8 +74,10 @@ export interface ModelSavePayload {
   tpmLimit: number | null;
 }
 
-/** 模型清单的过滤条件 */
-export interface ModelQuery {
+/** 模型清单的分页查询条件（页码与页长可空，按后端默认 1 / 10 兜底） */
+export interface ModelPageQuery {
+  current?: number;
+  size?: number;
   capability?: string;
   status?: string;
   keyword?: string;

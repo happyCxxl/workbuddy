@@ -66,7 +66,7 @@ class ConfigImportManifestTest {
         DOMAINS.put("workbuddy-file.yml", List.of("knowledge.file.", "file-center."));
         DOMAINS.put("knowledge-task.yml", List.of("knowledge.task."));
         DOMAINS.put("knowledge-retrieval.yml", List.of("retrieval."));
-        DOMAINS.put(EMPTY_ALLOWED, List.of("knowledge.model."));
+        DOMAINS.put(EMPTY_ALLOWED, List.of("workbuddy.model."));
     }
 
     @TempDir

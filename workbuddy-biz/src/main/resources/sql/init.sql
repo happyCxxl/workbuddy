@@ -455,13 +455,13 @@ CREATE TABLE wb_storage_source
 -- ============================================================================
 
 -- 模型目录：一行 = 一个可调用的模型。厂商连接与密钥在配置（knowledge.model.vendors.*），本表只存厂商码。
--- capabilities 为多值（逗号分隔，取值 CHAT/EMBEDDING/OCR/LAYOUT/TABLE_STRUCTURE），候选集按能力筛，限额按模型行算。
+-- capabilities 为多值（逗号分隔，取值 CHAT/EMBEDDING/OCR），候选集按能力筛，限额按模型行算。
 CREATE TABLE wb_model
 (
     id                        BIGINT         NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     vendor_code               VARCHAR(64)    NOT NULL COMMENT '厂商码（knowledge.model.vendors 配置里的键）',
     model_key                 VARCHAR(128)   NOT NULL COMMENT '厂商侧模型名（请求体里的模型标识）',
-    capabilities              VARCHAR(255)   NOT NULL COMMENT '能力清单（多值，逗号分隔：CHAT/EMBEDDING/OCR/LAYOUT/TABLE_STRUCTURE）',
+    capabilities              VARCHAR(255)   NOT NULL COMMENT '能力清单（多值，逗号分隔：CHAT/EMBEDDING/OCR）',
     thinking_enabled          TINYINT        NOT NULL DEFAULT 0 COMMENT '是否支持思考模式：1 支持 / 0 不支持（仅登记能力，不装配请求参数）',
     input_limit               INT                     DEFAULT NULL COMMENT '最大输入长度（tokens，可空）',
     output_limit              INT                     DEFAULT NULL COMMENT '最大输出长度（tokens，可空）',

@@ -3,7 +3,9 @@ package com.workbuddy.biz.service.db.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.mapper.WbModelMapper;
 import com.workbuddy.common.domain.entity.WbModel;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
@@ -51,15 +53,14 @@ class WbModelDbServiceImplTest {
     }
 
     @Test
-    void listByConditionShouldFilterStatusAndKeywordInSql() {
+    void listByConditionShouldFilterStatusInSql() {
         when(mapper.selectList(any())).thenReturn(List.of(row(1L)));
 
-        List<WbModel> rows = dbService.listByCondition("ENABLED", "qwen");
+        List<WbModel> rows = dbService.listByCondition("ENABLED");
 
         assertEquals(1, rows.size());
         String sql = capturedListSql();
         assertTrue(sql.contains("status"), sql);
-        assertTrue(sql.contains("model_key"), sql);
         assertTrue(sql.contains("ORDER BY"), sql);
     }
 
@@ -67,10 +68,41 @@ class WbModelDbServiceImplTest {
     void listByConditionShouldSkipBlankFilters() {
         when(mapper.selectList(any())).thenReturn(List.of());
 
-        assertTrue(dbService.listByCondition(null, null).isEmpty());
+        assertTrue(dbService.listByCondition(null).isEmpty());
 
-        // 两个条件都不下发：SQL 里没有 WHERE，只有排序（排序键里本就含 model_key，故不能整串判）
+        // 条件不下发：SQL 里没有 WHERE，只有排序（排序键里本就含 model_key，故不能整串判）
         String sql = capturedListSql();
+        assertFalse(sql.contains("WHERE"), sql);
+        assertTrue(sql.contains("ORDER BY"), sql);
+    }
+
+    @Test
+    void pageByConditionShouldFilterStatusKeywordAndCapabilityInSql() {
+        Page<WbModel> page = new Page<>(1, 10);
+        page.setRecords(List.of(row(1L)));
+        when(mapper.selectPage(any(), any())).thenReturn(page);
+
+        IPage<WbModel> result = dbService.pageByCondition(1, 10, "ENABLED", "qwen", "OCR");
+
+        assertEquals(1, result.getRecords().size());
+        String sql = capturedPageSql();
+        assertTrue(sql.contains("status"), sql);
+        assertTrue(sql.contains("model_key"), sql);
+        assertTrue(sql.contains("FIND_IN_SET"), sql);
+        assertTrue(sql.contains("capabilities"), sql);
+        assertTrue(sql.contains("ORDER BY"), sql);
+    }
+
+    /** 能力留空时不拼 FIND_IN_SET，状态与关键字留空时不拼 WHERE */
+    @Test
+    void pageByConditionShouldSkipAbsentFilters() {
+        Page<WbModel> page = new Page<>(1, 10);
+        when(mapper.selectPage(any(), any())).thenReturn(page);
+
+        dbService.pageByCondition(1, 10, null, null, null);
+
+        String sql = capturedPageSql();
+        assertFalse(sql.contains("FIND_IN_SET"), sql);
         assertFalse(sql.contains("WHERE"), sql);
         assertTrue(sql.contains("ORDER BY"), sql);
     }
@@ -151,6 +183,14 @@ class WbModelDbServiceImplTest {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Wrapper<WbModel>> captor = ArgumentCaptor.forClass(Wrapper.class);
         verify(mapper).selectList(captor.capture());
+        return captor.getValue().getSqlSegment();
+    }
+
+    /** 取最近一次分页查询用的条件 */
+    private String capturedPageSql() {
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Wrapper<WbModel>> captor = ArgumentCaptor.forClass(Wrapper.class);
+        verify(mapper).selectPage(any(), captor.capture());
         return captor.getValue().getSqlSegment();
     }
 

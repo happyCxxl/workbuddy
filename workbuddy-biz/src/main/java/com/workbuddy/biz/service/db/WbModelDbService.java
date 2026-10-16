@@ -1,28 +1,39 @@
 package com.workbuddy.biz.service.db;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.infra.persistence.InfraDbService;
 
 import java.util.List;
 
 /**
- * 模型目录数据访问服务（表：wb_model）：管理页面的清单查询与三处定点回写。
+ * 模型目录数据访问服务（表：wb_model）：清单分页查询与三处定点回写。
  *
- * <p>状态与关键字在 SQL 里筛，能力在业务层按逗号分隔串比对（子串匹配会误命中短取值，
- * 判定口径与目录端口一致）；清单按厂商码与模型名升序，取值稳定。
+ * <p>状态与关键字在 SQL 里筛，能力按逗号分隔清单整项匹配；清单按厂商码与模型名升序，取值稳定。
  *
  * @author cxxl
  */
 public interface WbModelDbService extends InfraDbService<WbModel> {
 
     /**
-     * 按状态与关键字取行（两项都可留空 = 不过滤）。
+     * 按状态取全部行（注册表装载路径）。
      *
-     * @param status  状态码值，可空
-     * @param keyword 关键字（匹配模型名或展示名），可空
+     * @param status 状态码值，可空 = 不过滤
      * @return 命中的行（厂商码升序、模型名升序）
      */
-    List<WbModel> listByCondition(String status, String keyword);
+    List<WbModel> listByCondition(String status);
+
+    /**
+     * 分页取行：状态等值、模型名模糊、能力整项匹配。
+     *
+     * @param current    页码（1 起）
+     * @param size       每页条数
+     * @param status     状态码值，可空
+     * @param keyword    模型名模糊关键字，可空
+     * @param capability 能力（对 capabilities 清单整项匹配），可空
+     * @return 分页结果（厂商码升序、模型名升序）
+     */
+    IPage<WbModel> pageByCondition(long current, long size, String status, String keyword, String capability);
 
     /**
      * 取一行现有记录。

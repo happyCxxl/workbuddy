@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * 模型厂商连接配置（配置键 `knowledge.model.vendors.<厂商码>`，厂商码即 Map 键）。
+ * 模型厂商连接配置（配置键 `workbuddy.model.vendors.<厂商码>`，厂商码即 Map 键）。
  *
  * <p>整段可缺省：不配即没有厂商进入运行时，本地与 CI 无需密钥即可启动。字段留空的口径见各字段说明。
  *
@@ -17,7 +17,7 @@ import java.util.TreeMap;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "knowledge.model")
+@ConfigurationProperties(prefix = "workbuddy.model")
 public class ModelVendorProperties {
 
     /** 厂商码 → 连接配置；按厂商码排序，校验与日志的遍历顺序固定 */
@@ -43,5 +43,8 @@ public class ModelVendorProperties {
 
         /** 同一实例内的重试次数；留空 = 用底层默认值 */
         private Integer maxRetries;
+
+        /** 展示名（清单页显示用）；留空 = 用厂商码 */
+        private String displayName;
     }
 }

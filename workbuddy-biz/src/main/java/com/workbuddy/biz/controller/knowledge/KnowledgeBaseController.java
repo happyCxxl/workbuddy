@@ -4,18 +4,19 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.biz.service.KnowledgeBaseService;
 import com.workbuddy.common.dto.response.R;
 import com.workbuddy.common.dto.request.input.FileSubmitRequest;
+import com.workbuddy.common.dto.request.knowledge.FileResultQueryDto;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDto;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDto;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDto;
 import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDto;
 import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateRequest;
-import com.workbuddy.common.dto.request.page.PageQueryDto;
+import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDto;
 import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitResponse;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
 import com.workbuddy.common.dto.response.knowledge.StrategyBindingVO;
-import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,20 +107,12 @@ public class KnowledgeBaseController {
      * <p>可见范围在服务端定：普通用户只查自己创建的库，管理员不限；接口**不接受"创建人"参数**。
      * 未知 sort 值回落 DEFAULT（不报错，避免旧客户端失败）。
      *
-     * @param pageQuery 分页参数（current/size；缺省 1/10，小于 1 回落缺省）
-     * @param name      名称模糊关键字（可选）
-     * @param status    状态过滤：1 启用 / 0 停用；不传不过滤
-     * @param sort      排序口径：DEFAULT 默认 / UPDATED 最近更新 / NAME 名称；未知值按默认
+     * @param query 查询条件（名称 / 状态 / 排序都可留空；current/size 缺省 1/10，小于 1 回落缺省）
      * @return 知识库分页 VO（不含已删除）
      */
     @GetMapping("/page")
-    public R<IPage<KnowledgeBaseVO>> page(
-            PageQueryDto pageQuery,
-            @RequestParam(value = "name", required = false) String name,
-            @RequestParam(value = "status", required = false) Integer status,
-            @RequestParam(value = "sort", required = false) String sort) {
-        return R.ok(knowledgeBaseService.page(pageQuery.currentOrDefault(), pageQuery.sizeOrDefault(), name, status,
-                KnowledgeBaseSort.of(sort)));
+    public R<IPage<KnowledgeBaseVO>> page(@Valid KnowledgeBaseQueryDto query) {
+        return R.ok(knowledgeBaseService.page(query));
     }
 
     /**
@@ -206,38 +199,30 @@ public class KnowledgeBaseController {
      * 提交记录分页查询：按知识库分页返回提交流水（PASS/FAIL 均记录，数据源 wb_submit_log），
      * 支持按提交结果与文件名模糊筛选；失败原因随记录一并返回。
      *
-     * @param id        知识库 ID（路径参数）
-     * @param pageQuery 分页参数（current/size；缺省 1/10，小于 1 回落缺省）
-     * @param status    提交结果筛选（PASS/FAIL，可选）
-     * @param fileName  文件名模糊筛选（可选）
+     * @param id    知识库 ID（路径参数）
+     * @param query 查询条件（状态 / 文件名都可留空；current/size 缺省 1/10，小于 1 回落缺省）
      * @return 提交记录分页 VO
      */
     @GetMapping("/{id}/submit-logs")
     public R<IPage<SubmitLogVO>> submitLogs(
             @PathVariable("id") Long id,
-            PageQueryDto pageQuery,
-            @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "fileName", required = false) String fileName) {
-        return R.ok(knowledgeBaseService.pageSubmitLogs(pageQuery.currentOrDefault(), pageQuery.sizeOrDefault(), id,
-                status, fileName));
+            @Valid SubmitLogQueryDto query) {
+        return R.ok(knowledgeBaseService.pageSubmitLogs(id, query));
     }
 
     /**
      * 文件结果分页查询（执行链工作台列表数据源）：按知识库分页返回文件处理结果，
      * 每行附带各环节最新任务状态（PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED 五环节）。
      *
-     * @param id        知识库 ID（路径参数）
-     * @param pageQuery 分页参数（current/size；缺省 1/10，小于 1 回落缺省）
-     * @param stage     环节（可选；合法值 PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED，非法值 40001）
+     * @param id    知识库 ID（路径参数）
+     * @param query 查询条件（环节可留空；current/size 缺省 1/10，小于 1 回落缺省）
      * @return 文件结果分页 VO（含来源文件信息与各环节状态列表）
      */
     @GetMapping("/{id}/file-results")
     public R<IPage<FileResultVO>> fileResults(
             @PathVariable("id") Long id,
-            PageQueryDto pageQuery,
-            @RequestParam(value = "stage", required = false) String stage) {
-        return R.ok(knowledgeBaseService.pageFileResults(pageQuery.currentOrDefault(), pageQuery.sizeOrDefault(), id,
-                stage));
+            @Valid FileResultQueryDto query) {
+        return R.ok(knowledgeBaseService.pageFileResults(id, query));
     }
 
     /**

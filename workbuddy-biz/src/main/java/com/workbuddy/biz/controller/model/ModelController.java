@@ -1,11 +1,13 @@
 package com.workbuddy.biz.controller.model;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;
 import com.workbuddy.common.dto.response.R;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,16 +19,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 /**
- * 模型管理 Controller：模型目录的清单、新增、编辑与启停，对所有登录用户开放。
+ * 模型管理 Controller：模型目录的清单分页、新增、编辑与启停，对所有登录用户开放。
  *
  * <p>路径前缀 `/model`（与用量两个只读接口同前缀，仓库既有接口不带 `api` 段）。
- * 厂商候选与展示名由前端枚举承载（与配置 `knowledge.model.vendors` 的键保持一致），
+ * 厂商候选由前端枚举承载（与配置 `workbuddy.model.vendors` 的键保持一致），展示名取配置的 display-name，
  * 厂商连接与密钥也都在配置里，本 Controller **没有密钥相关的入口**。
  *
- * <p>查询条件成组时收进 {@link ModelQueryDto}，DTO 字段按同名的独立查询参数绑定。
+ * <p>查询条件成组时收进 {@link ModelQueryDto}（页码与页长口径见其父类），DTO 字段按同名的独立查询参数绑定。
  *
  * @author cxxl
  */
@@ -38,23 +38,23 @@ public class ModelController {
 
     private final ModelService modelService;
 
-    @GetMapping("/list")
-    public R<List<ModelItemVO>> list(ModelQueryDto query) {
-        return R.ok(modelService.list(query));
+    @GetMapping("/page")
+    public R<IPage<ModelItemVO>> page(@Valid ModelQueryDto query) {
+        return R.ok(modelService.page(query));
     }
 
     @PostMapping("/create")
-    public R<ModelItemVO> create(@RequestBody ModelSaveDto dto) {
+    public R<ModelItemVO> create(@Valid @RequestBody ModelSaveDto dto) {
         return R.ok(modelService.create(dto), "新增成功");
     }
 
     @PutMapping("/update/{id}")
-    public R<ModelItemVO> update(@PathVariable Long id, @RequestBody ModelSaveDto dto) {
+    public R<ModelItemVO> update(@PathVariable Long id, @Valid @RequestBody ModelSaveDto dto) {
         return R.ok(modelService.update(id, dto), "保存成功");
     }
 
     @PatchMapping("/updateStatus/{id}")
-    public R<ModelItemVO> updateStatus(@PathVariable Long id, @RequestBody ModelStatusDto dto) {
+    public R<ModelItemVO> updateStatus(@PathVariable Long id, @Valid @RequestBody ModelStatusDto dto) {
         return R.ok(modelService.updateStatus(id, dto), "状态已更新");
     }
 }

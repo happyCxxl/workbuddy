@@ -2,6 +2,8 @@ package com.workbuddy.biz.service.db.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.workbuddy.biz.mapper.WbModelMapper;
 import com.workbuddy.biz.service.db.WbModelDbService;
@@ -21,13 +23,26 @@ import java.util.List;
 public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbModel> implements WbModelDbService {
 
     @Override
-    public List<WbModel> listByCondition(String status, String keyword) {
+    public List<WbModel> listByCondition(String status) {
         return this.lambdaQuery()
                 .eq(StrUtil.isNotBlank(status), WbModel::getStatus, status)
-                .like(StrUtil.isNotBlank(keyword), WbModel::getModelKey, keyword)
                 .orderByAsc(WbModel::getVendorCode)
                 .orderByAsc(WbModel::getModelKey)
                 .list();
+    }
+
+    @Override
+    public IPage<WbModel> pageByCondition(long current, long size, String status, String keyword,
+            String capability) {
+        return this.lambdaQuery()
+                .eq(StrUtil.isNotBlank(status), WbModel::getStatus, status)
+                .like(StrUtil.isNotBlank(keyword), WbModel::getModelKey, keyword)
+                // 能力列是逗号分隔清单：FIND_IN_SET 做整项匹配
+                .apply(NullUtil.isNotNull(capability), "FIND_IN_SET({0}, capabilities)",
+                        NullUtil.isNull(capability) ? "" : capability)
+                .orderByAsc(WbModel::getVendorCode)
+                .orderByAsc(WbModel::getModelKey)
+                .page(new Page<>(current, size));
     }
 
     @Override

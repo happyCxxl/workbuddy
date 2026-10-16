@@ -3,7 +3,6 @@ package com.workbuddy.biz.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.KnowledgeBaseService;
 import com.workbuddy.biz.service.StrategyVersionService;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
@@ -34,10 +33,13 @@ import com.workbuddy.common.domain.rules.StageFunnelRules;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.dto.request.input.FileSubmitRequest;
+import com.workbuddy.common.dto.request.knowledge.FileResultQueryDto;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDto;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDto;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDto;
 import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDto;
 import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateRequest;
+import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDto;
 import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitResponse;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
@@ -182,19 +184,16 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     @Override
-    public IPage<KnowledgeBaseVO> page(long current, long size, String name, Integer status,
-                                       KnowledgeBaseSort sort) {
+    public IPage<KnowledgeBaseVO> page(KnowledgeBaseQueryDto query) {
         // 可见范围在服务端定：普通用户只查自己创建的，管理员不限（见 KnowledgeBaseRules.visibleOwnerId）
-        IPage<WbKnowledgeBase> page =
-                knowledgeBaseDbService.pageByCondition(current, size, name, status, sort, visibleOwnerId());
-        Page<KnowledgeBaseVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
-        List<KnowledgeBaseVO> records = page.getRecords().stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
+        IPage<WbKnowledgeBase> page = knowledgeBaseDbService.pageByCondition(query.currentOrDefault(),
+                query.sizeOrDefault(), query.getName(), query.getStatus(), KnowledgeBaseSort.of(query.getSort()),
+                visibleOwnerId());
+        IPage<KnowledgeBaseVO> voPage = page.convert(this::toVO);
+        List<KnowledgeBaseVO> records = voPage.getRecords();
         fillStrategyBindings(records);
         fillDocumentCounts(records);
         fillPublishedIndexVersions(records);
-        voPage.setRecords(records);
         return voPage;
     }
 
@@ -539,16 +538,14 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     /**
      * 提交记录分页查询：按知识库分页取 wb_submit_log 并转换为 VO（PASS/FAIL 均含，失败原因随行返回）。
      *
-     * @param current        当前页，从 1 开始
-     * @param size           每页条数
      * @param knowledgeBaseId 知识库 ID
-     * @param status         提交结果筛选（PASS/FAIL，可选）
-     * @param fileName       文件名模糊筛选（可选）
+     * @param query           查询条件（状态 / 文件名都可留空）
      * @return 提交记录分页 VO
      */
     @Override
-    public IPage<SubmitLogVO> pageSubmitLogs(long current, long size, Long knowledgeBaseId, String status, String fileName) {
-        return submitLogDbService.pageByKb(current, size, knowledgeBaseId, status, fileName)
+    public IPage<SubmitLogVO> pageSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDto query) {
+        return submitLogDbService.pageByKb(query.currentOrDefault(), query.sizeOrDefault(), knowledgeBaseId,
+                query.getStatus(), query.getFileName())
                 .convert(inputVoAssembler::toSubmitLogVO);
     }
 
@@ -559,16 +556,15 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * <p>stage 参数经 {@link StageFunnelRules#resolveUpstreamStage(String)} 做合法性校验（非法值 40001）；
      * 按上游产物过滤在解析环节（产物表）落地后启用。
      *
-     * @param current        当前页，从 1 开始
-     * @param size           每页条数
      * @param knowledgeBaseId 知识库 ID
-     * @param stage          环节（可选）
+     * @param query           查询条件（环节可留空，页码与页长口径见 {@link FileResultQueryDto} 父类）
      * @return 文件结果分页 VO（含来源文件信息、所属数据源与当前启用的数据源及其显示名、各环节状态列表）
      */
     @Override
-    public IPage<FileResultVO> pageFileResults(long current, long size, Long knowledgeBaseId, String stage) {
-        StageFunnelRules.resolveUpstreamStage(stage);
-        IPage<WbFileResult> page = kbFileResultDbService.pageByKb(current, size, knowledgeBaseId);
+    public IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDto query) {
+        StageFunnelRules.resolveUpstreamStage(query.getStage());
+        IPage<WbFileResult> page = kbFileResultDbService.pageByKb(query.currentOrDefault(), query.sizeOrDefault(),
+                knowledgeBaseId);
         List<Long> sourceIds = page.getRecords().stream()
                 .map(WbFileResult::getSourceFileId)
                 .distinct()

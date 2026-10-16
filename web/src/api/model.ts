@@ -1,11 +1,12 @@
 import { http } from './http';
-import type { ModelItem, ModelQuery, ModelSavePayload } from '@/types/model';
+import type { PageResult } from '@/types/response';
+import type { ModelItem, ModelPageQuery, ModelSavePayload } from '@/types/model';
 
-/** 模型管理接口：模型目录的清单与写入、启停 */
+/** 模型管理接口：模型目录的分页清单与写入、启停 */
 
-/** 查询模型清单：支持按能力 / 状态 / 关键字过滤，返回目录视图字段 */
-export async function getModelList(query: ModelQuery = {}): Promise<ModelItem[]> {
-  const response = await http.get<ModelItem[]>('/model/list', { params: query });
+/** 分页查询模型清单：支持按能力 / 状态 / 关键字过滤，返回目录视图字段 */
+export async function getModelPage(query: ModelPageQuery = {}): Promise<PageResult<ModelItem>> {
+  const response = await http.get<PageResult<ModelItem>>('/model/page', { params: query });
   return response.data;
 }
 

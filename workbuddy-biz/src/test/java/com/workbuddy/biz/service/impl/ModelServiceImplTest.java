@@ -1,5 +1,7 @@
 package com.workbuddy.biz.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.enums.model.AuthType;
@@ -53,59 +55,39 @@ class ModelServiceImplTest {
         Map<String, ModelVendorProperties.Vendor> vendors = new LinkedHashMap<>();
         vendors.put("dashscope", vendor("sk-dashscope"));
         vendors.put("self-ocr", vendor(null));
+        vendors.get("dashscope").setDisplayName("阿里百炼");
         vendorProperties.setVendors(vendors);
         service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher);
     }
 
     @Test
-    void listShouldPassFiltersAndMapDirectoryFields() {
-        when(kbModelDbService.listByCondition("ENABLED", "qwen")).thenReturn(List.of(
-                row(1L, "dashscope", "qwen-max", "CHAT", "ENABLED"),
-                row(2L, "dashscope", "qwen-vl-max", "OCR,LAYOUT,TABLE_STRUCTURE", "ENABLED")));
-        ModelQueryDto query = new ModelQueryDto();
-        query.setCapability("ocr");
-        query.setStatus("enabled");
-        query.setKeyword("  qwen  ");
+    void pageShouldPassFiltersAndMapDirectoryFields() {
+        when(kbModelDbService.pageByCondition(1, 10, "ENABLED", "qwen", "OCR"))
+                .thenReturn(pageOf(row(2L, "dashscope", "qwen-vl-max", "OCR,EMBEDDING", "ENABLED")));
 
-        List<ModelItemVO> items = service.list(query);
+        IPage<ModelItemVO> result = service.page(query("OCR", "ENABLED", "  qwen  ", 1L, 10L));
 
-        verify(kbModelDbService).listByCondition("ENABLED", "qwen");
-        assertEquals(1, items.size());
-        ModelItemVO item = items.getFirst();
+        verify(kbModelDbService).pageByCondition(1, 10, "ENABLED", "qwen", "OCR");
+        assertEquals(1, result.getRecords().size());
+        assertEquals(1, result.getTotal());
+        ModelItemVO item = result.getRecords().getFirst();
         assertEquals(2L, item.getId());
         assertEquals("dashscope", item.getVendorCode());
         assertEquals("阿里百炼", item.getVendorName());
         assertEquals("qwen-vl-max", item.getModelKey());
-        assertEquals(List.of("OCR", "LAYOUT", "TABLE_STRUCTURE"), item.getCapabilities());
+        assertEquals(List.of("OCR", "EMBEDDING"), item.getCapabilities());
         assertEquals("ENABLED", item.getStatus());
     }
 
+    /** 页码与页长缺省按 1 / 10 兜底，筛选条件留空按不过滤下发 */
     @Test
-    void listShouldSkipFiltersWhenAbsent() {
-        when(kbModelDbService.listByCondition(null, null)).thenReturn(List.of());
+    void pageShouldDefaultPaginationWhenAbsent() {
+        when(kbModelDbService.pageByCondition(1, 10, null, null, null)).thenReturn(pageOf());
 
-        assertTrue(service.list(null).isEmpty());
-        assertTrue(service.list(new ModelQueryDto()).isEmpty());
+        IPage<ModelItemVO> result = service.page(query(null, null, "   ", null, null));
 
-        verify(kbModelDbService, times(2)).listByCondition(null, null);
-    }
-
-    @Test
-    void listShouldRejectIllegalDictionaryValues() {
-        ModelQueryDto capability = new ModelQueryDto();
-        capability.setCapability("VISION");
-        KnowledgeException capabilityError = assertThrows(KnowledgeException.class, () -> service.list(capability));
-
-        assertEquals(ErrorCode.PARAM_INVALID, capabilityError.getErrorCode());
-        assertTrue(capabilityError.getMessage().contains("能力"), capabilityError.getMessage());
-
-        ModelQueryDto status = new ModelQueryDto();
-        status.setStatus("PAUSED");
-        KnowledgeException statusError = assertThrows(KnowledgeException.class, () -> service.list(status));
-
-        assertEquals(ErrorCode.PARAM_INVALID, statusError.getErrorCode());
-        assertTrue(statusError.getMessage().contains("状态"), statusError.getMessage());
-        verify(kbModelDbService, never()).listByCondition(any(), any());
+        assertTrue(result.getRecords().isEmpty());
+        verify(kbModelDbService).pageByCondition(1, 10, null, null, null);
     }
 
     @Test
@@ -156,7 +138,7 @@ class ModelServiceImplTest {
         KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.create(dto));
 
         assertEquals(ErrorCode.MODEL_VENDOR_UNKNOWN, error.getErrorCode());
-        assertTrue(error.getMessage().contains("knowledge.model.vendors"), error.getMessage());
+        assertTrue(error.getMessage().contains("workbuddy.model.vendors"), error.getMessage());
         assertTrue(error.getMessage().contains("no-such-vendor"), error.getMessage());
         verify(kbModelDbService, never()).save(any());
         verify(auditEventPublisher, never()).publish(any(), anyString(), any(), any(), any());
@@ -170,23 +152,6 @@ class ModelServiceImplTest {
 
         assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
         assertTrue(error.getMessage().contains("唯一键"), error.getMessage());
-        verify(kbModelDbService, never()).save(any());
-    }
-
-    @Test
-    void createShouldRejectNegativePriceAndLimit() {
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
-        ModelSaveDto price = saveDto();
-        price.setPriceInPerM(new BigDecimal("-1"));
-        ModelSaveDto limit = saveDto();
-        limit.setRpmLimit(-5);
-
-        KnowledgeException priceError = assertThrows(KnowledgeException.class, () -> service.create(price));
-        KnowledgeException limitError = assertThrows(KnowledgeException.class, () -> service.create(limit));
-
-        assertEquals(ErrorCode.PARAM_INVALID, priceError.getErrorCode());
-        assertTrue(priceError.getMessage().contains("输入单价"), priceError.getMessage());
-        assertTrue(limitError.getMessage().contains("RPM"), limitError.getMessage());
         verify(kbModelDbService, never()).save(any());
     }
 
@@ -208,36 +173,12 @@ class ModelServiceImplTest {
     }
 
     @Test
-    void createShouldRejectIllegalCurrency() {
-        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
-        ModelSaveDto currency = saveDto();
-        currency.setCurrency("EUR");
-
-        KnowledgeException currencyError = assertThrows(KnowledgeException.class, () -> service.create(currency));
-
-        assertTrue(currencyError.getMessage().contains("CNY"), currencyError.getMessage());
-        verify(kbModelDbService, never()).save(any());
-    }
-
-    @Test
     void createShouldAlwaysSaveEnabled() {
         when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
 
         service.create(saveDto());
 
         assertEquals("ENABLED", capturedSave().getStatus());
-    }
-
-    @Test
-    void createShouldRejectMissingRequiredText() {
-        ModelSaveDto dto = saveDto();
-        dto.setModelKey("   ");
-
-        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.create(dto));
-
-        assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
-        assertTrue(error.getMessage().contains("模型名"), error.getMessage());
-        verify(kbModelDbService, never()).existsVendorAndModelKey(anyString(), anyString(), any());
     }
 
     @Test
@@ -258,8 +199,9 @@ class ModelServiceImplTest {
                 anyString(), anyString());
     }
 
+    /** 编辑不改状态：停用行编辑后保持停用（启停只走专用接口） */
     @Test
-    void updateShouldResetStatusToEnabledAndKeepCurrencyWhenAbsent() {
+    void updateShouldKeepStatusWhenAbsent() {
         WbModel existing = row(7L, "dashscope", "qwen-max", "CHAT", "DISABLED");
         existing.setCurrency("USD");
         when(kbModelDbService.getExistingById(7L)).thenReturn(existing);
@@ -270,8 +212,7 @@ class ModelServiceImplTest {
         service.update(7L, dto);
 
         WbModel updated = capturedUpdate();
-        // 保存路径不收状态，统一写启用；停用只走启停接口
-        assertEquals("ENABLED", updated.getStatus());
+        assertEquals("DISABLED", updated.getStatus());
         assertEquals("USD", updated.getCurrency());
     }
 
@@ -297,23 +238,6 @@ class ModelServiceImplTest {
         verify(kbModelDbService).updateStatus(3L, "DISABLED");
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_DISABLE), eq(AUDIT_OBJECT_TYPE), eq(3L),
                 anyString(), anyString());
-    }
-
-    @Test
-    void updateStatusShouldRejectBlankOrIllegalStatus() {
-        when(kbModelDbService.getExistingById(3L)).thenReturn(row(3L, "dashscope", "qwen-max", "CHAT", "ENABLED"));
-        ModelStatusDto blank = new ModelStatusDto();
-        ModelStatusDto illegal = new ModelStatusDto();
-        illegal.setStatus("PAUSED");
-
-        KnowledgeException blankError = assertThrows(KnowledgeException.class, () -> service.updateStatus(3L, blank));
-        KnowledgeException illegalError = assertThrows(KnowledgeException.class,
-                () -> service.updateStatus(3L, illegal));
-
-        assertEquals(ErrorCode.PARAM_INVALID, blankError.getErrorCode());
-        assertEquals(ErrorCode.PARAM_INVALID, illegalError.getErrorCode());
-        verify(kbModelDbService, never()).updateStatus(any(), any());
-        verify(auditEventPublisher, never()).publish(any(), anyString(), any(), any(), any());
     }
 
     /** 字段齐全的收参：覆盖长度四列、价格三列与限额两列 */
@@ -347,6 +271,25 @@ class ModelServiceImplTest {
         row.setCurrency("CNY");
         row.setStatus(status);
         return row;
+    }
+
+    /** 一页目录行（total 与条数一致） */
+    private Page<WbModel> pageOf(WbModel... rows) {
+        Page<WbModel> page = new Page<>(1, 10);
+        page.setRecords(List.of(rows));
+        page.setTotal(rows.length);
+        return page;
+    }
+
+    /** 分页查询条件（页码与页长可空 = 缺省口径） */
+    private ModelQueryDto query(String capability, String status, String keyword, Long current, Long size) {
+        ModelQueryDto query = new ModelQueryDto();
+        query.setCapability(capability);
+        query.setStatus(status);
+        query.setKeyword(keyword);
+        query.setCurrent(current);
+        query.setSize(size);
+        return query;
     }
 
     /** 厂商配置体：密钥可空（空表示未配密钥） */

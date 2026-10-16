@@ -30,12 +30,12 @@
         <el-input
           v-model="keyword"
           class="model-search"
-          placeholder="搜索模型名 / 展示名"
+          placeholder="搜索模型名"
           clearable
-          @keyup.enter="loadModels"
-          @clear="loadModels"
+          @keyup.enter="handleSearch"
+          @clear="handleSearch"
         />
-        <el-button class="page-btn-primary" @click="loadModels">查询</el-button>
+        <el-button class="page-btn-primary" @click="handleSearch">查询</el-button>
         <el-button class="page-btn-ghost" @click="handleReset">重置</el-button>
         <button
           class="page-refresh"
@@ -139,7 +139,15 @@
       </div>
 
       <div class="page-panel-foot">
-        <span>共 {{ models.length }} 条</span>
+        <span>共 {{ total }} 条</span>
+        <el-pagination
+          class="model-pager"
+          layout="prev, pager, next"
+          :total="total"
+          :page-size="query.size"
+          :current-page="query.current"
+          @current-change="handlePageChange"
+        />
       </div>
     </div>
 
@@ -378,7 +386,7 @@
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { computed, onMounted, reactive, ref } from 'vue';
 
-import { addModel, getModelList, updateModel, updateModelStatus } from '@/api/model';
+import { addModel, getModelPage, updateModel, updateModelStatus } from '@/api/model';
 import {
   MODEL_CAPABILITIES,
   MODEL_CAPABILITY_LABELS,
@@ -395,6 +403,8 @@ const capabilityFilter = ref('');
 const statusFilter = ref('');
 const keyword = ref('');
 const models = ref<ModelItem[]>([]);
+const total = ref(0);
+const query = reactive({ current: 1, size: 10 });
 const loading = ref(false);
 const togglingId = ref<string | null>(null);
 
@@ -576,11 +586,15 @@ function firstNegativeField(): string | null {
 async function loadModels(): Promise<void> {
   loading.value = true;
   try {
-    models.value = await getModelList({
+    const page = await getModelPage({
+      current: query.current,
+      size: query.size,
       capability: capabilityFilter.value === '' ? undefined : capabilityFilter.value,
       status: statusFilter.value === '' ? undefined : statusFilter.value,
       keyword: keyword.value.trim() === '' ? undefined : keyword.value.trim(),
     });
+    models.value = page.records;
+    total.value = page.total;
   } catch {
     // 失败提示已由接口层统一拦截
   } finally {
@@ -588,12 +602,24 @@ async function loadModels(): Promise<void> {
   }
 }
 
+/** 带筛选条件的查询：回到第一页再取数 */
+function handleSearch(): void {
+  query.current = 1;
+  void loadModels();
+}
+
+/** 翻页：按当前筛选条件取目标页 */
+function handlePageChange(page: number): void {
+  query.current = page;
+  void loadModels();
+}
+
 /** 重置全部筛选条件并重新查询 */
 function handleReset(): void {
   capabilityFilter.value = '';
   statusFilter.value = '';
   keyword.value = '';
-  void loadModels();
+  handleSearch();
 }
 
 /** 新增时默认选中枚举里的第一个厂商 */

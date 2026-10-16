@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.common.domain.entity.WbUser;
+import com.workbuddy.common.dto.request.user.UserQueryDto;
 import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.enums.user.UserRole;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class UserServiceImplTest {
         source.setRecords(List.of(user(1L, "admin", UserRole.ADMIN), user(2L, "tom", UserRole.USER)));
         when(userDbService.pageByCondition(eq(1L), eq(10L), any(), any(), any())).thenReturn(source);
 
-        IPage<UserVO> result = userService.pageUsers(1, 10, null, null, null);
+        IPage<UserVO> result = userService.pageUsers(userQuery(1L, 10L, null, null, null));
 
         assertEquals(2, result.getTotal());
         assertEquals(1, result.getCurrent());
@@ -71,10 +72,21 @@ class UserServiceImplTest {
         source.setRecords(List.of());
         when(userDbService.pageByCondition(eq(2L), eq(5L), eq("tom"), eq("ADMIN"), eq(0))).thenReturn(source);
 
-        IPage<UserVO> result = userService.pageUsers(2, 5, "tom", "ADMIN", 0);
+        IPage<UserVO> result = userService.pageUsers(userQuery(2L, 5L, "tom", "ADMIN", 0));
 
         assertEquals(0, result.getRecords().size());
         assertEquals(2, result.getCurrent());
+    }
+
+    /** 分页查询条件（页码与页长可空 = 缺省口径） */
+    private UserQueryDto userQuery(Long current, Long size, String username, String role, Integer status) {
+        UserQueryDto query = new UserQueryDto();
+        query.setCurrent(current);
+        query.setSize(size);
+        query.setUsername(username);
+        query.setRole(role);
+        query.setStatus(status);
+        return query;
     }
 
     private WbUser user(Long id, String username, UserRole role) {

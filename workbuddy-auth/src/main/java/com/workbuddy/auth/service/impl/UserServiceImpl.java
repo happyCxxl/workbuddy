@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.workbuddy.common.dto.request.user.UserQueryDto;
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.UserService;
 import com.workbuddy.auth.util.JwtUtil;
@@ -62,12 +62,11 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
 
     @Override
-    public IPage<UserVO> pageUsers(long current, long size, String username, String role, Integer status) {
-        IPage<WbUser> source = userDbService.pageByCondition(current, size, username, role, status);
+    public IPage<UserVO> pageUsers(UserQueryDto query) {
+        IPage<WbUser> source = userDbService.pageByCondition(query.currentOrDefault(), query.sizeOrDefault(),
+                query.getUsername(), query.getRole(), query.getStatus());
         // 显式字段映射：密码等敏感字段不进入响应体
-        Page<UserVO> target = new Page<>(source.getCurrent(), source.getSize(), source.getTotal());
-        target.setRecords(source.getRecords().stream().map(UserServiceImpl::toUserVO).toList());
-        return target;
+        return source.convert(UserServiceImpl::toUserVO);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.workbuddy.biz.controller.model;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
@@ -52,19 +53,23 @@ class ModelControllerRoutingTest {
     }
 
     @Test
-    void listPathShouldRouteToServiceWithBoundQuery() throws Exception {
-        when(modelService.list(any())).thenReturn(List.of(new ModelItemVO()));
+    void pagePathShouldRouteToServiceWithBoundQuery() throws Exception {
+        when(modelService.page(any())).thenReturn(new Page<>(1, 10));
 
-        mockMvc.perform(get("/model/list")
+        mockMvc.perform(get("/model/page")
+                .param("current", "2")
+                .param("size", "5")
                 .param("capability", "CHAT")
                 .param("status", "ENABLED")
                 .param("keyword", "qwen")).andExpect(status().isOk());
 
-        ModelQueryDto query = capturedListQuery();
-        assertEquals("CHAT", query.getCapability());
-        assertEquals("ENABLED", query.getStatus());
-        assertEquals("qwen", query.getKeyword());
-        verify(modelService, never()).create(any());
+        ArgumentCaptor<ModelQueryDto> captor = ArgumentCaptor.forClass(ModelQueryDto.class);
+        verify(modelService).page(captor.capture());
+        assertEquals(2L, captor.getValue().getCurrent());
+        assertEquals(5L, captor.getValue().getSize());
+        assertEquals("CHAT", captor.getValue().getCapability());
+        assertEquals("ENABLED", captor.getValue().getStatus());
+        assertEquals("qwen", captor.getValue().getKeyword());
     }
 
     @Test
@@ -126,7 +131,7 @@ class ModelControllerRoutingTest {
 
     @Test
     void everyEndpointShouldBeOpenToAnyLoggedInUser() {
-        for (String name : List.of("list", "create", "update", "updateStatus")) {
+        for (String name : List.of("page", "create", "update", "updateStatus")) {
             assertFalse(hasAdminOnly(declaredMethod(name)),
                     name + " 不应挂 @AdminOnly：模型管理对所有登录用户开放");
         }
@@ -150,13 +155,6 @@ class ModelControllerRoutingTest {
             }
         }
         return false;
-    }
-
-    /** 取最近一次清单接口的收参 */
-    private ModelQueryDto capturedListQuery() {
-        ArgumentCaptor<ModelQueryDto> captor = ArgumentCaptor.forClass(ModelQueryDto.class);
-        verify(modelService).list(captor.capture());
-        return captor.getValue();
     }
 
     /** 取最近一次新增接口的收参 */

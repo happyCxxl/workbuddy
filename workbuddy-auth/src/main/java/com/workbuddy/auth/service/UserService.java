@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.common.dto.request.user.PasswordUpdateRequest;
 import com.workbuddy.common.dto.request.user.ProfileUpdateRequest;
 import com.workbuddy.common.dto.request.user.UserCreateRequest;
+import com.workbuddy.common.dto.request.user.UserQueryDto;
 import com.workbuddy.common.dto.request.user.UserUpdateRequest;
 import com.workbuddy.common.dto.response.user.UserVO;
 
@@ -20,14 +21,10 @@ public interface UserService {
     /**
      * 分页查询用户（不含已删除；响应不含密码），支持用户名模糊、角色与状态过滤。
      *
-     * @param current  当前页
-     * @param size     每页条数
-     * @param username 用户名（模糊查询，可空）
-     * @param role     角色码值（可空）
-     * @param status   状态（可空）
+     * @param query 查询条件（页码与页长口径见 {@link UserQueryDto} 父类）
      * @return 用户分页结果
      */
-    IPage<UserVO> pageUsers(long current, long size, String username, String role, Integer status);
+    IPage<UserVO> pageUsers(UserQueryDto query);
 
     /**
      * 查询个人信息（本人操作，响应不含密码）。

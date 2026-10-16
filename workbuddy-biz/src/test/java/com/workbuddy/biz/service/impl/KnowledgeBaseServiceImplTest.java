@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDto;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
@@ -32,6 +33,7 @@ import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
 import com.workbuddy.common.dto.response.knowledge.StrategyBindingVO;
 import com.workbuddy.common.enums.base.DelFlag;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
+import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.user.UserRole;
@@ -319,7 +321,7 @@ class KnowledgeBaseServiceImplTest {
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(2);
         page.setRecords(List.of(withIndex, withoutIndex));
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, null, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of());
 
@@ -332,7 +334,7 @@ class KnowledgeBaseServiceImplTest {
         version.setVersionNo("v3");
         when(indexVersionDbService.listByIds(any())).thenReturn(List.of(version));
 
-        IPage<KnowledgeBaseVO> result = service.page(1, 10, null, null, null);
+        IPage<KnowledgeBaseVO> result = service.page(kbQuery(null, null, null));
 
         assertEquals("v3", result.getRecords().get(0).getPublishedIndexVersion());
         // 未发布索引的库为 null（前端据此显示「未发布」）
@@ -347,11 +349,11 @@ class KnowledgeBaseServiceImplTest {
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, null, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of());
 
-        service.page(1, 10, null, null, null);
+        service.page(kbQuery(null, null, null));
 
         // 没有任何库发布过索引时不应产生多余的查询
         verify(indexSetDbService, never()).listByKbIds(any());
@@ -364,11 +366,11 @@ class KnowledgeBaseServiceImplTest {
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, "库7", null, null, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, "库7", null, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of(7L, 3L));
 
-        IPage<KnowledgeBaseVO> result = service.page(1, 10, "库7", null, null);
+        IPage<KnowledgeBaseVO> result = service.page(kbQuery("库7", null, null));
 
         assertEquals(1, result.getTotal());
         assertEquals(1, result.getRecords().size());
@@ -382,11 +384,11 @@ class KnowledgeBaseServiceImplTest {
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(8L, 0)));
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, 0, null, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, 0, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of());
 
-        IPage<KnowledgeBaseVO> result = service.page(1, 10, null, 0, null);
+        IPage<KnowledgeBaseVO> result = service.page(kbQuery(null, 0, null));
 
         assertEquals(0L, result.getRecords().getFirst().getDocumentCount());
     }
@@ -781,15 +783,15 @@ class KnowledgeBaseServiceImplTest {
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
         // 管理员：归属条件为 null（不加 user_id 过滤）
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, null, null)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, null)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of());
 
         assertEquals(9L, service.detail(9L).getId(), "管理员可读别人的库");
 
-        service.page(1, 10, null, null, null);
+        service.page(kbQuery(null, null, null));
 
-        verify(knowledgeBaseDbService).pageByCondition(1L, 10L, null, null, null, null);
+        verify(knowledgeBaseDbService).pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, null);
     }
 
     @Test
@@ -797,19 +799,28 @@ class KnowledgeBaseServiceImplTest {
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(0);
         page.setRecords(List.of());
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, null, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(knowledgeBaseDbService.countByStatus(null, ME)).thenReturn(2L);
         when(knowledgeBaseDbService.countByStatus(1, ME)).thenReturn(1L);
         when(knowledgeBaseDbService.listIdsByOwner(ME)).thenReturn(List.of(7L, 8L));
         when(kbFileResultDbService.countByKbIds(List.of(7L, 8L))).thenReturn(9L);
 
-        service.page(1, 10, null, null, null);
+        service.page(kbQuery(null, null, null));
         KnowledgeBaseStatsVO stats = service.stats();
 
         // 列表与计数都按当前用户归属收口；文档数也取同一范围（不是全平台 countAll）
-        verify(knowledgeBaseDbService).pageByCondition(1L, 10L, null, null, null, ME);
+        verify(knowledgeBaseDbService).pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, ME);
         assertEquals(2L, stats.getKnowledgeBaseCount());
         assertEquals(1L, stats.getEnabledCount());
         assertEquals(9L, stats.getDocumentCount());
+    }
+
+    /** 分页查询条件（页码 1 / 页长 10 由缺省口径兜底，名称 / 状态 / 排序可空） */
+    private KnowledgeBaseQueryDto kbQuery(String name, Integer status, String sort) {
+        KnowledgeBaseQueryDto query = new KnowledgeBaseQueryDto();
+        query.setName(name);
+        query.setStatus(status);
+        query.setSort(sort);
+        return query;
     }
 }

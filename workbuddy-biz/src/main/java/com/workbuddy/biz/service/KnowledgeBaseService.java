@@ -2,17 +2,19 @@ package com.workbuddy.biz.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.common.dto.request.input.FileSubmitRequest;
+import com.workbuddy.common.dto.request.knowledge.FileResultQueryDto;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDto;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDto;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDto;
 import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDto;
 import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateRequest;
+import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDto;
 import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitResponse;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
 import com.workbuddy.common.dto.response.knowledge.StrategyBindingVO;
-import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 
 import java.util.List;
 
@@ -63,15 +65,11 @@ public interface KnowledgeBaseService {
     /**
      * 分页列表（**仅当前用户可见的库**；名称模糊，不含已删），并回填每库文档数与已发布索引版本。
      *
-     * @param current 当前页，从 1 开始
-     * @param size    每页条数
-     * @param name    名称模糊关键字（可空）
-     * @param status  状态过滤：1 启用 / 0 停用；null 不过滤
-     * @param sort    排序口径：null 或未知值按默认口径（id 倒序）
+     * @param query 查询条件（名称 / 状态 / 排序都可留空，页码与页长口径见 {@link KnowledgeBaseQueryDto} 父类；
+     *              排序未知取值按默认口径）
      * @return 知识库分页
      */
-    IPage<KnowledgeBaseVO> page(long current, long size, String name, Integer status,
-                                KnowledgeBaseSort sort);
+    IPage<KnowledgeBaseVO> page(KnowledgeBaseQueryDto query);
 
     /**
      * 统计概览（仅未删除数据）：知识库总数、启用数、文档数。
@@ -154,23 +152,19 @@ public interface KnowledgeBaseService {
      * 提交记录分页查询：数据源 wb_submit_log（PASS/FAIL 均记录），
      * 支持按提交结果与文件名模糊筛选。
      *
-     * @param current        当前页，从 1 开始
-     * @param size           每页条数
      * @param knowledgeBaseId 知识库 ID
-     * @param status         提交结果筛选（PASS/FAIL，可选）
-     * @param fileName       文件名模糊筛选（可选）
+     * @param query           查询条件（状态 / 文件名都可留空，页码与页长口径见 {@link SubmitLogQueryDto} 父类）
      * @return 提交记录分页 VO（含失败原因）
      */
-    IPage<SubmitLogVO> pageSubmitLogs(long current, long size, Long knowledgeBaseId, String status, String fileName);
+    IPage<SubmitLogVO> pageSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDto query);
 
     /**
      * 文件结果分页查询（执行链工作台列表数据源）：每行附带各环节最新任务状态。
      *
-     * @param current        当前页，从 1 开始
-     * @param size           每页条数
      * @param knowledgeBaseId 知识库 ID
-     * @param stage          环节（可选；合法值 PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED，非法值 40001）
+     * @param query           查询条件（环节可留空，页码与页长口径见 {@link FileResultQueryDto} 父类；
+     *                        环节合法值 PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED，非法值 40001）
      * @return 文件结果分页 VO（含来源文件信息与各环节状态列表）
      */
-    IPage<FileResultVO> pageFileResults(long current, long size, Long knowledgeBaseId, String stage);
+    IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDto query);
 }

@@ -6,6 +6,7 @@ import com.workbuddy.common.dto.response.R;
 import com.workbuddy.common.dto.request.user.PasswordUpdateRequest;
 import com.workbuddy.common.dto.request.user.ProfileUpdateRequest;
 import com.workbuddy.common.dto.request.user.UserCreateRequest;
+import com.workbuddy.common.dto.request.user.UserQueryDto;
 import com.workbuddy.common.dto.request.user.UserUpdateRequest;
 import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.error.ErrorCode;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -59,13 +59,8 @@ public class UserController {
 
     @AdminOnly
     @GetMapping("/page")
-    public R<IPage<UserVO>> pageUsers(
-            @RequestParam(value = "current", defaultValue = "1") long current,
-            @RequestParam(value = "size", defaultValue = "10") long size,
-            @RequestParam(value = "username", required = false) String username,
-            @RequestParam(value = "role", required = false) String role,
-            @RequestParam(value = "status", required = false) Integer status) {
-        return R.ok(userService.pageUsers(current, size, username, role, status));
+    public R<IPage<UserVO>> pageUsers(@Valid UserQueryDto query) {
+        return R.ok(userService.pageUsers(query));
     }
 
     @AdminOnly
