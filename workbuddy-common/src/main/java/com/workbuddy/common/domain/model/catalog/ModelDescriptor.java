@@ -1,6 +1,7 @@
 package com.workbuddy.common.domain.model.catalog;
 
 import com.workbuddy.common.enums.embed.EmbedMetric;
+import com.workbuddy.common.enums.model.ModelCapability;
 import lombok.Data;
 
 import java.math.BigDecimal;

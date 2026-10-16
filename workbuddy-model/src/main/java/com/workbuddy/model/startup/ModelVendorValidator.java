@@ -1,6 +1,6 @@
 package com.workbuddy.model.startup;
 
-import com.workbuddy.common.domain.model.AuthType;
+import com.workbuddy.common.enums.model.AuthType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.startup.StartupCheck;

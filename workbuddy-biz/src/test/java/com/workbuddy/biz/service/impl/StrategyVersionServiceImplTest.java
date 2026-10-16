@@ -10,7 +10,6 @@ import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
-import com.workbuddy.biz.testsupport.catalog.StaticModelCatalog;
 import com.workbuddy.worker.retrieval.RetrievalRuleSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +24,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,7 +54,7 @@ class StrategyVersionServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new StrategyVersionServiceImpl(strategyVersionDbService, strategyBindingDbService,
-                new StaticModelCatalog(), retrievalRuleResolver);
+                retrievalRuleResolver);
     }
 
     private WbPipelineStrategyVersion row(Long id, String version, String status) {
@@ -408,7 +408,7 @@ class StrategyVersionServiceImplTest {
     }
 
     @Test
-    void createEmbedWithValidConfigShouldSaveAndEnrichSnapshot() {
+    void createEmbedWithValidConfigShouldSaveSnapshotAsIs() {
         ArgumentCaptor<WbPipelineStrategyVersion> captor = ArgumentCaptor.forClass(WbPipelineStrategyVersion.class);
         when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
             inv.getArgument(0, WbPipelineStrategyVersion.class).setId(14L);
@@ -423,31 +423,19 @@ class StrategyVersionServiceImplTest {
         assertEquals(14L, vo.getId());
         verify(strategyVersionDbService).save(captor.capture());
         java.util.Map<String, Object> snapshot = JsonUtil.toMap(captor.getValue().getConfigSnapshot());
-        // 保存时目录冗余进快照（dimension/metric/normalized/contextWindowTokens/batchLimit）
-        assertEquals(1024, snapshot.get("dimension"));
-        assertEquals("COSINE", snapshot.get("metric"));
-        assertEquals(Boolean.TRUE, snapshot.get("normalized"));
-        assertEquals(8192, snapshot.get("contextWindowTokens"));
-        assertNotNull(snapshot.get("batchLimit"));
+        assertEquals("text-embedding-v4", snapshot.get("model"));
         assertEquals(64, snapshot.get("batchSize"));
+        assertNull(snapshot.get("dimension"), "快照原样落库，不再回填目录冗余");
     }
 
+    /** 目录校验已移除：未收录的模型名原样保存，存在性交给调用期判定 */
     @Test
-    void createEmbedWithUnknownModelShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
-                () -> service.create(embedDto("{\"model\":\"no-such-model\"}")));
-        assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
-        assertEquals("模型不存在: no-such-model", e.getMessage());
-        verify(strategyVersionDbService, never()).save(any());
-    }
+    void createEmbedWithUncatalogedModelShouldSaveAsIs() {
+        when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenReturn(true);
 
-    @Test
-    void createEmbedWithDisabledModelShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
-                () -> service.create(embedDto("{\"model\":\"text-embedding-v3\"}")));
-        assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
-        assertEquals("模型未启用: text-embedding-v3", e.getMessage());
-        verify(strategyVersionDbService, never()).save(any());
+        service.create(embedDto("{\"model\":\"no-such-model\",\"docTemplate\":\"{content}\",\"queryTemplate\":\"{query}\"}"));
+
+        verify(strategyVersionDbService).save(any(WbPipelineStrategyVersion.class));
     }
 
     @Test

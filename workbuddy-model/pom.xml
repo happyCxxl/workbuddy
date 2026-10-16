@@ -36,6 +36,12 @@
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- LangChain4j OpenAI 兼容调用（版本由根 pom 导入的 BOM 管理） -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai</artifactId>
+        </dependency>
+
         <!-- 配置属性元数据（生成 META-INF/spring-configuration-metadata.json，IDE 按它解析本模块的键；
              optional：不进依赖方的运行时类路径） -->
         <dependency>

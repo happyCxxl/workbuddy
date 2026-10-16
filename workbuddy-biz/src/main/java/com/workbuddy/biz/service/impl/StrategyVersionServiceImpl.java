@@ -15,7 +15,6 @@ import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.model.catalog.ModelCatalogPort;
 import com.workbuddy.worker.chunking.strategy.ChunkAlgorithmSpec;
 import com.workbuddy.worker.embedding.strategy.EmbedAlgorithmSpec;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessAlgorithmSpec;
@@ -42,8 +41,6 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
     private final WbPipelineStrategyVersionDbService strategyVersionDbService;
 
     private final WbStrategyBindingDbService strategyBindingDbService;
-
-    private final ModelCatalogPort modelCatalog;
 
     private final RetrievalRuleResolver retrievalRuleResolver;
 
@@ -124,15 +121,10 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
 
     /**
      * 策略配置校验：按各环节算法 Spec 校验；非法 40001。
-     * EMBED 校验通过后把模型目录冗余（dimension/metric/normalized/contextWindowTokens/batchLimit）打进快照落库。
      */
     private String resolveConfigSnapshot(String type, String configSnapshot) {
         validateConfig(type, configSnapshot);
-        if (!"EMBED".equals(type)) {
-            return configSnapshot;
-        }
-        Map<String, Object> enriched = EmbedAlgorithmSpec.enrich(JsonUtil.toMap(configSnapshot), modelCatalog);
-        return JsonUtil.toJsonStr(enriched);
+        return configSnapshot;
     }
 
     private void validateConfig(String type, String configSnapshot) {
@@ -151,7 +143,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         String error = switch (type) {
             case "CHUNK" -> ChunkAlgorithmSpec.validate(config);
             case "PREPROCESS" -> PreprocessAlgorithmSpec.validate(config);
-            case "EMBED" -> EmbedAlgorithmSpec.validate(config, modelCatalog);
+            case "EMBED" -> EmbedAlgorithmSpec.validate(config);
             default -> null;
         };
         ThrowUtil.throwIf(NullUtil.isNotNull(error), ErrorCode.PARAM_INVALID, error);

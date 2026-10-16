@@ -2,7 +2,7 @@ package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
-import com.workbuddy.common.domain.model.AuthType;
+import com.workbuddy.common.enums.model.AuthType;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;

@@ -1,13 +1,12 @@
 package com.workbuddy.worker.embedding.strategy;
 
-import com.workbuddy.model.catalog.ModelCatalogPort;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.pipeline.StrategySnapshotSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * 向量化策略解析器：快照 JSON → EmbedStrategy（补默认 + 目录冗余回填）。
+ * 向量化策略解析器：快照 JSON → EmbedStrategy（补默认）。
  * 触发（runner 读任务快照）与保存侧（控制面 toStrategy）共用同一解析口径；
  * 快照为空或损坏一律抛异常，由上层按数据问题处置，本类不提供任何内置默认策略。
  *
@@ -19,11 +18,9 @@ public class EmbedStrategyParser {
 
     private final EmbedProperties properties;
 
-    private final ModelCatalogPort catalog;
-
     /**
      * 快照解析：空快照、JSON 非法、反序列化为 null 与后续补全失败一律抛 IllegalStateException；
-     * 成功则补默认与目录冗余后返回。
+     * 成功则补默认后返回。
      *
      * @param snapshot 策略快照 JSON 文本（任务行或策略版本行），可空
      * @return 补全后的向量化策略（非空）
@@ -31,7 +28,7 @@ public class EmbedStrategyParser {
      */
     public EmbedStrategy parse(String snapshot) {
         return StrategySnapshotSupport.parse(snapshot, EmbedStrategy.class, "向量化",
-                strategy -> EmbedAlgorithmSpec.normalize(strategy, properties, catalog));
+                strategy -> EmbedAlgorithmSpec.normalize(strategy, properties));
     }
 
     /**

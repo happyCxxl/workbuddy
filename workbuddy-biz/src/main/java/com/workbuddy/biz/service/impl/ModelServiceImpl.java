@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
-import com.workbuddy.common.domain.model.catalog.ModelCapability;
+import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;
 import com.workbuddy.common.dto.request.model.ModelStatusDto;

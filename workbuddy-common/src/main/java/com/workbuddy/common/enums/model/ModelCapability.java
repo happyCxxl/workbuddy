@@ -1,4 +1,4 @@
-package com.workbuddy.common.domain.model.catalog;
+package com.workbuddy.common.enums.model;
 
 import cn.hutool.core.util.StrUtil;
 

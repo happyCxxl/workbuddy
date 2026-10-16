@@ -1,6 +1,6 @@
 package com.workbuddy.model.config;
 
-import com.workbuddy.common.domain.model.AuthType;
+import com.workbuddy.common.enums.model.AuthType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.model.startup.ModelVendorValidator;

@@ -1,8 +1,5 @@
 package com.workbuddy.worker.embedding.strategy;
 
-import com.workbuddy.common.enums.embed.EmbedMetric;
-import com.workbuddy.common.enums.embed.EmbeddingModel;
-import com.workbuddy.worker.testsupport.catalog.StaticModelCatalog;
 import com.workbuddy.worker.embedding.EmbedProperties;
 
 import org.junit.jupiter.api.Test;
@@ -14,16 +11,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 向量化策略解析器单测：默认补齐 / 目录冗余回填 / 空与非法快照抛异常 / parseConfig 不设 name/version。
+ * 向量化策略解析器单测：默认补齐 / 空与非法快照抛异常 / parseConfig 不设 name/version。
  *
  * @author cxxl
  */
 class EmbedStrategyParserTest {
 
-    private final EmbedStrategyParser parser = new EmbedStrategyParser(new EmbedProperties(), new StaticModelCatalog());
+    private final EmbedStrategyParser parser = new EmbedStrategyParser(new EmbedProperties());
 
     @Test
-    void configShouldFillDefaultsAndStampCatalog() {
+    void configShouldFillDefaults() {
         EmbedStrategy strategy = parser.parse("{\"model\":\"text-embedding-v4\",\"batchSize\":64,\"cacheEnabled\":\"OFF\"}");
 
         assertEquals("text-embedding-v4", strategy.getModel());
@@ -35,20 +32,14 @@ class EmbedStrategyParserTest {
         assertEquals("OFF", strategy.getCacheEnabled());
         assertEquals("ON", strategy.getSkipEmpty());
         assertEquals("OFF", strategy.getIncludeParent());
-        // 目录冗余回填
-        assertEquals(1024, strategy.getDimension());
-        assertEquals(EmbedMetric.COSINE.key(), strategy.getMetric());
-        assertTrue(strategy.getNormalized());
-        assertEquals(8192, strategy.getContextWindowTokens());
-        assertEquals(64, strategy.getBatchLimit());
     }
 
+    /** 快照未写模型时保持为空，由保存校验报「模型不能为空」 */
     @Test
-    void blankModelShouldFallbackToFirstEnabledModel() {
+    void blankModelShouldStayBlank() {
         EmbedStrategy strategy = parser.parse("{\"batchSize\":16}");
 
-        assertEquals(EmbeddingModel.firstEnabled().key(), strategy.getModel());
-        assertEquals(EmbeddingModel.firstEnabled().dimension(), strategy.getDimension());
+        assertNull(strategy.getModel());
         assertEquals(16, strategy.getBatchSize());
     }
 
@@ -68,14 +59,12 @@ class EmbedStrategyParserTest {
         assertNotNull(e.getCause());
     }
 
+    /** 解析不校验模型存在与启用（保存侧校验），未收录的模型名原样保留 */
     @Test
-    void disabledModelShouldStillParseAndStampCatalog() {
-        // 解析不校验启用（启用校验在保存/触发侧），目录冗余仍按目录回填
+    void unknownModelShouldStillParse() {
         EmbedStrategy strategy = parser.parse("{\"model\":\"text-embedding-v3\"}");
 
         assertEquals("text-embedding-v3", strategy.getModel());
-        assertEquals(1024, strategy.getDimension());
-        assertEquals(8192, strategy.getContextWindowTokens());
     }
 
     @Test

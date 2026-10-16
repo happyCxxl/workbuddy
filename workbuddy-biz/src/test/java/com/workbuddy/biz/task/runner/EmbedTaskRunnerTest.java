@@ -33,7 +33,6 @@ import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.service.FileStorage;
-import com.workbuddy.biz.testsupport.catalog.StaticModelCatalog;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import com.workbuddy.worker.embedding.EmbedContext;
@@ -116,7 +115,7 @@ class EmbedTaskRunnerTest {
         runner = new EmbedTaskRunner(pipelineTaskDbService, fileResultDbService,
                 pipelineProductDbService, chunkSetDbService, embeddingSetDbService,
                 embeddingRecordDbService, fileStorage, indexSetService, embedder,
-                new EmbedStrategyParser(embedProperties, new StaticModelCatalog()),
+                new EmbedStrategyParser(embedProperties),
                 new ChunkStrategyParser(new ChunkProperties()),
                 embedProperties, new ChunkProperties(),
                 new StepLogPersistence(stepLogDbService),

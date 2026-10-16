@@ -36,7 +36,6 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.service.FileStorage;
-import com.workbuddy.biz.testsupport.catalog.StaticModelCatalog;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import com.workbuddy.worker.embedding.EmbedProperties;
@@ -115,7 +114,7 @@ class EmbedControlServiceImplTest {
                 fileStorage, storageRouter);
         service = new EmbedControlServiceImpl(pipelineProductDbService, stepLogDbService,
                 embeddingSetDbService, embeddingRecordDbService, new EmbedVoAssembler(),
-                new EmbedStrategyParser(new EmbedProperties(), new StaticModelCatalog()),
+                new EmbedStrategyParser(new EmbedProperties()),
                 new ChunkStrategyParser(new ChunkProperties()),
                 new EmbedProperties(), new ChunkProperties(),
                 new StageStrategySupport(strategyVersionDbService, strategyBindingDbService, knowledgeBaseDbService),
