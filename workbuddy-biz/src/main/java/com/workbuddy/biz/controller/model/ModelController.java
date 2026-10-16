@@ -1,4 +1,4 @@
-package com.workbuddy.biz.controller;
+package com.workbuddy.biz.controller.model;
 
 import com.workbuddy.biz.service.ModelAdminService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;

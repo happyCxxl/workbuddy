@@ -351,7 +351,7 @@ const navItems: NavItem[] = [
   },
   {
     kind: 'group',
-    // 模型管理：模型目录维护与用量成本；页面与接口对所有登录用户开放
+    // 模型管理：模型目录维护；页面与接口对所有登录用户开放
     label: '模型管理',
     iconPaths: ['M5.2 5.2h5.6v5.6H5.2z', 'M8 2.4v2.8M8 10.8v2.8M2.4 8h2.8M10.8 8h2.8'],
     children: [
@@ -360,12 +360,6 @@ const navItems: NavItem[] = [
         label: '模型清单',
         path: '/model/manager',
         iconPaths: ['M3.2 4.6h9.6M3.2 8h9.6M3.2 11.4h9.6', 'M5.6 3.2v10.8'],
-      },
-      // 用量与成本：调用概览与明细，只读
-      {
-        label: '用量与成本',
-        path: '/model/usage',
-        iconPaths: ['M2.4 13.2h11.2', 'M4.4 13.2V8.4M7.4 13.2V4.4M10.4 13.2V10'],
       },
     ],
   },
@@ -455,7 +449,6 @@ const BACK_TARGETS: Record<string, { path: string; label: string }> = {
   StrategyManagement: { path: '/home', label: '首页' },
   UserManagement: { path: '/home', label: '首页' },
   ModelList: { path: '/home', label: '首页' },
-  ModelUsage: { path: '/home', label: '首页' },
   SystemSetting: { path: '/home', label: '首页' },
   Profile: { path: '/home', label: '首页' },
 };

@@ -17,7 +17,6 @@ import com.workbuddy.common.enums.embed.EmbedRecordStatus;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.model.gateway.ModelGatewayPort;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.embedding.EmbedContext;
 import com.workbuddy.worker.embedding.EmbedWindowRules;
@@ -51,9 +50,22 @@ import java.util.Map;
 public class EmbedPipeline implements EmbedderPort {
 
     private final EmbedProperties properties;
-    private final ModelGatewayPort gateway;
     private final ConsistencyChecker checker;
     private final InputTemplatePort template;
+
+    /**
+     * 一批文本的向量编码。
+     *
+     * <p>TODO 模型调用层已移除，接入模型模块后在此调用向量编码门面（入参 {@link EmbeddingRequest}，
+     * 出参 {@link EmbeddingResult}）；当前一律失败，批次按失败隔离，不回写账本。
+     *
+     * @param request 本批入参
+     * @return 向量结果
+     */
+    private EmbeddingResult embedBatch(EmbeddingRequest request) {
+        throw new UnsupportedOperationException("向量编码不可用：模型调用层待接入，本批模型=" + request.getModel()
+                + "，条数=" + (NullUtil.isNull(request.getTexts()) ? 0 : request.getTexts().size()));
+    }
 
     @Override
     public EmbedOutcome embed(EmbedContext context) {
@@ -281,7 +293,7 @@ public class EmbedPipeline implements EmbedderPort {
             request.setBatchSize(batch.size());
             request.setRequestId(requestId);
             try {
-                EmbeddingResult response = gateway.embed(request);
+                EmbeddingResult response = embedBatch(request);
                 long checkStartedNanos = System.nanoTime();
                 ConsistencyResult check = checker.check(request.getTexts(), response.getEmbeddings(), strategy);
                 result.checkerNanos += System.nanoTime() - checkStartedNanos;

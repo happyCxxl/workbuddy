@@ -1,5 +1,6 @@
 package com.workbuddy.biz.controller;
 
+import com.workbuddy.biz.controller.model.ModelController;
 import com.workbuddy.biz.service.ModelAdminService;
 import com.workbuddy.common.dto.request.model.ModelQueryDto;
 import com.workbuddy.common.dto.request.model.ModelSaveDto;

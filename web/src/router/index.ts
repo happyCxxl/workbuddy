@@ -81,13 +81,6 @@ const router = createRouter({
           meta: { title: '模型清单' },
         },
         {
-          // 用量与成本：调用概览与明细；与模型清单同属「模型管理」菜单
-          path: 'model/usage',
-          name: 'ModelUsage',
-          component: () => import('@/views/model/ModelUsageView.vue'),
-          meta: { title: '用量与成本' },
-        },
-        {
           // 系统设置：平台级开关，登录用户都能进；页面内各设置卡按权限自行决定是否渲染
           path: 'settings',
           name: 'SystemSetting',

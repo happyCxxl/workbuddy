@@ -9,8 +9,6 @@ import com.workbuddy.biz.service.db.WbRetrievalRunDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.RetrievalRuleResolver;
 import com.workbuddy.biz.service.support.RetrievalRunSettings;
-import com.workbuddy.common.domain.embed.EmbeddingRequest;
-import com.workbuddy.common.domain.embed.EmbeddingResult;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
@@ -25,7 +23,6 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.model.gateway.ModelGatewayPort;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategy;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategyParser;
 import com.workbuddy.worker.indexing.ComboSnapshot;
@@ -42,12 +39,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -73,7 +69,6 @@ public class SearchServiceImpl implements SearchService {
 
     private final MilvusIndexPort milvusIndexPort;
 
-    private final ModelGatewayPort modelGatewayPort;
 
     private final EmbedStrategyParser embedStrategyParser;
 
@@ -271,22 +266,11 @@ public class SearchServiceImpl implements SearchService {
         }
         String template = StrUtil.isBlank(strategy.getQueryTemplate()) ? "{query}" : strategy.getQueryTemplate();
         String input = template.replace("{query}", query);
-        EmbeddingRequest request = new EmbeddingRequest();
-        request.setModel(strategy.getModel());
-        request.setTexts(List.of(input));
-        request.setTimeoutMs(strategy.getTimeoutMs());
-        request.setRequestId(UUID.randomUUID().toString());
-        try {
-            EmbeddingResult result = modelGatewayPort.embed(request);
-            if (NullUtil.isNull(result) || NullUtil.isNull(result.getEmbeddings())
-                    || result.getEmbeddings().isEmpty()) {
-                return null;
-            }
-            return result.getEmbeddings().getFirst();
-        } catch (Exception e) {
-            log.warn("===> SearchServiceImpl 查询向量化失败，向量通道降级为空, versionId={}", version.getId(), e);
-            return null;
-        }
+        // TODO 模型调用层已移除：查询向量化不可用时走既有降级分支（返回 null，检索降级）。
+        //  接入模型模块后在此按 strategy.getModel() 编码 input，取返回向量的第一个作为查询向量。
+        log.warn("===> SearchServiceImpl 查询向量化跳过：模型调用层待接入, versionId={}, input长度={}",
+                version.getId(), input.length());
+        return null;
     }
 
     private String strategyNameOf(String nameVersion) {

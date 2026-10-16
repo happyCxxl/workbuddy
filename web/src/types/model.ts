@@ -41,44 +41,6 @@ export const MODEL_VENDORS = [
   { code: 'deepseek', displayName: 'DeepSeek' },
 ] as const;
 
-/** 调用状态码值（后端 CallStatus） */
-export const CALL_STATUS = {
-  SUCCESS: 'SUCCESS',
-  FAILED: 'FAILED',
-  TIMEOUT: 'TIMEOUT',
-  RATE_LIMITED: 'RATE_LIMITED',
-  CIRCUIT_OPEN: 'CIRCUIT_OPEN',
-} as const;
-
-/** 调用状态展示名 */
-export const CALL_STATUS_LABELS: Record<string, string> = {
-  SUCCESS: '成功',
-  FAILED: '失败',
-  TIMEOUT: '超时',
-  RATE_LIMITED: '限流',
-  CIRCUIT_OPEN: '熔断',
-};
-
-/** 路由原因码值（后端 RouteReason，无配额层与灰度，故无 BUDGET_EXCEEDED / SHADOW_ONLY） */
-export const ROUTE_REASONS = [
-  'OK',
-  'CAPACITY_HIGH',
-  'LATENCY_HIGH',
-  'UNHEALTHY',
-  'SLOW_START',
-  'FALLBACK_FROM',
-] as const;
-
-/** 路由原因展示名 */
-export const ROUTE_REASON_LABELS: Record<string, string> = {
-  OK: '常规选型',
-  CAPACITY_HIGH: '避开高占用',
-  LATENCY_HIGH: '避开高延迟',
-  UNHEALTHY: '避开不健康',
-  SLOW_START: '恢复期爬升',
-  FALLBACK_FROM: '降级切换',
-};
-
 /** 模型清单条目（对应后端 ModelItemVO） */
 export interface ModelItem {
   id: string;
@@ -125,57 +87,4 @@ export interface ModelQuery {
   capability?: string;
   status?: string;
   keyword?: string;
-}
-
-/** 用量与成本查询条件：时间范围必填（from 含 / to 不含），其余维度可选 */
-export interface ModelUsageQuery {
-  from: string;
-  to: string;
-  capability?: string;
-  model?: string;
-  routeReason?: string;
-  status?: string;
-  limit?: number;
-}
-
-/** 调用明细一行（对应后端 ModelCallLogView；用量三项与 cost 为 null 表示未知，0 表示确实为零） */
-export interface ModelCallLog {
-  id: string;
-  createTime: string;
-  traceId: string | null;
-  tenantId: number | null;
-  bizType: string | null;
-  bizId: string | null;
-  capability: string | null;
-  vendor: string | null;
-  model: string | null;
-  modelVersion: string | null;
-  promptTokens: number | null;
-  completionTokens: number | null;
-  totalTokens: number | null;
-  usageUnknown: number | null;
-  unitPriceIn: number | null;
-  unitPriceOut: number | null;
-  currency: string | null;
-  cost: number | null;
-  latencyMs: number | null;
-  retryCount: number | null;
-  fallbackFrom: string | null;
-  routeReason: string | null;
-  cacheHit: number | null;
-  status: string | null;
-  errorCode: string | null;
-}
-
-/** 用量与成本概览（对应后端 ModelCallLogSummary；未知行不参与合计，无数据时聚合列为 null） */
-export interface ModelCallLogSummary {
-  calls: number | null;
-  successCalls: number | null;
-  failedCalls: number | null;
-  timeoutCalls: number | null;
-  rateLimitedCalls: number | null;
-  unknownCalls: number | null;
-  unknownRatio: number | null;
-  totalTokens: number | null;
-  costTotal: number | null;
 }

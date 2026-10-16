@@ -450,7 +450,6 @@ CREATE TABLE wb_storage_source
     UNIQUE KEY uk_name (name),
     KEY idx_del_flag (del_flag)
 )  COMMENT ='存储数据源：一行 = 一个数据源实例（含连接参数）；当前启用的一行决定新对象的写入后端';
-
 -- ============================================================================
 -- 十、模型目录
 -- ============================================================================
@@ -489,55 +488,9 @@ CREATE TABLE wb_model
    COMMENT ='模型目录：一行 = 一个模型的厂商归属、能力、长度、价格与限额';
 
 -- ============================================================================
--- 十一、模型调用明细
 -- ============================================================================
-
--- 调用明细：一行 = 一次逻辑调用（成功与失败都落行），同步插入；量级成为瓶颈时再评估异步批量或分区。
--- 用量口径：厂商未回 usage 时三项 token 与 cost 记 NULL，并置 usage_unknown = 1（不写 -1、不写 0、不做本地估算）；
--- 确实为零写 0，未知与零不混用。单价随行留档（计价时用的单价），一行成本可复算。
--- latency_ms 是一次逻辑调用的整段耗时（含内部重试与退避等待）；retry_count 由真实 HTTP 层计数（尝试次数 − 1）。
--- 不做日聚合表：概览、趋势与告警直接查本表，按时间范围走下面的索引。
-CREATE TABLE wb_model_call_log
-(
-    id                BIGINT         NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
-    trace_id          VARCHAR(64)             DEFAULT NULL   COMMENT '链路标识（业务链路关联用，可空）',
-    tenant_id         BIGINT                  DEFAULT NULL   COMMENT '租户 ID（可空）',
-    biz_type          VARCHAR(32)             DEFAULT NULL   COMMENT '业务类型（解析任务 / 问答会话…，可空）',
-    biz_id            VARCHAR(64)             DEFAULT NULL   COMMENT '业务 ID（可空）',
-    capability        VARCHAR(32)    NOT NULL                COMMENT '能力：CHAT/EMBEDDING/OCR/LAYOUT/TABLE_STRUCTURE',
-    vendor            VARCHAR(64)    NOT NULL                COMMENT '厂商码（knowledge.model.vendors 配置里的键）',
-    model             VARCHAR(128)   NOT NULL                COMMENT '实际使用的模型（别名漂移以响应回传为准）',
-    model_version     VARCHAR(128)            DEFAULT NULL   COMMENT '响应回传的模型版本（可空）',
-    prompt_tokens     BIGINT                  DEFAULT NULL   COMMENT '提示词 token 数（未知 = NULL）',
-    completion_tokens BIGINT                  DEFAULT NULL   COMMENT '生成 token 数（未知 = NULL）',
-    total_tokens      BIGINT                  DEFAULT NULL   COMMENT '总 token 数（未知 = NULL）',
-    usage_unknown     TINYINT(1)     NOT NULL DEFAULT 0      COMMENT '用量是否未知：1 未知（tokens 与 cost 记 NULL）/ 0 已知',
-    unit_price_in     DECIMAL(18, 6)          DEFAULT NULL   COMMENT '计价用的输入单价（每百万 token，可空）',
-    unit_price_out    DECIMAL(18, 6)          DEFAULT NULL   COMMENT '计价用的输出单价（每百万 token，可空）',
-    currency          VARCHAR(8)              DEFAULT NULL   COMMENT '币种：CNY / USD（可空）',
-    cost              DECIMAL(18, 6)          DEFAULT NULL   COMMENT '调用费用（可空；用量未知或单价缺失 = NULL）',
-    latency_ms        INT                     DEFAULT NULL   COMMENT '延迟（毫秒）：一次逻辑调用的整段耗时，含内部重试与退避等待',
-    retry_count       INT            NOT NULL DEFAULT 0      COMMENT '重试次数（真实 HTTP 层计数：尝试次数 − 1）',
-    fallback_from     VARCHAR(128)            DEFAULT NULL   COMMENT '从哪个模型降级而来（可空）',
-    route_reason      VARCHAR(32)             DEFAULT NULL   COMMENT '路由原因：OK/CAPACITY_HIGH/LATENCY_HIGH/UNHEALTHY/SLOW_START/FALLBACK_FROM（可空）',
-    cache_hit         TINYINT(1)     NOT NULL DEFAULT 0      COMMENT '是否命中缓存：1 命中 / 0 未命中',
-    status            VARCHAR(16)    NOT NULL                COMMENT '调用状态：SUCCESS/FAILED/TIMEOUT/RATE_LIMITED/CIRCUIT_OPEN',
-    error_code        VARCHAR(64)             DEFAULT NULL   COMMENT '失败错误码（ErrorCode 枚举名，成功 = NULL）',
-    del_flag          VARCHAR(1)     NOT NULL DEFAULT '0'    COMMENT '删除标记：0 正常 / 1 已删',
-    create_by         VARCHAR(64)             DEFAULT NULL   COMMENT '创建人',
-    create_time       DATETIME(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '调用时间（明细写入时刻，紧随调用结束）',
-    update_by         VARCHAR(64)             DEFAULT NULL   COMMENT '更新人',
-    update_time       DATETIME(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
-    PRIMARY KEY (id),
-    KEY idx_tenant_time (tenant_id, create_time),
-    KEY idx_capability_model_time (capability, model, create_time),
-    KEY idx_trace_id (trace_id),
-    KEY idx_del_flag (del_flag)
-) ENGINE = InnoDB
-   COMMENT ='模型调用明细：一行 = 一次逻辑调用（成功与失败都落行；不做日聚合表）';
-
+-- 十一、初始数据
 -- ============================================================================
--- 十二、初始数据
 -- ============================================================================
 
 -- 管理员账号：用户名 admin / 密码 Admin@123（BCrypt 哈希），首次登录后请立即改密

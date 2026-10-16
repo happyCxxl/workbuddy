@@ -1,7 +1,6 @@
 package com.workbuddy.biz.config;
 
 import com.workbuddy.worker.parser.ParseProperties;
-import com.workbuddy.worker.parser.capability.CapabilityProperties;
 import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.Yaml;
 
@@ -36,7 +35,6 @@ class ParsePropertiesConfigTest {
     void applicationYmlShouldCoverAllParseProperties() throws Exception {
         Map<String, Object> parse = parseBlock();
         assertPropertiesCovered(parse, new ParseProperties());
-        assertPropertiesCovered(nested(parse, "capability"), new CapabilityProperties());
     }
 
     /** 配置项逐个对上代码默认值，且不许缺项 */

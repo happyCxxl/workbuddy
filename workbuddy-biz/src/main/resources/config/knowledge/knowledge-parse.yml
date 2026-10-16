@@ -1,5 +1,5 @@
-# 解析环节配置：PDF 与 Office 的解析阈值、质量判定参数与三项模型能力开关。
-# 键的来源：knowledge-worker 的 ParseProperties（前缀 knowledge.parse）与 CapabilityProperties（前缀 knowledge.parse.capability）。
+# 解析环节配置：PDF 与 Office 的解析阈值与质量判定参数。
+# 键的来源：knowledge-worker 的 ParseProperties（前缀 knowledge.parse）。
 # 本环节配置的默认值在此处维护；配置面与代码面的一致性由 ParsePropertiesConfigTest 对账。
 knowledge:
   # 解析阈值全量默认值（与 knowledge-worker 的 ParseProperties 同名 kebab-case；配置来源 = 本文件与 ParseProperties 内置默认值）
@@ -66,8 +66,3 @@ knowledge:
     column-min-chars: 10
     column-min-page-chars: 100
     column-max-count: 4
-    # 模型能力开关（三项开关默认关；厂商地址与密钥取 knowledge.model.vendors.<厂商码>）
-    capability:
-      ocr-enabled: false
-      layout-enabled: false
-      table-enabled: false
