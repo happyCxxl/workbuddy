@@ -53,7 +53,6 @@ public class StaticModelCatalog implements ModelCatalogPort {
     private ModelDescriptor toDescriptor(EmbeddingModel model) {
         ModelDescriptor descriptor = new ModelDescriptor();
         descriptor.setModelKey(model.key());
-        descriptor.setDisplayName(model.desc());
         descriptor.setCapabilities(Set.of(ModelCapability.EMBEDDING));
         descriptor.setContextWindow(model.contextWindowTokens());
         descriptor.setStatus(model.enabled() ? "ENABLED" : "DISABLED");

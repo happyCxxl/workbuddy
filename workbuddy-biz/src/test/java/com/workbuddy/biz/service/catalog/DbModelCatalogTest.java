@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,7 +54,7 @@ class DbModelCatalogTest {
     }
 
     @Test
-    void listByCapabilityShouldFilterStatusAndEffectiveWindowInSql() {
+    void listByCapabilityShouldFilterStatusInSql() {
         when(mapper.selectList(any())).thenReturn(List.of(row(1L, "dashscope", "text-embedding-v4", "EMBEDDING")));
 
         List<ModelDescriptor> candidates = catalog.listByCapability(ModelCapability.EMBEDDING);
@@ -64,8 +62,6 @@ class DbModelCatalogTest {
         assertEquals(1, candidates.size());
         String sql = capturedListSql();
         assertTrue(sql.contains("status"), sql);
-        assertTrue(sql.contains("effective_from"), sql);
-        assertTrue(sql.contains("effective_to"), sql);
         assertTrue(sql.contains("ORDER BY"), sql);
         assertTrue(sql.contains("model_key"), sql);
     }
@@ -93,18 +89,14 @@ class DbModelCatalogTest {
     @Test
     void descriptorShouldCarryCapabilitiesPricesAndEmbedSpecs() {
         WbModel embed = row(1L, "dashscope", "text-embedding-v4", "EMBEDDING");
-        embed.setPricePerThousandCalls(new BigDecimal("0.000700"));
         embed.setCurrency("CNY");
         embed.setRpmLimit(600);
-        embed.setEffectiveFrom(LocalDateTime.of(2026, 1, 1, 0, 0));
         when(mapper.selectList(any())).thenReturn(List.of(embed));
 
         ModelDescriptor descriptor = catalog.listByCapability(ModelCapability.EMBEDDING).getFirst();
 
         assertEquals("dashscope", descriptor.getVendorCode());
         assertEquals("text-embedding-v4", descriptor.getModelKey());
-        assertEquals("dashscope-text-embedding-v4", descriptor.getDisplayName());
-        assertEquals(new BigDecimal("0.000700"), descriptor.getPricePerThousandCalls());
         assertEquals(600, descriptor.getRpmLimit());
         assertTrue(descriptor.enabled());
         assertTrue(descriptor.supports(ModelCapability.EMBEDDING));
@@ -115,8 +107,8 @@ class DbModelCatalogTest {
     }
 
     @Test
-    void disabledOrOutOfWindowRowsShouldNotBeCandidates() {
-        // 启用状态与生效区间由 SQL 筛出，本层只按能力过滤：不入候选的行不会出现在查询结果里
+    void disabledRowsShouldNotBeCandidates() {
+        // 启用状态由 SQL 筛出，本层只按能力过滤：不入候选的行不会出现在查询结果里
         when(mapper.selectList(any())).thenReturn(List.of());
 
         assertTrue(catalog.listByCapability(ModelCapability.EMBEDDING).isEmpty());
@@ -216,13 +208,12 @@ class DbModelCatalogTest {
         return wrapper.getSqlSegment();
     }
 
-    /** 目录行：状态启用、生效区间开放 */
+    /** 目录行：状态启用 */
     private WbModel row(Long id, String vendorCode, String modelKey, String capabilities) {
         WbModel row = new WbModel();
         row.setId(id);
         row.setVendorCode(vendorCode);
         row.setModelKey(modelKey);
-        row.setDisplayName(vendorCode + "-" + modelKey);
         row.setCapabilities(capabilities);
         row.setStatus("ENABLED");
         row.setCurrency("CNY");

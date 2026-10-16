@@ -14,9 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -73,11 +70,8 @@ public class ModelRouter {
     /** 随机源：恢复放行与并列抽样 */
     private final RandomSource randomSource;
 
-    /** 时间源：生效区间判断 */
-    private final TimeSource timeSource;
-
     /**
-     * 装配入口：随机源取默认实现（线程本地随机数），时间源取系统时钟。
+     * 装配入口：随机源取默认实现（线程本地随机数）。
      *
      * @param routeProperties  路由参数
      * @param vendorProperties 厂商配置
@@ -88,12 +82,11 @@ public class ModelRouter {
     @Autowired
     public ModelRouter(ModelRouteProperties routeProperties, ModelVendorProperties vendorProperties,
             ModelCatalogPort modelCatalog, RouteStateStore stateStore, ModelCircuitBreakers breakers) {
-        this(routeProperties, vendorProperties, modelCatalog, stateStore, breakers, RandomSource.DEFAULT,
-                TimeSource.DEFAULT);
+        this(routeProperties, vendorProperties, modelCatalog, stateStore, breakers, RandomSource.DEFAULT);
     }
 
     /**
-     * 指定随机源与时间源的路由：供用例注入取值可预测的随机源与可推进的时间源。
+     * 指定随机源的路由：供用例注入取值可预测的随机源。
      *
      * @param routeProperties  路由参数
      * @param vendorProperties 厂商配置
@@ -101,18 +94,16 @@ public class ModelRouter {
      * @param stateStore       路由状态
      * @param breakers         模型熔断器
      * @param randomSource     随机源
-     * @param timeSource       时间源
      */
     public ModelRouter(ModelRouteProperties routeProperties, ModelVendorProperties vendorProperties,
             ModelCatalogPort modelCatalog, RouteStateStore stateStore, ModelCircuitBreakers breakers,
-            RandomSource randomSource, TimeSource timeSource) {
+            RandomSource randomSource) {
         this.routeProperties = routeProperties;
         this.vendorProperties = vendorProperties;
         this.modelCatalog = modelCatalog;
         this.stateStore = stateStore;
         this.breakers = breakers;
         this.randomSource = randomSource;
-        this.timeSource = timeSource;
     }
 
     /**
@@ -175,9 +166,6 @@ public class ModelRouter {
         }
         if (!vendorConfigured(candidate.getVendorCode())) {
             return "厂商未配置或密钥为空";
-        }
-        if (!inEffectiveRange(candidate)) {
-            return "不在生效区间";
         }
         if (!healthGate(candidate.getVendorCode(), candidate.getModelKey())) {
             return "熔断未放行";
@@ -455,14 +443,6 @@ public class ModelRouter {
             return runnerUp.relativeLoad() - decision.relativeLoad();
         }
         return runnerUp.relativeLatency() - decision.relativeLatency();
-    }
-
-    /** 是否落在生效区间：两个端点都留空即长期有效 */
-    private boolean inEffectiveRange(ModelDescriptor candidate) {
-        LocalDateTime now = LocalDateTime.ofInstant(Instant.ofEpochMilli(timeSource.now()), ZoneId.systemDefault());
-        LocalDateTime from = candidate.getEffectiveFrom();
-        LocalDateTime to = candidate.getEffectiveTo();
-        return (NullUtil.isNull(from) || !now.isBefore(from)) && (NullUtil.isNull(to) || !now.isAfter(to));
     }
 
     /** 厂商是否已配密钥：配置里没有该厂商或密钥为空都按未配处理，其模型不进候选 */

@@ -84,7 +84,6 @@ public class TestModelCatalog implements ModelCatalogPort {
         EmbeddingModel model = EmbeddingModel.of(modelKey);
         descriptor.setStatus(model != null && model.enabled() ? "ENABLED" : "DISABLED");
         if (model != null) {
-            descriptor.setDisplayName(model.desc());
             descriptor.setContextWindow(model.contextWindowTokens());
             ModelDescriptor.EmbedSpecs specs = new ModelDescriptor.EmbedSpecs();
             specs.setDimension(model.dimension());

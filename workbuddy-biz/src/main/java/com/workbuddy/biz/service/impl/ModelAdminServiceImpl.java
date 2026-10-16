@@ -12,7 +12,6 @@ import com.workbuddy.common.dto.response.model.ModelItemVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.AuditObjectType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.security.audit.AuditEventPublisher;
 import com.workbuddy.common.utils.JsonUtil;
@@ -24,22 +23,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 模型管理服务实现：模型目录的清单与写入、启停。
  *
- * <p>校验都在本类一处完成：厂商码必须出现在配置里、唯一键不冲突、价格与限额非负、能力与状态取值在字典内、
- * 生效区间的开始早于结束。写入只落 `wb_model` 的业务列与审计，配置与密钥都不经过本类。
+ * <p>校验都在本类一处完成：厂商码必须出现在配置里、唯一键不冲突、长度 / 价格与限额非负、能力与状态取值在字典内。
+ * 写入只落 `wb_model` 的业务列与审计，配置与密钥都不经过本类。
  *
  * @author cxxl
  */
@@ -66,9 +56,11 @@ public class ModelAdminServiceImpl implements ModelAdminService {
     /** 文本列宽上限（与 wb_model 的列定义一致） */
     private static final int VENDOR_CODE_MAX = 64;
     private static final int MODEL_KEY_MAX = 128;
-    private static final int DISPLAY_NAME_MAX = 128;
     private static final int CAPABILITIES_MAX = 255;
-    private static final int REMARK_MAX = 512;
+
+    /** 思考模式标记取值：1 支持 / 0 不支持 */
+    private static final int THINKING_ENABLED = 1;
+    private static final int THINKING_DISABLED = 0;
 
     /** 日期写法的文本长度（yyyy-MM-dd） */
     private static final int DATE_TEXT_LENGTH = 10;
@@ -108,7 +100,7 @@ public class ModelAdminServiceImpl implements ModelAdminService {
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO create(ModelSaveDto dto) {
         WbModel row = new WbModel();
-        fill(row, dto, null, STATUS_ENABLED, CURRENCY_DEFAULT);
+        fill(row, dto, null, CURRENCY_DEFAULT);
         kbModelDbService.save(row);
         auditEventPublisher.publish(AuditActionType.MODEL_CREATE, AUDIT_OBJECT_TYPE, row.getId(), null,
                 JsonUtil.toJsonStr(row));
@@ -124,7 +116,7 @@ public class ModelAdminServiceImpl implements ModelAdminService {
         String beforeJson = JsonUtil.toJsonStr(before);
         WbModel after = new WbModel();
         after.setId(id);
-        fill(after, dto, id, before.getStatus(), before.getCurrency());
+        fill(after, dto, id, before.getCurrency());
         kbModelDbService.updateAll(after);
         auditEventPublisher.publish(AuditActionType.MODEL_UPDATE, AUDIT_OBJECT_TYPE, id, beforeJson,
                 JsonUtil.toJsonStr(after));
@@ -149,15 +141,14 @@ public class ModelAdminServiceImpl implements ModelAdminService {
 
     /**
      * 收参校验后把业务列写进行对象：新增与编辑共用，编辑时排除自身做唯一键判定，
-     * 状态与币种留空时取形参给出的回落值。
+     * 币种留空时取形参给出的回落值；**状态不在收参里**，统一写启用（停用走启停接口）。
      *
-     * @param row             目标行（新增为新建对象，编辑为只带主键的新对象）
-     * @param dto             模型收参
-     * @param excludeId       唯一键判定要排除的主键，可空
-     * @param statusFallback  状态留空时的取值
+     * @param row              目标行（新增为新建对象，编辑为只带主键的新对象）
+     * @param dto              模型收参
+     * @param excludeId        唯一键判定要排除的主键，可空
      * @param currencyFallback 币种留空时的取值
      */
-    private void fill(WbModel row, ModelSaveDto dto, Long excludeId, String statusFallback, String currencyFallback) {
+    private void fill(WbModel row, ModelSaveDto dto, Long excludeId, String currencyFallback) {
         ThrowUtil.throwIf(NullUtil.isNull(dto), ErrorCode.PARAM_INVALID, "请求体不能为空");
         String vendorCode = requiredVendorCode(dto.getVendorCode());
         String modelKey = text(dto.getModelKey(), "模型名", MODEL_KEY_MAX, true);
@@ -166,24 +157,20 @@ public class ModelAdminServiceImpl implements ModelAdminService {
                         + vendorCode + " / " + modelKey);
         row.setVendorCode(vendorCode);
         row.setModelKey(modelKey);
-        row.setDisplayName(displayName(dto.getDisplayName(), modelKey));
         row.setCapabilities(capabilities(dto.getCapabilities()));
-        row.setContextWindow(nonNegative(dto.getContextWindow(), "上下文窗口"));
-        row.setPriceInPerM(nonNegative(dto.getPriceInPerM(), "输入单价"));
+        row.setThinkingEnabled(flagOf(dto.getThinkingEnabled()));
+        row.setInputLimit(nonNegative(dto.getInputLimit(), "最大输入长度"));
+        row.setOutputLimit(nonNegative(dto.getOutputLimit(), "最大输出长度"));
+        row.setThinkingInputLimit(nonNegative(dto.getThinkingInputLimit(), "思考模式最大输入长度"));
+        row.setThinkingOutputLimit(nonNegative(dto.getThinkingOutputLimit(), "思考模式最大输出长度"));
+        row.setContextWindow(nonNegative(dto.getContextWindow(), "上下文长度"));
+        row.setPriceInPerM(nonNegative(dto.getPriceInPerM(), "输入单价（缓存未命中）"));
+        row.setPriceInPerMCacheHit(nonNegative(dto.getPriceInPerMCacheHit(), "输入单价（缓存命中）"));
         row.setPriceOutPerM(nonNegative(dto.getPriceOutPerM(), "输出单价"));
-        row.setPriceImagePerPage(nonNegative(dto.getPriceImagePerPage(), "按页单价"));
-        row.setPricePerThousandCalls(nonNegative(dto.getPricePerThousandCalls(), "按千次单价"));
         row.setCurrency(currency(dto.getCurrency(), currencyFallback));
         row.setRpmLimit(nonNegative(dto.getRpmLimit(), "RPM 上限"));
         row.setTpmLimit(nonNegative(dto.getTpmLimit(), "TPM 上限"));
-        row.setStatus(statusOf(dto.getStatus(), statusFallback));
-        LocalDateTime from = timeOf(dto.getEffectiveFrom(), "生效开始时间");
-        LocalDateTime to = timeOf(dto.getEffectiveTo(), "生效结束时间");
-        ThrowUtil.throwIf(NullUtil.isNotNull(from) && NullUtil.isNotNull(to) && !from.isBefore(to),
-                ErrorCode.PARAM_INVALID, "生效开始时间必须早于结束时间");
-        row.setEffectiveFrom(from);
-        row.setEffectiveTo(to);
-        row.setRemark(text(dto.getRemark(), "备注", REMARK_MAX, false));
+        row.setStatus(STATUS_ENABLED);
     }
 
     /** 厂商码：必填，且必须出现在 knowledge.model.vendors 配置里 */
@@ -196,10 +183,14 @@ public class ModelAdminServiceImpl implements ModelAdminService {
         return vendorCode;
     }
 
-    /** 展示名：可留空，留空取模型名（wb_model.display_name 为非空列） */
-    private String displayName(String value, String modelKey) {
-        String displayName = text(value, "展示名", DISPLAY_NAME_MAX, false);
-        return NullUtil.isNull(displayName) ? modelKey : displayName;
+    /** 是否支持思考模式：留空取 0 不支持，只接受 0 / 1 */
+    private Integer flagOf(Integer value) {
+        if (NullUtil.isNull(value)) {
+            return THINKING_DISABLED;
+        }
+        ThrowUtil.throwIf(value != THINKING_ENABLED && value != THINKING_DISABLED, ErrorCode.PARAM_INVALID,
+                "思考模式标记只接受 " + THINKING_ENABLED + "（支持）或 " + THINKING_DISABLED + "（不支持），当前 " + value);
+        return value;
     }
 
     /** 能力：至少一项，逐项按字典解析，未知取值拒绝；落库形态是逗号分隔的多值串 */
@@ -282,23 +273,6 @@ public class ModelAdminServiceImpl implements ModelAdminService {
         return text;
     }
 
-    /** 生效区间两段：日期写法按当日零点，日期时间按 ISO 解析，留空表示开放端点 */
-    private LocalDateTime timeOf(String value, String field) {
-        String text = StrUtil.trimToNull(value);
-        if (NullUtil.isNull(text)) {
-            return null;
-        }
-        try {
-            if (text.length() == DATE_TEXT_LENGTH) {
-                return LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay();
-            }
-            return LocalDateTime.parse(text, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        } catch (DateTimeParseException e) {
-            throw new KnowledgeException(ErrorCode.PARAM_INVALID,
-                    field + "格式不合法：" + text + "，按 yyyy-MM-dd 或 yyyy-MM-ddTHH:mm:ss 传入");
-        }
-    }
-
     /** 取一行现有记录；查不到即按模型不存在拒绝 */
     private WbModel requireRow(Long id) {
         WbModel row = kbModelDbService.getExistingById(id);
@@ -313,22 +287,22 @@ public class ModelAdminServiceImpl implements ModelAdminService {
         item.setVendorCode(row.getVendorCode());
         item.setVendorName(vendorName(row.getVendorCode()));
         item.setModelKey(row.getModelKey());
-        item.setDisplayName(row.getDisplayName());
         for (ModelCapability capability : ModelCapability.parse(row.getCapabilities())) {
             item.getCapabilities().add(capability.name());
         }
+        item.setThinkingEnabled(row.getThinkingEnabled());
+        item.setInputLimit(row.getInputLimit());
+        item.setOutputLimit(row.getOutputLimit());
+        item.setThinkingInputLimit(row.getThinkingInputLimit());
+        item.setThinkingOutputLimit(row.getThinkingOutputLimit());
         item.setContextWindow(row.getContextWindow());
         item.setPriceInPerM(row.getPriceInPerM());
+        item.setPriceInPerMCacheHit(row.getPriceInPerMCacheHit());
         item.setPriceOutPerM(row.getPriceOutPerM());
-        item.setPriceImagePerPage(row.getPriceImagePerPage());
-        item.setPricePerThousandCalls(row.getPricePerThousandCalls());
         item.setCurrency(row.getCurrency());
         item.setRpmLimit(row.getRpmLimit());
         item.setTpmLimit(row.getTpmLimit());
         item.setStatus(row.getStatus());
-        item.setEffectiveFrom(row.getEffectiveFrom());
-        item.setEffectiveTo(row.getEffectiveTo());
-        item.setRemark(row.getRemark());
         return item;
     }
 

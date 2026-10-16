@@ -23,7 +23,7 @@ import java.util.Set;
  * 路由用例夹具（测试用）：一份假目录 + 一份厂商配置 + 一个可推进时间的路由状态与熔断器，
  * 按生产装配顺序接成路由与调用器，供三信号打分、硬闸门、熔断与恢复、降级链各用例直接驱动。
  *
- * <p>路由侧的时间源从 {@link #START_MILLIS} 起算，用例按需推进（占用窗口、延迟窗口与生效区间都读它）；
+ * <p>路由侧的时间源从 {@link #START_MILLIS} 起算，用例按需推进（占用窗口与延迟窗口都读它）；
  * 熔断器侧的打开保持与半开到期按系统时钟，三类前提由库的公开状态迁移方法构造，见
  * {@link #withOpenBreaker(String, String)} 与 {@link #withHalfOpenBreaker(String, String)}；
  * 时间行为用例经 {@link #withBreakers(ModelCircuitBreakers)} 换成自建窗口的那一份。
@@ -164,8 +164,7 @@ public final class RouteFixture {
 
     /** 用当前随机源装配路由 */
     public ModelRouter router() {
-        return new ModelRouter(routeProperties, vendorProperties, catalog, stateStore, breakers, randomSource,
-                timeSource);
+        return new ModelRouter(routeProperties, vendorProperties, catalog, stateStore, breakers, randomSource);
     }
 
     /** 调用明细端口；未装配调用器时为 null */

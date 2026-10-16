@@ -43,8 +43,8 @@ public interface WbModelDbService extends InfraDbService<WbModel> {
     boolean existsVendorAndModelKey(String vendorCode, String modelKey, Long excludeId);
 
     /**
-     * 覆盖式更新一行的业务列（厂商码、模型名、展示名、能力、上下文窗口、四个价格列、币种、两个限额、
-     * 状态、生效区间、备注）：实体带什么值就写什么值，**被清空的列写成 NULL**。
+     * 覆盖式更新一行的业务列（厂商码、模型名、能力、思考模式标记、四个长度列、三个价格列、币种、两个限额、
+     * 状态）：实体带什么值就写什么值，**被清空的列写成 NULL**。
      *
      * @param row 目标行（主键必填，业务列按覆盖口径写入）
      */

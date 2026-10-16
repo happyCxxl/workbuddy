@@ -12,7 +12,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -223,20 +222,6 @@ class ModelRouterTest {
         fixture.withVendor(VENDOR);
         fixture.withChatModel(VENDOR, SECOND, 100);
         fixture.withChatModel("other-vendor", FIRST, 100);
-        ModelRouter router = fixture.router();
-
-        assertEquals(SECOND, router.plan(ModelCapability.CHAT).selected().modelKey());
-    }
-
-    @Test
-    void candidateOutsideEffectiveRangeShouldBeRejected() {
-        RouteFixture fixture = fixture();
-        fixture.withVendor(VENDOR);
-        fixture.withChatModel(VENDOR, SECOND, 100);
-        ModelDescriptor expired = fixture.withChatModel(VENDOR, FIRST, 100).catalog()
-                .findByVendorAndModelKey(VENDOR, FIRST);
-        // 时间源从用例起点起算，生效区间取该起点之前的时刻即视为已过期
-        expired.setEffectiveTo(LocalDateTime.of(2020, 1, 1, 0, 0));
         ModelRouter router = fixture.router();
 
         assertEquals(SECOND, router.plan(ModelCapability.CHAT).selected().modelKey());

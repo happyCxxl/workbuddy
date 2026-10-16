@@ -17,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,32 +128,34 @@ class ModelAdminServiceImplTest {
         WbModel saved = capturedSave();
         assertEquals("dashscope", saved.getVendorCode());
         assertEquals("qwen-max", saved.getModelKey());
-        assertEquals("通义千问 Max", saved.getDisplayName());
         assertEquals("CHAT,EMBEDDING", saved.getCapabilities());
+        assertEquals(1, saved.getThinkingEnabled());
+        assertEquals(30720, saved.getInputLimit());
+        assertEquals(8192, saved.getOutputLimit());
+        assertEquals(32768, saved.getThinkingInputLimit());
+        assertEquals(65536, saved.getThinkingOutputLimit());
         assertEquals(32768, saved.getContextWindow());
         assertEquals(new BigDecimal("20"), saved.getPriceInPerM());
+        assertEquals(new BigDecimal("2"), saved.getPriceInPerMCacheHit());
         assertEquals(new BigDecimal("60"), saved.getPriceOutPerM());
         assertEquals("CNY", saved.getCurrency());
         assertEquals(600, saved.getRpmLimit());
         assertEquals(120000, saved.getTpmLimit());
         assertEquals("ENABLED", saved.getStatus());
-        assertEquals(LocalDateTime.of(2026, 1, 1, 0, 0), saved.getEffectiveFrom());
-        assertEquals(LocalDateTime.of(2026, 12, 31, 23, 59, 59), saved.getEffectiveTo());
-        assertEquals("备注", saved.getRemark());
         assertEquals(List.of("CHAT", "EMBEDDING"), item.getCapabilities());
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_CREATE), eq(AUDIT_OBJECT_TYPE), isNull(),
                 isNull(), anyString());
     }
 
     @Test
-    void createShouldFallBackToModelKeyWhenDisplayNameAbsent() {
+    void createShouldDefaultThinkingFlagToDisabled() {
         when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
         ModelSaveDto dto = saveDto();
-        dto.setDisplayName("  ");
+        dto.setThinkingEnabled(null);
 
         service.create(dto);
 
-        assertEquals("qwen-max", capturedSave().getDisplayName());
+        assertEquals(0, capturedSave().getThinkingEnabled());
     }
 
     @Test
@@ -217,38 +218,24 @@ class ModelAdminServiceImplTest {
     }
 
     @Test
-    void createShouldRejectIllegalStatusAndCurrency() {
+    void createShouldRejectIllegalCurrency() {
         when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
-        ModelSaveDto status = saveDto();
-        status.setStatus("PAUSED");
         ModelSaveDto currency = saveDto();
         currency.setCurrency("EUR");
 
-        KnowledgeException statusError = assertThrows(KnowledgeException.class, () -> service.create(status));
         KnowledgeException currencyError = assertThrows(KnowledgeException.class, () -> service.create(currency));
 
-        assertEquals(ErrorCode.PARAM_INVALID, statusError.getErrorCode());
-        assertTrue(statusError.getMessage().contains("ENABLED"), statusError.getMessage());
         assertTrue(currencyError.getMessage().contains("CNY"), currencyError.getMessage());
         verify(kbModelDbService, never()).save(any());
     }
 
     @Test
-    void createShouldRejectIllegalEffectiveWindow() {
+    void createShouldAlwaysSaveEnabled() {
         when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(false);
-        ModelSaveDto reversed = saveDto();
-        reversed.setEffectiveFrom("2026-06-01");
-        reversed.setEffectiveTo("2026-05-01");
-        ModelSaveDto illegal = saveDto();
-        illegal.setEffectiveFrom("2026/06/01");
 
-        KnowledgeException reversedError = assertThrows(KnowledgeException.class, () -> service.create(reversed));
-        KnowledgeException illegalError = assertThrows(KnowledgeException.class, () -> service.create(illegal));
+        service.create(saveDto());
 
-        assertEquals(ErrorCode.PARAM_INVALID, reversedError.getErrorCode());
-        assertTrue(reversedError.getMessage().contains("早于"), reversedError.getMessage());
-        assertTrue(illegalError.getMessage().contains("格式不合法"), illegalError.getMessage());
-        verify(kbModelDbService, never()).save(any());
+        assertEquals("ENABLED", capturedSave().getStatus());
     }
 
     @Test
@@ -277,25 +264,24 @@ class ModelAdminServiceImplTest {
         WbModel updated = capturedUpdate();
         assertEquals(5L, updated.getId());
         assertNull(updated.getPriceInPerM());
-        assertEquals("通义千问 Max", updated.getDisplayName());
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_UPDATE), eq(AUDIT_OBJECT_TYPE), eq(5L),
                 anyString(), anyString());
     }
 
     @Test
-    void updateShouldKeepStatusAndCurrencyWhenAbsent() {
+    void updateShouldResetStatusToEnabledAndKeepCurrencyWhenAbsent() {
         WbModel existing = row(7L, "dashscope", "qwen-max", "CHAT", "DISABLED");
         existing.setCurrency("USD");
         when(kbModelDbService.getExistingById(7L)).thenReturn(existing);
         when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", 7L)).thenReturn(false);
         ModelSaveDto dto = saveDto();
-        dto.setStatus(null);
         dto.setCurrency(null);
 
         service.update(7L, dto);
 
         WbModel updated = capturedUpdate();
-        assertEquals("DISABLED", updated.getStatus());
+        // 保存路径不收状态，统一写启用；停用只走启停接口
+        assertEquals("ENABLED", updated.getStatus());
         assertEquals("USD", updated.getCurrency());
     }
 
@@ -340,25 +326,24 @@ class ModelAdminServiceImplTest {
         verify(auditEventPublisher, never()).publish(any(), anyString(), any(), any(), any());
     }
 
-    /** 字段齐全的收参：覆盖价格四列、限额两列与生效区间 */
+    /** 字段齐全的收参：覆盖长度四列、价格三列与限额两列 */
     private ModelSaveDto saveDto() {
         ModelSaveDto dto = new ModelSaveDto();
         dto.setVendorCode("dashscope");
         dto.setModelKey("qwen-max");
-        dto.setDisplayName("通义千问 Max");
         dto.setCapabilities(List.of("CHAT", "EMBEDDING"));
+        dto.setThinkingEnabled(1);
+        dto.setInputLimit(30720);
+        dto.setOutputLimit(8192);
+        dto.setThinkingInputLimit(32768);
+        dto.setThinkingOutputLimit(65536);
         dto.setContextWindow(32768);
         dto.setPriceInPerM(new BigDecimal("20"));
+        dto.setPriceInPerMCacheHit(new BigDecimal("2"));
         dto.setPriceOutPerM(new BigDecimal("60"));
-        dto.setPriceImagePerPage(new BigDecimal("0.02"));
-        dto.setPricePerThousandCalls(new BigDecimal("0.0007"));
         dto.setCurrency("CNY");
         dto.setRpmLimit(600);
         dto.setTpmLimit(120000);
-        dto.setStatus("ENABLED");
-        dto.setEffectiveFrom("2026-01-01");
-        dto.setEffectiveTo("2026-12-31T23:59:59");
-        dto.setRemark("备注");
         return dto;
     }
 
@@ -368,7 +353,6 @@ class ModelAdminServiceImplTest {
         row.setId(id);
         row.setVendorCode(vendorCode);
         row.setModelKey(modelKey);
-        row.setDisplayName(vendorCode + "-" + modelKey);
         row.setCapabilities(capabilities);
         row.setCurrency("CNY");
         row.setStatus(status);

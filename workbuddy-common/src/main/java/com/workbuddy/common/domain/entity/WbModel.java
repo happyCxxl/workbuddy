@@ -9,7 +9,6 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * 模型目录（表：wb_model）：一行 = 一个模型的厂商归属、能力、价格与限额。
@@ -37,26 +36,35 @@ public class WbModel extends BaseInfo {
     /** 厂商侧模型名 */
     private String modelKey;
 
-    /** 页面展示名 */
-    private String displayName;
-
     /** 能力清单（多值，逗号分隔） */
     private String capabilities;
+
+    /** 是否支持思考模式（1 支持 / 0 不支持）：仅登记能力，不参与请求参数装配 */
+    private Integer thinkingEnabled;
+
+    /** 最大输入长度（tokens，可空） */
+    private Integer inputLimit;
+
+    /** 最大输出长度（tokens，可空） */
+    private Integer outputLimit;
+
+    /** 思考模式下的最大输入长度（tokens，可空；思考模式关闭时留空） */
+    private Integer thinkingInputLimit;
+
+    /** 思考模式下的最大输出长度（tokens，可空；思考模式关闭时留空） */
+    private Integer thinkingOutputLimit;
 
     /** 上下文窗口（tokens，可空） */
     private Integer contextWindow;
 
-    /** 输入每百万 token 单价（可空） */
+    /** 输入每百万 token 单价（缓存未命中，可空） */
     private BigDecimal priceInPerM;
+
+    /** 输入每百万 token 单价（缓存命中，可空） */
+    private BigDecimal priceInPerMCacheHit;
 
     /** 输出每百万 token 单价（可空） */
     private BigDecimal priceOutPerM;
-
-    /** 图像按页单价（可空） */
-    private BigDecimal priceImagePerPage;
-
-    /** 嵌入按千次单价（可空） */
-    private BigDecimal pricePerThousandCalls;
 
     /** 币种：CNY / USD */
     private String currency;
@@ -69,13 +77,4 @@ public class WbModel extends BaseInfo {
 
     /** 状态码值：ENABLED 启用 / DISABLED 停用 */
     private String status;
-
-    /** 生效开始时间（空 = 立即生效） */
-    private LocalDateTime effectiveFrom;
-
-    /** 生效结束时间（空 = 长期有效） */
-    private LocalDateTime effectiveTo;
-
-    /** 备注 */
-    private String remark;
 }

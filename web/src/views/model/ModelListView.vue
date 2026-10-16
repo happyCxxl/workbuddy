@@ -68,34 +68,38 @@
           :data="models"
           :border="false"
         >
-          <el-table-column label="厂商" min-width="150" align="center">
+          <el-table-column label="厂商" min-width="160" align="center">
             <template #default="{ row }">
               <div>{{ row.vendorName }}</div>
               <div class="model-muted model-mono">{{ row.vendorCode }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="模型" min-width="150" align="center">
+          <el-table-column label="模型" min-width="160" align="center">
             <template #default="{ row }">
-              <div>{{ row.displayName }}</div>
-              <div class="model-muted model-mono">{{ row.modelKey }}</div>
+              <div>{{ row.modelKey }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="能力" min-width="150" align="center">
+          <el-table-column label="能力" min-width="160" align="center">
             <template #default="{ row }">
               <span v-for="item in row.capabilities" :key="item" class="model-tag">{{ item }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="价格" min-width="150" align="center">
+          <el-table-column label="长度（输入/输出/上下文）" min-width="160" align="center">
+            <template #default="{ row }">
+              <span class="model-mono">{{ lengthText(row as ModelItem) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="价格（未命中/命中/输出）" min-width="160" align="center">
             <template #default="{ row }">
               <span class="model-mono">{{ priceText(row as ModelItem) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="限额（RPM / TPM）" min-width="150" align="center">
+          <el-table-column label="限额（RPM / TPM）" min-width="160" align="center">
             <template #default="{ row }">
               <span class="model-mono">{{ limitText(row as ModelItem) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" min-width="150" align="center">
+          <el-table-column label="状态" min-width="160" align="center">
             <template #default="{ row }">
               <el-tag
                 :type="row.status === MODEL_STATUS.ENABLED ? 'success' : 'info'"
@@ -106,7 +110,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" min-width="150" align="center" fixed="right">
+          <el-table-column label="操作" min-width="160" align="center" fixed="right">
             <!-- 插槽里的 row 是 el-table 的 DefaultRow，交给强类型函数时逐个断言成 ModelItem -->
             <template #default="{ row }">
               <el-button
@@ -144,7 +148,7 @@
       v-model="drawerVisible"
       class="model-drawer"
       :title="drawerTitle"
-      size="520px"
+      size="720px"
       destroy-on-close
     >
       <el-form
@@ -154,42 +158,45 @@
         label-position="top"
         :hide-required-asterisk="true"
       >
-        <el-form-item prop="vendorCode" label="厂商" class="model-form-item">
-          <el-select v-model="form.vendorCode" class="model-form-control" placeholder="请选择厂商">
-            <el-option
-              v-for="vendor in MODEL_VENDORS"
-              :key="vendor.code"
-              :label="`${vendor.displayName}（${vendor.code}）`"
-              :value="vendor.code"
-            />
-          </el-select>
-          <p class="model-hint">
-            候选来自前端枚举，需与后端配置 knowledge.model.vendors 的键保持一致。
-          </p>
-        </el-form-item>
-
-        <div class="model-form-pair">
-          <el-form-item prop="modelKey" label="模型名（厂商侧）" class="model-form-item">
-            <el-input
-              v-model="form.modelKey"
+        <div class="model-form-group-head">
+          <span class="model-form-group-title">基础信息</span>
+        </div>
+        <div class="model-form-row model-form-row-3">
+          <el-form-item prop="vendorCode" label="厂商" class="model-form-item">
+            <el-select
+              v-model="form.vendorCode"
               class="model-form-control"
-              placeholder="如 qwen-max"
-            />
+              placeholder="请选择厂商"
+            >
+              <el-option
+                v-for="vendor in MODEL_VENDORS"
+                :key="vendor.code"
+                :label="`${vendor.displayName}（${vendor.code}）`"
+                :value="vendor.code"
+              />
+            </el-select>
           </el-form-item>
-          <el-form-item prop="displayName" label="展示名" class="model-form-item">
-            <el-input
-              v-model="form.displayName"
+          <el-form-item prop="modelKey" label="模型名" class="model-form-item">
+            <el-input v-model="form.modelKey" class="model-form-control" placeholder="qwen-max" />
+          </el-form-item>
+          <el-form-item prop="thinkingEnabled" label="支持思考模式" class="model-form-item">
+            <el-switch
+              v-model="form.thinkingEnabled"
               class="model-form-control"
-              placeholder="留空取模型名"
+              :active-value="1"
+              :inactive-value="0"
             />
           </el-form-item>
         </div>
-
         <el-form-item prop="capabilities" label="能力" class="model-form-item">
+          <!-- 收起超额标签：全选五项时保持单行高度，不把表单撑开 -->
           <el-select
             v-model="form.capabilities"
             class="model-form-control"
             multiple
+            collapse-tags
+            collapse-tags-tooltip
+            :max-collapse-tags="3"
             placeholder="至少选一项"
           >
             <el-option
@@ -199,76 +206,138 @@
               :value="item"
             />
           </el-select>
-          <p class="model-hint">
-            一个模型可勾多个能力，它会同时进入这些能力的候选集；冷却、占用与限额按模型算。
-          </p>
         </el-form-item>
 
-        <div class="model-form-pair">
-          <el-form-item prop="contextWindow" label="上下文窗口（tokens）" class="model-form-item">
-            <el-input-number
-              v-model="form.contextWindow"
-              class="model-form-control"
-              :min="0"
-              :controls="false"
-              placeholder="可留空"
-            />
+        <div class="model-form-group-head">
+          <span class="model-form-group-title">长度</span>
+        </div>
+        <div class="model-form-row model-form-row-3">
+          <el-form-item prop="inputLimit" label="最大输入长度" class="model-form-item">
+            <div class="model-limit-row">
+              <el-input-number
+                v-model="form.inputLimit"
+                class="model-form-control"
+                :min="0"
+                :controls="false"
+                placeholder="可留空"
+              />
+              <el-select v-model="inputUnit" class="model-limit-unit">
+                <el-option label="K" value="K" />
+                <el-option label="M" value="M" />
+              </el-select>
+            </div>
           </el-form-item>
-          <el-form-item prop="currency" label="币种" class="model-form-item">
-            <el-select v-model="form.currency" class="model-form-control">
-              <el-option v-for="item in MODEL_CURRENCIES" :key="item" :label="item" :value="item" />
-            </el-select>
+          <el-form-item prop="outputLimit" label="最大输出长度" class="model-form-item">
+            <div class="model-limit-row">
+              <el-input-number
+                v-model="form.outputLimit"
+                class="model-form-control"
+                :min="0"
+                :controls="false"
+                placeholder="可留空"
+              />
+              <el-select v-model="outputUnit" class="model-limit-unit">
+                <el-option label="K" value="K" />
+                <el-option label="M" value="M" />
+              </el-select>
+            </div>
+          </el-form-item>
+          <el-form-item prop="contextWindow" label="上下文长度" class="model-form-item">
+            <div class="model-limit-row">
+              <el-input-number
+                v-model="form.contextWindow"
+                class="model-form-control"
+                :min="0"
+                :controls="false"
+                placeholder="可留空"
+              />
+              <el-select v-model="contextUnit" class="model-limit-unit">
+                <el-option label="K" value="K" />
+                <el-option label="M" value="M" />
+              </el-select>
+            </div>
+          </el-form-item>
+        </div>
+        <!-- 思考模式两行只在开关打开时出现：关掉后提交不带上，库里留空 -->
+        <div v-if="form.thinkingEnabled === 1" class="model-form-row">
+          <el-form-item
+            prop="thinkingInputLimit"
+            label="最大输入长度（思考模式下）"
+            class="model-form-item"
+          >
+            <div class="model-limit-row">
+              <el-input-number
+                v-model="form.thinkingInputLimit"
+                class="model-form-control"
+                :min="0"
+                :controls="false"
+                placeholder="可留空"
+              />
+              <el-select v-model="thinkingInputUnit" class="model-limit-unit">
+                <el-option label="K" value="K" />
+                <el-option label="M" value="M" />
+              </el-select>
+            </div>
+          </el-form-item>
+          <el-form-item
+            prop="thinkingOutputLimit"
+            label="最大输出长度（思考模式下）"
+            class="model-form-item"
+          >
+            <div class="model-limit-row">
+              <el-input-number
+                v-model="form.thinkingOutputLimit"
+                class="model-form-control"
+                :min="0"
+                :controls="false"
+                placeholder="可留空"
+              />
+              <el-select v-model="thinkingOutputUnit" class="model-limit-unit">
+                <el-option label="K" value="K" />
+                <el-option label="M" value="M" />
+              </el-select>
+            </div>
           </el-form-item>
         </div>
 
-        <div class="model-form-section">价格（按能力的计价口径填对应项，可留空）</div>
-        <div class="model-form-pair">
-          <el-form-item prop="priceInPerM" label="输入（/ 百万 token）" class="model-form-item">
+        <div class="model-form-group-head">
+          <span class="model-form-group-title">价格</span>
+          <span class="model-form-group-sub">每百万 token</span>
+        </div>
+        <div class="model-form-row model-form-row-3">
+          <el-form-item prop="priceInPerM" label="输入·缓存未命中" class="model-form-item">
             <el-input-number
               v-model="form.priceInPerM"
               class="model-form-control"
               :min="0"
               :controls="false"
-              placeholder="留空表示未登记"
+              placeholder="未登记"
             />
           </el-form-item>
-          <el-form-item prop="priceOutPerM" label="输出（/ 百万 token）" class="model-form-item">
+          <el-form-item prop="priceInPerMCacheHit" label="输入·缓存命中" class="model-form-item">
+            <el-input-number
+              v-model="form.priceInPerMCacheHit"
+              class="model-form-control"
+              :min="0"
+              :controls="false"
+              placeholder="未登记"
+            />
+          </el-form-item>
+          <el-form-item prop="priceOutPerM" label="输出" class="model-form-item">
             <el-input-number
               v-model="form.priceOutPerM"
               class="model-form-control"
               :min="0"
               :controls="false"
-              placeholder="留空表示未登记"
-            />
-          </el-form-item>
-        </div>
-        <div class="model-form-pair">
-          <el-form-item
-            prop="priceImagePerPage"
-            label="图像 / 版面 / OCR（/ 页）"
-            class="model-form-item"
-          >
-            <el-input-number
-              v-model="form.priceImagePerPage"
-              class="model-form-control"
-              :min="0"
-              :controls="false"
-              placeholder="留空表示不按页计价"
-            />
-          </el-form-item>
-          <el-form-item prop="pricePerThousandCalls" label="嵌入（/ 千次）" class="model-form-item">
-            <el-input-number
-              v-model="form.pricePerThousandCalls"
-              class="model-form-control"
-              :min="0"
-              :controls="false"
-              placeholder="留空表示不按千次计价"
+              placeholder="未登记"
             />
           </el-form-item>
         </div>
 
-        <div class="model-form-section">限额（都能留空；两项都留空则该模型不参与容量占用判断）</div>
-        <div class="model-form-pair">
+        <div class="model-form-group-head">
+          <span class="model-form-group-title">限额与状态</span>
+        </div>
+        <div class="model-form-row model-form-row-3">
           <el-form-item prop="rpmLimit" label="RPM" class="model-form-item">
             <el-input-number
               v-model="form.rpmLimit"
@@ -287,40 +356,12 @@
               placeholder="可留空"
             />
           </el-form-item>
-        </div>
-
-        <div class="model-form-section">生效区间（留空 = 立即生效 / 长期有效）</div>
-        <div class="model-form-pair">
-          <el-form-item prop="effectiveFrom" label="开始时间" class="model-form-item">
-            <el-date-picker
-              v-model="form.effectiveFrom"
-              class="model-form-control"
-              type="datetime"
-              value-format="YYYY-MM-DDTHH:mm:ss"
-              placeholder="留空 = 立即生效"
-            />
-          </el-form-item>
-          <el-form-item prop="effectiveTo" label="结束时间" class="model-form-item">
-            <el-date-picker
-              v-model="form.effectiveTo"
-              class="model-form-control"
-              type="datetime"
-              value-format="YYYY-MM-DDTHH:mm:ss"
-              placeholder="留空 = 长期有效"
-            />
+          <el-form-item prop="currency" label="币种" class="model-form-item">
+            <el-select v-model="form.currency" class="model-form-control">
+              <el-option v-for="item in MODEL_CURRENCIES" :key="item" :label="item" :value="item" />
+            </el-select>
           </el-form-item>
         </div>
-
-        <el-form-item prop="status" label="状态" class="model-form-item">
-          <el-radio-group v-model="form.status">
-            <el-radio :value="MODEL_STATUS.ENABLED">启用</el-radio>
-            <el-radio :value="MODEL_STATUS.DISABLED">停用</el-radio>
-          </el-radio-group>
-        </el-form-item>
-
-        <el-form-item prop="remark" label="备注" class="model-form-item">
-          <el-input v-model="form.remark" class="model-form-control" placeholder="选填" />
-        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -362,46 +403,44 @@ const submitting = ref(false);
 const editingId = ref<string | null>(null);
 const formRef = ref<FormInstance>();
 
-/** 抽屉表单的值形状：数值列可留空（null），生效区间两段可留空 */
+/** 抽屉表单的值形状：数值列可留空（null），长度按「数值 + 单位」成对出现 */
 interface ModelForm {
   vendorCode: string;
   modelKey: string;
-  displayName: string;
   capabilities: string[];
+  thinkingEnabled: number;
+  inputLimit: number | null;
+  outputLimit: number | null;
+  thinkingInputLimit: number | null;
+  thinkingOutputLimit: number | null;
   contextWindow: number | null;
   priceInPerM: number | null;
+  priceInPerMCacheHit: number | null;
   priceOutPerM: number | null;
-  priceImagePerPage: number | null;
-  pricePerThousandCalls: number | null;
   currency: string;
   rpmLimit: number | null;
   tpmLimit: number | null;
-  status: string;
-  effectiveFrom: string | null;
-  effectiveTo: string | null;
-  remark: string;
 }
 
 const form = reactive<ModelForm>({
   vendorCode: '',
   modelKey: '',
-  displayName: '',
   capabilities: [],
+  thinkingEnabled: 0,
+  inputLimit: null,
+  outputLimit: null,
+  thinkingInputLimit: null,
+  thinkingOutputLimit: null,
   contextWindow: null,
   priceInPerM: null,
+  priceInPerMCacheHit: null,
   priceOutPerM: null,
-  priceImagePerPage: null,
-  pricePerThousandCalls: null,
   currency: 'CNY',
   rpmLimit: null,
   tpmLimit: null,
-  status: MODEL_STATUS.ENABLED,
-  effectiveFrom: null,
-  effectiveTo: null,
-  remark: '',
 });
 
-/** 非负校验规则：价格与限额四类数值都不接受负数 */
+/** 非负校验规则：长度、价格与限额这些数值列都不接受负数 */
 const NON_NEGATIVE_RULE = {
   type: 'number' as const,
   min: 0,
@@ -409,13 +448,55 @@ const NON_NEGATIVE_RULE = {
   trigger: 'change' as const,
 };
 
+/**
+ * 长度单位：K = 1000 tokens、M = 1000000 tokens（十进制，与厂商文档口径一致）。
+ *
+ * 库里存的是整数 token，单位只活在表单里：提交前按单位乘上去，编辑时按整除关系拆回来。
+ */
+type LengthUnit = 'K' | 'M';
+
+const UNIT_FACTOR: Record<LengthUnit, number> = { K: 1000, M: 1000000 };
+
+/** 把整数 token 拆成「数值 + 单位」：能整除 M 用 M，否则能整除 K 用 K，都不能则原样按 K 的数值展示 */
+function splitLength(tokens: number | null): { value: number | null; unit: LengthUnit } {
+  if (tokens === null) {
+    return { value: null, unit: 'K' };
+  }
+  if (tokens > 0 && tokens % UNIT_FACTOR.M === 0) {
+    return { value: tokens / UNIT_FACTOR.M, unit: 'M' };
+  }
+  if (tokens > 0 && tokens % UNIT_FACTOR.K === 0) {
+    return { value: tokens / UNIT_FACTOR.K, unit: 'K' };
+  }
+  return { value: tokens, unit: 'K' };
+}
+
+/** 长度展示：能整除就用 M / K 后缀，否则原样给 token 数字 */
+function lengthCellText(tokens: number | null): string {
+  if (tokens === null) {
+    return '—';
+  }
+  if (tokens > 0 && tokens % UNIT_FACTOR.M === 0) {
+    return `${tokens / UNIT_FACTOR.M}M`;
+  }
+  if (tokens > 0 && tokens % UNIT_FACTOR.K === 0) {
+    return `${tokens / UNIT_FACTOR.K}K`;
+  }
+  return String(tokens);
+}
+
+const inputUnit = ref<LengthUnit>('K');
+const outputUnit = ref<LengthUnit>('K');
+const contextUnit = ref<LengthUnit>('K');
+const thinkingInputUnit = ref<LengthUnit>('K');
+const thinkingOutputUnit = ref<LengthUnit>('K');
+
 const formRules: FormRules = {
   vendorCode: [{ required: true, message: '请选择厂商', trigger: 'change' }],
   modelKey: [
     { required: true, message: '请输入模型名', trigger: 'blur' },
     { max: 128, message: '模型名最长 128 字符', trigger: 'blur' },
   ],
-  displayName: [{ max: 128, message: '展示名最长 128 字符', trigger: 'blur' }],
   capabilities: [
     { type: 'array', required: true, message: '至少选择一项能力', trigger: 'change' },
     {
@@ -425,22 +506,16 @@ const formRules: FormRules = {
       trigger: 'change',
     },
   ],
+  inputLimit: [NON_NEGATIVE_RULE],
+  outputLimit: [NON_NEGATIVE_RULE],
+  thinkingInputLimit: [NON_NEGATIVE_RULE],
+  thinkingOutputLimit: [NON_NEGATIVE_RULE],
   contextWindow: [NON_NEGATIVE_RULE],
   priceInPerM: [NON_NEGATIVE_RULE],
+  priceInPerMCacheHit: [NON_NEGATIVE_RULE],
   priceOutPerM: [NON_NEGATIVE_RULE],
-  priceImagePerPage: [NON_NEGATIVE_RULE],
-  pricePerThousandCalls: [NON_NEGATIVE_RULE],
   rpmLimit: [NON_NEGATIVE_RULE],
   tpmLimit: [NON_NEGATIVE_RULE],
-  remark: [{ max: 512, message: '备注最长 512 字符', trigger: 'blur' }],
-  effectiveTo: [
-    {
-      validator: (_rule, value: string | null, callback: (error?: Error) => void) => {
-        callback(endsBeforeStart(value) ? new Error('结束时间必须晚于开始时间') : undefined);
-      },
-      trigger: 'change',
-    },
-  ],
 };
 
 const drawerTitle = computed(() =>
@@ -456,21 +531,17 @@ function moneyText(value: number | null): string {
   return text === '' ? '0' : text;
 }
 
-/** 价格列文案：按能力取对应计价口径，多组之间用 / 连接 */
+/** 价格列文案：输入按「缓存未命中 / 缓存命中」两档，再接输出，末尾给「币种/百万 token」 */
 function priceText(item: ModelItem): string {
-  const parts: string[] = [];
-  if (item.capabilities.includes('CHAT')) {
-    parts.push(
-      `${moneyText(item.priceInPerM)} / ${moneyText(item.priceOutPerM)} ${item.currency}·百万 token`,
-    );
-  }
-  if (item.capabilities.includes('EMBEDDING')) {
-    parts.push(`${moneyText(item.pricePerThousandCalls)} ${item.currency}·千次`);
-  }
-  if (item.capabilities.some((capability) => capability !== 'CHAT' && capability !== 'EMBEDDING')) {
-    parts.push(`${moneyText(item.priceImagePerPage)} ${item.currency}·页`);
-  }
-  return parts.length === 0 ? '—' : parts.join(' / ');
+  const prices = [item.priceInPerM, item.priceInPerMCacheHit, item.priceOutPerM]
+    .map(moneyText)
+    .join(' / ');
+  return `${prices} ${item.currency}/M`;
+}
+
+/** 长度列文案：最大输入 / 最大输出 / 上下文长度，走 K / M 后缀，任一为空读作 — */
+function lengthText(item: ModelItem): string {
+  return [item.inputLimit, item.outputLimit, item.contextWindow].map(lengthCellText).join(' / ');
 }
 
 /** 限额列文案：两项都可留空，留空读作 — */
@@ -480,22 +551,17 @@ function limitText(item: ModelItem): string {
   return `${rpm} / ${tpm}`;
 }
 
-/** 结束时间是否早于开始时间（两段都可留空，留空不比较） */
-function endsBeforeStart(value: string | null): boolean {
-  if (value === null || value === '' || form.effectiveFrom === null || form.effectiveFrom === '') {
-    return false;
-  }
-  return value < form.effectiveFrom;
-}
-
 /** 非负兜底：表单控件已限最小值，提交前再扫一遍数值列 */
 function firstNegativeField(): string | null {
   const values: [string, number | null][] = [
-    ['上下文窗口', form.contextWindow],
-    ['输入单价', form.priceInPerM],
+    ['最大输入长度', form.inputLimit],
+    ['最大输出长度', form.outputLimit],
+    ['思考模式最大输入长度', form.thinkingInputLimit],
+    ['思考模式最大输出长度', form.thinkingOutputLimit],
+    ['上下文长度', form.contextWindow],
+    ['输入单价（缓存未命中）', form.priceInPerM],
+    ['输入单价（缓存命中）', form.priceInPerMCacheHit],
     ['输出单价', form.priceOutPerM],
-    ['按页单价', form.priceImagePerPage],
-    ['按千次单价', form.pricePerThousandCalls],
     ['RPM 上限', form.rpmLimit],
     ['TPM 上限', form.tpmLimit],
   ];
@@ -505,12 +571,6 @@ function firstNegativeField(): string | null {
     }
   }
   return null;
-}
-
-/** 文本列：空白按留空下发（后端把留空按对应口径处理） */
-function textOrNull(value: string): string | null {
-  const text = value.trim();
-  return text === '' ? null : text;
 }
 
 async function loadModels(): Promise<void> {
@@ -545,20 +605,24 @@ function defaultVendorCode(): string {
 function resetForm(): void {
   form.vendorCode = defaultVendorCode();
   form.modelKey = '';
-  form.displayName = '';
   form.capabilities = [];
+  form.thinkingEnabled = 0;
+  form.inputLimit = null;
+  form.outputLimit = null;
+  form.thinkingInputLimit = null;
+  form.thinkingOutputLimit = null;
   form.contextWindow = null;
+  inputUnit.value = 'K';
+  outputUnit.value = 'K';
+  contextUnit.value = 'K';
+  thinkingInputUnit.value = 'K';
+  thinkingOutputUnit.value = 'K';
   form.priceInPerM = null;
+  form.priceInPerMCacheHit = null;
   form.priceOutPerM = null;
-  form.priceImagePerPage = null;
-  form.pricePerThousandCalls = null;
   form.currency = MODEL_CURRENCIES[0];
   form.rpmLimit = null;
   form.tpmLimit = null;
-  form.status = MODEL_STATUS.ENABLED;
-  form.effectiveFrom = null;
-  form.effectiveTo = null;
-  form.remark = '';
 }
 
 function openCreate(): void {
@@ -572,42 +636,60 @@ function openEdit(item: ModelItem): void {
   editingId.value = item.id;
   form.vendorCode = item.vendorCode;
   form.modelKey = item.modelKey;
-  form.displayName = item.displayName;
   form.capabilities = [...item.capabilities];
-  form.contextWindow = item.contextWindow;
+  form.thinkingEnabled = item.thinkingEnabled;
+  const thinkingInput = splitLength(item.thinkingInputLimit);
+  const thinkingOutput = splitLength(item.thinkingOutputLimit);
+  const input = splitLength(item.inputLimit);
+  const output = splitLength(item.outputLimit);
+  const context = splitLength(item.contextWindow);
+  form.inputLimit = input.value;
+  form.outputLimit = output.value;
+  form.thinkingInputLimit = thinkingInput.value;
+  form.thinkingOutputLimit = thinkingOutput.value;
+  form.contextWindow = context.value;
+  inputUnit.value = input.unit;
+  outputUnit.value = output.unit;
+  thinkingInputUnit.value = thinkingInput.unit;
+  thinkingOutputUnit.value = thinkingOutput.unit;
+  contextUnit.value = context.unit;
   form.priceInPerM = item.priceInPerM;
+  form.priceInPerMCacheHit = item.priceInPerMCacheHit;
   form.priceOutPerM = item.priceOutPerM;
-  form.priceImagePerPage = item.priceImagePerPage;
-  form.pricePerThousandCalls = item.pricePerThousandCalls;
   form.currency = item.currency;
   form.rpmLimit = item.rpmLimit;
   form.tpmLimit = item.tpmLimit;
-  form.status = item.status;
-  form.effectiveFrom = item.effectiveFrom;
-  form.effectiveTo = item.effectiveTo;
-  form.remark = item.remark ?? '';
   drawerVisible.value = true;
 }
 
-/** 表单 → 请求体：文本列空白按 null 下发，价格与限额留空即写空 */
+/** 表单里的「数值 + 单位」合成整数 token；数值留空即该列留空 */
+function toTokens(value: number | null, unit: LengthUnit): number | null {
+  return value === null ? null : value * UNIT_FACTOR[unit];
+}
+
+/** 表单 → 请求体：长度按所选单位换算成 token，思考模式关闭时两列长度不下发（置 null），文本列空白按 null 下发 */
 function buildPayload(): ModelSavePayload {
+  const thinking = form.thinkingEnabled === 1;
   return {
     vendorCode: form.vendorCode,
     modelKey: form.modelKey.trim(),
-    displayName: textOrNull(form.displayName),
     capabilities: [...form.capabilities],
-    contextWindow: form.contextWindow,
+    thinkingEnabled: form.thinkingEnabled,
+    inputLimit: toTokens(form.inputLimit, inputUnit.value),
+    outputLimit: toTokens(form.outputLimit, outputUnit.value),
+    thinkingInputLimit: thinking
+      ? toTokens(form.thinkingInputLimit, thinkingInputUnit.value)
+      : null,
+    thinkingOutputLimit: thinking
+      ? toTokens(form.thinkingOutputLimit, thinkingOutputUnit.value)
+      : null,
+    contextWindow: toTokens(form.contextWindow, contextUnit.value),
     priceInPerM: form.priceInPerM,
+    priceInPerMCacheHit: form.priceInPerMCacheHit,
     priceOutPerM: form.priceOutPerM,
-    priceImagePerPage: form.priceImagePerPage,
-    pricePerThousandCalls: form.pricePerThousandCalls,
     currency: form.currency,
     rpmLimit: form.rpmLimit,
     tpmLimit: form.tpmLimit,
-    status: form.status,
-    effectiveFrom: form.effectiveFrom,
-    effectiveTo: form.effectiveTo,
-    remark: textOrNull(form.remark),
   };
 }
 
@@ -724,16 +806,73 @@ onMounted(async () => {
   width: 100%;
 }
 
-.model-form-pair {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+/* 长度这类「数值 + 单位」的复合控件：两个控件同行，单位窄一档 */
+.model-limit-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
 }
 
-/* 分组小标题：价格、限额与生效区间三段各一处 */
-.model-form-section {
-  margin: 6px 0 10px;
-  color: var(--kb-text-2);
+.model-limit-row .model-form-control {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.model-limit-unit {
+  flex: none;
+  width: 62px;
+}
+
+/* 抽屉宽度：字段行最多三列，720px 下单格约 215px，长标签与数值都放得下 */
+.model-drawer {
+  min-width: 720px;
+}
+
+/* 字段行：列数由 --model-cols 给（抽屉 720px 时三列每格约 215px、两列约 334px） */
+.model-form-row {
+  --model-cols: 2;
+
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(var(--model-cols), minmax(0, 1fr));
+}
+
+.model-form-row-3 {
+  --model-cols: 3;
+}
+
+/* 三列时数值框仍有约 160px，单位按需占位 */
+.model-form-row-3 .model-limit-unit {
+  width: 56px;
+}
+
+/* 分组分隔：标题与说明同一行，右侧一条横线把段落分开 */
+.model-form-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0 14px;
+}
+
+.model-form-group-title {
+  flex: none;
+  color: var(--kb-text-1);
   font-size: 12px;
+  font-weight: 600;
+}
+
+.model-form-group-sub {
+  flex: none;
+  color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.model-form-group-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--kb-line);
 }
 </style>

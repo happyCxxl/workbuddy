@@ -14,7 +14,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,7 +60,6 @@ class WbModelDbServiceImplTest {
         String sql = capturedListSql();
         assertTrue(sql.contains("status"), sql);
         assertTrue(sql.contains("model_key"), sql);
-        assertTrue(sql.contains("display_name"), sql);
         assertTrue(sql.contains("ORDER BY"), sql);
     }
 
@@ -71,9 +69,9 @@ class WbModelDbServiceImplTest {
 
         assertTrue(dbService.listByCondition(null, null).isEmpty());
 
+        // 两个条件都不下发：SQL 里没有 WHERE，只有排序（排序键里本就含 model_key，故不能整串判）
         String sql = capturedListSql();
-        assertFalse(sql.contains("status"), sql);
-        assertFalse(sql.contains("display_name"), sql);
+        assertFalse(sql.contains("WHERE"), sql);
         assertTrue(sql.contains("ORDER BY"), sql);
     }
 
@@ -128,8 +126,7 @@ class WbModelDbServiceImplTest {
         WbModel row = row(6L);
         row.setPriceInPerM(null);
         row.setRpmLimit(null);
-        row.setEffectiveTo(null);
-        row.setRemark(null);
+        row.setInputLimit(null);
 
         dbService.updateAll(row);
 
@@ -144,8 +141,7 @@ class WbModelDbServiceImplTest {
         String sqlSet = ((LambdaUpdateWrapper<WbModel>) wrapperCaptor.getValue()).getSqlSet();
         assertTrue(sqlSet.contains("price_in_per_m"), sqlSet);
         assertTrue(sqlSet.contains("rpm_limit"), sqlSet);
-        assertTrue(sqlSet.contains("effective_to"), sqlSet);
-        assertTrue(sqlSet.contains("remark"), sqlSet);
+        assertTrue(sqlSet.contains("input_limit"), sqlSet);
         assertFalse(sqlSet.contains("price_out_per_m"), sqlSet);
         assertFalse(sqlSet.contains("model_key"), sqlSet);
     }
@@ -172,14 +168,11 @@ class WbModelDbServiceImplTest {
         row.setId(id);
         row.setVendorCode("dashscope");
         row.setModelKey("qwen-max");
-        row.setDisplayName("通义千问 Max");
         row.setCapabilities("CHAT");
         row.setPriceOutPerM(new BigDecimal("60"));
         row.setCurrency("CNY");
         row.setStatus("ENABLED");
-        row.setEffectiveFrom(LocalDateTime.of(2026, 1, 1, 0, 0));
-        row.setEffectiveTo(LocalDateTime.of(2026, 12, 31, 0, 0));
-        row.setRemark("备注");
+        row.setInputLimit(1000000);
         return row;
     }
 }

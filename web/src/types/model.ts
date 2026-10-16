@@ -85,40 +85,39 @@ export interface ModelItem {
   vendorCode: string;
   vendorName: string;
   modelKey: string;
-  displayName: string;
   capabilities: string[];
+  thinkingEnabled: number;
+  inputLimit: number | null;
+  outputLimit: number | null;
+  thinkingInputLimit: number | null;
+  thinkingOutputLimit: number | null;
   contextWindow: number | null;
   priceInPerM: number | null;
+  priceInPerMCacheHit: number | null;
   priceOutPerM: number | null;
-  priceImagePerPage: number | null;
-  pricePerThousandCalls: number | null;
   currency: string;
   rpmLimit: number | null;
   tpmLimit: number | null;
   status: string;
-  effectiveFrom: string | null;
-  effectiveTo: string | null;
-  remark: string | null;
 }
 
-/** 新增与编辑模型的请求体（对应后端 ModelSaveDto） */
+/** 新增与编辑模型的请求体（对应后端 ModelSaveDto；不含状态，停用走启停接口） */
 export interface ModelSavePayload {
   vendorCode: string;
   modelKey: string;
-  displayName: string | null;
   capabilities: string[];
+  thinkingEnabled: number;
+  inputLimit: number | null;
+  outputLimit: number | null;
+  thinkingInputLimit: number | null;
+  thinkingOutputLimit: number | null;
   contextWindow: number | null;
   priceInPerM: number | null;
+  priceInPerMCacheHit: number | null;
   priceOutPerM: number | null;
-  priceImagePerPage: number | null;
-  pricePerThousandCalls: number | null;
   currency: string;
   rpmLimit: number | null;
   tpmLimit: number | null;
-  status: string;
-  effectiveFrom: string | null;
-  effectiveTo: string | null;
-  remark: string | null;
 }
 
 /** 模型清单的过滤条件 */

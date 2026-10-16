@@ -462,20 +462,20 @@ CREATE TABLE wb_model
     id                        BIGINT         NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     vendor_code               VARCHAR(64)    NOT NULL COMMENT '厂商码（knowledge.model.vendors 配置里的键）',
     model_key                 VARCHAR(128)   NOT NULL COMMENT '厂商侧模型名（请求体里的模型标识）',
-    display_name              VARCHAR(128)   NOT NULL COMMENT '页面展示名',
     capabilities              VARCHAR(255)   NOT NULL COMMENT '能力清单（多值，逗号分隔：CHAT/EMBEDDING/OCR/LAYOUT/TABLE_STRUCTURE）',
-    context_window            INT                     DEFAULT NULL COMMENT '上下文窗口（tokens，可空）',
-    price_in_per_m            DECIMAL(18, 6)          DEFAULT NULL COMMENT '输入每百万 token 单价（可空；对应能力 CHAT）',
+    thinking_enabled          TINYINT        NOT NULL DEFAULT 0 COMMENT '是否支持思考模式：1 支持 / 0 不支持（仅登记能力，不装配请求参数）',
+    input_limit               INT                     DEFAULT NULL COMMENT '最大输入长度（tokens，可空）',
+    output_limit              INT                     DEFAULT NULL COMMENT '最大输出长度（tokens，可空）',
+    thinking_input_limit      INT                     DEFAULT NULL COMMENT '思考模式下的最大输入长度（tokens，可空）',
+    thinking_output_limit     INT                     DEFAULT NULL COMMENT '思考模式下的最大输出长度（tokens，可空）',
+    context_window            INT                     DEFAULT NULL COMMENT '上下文长度（tokens，可空）',
+    price_in_per_m            DECIMAL(18, 6)          DEFAULT NULL COMMENT '输入每百万 token 单价·缓存未命中（可空；对应能力 CHAT）',
+    price_in_per_m_cache_hit  DECIMAL(18, 6)          DEFAULT NULL COMMENT '输入每百万 token 单价·缓存命中（可空；对应能力 CHAT）',
     price_out_per_m           DECIMAL(18, 6)          DEFAULT NULL COMMENT '输出每百万 token 单价（可空；对应能力 CHAT）',
-    price_image_per_page      DECIMAL(18, 6)          DEFAULT NULL COMMENT '图像按页单价（可空；对应能力 OCR/LAYOUT/TABLE_STRUCTURE）',
-    price_per_thousand_calls  DECIMAL(18, 6)          DEFAULT NULL COMMENT '嵌入按千次单价（可空；对应能力 EMBEDDING）',
     currency                  VARCHAR(8)     NOT NULL DEFAULT 'CNY' COMMENT '币种：CNY / USD',
     rpm_limit                 INT                     DEFAULT NULL COMMENT '每分钟请求数上限（可空；与 tpm 都空则该模型不参与容量占用判断）',
     tpm_limit                 INT                     DEFAULT NULL COMMENT '每分钟 token 上限（可空）',
     status                    VARCHAR(16)    NOT NULL DEFAULT 'ENABLED' COMMENT '状态：ENABLED 启用 / DISABLED 停用',
-    effective_from            DATETIME(3)             DEFAULT NULL COMMENT '生效开始时间（空 = 立即生效）',
-    effective_to              DATETIME(3)             DEFAULT NULL COMMENT '生效结束时间（空 = 长期有效）',
-    remark                    VARCHAR(512)            DEFAULT NULL COMMENT '备注',
     del_flag                  VARCHAR(1)     NOT NULL DEFAULT '0' COMMENT '删除标记：0 正常 / 1 已删',
     create_by                 VARCHAR(64)             DEFAULT NULL COMMENT '创建人',
     create_time               DATETIME(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
@@ -486,7 +486,7 @@ CREATE TABLE wb_model
     KEY idx_status_capabilities (status, capabilities),
     KEY idx_del_flag (del_flag)
 ) ENGINE = InnoDB
-   COMMENT ='模型目录：一行 = 一个模型的厂商归属、能力、价格与限额';
+   COMMENT ='模型目录：一行 = 一个模型的厂商归属、能力、长度、价格与限额';
 
 -- ============================================================================
 -- 十一、模型调用明细

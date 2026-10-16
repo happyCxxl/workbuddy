@@ -3,7 +3,6 @@ package com.workbuddy.common.dto.response.model;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,35 +29,38 @@ public class ModelItemVO {
     /** 厂商侧模型名（唯一键的另一半） */
     private String modelKey;
 
-    /** 页面展示名（落库非空） */
-    private String displayName;
-
     /** 能力字典名清单，至少一项 */
     private List<String> capabilities = new ArrayList<>();
 
     /** 状态码值 ENABLED / DISABLED */
     private String status;
 
-    /** 生效开始时间，空 = 立即生效 */
-    private LocalDateTime effectiveFrom;
+    /** 是否支持思考模式（1 支持 / 0 不支持） */
+    private Integer thinkingEnabled;
 
-    /** 生效结束时间，空 = 长期有效 */
-    private LocalDateTime effectiveTo;
+    /** 最大输入长度 tokens，可空 */
+    private Integer inputLimit;
+
+    /** 最大输出长度 tokens，可空 */
+    private Integer outputLimit;
+
+    /** 思考模式下的最大输入长度 tokens，可空 */
+    private Integer thinkingInputLimit;
+
+    /** 思考模式下的最大输出长度 tokens，可空 */
+    private Integer thinkingOutputLimit;
 
     /** 上下文窗口 tokens，可空 */
     private Integer contextWindow;
 
-    /** 每百万 token 的输入单价，可空 */
+    /** 每百万 token 的输入单价（缓存未命中），可空 */
     private BigDecimal priceInPerM;
+
+    /** 每百万 token 的输入单价（缓存命中），可空 */
+    private BigDecimal priceInPerMCacheHit;
 
     /** 每百万 token 的输出单价，可空 */
     private BigDecimal priceOutPerM;
-
-    /** 按页单价（图像 / 版面 / OCR），可空 */
-    private BigDecimal priceImagePerPage;
-
-    /** 按千次单价（嵌入），可空 */
-    private BigDecimal pricePerThousandCalls;
 
     /** 币种 CNY / USD */
     private String currency;
@@ -68,7 +70,4 @@ public class ModelItemVO {
 
     /** 每分钟 token 上限，可空 */
     private Integer tpmLimit;
-
-    /** 备注 */
-    private String remark;
 }

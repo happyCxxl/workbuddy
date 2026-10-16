@@ -24,9 +24,7 @@ public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbMo
     public List<WbModel> listByCondition(String status, String keyword) {
         return this.lambdaQuery()
                 .eq(StrUtil.isNotBlank(status), WbModel::getStatus, status)
-                .and(StrUtil.isNotBlank(keyword), wrapper -> wrapper
-                        .like(WbModel::getModelKey, keyword)
-                        .or().like(WbModel::getDisplayName, keyword))
+                .like(StrUtil.isNotBlank(keyword), WbModel::getModelKey, keyword)
                 .orderByAsc(WbModel::getVendorCode)
                 .orderByAsc(WbModel::getModelKey)
                 .list();
@@ -53,16 +51,16 @@ public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbMo
     public void updateAll(WbModel row) {
         LambdaUpdateWrapper<WbModel> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(WbModel::getId, row.getId());
+        clearIfNull(wrapper, WbModel::getInputLimit, row.getInputLimit());
+        clearIfNull(wrapper, WbModel::getOutputLimit, row.getOutputLimit());
+        clearIfNull(wrapper, WbModel::getThinkingInputLimit, row.getThinkingInputLimit());
+        clearIfNull(wrapper, WbModel::getThinkingOutputLimit, row.getThinkingOutputLimit());
         clearIfNull(wrapper, WbModel::getContextWindow, row.getContextWindow());
         clearIfNull(wrapper, WbModel::getPriceInPerM, row.getPriceInPerM());
+        clearIfNull(wrapper, WbModel::getPriceInPerMCacheHit, row.getPriceInPerMCacheHit());
         clearIfNull(wrapper, WbModel::getPriceOutPerM, row.getPriceOutPerM());
-        clearIfNull(wrapper, WbModel::getPriceImagePerPage, row.getPriceImagePerPage());
-        clearIfNull(wrapper, WbModel::getPricePerThousandCalls, row.getPricePerThousandCalls());
         clearIfNull(wrapper, WbModel::getRpmLimit, row.getRpmLimit());
         clearIfNull(wrapper, WbModel::getTpmLimit, row.getTpmLimit());
-        clearIfNull(wrapper, WbModel::getEffectiveFrom, row.getEffectiveFrom());
-        clearIfNull(wrapper, WbModel::getEffectiveTo, row.getEffectiveTo());
-        clearIfNull(wrapper, WbModel::getRemark, row.getRemark());
         update(row, wrapper);
     }
 

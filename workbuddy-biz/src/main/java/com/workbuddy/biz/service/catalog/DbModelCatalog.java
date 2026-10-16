@@ -12,7 +12,6 @@ import com.workbuddy.infra.persistence.InfraDbServiceImpl;
 import com.workbuddy.model.catalog.ModelCatalogPort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -21,7 +20,7 @@ import java.util.Set;
 /**
  * 模型目录的库表实现（表：wb_model），按端口契约供 knowledge-model 的组件注入。
  *
- * <p>筛选口径两段：启用状态与生效区间在 SQL 里筛（走 idx_status_capabilities），能力在应用侧按逗号分隔串切分比对。
+ * <p>筛选口径两段：启用状态在 SQL 里筛（走 idx_status_capabilities），能力在应用侧按逗号分隔串切分比对。
  * 能力不用 LIKE 的理由是子串会误命中（例如能力串里含 OCR 的行会被 TABLE_STRUCTURE 之外的短取值串到），
  * 且本表是配置级表、行数在几十行量级，整表候选集一次读入内存没有规模风险。
  *
@@ -43,11 +42,6 @@ public class DbModelCatalog extends InfraDbServiceImpl<WbModelMapper, WbModel> i
         }
         List<WbModel> rows = this.lambdaQuery()
                 .eq(WbModel::getStatus, STATUS_ENABLED)
-                // 生效区间：起点留空视为立即生效，终点留空视为长期有效，两端都按开放区间判定
-                .and(wrapper -> wrapper.isNull(WbModel::getEffectiveFrom)
-                        .or().le(WbModel::getEffectiveFrom, LocalDateTime.now()))
-                .and(wrapper -> wrapper.isNull(WbModel::getEffectiveTo)
-                        .or().gt(WbModel::getEffectiveTo, LocalDateTime.now()))
                 .orderByAsc(WbModel::getModelKey)
                 .list();
         List<ModelDescriptor> candidates = new ArrayList<>();
@@ -116,20 +110,14 @@ public class DbModelCatalog extends InfraDbServiceImpl<WbModelMapper, WbModel> i
         ModelDescriptor descriptor = new ModelDescriptor();
         descriptor.setVendorCode(row.getVendorCode());
         descriptor.setModelKey(row.getModelKey());
-        descriptor.setDisplayName(row.getDisplayName());
         descriptor.setCapabilities(capabilities);
         descriptor.setContextWindow(row.getContextWindow());
         descriptor.setPriceInPerM(row.getPriceInPerM());
         descriptor.setPriceOutPerM(row.getPriceOutPerM());
-        descriptor.setPriceImagePerPage(row.getPriceImagePerPage());
-        descriptor.setPricePerThousandCalls(row.getPricePerThousandCalls());
         descriptor.setCurrency(row.getCurrency());
         descriptor.setRpmLimit(row.getRpmLimit());
         descriptor.setTpmLimit(row.getTpmLimit());
         descriptor.setStatus(row.getStatus());
-        descriptor.setEffectiveFrom(row.getEffectiveFrom());
-        descriptor.setEffectiveTo(row.getEffectiveTo());
-        descriptor.setRemark(row.getRemark());
         if (capabilities.contains(ModelCapability.EMBEDDING)) {
             descriptor.setEmbedSpecs(embedSpecs(row.getModelKey()));
         }
