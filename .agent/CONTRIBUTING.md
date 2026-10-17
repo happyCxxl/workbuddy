@@ -7,13 +7,14 @@
 
 前置：JDK 21、Maven 3.9+、Node ≥20 + pnpm、Docker Desktop。安装与启动细节见根 `README.md`。
 
-| 场景                | 命令                                                                    |
-|---------------------|-------------------------------------------------------------------------|
-| 基础设施            | `cd docker && docker compose up -d`（首次自动建库建表）                 |
-| 后端构建 + 静态门禁 | `mvn verify`（SpotBugs / Checkstyle / PMD / CPD，有告警即失败）         |
-| 改了公共模块后      | `mvn -o -q install -DskipTests` 回写本地 `.m2`（否则 CLI 门禁读旧 jar） |
-| 前端全量校验        | `cd web && pnpm lint`                                                   |
-| 推送门禁预跑        | `sh tools/pre-push-gate.sh`（`FORCE_GATE=1` 强制重跑）                  |
+| 场景                | 命令                                                                                            |
+|---------------------|-------------------------------------------------------------------------------------------------|
+| 基础设施            | `cd docker && docker compose up -d`（首次自动建库建表）                                         |
+| 后端构建 + 静态门禁 | `mvn verify`（SpotBugs / Checkstyle / PMD / CPD，有告警即失败）                                 |
+| 后端测试            | `mvn -o test`（推送门禁已含全量；开发期按改动范围分档见 `.agent/standards/java/05-测试.md` §8） |
+| 改了公共模块后      | `mvn -o -q install -DskipTests` 回写本地 `.m2`（否则 CLI 门禁读旧 jar）                         |
+| 前端全量校验        | `cd web && pnpm lint`                                                                           |
+| 推送门禁预跑        | `sh tools/pre-push-gate.sh`（`FORCE_GATE=1` 强制重跑）                                          |
 
 构建口径已固化在仓库（`.mvn/jvm.config` UTF-8 输出、父 pom `<proc>full</proc>`），克隆即得，无需个人配置。
 

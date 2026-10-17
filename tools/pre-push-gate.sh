@@ -109,6 +109,7 @@ run_agents=0
 run_frontend=0
 run_source=0
 run_bytecode=0
+run_tests=0
 if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.md$|^\.husky/|^tools/check-comments\.mjs$)'; then
   run_comments=1
 fi
@@ -124,8 +125,9 @@ fi
 if printf '%s\n' "$changed" | grep -qE '(\.java$|pom\.xml$|^tools/backend/)'; then
   run_source=1
   run_bytecode=1
+  run_tests=1
 fi
-total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_bytecode))
+total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_tests + run_bytecode))
 
 echo ""
 echo "==================== 推送前检查 ===================="
@@ -140,7 +142,7 @@ if [ "$total" = "0" ]; then
 } > "$cache_file"
   exit 0
 fi
-echo "步骤：共 $total 步，耗时最长的是后端字节码门禁（compile + spotbugs）"
+echo "步骤：共 $total 步，耗时最长的是后端单元测试与字节码门禁（test / compile + spotbugs）"
 echo "===================================================="
 
 step=0
@@ -245,6 +247,21 @@ if [ "$run_source" = "1" ]; then
     echo "     复跑：mvn -o checkstyle:check pmd:check pmd:cpd-check"
     echo "     提示：报 cannot find symbol 或 PMD UnusedPrivateMethod 时，先给被依赖模块回写本地仓库："
     echo "           mvn -o -q install -DskipTests   （CLI 调用读的是 .m2 里的 jar）"
+    exit 1
+  fi
+
+  step=$((step + 1))
+  started=$(date +%s)
+  echo ""
+  echo ">>>> [$step/$total] 后端单元测试：mvn -o test"
+  echo "     （范围：$bytecode_scope；推送前全量兜底，开发期的分档见 .agent/standards/java/05-测试.md §8）"
+  if eval "mvn -o $scope_arg test"; then
+    echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
+  else
+    echo ""
+    echo "!!!! [$step/$total] 后端单元测试失败"
+    echo "     复跑：mvn -o $scope_arg test"
+    echo "     说明：失败可能来自「改坏了代码」或「测试已过时」，先看失败用例的断言信息再判断"
     exit 1
   fi
 
