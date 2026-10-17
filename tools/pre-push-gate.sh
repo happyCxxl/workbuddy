@@ -110,6 +110,7 @@ run_frontend=0
 run_source=0
 run_bytecode=0
 run_tests=0
+run_modules=0
 if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.md$|^\.husky/|^tools/check-comments\.mjs$)'; then
   run_comments=1
 fi
@@ -122,12 +123,13 @@ fi
 if printf '%s\n' "$changed" | grep -qE '^(web|tools/frontend)/'; then
   run_frontend=1
 fi
-if printf '%s\n' "$changed" | grep -qE '(\.java$|pom\.xml$|^tools/backend/)'; then
+if printf '%s\n' "$changed" | grep -qE '(\.java$|pom\.xml$|^tools/backend/|01-分层与包结构\.md$)'; then
   run_source=1
   run_bytecode=1
   run_tests=1
+  run_modules=1
 fi
-total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_tests + run_bytecode))
+total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_tests + run_bytecode + run_modules))
 
 echo ""
 echo "==================== 推送前检查 ===================="
@@ -218,6 +220,22 @@ if [ "$run_frontend" = "1" ]; then
     echo ""
     echo "!!!! [$step/$total] 前端检查失败"
     echo "     复跑：cd web && pnpm lint"
+    exit 1
+  fi
+fi
+
+# 模块依赖一致性：文档 §1 的矩阵与各模块 pom.xml 双向核对，改动涉及 Java、pom 或矩阵文档时执行。
+if [ "$run_modules" = "1" ]; then
+  step=$((step + 1))
+  started=$(date +%s)
+  echo ""
+  echo ">>>> [$step/$total] 模块依赖一致性：node tools/check-modules.mjs"
+  if node tools/check-modules.mjs; then
+    echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
+  else
+    echo ""
+    echo "!!!! [$step/$total] 模块依赖与文档不一致"
+    echo "     修复：改 .agent/standards/java/01-分层与包结构.md §1 的模块表，或删掉 pom 里多余的依赖"
     exit 1
   fi
 fi

@@ -75,10 +75,12 @@
 1. **先决策后动手**：在 `.agent/adr/` 记一条接入决策（技术栈选型、与既有功能域的关系、目录落位）。
 2. **目录落位**：新功能域在仓库根新建独立顶层目录，不塞进既有 `workbuddy-*` 模块或 `web/`；
    Java 侧新模块沿用 `workbuddy-<域>` 命名并保持依赖方向单一。
-3. **规范就近落位**：新功能域目录下建自己的 `AGENTS.md`（命令 + Never + 指针）；条款正文统一收进 `.agent/standards/<域>/`，入口只留指针。
-4. **门禁接入**：新语言的 lint / 类型检查 / 测试须接入 pre-push 门禁与 CI（`tools/pre-push-gate.sh` 与 workflow 各加一步），
+3. **依赖矩阵同步**：新模块或模块间新增依赖边，必须改 `.agent/standards/java/01-分层与包结构.md` §1 的表并写 ADR；
+   `node tools/check-modules.mjs` 校验文档与 `pom.xml` 一致，不一致推送被拦。
+4. **规范就近落位**：新功能域目录下建自己的 `AGENTS.md`（命令 + Never + 指针）；条款正文统一收进 `.agent/standards/<域>/`，入口只留指针。
+5. **门禁接入**：新语言的 lint / 类型检查 / 测试须接入 pre-push 门禁与 CI（`tools/pre-push-gate.sh` 与 workflow 各加一步），
    口径对齐既有两段式（提交就地修复、推送全量校验）。
-5. **登记**：在根 `AGENTS.md` §1 与 §3 路由表补一行；在本文 §1 命令表补构建命令。
+6. **登记**：在根 `AGENTS.md` §1 与 §3 路由表补一行；在本文 §1 命令表补构建命令。
 
 ## 8. 相关文档
 
