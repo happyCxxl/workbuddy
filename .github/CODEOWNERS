@@ -1,0 +1,17 @@
+# CODEOWNERS — 路径 → 默认评审人（PR 触及对应路径时 GitHub 自动请求其评审）。
+# 生效前提：Settings → Branches → main 开启分支保护并勾选 "Require review from Code Owners"（见 CONTRIBUTING §3/§4）。
+# 多人协作扩容时按目录认领，每人把自己负责的功能域挂上自己的 ID；* 为全库兜底。
+
+# ---- 全库兜底：仓库所有者 ----
+*  @happyCxxl
+
+# ---- 规范与门禁（入口 / 检查器 / CI：改动须过所有者评审）----
+/AGENTS.md          @happyCxxl
+/web/AGENTS.md      @happyCxxl
+/CONTRIBUTING.md    @happyCxxl
+/.agent/            @happyCxxl
+/tools/             @happyCxxl
+/.github/           @happyCxxl
+
+# ---- 功能域（按目录就近认领）----
+/web/               @happyCxxl

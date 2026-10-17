@@ -1,5 +1,5 @@
 #!/bin/sh
-# 推送前门禁：对「本次要推上去的改动」跑注释口径 + 前端全量 lint + 后端源码级/字节码级门禁。
+# 推送前门禁：对「本次要推上去的改动」跑注释口径 + 文件编码 + AGENTS 入口体检 + 前端全量 lint + 后端源码级/字节码级门禁。
 #
 # 用法：
 #   1) 由 .husky/pre-push 调用（从标准输入读 push 协议行）；
@@ -70,15 +70,16 @@ changed_hash=$(printf '%s' "$changed" | git hash-object --stdin)
 hook_hash=$(git hash-object .husky/pre-push 2>/dev/null || echo nohook)
 script_hash=$(git hash-object tools/pre-push-gate.sh 2>/dev/null || echo noscript)
 checker_hash=$(git hash-object tools/check-comments.mjs 2>/dev/null || echo nochecker)
+agents_hash=$(git hash-object tools/check-agents.mjs 2>/dev/null || echo noagents)
 pom_hash=$(git hash-object pom.xml 2>/dev/null || echo nopom)
-fingerprint=$(printf '%s\n%s\n%s\n%s\n%s\n%s' \
-  "$ranges" "$changed_hash" "$hook_hash" "$script_hash" "$checker_hash" "$pom_hash" | git hash-object --stdin)
+fingerprint=$(printf '%s\n%s\n%s\n%s\n%s\n%s\n%s' \
+  "$ranges" "$changed_hash" "$hook_hash" "$script_hash" "$checker_hash" "$agents_hash" "$pom_hash" | git hash-object --stdin)
 
 # 排查用：GATE_DEBUG=1 打印指纹组成（缓存命中/未命中时都能看出是哪一项变了）
 if [ "${GATE_DEBUG:-0}" = "1" ]; then
   echo "指纹组成：ranges=$ranges"
   echo "          changed=$changed_hash（$changed_count 个文件）"
-  echo "          hook=$hook_hash script=$script_hash checker=$checker_hash pom=$pom_hash"
+  echo "          hook=$hook_hash script=$script_hash checker=$checker_hash agents=$agents_hash pom=$pom_hash"
   echo "          合计=$fingerprint"
 fi
 
@@ -104,6 +105,7 @@ fi
 # ---------- 3. 规划步骤 ----------
 run_comments=0
 run_encoding=0
+run_agents=0
 run_frontend=0
 run_source=0
 run_bytecode=0
@@ -113,6 +115,9 @@ fi
 if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.js$|\.md$|\.sql$|\.ya?ml$|\.json$|\.html$|\.sh$|\.xml$|\.properties$|^tools/|^docker/)'; then
   run_encoding=1
 fi
+if printf '%s\n' "$changed" | grep -qE '(AGENTS\.md$|^CONTRIBUTING\.md$|^\.agent/)'; then
+  run_agents=1
+fi
 if printf '%s\n' "$changed" | grep -qE '^(web|tools/frontend)/'; then
   run_frontend=1
 fi
@@ -120,7 +125,7 @@ if printf '%s\n' "$changed" | grep -qE '(\.java$|pom\.xml$|^tools/backend/)'; th
   run_source=1
   run_bytecode=1
 fi
-total=$((run_comments + run_encoding + run_frontend + run_source + run_bytecode))
+total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_bytecode))
 
 echo ""
 echo "==================== 推送前检查 ===================="
@@ -130,8 +135,8 @@ if [ "$total" = "0" ]; then
   echo "===================================================="
   {
   printf '%s\n%s\n' "$fingerprint" "$(date '+%Y-%m-%d %H:%M:%S')"
-  printf 'ranges=%s\nchanged=%s(%s 个文件)\nhook=%s\nscript=%s\nchecker=%s\npom=%s\n' \
-    "$ranges" "$changed_hash" "$changed_count" "$hook_hash" "$script_hash" "$checker_hash" "$pom_hash"
+  printf 'ranges=%s\nchanged=%s(%s 个文件)\nhook=%s\nscript=%s\nchecker=%s\nagents=%s\npom=%s\n' \
+    "$ranges" "$changed_hash" "$changed_count" "$hook_hash" "$script_hash" "$checker_hash" "$agents_hash" "$pom_hash"
 } > "$cache_file"
   exit 0
 fi
@@ -173,6 +178,24 @@ if [ "$run_encoding" = "1" ]; then
     echo "!!!! [$step/$total] 文件编码检查失败（上方列出 文件:行 与命中形态）"
     echo "     复跑：node tools/check-encoding.mjs"
     echo "     说明：用 UTF-8 工具重写受影响的行；确需举例写出这些序列时在该行写「编码豁免：<理由>」"
+    exit 1
+  fi
+fi
+
+# AGENTS 入口体检：入口文件引用的路径必须存在；行数预算超限只提示。
+if [ "$run_agents" = "1" ]; then
+  step=$((step + 1))
+  started=$(date +%s)
+  echo ""
+  echo ">>>> [$step/$total] AGENTS 入口体检：node tools/check-agents.mjs"
+  echo "     （指针失效 ERROR 拦下；行数预算超限 WARN 只提示）"
+  if node "$root/tools/check-agents.mjs"; then
+    echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
+  else
+    echo ""
+    echo "!!!! [$step/$total] AGENTS 入口体检失败（上方列出失效指针）"
+    echo "     复跑：node tools/check-agents.mjs"
+    echo "     说明：更正入口文件里的路径，或恢复被删/被移动的目标文件"
     exit 1
   fi
 fi
@@ -242,8 +265,8 @@ fi
 
 {
   printf '%s\n%s\n' "$fingerprint" "$(date '+%Y-%m-%d %H:%M:%S')"
-  printf 'ranges=%s\nchanged=%s(%s 个文件)\nhook=%s\nscript=%s\nchecker=%s\npom=%s\n' \
-    "$ranges" "$changed_hash" "$changed_count" "$hook_hash" "$script_hash" "$checker_hash" "$pom_hash"
+  printf 'ranges=%s\nchanged=%s(%s 个文件)\nhook=%s\nscript=%s\nchecker=%s\nagents=%s\npom=%s\n' \
+    "$ranges" "$changed_hash" "$changed_count" "$hook_hash" "$script_hash" "$checker_hash" "$agents_hash" "$pom_hash"
 } > "$cache_file"
 
 echo ""

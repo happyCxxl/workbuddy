@@ -1,0 +1,54 @@
+# CI 门禁：本地推送门禁（tools/pre-push-gate.sh）的远端强制版——本地钩子可被 --no-verify 绕过，CI 不可以。
+# 与本地版的差异：无推送范围概念，跑全量；mvn 不带 -o（远端首次需联网拉依赖）。
+# 新语言/新功能域接入时在此追加检查步骤（CONTRIBUTING §7）。
+name: gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 JDK 21（带 Maven 依赖缓存）
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: 安装 pnpm（版本读 web/package.json 的 packageManager 字段）
+        uses: pnpm/action-setup@v4
+
+      - name: 安装 Node 24（带 pnpm 依赖缓存）
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: 注释口径
+        run: node tools/check-comments.mjs
+
+      - name: 文件编码
+        run: node tools/check-encoding.mjs
+
+      - name: AGENTS 入口体检
+        run: node tools/check-agents.mjs
+
+      - name: 前端全量检查
+        working-directory: web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+
+      - name: 后端源码级门禁（checkstyle + pmd + cpd）
+        run: mvn -B checkstyle:check pmd:check pmd:cpd-check
+
+      - name: 后端字节码门禁（compile + spotbugs）
+        run: mvn -B compile spotbugs:check
