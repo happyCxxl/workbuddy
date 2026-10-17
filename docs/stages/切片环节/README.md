@@ -15,7 +15,7 @@
 | 下游 | 向量化环节（父片默认跳过；片长超过模型窗口允许字符数时向量化直接失败 `EMBED_MODEL_INCOMPATIBLE`）；检索侧 `PARENT_EXPAND` 预留                                              |
 | 落库 | 不在本环节内：`ChunkPipeline` 是纯算法（不碰 DB 与对象存储）；产物行与任务终态由 biz `ChunkTaskRunner` 编排                                                                 |
 | 实现 | 四路由（正文 / 表格 / 图片 / 兜底降级）+ 固定后置链（结构重叠 → 碎片合并 → 标题入正文）+ 单层父子片；算法按 `(route, key)` 注册表查找                                       |
-| 代码 | `../../../workbuddy-worker/src/main/java/com/knowledge/worker/chunking/`（全局默认值在 `ChunkProperties`，前缀 `knowledge.chunk`）                                          |
+| 代码 | `../../../workbuddy-worker/src/main/java/com/workbuddy/worker/chunking/`（全局默认值在 `ChunkProperties`，前缀 `knowledge.chunk`）                                          |
 
 ## 文档导航
 
