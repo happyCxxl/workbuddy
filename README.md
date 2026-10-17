@@ -54,7 +54,7 @@
 > `mvn verify` 在打包之外还会执行静态检查门禁（SpotBugs / Checkstyle / PMD / CPD）；门禁绑在
 > `verify` 相位，因此 `mvn package` 不会触发它。推送前钩子（`.husky/pre-push` → `tools/pre-push-gate.sh`）
 > 对本次推送范围的改动跑同一套门禁，**并逐步打印进度**（`[i/N]` 横幅 + 每步耗时 + 失败定位与复跑命令，
-> 子命令输出照旧实时透传），推送过程随时可见进度；提交前钩子只做就地格式化（`tools/frontend/README.md`）。
+> 子命令输出照旧实时透传），推送过程随时可见进度；提交前钩子只做就地格式化（`.agent/checkers/frontend.md`）。
 >
 > 门禁结果按「推送范围 + 改动清单 + 钩子/检查器/pom 的内容哈希」缓存到 `.git/workbuddy-prepush-ok`：
 > **推送失败后原样重推会直接跳过**（打印上次通过时间），改过任何文件就自动全量重跑。想在推送前先跑，
@@ -74,13 +74,11 @@
 
 ## 文档
 
-| 文档                             | 内容                                  |
-|----------------------------------|---------------------------------------|
-| `AGENTS.md` / `web/AGENTS.md`    | AI 代理入口（全局 / 前端就近）        |
-| `CONTRIBUTING.md`                | 协作流程与规范迭代指南                |
-| `.agent/adr/`                    | 取舍记录（ADR）                       |
-| `docs/README.md`                 | 业务文档根：页面 / 环节 / 调研 / 设计 |
-| `tools/backend/README.md`        | 后端静态检查口径与交付自查清单        |
-| `tools/frontend/README.md`       | 前端检查的组成与分工                  |
-| `web/docs/前端开发规范.md`       | 前端实现规范                          |
-| `web/docs/delivery-checklist.md` | 前端交付自查清单                      |
+| 文档                          | 内容                                                         |
+|-------------------------------|--------------------------------------------------------------|
+| `AGENTS.md` / `web/AGENTS.md` | AI 代理入口（全局 / 前端就近）                               |
+| `.agent/CONTRIBUTING.md`      | 协作流程与规范迭代指南                                       |
+| `.agent/standards/`           | 规范正典（`java/` 实现形态、`frontend/` 前端规范与交付清单） |
+| `.agent/checkers/`            | 检查口径（跨侧 / 后端 / 前端）                               |
+| `.agent/adr/`                 | 取舍记录（ADR）                                              |
+| `docs/README.md`              | 业务文档根：页面 / 环节 / 调研 / 设计                        |

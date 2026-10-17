@@ -1,10 +1,10 @@
 # 后端静态检查
 
-后端交付自检与构建门禁。规则文件与排除清单均在本目录，由根 pom 统一接入（8 个模块生效）。
+后端交付自检与构建门禁。规则文件与排除清单在 `tools/backend/`，由根 pom 统一接入（8 个模块生效）。
 
 ## 引擎
 
-| 引擎                        | 检查内容                                                                                                          | 规则文件                                                                                                                                                                            |
+| 引擎                        | 检查内容                                                                                                          | 规则文件（`tools/backend/`）                                                                                                                                                        |
 |-----------------------------|-------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | SpotBugs（字节码 bug 模式） | 空指针、资源泄漏、equals/hashCode、可疑集合用法等                                                                 | `spotbugs-exclude.xml`（排除清单）                                                                                                                                                  |
 | Checkstyle（源码风格）      | 命名、导入、括号、空白、行长（≤150，存量分布上限口径）                                                            | `checkstyle.xml`                                                                                                                                                                    |
@@ -17,7 +17,7 @@
 - **构建门禁**：`mvn verify` 阶段自动执行 spotbugs:check（阈值 Low）+ checkstyle:check + pmd:check + pmd:cpd-check，有告警构建失败；
 - **推送门禁**：`tools/pre-push-gate.sh`（`.husky/pre-push` 转发，按推送范围触发；也可手动预跑）。全部步骤通过后写指纹缓存 `.git/workbuddy-prepush-ok`：同一次推送重试直接跳过，任何文件改动都让缓存失效并全量重跑；
 - **交付自检**：写完代码后手动执行 `mvn compile spotbugs:check checkstyle:check pmd:check pmd:cpd-check`，0 告警才交付；
-- **注释口径**：不在 `mvn verify` 里，由跨前后端的 `tools/check-comments.mjs` 检查（见 `tools/README.md`），是推送门禁的第 1 步；
+- **注释口径**：不在 `mvn verify` 里，由跨前后端的 `tools/check-comments.mjs` 检查（见 `.agent/checkers/README.md`），是推送门禁的第 1 步；
 - 检查须从仓库根目录执行（规则文件经 `${maven.multiModuleProjectDirectory}` 解析）。
 
 ## 排除口径
@@ -49,5 +49,6 @@
 - [ ] 新增子步骤/组装逻辑先查公共助手（StepLogHelper 等）再自行构造，避免低 token 重复片段
 - [ ] 平行家族（各环节 TaskRunner / ControlServiceImpl / 解析器 / 切片策略 / 规则）先看有没有现成基类或助手（`TaskRunnerSupport`、`TaskDetailSupport`、`StageStrategySupport`、`AbstractTableSliceStrategy`、`AbstractPoiDocumentParser` 等），再决定是否新写一份
 - [ ] Controller 查询参数优先复用共享查询对象（`PageQueryDto` / `StageTriggerQueryDto` / `StageDetailQueryDto` + `@ParameterObject`），注解样板不在每个方法上重写一遍
-- [ ] 注释只写"做什么"（职责与行为），不写给谁用、为什么存在、从哪来、阶段/编号（前后端同一口径：前端见 `web/docs/前端开发规范.md` §9；机器检查见 `tools/check-comments.mjs`）
+- [ ] 注释只写"做什么"（职责与行为），不写给谁用、为什么存在、从哪来、阶段/编号（前后端同一口径：前端见 `.agent/standards/frontend/前端开发规范.md` §9；机器检查见 `tools/check-comments.mjs`）
+- [ ] 实现形态（分层、命名、DTO、异常、日志、事务、测试、注释）按 `.agent/standards/java/00-总则与规则索引.md` §6 的评审项逐条核对，交付说明附逐项结论
 - [ ] 改了被依赖的模块（`workbuddy-common` / `workbuddy-infra` / `workbuddy-worker` 等）后，跑 `mvn -o -q install -DskipTests` 回写本地仓库。**推送钩子与 `mvn <goal>` 这类 CLI 调用用的是 `.m2` 里的 jar**（生命周期 `verify` 用 reactor 的新 classes，两者判定可能不同）：读到旧 jar 时的症状是 `cannot find symbol`，或 PMD 把"参数类型来自另一模块接口"的私有方法误报为未使用（`UnusedPrivateMethod`）

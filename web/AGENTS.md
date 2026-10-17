@@ -28,6 +28,6 @@
 
 ## 3. 必读与交付
 
-- 动手前必读：`docs/前端开发规范.md`（13 节分级条款；本文 Never 只是其中红线的速查，条款冲突以规范为准）。
-- 交付自查：`docs/delivery-checklist.md`（机器层已由钩子覆盖，评审层逐项核对）。
-- 检查器组成与豁免口径：`../tools/frontend/README.md`。
+- 动手前必读：`.agent/standards/frontend/前端开发规范.md`（13 节分级条款；本文 Never 只是其中红线的速查，条款冲突以规范为准）。
+- 交付自查：`.agent/standards/frontend/delivery-checklist.md`（机器层已由钩子覆盖，评审层逐项核对）。
+- 检查器组成与豁免口径：`.agent/checkers/frontend.md`。

@@ -37,6 +37,7 @@ const SCAN_ROOTS = [
   'web/docs',
   'docs',
   'tools',
+  '.agent',
   'docker',
   'sql',
   'README.md',

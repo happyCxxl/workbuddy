@@ -164,6 +164,8 @@ const files = [
   ...walk(join(ROOT, 'web', 'docs')),
   ...walk(join(ROOT, 'docs')),
   ...walk(join(ROOT, 'tools')),
+  ...walk(join(ROOT, '.agent', 'standards')),
+  ...walk(join(ROOT, '.agent', 'checkers')),
   ...SHELL_FILES.map((rel) => join(ROOT, rel))
 ];
 
@@ -176,7 +178,7 @@ for (const file of files) {
     continue;
   }
   const content = readFileSync(file, 'utf8');
-  if (rel.startsWith('docs/') || rel.startsWith('web/docs/')) {
+  if (rel.startsWith('docs/') || rel.startsWith('web/docs/') || rel.startsWith('.agent/')) {
     for (const { line, text } of commentLines(file, content)) {
       if (text.includes(EXEMPT)) {
         continue;

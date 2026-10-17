@@ -21,7 +21,7 @@
 .EXAMPLE
   powershell tools/format-md.ps1
   powershell tools/format-md.ps1 -Paths docs
-  powershell tools/format-md.ps1 -Paths README.md,tools/backend/README.md
+  powershell tools/format-md.ps1 -Paths README.md,.agent/checkers/backend.md
 
 .EXAMPLE
   powershell tools/format-md.ps1 -SelfTest

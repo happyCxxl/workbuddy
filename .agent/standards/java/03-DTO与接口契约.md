@@ -1,0 +1,117 @@
+# 03 · DTO 与接口契约
+
+> 条款编号见 `00-总则与规则索引.md` §5.3。
+> 响应体外壳、错误码、鉴权、分页字段的业务口径以 `docs/README.md`「全局约定」为准，本文只定形态。
+
+## 1. 两种对象
+
+| 角色 | 命名           | 落位                       | 内容                         |
+|------|----------------|----------------------------|------------------------------|
+| 请求 | `Xxx<动作>Dto` | `common/dto/request/<域>`  | 入参字段 + 校验注解          |
+| 响应 | `XxxVO`        | `common/dto/response/<域>` | 出参字段，只有 getter/setter |
+
+（JAVA-DTO-001）包名中的 `<域>` 与 Controller 所在域一致：`biz/controller/model` 对应 `common/dto/**/model`。
+
+禁止：
+
+- 把实体当响应返回（实体带 `delFlag`、`createBy` 等内部列）。
+- 请求对象继承实体，或挂 `@TableName`。
+- 同一域内出现两套命名（`ModelItemVO` 与 `ModelResponse` 并存）。
+
+（JAVA-DTO-006）请求与响应对象只承载字段，不写业务方法、不查库、不做状态判断。
+
+## 2. 动作词表
+
+（JAVA-NAME-002）请求对象动作词只取：
+
+| 动作      | 语义                   | 例                        |
+|-----------|------------------------|---------------------------|
+| `Create`  | 新增                   | `KnowledgeBaseCreateDto`  |
+| `Update`  | 全量更新               | `KnowledgeBaseUpdateDto`  |
+| `Save`    | 新增与更新共用一份表单 | `ModelSaveDto`            |
+| `Query`   | 成组查询条件           | `KnowledgeBaseQueryDto`   |
+| `Status`  | 状态变更               | `ModelStatusDto`          |
+| `Trigger` | 触发环节任务           | `StageTriggerQueryDto`    |
+| `Publish` | 发布                   | `RetrievalRulePublishDto` |
+| `Compare` | 对比运行               | `RetrievalRunCompareDto`  |
+
+不使用 `Add`、`Modify`、`Edit`、`Delete` 作为后缀；删除走路径参数，不需要请求体。
+
+## 3. 字段与校验
+
+（JAVA-DTO-002）请求体参数一律 `@Valid`，校验注解取 `jakarta.validation`：
+
+| 场景       | 注解                           |
+|------------|--------------------------------|
+| 字符串非空 | `@NotBlank`                    |
+| 对象非空   | `@NotNull`                     |
+| 长度       | `@Size(min, max)` 或 `@Length` |
+| 数值区间   | `@Min`、`@Max`                 |
+| 集合非空   | `@NotEmpty`                    |
+| 嵌套对象   | 字段标 `@Valid`                |
+
+规则：
+
+1. 校验消息写中文，与页面提示语一致。
+2. 路径参数用 `@PathVariable`，单字段筛选可用 `@RequestParam`；三个及以上成组条件收进 `XxxQueryDto`。
+3. 不使用校验分组；新增与更新字段差异用两个对象表达（`XxxCreateDto` / `XxxUpdateDto`）。
+4. 业务规则校验（跨字段、查库判断）放 Service，不写在 DTO 的 getter 里。
+
+## 4. 分页
+
+（JAVA-DTO-003）
+
+- 请求：继承 `common/dto/request/page/PageQueryDto`，字段 `current`（默认 1）、`size`（默认 10）。
+- 响应：`IPage<T>`，前端取 `records`、`total`、`size`、`current`。
+- Controller 方法签名：`public R<IPage<XxxVO>> page(@Valid XxxQueryDto query)`。
+- 查询条件与分页字段同名绑定，不额外包一层 `Page` 参数。
+
+## 5. 出参类型
+
+（JAVA-DTO-004）（JAVA-DTO-005）
+
+| 项         | 口径                                                                         |
+|------------|------------------------------------------------------------------------------|
+| 外壳       | `R<T>`，`R.ok(data)` / `R.ok(data, msg)`                                     |
+| HTTP 状态  | 恒 200，错误语义走 `R.code`                                                  |
+| ID         | `Long`；超过 `2^53-1` 由 `LongIdJsonConfig` 序列化为字符串，前端按字符串处理 |
+| 时间       | `LocalDateTime`，序列化格式由全局配置决定                                    |
+| 金额与比例 | `BigDecimal`，不用 `double`                                                  |
+| 枚举       | 出参用码值（`String` 或 `Integer`），不用枚举名                              |
+| 集合       | 空集合返回 `[]`，不返回 `null`                                               |
+
+禁止：`Object`、`Map<String, Object>`、`JSONObject` 作为出参字段类型。
+
+## 6. 正例与反例
+
+正例：
+
+```java
+public class ModelItemVO {
+    private String id;
+    private String name;
+    private Integer status;
+}
+```
+
+```java
+@PostMapping("/create")
+public R<ModelItemVO> create(@Valid @RequestBody ModelSaveDto dto) {
+    return R.ok(modelService.create(dto), "新增成功");
+}
+```
+
+反例：请求体缺 `@Valid`、出参用 `Map`、响应复用了实体。
+
+```java
+@PostMapping("/create")
+public R<Map<String, Object>> create(@RequestBody ModelSaveDto dto) {   // 缺 @Valid；出参无契约
+    return R.ok(Map.of("data", modelService.create(dto)));             // Map 作字段类型
+}
+```
+
+## 7. 与前端类型的对应
+
+- 前端 `web/src/types/` 与 `common/dto` 一一对应；字段改名先改后端，再同步前端。
+- 前端接口函数返回类型显式声明，不写 `any`（`.agent/standards/frontend/前端开发规范.md` §2.3）。
+- 新增接口前缀同步 `web/vite.config.ts` 代理。

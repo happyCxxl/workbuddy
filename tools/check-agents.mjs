@@ -12,7 +12,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ENTRIES = [
   { rel: 'AGENTS.md', budget: 80 },
   { rel: 'web/AGENTS.md', budget: 50 },
-  { rel: 'CONTRIBUTING.md', budget: 130 },
+  { rel: '.agent/CONTRIBUTING.md', budget: 130 },
 ];
 
 // 只认「像仓库路径」的反引号串：剥掉命令前缀后不含空白/特殊字符，且含 / 或以已知扩展名结尾

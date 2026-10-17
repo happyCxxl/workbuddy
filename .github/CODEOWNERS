@@ -8,7 +8,6 @@
 # ---- 规范与门禁（入口 / 检查器 / CI：改动须过所有者评审）----
 /AGENTS.md          @happyCxxl
 /web/AGENTS.md      @happyCxxl
-/CONTRIBUTING.md    @happyCxxl
 /.agent/            @happyCxxl
 /tools/             @happyCxxl
 /.github/           @happyCxxl

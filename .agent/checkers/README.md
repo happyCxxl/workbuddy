@@ -1,18 +1,17 @@
 # 跨前后端的口径检查
 
-放不属于单一侧（后端 / 前端）的检查脚本。当前一个：注释口径。
+本文件说明 `tools/` 下跨两侧的检查脚本。当前两个：注释口径与编码口径。
 
 ## check-comments.mjs
 
-注释只写"做什么"（职责与行为），不写"谁写的 / 为什么 / 从哪来 / 阶段 X"。规范两处各有一份同义条款：
-`web/docs/前端开发规范.md` §9.1（前端）与 `tools/backend/README.md` 交付自查清单（后端）。本脚本是这条规范的机器执行者。
+注释只写"做什么"（职责与行为），不写"谁写的 / 为什么 / 从哪来 / 阶段 X"。规范两处各有一份同义条款：`.agent/standards/frontend/前端开发规范.md` §9.1（前端）与 `.agent/checkers/backend.md` 交付自查清单（后端）。本脚本是这条规范的机器执行者。
 
 ```
 node tools/check-comments.mjs             # 全量：命中 ERROR 退出 1
 node tools/check-comments.mjs --strings    # 额外报告字符串字面量里的阶段词（只读，不判失败）
 ```
 
-覆盖范围：`workbuddy-*/src`、`web/src`、`web/docs`、`docs`、`tools`、根 `README.md` 与 `.husky/pre-commit`、`.husky/pre-push`。
+覆盖范围：`workbuddy-*/src`、`web/src`、`web/docs`、`docs`、`tools`、`.agent`、根 `README.md` 与 `.husky/pre-commit`、`.husky/pre-push`。
 
 判定分两级：
 
@@ -44,6 +43,6 @@ node tools/check-comments.mjs --strings    # 额外报告字符串字面量里�
 
 ## 相关
 
-- 后端检查组成：`tools/backend/README.md`
-- 前端检查组成：`tools/frontend/README.md`
-- 文档组织与全局口径：`docs/README.md`
+- 后端检查组成：`.agent/checkers/backend.md`
+- 前端检查组成：`.agent/checkers/frontend.md`
+- 文档组织与全局口径：`.agent/standards/README.md`、`docs/README.md`

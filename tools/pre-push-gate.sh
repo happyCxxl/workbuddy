@@ -112,10 +112,10 @@ run_bytecode=0
 if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.md$|^\.husky/|^tools/check-comments\.mjs$)'; then
   run_comments=1
 fi
-if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.js$|\.md$|\.sql$|\.ya?ml$|\.json$|\.html$|\.sh$|\.xml$|\.properties$|^tools/|^docker/)'; then
+if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.js$|\.md$|\.sql$|\.ya?ml$|\.json$|\.html$|\.sh$|\.xml$|\.properties$|^tools/|^docker/|^\.agent/)'; then
   run_encoding=1
 fi
-if printf '%s\n' "$changed" | grep -qE '(AGENTS\.md$|^CONTRIBUTING\.md$|^\.agent/)'; then
+if printf '%s\n' "$changed" | grep -qE '(AGENTS\.md$|^\.agent/)'; then
   run_agents=1
 fi
 if printf '%s\n' "$changed" | grep -qE '^(web|tools/frontend)/'; then

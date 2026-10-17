@@ -13,6 +13,6 @@
 ## 自查
 
 - [ ] 推送门禁全绿（`sh tools/pre-push-gate.sh`；或说明为何不涉及）
-- [ ] 后端改动：对照 `tools/backend/README.md` 交付自查清单逐项核对
-- [ ] 前端改动：对照 `web/docs/delivery-checklist.md` 评审层条款逐项核对
+- [ ] 后端改动：对照 `.agent/checkers/backend.md` 交付自查清单逐项核对
+- [ ] 前端改动：对照 `.agent/standards/frontend/delivery-checklist.md` 评审层条款逐项核对
 - [ ] AI 参与生成的部分已按手写代码标准复核（You own the code）
