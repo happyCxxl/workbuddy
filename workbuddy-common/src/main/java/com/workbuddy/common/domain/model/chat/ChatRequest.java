@@ -5,15 +5,12 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 对话请求：模型名 + 消息列表 + 可空参数组。
+ * 对话请求：消息列表 + 可空参数组；模型由模块在注册表候选集中选定，请求不指定模型。
  *
  * @author cxxl
  */
 @Data
 public class ChatRequest {
-
-    /** 模型名（目录收录口径） */
-    private String model;
 
     /** 消息列表（首轮即 system + user） */
     private List<ChatMessage> messages;

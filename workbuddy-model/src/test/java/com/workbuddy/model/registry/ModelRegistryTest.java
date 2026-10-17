@@ -1,0 +1,75 @@
+package com.workbuddy.model.registry;
+
+import com.workbuddy.common.domain.model.RegisteredModel;
+import com.workbuddy.common.enums.model.ModelCapability;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * 模型内存注册表单测：全量替换、空与 null 容忍、缺模型名的行丢弃。
+ *
+ * @author cxxl
+ */
+class ModelRegistryTest {
+
+    private final ModelRegistry registry = new ModelRegistry();
+
+    private RegisteredModel model(String vendorCode, String modelKey) {
+        RegisteredModel model = new RegisteredModel();
+        model.setVendorCode(vendorCode);
+        model.setModelKey(modelKey);
+        model.setCapabilities(Set.of(ModelCapability.CHAT));
+        return model;
+    }
+
+    @Test
+    void shouldKeepLoadedRows() {
+        registry.reload(List.of(
+                model("deepseek", "deepseek-chat"),
+                model("dashscope", "qwen-max")));
+
+        assertEquals(2, registry.all().size());
+    }
+
+    /** 同名跨厂商是合法录入：两行都原样保留，定位口径是 厂商码 + 模型名 */
+    @Test
+    void shouldKeepDuplicateKeysAcrossVendors() {
+        registry.reload(List.of(
+                model("deepseek", "gpt-x"),
+                model("dashscope", "gpt-x")));
+
+        assertEquals(2, registry.all().size());
+    }
+
+    /** reload 是全量替换：换一份清单后旧条目不再可见 */
+    @Test
+    void reloadShouldReplaceSnapshotEntirely() {
+        registry.reload(List.of(model("deepseek", "deepseek-chat")));
+        registry.reload(List.of(model("dashscope", "qwen-max")));
+
+        assertEquals(1, registry.all().size());
+        assertEquals("dashscope", registry.all().getFirst().getVendorCode());
+    }
+
+    @Test
+    void shouldTolerateEmptyOrNullReload() {
+        registry.reload(null);
+        assertTrue(registry.all().isEmpty());
+
+        registry.reload(List.of());
+        assertTrue(registry.all().isEmpty());
+    }
+
+    /** 模型名为空的行没有定位意义，装载后不进快照 */
+    @Test
+    void shouldDropRowsWithoutModelKey() {
+        registry.reload(List.of(model("deepseek", "deepseek-chat"), model("dashscope", null)));
+
+        assertEquals(1, registry.all().size());
+    }
+}
