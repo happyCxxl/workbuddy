@@ -4,7 +4,7 @@
 
 ## check-comments.mjs
 
-注释只写"做什么"（职责与行为），不写"谁写的 / 为什么 / 从哪来 / 阶段 X"。规范两处各有一份同义条款：`.agent/standards/frontend/前端开发规范.md` §9.1（前端）与 `.agent/checkers/backend.md` 交付自查清单（后端）。本脚本是这条规范的机器执行者。
+注释只写"做什么"（职责与行为），不写"谁写的 / 为什么 / 从哪来 / 阶段 X"。规范两处各有一份同义条款：`.agent/standards/frontend/01-工程与命名.md` §5（WEB-DOC-001，前端）与 `.agent/checkers/backend.md` 交付自查清单（后端）。本脚本是这条规范的机器执行者。
 
 ```
 node tools/check-comments.mjs             # 全量：命中 ERROR 退出 1

@@ -49,6 +49,6 @@
 - [ ] 新增子步骤/组装逻辑先查公共助手（StepLogHelper 等）再自行构造，避免低 token 重复片段
 - [ ] 平行家族（各环节 TaskRunner / ControlServiceImpl / 解析器 / 切片策略 / 规则）先看有没有现成基类或助手（`TaskRunnerSupport`、`TaskDetailSupport`、`StageStrategySupport`、`AbstractTableSliceStrategy`、`AbstractPoiDocumentParser` 等），再决定是否新写一份
 - [ ] Controller 查询参数优先复用共享查询对象（`PageQueryDto` / `StageTriggerQueryDto` / `StageDetailQueryDto` + `@ParameterObject`），注解样板不在每个方法上重写一遍
-- [ ] 注释只写"做什么"（职责与行为），不写给谁用、为什么存在、从哪来、阶段/编号（前后端同一口径：前端见 `.agent/standards/frontend/前端开发规范.md` §9；机器检查见 `tools/check-comments.mjs`）
+- [ ] 注释只写"做什么"（职责与行为），不写给谁用、为什么存在、从哪来、阶段/编号（前后端同一口径：前端见 `.agent/standards/frontend/01-工程与命名.md` §5；机器检查见 `tools/check-comments.mjs`）
 - [ ] 实现形态（分层、命名、DTO、异常、日志、事务、测试、注释）按 `.agent/standards/java/00-总则与规则索引.md` §6 的评审项逐条核对，交付说明附逐项结论
 - [ ] 改了被依赖的模块（`workbuddy-common` / `workbuddy-infra` / `workbuddy-worker` 等）后，跑 `mvn -o -q install -DskipTests` 回写本地仓库。**推送钩子与 `mvn <goal>` 这类 CLI 调用用的是 `.m2` 里的 jar**（生命周期 `verify` 用 reactor 的新 classes，两者判定可能不同）：读到旧 jar 时的症状是 `cannot find symbol`，或 PMD 把"参数类型来自另一模块接口"的私有方法误报为未使用（`UnusedPrivateMethod`）

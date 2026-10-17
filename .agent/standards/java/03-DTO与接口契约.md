@@ -113,5 +113,5 @@ public R<Map<String, Object>> create(@RequestBody ModelSaveDto dto) {   // 缺 @
 ## 7. 与前端类型的对应
 
 - 前端 `web/src/types/` 与 `common/dto` 一一对应；字段改名先改后端，再同步前端。
-- 前端接口函数返回类型显式声明，不写 `any`（`.agent/standards/frontend/前端开发规范.md` §2.3）。
+- 前端接口函数返回类型显式声明，不写 `any`（`.agent/standards/frontend/01-工程与命名.md` §2，WEB-API-002）。
 - 新增接口前缀同步 `web/vite.config.ts` 代理。
