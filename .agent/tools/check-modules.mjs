@@ -12,7 +12,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DOC = join(ROOT, '.agent', 'standards', 'java', '01-分层与依赖.md');
 
 /** 从文档 §1 的表里读出 { 模块名: { deps, dependents } } */

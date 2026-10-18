@@ -19,9 +19,9 @@
     "lint:types": "vue-tsc -b",
     "lint:css": "stylelint \"**/*.{css,vue}\" --allow-empty-input",
     "lint:files": "ls-lint",
-    "lint:names": "node ../tools/frontend/check-naming.mjs",
-    "lint:spec": "node ../tools/frontend/check-spec.mjs",
-    "lint:table": "node ../tools/frontend/check-table.mjs",
+    "lint:names": "node ../.agent/tools/frontend/check-naming.mjs",
+    "lint:spec": "node ../.agent/tools/frontend/check-spec.mjs",
+    "lint:table": "node ../.agent/tools/frontend/check-table.mjs",
     "format": "prettier --write ."
   },
   "lint-staged": {

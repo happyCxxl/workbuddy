@@ -3,7 +3,7 @@
 #
 # 用法：
 #   1) 由 .husky/pre-push 调用（从标准输入读 push 协议行）；
-#   2) 手动预跑：sh tools/pre-push-gate.sh [base..head]
+#   2) 手动预跑：sh .agent/tools/pre-push-gate.sh [base..head]
 #      不带参数时比对当前分支与它的 upstream（没有 upstream 时用 origin/main）；
 #   3) FORCE_GATE=1 强制重跑（忽略指纹缓存）。
 #
@@ -27,7 +27,7 @@ ranges=""
 full=0
 read_lines=0
 if [ -n "${1:-}" ]; then
-  # 手动指定范围（优先级最高）：sh tools/pre-push-gate.sh origin/main..HEAD
+  # 手动指定范围（优先级最高）：sh .agent/tools/pre-push-gate.sh origin/main..HEAD
   ranges="$1"
 else
   # 钩子触发时从标准输入读 push 协议行（<local ref> <local sha> <remote ref> <remote sha>）；
@@ -68,9 +68,9 @@ changed_count=$(printf '%s\n' "$changed" | sed '/^$/d' | wc -l | tr -d ' ')
 # ---------- 2. 指纹缓存 ----------
 changed_hash=$(printf '%s' "$changed" | git hash-object --stdin)
 hook_hash=$(git hash-object .husky/pre-push 2>/dev/null || echo nohook)
-script_hash=$(git hash-object tools/pre-push-gate.sh 2>/dev/null || echo noscript)
-checker_hash=$(git hash-object tools/check-comments.mjs 2>/dev/null || echo nochecker)
-agents_hash=$(git hash-object tools/check-agents.mjs 2>/dev/null || echo noagents)
+script_hash=$(git hash-object .agent/tools/pre-push-gate.sh 2>/dev/null || echo noscript)
+checker_hash=$(git hash-object .agent/tools/check-comments.mjs 2>/dev/null || echo nochecker)
+agents_hash=$(git hash-object .agent/tools/check-agents.mjs 2>/dev/null || echo noagents)
 pom_hash=$(git hash-object pom.xml 2>/dev/null || echo nopom)
 fingerprint=$(printf '%s\n%s\n%s\n%s\n%s\n%s\n%s' \
   "$ranges" "$changed_hash" "$hook_hash" "$script_hash" "$checker_hash" "$agents_hash" "$pom_hash" | git hash-object --stdin)
@@ -99,7 +99,7 @@ if [ "${FORCE_GATE:-0}" != "1" ] && [ -f "$cache_file" ]; then
   # 未命中时给出可比对的证据，避免"又重跑了"只能靠猜：旧指纹与新指纹各打一条，细节看 GATE_DEBUG
   echo ""
   echo "---- 缓存未命中：重跑（旧 ${cached:-无} → 新 $fingerprint）"
-  echo "     查是哪一项变了：GATE_DEBUG=1 sh tools/pre-push-gate.sh"
+  echo "     查是哪一项变了：GATE_DEBUG=1 sh .agent/tools/pre-push-gate.sh"
 fi
 
 # ---------- 3. 规划步骤 ----------
@@ -111,19 +111,19 @@ run_source=0
 run_bytecode=0
 run_tests=0
 run_modules=0
-if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.md$|^\.husky/|^tools/check-comments\.mjs$)'; then
+if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.md$|^\.husky/|^\.agent/tools/check-comments\.mjs$)'; then
   run_comments=1
 fi
-if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.js$|\.md$|\.sql$|\.ya?ml$|\.json$|\.html$|\.sh$|\.xml$|\.properties$|^tools/|^docker/|^\.agent/)'; then
+if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.js$|\.md$|\.sql$|\.ya?ml$|\.json$|\.html$|\.sh$|\.xml$|\.properties$|^\.agent/tools/|^docker/|^\.agent/)'; then
   run_encoding=1
 fi
 if printf '%s\n' "$changed" | grep -qE '(AGENTS\.md$|^\.agent/)'; then
   run_agents=1
 fi
-if printf '%s\n' "$changed" | grep -qE '^(web|tools/frontend)/'; then
+if printf '%s\n' "$changed" | grep -qE '^(web|\.agent/tools/frontend)/'; then
   run_frontend=1
 fi
-if printf '%s\n' "$changed" | grep -qE '(\.java$|pom\.xml$|^tools/backend/|01-分层与包结构\.md$)'; then
+if printf '%s\n' "$changed" | grep -qE '(\.java$|pom\.xml$|^\.agent/tools/backend/|01-分层与包结构\.md$)'; then
   run_source=1
   run_bytecode=1
   run_tests=1
@@ -150,19 +150,19 @@ echo "===================================================="
 step=0
 started_all=$(date +%s)
 
-# 注释口径：只写"做什么"（职责与行为），禁词表见 tools/check-comments.mjs。
+# 注释口径：只写"做什么"（职责与行为），禁词表见 .agent/tools/check-comments.mjs。
 if [ "$run_comments" = "1" ]; then
   step=$((step + 1))
   started=$(date +%s)
   echo ""
-  echo ">>>> [$step/$total] 注释口径：node tools/check-comments.mjs"
+  echo ">>>> [$step/$total] 注释口径：node .agent/tools/check-comments.mjs"
   echo "     （阶段词 / 历史沿革 / 因果目的 / 给谁用；ERROR 拦下，WARN 只提示）"
-  if node "$root/tools/check-comments.mjs"; then
+  if node "$root/.agent/tools/check-comments.mjs"; then
     echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
   else
     echo ""
     echo "!!!! [$step/$total] 注释口径检查失败（上方列出 文件:行 与命中的词）"
-    echo "     复跑：node tools/check-comments.mjs"
+    echo "     复跑：node .agent/tools/check-comments.mjs"
     echo "     说明：注释只写做什么；确需保留禁词时在该行写「口径豁免：<理由>」"
     exit 1
   fi
@@ -173,14 +173,14 @@ if [ "$run_encoding" = "1" ]; then
   step=$((step + 1))
   started=$(date +%s)
   echo ""
-  echo ">>>> [$step/$total] 文件编码：node tools/check-encoding.mjs"
+  echo ">>>> [$step/$total] 文件编码：node .agent/tools/check-encoding.mjs"
   echo "     （替换字符 U+FFFD 与 GBK 误读序列；命中即拦下）"
-  if node "$root/tools/check-encoding.mjs"; then
+  if node "$root/.agent/tools/check-encoding.mjs"; then
     echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
   else
     echo ""
     echo "!!!! [$step/$total] 文件编码检查失败（上方列出 文件:行 与命中形态）"
-    echo "     复跑：node tools/check-encoding.mjs"
+    echo "     复跑：node .agent/tools/check-encoding.mjs"
     echo "     说明：用 UTF-8 工具重写受影响的行；确需举例写出这些序列时在该行写「编码豁免：<理由>」"
     exit 1
   fi
@@ -191,14 +191,14 @@ if [ "$run_agents" = "1" ]; then
   step=$((step + 1))
   started=$(date +%s)
   echo ""
-  echo ">>>> [$step/$total] AGENTS 入口体检：node tools/check-agents.mjs"
+  echo ">>>> [$step/$total] AGENTS 入口体检：node .agent/tools/check-agents.mjs"
   echo "     （指针失效 ERROR 拦下；行数预算超限 WARN 只提示）"
-  if node "$root/tools/check-agents.mjs"; then
+  if node "$root/.agent/tools/check-agents.mjs"; then
     echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
   else
     echo ""
     echo "!!!! [$step/$total] AGENTS 入口体检失败（上方列出失效指针）"
-    echo "     复跑：node tools/check-agents.mjs"
+    echo "     复跑：node .agent/tools/check-agents.mjs"
     echo "     说明：更正入口文件里的路径，或恢复被删/被移动的目标文件"
     exit 1
   fi
@@ -229,8 +229,8 @@ if [ "$run_modules" = "1" ]; then
   step=$((step + 1))
   started=$(date +%s)
   echo ""
-  echo ">>>> [$step/$total] 模块依赖一致性：node tools/check-modules.mjs"
-  if node tools/check-modules.mjs; then
+  echo ">>>> [$step/$total] 模块依赖一致性：node .agent/tools/check-modules.mjs"
+  if node .agent/tools/check-modules.mjs; then
     echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
   else
     echo ""
@@ -241,12 +241,12 @@ if [ "$run_modules" = "1" ]; then
 fi
 
 # 后端组：源码级分析（checkstyle / pmd / cpd）与字节码级分析（compile + spotbugs）。
-# 改动模块用 -pl <改动模块> -amd 展开「改动模块 + 依赖它的模块」；改到 pom 或 tools/backend 时全量。
+# 改动模块用 -pl <改动模块> -amd 展开「改动模块 + 依赖它的模块」；改到 pom 或 .agent/tools/backend 时全量。
 if [ "$run_source" = "1" ]; then
   scoped=$(printf '%s\n' "$changed" | grep -oE '^workbuddy-[a-z-]+' | sort -u | tr '\n' ',' | sed 's/,$//')
-  if [ -z "$scoped" ] || printf '%s\n' "$changed" | grep -qE '^(pom\.xml$|tools/backend/)'; then
+  if [ -z "$scoped" ] || printf '%s\n' "$changed" | grep -qE '^(pom\.xml$|\.agent/tools/backend/)'; then
     scope_arg=""
-    bytecode_scope="全量 9 模块（改到了 pom 或 tools/backend，闭包即全量）"
+    bytecode_scope="全量 9 模块（改到了 pom 或 .agent/tools/backend，闭包即全量）"
   else
     scope_arg="-pl \"$scoped\" -amd"
     bytecode_scope="改动模块及下游：$scoped"

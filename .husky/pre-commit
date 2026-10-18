@@ -7,8 +7,8 @@ set -e
 staged=$(git -c core.quotePath=false diff --cached --name-only)
 
 # 格式器自检：暂存了格式器本身时先验证它仍然健康（改坏它会在提交时被明确拦下）。
-if echo "$staged" | grep -qE '^tools/format-md\.ps1$'; then
-  powershell -NoProfile -ExecutionPolicy Bypass -File tools/format-md.ps1 -SelfTest
+if echo "$staged" | grep -qE '^\.agent/tools/format-md\.ps1$'; then
+  powershell -NoProfile -ExecutionPolicy Bypass -File .agent/tools/format-md.ps1 -SelfTest
 fi
 
 if echo "$staged" | grep -q '\.md$'; then
@@ -17,14 +17,14 @@ if echo "$staged" | grep -q '\.md$'; then
   md=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR | grep '\.md$' || true)
   if [ -n "$md" ]; then
     paths=$(echo "$md" | sed "s/^/'/;s/\$/'/" | tr '\n' ',' | sed 's/,$//')
-    powershell -NoProfile -ExecutionPolicy Bypass -Command "& ./tools/format-md.ps1 -Paths $paths"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "& ./.agent/tools/format-md.ps1 -Paths $paths"
     echo "$md" | while read -r f; do git add -- "$f"; done
   fi
 fi
 
 # 前端组：对暂存文件做自动修复（prettier / eslint / stylelint 的 fix 结果回写索引）。
 # 全量检查（vue-tsc / ls-lint / 命名词表 / 规范合规）在 pre-push。
-if echo "$staged" | grep -qE '^(web|tools/frontend)/'; then
+if echo "$staged" | grep -qE '^(web|\.agent/tools/frontend)/'; then
   (
     cd "$(git rev-parse --show-toplevel)/web"
     pnpm exec lint-staged --concurrent false

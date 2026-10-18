@@ -2,7 +2,7 @@
 
 > 本文件是所有 AI 编码代理（DSH / Claude Code / Cursor / Trae / 通义灵码 / CodeBuddy 等）在本仓库的**全局入口**：
 > 只放跨功能域、跨语言都成立的禁令与路由，细节一律指向对应规范文档——单一事实源，此处不复述。
-> 功能域就近入口：前端 `web/AGENTS.md`。人的协作规范见 `.agent/CONTRIBUTING.md`。本文件迭代方式见 §5。
+> 功能域就近入口：前端 `web/AGENTS.md`。人的协作规范见 `.agent/standards/common/06-协作流程.md`。本文件迭代方式见 §5。
 
 ## 1. 工作台定位
 
@@ -10,43 +10,45 @@
   是首个功能域；后续功能域陆续接入，**可能引入 Java 之外的语言与技术栈**。
 - 当前实现：后端 Java 21 / Spring Boot 3.2.5 / Maven 多模块（`workbuddy-*`，包根 `com.workbuddy`）；前端 `web/`
   （Vue 3 + TypeScript + Vite + Element Plus，界面纯中文）；基础设施 MySQL / Redis / MinIO / Milvus（`docker/` 编排）。
-- 规范分层：**根文件 = 工作台全局口径；功能域入口就近落位，条款正文收口 `.agent/`**（前端入口在 `web/`、条款在 `.agent/standards/frontend/`；Java 后端实现形态在 `.agent/standards/java/`，契约口径在 `docs/`，检查口径在 `.agent/checkers/`，引擎配置在 `tools/`）。
-  新功能域接入前必读 `.agent/CONTRIBUTING.md` 的「新功能域接入约定」。
+- 规范分层：**根文件 = 工作台全局口径；功能域入口就近落位，条款正文收口 `.agent/`**（前端入口在 `web/`、条款在 `.agent/standards/vue/`；Java 后端实现形态在 `.agent/standards/java/`，通用约束与 AI 协作在 `.agent/standards/common/`，契约口径在 `docs/`，检查口径在 `.agent/standards/`，引擎配置在 `.agent/tools/`）。
+  新功能域接入前必读 `.agent/standards/common/06-协作流程.md` 的「新功能域接入约定」。
 
 ## 2. 全局 Never（与语言无关，违反即不合规）
 
 1. **禁止用 PowerShell 文本写入方式（`Set-Content` / `Out-File` / `>` 重定向）改仓库内任何文件**——会按系统编码（GBK）
    破坏 UTF-8 中文；写文件一律用代理自带的写文件工具。根 `README.md` 曾因此整文件损坏（`.` 全部变 `g`）。
-2. 注释只写「做什么」（职责与行为），不写「谁写的 / 为什么 / 从哪来 / 阶段编号」——`tools/check-comments.mjs` 推送时机器拦截。
+2. 注释只写「做什么」（职责与行为），不写「谁写的 / 为什么 / 从哪来 / 阶段编号」——`.agent/tools/check-comments.mjs` 推送时机器拦截。
 3. 提交信息用 Conventional Commits + 中文描述 + scope：`refactor(模型): ...`、`fix(docker): ...`。
 4. 不新增第三方依赖，除非任务明确要求且交付说明里给理由。
-5. 不削弱门禁：`tools/backend/checkstyle.xml` / `tools/backend/pmd-ruleset.xml` / `web/eslint.config.mjs` / 钩子脚本的任何放宽须用户明确批准。
+5. 不削弱门禁：`.agent/tools/backend/checkstyle.xml` / `.agent/tools/backend/pmd-ruleset.xml` / `web/eslint.config.mjs` / 钩子脚本的任何放宽须用户明确批准。
 6. 禁止用 `--no-verify` 等方式绕过 Git 钩子门禁：门禁修不过就如实报告问题，不绕。
 
 ## 3. 路由表（动什么，先读什么——未读就动手即违规）
 
-| 要动的东西                 | 动手前必读                                                                                                                                                                                                                                                                                                                               |
-|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Java 后端（`workbuddy-*`） | `.agent/standards/java/00-总则与规则索引.md`（实现形态：分层、命名、DTO、异常、日志、事务、测试、注释；含参考实现清单）+ `docs/README.md`「全局约定」全部章节（判空 `NullUtil`、错误码登记、HTTP 恒 200、ID 序列化、分页契约、`@AdminOnly` 等）+ `.agent/checkers/backend.md`（检查口径与交付自查清单：基类复用、`serialVersionUID` 等） |
-| 前端（`web/`）             | `web/AGENTS.md`（就近入口，编辑 `web/` 文件时自动加载）                                                                                                                                                                                                                                                                                  |
-| 文档（`docs/`）            | `docs/README.md`（四视角组织与维护约定：不写行号、跨页口径只写一次）                                                                                                                                                                                                                                                                     |
-| 检查器 / 门禁 / 脚本       | `.agent/checkers/README.md` + 对应侧说明（`.agent/checkers/backend.md`、`.agent/checkers/frontend.md`）                                                                                                                                                                                                                                  |
-| 新功能域 / 新语言          | `.agent/CONTRIBUTING.md`「新功能域接入约定」                                                                                                                                                                                                                                                                                             |
+| 要动的东西                 | 动手前必读                                                                                                                                                                                                                                                                                                                                         |
+|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 规范总入口                 | `.agent/standards/00-索引.md`（语言 × 主题地图、规则规模、执行手段；先定位再下钻）                                                                                                                                                                                                                                                                 |
+| Java 后端（`workbuddy-*`） | `.agent/standards/java/00-总则与规则索引.md`（实现形态：分层、命名、DTO、异常、日志、事务、测试、注释；含参考实现清单）+ `docs/README.md`「全局约定」全部章节（判空 `NullUtil`、错误码登记、HTTP 恒 200、ID 序列化、分页契约、`@AdminOnly` 等）+ `.agent/standards/java/08-静态检查.md`（检查口径与交付自查清单：基类复用、`serialVersionUID` 等） |
+| 任何代码（先读这条）       | `.agent/standards/common/02-AI协作约束.md`（先读后写、最小改动、禁止发明、验证闭环）+ `.agent/standards/common/03-AI反模式.md`（过度抽象、防御性冗余、复制粘贴、迎合式重构等九类）                                                                                                                                                                 |
+| 前端（`web/`）             | `web/AGENTS.md`（就近入口，编辑 `web/` 文件时自动加载）                                                                                                                                                                                                                                                                                            |
+| 文档（`docs/`）            | `docs/README.md`（四视角组织与维护约定：不写行号、跨页口径只写一次）                                                                                                                                                                                                                                                                               |
+| 检查器 / 门禁 / 手段       | `.agent/standards/common/07-检查手段.md`（跨语言）+ `.agent/standards/java/08-静态检查.md`（Java）+ `.agent/standards/vue/04-检查手段.md`（Vue）                                                                                                                                                                                                   |
+| 新功能域 / 新语言          | `.agent/standards/common/06-协作流程.md`「新功能域接入约定」                                                                                                                                                                                                                                                                                       |
 
-推送门禁预跑：`sh tools/pre-push-gate.sh`（与 `.husky/pre-push` 同一套，带指纹缓存；`FORCE_GATE=1` 强制重跑）。
+推送门禁预跑：`sh .agent/tools/pre-push-gate.sh`（与 `.husky/pre-push` 同一套，带指纹缓存；`FORCE_GATE=1` 强制重跑）。
 
 ### 3.1 验证阶梯（改什么，跑多少）
 
 开发期按改动范围选档，推送前一律全量；拿不准时取更全的一档。细则见 `.agent/standards/java/06-测试.md` §8。
 
-| 改动                   | 验证命令                                  |
-|------------------------|-------------------------------------------|
-| 文档、注释、规范       | `node tools/check-comments.mjs`           |
-| 前端                   | `cd web && pnpm lint`                     |
-| 单个模块的类           | `mvn -o -pl <模块名> test`                |
-| 公共模块，或改动跨模块 | `mvn -o -pl <模块名> -amd test`           |
-| `pom.xml`、跨模块重构  | `mvn -o test`                             |
-| 推送前                 | `sh tools/pre-push-gate.sh`（含全量测试） |
+| 改动                   | 验证命令                                         |
+|------------------------|--------------------------------------------------|
+| 文档、注释、规范       | `node .agent/tools/check-comments.mjs`           |
+| 前端                   | `cd web && pnpm lint`                            |
+| 单个模块的类           | `mvn -o -pl <模块名> test`                       |
+| 公共模块，或改动跨模块 | `mvn -o -pl <模块名> -amd test`                  |
+| `pom.xml`、跨模块重构  | `mvn -o test`                                    |
+| 推送前                 | `sh .agent/tools/pre-push-gate.sh`（含全量测试） |
 
 ## 4. 跨会话恢复与行为守则
 
@@ -57,10 +59,10 @@
 ## 5. 本文件怎么迭代（规范的规范）
 
 1. **踩坑驱动**：AI 每犯一次不该犯的错 → §2 加一条可判定 Never + §6 演进日志记一行（日期 / 规则 / 原因）。
-2. **结构变更同步**：目录、门禁、构建口径、功能域增减时同步本文件与路由表；`tools/check-agents.mjs` 机器校验指针有效性。
+2. **结构变更同步**：目录、门禁、构建口径、功能域增减时同步本文件与路由表；`.agent/tools/check-agents.mjs` 机器校验指针有效性。
 3. **行数预算**：本文件 ≤80 行，超了就把细节下沉到对应规范文档、此处留指针。
 4. **变更评审**：本文件改动与代码同等走 git 评审。
-5. **重大取舍**：写 ADR（`.agent/adr/`，只增不改，被取代标 Superseded）。
+5. **重大取舍**：写进规范条款的「行业怎么做 / 我们怎么做」两段，并在提交信息里写明理由。
 
 ## 6. 演进日志
 

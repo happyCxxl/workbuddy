@@ -62,7 +62,7 @@
 
 - 纯中文界面（可保留 ID、JSON 等业界通用缩写）
 - 禁止出现"家庭/home""shangjige"字样，无租户概念，品牌名为「工作台」（副标题「AI 工作台」）
-- 落地代码须过前端 lint 门禁（静态检查引擎口径见 `.agent/standards/frontend/03-异步与测试.md` §4）
+- 落地代码须过前端 lint 门禁（静态检查引擎口径见 `.agent/standards/vue/03-异步与测试.md` §4）
 
 ## 8. 参考方向
 

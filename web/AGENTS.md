@@ -28,6 +28,6 @@
 
 ## 3. 必读与交付
 
-- 动手前必读：`.agent/standards/frontend/00-规则索引.md`（49 条编号规则，分四份：索引、工程与命名、组件与样式、异步与测试；本文 Never 只是其中红线的速查，条款冲突以规范为准）。
-- 交付自查：`.agent/standards/frontend/delivery-checklist.md`（机器层已由钩子覆盖，评审层逐项核对）。
-- 检查器组成与豁免口径：`.agent/checkers/frontend.md`。
+- 动手前必读：`.agent/standards/vue/00-规则索引.md`（48 条编号规则，分四份：索引、工程与命名、组件与样式、异步与测试；本文 Never 只是其中红线的速查，条款冲突以规范为准）。
+- 交付自查：`.agent/standards/vue/delivery-checklist.md`（机器层已由钩子覆盖，评审层逐项核对）。
+- 检查器组成与豁免口径：`.agent/standards/vue/04-检查手段.md`。

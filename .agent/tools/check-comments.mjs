@@ -7,8 +7,8 @@
  * 某行确实需要保留禁词时，在该行写 `口径豁免：<理由>`。
  *
  * 用法：
- *   node tools/check-comments.mjs              # 全量（代码 + 文档），命中 ERROR 即退出 1
- *   node tools/check-comments.mjs --strings     # 额外报告字符串字面量里的阶段词（不判失败）
+ *   node .agent/tools/check-comments.mjs              # 全量（代码 + 文档），命中 ERROR 即退出 1
+ *   node .agent/tools/check-comments.mjs --strings     # 额外报告字符串字面量里的阶段词（不判失败）
  *
  * @author cxxl
  */
@@ -163,9 +163,8 @@ const files = [
   ...walk(join(ROOT, 'web', 'src')),
   ...walk(join(ROOT, 'web', 'docs')),
   ...walk(join(ROOT, 'docs')),
-  ...walk(join(ROOT, 'tools')),
+  ...walk(join(ROOT, '.agent', 'tools')),
   ...walk(join(ROOT, '.agent', 'standards')),
-  ...walk(join(ROOT, '.agent', 'checkers')),
   ...SHELL_FILES.map((rel) => join(ROOT, rel))
 ];
 
@@ -174,7 +173,7 @@ const warns = [];
 const stringHits = [];
 for (const file of files) {
   const rel = relative(ROOT, file).split(sep).join('/');
-  if (rel === 'tools/check-comments.mjs') {
+  if (rel === '.agent/tools/check-comments.mjs') {
     continue;
   }
   const content = readFileSync(file, 'utf8');
