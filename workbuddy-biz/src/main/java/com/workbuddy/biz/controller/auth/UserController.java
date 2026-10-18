@@ -2,12 +2,12 @@ package com.workbuddy.biz.controller.auth;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.auth.service.UserService;
-import com.workbuddy.common.dto.response.R;
-import com.workbuddy.common.dto.request.user.PasswordUpdateRequest;
-import com.workbuddy.common.dto.request.user.ProfileUpdateRequest;
-import com.workbuddy.common.dto.request.user.UserCreateRequest;
-import com.workbuddy.common.dto.request.user.UserQueryDto;
-import com.workbuddy.common.dto.request.user.UserUpdateRequest;
+import com.workbuddy.common.web.R;
+import com.workbuddy.common.dto.request.user.PasswordUpdateDTO;
+import com.workbuddy.common.dto.request.user.ProfileUpdateDTO;
+import com.workbuddy.common.dto.request.user.UserCreateDTO;
+import com.workbuddy.common.dto.request.user.UserQueryDTO;
+import com.workbuddy.common.dto.request.user.UserUpdateDTO;
 import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
@@ -47,25 +47,25 @@ public class UserController {
     }
 
     @PutMapping("/profile")
-    public R<Void> updateProfile(@Valid @RequestBody ProfileUpdateRequest request) {
+    public R<Void> updateProfile(@Valid @RequestBody ProfileUpdateDTO request) {
         userService.updateProfile(currentUserId(), request);
         return R.ok(null, "更新成功");
     }
 
     @PutMapping("/password")
-    public R<String> changePassword(@Valid @RequestBody PasswordUpdateRequest request) {
+    public R<String> changePassword(@Valid @RequestBody PasswordUpdateDTO request) {
         return R.ok(userService.changePassword(currentUserId(), request), "密码已修改");
     }
 
     @AdminOnly
     @GetMapping("/page")
-    public R<IPage<UserVO>> pageUsers(@Valid UserQueryDto query) {
+    public R<IPage<UserVO>> pageUsers(@Valid UserQueryDTO query) {
         return R.ok(userService.pageUsers(query));
     }
 
     @AdminOnly
     @PostMapping("/add")
-    public R<String> addUser(@Valid @RequestBody UserCreateRequest request) {
+    public R<String> addUser(@Valid @RequestBody UserCreateDTO request) {
         return R.ok(String.valueOf(userService.addUser(request)), "新增成功");
     }
 
@@ -73,7 +73,7 @@ public class UserController {
     @PutMapping("/{id}")
     public R<Void> updateUser(
             @PathVariable("id") Long id,
-            @Valid @RequestBody UserUpdateRequest request) {
+            @Valid @RequestBody UserUpdateDTO request) {
         userService.updateUser(id, request);
         return R.ok(null, "更新成功");
     }

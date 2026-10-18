@@ -4,8 +4,8 @@ import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.support.LoginAttemptGuard;
 import com.workbuddy.auth.util.JwtUtil;
 import com.workbuddy.common.domain.entity.WbUser;
-import com.workbuddy.common.dto.request.auth.LoginRequest;
-import com.workbuddy.common.dto.request.auth.RegisterRequest;
+import com.workbuddy.common.dto.request.auth.LoginDTO;
+import com.workbuddy.common.dto.request.auth.RegisterDTO;
 import com.workbuddy.common.dto.response.auth.LoginVO;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
@@ -206,7 +206,7 @@ class AuthServiceTest {
 
     @Test
     void loginShouldIssueLongLivedTokenWhenRememberMe() {
-        LoginRequest request = loginRequest("admin", "pass123456");
+        LoginDTO request = loginRequest("admin", "pass123456");
         request.setRemember(true);
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
@@ -218,15 +218,15 @@ class AuthServiceTest {
         verify(jwtUtil).sign(1L, "admin", UserRole.ADMIN, 0, REMEMBER_TTL);
     }
 
-    private LoginRequest loginRequest(String username, String password) {
-        LoginRequest request = new LoginRequest();
+    private LoginDTO loginRequest(String username, String password) {
+        LoginDTO request = new LoginDTO();
         request.setUsername(username);
         request.setPassword(password);
         return request;
     }
 
-    private RegisterRequest registerRequest() {
-        RegisterRequest request = new RegisterRequest();
+    private RegisterDTO registerRequest() {
+        RegisterDTO request = new RegisterDTO();
         request.setUsername("admin");
         request.setDisplayName("张三");
         request.setEmail("zhangsan@example.com");

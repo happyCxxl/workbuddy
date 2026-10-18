@@ -12,7 +12,7 @@ import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

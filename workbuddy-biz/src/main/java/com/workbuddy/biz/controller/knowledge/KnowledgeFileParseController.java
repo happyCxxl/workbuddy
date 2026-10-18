@@ -1,8 +1,8 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.ParseControlService;
-import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.dto.request.stage.StageDetailQueryDTO;
+import com.workbuddy.common.web.R;
 import com.workbuddy.common.dto.response.parse.ParseDetailVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +55,7 @@ public class KnowledgeFileParseController {
     @GetMapping("/{fileResultId}/parse-detail")
     public R<ParseDetailVO> parseDetail(
             @PathVariable("fileResultId") Long fileResultId,
-            StageDetailQueryDto query) {
+            StageDetailQueryDTO query) {
         return R.ok(parseControlService.parseDetail(fileResultId, query.getTaskId()));
     }
 }

@@ -11,7 +11,7 @@ import java.util.Map;
  * 各环节详情 VO 继承本类并追加环节专属统计/列表字段。
  */
 @Data
-public class StageDetailVO implements TaskStatusView {
+public class StageDetailVO implements TaskStatusVO {
 
     /** 文件结果 ID */
     private Long fileResultId;

@@ -13,7 +13,7 @@ import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.rules.KnowledgeBaseRules;
-import com.workbuddy.common.dto.request.home.HomeRecentSubmitQueryDto;
+import com.workbuddy.common.dto.request.home.HomeRecentSubmitQueryDTO;
 import com.workbuddy.common.dto.response.home.HomeRecentSubmitVO;
 import com.workbuddy.common.dto.response.home.HomeSummaryVO;
 import com.workbuddy.common.enums.input.FileFormat;
@@ -88,7 +88,7 @@ public class KnowledgeHomeServiceImpl implements KnowledgeHomeService {
     }
 
     @Override
-    public IPage<HomeRecentSubmitVO> recentSubmits(HomeRecentSubmitQueryDto query) {
+    public IPage<HomeRecentSubmitVO> recentSubmits(HomeRecentSubmitQueryDTO query) {
         long current = query.currentOrDefault();
         long size = query.sizeOrDefault();
         KnowledgeUser user = SecurityUtil.getUser();

@@ -1,11 +1,11 @@
 package com.workbuddy.auth.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.workbuddy.common.dto.request.user.PasswordUpdateRequest;
-import com.workbuddy.common.dto.request.user.ProfileUpdateRequest;
-import com.workbuddy.common.dto.request.user.UserCreateRequest;
-import com.workbuddy.common.dto.request.user.UserQueryDto;
-import com.workbuddy.common.dto.request.user.UserUpdateRequest;
+import com.workbuddy.common.dto.request.user.PasswordUpdateDTO;
+import com.workbuddy.common.dto.request.user.ProfileUpdateDTO;
+import com.workbuddy.common.dto.request.user.UserCreateDTO;
+import com.workbuddy.common.dto.request.user.UserQueryDTO;
+import com.workbuddy.common.dto.request.user.UserUpdateDTO;
 import com.workbuddy.common.dto.response.user.UserVO;
 
 /**
@@ -21,10 +21,10 @@ public interface UserService {
     /**
      * 分页查询用户（不含已删除；响应不含密码），支持用户名模糊、角色与状态过滤。
      *
-     * @param query 查询条件（页码与页长口径见 {@link UserQueryDto} 父类）
+     * @param query 查询条件（页码与页长口径见 {@link UserQueryDTO} 父类）
      * @return 用户分页结果
      */
-    IPage<UserVO> pageUsers(UserQueryDto query);
+    IPage<UserVO> pageUsers(UserQueryDTO query);
 
     /**
      * 查询个人信息（本人操作，响应不含密码）。
@@ -40,7 +40,7 @@ public interface UserService {
      * @param id      用户主键
      * @param request 个人信息请求
      */
-    void updateProfile(Long id, ProfileUpdateRequest request);
+    void updateProfile(Long id, ProfileUpdateDTO request);
 
     /**
      * 修改密码（本人操作）：校验当前密码后写入新密码，并递增令牌版本让该账号此前签发的令牌全部失效。
@@ -49,7 +49,7 @@ public interface UserService {
      * @param request 修改密码请求
      * @return 以新令牌版本补签的令牌（当前会话可继续使用，不必重新登录）
      */
-    String changePassword(Long id, PasswordUpdateRequest request);
+    String changePassword(Long id, PasswordUpdateDTO request);
 
     /**
      * 新增用户（管理员操作）。
@@ -57,7 +57,7 @@ public interface UserService {
      * @param request 新增请求（用户名唯一、密码 BCrypt 加密）
      * @return 新用户主键
      */
-    Long addUser(UserCreateRequest request);
+    Long addUser(UserCreateDTO request);
 
     /**
      * 编辑用户（管理员操作）：用户名不可改，密码不传表示不重置。
@@ -65,7 +65,7 @@ public interface UserService {
      * @param id      用户主键
      * @param request 编辑请求
      */
-    void updateUser(Long id, UserUpdateRequest request);
+    void updateUser(Long id, UserUpdateDTO request);
 
     /**
      * 删除用户（逻辑删除，管理员操作）。

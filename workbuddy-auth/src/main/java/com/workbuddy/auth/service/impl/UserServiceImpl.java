@@ -4,15 +4,15 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.workbuddy.common.dto.request.user.UserQueryDto;
+import com.workbuddy.common.dto.request.user.UserQueryDTO;
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.UserService;
 import com.workbuddy.auth.util.JwtUtil;
 import com.workbuddy.common.domain.entity.WbUser;
-import com.workbuddy.common.dto.request.user.PasswordUpdateRequest;
-import com.workbuddy.common.dto.request.user.ProfileUpdateRequest;
-import com.workbuddy.common.dto.request.user.UserCreateRequest;
-import com.workbuddy.common.dto.request.user.UserUpdateRequest;
+import com.workbuddy.common.dto.request.user.PasswordUpdateDTO;
+import com.workbuddy.common.dto.request.user.ProfileUpdateDTO;
+import com.workbuddy.common.dto.request.user.UserCreateDTO;
+import com.workbuddy.common.dto.request.user.UserUpdateDTO;
 import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.utils.AvatarUrlUtil;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
 
     @Override
-    public IPage<UserVO> pageUsers(UserQueryDto query) {
+    public IPage<UserVO> pageUsers(UserQueryDTO query) {
         IPage<WbUser> source = userDbService.pageByCondition(query.currentOrDefault(), query.sizeOrDefault(),
                 query.getUsername(), query.getRole(), query.getStatus());
         // 显式字段映射：密码等敏感字段不进入响应体
@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Long addUser(UserCreateRequest request) {
+    public Long addUser(UserCreateDTO request) {
         ThrowUtil.throwIf(NullUtil.isNotNull(userDbService.findActiveByUsername(request.getUsername())),
                 ErrorCode.USERNAME_EXISTS);
         WbUser user = new WbUser();
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(Long id, UserUpdateRequest request) {
+    public void updateUser(Long id, UserUpdateDTO request) {
         WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         String beforeSummary = auditSummary(user);
@@ -163,7 +163,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateProfile(Long id, ProfileUpdateRequest request) {
+    public void updateProfile(Long id, ProfileUpdateDTO request) {
         WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         String beforeSummary = auditSummary(user);
@@ -176,7 +176,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String changePassword(Long id, PasswordUpdateRequest request) {
+    public String changePassword(Long id, PasswordUpdateDTO request) {
         WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
         ThrowUtil.throwIf(!passwordEncoder.matches(request.getOldPassword(), user.getPassword()),

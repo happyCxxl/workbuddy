@@ -2,7 +2,7 @@ package com.workbuddy.biz.service.db;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.common.domain.entity.WbChunk;
-import com.workbuddy.common.dto.request.stage.ChunkContentFilter;
+import com.workbuddy.common.dto.request.stage.ChunkContentFilterDTO;
 import com.workbuddy.infra.persistence.InfraDbService;
 
 import java.util.List;
@@ -30,5 +30,5 @@ public interface WbChunkDbService extends InfraDbService<WbChunk> {
      * @param size       每页条数
      * @return 分页结果（含过滤后的总条数）
      */
-    IPage<WbChunk> pageByChunkSetId(Long chunkSetId, ChunkContentFilter filter, long current, long size);
+    IPage<WbChunk> pageByChunkSetId(Long chunkSetId, ChunkContentFilterDTO filter, long current, long size);
 }

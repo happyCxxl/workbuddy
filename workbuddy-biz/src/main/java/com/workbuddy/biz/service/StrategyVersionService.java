@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service;
 
-import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDto;
-import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDto;
+import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDTO;
+import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDTO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.enums.strategy.StrategyType;
 
@@ -30,13 +30,13 @@ public interface StrategyVersionService {
     /**
      * 创建（默认 ACTIVE；type 白名单校验；同环节同名版本撞唯一键 → 40001）。
      */
-    StrategyVersionVO create(StrategyVersionCreateDto dto);
+    StrategyVersionVO create(StrategyVersionCreateDTO dto);
 
     /**
      * 编辑 = 复制新版本（策略版本行不可变）：type 归属旧行不变；新行按 dto 的 name/version/configSnapshot
      * 注册（撞唯一键 40001），旧行原样保留；不存在 40433。
      */
-    StrategyVersionVO update(Long id, StrategyVersionUpdateDto dto);
+    StrategyVersionVO update(Long id, StrategyVersionUpdateDTO dto);
 
     /**
      * 启用/停用（幂等成功；不存在 40433）。

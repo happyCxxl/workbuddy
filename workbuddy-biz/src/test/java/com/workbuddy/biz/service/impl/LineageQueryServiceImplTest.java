@@ -33,7 +33,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import org.junit.jupiter.api.BeforeEach;

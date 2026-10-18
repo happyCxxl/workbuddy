@@ -1,9 +1,9 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.ChunkControlService;
-import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;
-import com.workbuddy.common.dto.request.stage.StageTriggerQueryDto;
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.dto.request.stage.StageDetailQueryDTO;
+import com.workbuddy.common.dto.request.stage.StageTriggerQueryDTO;
+import com.workbuddy.common.web.R;
 import com.workbuddy.common.dto.response.chunk.ChunkDetailVO;
 import com.workbuddy.common.dto.response.chunk.ChunkTriggerVO;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class KnowledgeFileChunkController {
     @PostMapping("/{fileResultId}/chunk")
     public R<ChunkTriggerVO> chunk(
             @PathVariable("fileResultId") Long fileResultId,
-            StageTriggerQueryDto query) {
+            StageTriggerQueryDTO query) {
         log.info("===> KnowledgeFileChunkController chunk 触发切片, fileResultId={}, strategyVersionId={},"
                         + " upstreamProductId={}",
                 fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId());
@@ -41,7 +41,7 @@ public class KnowledgeFileChunkController {
     @GetMapping("/{fileResultId}/chunk-detail")
     public R<ChunkDetailVO> chunkDetail(
             @PathVariable("fileResultId") Long fileResultId,
-            StageDetailQueryDto query) {
+            StageDetailQueryDTO query) {
         return R.ok(chunkControlService.chunkDetail(fileResultId, query.getTaskId()));
     }
 }

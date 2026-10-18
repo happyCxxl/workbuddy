@@ -28,7 +28,7 @@ import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.domain.structure.UnifiedElement;
-import com.workbuddy.common.dto.request.stage.ChunkContentFilter;
+import com.workbuddy.common.dto.request.stage.ChunkContentFilterDTO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.enums.task.PipelineStage;
@@ -37,7 +37,7 @@ import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -95,7 +95,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      */
     @Override
     public StageContentVO stageContent(Long fileResultId, String stage, Long taskId, Long docPage,
-                                       Integer page, Integer limit, String status, ChunkContentFilter chunkFilter) {
+                                       Integer page, Integer limit, String status, ChunkContentFilterDTO chunkFilter) {
         accessGuard.requireExisting(fileResultId);
         ThrowUtil.throwIf(StrUtil.isBlank(stage) || !PipelineStage.FILE_CHAIN_STAGES.contains(stage),
                 ErrorCode.PARAM_INVALID, "未知环节: " + stage);
@@ -436,7 +436,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      *
      * <p>total 取过滤后的总条数，与 items 同一口径（先过滤再分页）。
      */
-    private void fillChunkPage(StageContentVO vo, ObjectRef ref, ChunkContentFilter filter,
+    private void fillChunkPage(StageContentVO vo, ObjectRef ref, ChunkContentFilterDTO filter,
                                int pageNo, int pageSize) {
         WbChunkSet chunkSet = chunkSetDbService.getByArtifactId(ref.objectKey());
         if (NullUtil.isNull(chunkSet)) {

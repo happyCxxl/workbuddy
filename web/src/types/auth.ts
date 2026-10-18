@@ -1,4 +1,4 @@
-// 认证契约（与后端 LoginRequest/LoginVO/RegisterRequest 对齐）
+// 认证契约（与后端 LoginDTO/LoginVO/RegisterDTO 对齐）
 
 /** 角色码值：与后端 UserRole 对齐 */
 export type UserRole = 'ADMIN' | 'USER';

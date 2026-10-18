@@ -1,8 +1,8 @@
 package com.workbuddy.biz.controller.file;
 
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.web.R;
 import com.workbuddy.filecenter.service.FileService;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

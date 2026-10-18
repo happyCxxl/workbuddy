@@ -12,7 +12,7 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

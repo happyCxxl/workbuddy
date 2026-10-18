@@ -10,7 +10,7 @@ import com.workbuddy.common.domain.rules.PreprocessViewRules;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -1,8 +1,8 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.StructureControlService;
-import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.dto.request.stage.StageDetailQueryDTO;
+import com.workbuddy.common.web.R;
 import com.workbuddy.common.dto.response.structure.StructureDetailVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class KnowledgeFileStructureController {
     @GetMapping("/{fileResultId}/structure-detail")
     public R<StructureDetailVO> structureDetail(
             @PathVariable("fileResultId") Long fileResultId,
-            StageDetailQueryDto query) {
+            StageDetailQueryDTO query) {
         return R.ok(structureControlService.structureDetail(fileResultId, query.getTaskId()));
     }
 }

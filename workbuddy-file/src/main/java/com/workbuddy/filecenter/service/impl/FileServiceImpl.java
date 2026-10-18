@@ -3,7 +3,7 @@ package com.workbuddy.filecenter.service.impl;
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.service.FileService;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;

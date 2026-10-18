@@ -2,17 +2,17 @@ package com.workbuddy.biz.controller.knowledge;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.biz.service.KnowledgeBaseService;
-import com.workbuddy.common.dto.response.R;
-import com.workbuddy.common.dto.request.input.FileSubmitRequest;
-import com.workbuddy.common.dto.request.knowledge.FileResultQueryDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDto;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDto;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateRequest;
-import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDto;
+import com.workbuddy.common.web.R;
+import com.workbuddy.common.dto.request.input.FileSubmitDTO;
+import com.workbuddy.common.dto.request.knowledge.FileResultQueryDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDTO;
 import com.workbuddy.common.dto.response.input.FileResultVO;
-import com.workbuddy.common.dto.response.input.FileSubmitResponse;
+import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
@@ -60,7 +60,7 @@ public class KnowledgeBaseController {
      * @return 新知识库 ID（雪花 ID 以字符串返回，避免前端 JS 大整数精度丢失）
      */
     @PostMapping
-    public R<String> create(@Valid @RequestBody KnowledgeBaseCreateDto dto) {
+    public R<String> create(@Valid @RequestBody KnowledgeBaseCreateDTO dto) {
         log.info("===> KnowledgeBaseController create 创建知识库, name={}", dto.getName());
         return R.ok(String.valueOf(knowledgeBaseService.create(dto)), "创建成功");
     }
@@ -79,7 +79,7 @@ public class KnowledgeBaseController {
     @PutMapping("/{id}")
     public R<Boolean> update(
             @PathVariable("id") Long id,
-            @Valid @RequestBody KnowledgeBaseUpdateDto dto) {
+            @Valid @RequestBody KnowledgeBaseUpdateDTO dto) {
         dto.setId(id);
         log.info("===> KnowledgeBaseController update 更新知识库, id={}", id);
         return R.ok(knowledgeBaseService.update(dto), "更新成功");
@@ -111,7 +111,7 @@ public class KnowledgeBaseController {
      * @return 知识库分页 VO（不含已删除）
      */
     @GetMapping("/page")
-    public R<IPage<KnowledgeBaseVO>> page(@Valid KnowledgeBaseQueryDto query) {
+    public R<IPage<KnowledgeBaseVO>> page(@Valid KnowledgeBaseQueryDTO query) {
         return R.ok(knowledgeBaseService.page(query));
     }
 
@@ -187,9 +187,9 @@ public class KnowledgeBaseController {
      * @return 提交响应：新建提交 pipelineTaskId 为 null；幂等回放时回填该文件结果已有的解析任务 ID（可能为 null）
      */
     @PostMapping("/{id}/submit")
-    public R<FileSubmitResponse> submit(
+    public R<FileSubmitVO> submit(
             @PathVariable("id") Long id,
-            @Valid @RequestBody FileSubmitRequest request) {
+            @Valid @RequestBody FileSubmitDTO request) {
         log.info("===> KnowledgeBaseController submit 提交文件, kbId={}, fileId={}, requestId={}",
                 id, request.getFileId(), request.getRequestId());
         return R.ok(knowledgeBaseService.submit(id, request));
@@ -206,7 +206,7 @@ public class KnowledgeBaseController {
     @GetMapping("/{id}/submit-logs")
     public R<IPage<SubmitLogVO>> submitLogs(
             @PathVariable("id") Long id,
-            @Valid SubmitLogQueryDto query) {
+            @Valid SubmitLogQueryDTO query) {
         return R.ok(knowledgeBaseService.pageSubmitLogs(id, query));
     }
 
@@ -221,7 +221,7 @@ public class KnowledgeBaseController {
     @GetMapping("/{id}/file-results")
     public R<IPage<FileResultVO>> fileResults(
             @PathVariable("id") Long id,
-            @Valid FileResultQueryDto query) {
+            @Valid FileResultQueryDTO query) {
         return R.ok(knowledgeBaseService.pageFileResults(id, query));
     }
 
@@ -274,7 +274,7 @@ public class KnowledgeBaseController {
     @PutMapping("/{id}/strategy-binding")
     public R<Boolean> bindStrategy(
             @PathVariable("id") Long id,
-            @Valid @RequestBody StrategyBindingUpdateDto dto) {
+            @Valid @RequestBody StrategyBindingUpdateDTO dto) {
         log.info("===> KnowledgeBaseController bindStrategy 绑定知识库策略, id={}, type={}", id, dto.getStrategyType());
         return R.ok(knowledgeBaseService.bindStrategy(id, dto), "绑定成功");
     }
@@ -294,7 +294,7 @@ public class KnowledgeBaseController {
     @PutMapping("/{id}/strategy-bindings")
     public R<Boolean> bindStrategies(
             @PathVariable("id") Long id,
-            @Valid @RequestBody StrategyBindingsUpdateRequest request) {
+            @Valid @RequestBody StrategyBindingsUpdateDTO request) {
         log.info("===> KnowledgeBaseController bindStrategies 批量绑定知识库策略集合, id={}", id);
         return R.ok(knowledgeBaseService.bindStrategies(id, request), "绑定成功");
     }

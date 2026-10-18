@@ -1,9 +1,9 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.StageContentQueryService;
-import com.workbuddy.common.dto.request.stage.ChunkContentFilter;
-import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.dto.request.stage.ChunkContentFilterDTO;
+import com.workbuddy.common.dto.request.stage.StageDetailQueryDTO;
+import com.workbuddy.common.web.R;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.RequiredArgsConstructor;
@@ -46,14 +46,14 @@ public class KnowledgeFileStageController {
     public R<StageContentVO> stageContent(
             @PathVariable("fileResultId") Long fileResultId,
             @RequestParam("stage") String stage,
-            StageDetailQueryDto query) {
+            StageDetailQueryDTO query) {
         return R.ok(stageContentQueryService.stageContent(fileResultId, stage, query.getTaskId(),
                 docPageOf(query), query.getPage(), query.getLimit(), query.getStatus(), chunkFilterOf(query)));
     }
 
     /** 切片内容过滤条件（三项都空时按不过滤） */
-    private ChunkContentFilter chunkFilterOf(StageDetailQueryDto query) {
-        return new ChunkContentFilter(query.getContentType(), query.getFallback(), query.getHasParent());
+    private ChunkContentFilterDTO chunkFilterOf(StageDetailQueryDTO query) {
+        return new ChunkContentFilterDTO(query.getContentType(), query.getFallback(), query.getHasParent());
     }
 
     /**
@@ -62,7 +62,7 @@ public class KnowledgeFileStageController {
      * <p>页码比较在服务层按 Long 做：HTTP 来的数是大整数，元素页码在产物里是 Integer，
      * 类型不一致会让"第 N 页"永远匹配不上。
      */
-    private Long docPageOf(StageDetailQueryDto query) {
+    private Long docPageOf(StageDetailQueryDTO query) {
         Integer docPage = query.getDocPage();
         return NullUtil.isNull(docPage) || docPage < 1 ? null : docPage.longValue();
     }

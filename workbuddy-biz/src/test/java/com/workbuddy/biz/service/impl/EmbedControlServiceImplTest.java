@@ -35,7 +35,7 @@ import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import com.workbuddy.worker.embedding.EmbedProperties;

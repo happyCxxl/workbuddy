@@ -1,6 +1,6 @@
 package com.workbuddy.biz.service;
 
-import com.workbuddy.common.dto.request.retrieval.SearchRequest;
+import com.workbuddy.common.dto.request.retrieval.SearchDTO;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRunVO;
 import com.workbuddy.common.dto.response.retrieval.SearchVO;
 
@@ -18,7 +18,7 @@ public interface SearchService {
     /**
      * 检索（唯一执行路径）：规则解析 → 双通道召回 → RRF 融合 → 父片展开 → Top-K → 溯源返回。
      */
-    SearchVO search(Long knowledgeBaseId, SearchRequest request);
+    SearchVO search(Long knowledgeBaseId, SearchDTO request);
 
     /**
      * 运行记录列表（新→旧；limit 截断，≤0 = 全部）。

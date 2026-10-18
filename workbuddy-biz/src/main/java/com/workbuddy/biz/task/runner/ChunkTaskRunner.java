@@ -26,7 +26,7 @@ import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.ChunkContext;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.ChunkerPort;

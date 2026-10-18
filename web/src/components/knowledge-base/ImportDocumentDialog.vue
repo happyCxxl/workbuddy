@@ -163,7 +163,7 @@ interface ImportItem {
   key: string;
   file: File;
   /**
-   * 幂等键：**一次提交一个**（后端契约见 `FileSubmitRequest.requestId`：提交端生成、通常 UUID、
+   * 幂等键：**一次提交一个**（后端契约见 `FileSubmitDTO.requestId`：提交端生成、通常 UUID、
    * 网络重试沿用同一值）。
    *
    * <p>加入列表时生成并挂在本项上——本项的重试沿用同一个值（超时重发不会重复建档），

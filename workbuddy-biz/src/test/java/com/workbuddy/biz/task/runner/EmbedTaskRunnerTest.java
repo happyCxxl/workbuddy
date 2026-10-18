@@ -32,7 +32,7 @@ import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import com.workbuddy.worker.embedding.EmbedContext;

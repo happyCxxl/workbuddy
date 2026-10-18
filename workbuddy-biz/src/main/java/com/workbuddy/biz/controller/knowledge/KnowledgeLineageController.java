@@ -1,6 +1,6 @@
 package com.workbuddy.biz.controller.knowledge;
 
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.web.R;
 import com.workbuddy.biz.service.LineageQueryService;
 import com.workbuddy.common.dto.response.lineage.LineageVO;
 import lombok.RequiredArgsConstructor;

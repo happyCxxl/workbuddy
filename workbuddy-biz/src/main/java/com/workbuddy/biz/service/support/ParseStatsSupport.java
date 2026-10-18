@@ -10,7 +10,7 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.lineage.LineageParseStatsVO;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

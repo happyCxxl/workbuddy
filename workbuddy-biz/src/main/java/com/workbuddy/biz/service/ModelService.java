@@ -1,10 +1,10 @@
 package com.workbuddy.biz.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.workbuddy.common.dto.request.model.ModelQueryDto;
-import com.workbuddy.common.dto.request.model.ModelSaveDto;
-import com.workbuddy.common.dto.request.model.ModelStatusDto;
-import com.workbuddy.common.dto.request.model.ModelUpdateDto;
+import com.workbuddy.common.dto.request.model.ModelQueryDTO;
+import com.workbuddy.common.dto.request.model.ModelSaveDTO;
+import com.workbuddy.common.dto.request.model.ModelStatusDTO;
+import com.workbuddy.common.dto.request.model.ModelUpdateDTO;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
 
 /**
@@ -18,12 +18,12 @@ import com.workbuddy.common.dto.response.model.ModelItemVO;
 public interface ModelService {
 
     /**
-     * 模型清单分页：按能力 / 状态 / 模型名过滤，页码与页长口径见 {@link ModelQueryDto} 父类。
+     * 模型清单分页：按能力 / 状态 / 模型名过滤，页码与页长口径见 {@link ModelQueryDTO} 父类。
      *
      * @param query 查询条件（各项都可留空）
      * @return 分页结果（厂商码升序、模型名升序）
      */
-    IPage<ModelItemVO> page(ModelQueryDto query);
+    IPage<ModelItemVO> page(ModelQueryDTO query);
 
     /**
      * 新增模型：校验厂商码在配置里、唯一键不冲突、能力逐项按字典解析。
@@ -31,7 +31,7 @@ public interface ModelService {
      * @param dto 模型收参
      * @return 落库后的模型
      */
-    ModelItemVO create(ModelSaveDto dto);
+    ModelItemVO create(ModelSaveDTO dto);
 
     /**
      * 编辑模型：校验口径与新增一致，唯一键判定排除本行；状态沿用原值。
@@ -40,7 +40,7 @@ public interface ModelService {
      * @param dto 模型编辑收参
      * @return 覆盖写之后的模型
      */
-    ModelItemVO update(Long id, ModelUpdateDto dto);
+    ModelItemVO update(Long id, ModelUpdateDTO dto);
 
     /**
      * 启停模型：只改状态列。
@@ -49,5 +49,5 @@ public interface ModelService {
      * @param dto 目标状态
      * @return 回写后的模型
      */
-    ModelItemVO updateStatus(Long id, ModelStatusDto dto);
+    ModelItemVO updateStatus(Long id, ModelStatusDTO dto);
 }

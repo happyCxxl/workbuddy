@@ -2,7 +2,7 @@ package com.workbuddy.biz.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.common.dto.request.knowledge.FileResultQueryDto;
+import com.workbuddy.common.dto.request.knowledge.FileResultQueryDTO;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
@@ -23,9 +23,9 @@ import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.input.FileValidationResult;
 import com.workbuddy.common.domain.storage.StorageRef;
-import com.workbuddy.common.dto.request.input.FileSubmitRequest;
+import com.workbuddy.common.dto.request.input.FileSubmitDTO;
 import com.workbuddy.common.dto.response.input.FileResultVO;
-import com.workbuddy.common.dto.response.input.FileSubmitResponse;
+import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.task.StageStatusVO;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.enums.input.FileValidationFailReason;
@@ -39,7 +39,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileValidatorPort;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,8 +139,8 @@ class KnowledgeBaseFileSubmitTest {
         SecurityContextHolder.clearContext();
     }
 
-    private FileSubmitRequest request() {
-        FileSubmitRequest request = new FileSubmitRequest();
+    private FileSubmitDTO request() {
+        FileSubmitDTO request = new FileSubmitDTO();
         request.setFileId("88");
         request.setRequestId("req-1");
         return request;
@@ -189,7 +189,7 @@ class KnowledgeBaseFileSubmitTest {
         when(fileStorage.metadata("88")).thenReturn(metadata());
         stubSuccessWrites();
 
-        FileSubmitResponse response = service.submit(1L, request());
+        FileSubmitVO response = service.submit(1L, request());
 
         assertNotNull(response.getSubmitLog());
         assertEquals(SubmitStatus.PASS.name(), response.getSubmitLog().getStatus());
@@ -210,7 +210,7 @@ class KnowledgeBaseFileSubmitTest {
             return true;
         });
 
-        FileSubmitResponse response = service.submit(1L, request());
+        FileSubmitVO response = service.submit(1L, request());
 
         assertEquals(SubmitStatus.FAIL.name(), response.getSubmitLog().getStatus());
         assertEquals(FileValidationFailReason.FORMAT_NOT_ALLOWED.name(), response.getSubmitLog().getFailReason());
@@ -230,7 +230,7 @@ class KnowledgeBaseFileSubmitTest {
             return true;
         });
 
-        FileSubmitResponse response = service.submit(1L, request());
+        FileSubmitVO response = service.submit(1L, request());
 
         assertEquals(SubmitStatus.FAIL.name(), response.getSubmitLog().getStatus());
         assertEquals(FileValidationFailReason.FILE_NOT_FOUND.name(), response.getSubmitLog().getFailReason());
@@ -249,7 +249,7 @@ class KnowledgeBaseFileSubmitTest {
         task.setId(20L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name())).thenReturn(task);
 
-        FileSubmitResponse response = service.submit(1L, request());
+        FileSubmitVO response = service.submit(1L, request());
 
         assertEquals(30L, response.getSubmitLog().getId());
         assertEquals(20L, response.getPipelineTaskId());
@@ -283,7 +283,7 @@ class KnowledgeBaseFileSubmitTest {
         task.setId(20L);
         when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name())).thenReturn(task);
 
-        FileSubmitResponse response = service.submit(1L, request());
+        FileSubmitVO response = service.submit(1L, request());
 
         assertEquals(30L, response.getSubmitLog().getId());
         assertEquals(20L, response.getPipelineTaskId());
@@ -310,7 +310,7 @@ class KnowledgeBaseFileSubmitTest {
             return true;
         });
 
-        FileSubmitResponse response = service.submit(1L, request());
+        FileSubmitVO response = service.submit(1L, request());
 
         assertNull(response.getPipelineTaskId());
         ArgumentCaptor<WbFileResult> captor = ArgumentCaptor.forClass(WbFileResult.class);
@@ -347,7 +347,7 @@ class KnowledgeBaseFileSubmitTest {
 
     @Test
     void submitMissingRequestIdShouldThrow() {
-        FileSubmitRequest request = request();
+        FileSubmitDTO request = request();
         request.setRequestId("  ");
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.submit(1L, request));
@@ -530,8 +530,8 @@ class KnowledgeBaseFileSubmitTest {
     }
 
     /** 文件结果分页查询条件（环节可空） */
-    private FileResultQueryDto fileResultQuery(String stage) {
-        FileResultQueryDto query = new FileResultQueryDto();
+    private FileResultQueryDTO fileResultQuery(String stage) {
+        FileResultQueryDTO query = new FileResultQueryDTO();
         query.setStage(stage);
         return query;
     }

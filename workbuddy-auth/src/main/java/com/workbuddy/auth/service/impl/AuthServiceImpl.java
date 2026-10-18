@@ -5,8 +5,8 @@ import com.workbuddy.auth.service.AuthService;
 import com.workbuddy.auth.service.support.LoginAttemptGuard;
 import com.workbuddy.auth.util.JwtUtil;
 import com.workbuddy.common.domain.entity.WbUser;
-import com.workbuddy.common.dto.request.auth.LoginRequest;
-import com.workbuddy.common.dto.request.auth.RegisterRequest;
+import com.workbuddy.common.dto.request.auth.LoginDTO;
+import com.workbuddy.common.dto.request.auth.RegisterDTO;
 import com.workbuddy.common.dto.response.auth.LoginVO;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.enums.user.UserStatus;
@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final LoginAttemptGuard loginAttemptGuard;
 
     @Override
-    public LoginVO login(LoginRequest request) {
+    public LoginVO login(LoginDTO request) {
         String ip = ClientIpUtil.getClientIp();
         // 已锁定则直接拒绝：不查库、不跑 BCrypt（BCrypt 是慢哈希，放任尝试等于给对方一个 CPU 放大器）
         ThrowUtil.throwIf(loginAttemptGuard.isLocked(request.getUsername(), ip),
@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void register(RegisterRequest request) {
+    public void register(RegisterDTO request) {
         ThrowUtil.throwIf(userDbService.existsByUsername(request.getUsername()),
                 ErrorCode.USERNAME_EXISTS);
         WbUser user = new WbUser();

@@ -2,7 +2,7 @@ package com.workbuddy.biz.controller;
 
 import com.workbuddy.biz.service.StorageSourceService;
 import com.workbuddy.common.annotation.AdminOnly;
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.web.R;
 import com.workbuddy.common.dto.response.setting.StorageSourceVO;
 import com.workbuddy.common.dto.response.setting.StorageSwitchPreviewVO;
 import com.workbuddy.common.dto.response.setting.StorageSwitchResultVO;

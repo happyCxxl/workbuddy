@@ -33,7 +33,7 @@ import com.workbuddy.common.dto.response.lineage.LineageVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import lombok.RequiredArgsConstructor;

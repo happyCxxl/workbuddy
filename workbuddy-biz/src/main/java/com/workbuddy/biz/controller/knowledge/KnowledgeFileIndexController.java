@@ -1,12 +1,14 @@
 package com.workbuddy.biz.controller.knowledge;
 
-import com.workbuddy.common.dto.response.R;
 import com.workbuddy.biz.service.IndexSetService;
+import com.workbuddy.biz.service.support.BuildOrderAssembler;
+import com.workbuddy.common.dto.request.index.BuildOrderDTO;
 import com.workbuddy.common.dto.response.index.IndexBuildTriggerVO;
 import com.workbuddy.common.dto.response.index.IndexComboVO;
 import com.workbuddy.common.dto.response.index.IndexValidateVO;
 import com.workbuddy.common.dto.response.index.IndexVersionVO;
-import com.workbuddy.worker.indexing.BuildOrder;
+import com.workbuddy.common.web.R;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,6 +36,8 @@ public class KnowledgeFileIndexController {
 
     private final IndexSetService indexSetService;
 
+    private final BuildOrderAssembler buildOrderAssembler;
+
     @GetMapping("/{id}/index-sets")
     public R<List<IndexVersionVO>> list(
             @PathVariable("id") Long id) {
@@ -50,10 +54,10 @@ public class KnowledgeFileIndexController {
     @PostMapping("/{id}/index-sets")
     public R<IndexBuildTriggerVO> build(
             @PathVariable("id") Long id,
-            @RequestBody BuildOrder order) {
-        order.setKnowledgeBaseId(id);
-        log.info("===> KnowledgeFileIndexController build 触发索引构建, kbId={}, trigger={}", id, order.getTrigger());
-        return R.ok(indexSetService.buildCandidate(order), "构建任务已入队");
+            @Valid @RequestBody BuildOrderDTO request) {
+        log.info("===> KnowledgeFileIndexController build 触发索引构建, kbId={}, trigger={}",
+                id, request.getTrigger());
+        return R.ok(indexSetService.buildCandidate(buildOrderAssembler.toCommand(request, id)), "构建任务已入队");
     }
 
     @GetMapping("/{id}/index-sets/{versionId}")

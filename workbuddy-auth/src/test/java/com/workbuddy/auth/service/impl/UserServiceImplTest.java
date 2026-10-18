@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.common.domain.entity.WbUser;
-import com.workbuddy.common.dto.request.user.UserQueryDto;
+import com.workbuddy.common.dto.request.user.UserQueryDTO;
 import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.enums.user.UserRole;
 import org.junit.jupiter.api.Test;
@@ -79,8 +79,8 @@ class UserServiceImplTest {
     }
 
     /** 分页查询条件（页码与页长可空 = 缺省口径） */
-    private UserQueryDto userQuery(Long current, Long size, String username, String role, Integer status) {
-        UserQueryDto query = new UserQueryDto();
+    private UserQueryDTO userQuery(Long current, Long size, String username, String role, Integer status) {
+        UserQueryDTO query = new UserQueryDTO();
         query.setCurrent(current);
         query.setSize(size);
         query.setUsername(username);

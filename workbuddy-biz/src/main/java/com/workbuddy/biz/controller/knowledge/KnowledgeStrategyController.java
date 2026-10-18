@@ -1,9 +1,9 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.StrategyVersionService;
-import com.workbuddy.common.dto.response.R;
-import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDto;
-import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDto;
+import com.workbuddy.common.web.R;
+import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDTO;
+import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDTO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class KnowledgeStrategyController {
     }
 
     @PostMapping
-    public R<StrategyVersionVO> create(@Valid @RequestBody StrategyVersionCreateDto dto) {
+    public R<StrategyVersionVO> create(@Valid @RequestBody StrategyVersionCreateDTO dto) {
         log.info("===> StrategyVersionController create 创建策略版本, type={}, name={}, version={}",
                 dto.getType(), dto.getName(), dto.getVersion());
         return R.ok(strategyVersionService.create(dto), "创建成功");
@@ -50,7 +50,7 @@ public class KnowledgeStrategyController {
     @PutMapping("/{id}")
     public R<StrategyVersionVO> update(
             @PathVariable("id") Long id,
-            @Valid @RequestBody StrategyVersionUpdateDto dto) {
+            @Valid @RequestBody StrategyVersionUpdateDTO dto) {
         log.info("===> StrategyVersionController update 编辑策略版本, id={}", id);
         return R.ok(strategyVersionService.update(id, dto), "更新成功");
     }

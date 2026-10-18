@@ -12,7 +12,7 @@ import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.enums.chunk.ChunkRoute;
 import com.workbuddy.common.enums.chunk.PipelineKey;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.strategy.ChunkRouteConfig;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 

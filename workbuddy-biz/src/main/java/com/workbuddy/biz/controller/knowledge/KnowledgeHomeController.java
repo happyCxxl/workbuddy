@@ -2,8 +2,8 @@ package com.workbuddy.biz.controller.knowledge;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.biz.service.KnowledgeHomeService;
-import com.workbuddy.common.dto.response.R;
-import com.workbuddy.common.dto.request.home.HomeRecentSubmitQueryDto;
+import com.workbuddy.common.web.R;
+import com.workbuddy.common.dto.request.home.HomeRecentSubmitQueryDTO;
 import com.workbuddy.common.dto.response.home.HomeRecentSubmitVO;
 import com.workbuddy.common.dto.response.home.HomeSummaryVO;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>不含环节分布、待处理清单与审计动作（那些在各业务页与管理视角）。
  *
- * <p>查询对象收参（{@link HomeRecentSubmitQueryDto}）：DTO 字段按同名的独立查询参数绑定。
+ * <p>查询对象收参（{@link HomeRecentSubmitQueryDTO}）：DTO 字段按同名的独立查询参数绑定。
  *
  * <p>分页条件不加 `@Valid`：DTO 没有约束注解，取值由 `currentOrDefault` / `sizeOrDefault` 兜底。
  *
@@ -41,7 +41,7 @@ public class KnowledgeHomeController {
     }
 
     @GetMapping("/recent-submits")
-    public R<IPage<HomeRecentSubmitVO>> recentSubmits(HomeRecentSubmitQueryDto query) {
+    public R<IPage<HomeRecentSubmitVO>> recentSubmits(HomeRecentSubmitQueryDTO query) {
         return R.ok(knowledgeHomeService.recentSubmits(query));
     }
 }

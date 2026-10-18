@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.mapper.WbChunkMapper;
 import com.workbuddy.biz.service.db.WbChunkDbService;
 import com.workbuddy.common.domain.entity.WbChunk;
-import com.workbuddy.common.dto.request.stage.ChunkContentFilter;
+import com.workbuddy.common.dto.request.stage.ChunkContentFilterDTO;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.infra.persistence.InfraDbServiceImpl;
@@ -34,7 +34,7 @@ public class WbChunkDbServiceImpl extends InfraDbServiceImpl<WbChunkMapper, WbCh
     }
 
     @Override
-    public IPage<WbChunk> pageByChunkSetId(Long chunkSetId, ChunkContentFilter filter, long current, long size) {
+    public IPage<WbChunk> pageByChunkSetId(Long chunkSetId, ChunkContentFilterDTO filter, long current, long size) {
         LambdaQueryWrapper<WbChunk> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(WbChunk::getChunkSetId, chunkSetId);
         applyFilter(queryWrapper, filter);
@@ -43,7 +43,7 @@ public class WbChunkDbServiceImpl extends InfraDbServiceImpl<WbChunkMapper, WbCh
     }
 
     /** 过滤条件下推：类型等同、兜底按内容类型判定、有无父片按 parent_chunk_id 判定 */
-    private void applyFilter(LambdaQueryWrapper<WbChunk> queryWrapper, ChunkContentFilter filter) {
+    private void applyFilter(LambdaQueryWrapper<WbChunk> queryWrapper, ChunkContentFilterDTO filter) {
         if (NullUtil.isNull(filter)) {
             return;
         }

@@ -3,10 +3,10 @@ package com.workbuddy.auth.service.impl;
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.util.JwtUtil;
 import com.workbuddy.common.domain.entity.WbUser;
-import com.workbuddy.common.dto.request.user.PasswordUpdateRequest;
-import com.workbuddy.common.dto.request.user.ProfileUpdateRequest;
-import com.workbuddy.common.dto.request.user.UserCreateRequest;
-import com.workbuddy.common.dto.request.user.UserUpdateRequest;
+import com.workbuddy.common.dto.request.user.PasswordUpdateDTO;
+import com.workbuddy.common.dto.request.user.ProfileUpdateDTO;
+import com.workbuddy.common.dto.request.user.UserCreateDTO;
+import com.workbuddy.common.dto.request.user.UserUpdateDTO;
 import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.user.UserRole;
@@ -122,7 +122,7 @@ class UserServiceImplGuardTest {
         when(userDbService.getById(1L)).thenReturn(adminUser(1L));
         authenticateAs(1L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setRole(UserRole.USER.getCode());
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> userService.updateUser(1L, request));
@@ -136,7 +136,7 @@ class UserServiceImplGuardTest {
         when(userDbService.getById(1L)).thenReturn(adminUser(1L));
         authenticateAs(1L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(0);
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> userService.updateUser(1L, request));
@@ -151,7 +151,7 @@ class UserServiceImplGuardTest {
         authenticateAs(99L);
         when(userDbService.count(any())).thenReturn(0L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         // 仅降级角色（状态保持启用）：旧实现只看 status，这条路径能绕过守卫
         request.setRole(UserRole.USER.getCode());
 
@@ -167,7 +167,7 @@ class UserServiceImplGuardTest {
         authenticateAs(99L);
         when(userDbService.count(any())).thenReturn(1L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setRole(UserRole.USER.getCode());
 
         userService.updateUser(2L, request);
@@ -182,7 +182,7 @@ class UserServiceImplGuardTest {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
         authenticateAs(99L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(99);
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> userService.updateUser(2L, request));
@@ -210,7 +210,7 @@ class UserServiceImplGuardTest {
         authenticateAs(99L);
         when(passwordEncoder.encode("newpass123")).thenReturn("encoded-new");
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setPassword("newpass123");
 
         userService.updateUser(2L, request);
@@ -228,7 +228,7 @@ class UserServiceImplGuardTest {
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setRole(UserRole.ADMIN.getCode());
 
         userService.updateUser(2L, request);
@@ -246,7 +246,7 @@ class UserServiceImplGuardTest {
         authenticateAs(99L);
 
         // 角色/状态/密码都不变（例如只提交了相同状态）
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
 
         userService.updateUser(2L, request);
 
@@ -262,7 +262,7 @@ class UserServiceImplGuardTest {
         authenticateAs(99L);
         when(userDbService.count(any())).thenReturn(0L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(0);
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> userService.updateUser(2L, request));
@@ -277,7 +277,7 @@ class UserServiceImplGuardTest {
         authenticateAs(99L);
         when(userDbService.count(any())).thenReturn(1L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(0);
 
         userService.updateUser(2L, request);
@@ -293,7 +293,7 @@ class UserServiceImplGuardTest {
         authenticateAs(99L);
         when(passwordEncoder.encode("newpass123")).thenReturn("encoded-new");
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setPassword("newpass123");
 
         userService.updateUser(2L, request);
@@ -308,7 +308,7 @@ class UserServiceImplGuardTest {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
         authenticateAs(99L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(0);
 
         userService.updateUser(2L, request);
@@ -325,7 +325,7 @@ class UserServiceImplGuardTest {
         when(userDbService.getById(anyLong())).thenReturn(null);
 
         KnowledgeException e = assertThrows(KnowledgeException.class,
-                () -> userService.updateUser(404L, new UserUpdateRequest()));
+                () -> userService.updateUser(404L, new UserUpdateDTO()));
 
         assertEquals(ErrorCode.USER_NOT_FOUND, e.getErrorCode());
     }
@@ -387,7 +387,7 @@ class UserServiceImplGuardTest {
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setRole(UserRole.ADMIN.getCode());
 
         userService.updateUser(2L, request);
@@ -404,7 +404,7 @@ class UserServiceImplGuardTest {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
         authenticateAs(99L);
 
-        UserUpdateRequest request = new UserUpdateRequest();
+        UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(0);
 
         userService.updateUser(2L, request);
@@ -429,7 +429,7 @@ class UserServiceImplGuardTest {
     void addUserShouldCarryProfileFields() {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
         when(passwordEncoder.encode("secret123")).thenReturn("encoded");
-        UserCreateRequest request = createRequest("newbie", "secret123", null, null);
+        UserCreateDTO request = createRequest("newbie", "secret123", null, null);
         request.setDisplayName("张三");
         request.setEmail("zhangsan@example.com");
         request.setPhone("13800000000");
@@ -473,7 +473,7 @@ class UserServiceImplGuardTest {
         WbUser user = plainUser(2L);
         user.setDisplayName("旧名");
         when(userDbService.getById(2L)).thenReturn(user);
-        ProfileUpdateRequest request = profileRequest("新名", "new@example.com", "13900000000");
+        ProfileUpdateDTO request = profileRequest("新名", "new@example.com", "13900000000");
 
         userService.updateProfile(2L, request);
 
@@ -495,7 +495,7 @@ class UserServiceImplGuardTest {
     @Test
     void updateProfileShouldNormalizeBlankContactToNull() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
-        ProfileUpdateRequest request = profileRequest("张三", "   ", "");
+        ProfileUpdateDTO request = profileRequest("张三", "   ", "");
 
         userService.updateProfile(2L, request);
 
@@ -579,23 +579,23 @@ class UserServiceImplGuardTest {
                 objectIdCaptor.getValue(), beforeCaptor.getValue(), afterCaptor.getValue());
     }
 
-    private PasswordUpdateRequest passwordRequest(String oldPassword, String newPassword) {
-        PasswordUpdateRequest request = new PasswordUpdateRequest();
+    private PasswordUpdateDTO passwordRequest(String oldPassword, String newPassword) {
+        PasswordUpdateDTO request = new PasswordUpdateDTO();
         request.setOldPassword(oldPassword);
         request.setNewPassword(newPassword);
         return request;
     }
 
-    private ProfileUpdateRequest profileRequest(String displayName, String email, String phone) {
-        ProfileUpdateRequest request = new ProfileUpdateRequest();
+    private ProfileUpdateDTO profileRequest(String displayName, String email, String phone) {
+        ProfileUpdateDTO request = new ProfileUpdateDTO();
         request.setDisplayName(displayName);
         request.setEmail(email);
         request.setPhone(phone);
         return request;
     }
 
-    private UserCreateRequest createRequest(String username, String password, String role, Integer status) {
-        UserCreateRequest request = new UserCreateRequest();
+    private UserCreateDTO createRequest(String username, String password, String role, Integer status) {
+        UserCreateDTO request = new UserCreateDTO();
         request.setUsername(username);
         request.setPassword(password);
         request.setRole(role);

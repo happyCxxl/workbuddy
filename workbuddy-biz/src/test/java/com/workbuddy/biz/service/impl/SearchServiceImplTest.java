@@ -12,7 +12,7 @@ import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.domain.entity.WbRetrievalRun;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
-import com.workbuddy.common.dto.request.retrieval.SearchRequest;
+import com.workbuddy.common.dto.request.retrieval.SearchDTO;
 import com.workbuddy.common.dto.response.retrieval.SearchHitVO;
 import com.workbuddy.common.dto.response.retrieval.SearchVO;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
@@ -110,8 +110,8 @@ class SearchServiceImplTest {
         return row;
     }
 
-    private SearchRequest request() {
-        SearchRequest request = new SearchRequest();
+    private SearchDTO request() {
+        SearchDTO request = new SearchDTO();
         request.setQuery("保证金");
         return request;
     }
@@ -160,7 +160,7 @@ class SearchServiceImplTest {
     // TODO 模型调用层待接入：向量通道当前恒降级，本用例待恢复
     @Disabled("模型调用层待接入：向量通道恒降级")
     void benchSearchShouldUseExplicitVersionAndRuleAndRecordRun() {
-        SearchRequest request = request();
+        SearchDTO request = request();
         request.setVersionId(30L);
         request.setRuleId(500L);
         WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
@@ -204,7 +204,7 @@ class SearchServiceImplTest {
     // TODO 模型调用层待接入：向量通道当前恒降级，本用例待恢复
     @Disabled("模型调用层待接入：向量通道恒降级")
     void parentExpandShouldFetchParentFromCollection() {
-        SearchRequest request = request();
+        SearchDTO request = request();
         request.setRuleId(500L);
         WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
         when(indexVersionDbService.getById(30L)).thenReturn(version);
@@ -242,7 +242,7 @@ class SearchServiceImplTest {
     @Test
     void corruptEmbedStrategyRowShouldDegradeVectorChannel() {
         // EMBED 策略版本行配置快照坏：查询向量化中止（向量通道降级为空），全文通道照跑，不炸不造默认
-        SearchRequest request = request();
+        SearchDTO request = request();
         request.setVersionId(30L);
         request.setRuleId(500L);
         WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
@@ -271,7 +271,7 @@ class SearchServiceImplTest {
 
     @Test
     void lockedCapabilityRuleShouldBeRejectedAtEngine() {
-        SearchRequest request = request();
+        SearchDTO request = request();
         request.setVersionId(30L);
         request.setRuleId(500L);
         WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll());
@@ -290,7 +290,7 @@ class SearchServiceImplTest {
 
     @Test
     void benchWithPartialIdsShouldReject() {
-        SearchRequest request = request();
+        SearchDTO request = request();
         request.setVersionId(30L);
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.search(1L, request));

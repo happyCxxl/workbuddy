@@ -1,7 +1,7 @@
 package com.workbuddy.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.web.R;
 import com.workbuddy.common.error.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

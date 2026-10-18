@@ -5,10 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.enums.model.AuthType;
-import com.workbuddy.common.dto.request.model.ModelQueryDto;
-import com.workbuddy.common.dto.request.model.ModelSaveDto;
-import com.workbuddy.common.dto.request.model.ModelUpdateDto;
-import com.workbuddy.common.dto.request.model.ModelStatusDto;
+import com.workbuddy.common.dto.request.model.ModelQueryDTO;
+import com.workbuddy.common.dto.request.model.ModelSaveDTO;
+import com.workbuddy.common.dto.request.model.ModelUpdateDTO;
+import com.workbuddy.common.dto.request.model.ModelStatusDTO;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.AuditObjectType;
@@ -93,7 +93,7 @@ class ModelServiceImplTest {
 
     @Test
     void createShouldFillColumnsAndWriteAudit() {
-        ModelSaveDto dto = saveDto();
+        ModelSaveDTO dto = saveDto();
 
         ModelItemVO item = service.create(dto);
 
@@ -121,7 +121,7 @@ class ModelServiceImplTest {
 
     @Test
     void createShouldDefaultThinkingFlagToDisabled() {
-        ModelSaveDto dto = saveDto();
+        ModelSaveDTO dto = saveDto();
         dto.setThinkingEnabled(null);
 
         service.create(dto);
@@ -131,7 +131,7 @@ class ModelServiceImplTest {
 
     @Test
     void createShouldRejectIllegalCapability() {
-        ModelSaveDto unknown = saveDto();
+        ModelSaveDTO unknown = saveDto();
         unknown.setCapabilities(List.of("RERANK"));
 
         KnowledgeException unknownError = assertThrows(KnowledgeException.class, () -> service.create(unknown));
@@ -152,7 +152,7 @@ class ModelServiceImplTest {
     void updateShouldOverwriteColumns() {
         when(kbModelDbService.getExistingById(5L))
                 .thenReturn(row(5L, "dashscope", "qwen-max", "CHAT", "ENABLED"));
-        ModelUpdateDto dto = updateDto();
+        ModelUpdateDTO dto = updateDto();
         dto.setPriceInPerM(null);
 
         ModelItemVO item = service.update(5L, dto);
@@ -171,7 +171,7 @@ class ModelServiceImplTest {
         WbModel existing = row(7L, "dashscope", "qwen-max", "CHAT", "DISABLED");
         existing.setCurrency("USD");
         when(kbModelDbService.getExistingById(7L)).thenReturn(existing);
-        ModelUpdateDto dto = updateDto();
+        ModelUpdateDTO dto = updateDto();
 
         service.update(7L, dto);
 
@@ -193,7 +193,7 @@ class ModelServiceImplTest {
     @Test
     void updateStatusShouldWriteStatusAndAudit() {
         when(kbModelDbService.getExistingById(3L)).thenReturn(row(3L, "dashscope", "qwen-max", "CHAT", "ENABLED"));
-        ModelStatusDto dto = new ModelStatusDto();
+        ModelStatusDTO dto = new ModelStatusDTO();
         dto.setStatus("disabled");
 
         ModelItemVO item = service.updateStatus(3L, dto);
@@ -205,21 +205,21 @@ class ModelServiceImplTest {
     }
 
     /** 字段齐全的新增收参：覆盖长度四列、价格三列与限额两列 */
-    private ModelSaveDto saveDto() {
-        ModelSaveDto dto = new ModelSaveDto();
+    private ModelSaveDTO saveDto() {
+        ModelSaveDTO dto = new ModelSaveDTO();
         applyFullFields(dto);
         return dto;
     }
 
     /** 字段齐全的编辑收参：字段口径与新增一致 */
-    private ModelUpdateDto updateDto() {
-        ModelUpdateDto dto = new ModelUpdateDto();
+    private ModelUpdateDTO updateDto() {
+        ModelUpdateDTO dto = new ModelUpdateDTO();
         applyFullFields(dto);
         return dto;
     }
 
     /** 全字段赋值（新增 / 编辑收参共用） */
-    private void applyFullFields(ModelSaveDto dto) {
+    private void applyFullFields(ModelSaveDTO dto) {
         dto.setVendorCode("dashscope");
         dto.setModelKey("qwen-max");
         dto.setCapabilities(List.of("CHAT", "EMBEDDING"));
@@ -258,8 +258,8 @@ class ModelServiceImplTest {
     }
 
     /** 分页查询条件（页码与页长可空 = 缺省口径） */
-    private ModelQueryDto query(String capability, String status, String keyword, Long current, Long size) {
-        ModelQueryDto query = new ModelQueryDto();
+    private ModelQueryDTO query(String capability, String status, String keyword, Long current, Long size) {
+        ModelQueryDTO query = new ModelQueryDTO();
         query.setCapability(capability);
         query.setStatus(status);
         query.setKeyword(keyword);

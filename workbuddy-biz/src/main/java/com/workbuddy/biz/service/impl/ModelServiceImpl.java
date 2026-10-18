@@ -6,12 +6,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
-import com.workbuddy.common.dto.request.model.ModelQueryDto;
+import com.workbuddy.common.dto.request.model.ModelQueryDTO;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.model.ModelStatus;
-import com.workbuddy.common.dto.request.model.ModelSaveDto;
-import com.workbuddy.common.dto.request.model.ModelStatusDto;
-import com.workbuddy.common.dto.request.model.ModelUpdateDto;
+import com.workbuddy.common.dto.request.model.ModelSaveDTO;
+import com.workbuddy.common.dto.request.model.ModelStatusDTO;
+import com.workbuddy.common.dto.request.model.ModelUpdateDTO;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.AuditObjectType;
@@ -50,8 +50,8 @@ public class ModelServiceImpl implements ModelService {
     private final AuditEventPublisher auditEventPublisher;
 
     @Override
-    public IPage<ModelItemVO> page(ModelQueryDto query) {
-        ModelQueryDto source = NullUtil.isNull(query) ? new ModelQueryDto() : query;
+    public IPage<ModelItemVO> page(ModelQueryDTO query) {
+        ModelQueryDTO source = NullUtil.isNull(query) ? new ModelQueryDTO() : query;
         IPage<WbModel> rows = wbModelDbService.pageByCondition(source.currentOrDefault(),
                 source.sizeOrDefault(), source.getStatus(), StrUtil.trimToNull(source.getKeyword()),
                 source.getCapability());
@@ -62,7 +62,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ModelItemVO create(ModelSaveDto dto) {
+    public ModelItemVO create(ModelSaveDTO dto) {
         WbModel row = new WbModel();
         applyColumns(row, dto);
         row.setCurrency(dto.getCurrency());
@@ -77,7 +77,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ModelItemVO update(Long id, ModelUpdateDto dto) {
+    public ModelItemVO update(Long id, ModelUpdateDTO dto) {
         WbModel before = requireRow(id);
         String beforeJson = JsonUtil.toJsonStr(before);
         WbModel after = new WbModel();
@@ -95,7 +95,7 @@ public class ModelServiceImpl implements ModelService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ModelItemVO updateStatus(Long id, ModelStatusDto dto) {
+    public ModelItemVO updateStatus(Long id, ModelStatusDTO dto) {
         WbModel row = requireRow(id);
         String beforeJson = JsonUtil.toJsonStr(row);
         String status = StrUtil.trimToNull(NullUtil.isNull(dto) ? null : dto.getStatus());
@@ -113,7 +113,7 @@ public class ModelServiceImpl implements ModelService {
      * 业务列搬运：文本 trim、能力清单解析成落库 CSV、思考标记缺省 0、数值列原样复制；
      * 币种与状态由新增 / 编辑各自定值，不在本方法。
      */
-    private void applyColumns(WbModel row, ModelSaveDto dto) {
+    private void applyColumns(WbModel row, ModelSaveDTO dto) {
         row.setVendorCode(StrUtil.trimToNull(dto.getVendorCode()));
         row.setModelKey(StrUtil.trimToNull(dto.getModelKey()));
         row.setCapabilities(capabilities(dto.getCapabilities()));

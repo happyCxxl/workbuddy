@@ -4,8 +4,8 @@ import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.RetrievalRuleResolver;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
-import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDto;
-import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDto;
+import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDTO;
+import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDTO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
@@ -68,8 +68,8 @@ class StrategyVersionServiceImplTest {
         return row;
     }
 
-    private StrategyVersionCreateDto createDto() {
-        StrategyVersionCreateDto dto = new StrategyVersionCreateDto();
+    private StrategyVersionCreateDTO createDto() {
+        StrategyVersionCreateDTO dto = new StrategyVersionCreateDTO();
         dto.setType("CHUNK");
         dto.setName("chunk-hybrid");
         dto.setVersion("v2");
@@ -77,8 +77,8 @@ class StrategyVersionServiceImplTest {
         return dto;
     }
 
-    private StrategyVersionUpdateDto updateDto() {
-        StrategyVersionUpdateDto dto = new StrategyVersionUpdateDto();
+    private StrategyVersionUpdateDTO updateDto() {
+        StrategyVersionUpdateDTO dto = new StrategyVersionUpdateDTO();
         dto.setName("chunk-strict");
         dto.setVersion("v2");
         dto.setConfigSnapshot("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\"}}}");
@@ -86,8 +86,8 @@ class StrategyVersionServiceImplTest {
     }
 
     /** CHUNK 策略创建 DTO：routes/pipeline 配置结构 */
-    private StrategyVersionCreateDto chunkDto(String configSnapshot) {
-        StrategyVersionCreateDto dto = new StrategyVersionCreateDto();
+    private StrategyVersionCreateDTO chunkDto(String configSnapshot) {
+        StrategyVersionCreateDTO dto = new StrategyVersionCreateDTO();
         dto.setType("CHUNK");
         dto.setName("chunk-hybrid");
         dto.setVersion("v1");
@@ -149,7 +149,7 @@ class StrategyVersionServiceImplTest {
 
     @Test
     void createWithUnknownTypeShouldReject() {
-        StrategyVersionCreateDto dto = chunkDto("{\"routes\":{}}");
+        StrategyVersionCreateDTO dto = chunkDto("{\"routes\":{}}");
         dto.setType("INDEX");
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.create(dto));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -332,8 +332,8 @@ class StrategyVersionServiceImplTest {
 
     // ---------------- PREPROCESS 配置校验（结构/枚举/参数范围/自定义正则） ----------------
 
-    private StrategyVersionCreateDto preprocDto(String configSnapshot) {
-        StrategyVersionCreateDto dto = new StrategyVersionCreateDto();
+    private StrategyVersionCreateDTO preprocDto(String configSnapshot) {
+        StrategyVersionCreateDTO dto = new StrategyVersionCreateDTO();
         dto.setType("PREPROCESS");
         dto.setName("preproc-strict");
         dto.setVersion("v2");
@@ -398,8 +398,8 @@ class StrategyVersionServiceImplTest {
 
     // ---------------- EMBED 配置校验（模型目录/模板占位符/数值范围/枚举 + 保存时目录冗余进快照） ----------------
 
-    private StrategyVersionCreateDto embedDto(String configSnapshot) {
-        StrategyVersionCreateDto dto = new StrategyVersionCreateDto();
+    private StrategyVersionCreateDTO embedDto(String configSnapshot) {
+        StrategyVersionCreateDTO dto = new StrategyVersionCreateDTO();
         dto.setType("EMBED");
         dto.setName("embed-default");
         dto.setVersion("v1");
@@ -458,8 +458,8 @@ class StrategyVersionServiceImplTest {
 
     // ---------------- RETRIEVAL 配置校验（规则解析器收口：白名单/边界/预留能力锁定） ----------------
 
-    private StrategyVersionCreateDto retrievalDto(String configSnapshot) {
-        StrategyVersionCreateDto dto = new StrategyVersionCreateDto();
+    private StrategyVersionCreateDTO retrievalDto(String configSnapshot) {
+        StrategyVersionCreateDTO dto = new StrategyVersionCreateDTO();
         dto.setType("RETRIEVAL");
         dto.setName("hybrid-rrf-k60-top10");
         dto.setVersion("v1");

@@ -32,12 +32,12 @@
          判空语义与原生 null 比较运行期等价，且 || 短路保证解引用时必非空。
          注意：该告警的主元素是**字段**，用 <Method> 限定匹配不上，必须按字段豁免 -->
     <Match>
-        <Class name="com.workbuddy.common.dto.request.page.PageQueryDto"/>
+        <Class name="com.workbuddy.common.dto.request.page.PageQueryDTO"/>
         <Field name="current"/>
         <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>
     <Match>
-        <Class name="com.workbuddy.common.dto.request.page.PageQueryDto"/>
+        <Class name="com.workbuddy.common.dto.request.page.PageQueryDTO"/>
         <Field name="size"/>
         <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>

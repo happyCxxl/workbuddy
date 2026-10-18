@@ -1,8 +1,8 @@
 package com.workbuddy.biz.controller.model;
 
-import com.workbuddy.common.dto.request.model.ModelQueryDto;
-import com.workbuddy.common.dto.request.model.ModelSaveDto;
-import com.workbuddy.common.dto.request.model.ModelStatusDto;
+import com.workbuddy.common.dto.request.model.ModelQueryDTO;
+import com.workbuddy.common.dto.request.model.ModelSaveDTO;
+import com.workbuddy.common.dto.request.model.ModelStatusDTO;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -40,11 +40,11 @@ class ModelDtoValidationTest {
 
     @Test
     void blankOrOverlongTextShouldFail() {
-        ModelSaveDto blankVendor = saveDto();
+        ModelSaveDTO blankVendor = saveDto();
         blankVendor.setVendorCode("   ");
-        ModelSaveDto blankKey = saveDto();
+        ModelSaveDTO blankKey = saveDto();
         blankKey.setModelKey("");
-        ModelSaveDto overlong = saveDto();
+        ModelSaveDTO overlong = saveDto();
         overlong.setModelKey("x".repeat(129));
 
         assertPropertyViolated(VALIDATOR.validate(blankVendor), "vendorCode");
@@ -54,9 +54,9 @@ class ModelDtoValidationTest {
 
     @Test
     void negativeNumbersShouldFail() {
-        ModelSaveDto price = saveDto();
+        ModelSaveDTO price = saveDto();
         price.setPriceInPerM(new BigDecimal("-1"));
-        ModelSaveDto limit = saveDto();
+        ModelSaveDTO limit = saveDto();
         limit.setRpmLimit(-5);
 
         assertPropertyViolated(VALIDATOR.validate(price), "priceInPerM");
@@ -66,11 +66,11 @@ class ModelDtoValidationTest {
     /** 0 / 1 / 留空合法，越界取值拒绝 */
     @Test
     void thinkingFlagShouldBoundToZeroOrOne() {
-        ModelSaveDto legalZero = saveDto();
+        ModelSaveDTO legalZero = saveDto();
         legalZero.setThinkingEnabled(0);
-        ModelSaveDto legalNull = saveDto();
+        ModelSaveDTO legalNull = saveDto();
         legalNull.setThinkingEnabled(null);
-        ModelSaveDto illegal = saveDto();
+        ModelSaveDTO illegal = saveDto();
         illegal.setThinkingEnabled(2);
 
         assertTrue(VALIDATOR.validate(legalZero).isEmpty());
@@ -81,11 +81,11 @@ class ModelDtoValidationTest {
     /** 厂商码大小写不敏感；与配置清单外的取值拒绝（含曾配置后停用的厂商） */
     @Test
     void vendorCodeShouldMatchConfiguredSet() {
-        ModelSaveDto upper = saveDto();
+        ModelSaveDTO upper = saveDto();
         upper.setVendorCode("DEEPSEEK");
-        ModelSaveDto unconfigured = saveDto();
+        ModelSaveDTO unconfigured = saveDto();
         unconfigured.setVendorCode("dashscope");
-        ModelSaveDto unknown = saveDto();
+        ModelSaveDTO unknown = saveDto();
         unknown.setVendorCode("no-such-vendor");
 
         assertTrue(VALIDATOR.validate(upper).isEmpty());
@@ -96,11 +96,11 @@ class ModelDtoValidationTest {
     /** 币种必填、只认 CNY / USD 精确大小写 */
     @Test
     void currencyShouldMatchDictionary() {
-        ModelSaveDto absent = saveDto();
+        ModelSaveDTO absent = saveDto();
         absent.setCurrency(null);
-        ModelSaveDto lower = saveDto();
+        ModelSaveDTO lower = saveDto();
         lower.setCurrency("usd");
-        ModelSaveDto illegal = saveDto();
+        ModelSaveDTO illegal = saveDto();
         illegal.setCurrency("EUR");
 
         assertPropertyViolated(VALIDATOR.validate(absent), "currency");
@@ -133,16 +133,16 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(queryDto(null, "PAUSED")), "status");
     }
 
-    private ModelQueryDto queryDto(String capability, String status) {
-        ModelQueryDto query = new ModelQueryDto();
+    private ModelQueryDTO queryDto(String capability, String status) {
+        ModelQueryDTO query = new ModelQueryDTO();
         query.setCapability(capability);
         query.setStatus(status);
         return query;
     }
 
     /** 字段齐全的合法收参 */
-    private ModelSaveDto saveDto() {
-        ModelSaveDto dto = new ModelSaveDto();
+    private ModelSaveDTO saveDto() {
+        ModelSaveDTO dto = new ModelSaveDTO();
         dto.setVendorCode("deepseek");
         dto.setModelKey("qwen-max");
         dto.setCapabilities(List.of("CHAT", "EMBEDDING"));
@@ -158,8 +158,8 @@ class ModelDtoValidationTest {
         return dto;
     }
 
-    private ModelStatusDto statusDto(String status) {
-        ModelStatusDto dto = new ModelStatusDto();
+    private ModelStatusDTO statusDto(String status) {
+        ModelStatusDTO dto = new ModelStatusDTO();
         dto.setStatus(status);
         return dto;
     }

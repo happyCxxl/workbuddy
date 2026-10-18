@@ -1,16 +1,16 @@
 package com.workbuddy.biz.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.workbuddy.common.dto.request.input.FileSubmitRequest;
-import com.workbuddy.common.dto.request.knowledge.FileResultQueryDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDto;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDto;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateRequest;
-import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDto;
+import com.workbuddy.common.dto.request.input.FileSubmitDTO;
+import com.workbuddy.common.dto.request.knowledge.FileResultQueryDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDTO;
 import com.workbuddy.common.dto.response.input.FileResultVO;
-import com.workbuddy.common.dto.response.input.FileSubmitResponse;
+import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
@@ -49,13 +49,13 @@ public interface KnowledgeBaseService {
     /**
      * 创建知识库（默认启用状态），返回知识库 ID。
      */
-    Long create(KnowledgeBaseCreateDto dto);
+    Long create(KnowledgeBaseCreateDTO dto);
 
     /**
      * 更新名称/描述/策略绑定开关。
      */
     @SuppressWarnings("SameReturnValue")
-    boolean update(KnowledgeBaseUpdateDto dto);
+    boolean update(KnowledgeBaseUpdateDTO dto);
 
     /**
      * 详情（已逻辑删除不可见）。
@@ -65,11 +65,11 @@ public interface KnowledgeBaseService {
     /**
      * 分页列表（**仅当前用户可见的库**；名称模糊，不含已删），并回填每库文档数与已发布索引版本。
      *
-     * @param query 查询条件（名称 / 状态 / 排序都可留空，页码与页长口径见 {@link KnowledgeBaseQueryDto} 父类；
+     * @param query 查询条件（名称 / 状态 / 排序都可留空，页码与页长口径见 {@link KnowledgeBaseQueryDTO} 父类；
      *              排序未知取值按默认口径）
      * @return 知识库分页
      */
-    IPage<KnowledgeBaseVO> page(KnowledgeBaseQueryDto query);
+    IPage<KnowledgeBaseVO> page(KnowledgeBaseQueryDTO query);
 
     /**
      * 统计概览（仅未删除数据）：知识库总数、启用数、文档数。
@@ -121,14 +121,14 @@ public interface KnowledgeBaseService {
      * 非法（类型白名单/版本不存在/类型不匹配/停用/绑定开关关闭）→ 40001。
      */
     @SuppressWarnings("SameReturnValue")
-    boolean bindStrategy(Long id, StrategyBindingUpdateDto dto);
+    boolean bindStrategy(Long id, StrategyBindingUpdateDTO dto);
 
     /**
      * 批量设置知识库策略集合（发布=知识库策略集合）：一次调用给全可绑定类型（幂等设置），
      * strategyVersionId 为 null = 解绑；逐类型审计 BIND，任一项失败整体回滚。
      */
     @SuppressWarnings("SameReturnValue")
-    boolean bindStrategies(Long id, StrategyBindingsUpdateRequest request);
+    boolean bindStrategies(Long id, StrategyBindingsUpdateDTO request);
 
     // ------------------------------------------------------------------
     // 文档输入链路（提交建档 / 提交记录 / 文件结果）
@@ -146,25 +146,25 @@ public interface KnowledgeBaseService {
      *          幂等键缺失抛 KnowledgeException（40420）；
      *          文件校验不通过（4041x，含文件不存在）不抛异常，记 FAIL 提交日志并正常返回。
      */
-    FileSubmitResponse submit(Long knowledgeBaseId, FileSubmitRequest request);
+    FileSubmitVO submit(Long knowledgeBaseId, FileSubmitDTO request);
 
     /**
      * 提交记录分页查询：数据源 wb_submit_log（PASS/FAIL 均记录），
      * 支持按提交结果与文件名模糊筛选。
      *
      * @param knowledgeBaseId 知识库 ID
-     * @param query           查询条件（状态 / 文件名都可留空，页码与页长口径见 {@link SubmitLogQueryDto} 父类）
+     * @param query           查询条件（状态 / 文件名都可留空，页码与页长口径见 {@link SubmitLogQueryDTO} 父类）
      * @return 提交记录分页 VO（含失败原因）
      */
-    IPage<SubmitLogVO> pageSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDto query);
+    IPage<SubmitLogVO> pageSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDTO query);
 
     /**
      * 文件结果分页查询（执行链工作台列表数据源）：每行附带各环节最新任务状态。
      *
      * @param knowledgeBaseId 知识库 ID
-     * @param query           查询条件（环节可留空，页码与页长口径见 {@link FileResultQueryDto} 父类；
+     * @param query           查询条件（环节可留空，页码与页长口径见 {@link FileResultQueryDTO} 父类；
      *                        环节合法值 PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED，非法值 40001）
      * @return 文件结果分页 VO（含来源文件信息与各环节状态列表）
      */
-    IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDto query);
+    IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDTO query);
 }

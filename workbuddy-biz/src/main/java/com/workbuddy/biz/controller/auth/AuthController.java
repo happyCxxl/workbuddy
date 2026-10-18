@@ -1,9 +1,9 @@
 package com.workbuddy.biz.controller.auth;
 
 import com.workbuddy.auth.service.AuthService;
-import com.workbuddy.common.dto.response.R;
-import com.workbuddy.common.dto.request.auth.LoginRequest;
-import com.workbuddy.common.dto.request.auth.RegisterRequest;
+import com.workbuddy.common.web.R;
+import com.workbuddy.common.dto.request.auth.LoginDTO;
+import com.workbuddy.common.dto.request.auth.RegisterDTO;
 import com.workbuddy.common.dto.response.auth.LoginVO;
 import com.workbuddy.common.annotation.RateLimit;
 import jakarta.validation.Valid;
@@ -30,13 +30,13 @@ public class AuthController {
     /** 登录 */
     @PostMapping("/login")
     @RateLimit()
-    public R<LoginVO> login(@Valid @RequestBody LoginRequest request) {
+    public R<LoginVO> login(@Valid @RequestBody LoginDTO request) {
         return R.ok(authService.login(request));
     }
 
     /** 注册 */
     @PostMapping("/register")
-    public R<Void> register(@Valid @RequestBody RegisterRequest request) {
+    public R<Void> register(@Valid @RequestBody RegisterDTO request) {
         authService.register(request);
         return R.ok(null, "注册成功");
     }

@@ -6,8 +6,8 @@ import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.RetrievalRuleResolver;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
-import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDto;
-import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDto;
+import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDTO;
+import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDTO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.error.ErrorCode;
@@ -55,14 +55,14 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
     }
 
     @Override
-    public StrategyVersionVO create(StrategyVersionCreateDto dto) {
+    public StrategyVersionVO create(StrategyVersionCreateDTO dto) {
         ThrowUtil.throwIf(!SUPPORTED_TYPES.contains(dto.getType()),
                 ErrorCode.PARAM_INVALID, "未知策略类型: " + dto.getType());
         return register(dto.getType(), dto.getName(), dto.getVersion(), dto.getConfigSnapshot());
     }
 
     @Override
-    public StrategyVersionVO update(Long id, StrategyVersionUpdateDto dto) {
+    public StrategyVersionVO update(Long id, StrategyVersionUpdateDTO dto) {
         // 策略版本行不可变：编辑 = 复制新行（旧行原样保留；新版本号撞唯一键 → 40001）
         WbPipelineStrategyVersion old = requireById(id);
         StrategyVersionVO vo = register(old.getType(), dto.getName(), dto.getVersion(), dto.getConfigSnapshot());

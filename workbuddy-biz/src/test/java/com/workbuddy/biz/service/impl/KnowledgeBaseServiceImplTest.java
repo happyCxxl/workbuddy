@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDto;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDTO;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
@@ -24,10 +24,10 @@ import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.domain.entity.WbStrategyBinding;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDto;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDto;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateRequest;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateDTO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
 import com.workbuddy.common.dto.response.knowledge.StrategyBindingVO;
@@ -41,7 +41,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileValidatorPort;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -186,7 +186,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void createShouldSaveActiveAndAuditCreate() {
-        KnowledgeBaseCreateDto dto = new KnowledgeBaseCreateDto();
+        KnowledgeBaseCreateDTO dto = new KnowledgeBaseCreateDTO();
         dto.setName("招投标知识库");
         dto.setDescription("招投标场景");
         doAnswer(inv -> {
@@ -232,7 +232,7 @@ class KnowledgeBaseServiceImplTest {
     void updateShouldChangeNameAndAudit() {
         WbKnowledgeBase k = kb(3L, 1);
         when(knowledgeBaseDbService.getActiveById(3L)).thenReturn(k);
-        KnowledgeBaseUpdateDto dto = new KnowledgeBaseUpdateDto();
+        KnowledgeBaseUpdateDTO dto = new KnowledgeBaseUpdateDTO();
         dto.setId(3L);
         dto.setName("新名称");
         dto.setDescription("新描述");
@@ -439,7 +439,7 @@ class KnowledgeBaseServiceImplTest {
         existing.setDelFlag(DelFlag.DELETED.getCode());
         when(strategyBindingDbService.getAnyByKbAndType(2L, "CHUNK")).thenReturn(existing);
 
-        StrategyBindingUpdateDto dto = new StrategyBindingUpdateDto();
+        StrategyBindingUpdateDTO dto = new StrategyBindingUpdateDTO();
         dto.setStrategyType("CHUNK");
         dto.setStrategyVersionId(66L);
 
@@ -457,7 +457,7 @@ class KnowledgeBaseServiceImplTest {
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
         when(strategyBindingDbService.getByKbAndType(2L, "CHUNK")).thenReturn(binding(66L));
 
-        StrategyBindingUpdateDto dto = new StrategyBindingUpdateDto();
+        StrategyBindingUpdateDTO dto = new StrategyBindingUpdateDTO();
         dto.setStrategyType("CHUNK");
         dto.setStrategyVersionId(null);
 
@@ -477,7 +477,7 @@ class KnowledgeBaseServiceImplTest {
         inactive.setStatus("INACTIVE");
         when(strategyVersionDbService.getById(66L)).thenReturn(inactive);
 
-        StrategyBindingUpdateDto dto = new StrategyBindingUpdateDto();
+        StrategyBindingUpdateDTO dto = new StrategyBindingUpdateDTO();
         dto.setStrategyType("CHUNK");
         dto.setStrategyVersionId(66L);
 
@@ -492,18 +492,18 @@ class KnowledgeBaseServiceImplTest {
     // 逐类型增量改走 bindStrategy。"开关开着但还没绑"由不调用本接口表达。
 
     /** 批量绑定请求项 */
-    private StrategyBindingsUpdateRequest.StrategyBindItem bindItem(String type, Long versionId) {
-        StrategyBindingsUpdateRequest.StrategyBindItem item =
-                new StrategyBindingsUpdateRequest.StrategyBindItem();
+    private StrategyBindingsUpdateDTO.StrategyBindItem bindItem(String type, Long versionId) {
+        StrategyBindingsUpdateDTO.StrategyBindItem item =
+                new StrategyBindingsUpdateDTO.StrategyBindItem();
         item.setStrategyType(type);
         item.setStrategyVersionId(versionId);
         return item;
     }
 
     /** 批量绑定请求（绑定项可变参数） */
-    private StrategyBindingsUpdateRequest bindRequest(
-            StrategyBindingsUpdateRequest.StrategyBindItem... items) {
-        StrategyBindingsUpdateRequest request = new StrategyBindingsUpdateRequest();
+    private StrategyBindingsUpdateDTO bindRequest(
+            StrategyBindingsUpdateDTO.StrategyBindItem... items) {
+        StrategyBindingsUpdateDTO request = new StrategyBindingsUpdateDTO();
         request.setBindings(List.of(items));
         return request;
     }
@@ -527,7 +527,7 @@ class KnowledgeBaseServiceImplTest {
         stubActiveVersions("EMBED", 33L);
         when(strategyBindingDbService.getAnyByKbAndType(eq(2L), anyString())).thenReturn(null);
 
-        StrategyBindingsUpdateRequest request = bindRequest(
+        StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("EMBED", 33L));
 
         assertTrue(service.bindStrategies(2L, request));
@@ -540,7 +540,7 @@ class KnowledgeBaseServiceImplTest {
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
 
         // 只给预处理与切片的组合，缺向量化
-        StrategyBindingsUpdateRequest request = bindRequest(
+        StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L));
 
         KnowledgeException e =
@@ -554,7 +554,7 @@ class KnowledgeBaseServiceImplTest {
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
 
         // 三件套类型齐全，但向量化没给版本 —— 会造成"部分走绑定、部分走最新启用"的隐性不一致
-        StrategyBindingsUpdateRequest request = bindRequest(
+        StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("EMBED", null));
 
         KnowledgeException e =
@@ -569,7 +569,7 @@ class KnowledgeBaseServiceImplTest {
         disabled.setStrategyBindingEnabled(0);
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(disabled);
 
-        StrategyBindingsUpdateRequest request = bindRequest(
+        StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("EMBED", 33L));
 
         KnowledgeException e =
@@ -583,7 +583,7 @@ class KnowledgeBaseServiceImplTest {
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
 
         // 检索类策略不绑知识库（走索引版本的默认检索规则）
-        StrategyBindingsUpdateRequest request = bindRequest(
+        StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("RETRIEVAL", 44L));
 
         KnowledgeException e =
@@ -598,7 +598,7 @@ class KnowledgeBaseServiceImplTest {
         closed.setStrategyBindingEnabled(0);
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(closed);
 
-        StrategyBindingUpdateDto dto = new StrategyBindingUpdateDto();
+        StrategyBindingUpdateDTO dto = new StrategyBindingUpdateDTO();
         dto.setStrategyType("CHUNK");
         dto.setStrategyVersionId(66L);
 
@@ -666,7 +666,7 @@ class KnowledgeBaseServiceImplTest {
 
     @Test
     void createShouldStampOwnerAndRejectWithoutLogin() {
-        KnowledgeBaseCreateDto dto = new KnowledgeBaseCreateDto();
+        KnowledgeBaseCreateDTO dto = new KnowledgeBaseCreateDTO();
         dto.setName("我的库");
         doAnswer(inv -> {
             inv.getArgument(0, WbKnowledgeBase.class).setId(1L);
@@ -724,7 +724,7 @@ class KnowledgeBaseServiceImplTest {
         WbKnowledgeBase others = kb(3L, 1);
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(3L)).thenReturn(others);
-        KnowledgeBaseUpdateDto dto = new KnowledgeBaseUpdateDto();
+        KnowledgeBaseUpdateDTO dto = new KnowledgeBaseUpdateDTO();
         dto.setId(3L);
         dto.setName("改别人的库");
 
@@ -763,7 +763,7 @@ class KnowledgeBaseServiceImplTest {
         WbKnowledgeBase others = kb(2L, 1);
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(others);
-        StrategyBindingsUpdateRequest request = bindRequest(
+        StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("EMBED", 33L));
 
         KnowledgeException e =
@@ -816,8 +816,8 @@ class KnowledgeBaseServiceImplTest {
     }
 
     /** 分页查询条件（页码 1 / 页长 10 由缺省口径兜底，名称 / 状态 / 排序可空） */
-    private KnowledgeBaseQueryDto kbQuery(String name, Integer status, String sort) {
-        KnowledgeBaseQueryDto query = new KnowledgeBaseQueryDto();
+    private KnowledgeBaseQueryDTO kbQuery(String name, Integer status, String sort) {
+        KnowledgeBaseQueryDTO query = new KnowledgeBaseQueryDTO();
         query.setName(name);
         query.setStatus(status);
         query.setSort(sort);

@@ -14,7 +14,7 @@ import com.workbuddy.common.enums.structure.PageMark;
 import com.workbuddy.common.enums.structure.RelationType;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

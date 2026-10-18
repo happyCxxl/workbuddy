@@ -1,8 +1,8 @@
 package com.workbuddy.biz.controller.knowledge;
 
-import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;
-import com.workbuddy.common.dto.request.stage.StageTriggerQueryDto;
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.dto.request.stage.StageDetailQueryDTO;
+import com.workbuddy.common.dto.request.stage.StageTriggerQueryDTO;
+import com.workbuddy.common.web.R;
 import com.workbuddy.biz.service.EmbedControlService;
 import com.workbuddy.common.dto.response.embed.EmbedDetailVO;
 import com.workbuddy.common.dto.response.embed.EmbedTriggerVO;
@@ -31,7 +31,7 @@ public class KnowledgeFileEmbedController {
     @PostMapping("/{fileResultId}/embed")
     public R<EmbedTriggerVO> embed(
             @PathVariable("fileResultId") Long fileResultId,
-            StageTriggerQueryDto query) {
+            StageTriggerQueryDTO query) {
         log.info("===> KnowledgeFileEmbedController embed 触发向量化, fileResultId={}, strategyVersionId={},"
                         + " upstreamProductId={}",
                 fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId());
@@ -42,7 +42,7 @@ public class KnowledgeFileEmbedController {
     @GetMapping("/{fileResultId}/embed-detail")
     public R<EmbedDetailVO> embedDetail(
             @PathVariable("fileResultId") Long fileResultId,
-            StageDetailQueryDto query) {
+            StageDetailQueryDTO query) {
         return R.ok(embedControlService.embedDetail(fileResultId, query.getTaskId()));
     }
 }

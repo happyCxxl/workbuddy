@@ -1,11 +1,11 @@
 package com.workbuddy.biz.controller.knowledge;
 
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.web.R;
 import com.workbuddy.biz.service.RetrievalRuleService;
 import com.workbuddy.biz.service.SearchService;
-import com.workbuddy.common.dto.request.retrieval.RetrievalRulePublishDto;
-import com.workbuddy.common.dto.request.retrieval.RetrievalRunCompareDto;
-import com.workbuddy.common.dto.request.retrieval.SearchRequest;
+import com.workbuddy.common.dto.request.retrieval.RetrievalRulePublishDTO;
+import com.workbuddy.common.dto.request.retrieval.RetrievalRunCompareDTO;
+import com.workbuddy.common.dto.request.retrieval.SearchDTO;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRulePublishVO;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRunVO;
 import com.workbuddy.common.dto.response.retrieval.SearchVO;
@@ -41,14 +41,14 @@ public class KnowledgeRetrievalController {
     @PostMapping("/{id}/search")
     public R<SearchVO> search(
             @PathVariable("id") Long id,
-            @Valid @RequestBody SearchRequest request) {
+            @Valid @RequestBody SearchDTO request) {
         return R.ok(searchService.search(id, request));
     }
 
     @PostMapping("/{id}/retrieval-test")
     public R<SearchVO> retrievalTest(
             @PathVariable("id") Long id,
-            @Valid @RequestBody SearchRequest request) {
+            @Valid @RequestBody SearchDTO request) {
         return R.ok(searchService.search(id, request));
     }
 
@@ -62,14 +62,14 @@ public class KnowledgeRetrievalController {
     @PostMapping("/{id}/retrieval-runs/compare")
     public R<List<SearchVO>> compare(
             @PathVariable("id") Long id,
-            @Valid @RequestBody RetrievalRunCompareDto dto) {
+            @Valid @RequestBody RetrievalRunCompareDTO dto) {
         return R.ok(searchService.compareRuns(id, dto.getRunIds()));
     }
 
     @PostMapping("/{id}/retrieval-rules/publish")
     public R<RetrievalRulePublishVO> publishRule(
             @PathVariable("id") Long id,
-            @Valid @RequestBody RetrievalRulePublishDto dto) {
+            @Valid @RequestBody RetrievalRulePublishDTO dto) {
         return R.ok(retrievalRuleService.publishDefaultRule(id, dto));
     }
 }

@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.dto.response.input.FileResultVO;
-import com.workbuddy.common.dto.response.input.FileSubmitResponse;
+import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 import com.workbuddy.common.utils.NullUtil;
 import org.springframework.stereotype.Component;
@@ -48,8 +48,8 @@ public class InputVoAssembler {
      * @param parseTaskId 解析任务 ID（wb_knowledge_pipeline_task.id；无任务传 null）
      * @return 提交响应
      */
-    public FileSubmitResponse toSubmitResponse(WbSubmitLog log, Long parseTaskId) {
-        return new FileSubmitResponse(toSubmitLogVO(log), parseTaskId);
+    public FileSubmitVO toSubmitResponse(WbSubmitLog log, Long parseTaskId) {
+        return new FileSubmitVO(toSubmitLogVO(log), parseTaskId);
     }
 
     /**

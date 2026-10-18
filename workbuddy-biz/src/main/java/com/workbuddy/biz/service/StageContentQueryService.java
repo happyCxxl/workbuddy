@@ -1,6 +1,6 @@
 package com.workbuddy.biz.service;
 
-import com.workbuddy.common.dto.request.stage.ChunkContentFilter;
+import com.workbuddy.common.dto.request.stage.ChunkContentFilterDTO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 
 /**
@@ -43,5 +43,5 @@ public interface StageContentQueryService {
      * @return 产物内容（当前页）
      */
     StageContentVO stageContent(Long fileResultId, String stage, Long taskId, Long docPage, Integer page,
-                                Integer limit, String status, ChunkContentFilter chunkFilter);
+                                Integer limit, String status, ChunkContentFilterDTO chunkFilter);
 }

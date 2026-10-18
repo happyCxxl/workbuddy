@@ -54,7 +54,7 @@ export interface UserPageQuery {
   status?: number;
 }
 
-/** 新增用户入参（与后端 UserCreateRequest 对齐） */
+/** 新增用户入参（与后端 UserCreateDTO 对齐） */
 export interface UserCreateRequest {
   username: string;
   displayName: string;

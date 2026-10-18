@@ -8,7 +8,7 @@ import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
-import com.workbuddy.common.dto.request.retrieval.RetrievalRulePublishDto;
+import com.workbuddy.common.dto.request.retrieval.RetrievalRulePublishDTO;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRulePublishVO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
@@ -81,8 +81,8 @@ class RetrievalRuleServiceImplTest {
         return row;
     }
 
-    private RetrievalRulePublishDto dto() {
-        RetrievalRulePublishDto dto = new RetrievalRulePublishDto();
+    private RetrievalRulePublishDTO dto() {
+        RetrievalRulePublishDTO dto = new RetrievalRulePublishDTO();
         dto.setVersionId(20L);
         dto.setRuleId(500L);
         return dto;

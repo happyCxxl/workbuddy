@@ -32,16 +32,16 @@ import com.workbuddy.common.domain.rules.KnowledgeBaseRules;
 import com.workbuddy.common.domain.rules.StageFunnelRules;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.enums.storage.StorageType;
-import com.workbuddy.common.dto.request.input.FileSubmitRequest;
-import com.workbuddy.common.dto.request.knowledge.FileResultQueryDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDto;
-import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDto;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDto;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateRequest;
-import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDto;
+import com.workbuddy.common.dto.request.input.FileSubmitDTO;
+import com.workbuddy.common.dto.request.knowledge.FileResultQueryDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDTO;
+import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateDTO;
+import com.workbuddy.common.dto.request.knowledge.SubmitLogQueryDTO;
 import com.workbuddy.common.dto.response.input.FileResultVO;
-import com.workbuddy.common.dto.response.input.FileSubmitResponse;
+import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
@@ -64,7 +64,7 @@ import com.workbuddy.common.utils.SecurityUtil;
 import com.workbuddy.common.utils.JsonUtil;
 
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategy;
 import com.workbuddy.worker.input.FileValidatorPort;
@@ -146,7 +146,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(KnowledgeBaseCreateDto dto) {
+    public Long create(KnowledgeBaseCreateDTO dto) {
         WbKnowledgeBase kb = new WbKnowledgeBase();
         kb.setName(dto.getName());
         kb.setDescription(dto.getDescription());
@@ -162,7 +162,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean update(KnowledgeBaseUpdateDto dto) {
+    public boolean update(KnowledgeBaseUpdateDTO dto) {
         WbKnowledgeBase kb = getAccessibleById(dto.getId());
         String beforeJson = JsonUtil.toJsonStr(kb);
         kb.setName(dto.getName());
@@ -184,7 +184,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     @Override
-    public IPage<KnowledgeBaseVO> page(KnowledgeBaseQueryDto query) {
+    public IPage<KnowledgeBaseVO> page(KnowledgeBaseQueryDTO query) {
         // 可见范围在服务端定：普通用户只查自己创建的，管理员不限（见 KnowledgeBaseRules.visibleOwnerId）
         IPage<WbKnowledgeBase> page = knowledgeBaseDbService.pageByCondition(query.currentOrDefault(),
                 query.sizeOrDefault(), query.getName(), query.getStatus(), KnowledgeBaseSort.of(query.getSort()),
@@ -358,7 +358,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean bindStrategy(Long id, StrategyBindingUpdateDto dto) {
+    public boolean bindStrategy(Long id, StrategyBindingUpdateDTO dto) {
         WbKnowledgeBase kb = getAccessibleById(id);
         ThrowUtil.throwIf(isBindingDisabled(kb),
                 ErrorCode.PARAM_INVALID, "该知识库已关闭策略绑定（评测模式），禁止绑定策略");
@@ -410,16 +410,16 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean bindStrategies(Long id, StrategyBindingsUpdateRequest request) {
+    public boolean bindStrategies(Long id, StrategyBindingsUpdateDTO request) {
         WbKnowledgeBase kb = getAccessibleById(id);
         ThrowUtil.throwIf(isBindingDisabled(kb),
                 ErrorCode.PARAM_INVALID, "该知识库已关闭策略绑定（评测模式），禁止绑定策略");
-        List<StrategyBindingsUpdateRequest.StrategyBindItem> bindings = request.getBindings();
+        List<StrategyBindingsUpdateDTO.StrategyBindItem> bindings = request.getBindings();
         ThrowUtil.throwIf(NullUtil.isNull(bindings) || bindings.isEmpty(),
                 ErrorCode.PARAM_INVALID, "绑定列表不能为空");
         // 白名单 + 请求内类型不重复
         Set<String> seen = new HashSet<>();
-        for (StrategyBindingsUpdateRequest.StrategyBindItem item : bindings) {
+        for (StrategyBindingsUpdateDTO.StrategyBindItem item : bindings) {
             String type = item.getStrategyType();
             ThrowUtil.throwIf(!StrategyVersionService.BINDABLE_TYPES.contains(type),
                     ErrorCode.PARAM_INVALID, "未知策略类型: " + type);
@@ -429,13 +429,13 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         // （允许"开关开着但还没绑"的中间态由不调用本接口来表达；一旦调用就必须给全）
         ThrowUtil.throwIf(!seen.containsAll(StrategyVersionService.BINDABLE_TYPES),
                 ErrorCode.PARAM_INVALID, "需一次设置全部可绑定策略（预处理 / 切片 / 向量化）");
-        for (StrategyBindingsUpdateRequest.StrategyBindItem item : bindings) {
+        for (StrategyBindingsUpdateDTO.StrategyBindItem item : bindings) {
             ThrowUtil.throwIf(NullUtil.isNull(item.getStrategyVersionId()),
                     ErrorCode.PARAM_INVALID, "策略版本不能为空: " + item.getStrategyType());
         }
         // 局部更新：逐类型复用单类型绑定逻辑（校验/upsert/审计）；外层事务覆盖，任一项失败整体回滚
-        for (StrategyBindingsUpdateRequest.StrategyBindItem item : bindings) {
-            StrategyBindingUpdateDto dto = new StrategyBindingUpdateDto();
+        for (StrategyBindingsUpdateDTO.StrategyBindItem item : bindings) {
+            StrategyBindingUpdateDTO dto = new StrategyBindingUpdateDTO();
             dto.setStrategyType(item.getStrategyType());
             dto.setStrategyVersionId(item.getStrategyVersionId());
             bindStrategy(id, dto);
@@ -466,7 +466,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public FileSubmitResponse submit(Long knowledgeBaseId, FileSubmitRequest request) {
+    public FileSubmitVO submit(Long knowledgeBaseId, FileSubmitDTO request) {
         ThrowUtil.throwIf(StrUtil.isBlank(request.getRequestId()), ErrorCode.REQUEST_ID_MISSING);
 
         // ① 幂等：同一请求重复到达返回已有记录
@@ -544,7 +544,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 提交记录分页 VO
      */
     @Override
-    public IPage<SubmitLogVO> pageSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDto query) {
+    public IPage<SubmitLogVO> pageSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDTO query) {
         return submitLogDbService.pageByKb(query.currentOrDefault(), query.sizeOrDefault(), knowledgeBaseId,
                 query.getStatus(), query.getFileName())
                 .convert(inputVoAssembler::toSubmitLogVO);
@@ -558,11 +558,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * 按上游产物过滤在解析环节（产物表）落地后启用。
      *
      * @param knowledgeBaseId 知识库 ID
-     * @param query           查询条件（环节可留空，页码与页长口径见 {@link FileResultQueryDto} 父类）
+     * @param query           查询条件（环节可留空，页码与页长口径见 {@link FileResultQueryDTO} 父类）
      * @return 文件结果分页 VO（含来源文件信息、所属数据源与当前启用的数据源及其显示名、各环节状态列表）
      */
     @Override
-    public IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDto query) {
+    public IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDTO query) {
         StageFunnelRules.resolveUpstreamStage(query.getStage());
         IPage<WbFileResult> page = kbFileResultDbService.pageByKb(query.currentOrDefault(), query.sizeOrDefault(),
                 knowledgeBaseId);
@@ -639,7 +639,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /** 按 fileId 复用来源文件；并发撞 uk_file_id 时重查复用（同文件不重复建档）。 */
-    private WbSourceFile findOrCreateSourceFile(FileSubmitRequest request, FileValidationResult validationResult,
+    private WbSourceFile findOrCreateSourceFile(FileSubmitDTO request, FileValidationResult validationResult,
                                                 FileMetadata metadata, Long userId) {
         WbSourceFile sourceFile = sourceFileDbService.findByFileId(request.getFileId());
         if (NullUtil.isNotNull(sourceFile)) {
@@ -670,7 +670,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /** 校验失败：只记 FAIL 日志一条，不建结果；文件名尽力取，取不到存空串（列 NOT NULL）。 */
-    private FileSubmitResponse recordFailAndReturn(Long knowledgeBaseId, FileSubmitRequest request, String failReason) {
+    private FileSubmitVO recordFailAndReturn(Long knowledgeBaseId, FileSubmitDTO request, String failReason) {
         String fileName = "";
         try {
             FileMetadata metadata = fileStorage.metadata(request.getFileId());

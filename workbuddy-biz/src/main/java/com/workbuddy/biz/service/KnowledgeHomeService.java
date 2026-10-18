@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.workbuddy.common.dto.request.home.HomeRecentSubmitQueryDto;
+import com.workbuddy.common.dto.request.home.HomeRecentSubmitQueryDTO;
 import com.workbuddy.common.dto.response.home.HomeRecentSubmitVO;
 import com.workbuddy.common.dto.response.home.HomeSummaryVO;
 
@@ -28,5 +28,5 @@ public interface KnowledgeHomeService {
      *
      * @param query 分页条件
      */
-    IPage<HomeRecentSubmitVO> recentSubmits(HomeRecentSubmitQueryDto query);
+    IPage<HomeRecentSubmitVO> recentSubmits(HomeRecentSubmitQueryDTO query);
 }

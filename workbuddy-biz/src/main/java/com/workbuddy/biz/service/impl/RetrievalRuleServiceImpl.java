@@ -9,7 +9,7 @@ import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
-import com.workbuddy.common.dto.request.retrieval.RetrievalRulePublishDto;
+import com.workbuddy.common.dto.request.retrieval.RetrievalRulePublishDTO;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRulePublishVO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
@@ -57,7 +57,7 @@ public class RetrievalRuleServiceImpl implements RetrievalRuleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public RetrievalRulePublishVO publishDefaultRule(Long knowledgeBaseId, RetrievalRulePublishDto dto) {
+    public RetrievalRulePublishVO publishDefaultRule(Long knowledgeBaseId, RetrievalRulePublishDTO dto) {
         WbIndexVersion version = indexVersionDbService.getById(dto.getVersionId());
         ThrowUtil.throwIf(NullUtil.isNull(version), ErrorCode.INDEX_VERSION_NOT_FOUND);
         WbIndexSet set = indexSetDbService.getById(version.getIndexSetId());

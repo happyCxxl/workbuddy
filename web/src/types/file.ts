@@ -20,7 +20,7 @@ export interface SubmitLog {
 }
 
 /**
- * 提交响应（后端 FileSubmitResponse）。
+ * 提交响应（后端 FileSubmitVO）。
  *
  * <p>手动逐环节口径：首次提交时 `pipelineTaskId` 为空，解析要另行触发。
  */

@@ -1,7 +1,7 @@
 package com.workbuddy.biz.controller.file;
 
 import com.workbuddy.filecenter.service.FileService;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

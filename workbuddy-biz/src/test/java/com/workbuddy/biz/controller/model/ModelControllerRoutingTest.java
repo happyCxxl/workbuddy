@@ -2,10 +2,10 @@ package com.workbuddy.biz.controller.model;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.ModelService;
-import com.workbuddy.common.dto.request.model.ModelQueryDto;
-import com.workbuddy.common.dto.request.model.ModelSaveDto;
-import com.workbuddy.common.dto.request.model.ModelStatusDto;
-import com.workbuddy.common.dto.request.model.ModelUpdateDto;
+import com.workbuddy.common.dto.request.model.ModelQueryDTO;
+import com.workbuddy.common.dto.request.model.ModelSaveDTO;
+import com.workbuddy.common.dto.request.model.ModelStatusDTO;
+import com.workbuddy.common.dto.request.model.ModelUpdateDTO;
 import com.workbuddy.common.dto.response.model.ModelItemVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +64,7 @@ class ModelControllerRoutingTest {
                 .param("status", "ENABLED")
                 .param("keyword", "qwen")).andExpect(status().isOk());
 
-        ArgumentCaptor<ModelQueryDto> captor = ArgumentCaptor.forClass(ModelQueryDto.class);
+        ArgumentCaptor<ModelQueryDTO> captor = ArgumentCaptor.forClass(ModelQueryDTO.class);
         verify(modelService).page(captor.capture());
         assertEquals(2L, captor.getValue().getCurrent());
         assertEquals(5L, captor.getValue().getSize());
@@ -83,7 +83,7 @@ class ModelControllerRoutingTest {
                         + "\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\",\"priceInPerM\":20,\"rpmLimit\":600}"))
                 .andExpect(status().isOk());
 
-        ModelSaveDto dto = capturedSave();
+        ModelSaveDTO dto = capturedSave();
         assertEquals("deepseek", dto.getVendorCode());
         assertEquals("qwen-max", dto.getModelKey());
         assertEquals(List.of("CHAT"), dto.getCapabilities());
@@ -100,7 +100,7 @@ class ModelControllerRoutingTest {
                 .andExpect(status().isOk());
 
         ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<ModelUpdateDto> dtoCaptor = ArgumentCaptor.forClass(ModelUpdateDto.class);
+        ArgumentCaptor<ModelUpdateDTO> dtoCaptor = ArgumentCaptor.forClass(ModelUpdateDTO.class);
         verify(modelService).update(idCaptor.capture(), dtoCaptor.capture());
         assertEquals(5L, idCaptor.getValue());
         assertEquals("qwen-plus", dtoCaptor.getValue().getModelKey());
@@ -114,7 +114,7 @@ class ModelControllerRoutingTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"DISABLED\"}")).andExpect(status().isOk());
 
-        ArgumentCaptor<ModelStatusDto> captor = ArgumentCaptor.forClass(ModelStatusDto.class);
+        ArgumentCaptor<ModelStatusDTO> captor = ArgumentCaptor.forClass(ModelStatusDTO.class);
         verify(modelService).updateStatus(eq(6L), captor.capture());
         assertEquals("DISABLED", captor.getValue().getStatus());
     }
@@ -159,8 +159,8 @@ class ModelControllerRoutingTest {
     }
 
     /** 取最近一次新增接口的收参 */
-    private ModelSaveDto capturedSave() {
-        ArgumentCaptor<ModelSaveDto> captor = ArgumentCaptor.forClass(ModelSaveDto.class);
+    private ModelSaveDTO capturedSave() {
+        ArgumentCaptor<ModelSaveDTO> captor = ArgumentCaptor.forClass(ModelSaveDTO.class);
         verify(modelService).create(captor.capture());
         return captor.getValue();
     }

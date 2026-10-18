@@ -1,9 +1,9 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.PreprocessControlService;
-import com.workbuddy.common.dto.request.stage.StageDetailQueryDto;
-import com.workbuddy.common.dto.request.stage.StageTriggerQueryDto;
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.dto.request.stage.StageDetailQueryDTO;
+import com.workbuddy.common.dto.request.stage.StageTriggerQueryDTO;
+import com.workbuddy.common.web.R;
 import com.workbuddy.common.dto.response.preprocess.PreprocessDetailVO;
 import com.workbuddy.common.dto.response.preprocess.PreprocessTriggerVO;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class KnowledgeFilePreprocessController {
     @PostMapping("/{fileResultId}/preprocess")
     public R<PreprocessTriggerVO> preprocess(
             @PathVariable("fileResultId") Long fileResultId,
-            StageTriggerQueryDto query) {
+            StageTriggerQueryDTO query) {
         log.info("===> KnowledgeFilePreprocessController preprocess 触发预处理, fileResultId={},"
                         + " strategyVersionId={}, upstreamProductId={}",
                 fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId());
@@ -41,7 +41,7 @@ public class KnowledgeFilePreprocessController {
     @GetMapping("/{fileResultId}/preprocess-detail")
     public R<PreprocessDetailVO> preprocessDetail(
             @PathVariable("fileResultId") Long fileResultId,
-            StageDetailQueryDto query) {
+            StageDetailQueryDTO query) {
         return R.ok(preprocessControlService.preprocessDetail(fileResultId, query.getTaskId()));
     }
 }

@@ -7,7 +7,7 @@ import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.service.FileStorage;
+import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileCheckContext;
 import com.workbuddy.worker.input.FileValidationProperties;
 import com.workbuddy.worker.input.FileValidatorPort;

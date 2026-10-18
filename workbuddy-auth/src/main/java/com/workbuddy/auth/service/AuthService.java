@@ -1,7 +1,7 @@
 package com.workbuddy.auth.service;
 
-import com.workbuddy.common.dto.request.auth.LoginRequest;
-import com.workbuddy.common.dto.request.auth.RegisterRequest;
+import com.workbuddy.common.dto.request.auth.LoginDTO;
+import com.workbuddy.common.dto.request.auth.RegisterDTO;
 import com.workbuddy.common.dto.response.auth.LoginVO;
 
 /**
@@ -19,12 +19,12 @@ public interface AuthService {
      * @param request 登录请求
      * @return 登录结果（含令牌）
      */
-    LoginVO login(LoginRequest request);
+    LoginVO login(LoginDTO request);
 
     /**
      * 注册：用户名唯一校验，密码 BCrypt 加密后落库。
      *
      * @param request 注册请求
      */
-    void register(RegisterRequest request);
+    void register(RegisterDTO request);
 }

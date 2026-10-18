@@ -1,6 +1,6 @@
 package com.workbuddy.biz.config;
 
-import com.workbuddy.common.dto.response.R;
+import com.workbuddy.common.web.R;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.NullUtil;

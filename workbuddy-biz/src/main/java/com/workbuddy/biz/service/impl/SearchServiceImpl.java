@@ -14,7 +14,7 @@ import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.domain.entity.WbRetrievalRun;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
-import com.workbuddy.common.dto.request.retrieval.SearchRequest;
+import com.workbuddy.common.dto.request.retrieval.SearchDTO;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRunVO;
 import com.workbuddy.common.dto.response.retrieval.SearchHitVO;
 import com.workbuddy.common.dto.response.retrieval.SearchVO;
@@ -79,7 +79,7 @@ public class SearchServiceImpl implements SearchService {
     private final RetrievalRunSettings runSettings;
 
     @Override
-    public SearchVO search(Long knowledgeBaseId, SearchRequest request) {
+    public SearchVO search(Long knowledgeBaseId, SearchDTO request) {
         long start = System.currentTimeMillis();
         boolean bench = NullUtil.isNotNull(request.getVersionId()) || NullUtil.isNotNull(request.getRuleId());
         ThrowUtil.throwIf(bench && (NullUtil.isNull(request.getVersionId()) || NullUtil.isNull(request.getRuleId())),
@@ -172,7 +172,7 @@ public class SearchServiceImpl implements SearchService {
 
     /** 运行记录落库（快照 = 命中列表全字段 JSON；baseline 规则行无 id → rule_id 记 NULL） */
     private void recordRun(Long knowledgeBaseId, WbIndexVersion version, WbPipelineStrategyVersion ruleRow,
-                           SearchRequest request, SearchVO vo) {
+                           SearchDTO request, SearchVO vo) {
         WbRetrievalRun run = new WbRetrievalRun();
         run.setKbId(knowledgeBaseId);
         run.setVersionId(version.getId());
@@ -200,7 +200,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /** 版本解析：测试台=显式版本行（含候选冻结集，READY/ONLINE 可检索）；生产=在线版本（未发布 40446） */
-    private WbIndexVersion resolveVersion(Long knowledgeBaseId, SearchRequest request, boolean bench) {
+    private WbIndexVersion resolveVersion(Long knowledgeBaseId, SearchDTO request, boolean bench) {
         if (bench) {
             WbIndexVersion version = indexVersionDbService.getById(request.getVersionId());
             ThrowUtil.throwIf(NullUtil.isNull(version), ErrorCode.INDEX_VERSION_NOT_FOUND);
