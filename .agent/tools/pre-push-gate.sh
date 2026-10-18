@@ -108,6 +108,7 @@ run_encoding=0
 run_agents=0
 run_frontend=0
 run_source=0
+run_conventions=0
 run_bytecode=0
 run_tests=0
 run_coverage=0
@@ -126,12 +127,13 @@ if printf '%s\n' "$changed" | grep -qE '^(web|\.agent/tools/frontend)/'; then
 fi
 if printf '%s\n' "$changed" | grep -qE '(\.java$|pom\.xml$|^\.agent/tools/backend/|01-分层与包结构\.md$)'; then
   run_source=1
+  run_conventions=1
   run_bytecode=1
   run_tests=1
   run_coverage=1
   run_modules=1
 fi
-total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_tests + run_coverage + run_bytecode + run_modules))
+total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_conventions + run_tests + run_coverage + run_bytecode + run_modules))
 
 echo ""
 echo "==================== 推送前检查 ===================="
@@ -267,6 +269,23 @@ if [ "$run_source" = "1" ]; then
     echo "     复跑：mvn -o checkstyle:check pmd:check pmd:cpd-check"
     echo "     提示：报 cannot find symbol 或 PMD UnusedPrivateMethod 时，先给被依赖模块回写本地仓库："
     echo "           mvn -o -q install -DskipTests   （CLI 调用读的是 .m2 里的 jar）"
+    exit 1
+  fi
+
+  step=$((step + 1))
+  started=$(date +%s)
+  echo ""
+  echo ">>>> [$step/$total] Java 形态检查：check-java-conventions（本次改动的 .java）"
+  conventions_files=$(printf '%s\n' "$changed" | grep -E '\.java$' || true)
+  if [ -z "$conventions_files" ]; then
+    echo "---- [$step/$total] 跳过（本次改动不含 .java）"
+  elif node .agent/tools/check-java-conventions.mjs $conventions_files; then
+    echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
+  else
+    echo ""
+    echo "!!!! [$step/$total] Java 形态不合规"
+    echo "     复跑：node .agent/tools/check-java-conventions.mjs <文件...>（不带参数为全量审计）"
+    echo "     规则：.agent/standards/java/00-总则与规则索引.md"
     exit 1
   fi
 

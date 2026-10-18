@@ -32,11 +32,6 @@
             <groupId>com.workbuddy</groupId>
             <artifactId>workbuddy-infra</artifactId>
         </dependency>
-        <!-- 文件服务：头像上传与读取走对象存储端口（FileStorage） -->
-        <dependency>
-            <groupId>com.workbuddy</groupId>
-            <artifactId>workbuddy-file</artifactId>
-        </dependency>
 
         <!-- Web 过滤链基类（OncePerRequestFilter）：接口层已收拢到 biz，
              本模块不再声明 Web 起步依赖，Servlet 容器由 biz 提供 -->
