@@ -50,6 +50,9 @@ public enum DelFlag {
      *
      * <p>与 {@link com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus#of(Integer)} 不同，
      * 这里**不抛异常**：del_flag 是基础设施列，脏值不该把读路径打挂。
+     *
+     * @param code 码值
+     * @return 枚举项；null 或未知码值为 null
      */
     public static DelFlag of(String code) {
         if (NullUtil.isNull(code)) {
@@ -63,7 +66,12 @@ public enum DelFlag {
         return null;
     }
 
-    /** 是否已删除：只有显式 "1" 才算已删（null 与未知值一律按未删除处理）。 */
+    /**
+     * 是否已删除：只有显式 "1" 才算已删（null 与未知值一律按未删除处理）。
+     *
+     * @param code 码值
+     * @return 已删除为 true
+     */
     public static boolean isDeleted(String code) {
         return of(code) == DELETED;
     }

@@ -38,29 +38,48 @@ public enum PreprocessRule {
         this.desc = desc;
     }
 
-    /** 策略快照中的序列化键（JSON 契约）。 */
+    /**
+     * 策略快照中的序列化键（JSON 契约）。
+     *
+     * @return 规则键
+     */
     public String key() {
         return key;
     }
 
-    /** 规则说明（人类可读）。 */
+    /**
+     * 规则说明（人类可读）。
+     *
+     * @return 说明文案
+     */
     public String desc() {
         return desc;
     }
 
-    /** 三态规则（有 action，无 enabled）。 */
+    /**
+     * 三态规则（有 action，无 enabled）。
+     *
+     * @return 三态规则为 true
+     */
     public boolean triState() {
         return this == HEADER_FOOTER || this == TOC || this == NOISE || this == REPEAT;
     }
 
     /**
      * 旧开关格式：该规则历史上只有 enabled 开关（迁移期仍接受只给 enabled 的配置，ON 按 EXCLUDE / OFF 按 KEEP 解释）。
+     *
+     * @return 属于旧开关格式为 true
      */
     public boolean legacyToggle() {
         return this == REPEAT;
     }
 
-    /** 按序列化键精确查找；未识别返回 null。 */
+    /**
+     * 按序列化键精确查找。
+     *
+     * @param key 规则键
+     * @return 命中的规则；未识别时为 null
+     */
     public static PreprocessRule of(String key) {
         if (StrUtil.isBlank(key)) {
             return null;

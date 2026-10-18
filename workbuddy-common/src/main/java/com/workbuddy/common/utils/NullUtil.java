@@ -14,14 +14,24 @@ public final class NullUtil {
     private NullUtil() {
     }
 
-    /** 是否为 null */
+    /**
+     * 是否为 null。
+     *
+     * @param obj 待判定对象（可空）
+     * @return 为 null 时 true
+     */
     @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
             justification = "Hutool 判空方法参数未标注可空，入参可空是事实；本类即判空边界")
     public static boolean isNull(@Nullable Object obj) {
         return ObjectUtil.isNull(obj);
     }
 
-    /** 是否不为 null */
+    /**
+     * 是否不为 null。
+     *
+     * @param obj 待判定对象（可空）
+     * @return 不为 null 时 true
+     */
     @SuppressFBWarnings(value = "NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE",
             justification = "Hutool 判空方法参数未标注可空，入参可空是事实；本类即判空边界")
     public static boolean isNotNull(@Nullable Object obj) {

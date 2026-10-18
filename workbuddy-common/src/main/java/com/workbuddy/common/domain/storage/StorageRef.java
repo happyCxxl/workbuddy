@@ -14,12 +14,21 @@ import com.workbuddy.common.enums.storage.StorageType;
  */
 public record StorageRef(String storageType, Long sourceId) {
 
-    /** 文件档案行的存储口径。 */
+    /**
+     * 文件档案行的存储口径。
+     *
+     * @param row 文件档案行
+     * @return 存储口径
+     */
     public static StorageRef of(WbFileObject row) {
         return new StorageRef(row.getStorageType(), row.getStorageSourceId());
     }
 
-    /** 存储类型（码值为空或未知时返回 null）。 */
+    /**
+     * 存储类型。
+     *
+     * @return 存储类型；码值为空或未知时为 null
+     */
     public StorageType type() {
         return StorageType.of(storageType);
     }

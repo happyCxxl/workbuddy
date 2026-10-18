@@ -29,7 +29,11 @@ public enum PipelineKey {
         this.key = key;
     }
 
-    /** 策略快照中的序列化键（JSON 契约）。 */
+    /**
+     * 策略快照中的序列化键（JSON 契约）。
+     *
+     * @return 环节键
+     */
     public String key() {
         return key;
     }

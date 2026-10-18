@@ -24,6 +24,10 @@ public enum KnowledgeBaseStatus {
 
     /**
      * 按码值转枚举；未知码值抛异常（防御脏数据）。
+     *
+     * @param code 码值
+     * @return 枚举项；码值为空时为 null
+     * @throws com.workbuddy.common.exception.KnowledgeException 未知码值
      */
     public static KnowledgeBaseStatus of(Integer code) {
         if (NullUtil.isNull(code)) {

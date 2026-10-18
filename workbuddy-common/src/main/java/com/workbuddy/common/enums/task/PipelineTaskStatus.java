@@ -27,7 +27,11 @@ public enum PipelineTaskStatus {
     /** 失败（保留错误与已生成产物，失败不覆盖成功） */
     FAILED;
 
-    /** 本状态允许迁移到的目标态；终态为空集（终态吸收：不再接受任何迁移）。 */
+    /**
+     * 本状态允许迁移到的目标态；终态为空集（终态吸收：不再接受任何迁移）。
+     *
+     * @return 允许的目标状态集合
+     */
     public Set<PipelineTaskStatus> allowedTargets() {
         return switch (this) {
             case QUEUED -> EnumSet.of(RUNNING, FAILED);
@@ -36,7 +40,11 @@ public enum PipelineTaskStatus {
         };
     }
 
-    /** 是否终态（不再接受任何迁移）。 */
+    /**
+     * 是否终态（不再接受任何迁移）。
+     *
+     * @return 终态为 true
+     */
     public boolean isTerminal() {
         return allowedTargets().isEmpty();
     }

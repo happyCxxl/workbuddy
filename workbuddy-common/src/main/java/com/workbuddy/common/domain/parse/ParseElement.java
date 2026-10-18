@@ -84,6 +84,13 @@ public class ParseElement {
     /** 原文定位信息 */
     private Provenance provenance;
 
+    /**
+     * 按给定 ID 造元素。
+     *
+     * @param id   元素 ID（可空）
+     * @param type 元素类型
+     * @return 未填充其它属性的元素
+     */
     public static ParseElement of(String id, ElementType type) {
         ParseElement element = new ParseElement();
         element.id = id;
@@ -93,6 +100,9 @@ public class ParseElement {
 
     /**
      * 不带 ID 的元素：ID 由产出路径的分配点统一补（PDF 走 {@code PageElementIds}，组装环节换全局 ID）。
+     *
+     * @param type 元素类型
+     * @return 未分配 ID 的元素
      */
     public static ParseElement of(ElementType type) {
         return of(null, type);

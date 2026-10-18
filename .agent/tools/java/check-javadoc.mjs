@@ -19,16 +19,21 @@ const CTOR_DECL = /^\s*(?:public|protected)\s+(\w+)\s*\(/;
 const errors = [];
 const push = (file, line, rule, msg) => errors.push({ file, line, rule, msg });
 
-/** 从声明行向上找 Javadoc 结束行（跳过注解与空行） */
+/** 从声明行向上找 Javadoc 结束行（跳过空白行与注解，注解可能跨多行） */
 function javadocEndBefore(lines, declIdx) {
   let k = declIdx - 1;
   while (k >= 0) {
     const t = lines[k].trim();
-    if (t === '' || t.startsWith('@')) {
+    if (t === '') {
       k -= 1;
-      continue;
+    } else if (t.endsWith('*/')) {
+      return k;
+    } else if (t.startsWith('@') || !/[;{}]$/.test(t)) {
+      // 注解首行或注解续行
+      k -= 1;
+    } else {
+      return -1;
     }
-    return t.endsWith('*/') ? k : -1;
   }
   return -1;
 }

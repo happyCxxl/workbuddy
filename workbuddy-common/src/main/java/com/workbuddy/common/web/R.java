@@ -34,9 +34,18 @@ public class R<T> implements Serializable {
 
     private Long timestamp;
 
+    /** 供反序列化用的无参构造。 */
     public R() {
     }
 
+    /**
+     * 全字段构造。
+     *
+     * @param code      状态码（0 成功）
+     * @param msg       提示消息
+     * @param data      业务数据
+     * @param timestamp 响应时间戳
+     */
     public R(int code, String msg, T data, Long timestamp) {
         this.code = code;
         this.msg = msg;
@@ -44,17 +53,36 @@ public class R<T> implements Serializable {
         this.timestamp = timestamp;
     }
 
-    /** 成功响应（默认提示语）。 */
+    /**
+     * 成功响应（默认提示语）。
+     *
+     * @param data 业务数据
+     * @param <T>  业务数据类型
+     * @return 成功响应
+     */
     public static <T> R<T> ok(T data) {
         return ok(data, "操作成功");
     }
 
-    /** 成功响应（自定义提示语）。 */
+    /**
+     * 成功响应（自定义提示语）。
+     *
+     * @param data 业务数据
+     * @param msg  提示消息
+     * @param <T>  业务数据类型
+     * @return 成功响应
+     */
     public static <T> R<T> ok(T data, String msg) {
         return new R<>(SUCCESS, msg, data, System.currentTimeMillis());
     }
 
-    /** 失败响应（通用失败码）。 */
+    /**
+     * 失败响应（通用失败码）。
+     *
+     * @param msg 提示消息
+     * @param <T> 业务数据类型
+     * @return 失败响应，业务数据为空
+     */
     public static <T> R<T> failed(String msg) {
         return new R<>(FAILURE, msg, null, System.currentTimeMillis());
     }

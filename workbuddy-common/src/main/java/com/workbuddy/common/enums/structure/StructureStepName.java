@@ -27,7 +27,11 @@ public enum StructureStepName {
         this.value = value;
     }
 
-    /** 落库值（展示口径）。 */
+    /**
+     * 落库值（展示口径）。
+     *
+     * @return 步骤名
+     */
     public String value() {
         return value;
     }

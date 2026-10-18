@@ -24,6 +24,15 @@ public class NormalizedField {
     /** 命中规则名（如 amount-cn-v1） */
     private String rule;
 
+    /**
+     * 造一条归一化字段。
+     *
+     * @param field 字段名
+     * @param value 归一化后的值
+     * @param unit  单位（可空）
+     * @param rule  命中规则名
+     * @return 归一化字段
+     */
     public static NormalizedField of(String field, String value, String unit, String rule) {
         return new NormalizedField(field, value, unit, rule);
     }

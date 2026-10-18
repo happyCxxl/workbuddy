@@ -42,28 +42,49 @@ public enum StrategyType {
         this.bindable = bindable;
     }
 
-    /** 码值。 */
+    /**
+     * 码值。
+     *
+     * @return 策略类型码值
+     */
     public String key() {
         return key;
     }
 
-    /** 是否可绑定到知识库（三件套为 true，检索为 false）。 */
+    /**
+     * 是否可绑定到知识库（三件套为 true，检索为 false）。
+     *
+     * @return 可绑定为 true
+     */
     public boolean bindable() {
         return bindable;
     }
 
-    /** 全部策略类型码值。 */
+    /**
+     * 全部策略类型码值。
+     *
+     * @return 码值集合
+     */
     public static Set<String> keys() {
         return Arrays.stream(values()).map(StrategyType::key).collect(Collectors.toSet());
     }
 
-    /** 可绑定到知识库的类型码值（预处理 / 切片 / 向量化）。 */
+    /**
+     * 可绑定到知识库的类型码值（预处理 / 切片 / 向量化）。
+     *
+     * @return 可绑定类型的码值集合
+     */
     public static Set<String> bindableKeys() {
         return Arrays.stream(values()).filter(StrategyType::bindable)
                 .map(StrategyType::key).collect(Collectors.toSet());
     }
 
-    /** 按码值查找；未识别返回 null。 */
+    /**
+     * 按码值查找。
+     *
+     * @param key 码值（忽略大小写）
+     * @return 命中的类型；未识别时为 null
+     */
     public static StrategyType of(String key) {
         if (StrUtil.isBlank(key)) {
             return null;

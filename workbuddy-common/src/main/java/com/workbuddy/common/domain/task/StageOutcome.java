@@ -29,7 +29,12 @@ public abstract class StageOutcome {
     /** 环节内异常隔离告警记录（规则/切片器/批次失败等；内容口径各环节自定） */
     private List<String> warnings = new ArrayList<>();
 
-    /** 失败快捷置位：建议状态 FAILED + 错误码 + 错误信息。 */
+    /**
+     * 失败快捷置位：建议状态 FAILED + 错误码 + 错误信息。
+     *
+     * @param errorCode 错误码
+     * @param errorMsg  错误信息
+     */
     public void fail(String errorCode, String errorMsg) {
         this.suggestedStatus = PipelineTaskStatus.FAILED;
         this.errorCode = errorCode;

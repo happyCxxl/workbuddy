@@ -16,6 +16,11 @@ public class KnowledgeException extends RuntimeException {
 
     private final ErrorCode errorCode;
 
+    /**
+     * 按错误码构造异常，消息取错误码自带的默认文案。
+     *
+     * @param errorCode 错误码
+     */
     public KnowledgeException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
@@ -24,13 +29,19 @@ public class KnowledgeException extends RuntimeException {
     /**
      * 构造业务异常，用 detail 覆盖错误码自带的默认消息。
      *
-     * @param detail 补充原因（覆盖默认消息）
+     * @param errorCode 错误码
+     * @param detail    补充原因（覆盖默认消息）
      */
     public KnowledgeException(ErrorCode errorCode, String detail) {
         super(detail);
         this.errorCode = errorCode;
     }
 
+    /**
+     * 错误码的数值。
+     *
+     * @return 数值错误码
+     */
     public int getCode() {
         return errorCode.getCode();
     }

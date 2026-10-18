@@ -45,7 +45,12 @@ public class StepLogVO implements StepLogFields {
     /** 错误信息 */
     private String error;
 
-    /** 实体 → VO（公共字段拷贝）。 */
+    /**
+     * 实体转 VO（公共字段拷贝）。
+     *
+     * @param step 步骤日志行
+     * @return 步骤日志 VO
+     */
     public static StepLogVO of(WbPipelineStepLog step) {
         StepLogVO vo = new StepLogVO();
         vo.copyFrom(step);

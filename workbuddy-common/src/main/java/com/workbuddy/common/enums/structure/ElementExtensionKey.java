@@ -34,7 +34,11 @@ public enum ElementExtensionKey {
         this.key = key;
     }
 
-    /** 落库/落产物取值。 */
+    /**
+     * 落库/落产物取值。
+     *
+     * @return 扩展键
+     */
     public String key() {
         return key;
     }

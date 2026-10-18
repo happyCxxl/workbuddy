@@ -17,7 +17,11 @@ public final class ClientIpUtil {
     private ClientIpUtil() {
     }
 
-    /** 当前请求的客户端 IP；无请求上下文时返回 unknown。 */
+    /**
+     * 当前请求的客户端 IP。
+     *
+     * @return 客户端 IP；无请求上下文时为 unknown
+     */
     public static String getClientIp() {
         ServletRequestAttributes attributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

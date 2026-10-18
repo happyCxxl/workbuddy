@@ -10,12 +10,21 @@ import com.workbuddy.common.enums.input.FileValidationFailReason;
  */
 public record FileCheckResult(boolean passed, FileValidationFailReason failReason) {
 
-    /** 通过工厂。 */
+    /**
+     * 通过工厂。
+     *
+     * @return 通过结果
+     */
     public static FileCheckResult pass() {
         return new FileCheckResult(true, null);
     }
 
-    /** 失败工厂：只携带失败原因。 */
+    /**
+     * 失败工厂：只携带失败原因。
+     *
+     * @param reason 失败原因
+     * @return 失败结果
+     */
     public static FileCheckResult fail(FileValidationFailReason reason) {
         return new FileCheckResult(false, reason);
     }

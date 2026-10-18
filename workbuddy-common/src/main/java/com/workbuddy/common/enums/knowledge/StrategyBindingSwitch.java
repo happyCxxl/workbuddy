@@ -29,6 +29,9 @@ public enum StrategyBindingSwitch {
      *
      * <p>与 {@link KnowledgeBaseStatus#of(Integer)} 不同，这里**不抛异常**：
      * 开关是可选列，脏数据不该把读路径打挂。
+     *
+     * @param code 码值
+     * @return 枚举项；null 或未知码值为 null
      */
     public static StrategyBindingSwitch of(Integer code) {
         if (NullUtil.isNull(code)) {
@@ -42,12 +45,22 @@ public enum StrategyBindingSwitch {
         return null;
     }
 
-    /** 是否开启：null 视为开启（与实体注释口径一致）。 */
+    /**
+     * 是否开启：null 视为开启（与实体注释口径一致）。
+     *
+     * @param code 码值
+     * @return 开启为 true
+     */
     public static boolean isOn(Integer code) {
         return of(code) != OFF;
     }
 
-    /** 是否关闭：null 视为开启，只有显式 0 才返回 true。 */
+    /**
+     * 是否关闭：null 视为开启，只有显式 0 才返回 true。
+     *
+     * @param code 码值
+     * @return 明确关闭为 true
+     */
     public static boolean isOff(Integer code) {
         return of(code) == OFF;
     }

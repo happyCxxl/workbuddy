@@ -110,6 +110,9 @@ public final class KnowledgeBaseRules {
 
     /**
      * 策略绑定开关判定：null 或非 0 视为开启（兼容存量数据）。
+     *
+     * @param kb 知识库行（可空）
+     * @return 开关开启为 true
      */
     public static boolean isStrategyBindingEnabled(WbKnowledgeBase kb) {
         return NullUtil.isNull(kb) || StrategyBindingSwitch.isOn(kb.getStrategyBindingEnabled());

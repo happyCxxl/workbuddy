@@ -31,6 +31,16 @@ public class Signal {
     /** 信号子类型（SignalSubtype 枚举名；控制流依据，可空） */
     private String subtype;
 
+    /**
+     * 造一条解析信号。
+     *
+     * @param type      信号类型
+     * @param region    信号所在区域（可空）
+     * @param evidence  证据描述
+     * @param threshold 阈值快照（仅展示，可空）
+     * @param subtype   信号子类型（可空）
+     * @return 解析信号
+     */
     public static Signal of(SignalType type, String region, String evidence, String threshold, SignalSubtype subtype) {
         return new Signal(type.name(), region, evidence, threshold, NullUtil.isNull(subtype) ? null : subtype.name());
     }

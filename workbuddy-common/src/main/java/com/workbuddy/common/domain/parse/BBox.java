@@ -25,7 +25,13 @@ public class BBox {
     /** 高 */
     private double height;
 
-    /** 是否与另一框位置重叠（容差内）。 */
+    /**
+     * 是否与另一框位置重叠。
+     *
+     * @param other     另一框
+     * @param tolerance 容差（坐标单位）
+     * @return 重叠为 true；另一框为空时为 false
+     */
     public boolean overlaps(BBox other, double tolerance) {
         if (NullUtil.isNull(other)) {
             return false;

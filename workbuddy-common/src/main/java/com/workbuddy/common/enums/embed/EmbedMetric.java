@@ -29,17 +29,30 @@ public enum EmbedMetric {
         this.desc = desc;
     }
 
-    /** 序列化键。 */
+    /**
+     * 序列化键。
+     *
+     * @return 度量键
+     */
     public String key() {
         return key;
     }
 
-    /** 说明（人类可读）。 */
+    /**
+     * 说明（人类可读）。
+     *
+     * @return 说明文案
+     */
     public String desc() {
         return desc;
     }
 
-    /** 按键精确查找；未识别返回 null。 */
+    /**
+     * 按键精确查找。
+     *
+     * @param key 度量键（忽略大小写）
+     * @return 命中的度量；未识别时为 null
+     */
     public static EmbedMetric of(String key) {
         if (StrUtil.isBlank(key)) {
             return null;

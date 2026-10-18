@@ -22,7 +22,10 @@ public final class JsonUtil {
     }
 
     /**
-     * 对象转 JSON 字符串；入参为 null 时返回 null。
+     * 对象转 JSON 字符串。
+     *
+     * @param obj 对象
+     * @return JSON 字符串；入参为 null 时为 null
      */
     public static String toJsonStr(Object obj) {
         if (NullUtil.isNull(obj)) {
@@ -32,7 +35,12 @@ public final class JsonUtil {
     }
 
     /**
-     * JSON 字符串转对象；入参为 null 或空串时返回 null（后续需要时使用，先预置）。
+     * JSON 字符串转对象。
+     *
+     * @param json  JSON 字符串
+     * @param clazz 目标类型
+     * @param <T>   目标类型参数
+     * @return 目标对象；入参为 null 或空串时为 null
      */
     public static <T> T toObject(String json, Class<T> clazz) {
         if (StrUtil.isBlank(json)) {
@@ -42,7 +50,10 @@ public final class JsonUtil {
     }
 
     /**
-     * JSON 对象字符串转 Map（策略配置快照等动态结构）；入参为 null 或空串时返回空 Map。
+     * JSON 对象字符串转 Map（策略配置快照等动态结构）。
+     *
+     * @param json JSON 字符串
+     * @return 键值映射；入参为 null 或空串时为空 Map
      */
     public static Map<String, Object> toMap(String json) {
         if (StrUtil.isBlank(json)) {
@@ -52,7 +63,12 @@ public final class JsonUtil {
     }
 
     /**
-     * JSON 数组字符串转 List（检索运行记录快照回放等）；入参为 null 或空串时返回空列表。
+     * JSON 数组字符串转 List（检索运行记录快照回放等）。
+     *
+     * @param json        JSON 数组字符串
+     * @param elementType 元素类型
+     * @param <T>         元素类型参数
+     * @return 元素列表；入参为 null 或空串时为空列表
      */
     public static <T> List<T> toList(String json, Class<T> elementType) {
         if (StrUtil.isBlank(json)) {

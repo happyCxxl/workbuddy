@@ -14,17 +14,32 @@ public class ChatMessage {
     /** 消息内容 */
     private String content;
 
-    /** 系统提示消息。 */
+    /**
+     * 系统提示消息。
+     *
+     * @param content 消息内容
+     * @return 系统角色消息
+     */
     public static ChatMessage system(String content) {
         return of(Role.SYSTEM, content);
     }
 
-    /** 用户输入消息。 */
+    /**
+     * 用户输入消息。
+     *
+     * @param content 消息内容
+     * @return 用户角色消息
+     */
     public static ChatMessage user(String content) {
         return of(Role.USER, content);
     }
 
-    /** 模型回复消息。 */
+    /**
+     * 模型回复消息。
+     *
+     * @param content 消息内容
+     * @return 模型角色消息
+     */
     public static ChatMessage assistant(String content) {
         return of(Role.ASSISTANT, content);
     }

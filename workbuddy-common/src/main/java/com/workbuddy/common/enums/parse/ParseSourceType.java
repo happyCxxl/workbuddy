@@ -24,12 +24,21 @@ public enum ParseSourceType {
         this.value = value;
     }
 
-    /** 落库/落产物取值。 */
+    /**
+     * 落库/落产物取值。
+     *
+     * @return 来源取值
+     */
     public String value() {
         return value;
     }
 
-    /** 按落库值反查（未知值返回 null）。 */
+    /**
+     * 按落库值反查。
+     *
+     * @param value 来源取值
+     * @return 命中的来源类型；未知值为 null
+     */
     public static ParseSourceType ofValue(String value) {
         for (ParseSourceType type : values()) {
             if (type.value.equals(value)) {

@@ -9,7 +9,11 @@ package com.workbuddy.common.dto.request.stage;
  */
 public record ChunkContentFilterDTO(String contentType, Boolean fallback, Boolean hasParent) {
 
-    /** 不过滤。 */
+    /**
+     * 不过滤。
+     *
+     * @return 三个维度都为空的过滤条件
+     */
     public static ChunkContentFilterDTO none() {
         return new ChunkContentFilterDTO(null, null, null);
     }

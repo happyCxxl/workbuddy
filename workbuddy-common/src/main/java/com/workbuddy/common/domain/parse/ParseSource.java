@@ -46,6 +46,12 @@ public class ParseSource {
     /** 本路实际用到的模型能力（模型名 + 版本；能力调用处回填，管线汇总进产物能力快照） */
     private List<CapabilityUsage> capabilities = new ArrayList<>();
 
+    /**
+     * 原生解析路（不调用模型能力）。
+     *
+     * @param provider 解析提供方标识
+     * @return 解析来源
+     */
     public static ParseSource nativeSource(String provider) {
         ParseSource source = new ParseSource();
         source.source = ParseSourceType.NATIVE.value();

@@ -48,6 +48,17 @@ public class TraceEntry {
     /** 命中证据（判定依据描述） */
     private String evidence;
 
+    /**
+     * 造一条命中记录。
+     *
+     * @param rule     规则名
+     * @param field    字段名
+     * @param action   动作
+     * @param before   处理前摘要（可空）
+     * @param after    处理后摘要（可空）
+     * @param evidence 命中证据
+     * @return 命中记录
+     */
     public static TraceEntry of(String rule, String field, String action, String before, String after,
                                 String evidence) {
         return new TraceEntry(rule, field, action, before, after, evidence);

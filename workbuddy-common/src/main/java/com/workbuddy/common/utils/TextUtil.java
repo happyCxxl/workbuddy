@@ -16,6 +16,9 @@ public final class TextUtil {
      * 全角标点与引号、假名、谚文、生僻字（CJK 扩展 A 及以上）、希腊/西里尔字母、数学符号、
      * 圈号与项目符号等一律算正常字符。
      * 已知盲区：字体缺 ToUnicode 时错位出的可打印 ASCII 垃圾码点合法，不在本判据覆盖内。
+     *
+     * @param codePoint 待判定的码点
+     * @return 不可读码点为 true
      */
     public static boolean isNonCommonChar(int codePoint) {
         if (codePoint == 0xFFFD) {
@@ -33,6 +36,9 @@ public final class TextUtil {
     /**
      * 是否可打印乱码带字符：拉丁补充区（U+00A0–U+00FF）。
      * 字体缺 Unicode 映射时错位出的码点（`ÿþ¤¥¦§¨©`）集中落在此区，而自然语言正文里该区占比很低。
+     *
+     * @param codePoint 待判定的码点
+     * @return 落在拉丁补充区为 true
      */
     public static boolean isPrintableMojibakeChar(int codePoint) {
         return codePoint >= 0xA0 && codePoint <= 0xFF;
@@ -41,6 +47,9 @@ public final class TextUtil {
     /**
      * 可打印乱码率：可打印乱码带码点数 ÷ 非空白码点总数（无有效字符时返回 0）。
      * 与 {@link #garbledRatio(String)} 同一分母口径（非空白字符），供字体映射错位页的判定使用。
+     *
+     * @param text 待判定的文本
+     * @return 乱码率；无有效字符时为 0
      */
     public static double printableMojibakeRatio(String text) {
         if (NullUtil.isNull(text) || text.isEmpty()) {
@@ -63,6 +72,9 @@ public final class TextUtil {
 
     /**
      * 文本乱码率：非常用字符码点数 ÷ 非空白码点总数（无有效字符时返回 0）。
+     *
+     * @param text 待判定的文本
+     * @return 乱码率；无有效字符时为 0
      */
     public static double garbledRatio(String text) {
         if (NullUtil.isNull(text) || text.isEmpty()) {
@@ -86,6 +98,10 @@ public final class TextUtil {
     /**
      * 字符集 Jaccard 相似度（忽略空白字符）：去重合并与续表表头判定的公共口径。
      * 两端均为空文本视为同一（返回 1）。
+     *
+     * @param a 文本 A
+     * @param b 文本 B
+     * @return 字符集 Jaccard 相似度
      */
     public static double jaccardCharSet(String a, String b) {
         if (a.isBlank() && b.isBlank()) {
@@ -104,12 +120,21 @@ public final class TextUtil {
     /**
      * bigram 集合相似度（字符二元组 Jaccard）：重复页/重复段判定的公共口径。
      * 两端均为空集合视为不相似（返回 0）。
+     *
+     * @param a 文本 A
+     * @param b 文本 B
+     * @return bigram 集合的 Jaccard 相似度
      */
     public static double jaccardBigram(String a, String b) {
         return jaccardSet(bigramSet(a), bigramSet(b));
     }
 
-    /** 文本 → 字符二元组集合（含空文本 → 空集合）。 */
+    /**
+     * 文本转字符二元组集合（含空文本时为空集合）。
+     *
+     * @param text 文本
+     * @return 二元组集合
+     */
     public static Set<String> bigramSet(String text) {
         Set<String> set = new HashSet<>();
         for (int i = 0; i < text.length() - 1; i++) {
@@ -118,7 +143,13 @@ public final class TextUtil {
         return set;
     }
 
-    /** 集合 Jaccard 相似度（两端同为空集视为不相似，返回 0）。 */
+    /**
+     * 集合 Jaccard 相似度（两端同为空集视为不相似，返回 0）。
+     *
+     * @param a 集合 A
+     * @param b 集合 B
+     * @return 交集大小 ÷ 并集大小
+     */
     public static double jaccardSet(Set<String> a, Set<String> b) {
         if (a.isEmpty() && b.isEmpty()) {
             return 0;
@@ -133,11 +164,19 @@ public final class TextUtil {
     /**
      * bigram 集合摘要：去重后的 bigram 个数（与 {@link #bigramSet} 的 size 一致）+ 次序无关指纹。
      * 供"按集合规模剪枝 + 精确重复快车道"使用，集合本身瞬时释放、不常驻。
+     *
+     * @param count       去重后的 bigram 个数
+     * @param fingerprint 次序无关指纹
      */
     public record BigramSummary(int count, long fingerprint) {
     }
 
-    /** 文本 → bigram 摘要（内部集合瞬时释放）。 */
+    /**
+     * 文本转 bigram 摘要（内部集合瞬时释放）。
+     *
+     * @param text 文本
+     * @return bigram 个数与次序无关指纹
+     */
     public static BigramSummary bigramSummary(String text) {
         Set<String> bigrams = bigramSet(text);
         long fingerprint = 0;
@@ -150,6 +189,11 @@ public final class TextUtil {
     /**
      * 集合 Jaccard 是否严格超过阈值：判定与 {@code jaccardSet(a, b) > threshold} 一致，
      * 但用"达标所需的最小交集"提前中止——剩余元素全部命中也不够时立即返回 false。
+     *
+     * @param a         集合 A
+     * @param b         集合 B
+     * @param threshold 阈值（严格大于）
+     * @return 相似度严格超过阈值为 true
      */
     public static boolean jaccardExceeds(Set<String> a, Set<String> b, double threshold) {
         if (a.isEmpty() && b.isEmpty()) {

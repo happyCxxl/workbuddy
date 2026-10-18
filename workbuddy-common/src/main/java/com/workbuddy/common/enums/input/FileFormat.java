@@ -50,7 +50,12 @@ public enum FileFormat {
         this.mimeType = mimeType;
     }
 
-    /** 按真实 MIME 查找格式；未知类型返回 null。 */
+    /**
+     * 按真实 MIME 查找格式。
+     *
+     * @param mimeType 真实 MIME 类型
+     * @return 命中的格式；未知类型为 null
+     */
     public static FileFormat ofMimeType(String mimeType) {
         return Arrays.stream(values())
                 .filter(f -> f.mimeType.equals(mimeType))

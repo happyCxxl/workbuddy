@@ -31,7 +31,15 @@ public class FileValidationResult {
     /** sha256 指纹（流式计算，通过时非空） */
     private String sha256;
 
-    /** 校验通过工厂：携带建档三写所需全部字段。 */
+    /**
+     * 校验通过工厂：携带建档三写所需的全部字段。
+     *
+     * @param format   识别出的文件格式
+     * @param mimeType 媒体类型
+     * @param size     实际字节数
+     * @param sha256   内容指纹
+     * @return 通过结果
+     */
     public static FileValidationResult pass(FileFormat format, String mimeType, Long size, String sha256) {
         FileValidationResult r = new FileValidationResult();
         r.passed = true;
@@ -42,7 +50,12 @@ public class FileValidationResult {
         return r;
     }
 
-    /** 校验失败工厂：只携带失败原因，其余字段为空。 */
+    /**
+     * 校验失败工厂：只携带失败原因，其余字段为空。
+     *
+     * @param reason 失败原因
+     * @return 失败结果
+     */
     public static FileValidationResult fail(FileValidationFailReason reason) {
         FileValidationResult r = new FileValidationResult();
         r.passed = false;

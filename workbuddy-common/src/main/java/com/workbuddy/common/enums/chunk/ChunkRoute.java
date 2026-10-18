@@ -24,7 +24,11 @@ public enum ChunkRoute {
         this.key = key;
     }
 
-    /** 策略快照中的序列化键（JSON 契约）。 */
+    /**
+     * 策略快照中的序列化键（JSON 契约）。
+     *
+     * @return 路由键
+     */
     public String key() {
         return key;
     }

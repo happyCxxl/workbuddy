@@ -25,6 +25,15 @@ public class QualityWarning {
     /** 说明 */
     private String message;
 
+    /**
+     * 造一条质量告警。
+     *
+     * @param code      告警码
+     * @param elementId 关联元素 ID（可空）
+     * @param level     级别
+     * @param message   说明
+     * @return 质量告警
+     */
     public static QualityWarning of(QualityWarningCode code, String elementId, String level, String message) {
         return new QualityWarning(code.name(), elementId, level, message);
     }
