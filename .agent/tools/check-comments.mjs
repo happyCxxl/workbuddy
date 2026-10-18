@@ -9,15 +9,14 @@
  * 用法：
  *   node .agent/tools/check-comments.mjs              # 全量（代码 + 文档），命中 ERROR 即退出 1
  *   node .agent/tools/check-comments.mjs --strings     # 额外报告字符串字面量里的阶段词（不判失败）
- *
- * @author cxxl
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = process.cwd();
-const SKIP_DIRS = new Set(['node_modules', 'target', 'dist', '.git', '.idea', '.vscode', 'logs']);
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const SKIP_DIRS = new Set(['node_modules', 'target', 'dist', 'build', '.git', '.idea', '.vscode', 'logs', 'volumes', '.cache', '.gradle']);
 const CODE_EXT = new Set(['.java', '.ts', '.vue', '.css', '.mjs', '.js']);
 const DOC_EXT = new Set(['.md']);
 /** 无扩展名的 shell 钩子脚本（注释以 # 开头） */
@@ -46,14 +45,26 @@ const FORBIDDEN_SECTIONS = [/^#{1,6}\s*变更记录/, /^#{1,6}\s*决策记录/];
 const STRING_HINTS = ['一期', '二期', '首期'];
 
 function walk(dir, out = []) {
-  for (const name of readdirSync(dir)) {
+  let entries;
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    return out;
+  }
+  for (const name of entries) {
     if (SKIP_DIRS.has(name)) {
       continue;
     }
     const full = join(dir, name);
-    if (statSync(full).isDirectory()) {
+    let st;
+    try {
+      st = statSync(full);
+    } catch {
+      continue;
+    }
+    if (st.isDirectory()) {
       walk(full, out);
-    } else if (CODE_EXT.has(name.slice(name.lastIndexOf('.'))) || DOC_EXT.has(name.slice(name.lastIndexOf('.')))) {
+    } else if (st.isFile() && (CODE_EXT.has(name.slice(name.lastIndexOf('.'))) || DOC_EXT.has(name.slice(name.lastIndexOf('.'))))) {
       out.push(full);
     }
   }
@@ -151,21 +162,10 @@ function stringLines(content) {
 }
 
 const reportStrings = process.argv.includes('--strings');
+// 通用约定：扫描整个仓库（按扩展名过滤、跳过依赖与构建目录），不写死任何项目目录。
 const files = [
-  ...walk(join(ROOT, 'workbuddy-biz')),
-  ...walk(join(ROOT, 'workbuddy-common')),
-  ...walk(join(ROOT, 'workbuddy-infra')),
-  ...walk(join(ROOT, 'workbuddy-worker')),
-  ...walk(join(ROOT, 'workbuddy-auth')),
-  ...walk(join(ROOT, 'workbuddy-file')),
-  ...walk(join(ROOT, 'workbuddy-model')),
-  ...walk(join(ROOT, 'workbuddy-vector')),
-  ...walk(join(ROOT, 'web', 'src')),
-  ...walk(join(ROOT, 'web', 'docs')),
-  ...walk(join(ROOT, 'docs')),
-  ...walk(join(ROOT, '.agent', 'tools')),
-  ...walk(join(ROOT, '.agent', 'standards')),
-  ...SHELL_FILES.map((rel) => join(ROOT, rel))
+  ...walk(ROOT),
+  ...SHELL_FILES.filter((rel) => existsSync(join(ROOT, rel))).map((rel) => join(ROOT, rel)),
 ];
 
 const errors = [];

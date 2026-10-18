@@ -18,50 +18,12 @@
  *
  * 退出码：有 ERROR 命中 → 1；只有 WARN 或全干净 → 0。
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { ROOT, isText, trackedFiles } from './lib.mjs';
 
-const ROOT = process.cwd();
-
-/** 扫描根：与注释门禁同一批根，另加 SQL 与容器编排目录 */
-const SCAN_ROOTS = [
-  'workbuddy-common/src',
-  'workbuddy-infra/src',
-  'workbuddy-auth/src',
-  'workbuddy-file/src',
-  'workbuddy-model/src',
-  'workbuddy-vector/src',
-  'workbuddy-worker/src',
-  'workbuddy-biz/src',
-  'web/src',
-  'web/docs',
-  'docs',
-  '.agent/tools',
-  '.agent',
-  'docker',
-  'sql',
-  'README.md',
-  '.husky',
-];
-
-/** 只看文本类文件 */
-const TEXT_EXT = new Set([
-  '.java', '.ts', '.vue', '.css', '.mjs', '.js', '.md', '.sql', '.yml', '.yaml',
-  '.json', '.html', '.sh', '.xml', '.properties',
-]);
-
-/** 构建文件不入 SCAN_ROOTS（那里只列了各模块的 src），单独补一轮 */
-const BUILD_FILES = [
-  'pom.xml',
-  'workbuddy-common/pom.xml',
-  'workbuddy-infra/pom.xml',
-  'workbuddy-auth/pom.xml',
-  'workbuddy-file/pom.xml',
-  'workbuddy-model/pom.xml',
-  'workbuddy-vector/pom.xml',
-  'workbuddy-worker/pom.xml',
-  'workbuddy-biz/pom.xml',
-];
+/** 扫描范围：仓库内受版本控制的文本文件，不假设目录结构 */
+const files = trackedFiles().filter((f) => isText(f));
 
 /**
  * GBK 误读序列：正常中文写作里不会连着出现的组合（单字如「涓」「鏄」可能是真字，故用多字组合判定）。
@@ -131,32 +93,8 @@ function scanFile(absPath) {
   }
 }
 
-function walk(target) {
-  let st;
-  try {
-    st = statSync(target);
-  } catch {
-    return;
-  }
-  if (st.isFile()) {
-    if (TEXT_EXT.has(target.slice(target.lastIndexOf('.')))) {
-      scanFile(target);
-    }
-    return;
-  }
-  for (const entry of readdirSync(target)) {
-    if (entry === 'node_modules' || entry === 'target' || entry === 'dist' || entry === '.git') {
-      continue;
-    }
-    walk(join(target, entry));
-  }
-}
-
-for (const root of SCAN_ROOTS) {
-  walk(join(ROOT, root));
-}
-for (const build of BUILD_FILES) {
-  walk(join(ROOT, build));
+for (const file of files) {
+  scanFile(join(ROOT, file));
 }
 
 if (HITS.length === 0 && WARNS.length === 0) {

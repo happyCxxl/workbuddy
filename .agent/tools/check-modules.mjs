@@ -1,81 +1,101 @@
 #!/usr/bin/env node
-// 模块依赖一致性：把「模块依赖白名单」与各模块 pom.xml 双向核对。
-// 白名单在 .agent/tools/modules.json；基础模块（契约层、基础层）视为通配允许，不要求在每行登记。
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const CONFIG = join(ROOT, '.agent', 'tools', 'modules.json');
+// 模块结构检查：解析仓库内的 pom.xml，校验模块声明存在、模块间依赖无环、无自依赖。
+// 通用约定：任何 Maven 多模块仓库都适用；不读取项目专有的白名单文件。
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join, posix } from 'node:path';
+import { ROOT, trackedFiles } from './lib.mjs';
 
 const errors = [];
 const warns = [];
 
-let config;
-try {
-  config = JSON.parse(readFileSync(CONFIG, 'utf8'));
-} catch (e) {
-  console.log(`ERROR 读取模块白名单失败：${CONFIG}（${e.message}）`);
-  process.exit(1);
+/** 去掉与模块自身标识无关的块，剩下的第一个 artifactId 即本模块 */
+function stripBlocks(xml) {
+  return xml
+    .replace(/<parent>[\s\S]*?<\/parent>/g, '')
+    .replace(/<dependencies>[\s\S]*?<\/dependencies>/g, '')
+    .replace(/<dependencyManagement>[\s\S]*?<\/dependencyManagement>/g, '')
+    .replace(/<build>[\s\S]*?<\/build>/g, '')
+    .replace(/<profiles>[\s\S]*?<\/profiles>/g, '')
+    .replace(/<reporting>[\s\S]*?<\/reporting>/g, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
 }
 
-const BASE = new Set(config.baseModules ?? []);
-const MATRIX = new Map(Object.entries(config.modules ?? {}));
-
-const modules = readdirSync(ROOT, { withFileTypes: true })
-  .filter((d) => d.isDirectory() && d.name.startsWith('workbuddy-'))
-  .map((d) => d.name)
-  .sort();
-
-/** 从某模块 pom 读出它依赖的 workbuddy-* 模块 */
-function readPomDeps(module) {
-  const pom = join(ROOT, module, 'pom.xml');
-  if (!existsSync(pom)) return null;
-  const text = readFileSync(pom, 'utf8');
-  const deps = new Set();
-  for (const block of text.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)) {
-    const m = block[1].match(/<artifactId>(workbuddy-[a-z]+)<\/artifactId>/);
-    if (m && m[1] !== module) deps.add(m[1]);
-  }
-  return deps;
+function parsePom(rel) {
+  const xml = readFileSync(join(ROOT, rel), 'utf8');
+  const body = stripBlocks(xml);
+  const artifactId = /<artifactId>([\w.-]+)<\/artifactId>/.exec(body)?.[1] ?? null;
+  const modules = [...xml.matchAll(/<module>([^<]+)<\/module>/g)].map((m) => m[1].trim());
+  const deps = [...xml.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)]
+    .map((m) => /<artifactId>([\w.-]+)<\/artifactId>/.exec(m[1])?.[1])
+    .filter(Boolean);
+  return { rel, dir: dirname(rel) === '.' ? '' : dirname(rel), artifactId, modules, deps };
 }
 
-// 文档登记了、仓库里没有
-for (const name of MATRIX.keys()) {
-  if (!modules.includes(name)) warns.push(`${name}：白名单登记了该模块，但仓库中不存在`);
-}
-
-for (const module of modules) {
-  const actual = readPomDeps(module);
-  if (actual === null) {
-    warns.push(`${module}：没有 pom.xml，跳过`);
-    continue;
-  }
-  const allowed = new Set(MATRIX.get(module) ?? []);
-  if (!MATRIX.has(module)) {
-    errors.push(`${module}：仓库中存在，但白名单未登记该模块`);
-  }
-  for (const dep of actual) {
-    if (BASE.has(dep)) continue; // 基础层通配允许
-    if (!allowed.has(dep)) {
-      errors.push(`${module} → ${dep}：pom 中已存在，白名单未登记（新增依赖须登记并写明依据）`);
+const poms = trackedFiles().filter((f) => f.endsWith('pom.xml')).map(parsePom);
+const byArtifact = new Map();
+for (const pom of poms) {
+  if (pom.artifactId) {
+    if (byArtifact.has(pom.artifactId)) {
+      warns.push(`artifactId 重复：${pom.artifactId}（${byArtifact.get(pom.artifactId).rel} 与 ${pom.rel}）`);
+    } else {
+      byArtifact.set(pom.artifactId, pom);
     }
   }
-  for (const dep of allowed) {
-    if (!actual.has(dep)) warns.push(`${module} → ${dep}：白名单已登记，pom 中不存在（白名单过期）`);
+}
+
+if (poms.length === 0) {
+  console.log('模块结构检查：未发现 pom.xml，跳过');
+  process.exit(0);
+}
+
+// 模块声明指向的目录必须存在
+for (const pom of poms) {
+  for (const m of pom.modules) {
+    const target = pom.dir ? posix.join(pom.dir, m) : m;
+    if (!existsSync(join(ROOT, target))) {
+      errors.push(`${pom.rel} 声明的模块目录不存在：${target}`);
+    }
   }
 }
+
+// 模块间依赖：自依赖、环
+const graph = new Map();
+for (const pom of poms) {
+  if (!pom.artifactId) continue;
+  const deps = new Set();
+  for (const d of pom.deps) {
+    if (d === pom.artifactId) {
+      errors.push(`${pom.rel} 依赖了自身：${d}`);
+      continue;
+    }
+    if (byArtifact.has(d)) deps.add(d);
+  }
+  graph.set(pom.artifactId, deps);
+}
+
+const state = new Map();
+function visit(node, stack) {
+  if (state.get(node) === 'done') return;
+  if (state.get(node) === 'visiting') {
+    const cycle = [...stack.slice(stack.indexOf(node)), node].join(' -> ');
+    errors.push(`模块依赖成环：${cycle}`);
+    return;
+  }
+  state.set(node, 'visiting');
+  for (const dep of graph.get(node) ?? []) visit(dep, [...stack, node]);
+  state.set(node, 'done');
+}
+for (const node of graph.keys()) visit(node, []);
 
 for (const w of warns) console.log(`WARN  ${w}`);
 if (errors.length) {
   for (const e of errors) console.log(`ERROR ${e}`);
   console.log('');
-  console.log(`模块依赖一致性：${errors.length} 处未登记依赖；修复＝改 .agent/tools/modules.json，或删掉 pom 里多余的依赖`);
+  console.log(`模块结构检查：${errors.length} 处问题；修复＝改 pom.xml 的模块声明或依赖`);
   process.exit(1);
 }
-
-const edgeCount = [...MATRIX.values()].reduce((sum, list) => sum + list.length, 0);
+const edgeCount = [...graph.values()].reduce((sum, s) => sum + s.size, 0);
 console.log(
-  `模块依赖一致性：${modules.length} 个模块、${edgeCount} 条已登记边，与 pom.xml 一致` +
+  `模块结构检查：${graph.size} 个模块、${edgeCount} 条模块间依赖，无环、无自依赖` +
     (warns.length ? `（${warns.length} 条提示）` : '')
 );

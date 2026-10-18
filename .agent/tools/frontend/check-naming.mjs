@@ -1,16 +1,17 @@
-// 命名词表校验（§3.2）：src/api/ 下导出的接口函数必须以 add/update/delete/get/detail 开头。
+// 命名词表校验：接口层导出的函数必须以约定的动词开头。配置见 config.json 的 frontend.verbs。
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
+import { loadConfig } from '../lib.mjs';
 
-const apiDir = join(process.cwd(), 'src', 'api');
+const { apiDir: apiRel, verbs } = loadConfig().frontend;
+const apiDir = join(process.cwd(), apiRel);
 if (!existsSync(apiDir)) {
-  console.log('check-naming: src/api 不存在，跳过');
+  console.log(`check-naming: ${apiRel} 不存在，跳过`);
   process.exit(0);
 }
 
-const VERBS = ['add', 'update', 'delete', 'get', 'detail'];
-const verbPattern = new RegExp(`^(${VERBS.join('|')})`);
+const verbPattern = new RegExp(`^(${verbs.join('|')})`);
 
 const errors = [];
 for (const file of readdirSync(apiDir)) {
@@ -24,9 +25,7 @@ for (const file of readdirSync(apiDir)) {
   ];
   for (const name of functionNames) {
     if (!verbPattern.test(name)) {
-      errors.push(
-        `${file}: 接口函数 ${name} 必须以 add/update/delete/get/detail 开头（见规范 §3.2）`,
-      );
+      errors.push(`${file}: 接口函数 ${name} 必须以 ${verbs.join('/')} 开头（见规范“命名”）`);
     }
   }
 }

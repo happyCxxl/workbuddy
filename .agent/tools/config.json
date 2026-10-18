@@ -1,0 +1,23 @@
+{
+  "frontend": {
+    "srcDir": "src",
+    "apiDir": "src/api",
+    "verbs": ["add", "update", "delete", "get", "detail"],
+    "tableClass": "page-table",
+    "tableTag": "el-table",
+    "columnTag": "el-table-column",
+    "tableExempt": "表格豁免",
+    "routerActiveClasses": ["router-link-active", "router-link-exact-active"]
+  },
+  "java": {
+    "maxFileLines": 400
+  },
+  "backend": {
+    "checkstyle": "checkstyle.xml",
+    "pmd": "pmd-ruleset.xml",
+    "spotbugs": "spotbugs-exclude.xml",
+    "cpdTokens": 45,
+    "lineLength": 150,
+    "methodLength": 100
+  }
+}

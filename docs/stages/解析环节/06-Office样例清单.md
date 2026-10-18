@@ -47,7 +47,7 @@
 生成样例（Python 部分：xlsx / docx / pptx）：
 
 ```powershell
-<python> tools\samples\gen-office-samples.py
+<python> scripts\samples\gen-office-samples.py
 ```
 
 生成 POI 专属样例（合并覆盖格带值的 xlsx、`w:vMerge` 续接的 docx、公式缓存值 xlsx、`.xls`）：
@@ -57,13 +57,13 @@
 mvn -o -q -pl knowledge-worker dependency:build-classpath "-Dmdep.outputFile=target\cp-worker.txt"
 $cp = (Get-Content target\cp-worker.txt -Raw).Trim()
 $mods = (Get-ChildItem -Directory -Filter "knowledge-*" | ForEach-Object { "$($_.FullName)\target\classes" }) -join ";"
-java -cp "$mods;$cp" tools\samples\gen-office-poi\GenOfficePoiSamples.java
+java -cp "$mods;$cp" scripts\samples\gen-office-poi\GenOfficePoiSamples.java
 ```
 
 核对样例（用仓库解析器逐个跑并打印产物）：
 
 ```powershell
-java "-Dfile.encoding=UTF-8" "-Dstdout.encoding=UTF-8" -cp "$mods;$cp" tools\samples\verify-office\VerifyOfficeSamples.java |
+java "-Dfile.encoding=UTF-8" "-Dstdout.encoding=UTF-8" -cp "$mods;$cp" scripts\samples\verify-office\VerifyOfficeSamples.java |
     Tee-Object samples\office-parse-00-核对输出.txt
 ```
 

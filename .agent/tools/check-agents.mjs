@@ -5,15 +5,15 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { trackedFiles } from './lib.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-// 入口文件与各自的行数预算（与文件内自己声明的口径一致）
-const ENTRIES = [
-  { rel: 'AGENTS.md', budget: 80 },
-  { rel: 'web/AGENTS.md', budget: 50 },
-  { rel: '.agent/standards/common/06-协作流程.md', budget: 130 },
-];
+// 通用约定：仓库内任意层级的 AGENTS.md 都是入口文件；行数预算取通用默认值。
+const DEFAULT_BUDGET = 200;
+const ENTRIES = trackedFiles()
+  .filter((f) => f === 'AGENTS.md' || f.endsWith('/AGENTS.md'))
+  .map((rel) => ({ rel, budget: DEFAULT_BUDGET }));
 
 // 只认「像仓库路径」的反引号串：剥掉命令前缀后不含空白/特殊字符，且含 / 或以已知扩展名结尾
 const CMD_PREFIX = /^(sh|node|cd|mvn|pnpm|npx|java|git|docker)\s+/;

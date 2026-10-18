@@ -3,12 +3,15 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
+import { loadConfig } from '../lib.mjs';
 
-const srcDir = join(process.cwd(), 'src');
+const cfg = loadConfig().frontend;
+const srcDir = join(process.cwd(), cfg.srcDir);
 const errors = [];
 /** 逐列豁免标记：写在该列所在行 */
-const EXEMPT = '表格豁免';
-const TABLE_CLASS = /class="[^"]*\bpage-table\b[^"]*"/;
+const EXEMPT = cfg.tableExempt;
+const TABLE_CLASS = new RegExp(`class="[^"]*\\b${cfg.tableClass}\\b[^"]*"`);
+const COLUMN_TAG = cfg.columnTag;
 const COLUMN_MIN_WIDTH = /(?:^|\s):?min-width="(\d+)"/;
 const COLUMN_WIDTH = /(?:^|\s):?width="/;
 const COLUMN_ALIGN = /(?:^|\s)align="center"/;
@@ -40,12 +43,12 @@ function checkTable(rel, content, blockStart, block) {
   const tableTag = block.slice(0, tagEnd === -1 ? block.length : tagEnd + 1);
   if (!TABLE_CLASS.test(tableTag)) {
     errors.push(
-      `${rel}:${lineOf(content, blockStart)}: 表格必须挂 class="page-table"（见规范 §6.7）`,
+      `${rel}:${lineOf(content, blockStart)}: 表格必须挂 class="${cfg.tableClass}"（见规范“样式与表格”）`,
     );
   }
 
   const widths = [];
-  for (const match of block.matchAll(/<el-table-column[\s>][^>]*>/g)) {
+  for (const match of block.matchAll(new RegExp(`<${COLUMN_TAG}[\\s>][^>]*>`, 'g'))) {
     const tag = match[0];
     const index = blockStart + match.index;
     const line = lineOf(content, index);
@@ -83,19 +86,20 @@ for (const file of walkVueFiles(srcDir)) {
   const rel = file.slice(process.cwd().length + 1).replace(/\\/g, '/');
   const content = readFileSync(file, 'utf8');
   let cursor = 0;
+  const openTag = `<${cfg.tableTag}`;
+  const closeTag = `</${cfg.tableTag}>`;
   while (cursor < content.length) {
-    const open = content.indexOf('<el-table', cursor);
+    const open = content.indexOf(openTag, cursor);
     if (open === -1) {
       break;
     }
-    // 只有 el-table 自身：跳过 <el-table-column 这类同前缀标签
-    if (!/^[\s>]/.test(content.slice(open + '<el-table'.length, open + '<el-table'.length + 1))) {
-      cursor = open + '<el-table'.length;
+    if (!/^[\s>]/.test(content.slice(open + openTag.length, open + openTag.length + 1))) {
+      cursor = open + openTag.length;
       continue;
     }
-    const close = content.indexOf('</el-table>', open);
+    const close = content.indexOf(closeTag, open);
     checkTable(rel, content, open, content.slice(open, close === -1 ? content.length : close));
-    cursor = close === -1 ? content.length : close + '</el-table>'.length;
+    cursor = close === -1 ? content.length : close + closeTag.length;
   }
 }
 

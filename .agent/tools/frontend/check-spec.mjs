@@ -3,8 +3,10 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
+import { loadConfig } from '../lib.mjs';
 
-const srcDir = join(process.cwd(), 'src');
+const cfg = loadConfig().frontend;
+const srcDir = join(process.cwd(), cfg.srcDir);
 const errors = [];
 const GENERIC_FAMILIES = new Set([
   'serif',
@@ -21,7 +23,7 @@ const GENERIC_FAMILIES = new Set([
   'emoji',
   'fangsong',
 ]);
-const ROUTER_ACTIVE_CLASSES = new Set(['router-link-active', 'router-link-exact-active']);
+const ROUTER_ACTIVE_CLASSES = new Set(cfg.routerActiveClasses);
 
 function walkVueFiles(dir) {
   const out = [];
