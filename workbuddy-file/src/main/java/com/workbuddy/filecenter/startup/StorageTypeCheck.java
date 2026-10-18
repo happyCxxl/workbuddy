@@ -21,11 +21,21 @@ public class StorageTypeCheck implements StartupCheck {
 
     private final FileCenterConfig fileCenterConfig;
 
+    /**
+     * 校验序号：参数类校验。
+     *
+     * @return 校验顺序
+     */
     @Override
     public int order() {
         return ORDER_PARAMETERS;
     }
 
+    /**
+     * 校验存储类型配置可解析，通过后把控制权交给链上的下一项。
+     *
+     * @param next 启动校验链的下一项
+     */
     @Override
     public void check(StartupCheckChain next) {
         fileCenterConfig.defaultType();

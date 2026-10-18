@@ -24,11 +24,23 @@ public class Bucket4jConfig {
     /** 桶在 Redis 中的最长存活时间：窗口过后自动回收，避免每个客户端一个 key 长期堆积 */
     private static final Duration BUCKET_TTL = Duration.ofHours(1);
 
+    /**
+     * 令牌桶专用的 Redis 连接：桶状态以字节形式存放，与业务用的 String 编解码器分开。
+     *
+     * @param connectionFactory Spring Data Redis 的连接工厂
+     * @return 桶状态使用的 Redis 连接
+     */
     @Bean(destroyMethod = "close")
     public StatefulRedisConnection<String, byte[]> rateLimitConnection(LettuceConnectionFactory connectionFactory) {
         return redisClient(connectionFactory).connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
     }
 
+    /**
+     * 桶代理：CAS 方式落在 Redis 上，写入后按「补满到上限所需时间」过期。
+     *
+     * @param rateLimitConnection 桶状态使用的 Redis 连接
+     * @return 桶代理
+     */
     @Bean
     public ProxyManager<String> rateLimitProxyManager(StatefulRedisConnection<String, byte[]> rateLimitConnection) {
         return Bucket4jLettuce.casBasedBuilder(rateLimitConnection)

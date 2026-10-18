@@ -37,6 +37,12 @@ public class AuthServiceImpl implements AuthService {
 
     private final LoginAttemptGuard loginAttemptGuard;
 
+    /**
+     * 登录：先判失败阈值，再校验口令；失败按账号与 IP 两个维度计数，成功后清零账号维度。
+     *
+     * @param request 登录请求
+     * @return 令牌与用户信息
+     */
     @Override
     public LoginVO login(LoginDTO request) {
         String ip = ClientIpUtil.getClientIp();
@@ -67,6 +73,11 @@ public class AuthServiceImpl implements AuthService {
         return vo;
     }
 
+    /**
+     * 注册：用户名唯一，口令加密后入库。
+     *
+     * @param request 注册请求
+     */
     @Override
     public void register(RegisterDTO request) {
         ThrowUtil.throwIf(userDbService.existsByUsername(request.getUsername()),

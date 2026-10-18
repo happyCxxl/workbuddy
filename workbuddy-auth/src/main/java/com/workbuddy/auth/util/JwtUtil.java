@@ -50,6 +50,11 @@ public class JwtUtil {
      */
     private final Duration rememberTtl;
 
+    /**
+     * 构造令牌工具。
+     *
+     * @param properties 令牌配置（密钥与两档有效期）
+     */
     public JwtUtil(JwtProperties properties) {
         this.secret = properties.getSecret().getBytes(StandardCharsets.UTF_8);
         this.standardTtl = Duration.ofDays(properties.getTtlDays());
@@ -58,6 +63,8 @@ public class JwtUtil {
 
     /**
      * 不勾选「记住我」的令牌有效期。
+     *
+     * @return 有效期
      */
     public Duration standardTtl() {
         return standardTtl;
@@ -65,6 +72,8 @@ public class JwtUtil {
 
     /**
      * 勾选「记住我」的令牌有效期。
+     *
+     * @return 有效期
      */
     public Duration rememberTtl() {
         return rememberTtl;

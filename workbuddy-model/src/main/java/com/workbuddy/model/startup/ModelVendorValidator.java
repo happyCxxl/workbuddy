@@ -40,11 +40,21 @@ public class ModelVendorValidator implements StartupCheck {
 
     private final ModelVendorProperties properties;
 
+    /**
+     * 校验序号：凭据类校验排在能力类之前。
+     *
+     * @return 校验顺序
+     */
     @Override
     public int order() {
         return ORDER_CREDENTIALS;
     }
 
+    /**
+     * 执行厂商配置校验，通过后把控制权交给链上的下一项。
+     *
+     * @param next 启动校验链的下一项
+     */
     @Override
     public void check(StartupCheckChain next) {
         validate(properties);

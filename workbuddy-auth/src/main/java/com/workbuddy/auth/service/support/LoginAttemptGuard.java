@@ -24,7 +24,13 @@ public class LoginAttemptGuard {
 
     private final LoginGuardProperties properties;
 
-    /** 该「账号 + IP」或该 IP 是否已达失败阈值。 */
+    /**
+     * 该「账号 + IP」或该 IP 是否已达失败阈值。
+     *
+     * @param username 登录账号
+     * @param ip       客户端 IP
+     * @return 已达阈值为 true；防护开关关闭时恒为 false
+     */
     public boolean isLocked(String username, String ip) {
         if (!properties.isEnabled()) {
             return false;
@@ -33,7 +39,12 @@ public class LoginAttemptGuard {
                 || redisCounter.get(ipKey(ip)) >= properties.getIpFailThreshold();
     }
 
-    /** 记一次失败：两个维度都计数；账号不存在时同样计数。 */
+    /**
+     * 记一次失败：账号与 IP 两个维度都计数，账号不存在时同样计数。
+     *
+     * @param username 登录账号
+     * @param ip       客户端 IP
+     */
     public void recordFailure(String username, String ip) {
         if (!properties.isEnabled()) {
             return;
@@ -43,7 +54,12 @@ public class LoginAttemptGuard {
         redisCounter.increment(ipKey(ip), window);
     }
 
-    /** 登录成功后清零账号维度；IP 维度保留。 */
+    /**
+     * 登录成功后清零账号维度；IP 维度保留。
+     *
+     * @param username 登录账号
+     * @param ip       客户端 IP
+     */
     public void clearAccount(String username, String ip) {
         if (properties.isEnabled()) {
             redisCounter.reset(accountKey(username, ip));

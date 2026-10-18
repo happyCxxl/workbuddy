@@ -38,6 +38,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final WbUserDbService userDbService;
 
+    /**
+     * 解析 Authorization 头里的令牌，校验通过后把用户与角色写进安全上下文，再放行到后续过滤器。
+     *
+     * @param request     请求
+     * @param response    响应
+     * @param filterChain 过滤链
+     * @throws ServletException 过滤链抛出
+     * @throws IOException      过滤链抛出
+     */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,

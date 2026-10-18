@@ -25,6 +25,14 @@ public class RateLimitAspect {
 
     private final BucketRateLimiter bucketRateLimiter;
 
+    /**
+     * 限流切面：按「客户端 IP + 接口」取桶，取不到令牌即拒绝。
+     *
+     * @param joinPoint 被拦截的方法
+     * @param rateLimit 方法上的限流配置
+     * @return 原方法的返回值
+     * @throws Throwable 原方法抛出的异常；无令牌时抛限流错误
+     */
     @Around("@annotation(rateLimit)")
     public Object around(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
         String key = bucketKey(joinPoint);

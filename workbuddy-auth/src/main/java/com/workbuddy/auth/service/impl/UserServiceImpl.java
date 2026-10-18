@@ -59,6 +59,12 @@ public class UserServiceImpl implements UserService {
 
     private final JwtUtil jwtUtil;
 
+    /**
+     * 分页查用户。
+     *
+     * @param query 查询条件
+     * @return 用户分页；敏感字段不进入响应体
+     */
     @Override
     public IPage<UserVO> pageUsers(UserQueryDTO query) {
         IPage<WbUser> source = userDbService.pageByCondition(query.currentOrDefault(), query.sizeOrDefault(),
@@ -67,6 +73,13 @@ public class UserServiceImpl implements UserService {
         return source.convert(UserServiceImpl::toUserVO);
     }
 
+    /**
+     * 新增用户。
+     *
+     * @param request 新增用户请求
+     * @return 新用户 ID
+     * @throws KnowledgeException 用户名已存在（USERNAME_EXISTS）
+     */
     @Override
     public Long addUser(UserCreateDTO request) {
         ThrowUtil.throwIf(NullUtil.isNotNull(userDbService.findActiveByUsername(request.getUsername())),
@@ -86,6 +99,12 @@ public class UserServiceImpl implements UserService {
         return user.getId();
     }
 
+    /**
+     * 修改用户：不允许改自己的角色与状态，避免把自己锁在外面。
+     *
+     * @param id      用户 ID
+     * @param request 修改请求
+     */
     @Override
     public void updateUser(Long id, UserUpdateDTO request) {
         WbUser user = userDbService.getById(id);
@@ -138,6 +157,11 @@ public class UserServiceImpl implements UserService {
                 AUDIT_OBJECT_TYPE, id, beforeSummary, auditSummary(user));
     }
 
+    /**
+     * 删除用户：不允许删自己，也不允许删掉最后一个启用的管理员。
+     *
+     * @param id 用户 ID
+     */
     @Override
     public void deleteUser(Long id) {
         WbUser user = userDbService.getById(id);
@@ -153,6 +177,12 @@ public class UserServiceImpl implements UserService {
                 auditSummary(user), null);
     }
 
+    /**
+     * 取用户档案。
+     *
+     * @param id 用户 ID
+     * @return 用户档案
+     */
     @Override
     public UserVO getUserProfile(Long id) {
         WbUser user = userDbService.getById(id);
@@ -160,6 +190,12 @@ public class UserServiceImpl implements UserService {
         return toUserVO(user);
     }
 
+    /**
+     * 修改个人档案：只允许改展示名、邮箱与手机号。
+     *
+     * @param id      用户 ID
+     * @param request 档案修改请求
+     */
     @Override
     public void updateProfile(Long id, ProfileUpdateDTO request) {
         WbUser user = userDbService.getById(id);
@@ -173,6 +209,13 @@ public class UserServiceImpl implements UserService {
                 beforeSummary, auditSummary(user));
     }
 
+    /**
+     * 改密码：校验旧口令，新口令不得与旧口令相同；成功后递增令牌版本，旧令牌全部失效。
+     *
+     * @param id      用户 ID
+     * @param request 改密请求
+     * @return 用新凭据重新签发的令牌
+     */
     @Override
     public String changePassword(Long id, PasswordUpdateDTO request) {
         WbUser user = userDbService.getById(id);

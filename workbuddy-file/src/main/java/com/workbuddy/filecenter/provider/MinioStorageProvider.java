@@ -24,6 +24,11 @@ public class MinioStorageProvider implements StorageProvider {
 
     private final MinioClient minioClient;
 
+    /**
+     * 构造 MinIO 后端：端点与凭据取自数据源参数。
+     *
+     * @param def 数据源定义
+     */
     public MinioStorageProvider(StorageSourceDef def) {
         this.def = def;
         this.minioClient = MinioClient.builder()
@@ -33,11 +38,19 @@ public class MinioStorageProvider implements StorageProvider {
                 .build();
     }
 
+    /**
+     * 存储类型。
+     *
+     * @return MinIO
+     */
     @Override
     public StorageType type() {
         return StorageType.MINIO;
     }
 
+    /**
+     * 确保两个桶存在，重复调用无副作用。
+     */
     @Override
     public void initialize() {
         ensureBucket(def.fileBucket());
@@ -46,6 +59,15 @@ public class MinioStorageProvider implements StorageProvider {
                 def.name(), def.param(StorageSourceDef.KEY_ENDPOINT));
     }
 
+    /**
+     * 写入对象。
+     *
+     * @param bucket      桶名
+     * @param key         对象名
+     * @param in          内容流
+     * @param size        内容字节数
+     * @param contentType 内容类型
+     */
     @Override
     public void put(String bucket, String key, InputStream in, long size, String contentType) {
         try {
@@ -60,6 +82,13 @@ public class MinioStorageProvider implements StorageProvider {
         }
     }
 
+    /**
+     * 打开对象内容流。
+     *
+     * @param bucket 桶名
+     * @param key    对象名
+     * @return 内容流
+     */
     @Override
     public InputStream get(String bucket, String key) {
         try {
@@ -72,6 +101,13 @@ public class MinioStorageProvider implements StorageProvider {
         }
     }
 
+    /**
+     * 对象是否存在。
+     *
+     * @param bucket 桶名
+     * @param key    对象名
+     * @return 存在为 true
+     */
     @Override
     public boolean exists(String bucket, String key) {
         try {

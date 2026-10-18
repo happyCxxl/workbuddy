@@ -64,12 +64,20 @@ public record StorageSourceDef(Long id, String name, StorageType type, Map<Strin
         return NullUtil.isNull(params) ? null : params.get(key);
     }
 
-    /** 文件对象桶名（local 下为存储根下的一级子目录名）。 */
+    /**
+     * 文件对象桶名（local 下为存储根下的一级子目录名）。
+     *
+     * @return 桶名
+     */
     public String fileBucket() {
         return param(fileBucketKey(type));
     }
 
-    /** 内容寻址对象桶名（local 下为存储根下的一级子目录名）。 */
+    /**
+     * 内容寻址对象桶名（local 下为存储根下的一级子目录名）。
+     *
+     * @return 桶名
+     */
     public String artifactBucket() {
         return param(artifactBucketKey(type));
     }
@@ -159,7 +167,12 @@ public record StorageSourceDef(Long id, String name, StorageType type, Map<Strin
         return normalized;
     }
 
-    /** 是否为空或全空白。 */
+    /**
+     * 是否为空或全空白。
+     *
+     * @param value 待判定的字符串
+     * @return 空或全空白为 true
+     */
     public static boolean isBlank(String value) {
         return NullUtil.isNull(value) || value.isBlank();
     }

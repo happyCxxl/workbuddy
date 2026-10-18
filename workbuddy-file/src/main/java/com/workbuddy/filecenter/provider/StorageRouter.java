@@ -78,55 +78,101 @@ public class StorageRouter {
                 def.name(), sourceId, def.type().getCode(), provider.type().getCode());
     }
 
-    /** 当前启用的数据源 ID；未启用任何数据源时为 null。 */
+    /**
+     * 当前启用的数据源 ID。
+     *
+     * @return 数据源 ID；未启用任何数据源时为 null
+     */
     public Long currentSourceId() {
         return currentSourceId;
     }
 
-    /** 当前启用的数据源定义；未启用任何数据源时为 null。 */
+    /**
+     * 当前启用的数据源定义。
+     *
+     * @return 数据源定义；未启用任何数据源时为 null
+     */
     public StorageSourceDef currentDef() {
         return NullUtil.isNull(currentSourceId) ? null : defs.get(currentSourceId);
     }
 
-    /** 当前启用数据源的存储类型；未启用任何数据源时为 null。 */
+    /**
+     * 当前启用数据源的存储类型。
+     *
+     * @return 存储类型；未启用任何数据源时为 null
+     */
     public StorageType writeType() {
         StorageSourceDef def = currentDef();
         return NullUtil.isNull(def) ? null : def.type();
     }
 
-    /** 数据源名称；该 ID 未注册时返回 null。 */
+    /**
+     * 数据源名称。
+     *
+     * @param sourceId 数据源 ID
+     * @return 名称；该 ID 未注册时为 null
+     */
     public String nameOf(Long sourceId) {
         StorageSourceDef def = NullUtil.isNull(sourceId) ? null : defs.get(sourceId);
         return NullUtil.isNull(def) ? null : def.name();
     }
 
-    /** 当前启用数据源的名称；未启用任何数据源或该 ID 未注册时返回 null。 */
+    /**
+     * 当前启用数据源的名称。
+     *
+     * @return 名称；未启用任何数据源或该 ID 未注册时为 null
+     */
     public String currentName() {
         return nameOf(currentSourceId);
     }
 
-    /** 数据源存储类型；该 ID 未注册时返回 null。 */
+    /**
+     * 数据源的存储类型。
+     *
+     * @param sourceId 数据源 ID
+     * @return 存储类型；该 ID 未注册时为 null
+     */
     public StorageType typeOf(Long sourceId) {
         StorageSourceDef def = NullUtil.isNull(sourceId) ? null : defs.get(sourceId);
         return NullUtil.isNull(def) ? null : def.type();
     }
 
-    /** 数据源是否已注册。 */
+    /**
+     * 数据源是否已注册。
+     *
+     * @param sourceId 数据源 ID
+     * @return 已注册为 true
+     */
     public boolean registered(Long sourceId) {
         return NullUtil.isNotNull(sourceId) && defs.containsKey(sourceId);
     }
 
-    /** 当前启用数据源的文件对象桶名。 */
+    /**
+     * 当前启用数据源的文件对象桶名。
+     *
+     * @return 桶名
+     * @throws KnowledgeException 未启用任何数据源（40455）
+     */
     public String currentFileBucket() {
         return requireCurrentDef().fileBucket();
     }
 
-    /** 当前启用数据源的内容寻址对象桶名。 */
+    /**
+     * 当前启用数据源的内容寻址对象桶名。
+     *
+     * @return 桶名
+     * @throws KnowledgeException 未启用任何数据源（40455）
+     */
     public String currentArtifactBucket() {
         return requireCurrentDef().artifactBucket();
     }
 
-    /** 新对象的写入后端（当前启用的数据源）。 */
+    /**
+     * 新对象的写入后端。
+     *
+     * @return 当前启用数据源对应的存储后端
+     * @throws KnowledgeException 未启用任何数据源（40455）
+     */
     public StorageProvider writer() {
         return of(requireCurrentDef().id());
     }
@@ -146,7 +192,13 @@ public class StorageRouter {
         return providers.computeIfAbsent(sourceId, this::create);
     }
 
-    /** 按对象位置取后端。 */
+    /**
+     * 按对象位置取后端。
+     *
+     * @param ref 对象位置
+     * @return 该位置的存储后端
+     * @throws KnowledgeException 位置里的数据源为空或未注册（40455）
+     */
     public StorageProvider of(ObjectRef ref) {
         return of(ref.sourceId());
     }

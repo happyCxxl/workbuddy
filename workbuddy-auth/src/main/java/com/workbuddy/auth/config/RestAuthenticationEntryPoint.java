@@ -30,6 +30,14 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
 
+    /**
+     * 未认证：回统一响应体，HTTP 状态保持 200。
+     *
+     * @param request       请求
+     * @param response      响应
+     * @param authException 认证失败原因
+     * @throws IOException 写响应失败
+     */
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,

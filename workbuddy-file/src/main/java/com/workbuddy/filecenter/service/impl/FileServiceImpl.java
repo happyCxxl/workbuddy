@@ -22,10 +22,22 @@ public class FileServiceImpl implements FileService {
 
     private final FileStorage fileStorage;
 
+    /**
+     * 构造文件服务。
+     *
+     * @param fileStorage 文件存储端口
+     */
     public FileServiceImpl(FileStorage fileStorage) {
         this.fileStorage = fileStorage;
     }
 
+    /**
+     * 下载文件：以附件形式写进响应流，文件名按 UTF-8 编码。
+     *
+     * @param fileId   文件 ID
+     * @param response 响应
+     * @throws IOException 读对象或写响应失败
+     */
     @Override
     public void download(String fileId, HttpServletResponse response) throws IOException {
         FileMetadata metadata = fileStorage.metadata(fileId);

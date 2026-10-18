@@ -32,15 +32,28 @@ public class LocalStorageProvider implements StorageProvider {
 
     private final Path root;
 
+    /**
+     * 构造本地存储后端。
+     *
+     * @param def 数据源定义（根目录取自其参数）
+     */
     public LocalStorageProvider(StorageSourceDef def) {
         this.root = Paths.get(def.param(StorageSourceDef.KEY_ROOT_DIR)).toAbsolutePath().normalize();
     }
 
+    /**
+     * 存储类型。
+     *
+     * @return 本地存储
+     */
     @Override
     public StorageType type() {
         return StorageType.LOCAL;
     }
 
+    /**
+     * 建根目录，重复调用无副作用。
+     */
     @Override
     public void initialize() {
         try {
@@ -51,6 +64,15 @@ public class LocalStorageProvider implements StorageProvider {
         log.info("本地存储根目录: {}", root);
     }
 
+    /**
+     * 写入对象：先写临时文件再原子移动，避免读到写了一半的对象。
+     *
+     * @param bucket      桶名（根目录下的一级子目录）
+     * @param key         对象名
+     * @param in          内容流
+     * @param size        内容字节数
+     * @param contentType 内容类型
+     */
     @Override
     public void put(String bucket, String key, InputStream in, long size, String contentType) {
         Path target = resolve(bucket, key);
@@ -66,6 +88,13 @@ public class LocalStorageProvider implements StorageProvider {
         }
     }
 
+    /**
+     * 打开对象内容流。
+     *
+     * @param bucket 桶名
+     * @param key    对象名
+     * @return 内容流
+     */
     @Override
     public InputStream get(String bucket, String key) {
         Path target = resolve(bucket, key);
@@ -78,6 +107,13 @@ public class LocalStorageProvider implements StorageProvider {
         }
     }
 
+    /**
+     * 对象是否存在。
+     *
+     * @param bucket 桶名
+     * @param key    对象名
+     * @return 存在为 true
+     */
     @Override
     public boolean exists(String bucket, String key) {
         return Files.isRegularFile(resolve(bucket, key));

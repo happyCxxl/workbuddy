@@ -26,10 +26,22 @@ import java.io.InputStream;
 @Service
 public class DefaultFileStorage extends AbstractFileStorage {
 
+    /**
+     * 构造默认存储实现。
+     *
+     * @param router              数据源路由
+     * @param fileObjectDbService 文件档案访问
+     */
     public DefaultFileStorage(StorageRouter router, WbFileObjectDbService fileObjectDbService) {
         super(router, fileObjectDbService);
     }
 
+    /**
+     * 写入文件对象：fileId 寻址，每次写入新对象并登记档案，同时记录内容指纹。
+     *
+     * @param file 上传的文件
+     * @return 新建的 fileId
+     */
     @Override
     public String putFile(MultipartFile file) {
         String fileId = IdWorker.getIdStr();
@@ -57,11 +69,23 @@ public class DefaultFileStorage extends AbstractFileStorage {
         return fileId;
     }
 
+    /**
+     * 按 fileId 打开文件流，读取后端由档案里的数据源决定。
+     *
+     * @param fileId 文件 ID
+     * @return 内容流
+     */
     @Override
     public InputStream open(String fileId) {
         return openRef(ObjectRef.ofFile(requireObject(fileId)));
     }
 
+    /**
+     * 读文件元数据。
+     *
+     * @param fileId 文件 ID
+     * @return 元数据（文件名、大小、类型、指纹、创建时间）
+     */
     @Override
     public FileMetadata metadata(String fileId) {
         WbFileObject object = requireObject(fileId);
@@ -75,6 +99,12 @@ public class DefaultFileStorage extends AbstractFileStorage {
         return metadata;
     }
 
+    /**
+     * 文件档案是否存在。
+     *
+     * @param fileId 文件 ID
+     * @return 存在为 true
+     */
     @Override
     public boolean exists(String fileId) {
         return NullUtil.isNotNull(fileObjectDbService.getByFileId(fileId));

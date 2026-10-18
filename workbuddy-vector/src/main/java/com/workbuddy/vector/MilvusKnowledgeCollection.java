@@ -93,6 +93,12 @@ public class MilvusKnowledgeCollection implements KnowledgeCollectionPort {
 
     private final MilvusClientV2 milvusClientV2;
 
+    /**
+     * 确保集合存在：不存在时按维度创建，随后校验 schema 与维度一致。
+     *
+     * @param collectionName 集合名
+     * @param dimension      向量维度
+     */
     @Override
     public void ensureCollection(String collectionName, int dimension) {
         boolean exists = Boolean.TRUE.equals(milvusClientV2.hasCollection(
@@ -105,18 +111,34 @@ public class MilvusKnowledgeCollection implements KnowledgeCollectionPort {
         verifySchema(collectionName, dimension);
     }
 
+    /**
+     * 把集合加载进内存做预热：未加载的集合不接受检索。
+     *
+     * @param collectionName 集合名
+     */
     @Override
     public void load(String collectionName) {
         milvusClientV2.loadCollection(LoadCollectionReq.builder().collectionName(collectionName).build());
         log.info("===> MilvusKnowledgeCollection 集合已加载（预热）, collection={}", collectionName);
     }
 
+    /**
+     * 回收集合，即时释放存储与内存。
+     *
+     * @param collectionName 集合名
+     */
     @Override
     public void drop(String collectionName) {
         milvusClientV2.dropCollection(DropCollectionReq.builder().collectionName(collectionName).build());
         log.info("===> MilvusKnowledgeCollection 集合已回收（drop 即时释放）, collection={}", collectionName);
     }
 
+    /**
+     * 按主键 upsert 行集；空行集直接跳过。
+     *
+     * @param collectionName 集合名
+     * @param rows           待写入的行
+     */
     @Override
     public void upsert(String collectionName, List<CollectionRow> rows) {
         if (rows.isEmpty()) {
@@ -131,6 +153,15 @@ public class MilvusKnowledgeCollection implements KnowledgeCollectionPort {
         log.info("===> MilvusKnowledgeCollection 追加写入, collection={}, rows={}", collectionName, rows.size());
     }
 
+    /**
+     * 向量检索：按相似度取前 topK 行，并带上每行的分数。
+     *
+     * @param collectionName 集合名
+     * @param vector         查询向量
+     * @param topK           返回条数上限
+     * @param filter         过滤表达式（可空）
+     * @return 命中的行与相似度分数，按分数降序
+     */
     @Override
     public List<ScoredRow> searchVector(String collectionName, List<Float> vector, int topK, String filter) {
         SearchResp resp = searchInternal(collectionName, new FloatVec(vector), "vector", topK, filter);
@@ -145,6 +176,15 @@ public class MilvusKnowledgeCollection implements KnowledgeCollectionPort {
         return hits;
     }
 
+    /**
+     * 全文检索：关键词经清洗后走稀疏向量字段，返回命中的行（不带分数）。
+     *
+     * @param collectionName 集合名
+     * @param keyword        检索关键词
+     * @param limit          返回条数上限
+     * @param filter         过滤表达式（可空）
+     * @return 命中的行，按相关度降序
+     */
     @Override
     public List<CollectionRow> searchFullText(String collectionName, String keyword, long limit, String filter) {
         String sanitized = sanitizeKeyword(keyword);
@@ -175,6 +215,13 @@ public class MilvusKnowledgeCollection implements KnowledgeCollectionPort {
                 .build());
     }
 
+    /**
+     * 按过滤条件分页列出集合内的主键。
+     *
+     * @param collectionName 集合名
+     * @param filter         过滤表达式（可空）
+     * @return 主键列表
+     */
     @Override
     public List<String> listIds(String collectionName, String filter) {
         List<String> ids = new ArrayList<>();
@@ -206,6 +253,13 @@ public class MilvusKnowledgeCollection implements KnowledgeCollectionPort {
         return ids;
     }
 
+    /**
+     * 按主键批量取行。
+     *
+     * @param collectionName 集合名
+     * @param ids            主键集合
+     * @return 命中的行；主键为空时返回空列表
+     */
     @Override
     public List<CollectionRow> queryByIds(String collectionName, List<String> ids) {
         if (ids.isEmpty()) {
@@ -341,6 +395,9 @@ public class MilvusKnowledgeCollection implements KnowledgeCollectionPort {
     /**
      * 过滤表达式字符串清洗：Milvus 过滤表达式字符串字面量不允许原始换行/制表符，单引号会破坏语法——
      * 换行/制表转空格、单引号剔除、连续空白折叠（全文关键词与过滤值共用口径）。
+     *
+     * @param keyword 原始关键词或过滤值
+     * @return 清洗后的字符串；入参空白时返回空串
      */
     public static String sanitizeKeyword(String keyword) {
         if (StrUtil.isBlank(keyword)) {

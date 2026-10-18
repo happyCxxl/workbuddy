@@ -36,6 +36,11 @@ public class MilvusClientFactory {
     /**
      * 客户端 Bean（单例）：先确保目标库存在，再按配置连接。
      */
+    /**
+     * 客户端 Bean（单例）：先确保目标库存在，再按配置连接。
+     *
+     * @return Milvus 客户端
+     */
     @Bean
     public MilvusClientV2 milvusClientV2() {
         ensureDatabaseExists();

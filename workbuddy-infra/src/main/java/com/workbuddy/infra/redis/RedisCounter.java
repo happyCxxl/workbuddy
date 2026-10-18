@@ -25,18 +25,34 @@ public class RedisCounter {
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    /**
+     * 构造计数器。
+     *
+     * @param stringRedisTemplate Redis 客户端
+     */
     public RedisCounter(StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
-    /** 计数 +1 并返回新值；仅首次创建时写入过期时间，后续自增不续期；脚本未返回值时按 0 处理。 */
+    /**
+     * 计数加一：只有首次创建时写入过期时间，后续自增不续期。
+     *
+     * @param key 计数键
+     * @param ttl 首次创建时的存活时间
+     * @return 自增后的计数值；脚本未返回值时按 0 处理
+     */
     public long increment(String key, Duration ttl) {
         Long count = stringRedisTemplate.execute(INCR_WITH_TTL_SCRIPT, List.of(key),
                 String.valueOf(ttl.toMillis()));
         return ObjectUtil.defaultIfNull(count, 0L);
     }
 
-    /** 当前计数值；key 不存在或值不是数字时返回 0。 */
+    /**
+     * 当前计数值。
+     *
+     * @param key 计数键
+     * @return 计数值；键不存在或值不是数字时为 0
+     */
     public long get(String key) {
         String value = stringRedisTemplate.opsForValue().get(key);
         if (NullUtil.isNull(value)) {
@@ -49,7 +65,11 @@ public class RedisCounter {
         }
     }
 
-    /** 清零（删除 key）。 */
+    /**
+     * 清零：删除计数键。
+     *
+     * @param key 计数键
+     */
     public void reset(String key) {
         stringRedisTemplate.delete(key);
     }
