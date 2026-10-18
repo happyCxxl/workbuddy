@@ -53,7 +53,7 @@ public class PdfPageExtractor {
         return total > 0 ? (double) count / total : 0;
     }
 
-    /** 提取一页：字符级指标 → 行聚合 → 栏切分 → 阅读顺序 → 文字占比 */
+    /** 提取一页：字符级指标 → 行聚合 → 栏切分 → 阅读顺序 → 文字占比。 */
     public PageContent extractPage(PDDocument doc, int pageNo, ParseContext context) throws IOException {
         PositionStripper stripper = new PositionStripper();
         stripper.setStartPage(pageNo);

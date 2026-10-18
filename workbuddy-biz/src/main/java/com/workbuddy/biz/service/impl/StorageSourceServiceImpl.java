@@ -66,7 +66,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     private final ChainStorageSupport chainStorageSupport;
     private final FileCenterConfig fileCenterConfig;
 
-    /** 启动初始化：表为空按配置 seed 两行，注册未停用的行，标记当前启用的那一行 */
+    /** 启动初始化：表为空按配置 seed 两行，注册未停用的行，标记当前启用的那一行。 */
     @PostConstruct
     public void initialize() {
         List<WbStorageSource> rows = storageSourceDbService.listAll();

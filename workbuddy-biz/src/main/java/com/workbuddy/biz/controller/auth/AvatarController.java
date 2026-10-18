@@ -34,13 +34,13 @@ public class AvatarController {
 
     private final AvatarService avatarService;
 
-    /** 上传头像：按文件头判定类型，成功返回可直接渲染的新地址 */
+    /** 上传头像：按文件头判定类型，成功返回可直接渲染的新地址。 */
     @PostMapping
     public R<String> upload(@RequestParam("file") MultipartFile file) {
         return R.ok(avatarService.upload(file), "头像已更新");
     }
 
-    /** 移除头像：四列一并清空（key + 存储类型 + 数据源 + 桶名） */
+    /** 移除头像：四列一并清空（key + 存储类型 + 数据源 + 桶名）。 */
     @DeleteMapping
     public R<Void> remove() {
         avatarService.remove();

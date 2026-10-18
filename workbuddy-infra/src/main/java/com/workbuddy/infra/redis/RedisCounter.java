@@ -29,14 +29,14 @@ public class RedisCounter {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
-    /** 计数 +1 并返回新值；仅首次创建时写入过期时间，后续自增不续期；脚本未返回值时按 0 处理 */
+    /** 计数 +1 并返回新值；仅首次创建时写入过期时间，后续自增不续期；脚本未返回值时按 0 处理。 */
     public long increment(String key, Duration ttl) {
         Long count = stringRedisTemplate.execute(INCR_WITH_TTL_SCRIPT, List.of(key),
                 String.valueOf(ttl.toMillis()));
         return ObjectUtil.defaultIfNull(count, 0L);
     }
 
-    /** 当前计数值；key 不存在或值不是数字时返回 0 */
+    /** 当前计数值；key 不存在或值不是数字时返回 0。 */
     public long get(String key) {
         String value = stringRedisTemplate.opsForValue().get(key);
         if (NullUtil.isNull(value)) {
@@ -49,7 +49,7 @@ public class RedisCounter {
         }
     }
 
-    /** 清零（删除 key） */
+    /** 清零（删除 key）。 */
     public void reset(String key) {
         stringRedisTemplate.delete(key);
     }

@@ -23,7 +23,7 @@ public class RetrievalCapabilityProperties {
     /** 已启用的检索能力名（RetrievalCapability 枚举名；yaml 列表与逗号串两种写法都认） */
     private List<String> enabled = List.of();
 
-    /** 归一化后的能力名：去空白、转大写，供注册表与启动校验共用 */
+    /** 归一化后的能力名：去空白、转大写，供注册表与启动校验共用。 */
     public Set<String> enabledNames() {
         return enabled.stream()
                 .filter(StrUtil::isNotBlank)

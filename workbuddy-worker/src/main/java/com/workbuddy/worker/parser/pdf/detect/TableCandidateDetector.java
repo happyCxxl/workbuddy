@@ -24,7 +24,7 @@ public final class TableCandidateDetector {
     private TableCandidateDetector() {
     }
 
-    /** 表格候选：多 token 且存在"宽列距"（普通正文单词间距窄，表格列距宽） */
+    /** 表格候选：多 token 且存在"宽列距"（普通正文单词间距窄，表格列距宽）。 */
     public static boolean isCandidate(PageLine line) {
         if (line.tokens().size() < MIN_TOKENS) {
             return false;
@@ -39,11 +39,11 @@ public final class TableCandidateDetector {
         return false;
     }
 
-    /** 列区间：版面坐标下的左右边界（保留的列首尾相接，覆盖整块宽度） */
+    /** 列区间：版面坐标下的左右边界（保留的列首尾相接，覆盖整块宽度）。 */
     public record Column(double left, double right) {
     }
 
-    /** 对齐线聚类：一组 x 值按容差合并为升序簇（左起点与右边界共用） */
+    /** 对齐线聚类：一组 x 值按容差合并为升序簇（左起点与右边界共用）。 */
     public static List<Double> clusterEdges(List<Double> values, double tolerance) {
         List<Double> sorted = new ArrayList<>(values);
         sorted.sort(Double::compare);
@@ -88,7 +88,7 @@ public final class TableCandidateDetector {
         return join(kept, tokenMatrix.stream().flatMap(List::stream).mapToDouble(Token::xEnd).max().orElse(0));
     }
 
-    /** token 是否落在列区间内（按中心点判定） */
+    /** token 是否落在列区间内（按中心点判定）。 */
     public static boolean contains(Column column, Token token) {
         double center = (token.xStart() + token.xEnd()) / 2;
         return center >= column.left() && center < column.right();

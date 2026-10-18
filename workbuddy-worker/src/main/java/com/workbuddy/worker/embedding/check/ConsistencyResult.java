@@ -8,12 +8,12 @@ import java.util.List;
  */
 public record ConsistencyResult(boolean passed, boolean retryable, List<String> problems) {
 
-    /** 通过 */
+    /** 通过。 */
     public static ConsistencyResult pass() {
         return new ConsistencyResult(true, true, List.of());
     }
 
-    /** 失败（retryable=true 可重试 / false 拒绝） */
+    /** 失败（retryable=true 可重试 / false 拒绝）。 */
     public static ConsistencyResult fail(boolean retryable, List<String> problems) {
         return new ConsistencyResult(false, retryable, problems);
     }

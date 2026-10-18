@@ -27,7 +27,7 @@ public enum FileCheckStepName {
         this.value = value;
     }
 
-    /** 步骤名（人类可读） */
+    /** 步骤名（人类可读）。 */
     public String value() {
         return value;
     }

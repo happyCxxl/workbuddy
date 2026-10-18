@@ -34,7 +34,7 @@ public final class EmbedWindowRules {
         return new WindowBound(bound, allowed, true);
     }
 
-    /** 窗口兼容计算产物（bound/allowed 为字符数） */
+    /** 窗口兼容计算产物（bound/allowed 为字符数）。 */
     public record WindowBound(int bound, int allowed, boolean computable) {
     }
 }

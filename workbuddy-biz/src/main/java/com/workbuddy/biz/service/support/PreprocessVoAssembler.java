@@ -26,7 +26,7 @@ import java.util.List;
 @Component
 public class PreprocessVoAssembler {
 
-    /** 预处理统计（展示口径：检索文本与展示文本不同的元素数等；与步骤日志的规则改写计数口径不同） */
+    /** 预处理统计（展示口径：检索文本与展示文本不同的元素数等；与步骤日志的规则改写计数口径不同）。 */
     public PreprocessSummaryVO toSummary(PreprocessView view) {
         List<ViewElement> elements = ObjectUtil.defaultIfNull(view.getElements(), new ArrayList<>());
         int excludedCount = PreprocessStatsSupport.countStatuses(elements, PreprocessViewRules.EXCLUDED_STATUSES);
@@ -44,7 +44,7 @@ public class PreprocessVoAssembler {
         return summary;
     }
 
-    /** 视图元素 → 元素 VO 列表（处理轨迹只透传非 KEEP 条目） */
+    /** 视图元素 → 元素 VO 列表（处理轨迹只透传非 KEEP 条目）。 */
     public List<PreprocessElementVO> toElementVOs(PreprocessView view) {
         return ObjectUtil.defaultIfNull(view.getElements(), new ArrayList<ViewElement>()).stream()
                 .map(this::toElementVO)

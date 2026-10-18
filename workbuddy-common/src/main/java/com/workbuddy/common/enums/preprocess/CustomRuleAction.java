@@ -26,22 +26,22 @@ public enum CustomRuleAction {
         this.desc = desc;
     }
 
-    /** 动作说明（人类可读） */
+    /** 动作说明（人类可读）。 */
     public String desc() {
         return desc;
     }
 
-    /** 是否需要替换文本：只有 REPLACE 需要；其余动作携带替换文本按非法处理 */
+    /** 是否需要替换文本：只有 REPLACE 需要；其余动作携带替换文本按非法处理。 */
     public boolean needsReplacement() {
         return this == REPLACE;
     }
 
-    /** 动作名清单（校验提示与前端下拉同源，形如 REMOVE/REPLACE/EXTRACT） */
+    /** 动作名清单（校验提示与前端下拉同源，形如 REMOVE/REPLACE/EXTRACT）。 */
     public static String names() {
         return Arrays.stream(values()).map(Enum::name).collect(Collectors.joining("/"));
     }
 
-    /** 按名称解析（大小写不敏感）；未识别返回 null */
+    /** 按名称解析（大小写不敏感）；未识别返回 null。 */
     public static CustomRuleAction of(String name) {
         if (StrUtil.isBlank(name)) {
             return null;

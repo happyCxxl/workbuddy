@@ -58,7 +58,7 @@ public final class PdfBodyAssembler {
         return LayoutOrderSupport.reorder(bodyLines, outcome.regions(), outcome.order());
     }
 
-    /** 单页元素组装：页眉/页脚元素（每页各一条） → 正文按 y 顺序推进（表格候选块与段落互斥结算） */
+    /** 单页元素组装：页眉/页脚元素（每页各一条） → 正文按 y 顺序推进（表格候选块与段落互斥结算）。 */
     public static void assemble(PageContent page, Set<String> headers, HeaderFooterDetector.FooterKeys footers,
                          List<ParseElement> elements, ParseSource source, String fileId,
                          ParseProperties properties, CapabilityRegistry capabilityRegistry) {

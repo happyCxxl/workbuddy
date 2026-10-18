@@ -23,7 +23,7 @@ import java.util.Map;
 @Component
 public class ChunkVoAssembler {
 
-    /** 切片统计：总数/总字符/平均片长/父子数/类型分布（父子口径与 ChunkContentType 一致） */
+    /** 切片统计：总数/总字符/平均片长/父子数/类型分布（父子口径与 ChunkContentType 一致）。 */
     public ChunkSummaryVO toSummary(WbChunkSet chunkSet, List<WbChunk> chunks) {
         ChunkSummaryVO vo = new ChunkSummaryVO();
         vo.setChunkCount(chunkSet.getChunkCount());

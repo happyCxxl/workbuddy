@@ -24,7 +24,7 @@ public class CapabilitySnapshot {
     /** 表格识别能力（预留；null = 未接） */
     private CapabilityRef table;
 
-    /** 能力引用（模型名 + 版本） */
+    /** 能力引用（模型名 + 版本）。 */
     @Data
     public static class CapabilityRef {
         private String model;

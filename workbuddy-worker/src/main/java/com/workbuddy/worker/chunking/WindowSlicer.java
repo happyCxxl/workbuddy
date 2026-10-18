@@ -11,7 +11,7 @@ public final class WindowSlicer {
     private WindowSlicer() {
     }
 
-    /** 固定窗口切分（len + overlap；不足一片按实际长度） */
+    /** 固定窗口切分（len + overlap；不足一片按实际长度）。 */
     public static List<String> slice(String text, int len, int overlap) {
         if (text.length() <= len) {
             return List.of(text);

@@ -32,7 +32,7 @@ public final class PreprocessAlgorithmSpec {
 
     // ---------------- 默认补齐 ----------------
 
-    /** 三态规则默认处置方式（开关规则返回 null）；重复默认剔除，与历史上开关 ON 的效果一致 */
+    /** 三态规则默认处置方式（开关规则返回 null）；重复默认剔除，与历史上开关 ON 的效果一致。 */
     public static String defaultAction(PreprocessRule rule) {
         if (rule == PreprocessRule.REPEAT) {
             return PreprocessAction.EXCLUDE.name();
@@ -40,7 +40,7 @@ public final class PreprocessAlgorithmSpec {
         return rule.triState() ? PreprocessAction.MARK.name() : null;
     }
 
-    /** 开关规则默认值（三态规则返回 false） */
+    /** 开关规则默认值（三态规则返回 false）。 */
     public static boolean defaultEnabled(PreprocessRule rule) {
         return switch (rule) {
             case FIELD, TIDY, ENCODING -> true;
@@ -48,7 +48,7 @@ public final class PreprocessAlgorithmSpec {
         };
     }
 
-    /** 各规则默认参数（值源 = PreprocessProperties 全局默认，application.yml 同名 kebab-case 键） */
+    /** 各规则默认参数（值源 = PreprocessProperties 全局默认，application.yml 同名 kebab-case 键）。 */
     public static Map<String, String> defaultParams(PreprocessRule rule, PreprocessProperties properties) {
         Map<String, String> defaults = new LinkedHashMap<>();
         switch (rule) {

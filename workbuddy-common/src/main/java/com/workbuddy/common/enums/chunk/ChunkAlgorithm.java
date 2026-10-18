@@ -73,27 +73,27 @@ public enum ChunkAlgorithm {
         this.flushOnContentBoundary = flushOnContentBoundary;
     }
 
-    /** 所属路由 */
+    /** 所属路由。 */
     public ChunkRoute route() {
         return route;
     }
 
-    /** 策略快照中的序列化键（JSON 契约） */
+    /** 策略快照中的序列化键（JSON 契约）。 */
     public String key() {
         return key;
     }
 
-    /** 是否在当前支持集（保存校验 + 前端置灰口径） */
+    /** 是否在当前支持集（保存校验 + 前端置灰口径）。 */
     public boolean supported() {
         return supported;
     }
 
-    /** 正文聚合是否在表格/图片边界结算 */
+    /** 正文聚合是否在表格/图片边界结算。 */
     public boolean flushOnContentBoundary() {
         return flushOnContentBoundary;
     }
 
-    /** 按 (路由, 算法键) 精确查找；未识别返回 null */
+    /** 按 (路由, 算法键) 精确查找；未识别返回 null。 */
     public static ChunkAlgorithm of(ChunkRoute route, String key) {
         if (NullUtil.isNull(route) || StrUtil.isBlank(key)) {
             return null;

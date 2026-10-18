@@ -35,7 +35,7 @@ public abstract class AbstractTableSliceStrategy implements SliceStrategy {
     protected abstract List<Chunk> slicePrepared(TableMarkdownSupport.TablePrep prep,
                                                  ViewElement element, SliceContext context);
 
-    /** 表格路由参数（TABLE 路，解析时已补默认值） */
+    /** 表格路由参数（TABLE 路，解析时已补默认值）。 */
     protected final ChunkRouteConfig tableRoute(SliceContext context) {
         return context.getStrategy().route(ChunkRoute.TABLE);
     }

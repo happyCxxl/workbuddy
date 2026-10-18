@@ -58,7 +58,7 @@ public class PipelineTaskConsumer {
     /** 执行中的 taskId 集合（停机时据此显式置失败） */
     private final Set<Long> inFlight = ConcurrentHashMap.newKeySet();
 
-    /** 两个执行器 bean 同类型，构造参数按 bean 名限定（不用 Lombok 生成构造器，它不带走 @Qualifier） */
+    /** 两个执行器 bean 同类型，构造参数按 bean 名限定（不用 Lombok 生成构造器，它不带走 @Qualifier）。 */
     public PipelineTaskConsumer(TaskQueueSupport taskQueue, WbPipelineTaskDbService pipelineTaskDbService,
                              TaskQueueProperties properties, ParseTaskRunner runner,
                              StructureTaskRunner structureRunner, PreprocessTaskRunner preprocessRunner,
@@ -77,7 +77,7 @@ public class PipelineTaskConsumer {
         this.runnerExecutor = runnerExecutor;
     }
 
-    /** 应用就绪后启动（单次；daemon 线程随进程退出） */
+    /** 应用就绪后启动（单次；daemon 线程随进程退出）。 */
     @EventListener(ApplicationReadyEvent.class)
     public synchronized void start() {
         if (running) {
@@ -151,7 +151,7 @@ public class PipelineTaskConsumer {
         }
     }
 
-    /** 优雅停机：停领批 → 关池等上限 → 到点中断 → 仍未结束的任务显式置 FAILED(TASK_SHUTDOWN_INTERRUPTED) */
+    /** 优雅停机：停领批 → 关池等上限 → 到点中断 → 仍未结束的任务显式置 FAILED(TASK_SHUTDOWN_INTERRUPTED)。 */
     @PreDestroy
     public synchronized void stop() {
         if (!running) {

@@ -96,7 +96,7 @@ public abstract class AbstractFileStorage implements FileStorage {
         return refs;
     }
 
-    /** 摘要写入：流经 sha256 摘要后写入当前启用的数据源，返回摘要十六进制 */
+    /** 摘要写入：流经 sha256 摘要后写入当前启用的数据源，返回摘要十六进制。 */
     protected String putWithDigest(String bucket, String key, InputStream in, long size, String contentType) {
         try {
             DigestInputStream digest = new DigestInputStream(in, MessageDigest.getInstance("SHA-256"));
@@ -107,14 +107,14 @@ public abstract class AbstractFileStorage implements FileStorage {
         }
     }
 
-    /** 取档案，不存在抛业务错误 */
+    /** 取档案，不存在抛业务错误。 */
     protected WbFileObject requireObject(String fileId) {
         WbFileObject object = fileObjectDbService.getByFileId(fileId);
         ThrowUtil.throwIf(NullUtil.isNull(object), ErrorCode.FILE_NOT_FOUND);
         return object;
     }
 
-    /** 按对象位置打开流：对象缺失报 40454，其余读取故障报 40500 */
+    /** 按对象位置打开流：对象缺失报 40454，其余读取故障报 40500。 */
     protected InputStream openRef(ObjectRef ref) {
         StorageProvider provider = router.of(ref);
         try {
@@ -127,7 +127,7 @@ public abstract class AbstractFileStorage implements FileStorage {
         }
     }
 
-    /** 字节内容摘要（sha256 十六进制） */
+    /** 字节内容摘要（sha256 十六进制）。 */
     protected String sha256Hex(byte[] content) {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));

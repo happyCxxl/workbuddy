@@ -22,7 +22,7 @@ public class TaskExecutorConfig {
         return build(properties, "task-watchdog-");
     }
 
-    /** 执行池：实际跑各环节 Runner 的线程，与看门狗池一一对应 */
+    /** 执行池：实际跑各环节 Runner 的线程，与看门狗池一一对应。 */
     @Bean
     public ThreadPoolTaskExecutor taskRunnerExecutor(TaskQueueProperties properties) {
         return build(properties, "task-runner-");

@@ -95,7 +95,7 @@ public class IndexComboReconciler {
         return new ComboCatalog(latestChunk, latestEmbed, preprocessByChunk, embedStrategies);
     }
 
-    /** 文件级「同策略最新成功」切片行（追加表取 id 最大；对账/回填/枚举共用批次口径） */
+    /** 文件级「同策略最新成功」切片行（追加表取 id 最大；对账/回填/枚举共用批次口径）。 */
     public Map<String, WbChunkSet> latestChunkMap(List<Long> fileResultIds) {
         Map<String, WbChunkSet> latest = new LinkedHashMap<>();
         for (WbChunkSet set : chunkSetDbService.listByFileResultIds(fileResultIds)) {
@@ -105,7 +105,7 @@ public class IndexComboReconciler {
         return latest;
     }
 
-    /** 文件级「同策略最新成功」向量行（追加表取 id 最大；对账/回填/枚举共用批次口径） */
+    /** 文件级「同策略最新成功」向量行（追加表取 id 最大；对账/回填/枚举共用批次口径）。 */
     public Map<String, WbEmbeddingSet> latestEmbedMap(List<Long> fileResultIds) {
         Map<String, WbEmbeddingSet> latest = new LinkedHashMap<>();
         for (WbEmbeddingSet set : embeddingSetDbService.listByFileResultIds(fileResultIds)) {
@@ -136,7 +136,7 @@ public class IndexComboReconciler {
         return new ComboProducts(chunkRow, embedRow, null);
     }
 
-    /** 计算组合对账期望（实时重算口径） */
+    /** 计算组合对账期望（实时重算口径）。 */
     public ComboExpectation computeExpected(Long kbId, ComboSnapshot combo) {
         // 对账不变量：组合必须携带三环节策略维度（缺失即坏数据，已在快照读取处显式拒绝）
         if (NullUtil.isNull(combo) || !combo.hasCompleteStageStrategies()) {

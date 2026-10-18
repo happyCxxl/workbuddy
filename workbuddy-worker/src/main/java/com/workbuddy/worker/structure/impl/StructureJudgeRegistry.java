@@ -21,7 +21,7 @@ public class StructureJudgeRegistry {
         this.properties = properties;
     }
 
-    /** 启用的模型判定实现；无 → null（走固定规则降级）。多个实现时按注册顺序取首个（接入实现后如需优先级再补排序口径） */
+    /** 启用的模型判定实现；无 → null（走固定规则降级）。多个实现时按注册顺序取首个（接入实现后如需优先级再补排序口径）。 */
     public StructureJudgeProvider active() {
         return properties.isModelFallbackEnabled() && !providers.isEmpty() ? providers.getFirst() : null;
     }

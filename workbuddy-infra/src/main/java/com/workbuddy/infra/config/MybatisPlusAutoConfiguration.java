@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 public class MybatisPlusAutoConfiguration {
 
-    /** 分页插件（MySQL 方言） */
+    /** 分页插件（MySQL 方言）。 */
     @Bean
     @ConditionalOnMissingBean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {

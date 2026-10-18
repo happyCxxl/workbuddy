@@ -43,27 +43,27 @@ public class ComboSnapshot implements Serializable {
     /** 环节策略映射：stage（PipelineStage 名）→ 策略 name-version（环节白名单：PREPROCESS/CHUNK/EMBED，构建入口校验） */
     private Map<String, String> stageStrategies = new LinkedHashMap<>();
 
-    /** 取某环节策略 name-version（无 → null） */
+    /** 取某环节策略 name-version（无 → null）。 */
     public String strategyOf(String stage) {
         return stageStrategies.get(stage);
     }
 
-    /** 预处理策略 name-version */
+    /** 预处理策略 name-version。 */
     public String getPreprocessStrategy() {
         return strategyOf(PipelineStage.PREPROCESS.name());
     }
 
-    /** 切片策略 name-version */
+    /** 切片策略 name-version。 */
     public String getChunkStrategy() {
         return strategyOf(PipelineStage.CHUNK.name());
     }
 
-    /** 向量策略 name-version */
+    /** 向量策略 name-version。 */
     public String getEmbedStrategy() {
         return strategyOf(PipelineStage.EMBED.name());
     }
 
-    /** 格式断言（非抛）：预处理/切片/向量三环节策略维度齐全且非空 */
+    /** 格式断言（非抛）：预处理/切片/向量三环节策略维度齐全且非空。 */
     public boolean hasCompleteStageStrategies() {
         return NullUtil.isNotNull(stageStrategies)
                 && StrUtil.isNotBlank(strategyOf(PipelineStage.PREPROCESS.name()))
@@ -71,17 +71,17 @@ public class ComboSnapshot implements Serializable {
                 && StrUtil.isNotBlank(strategyOf(PipelineStage.EMBED.name()));
     }
 
-    /** 格式断言（抛）：三环节策略维度不完整 → 40448（需废弃重灌，不静默降级） */
+    /** 格式断言（抛）：三环节策略维度不完整 → 40448（需废弃重灌，不静默降级）。 */
     public void requireStageStrategies() {
         ThrowUtil.throwIf(!hasCompleteStageStrategies(), ErrorCode.INDEX_COMBO_SNAPSHOT_LEGACY);
     }
 
-    /** 是否评测冻结集范围（LIST） */
+    /** 是否评测冻结集范围（LIST）。 */
     public boolean isListScope() {
         return "LIST".equals(fileScopeMode);
     }
 
-    /** 三环节组合工厂（插入序 = 预处理/切片/向量化） */
+    /** 三环节组合工厂（插入序 = 预处理/切片/向量化）。 */
     public static ComboSnapshot of(String preprocess, String chunk, String embed) {
         ComboSnapshot combo = new ComboSnapshot();
         combo.getStageStrategies().put(PipelineStage.PREPROCESS.name(), preprocess);

@@ -32,7 +32,7 @@ public final class TableCapabilityAttempt {
             this(table, fact, null);
         }
 
-        /** 是否拿到可用结构 */
+        /** 是否拿到可用结构。 */
         public boolean enhanced() {
             return NullUtil.isNotNull(table);
         }

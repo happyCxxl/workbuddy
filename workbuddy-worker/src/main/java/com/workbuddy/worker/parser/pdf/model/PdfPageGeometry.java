@@ -18,23 +18,23 @@ public record PdfPageGeometry(double textWidth, double textHeight, int rotation)
         rotation = value == 90 || value == 180 || value == 270 ? value : 0;
     }
 
-    /** 从 PDFBox 页对象取几何：尺寸用裁剪框（未设裁剪框时 PDFBox 自动回落到媒体框） */
+    /** 从 PDFBox 页对象取几何：尺寸用裁剪框（未设裁剪框时 PDFBox 自动回落到媒体框）。 */
     public static PdfPageGeometry of(PDPage page) {
         PDRectangle box = page.getCropBox();
         return new PdfPageGeometry(box.getWidth(), box.getHeight(), page.getRotation());
     }
 
-    /** 视口宽度：旋转 90 / 270 时与版面高度互换 */
+    /** 视口宽度：旋转 90 / 270 时与版面高度互换。 */
     public double viewportWidth() {
         return rotated() ? textHeight : textWidth;
     }
 
-    /** 视口高度：旋转 90 / 270 时与版面宽度互换 */
+    /** 视口高度：旋转 90 / 270 时与版面宽度互换。 */
     public double viewportHeight() {
         return rotated() ? textWidth : textHeight;
     }
 
-    /** 版面坐标（左上原点）矩形 → 视口坐标矩形 */
+    /** 版面坐标（左上原点）矩形 → 视口坐标矩形。 */
     public BBox toViewport(BBox box) {
         return toViewport(box.getX(), box.getY(), box.getWidth(), box.getHeight());
     }

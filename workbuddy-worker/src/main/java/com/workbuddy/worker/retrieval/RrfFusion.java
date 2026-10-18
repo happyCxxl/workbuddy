@@ -16,7 +16,7 @@ public final class RrfFusion {
     private RrfFusion() {
     }
 
-    /** 融合命中（chunkId + 融合分） */
+    /** 融合命中（chunkId + 融合分）。 */
     public record FusedHit(String chunkId, double score) {
     }
 

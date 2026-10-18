@@ -35,11 +35,11 @@ public final class RuleLines {
     private RuleLines() {
     }
 
-    /** 页面图元：横竖线段 + 图片占位矩形（均为左上原点坐标） */
+    /** 页面图元：横竖线段 + 图片占位矩形（均为左上原点坐标）。 */
     public record Graphics(List<Segment> segments, List<Region> imageBoxes) {
     }
 
-    /** 采集页面图元；页面内容流异常时返回空结果（该页走文本表格路径） */
+    /** 采集页面图元；页面内容流异常时返回空结果（该页走文本表格路径）。 */
     public static Graphics collect(PDPage page, double pageHeight) {
         Collector collector = new Collector(page, pageHeight);
         try {
@@ -50,14 +50,14 @@ public final class RuleLines {
         return new Graphics(collector.segments, collector.imageBoxes);
     }
 
-    /** 单张图片的覆盖面积（超出页面的部分截掉，小于 0 记 0） */
+    /** 单张图片的覆盖面积（超出页面的部分截掉，小于 0 记 0）。 */
     public static double imageArea(Region box, double pageWidth, double pageHeight) {
         double width = Math.min(box.right(), pageWidth) - Math.max(box.left(), 0);
         double height = Math.min(box.bottom(), pageHeight) - Math.max(box.top(), 0);
         return width > 0 && height > 0 ? width * height : 0;
     }
 
-    /** 图片覆盖面积占比：各图片矩形面积之和 ÷ 页面面积（上限 1） */
+    /** 图片覆盖面积占比：各图片矩形面积之和 ÷ 页面面积（上限 1）。 */
     public static double imageAreaRatio(List<Region> imageBoxes, double pageWidth, double pageHeight) {
         if (imageBoxes.isEmpty() || pageWidth <= 0 || pageHeight <= 0) {
             return 0;
@@ -91,7 +91,7 @@ public final class RuleLines {
         return Math.min((maxX - minX) * (maxY - minY) / (pageWidth * pageHeight), 1);
     }
 
-    /** 线框区域：相交线条聚成组件，取外接矩形并保留能形成至少 2 列 2 行网格的组件 */
+    /** 线框区域：相交线条聚成组件，取外接矩形并保留能形成至少 2 列 2 行网格的组件。 */
     public static List<Region> regions(List<Segment> segments, double lineCoverRatio) {
         List<Segment> usable = segments.stream()
                 .filter(s -> s.length() >= MIN_SEGMENT_LENGTH)
@@ -117,7 +117,7 @@ public final class RuleLines {
         return regions;
     }
 
-    /** 区域内求线网格；列或行不足 2 段时返回 null */
+    /** 区域内求线网格；列或行不足 2 段时返回 null。 */
     public static Grid fit(List<Segment> segments, Region region, double lineCoverRatio) {
         List<Segment> verticals = fullyInside(segments, region, true, lineCoverRatio);
         List<Segment> horizontals = fullyInside(segments, region, false, lineCoverRatio);

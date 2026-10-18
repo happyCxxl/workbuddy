@@ -91,32 +91,32 @@ public enum ChunkParam {
         this.desc = desc;
     }
 
-    /** 归属算法 */
+    /** 归属算法。 */
     public ChunkAlgorithm algorithm() {
         return algorithm;
     }
 
-    /** 策略快照里的参数键（JSON 契约） */
+    /** 策略快照里的参数键（JSON 契约）。 */
     public String key() {
         return key;
     }
 
-    /** 允许的最小值 */
+    /** 允许的最小值。 */
     public int min() {
         return min;
     }
 
-    /** 允许的最大值 */
+    /** 允许的最大值。 */
     public int max() {
         return max;
     }
 
-    /** 参数说明（人类可读） */
+    /** 参数说明（人类可读）。 */
     public String desc() {
         return desc;
     }
 
-    /** 按 (算法, 参数键) 精确查找；未识别返回 null（未知参数按前向兼容透传） */
+    /** 按 (算法, 参数键) 精确查找；未识别返回 null（未知参数按前向兼容透传）。 */
     public static ChunkParam of(ChunkAlgorithm algorithm, String key) {
         if (NullUtil.isNull(algorithm) || NullUtil.isNull(key) || key.isEmpty()) {
             return null;
@@ -129,7 +129,7 @@ public enum ChunkParam {
         return null;
     }
 
-    /** 某个算法允许的全部参数（保存校验与前端范围提示共用） */
+    /** 某个算法允许的全部参数（保存校验与前端范围提示共用）。 */
     public static List<ChunkParam> ofAlgorithm(ChunkAlgorithm algorithm) {
         List<ChunkParam> params = new ArrayList<>();
         if (NullUtil.isNull(algorithm)) {

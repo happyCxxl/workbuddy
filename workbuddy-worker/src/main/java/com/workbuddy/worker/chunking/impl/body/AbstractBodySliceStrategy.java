@@ -40,7 +40,7 @@ public abstract class AbstractBodySliceStrategy implements SliceStrategy {
      */
     protected abstract List<Chunk> sliceText(String text, ViewElement element, SliceContext context);
 
-    /** 结算正文缓冲（调用前缓冲非空；结算后缓冲已清空） */
+    /** 结算正文缓冲（调用前缓冲非空；结算后缓冲已清空）。 */
     protected abstract Chunk flushGroup(SliceContext context);
 
     /**

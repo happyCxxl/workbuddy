@@ -21,7 +21,7 @@ public class SliceStrategyRegistry {
                 strategy -> strategy.algorithm().route() != ChunkRoute.FALLBACK);
     }
 
-    /** 按算法取实现；未找到明确报错（执行失败而非静默降级） */
+    /** 按算法取实现；未找到明确报错（执行失败而非静默降级）。 */
     public SliceStrategy get(ChunkAlgorithm algorithm) {
         return registry.get(algorithm);
     }

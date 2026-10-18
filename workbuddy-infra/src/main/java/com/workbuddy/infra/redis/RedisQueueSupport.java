@@ -17,12 +17,12 @@ public class RedisQueueSupport {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
-    /** 左侧入队 */
+    /** 左侧入队。 */
     public void leftPush(String key, String value) {
         stringRedisTemplate.opsForList().leftPush(key, value);
     }
 
-    /** 右侧阻塞弹出（超时返回 null） */
+    /** 右侧阻塞弹出（超时返回 null）。 */
     public String rightPop(String key, Duration timeout) {
         return stringRedisTemplate.opsForList().rightPop(key, timeout);
     }

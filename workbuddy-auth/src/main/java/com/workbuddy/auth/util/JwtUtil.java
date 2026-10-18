@@ -57,14 +57,14 @@ public class JwtUtil {
     }
 
     /**
-     * 不勾选「记住我」的令牌有效期
+     * 不勾选「记住我」的令牌有效期。
      */
     public Duration standardTtl() {
         return standardTtl;
     }
 
     /**
-     * 勾选「记住我」的令牌有效期
+     * 勾选「记住我」的令牌有效期。
      */
     public Duration rememberTtl() {
         return rememberTtl;

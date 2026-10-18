@@ -35,7 +35,7 @@ public final class LayoutCapabilityAttempt {
             this(regions, order, fact, null);
         }
 
-        /** 是否拿到可用顺序 */
+        /** 是否拿到可用顺序。 */
         public boolean enhanced() {
             return NullUtil.isNotNull(order) && !order.isEmpty() && NullUtil.isNotNull(regions)
                     && !regions.isEmpty();

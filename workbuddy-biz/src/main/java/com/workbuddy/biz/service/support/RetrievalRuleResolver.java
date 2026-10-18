@@ -43,7 +43,7 @@ public class RetrievalRuleResolver {
 
     private final RetrievalCapabilityRegistry capabilityRegistry;
 
-    /** 解析规则快照 JSON（空/非法 JSON → 40001） */
+    /** 解析规则快照 JSON（空/非法 JSON → 40001）。 */
     public RetrievalRuleSpec parse(String configSnapshot) {
         ThrowUtil.throwIf(StrUtil.isBlank(configSnapshot), ErrorCode.PARAM_INVALID, "检索规则配置不能为空");
         try {

@@ -18,10 +18,10 @@ public final class LineTexts {
     private LineTexts() {
     }
 
-    /** 行文本重建阈值：词间间隙比例、显著间隙的下限比例与占比门槛 */
+    /** 行文本重建阈值：词间间隙比例、显著间隙的下限比例与占比门槛。 */
     public record Options(double wordGapRatio, double spacingFloorRatio, double spacingGapShare) {
 
-        /** 解析阈值映射：词间间隙比例、字符间隙下限比例、显著间隙占比门槛 */
+        /** 解析阈值映射：词间间隙比例、字符间隙下限比例、显著间隙占比门槛。 */
         public static Options of(ParseProperties properties) {
             return new Options(properties.getWordGapRatio(),
                     properties.getCharacterSpacingFloorRatio(),
@@ -29,7 +29,7 @@ public final class LineTexts {
         }
     }
 
-    /** 行文本：按相邻字符间隙补词间空格，真实空白压成一个空格；字距加宽的行不按词边界补 */
+    /** 行文本：按相邻字符间隙补词间空格，真实空白压成一个空格；字距加宽的行不按词边界补。 */
     public static String lineText(List<CharInfo> sortedByX, Options options) {
         boolean characterSpacing = isCharacterSpacing(sortedByX, options);
         StringBuilder text = new StringBuilder();
@@ -85,12 +85,12 @@ public final class LineTexts {
         return wide >= 2 && (double) wide / total >= options.spacingGapShare();
     }
 
-    /** 行间分隔：任一侧取不到可见字符、或两侧同为 CJK 时不补空格，其余补一个空格 */
+    /** 行间分隔：任一侧取不到可见字符、或两侧同为 CJK 时不补空格，其余补一个空格。 */
     public static String lineSeparator(PageLine upper, PageLine lower) {
         return lineSeparator(upper.text(), lower.text());
     }
 
-    /** 文本间分隔：口径同行间分隔（供格内多行拼接复用） */
+    /** 文本间分隔：口径同行间分隔（供格内多行拼接复用）。 */
     public static String lineSeparator(String upperText, String lowerText) {
         int upperCodePoint = lastVisibleCodePoint(upperText);
         int lowerCodePoint = firstVisibleCodePoint(lowerText);
@@ -101,7 +101,7 @@ public final class LineTexts {
         return " ";
     }
 
-    /** CJK 码位：Han、假名、谚文、CJK 标点与符号、全角形式 */
+    /** CJK 码位：Han、假名、谚文、CJK 标点与符号、全角形式。 */
     public static boolean isCjk(int codePoint) {
         return (codePoint >= 0x3400 && codePoint <= 0x4DBF)
                 || (codePoint >= 0x4E00 && codePoint <= 0x9FFF)

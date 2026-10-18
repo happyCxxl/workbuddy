@@ -549,7 +549,7 @@ public class IndexSetServiceImpl implements IndexSetService {
         compensate(set, target);
     }
 
-    /** 当前发布版本（versionNo → 集合名 kb_{kbId}_{versionNo} 直连检索）；无 → null */
+    /** 当前发布版本（versionNo → 集合名 kb_{kbId}_{versionNo} 直连检索）；无 → null。 */
     public WbIndexVersion currentPublished(Long knowledgeBaseId) {
         WbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
         if (NullUtil.isNull(set) || NullUtil.isNull(set.getCurrentPublishedVersionId())) {

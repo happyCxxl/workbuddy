@@ -29,12 +29,12 @@ public class PageQueryDTO implements Serializable {
     /** 每页条数（可空，按默认 10） */
     private Long size;
 
-    /** 页码兜底：未传或小于 1 时取默认值 */
+    /** 页码兜底：未传或小于 1 时取默认值。 */
     public long currentOrDefault() {
         return NullUtil.isNull(current) || current < 1 ? DEFAULT_CURRENT : current;
     }
 
-    /** 每页条数兜底：未传或小于 1 时取默认值 */
+    /** 每页条数兜底：未传或小于 1 时取默认值。 */
     public long sizeOrDefault() {
         return NullUtil.isNull(size) || size < 1 ? DEFAULT_SIZE : size;
     }

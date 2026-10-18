@@ -212,7 +212,7 @@ public final class TextTableBuilder {
                 .toList();
     }
 
-    /** 表头行判定：首行含数字占比不超上限，且表体含数字（或首行字号大于表体最大字号） */
+    /** 表头行判定：首行含数字占比不超上限，且表体含数字（或首行字号大于表体最大字号）。 */
     public static Integer detectHeaderRow(List<List<String>> rowTexts, List<Double> rowFontSizes,
                                    double maxNumericRatio) {
         if (rowTexts.size() < 2) {

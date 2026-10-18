@@ -8,7 +8,7 @@ import java.util.List;
  */
 public record PageLines(int pageNo, double pageHeight, List<TextLine> lines) {
 
-    /** 由页提取内容取摘要 */
+    /** 由页提取内容取摘要。 */
     public static PageLines of(PageContent page) {
         return new PageLines(page.pageNo(), page.pageHeight(),
                 page.lines().stream().map(TextLine::of).toList());

@@ -68,47 +68,47 @@ public enum EmbeddingModel {
         this.desc = desc;
     }
 
-    /** 模型名（网关口径） */
+    /** 模型名（网关口径）。 */
     public String key() {
         return key;
     }
 
-    /** 向量维度 */
+    /** 向量维度。 */
     public int dimension() {
         return dimension;
     }
 
-    /** 度量 */
+    /** 度量。 */
     public EmbedMetric metric() {
         return metric;
     }
 
-    /** 是否归一化 */
+    /** 是否归一化。 */
     public boolean normalized() {
         return normalized;
     }
 
-    /** 上下文窗口（tokens） */
+    /** 上下文窗口（tokens）。 */
     public int contextWindowTokens() {
         return contextWindowTokens;
     }
 
-    /** 单批上限（条） */
+    /** 单批上限（条）。 */
     public int batchLimit() {
         return batchLimit;
     }
 
-    /** 是否启用 */
+    /** 是否启用。 */
     public boolean enabled() {
         return enabled;
     }
 
-    /** 说明（人类可读） */
+    /** 说明（人类可读）。 */
     public String desc() {
         return desc;
     }
 
-    /** 按模型名精确查找；未识别返回 null */
+    /** 按模型名精确查找；未识别返回 null。 */
     public static EmbeddingModel of(String key) {
         if (StrUtil.isBlank(key)) {
             return null;
@@ -121,7 +121,7 @@ public enum EmbeddingModel {
         return null;
     }
 
-    /** 启用中模型列表（前端下拉 / 默认模型选择） */
+    /** 启用中模型列表（前端下拉 / 默认模型选择）。 */
     public static List<EmbeddingModel> enabledModels() {
         List<EmbeddingModel> enabled = new ArrayList<>();
         for (EmbeddingModel model : values()) {
@@ -132,8 +132,8 @@ public enum EmbeddingModel {
         return enabled;
     }
 
-    /** 首个启用模型（内置默认策略用；目录恒至少一个启用模型） */
+    /** 首个启用模型（内置默认策略用；目录恒至少一个启用模型）。 */
     public static EmbeddingModel firstEnabled() {
-        return enabledModels().get(0);
+        return enabledModels().getFirst();
     }
 }

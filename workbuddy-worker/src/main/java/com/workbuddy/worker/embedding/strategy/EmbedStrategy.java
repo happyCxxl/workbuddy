@@ -73,22 +73,22 @@ public class EmbedStrategy implements StageStrategy {
     /** 单批上限（条；预留未消费——实际拆批按 batchSize、保存校验按硬编码上限） */
     private Integer batchLimit;
 
-    /** 复用开关判定（ON 大小写不敏感） */
+    /** 复用开关判定（ON 大小写不敏感）。 */
     public boolean cacheOn() {
         return ON.equalsIgnoreCase(cacheEnabled);
     }
 
-    /** 父片开关判定（默认 false） */
+    /** 父片开关判定（默认 false）。 */
     public boolean includeParentOn() {
         return ON.equalsIgnoreCase(includeParent);
     }
 
-    /** 空文本跳过判定 */
+    /** 空文本跳过判定。 */
     public boolean skipEmptyOn() {
         return ON.equalsIgnoreCase(skipEmpty);
     }
 
-    /** 完整版本串（name-version，如 embed-default-v1） */
+    /** 完整版本串（name-version，如 embed-default-v1）。 */
     public String fullVersion() {
         return name + "-" + version;
     }

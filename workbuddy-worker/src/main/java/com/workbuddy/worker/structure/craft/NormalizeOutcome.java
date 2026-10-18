@@ -21,7 +21,7 @@ public class NormalizeOutcome {
     /** 未识别类型的计数（空类型记为 (blank)） */
     private Map<String, Integer> unmappedTypeCounts = new LinkedHashMap<>();
 
-    /** 未识别类型的跳过元素总数 */
+    /** 未识别类型的跳过元素总数。 */
     public int unmappedElementCount() {
         return unmappedTypeCounts.values().stream().mapToInt(Integer::intValue).sum();
     }

@@ -21,7 +21,7 @@ public class FallbackSlicerRegistry {
                 slicer -> slicer.algorithm().route() == ChunkRoute.FALLBACK);
     }
 
-    /** 按算法取兜底切片器；未注册明确报错（SYSTEM_ERROR），不静默回退 */
+    /** 按算法取兜底切片器；未注册明确报错（SYSTEM_ERROR），不静默回退。 */
     public FallbackSlicer get(ChunkAlgorithm algorithm) {
         return registry.get(algorithm);
     }

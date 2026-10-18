@@ -44,17 +44,17 @@ public class R<T> implements Serializable {
         this.timestamp = timestamp;
     }
 
-    /** 成功响应（默认提示语） */
+    /** 成功响应（默认提示语）。 */
     public static <T> R<T> ok(T data) {
         return ok(data, "操作成功");
     }
 
-    /** 成功响应（自定义提示语） */
+    /** 成功响应（自定义提示语）。 */
     public static <T> R<T> ok(T data, String msg) {
         return new R<>(SUCCESS, msg, data, System.currentTimeMillis());
     }
 
-    /** 失败响应（通用失败码） */
+    /** 失败响应（通用失败码）。 */
     public static <T> R<T> failed(String msg) {
         return new R<>(FAILURE, msg, null, System.currentTimeMillis());
     }

@@ -42,12 +42,12 @@ public enum StrategyBindingSwitch {
         return null;
     }
 
-    /** 是否开启：null 视为开启（与实体注释口径一致） */
+    /** 是否开启：null 视为开启（与实体注释口径一致）。 */
     public static boolean isOn(Integer code) {
         return of(code) != OFF;
     }
 
-    /** 是否关闭：null 视为开启，只有显式 0 才返回 true */
+    /** 是否关闭：null 视为开启，只有显式 0 才返回 true。 */
     public static boolean isOff(Integer code) {
         return of(code) == OFF;
     }

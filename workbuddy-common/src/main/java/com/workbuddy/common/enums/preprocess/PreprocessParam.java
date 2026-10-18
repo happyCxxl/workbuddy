@@ -61,42 +61,42 @@ public enum PreprocessParam {
         this.desc = desc;
     }
 
-    /** 归属规则 */
+    /** 归属规则。 */
     public PreprocessRule rule() {
         return rule;
     }
 
-    /** 策略快照中的序列化键（JSON 契约） */
+    /** 策略快照中的序列化键（JSON 契约）。 */
     public String key() {
         return key;
     }
 
-    /** 数值参数的下限（开关参数为 null） */
+    /** 数值参数的下限（开关参数为 null）。 */
     public Integer min() {
         return min;
     }
 
-    /** 数值参数的上限（开关参数为 null） */
+    /** 数值参数的上限（开关参数为 null）。 */
     public Integer max() {
         return max;
     }
 
-    /** 默认值（字符串；数值参数同样以字符串存） */
+    /** 默认值（字符串；数值参数同样以字符串存）。 */
     public String defaultValue() {
         return defaultValue;
     }
 
-    /** 参数说明（人类可读） */
+    /** 参数说明（人类可读）。 */
     public String desc() {
         return desc;
     }
 
-    /** 是否数值参数（开关参数为 ON/OFF） */
+    /** 是否数值参数（开关参数为 ON/OFF）。 */
     public boolean numeric() {
         return NullUtil.isNotNull(min);
     }
 
-    /** 按 (规则, 键) 精确查找；未识别返回 null */
+    /** 按 (规则, 键) 精确查找；未识别返回 null。 */
     public static PreprocessParam of(PreprocessRule rule, String key) {
         if (NullUtil.isNull(rule) || StrUtil.isBlank(key)) {
             return null;

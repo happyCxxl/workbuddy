@@ -49,12 +49,12 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
     private final PdfPageExtractor pageExtractor;
     private final CapabilityRegistry capabilityRegistry;
 
-    /** 只跑规则路径（不接模型能力）的构造器 */
+    /** 只跑规则路径（不接模型能力）的构造器。 */
     public PdfBoxDocumentParser(PageLayoutAnalyzer layoutAnalyzer) {
         this(layoutAnalyzer, null);
     }
 
-    /** 运行期构造器：注入能力注册表（未开启或未接入时注册表返回 null） */
+    /** 运行期构造器：注入能力注册表（未开启或未接入时注册表返回 null）。 */
     @Autowired
     public PdfBoxDocumentParser(PageLayoutAnalyzer layoutAnalyzer, CapabilityRegistry capabilityRegistry) {
         this.pageExtractor = new PdfPageExtractor(layoutAnalyzer);

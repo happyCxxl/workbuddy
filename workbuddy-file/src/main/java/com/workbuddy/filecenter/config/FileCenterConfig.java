@@ -43,7 +43,7 @@ public class FileCenterConfig {
         return type;
     }
 
-    /** MinIO 数据源缺省参数 */
+    /** MinIO 数据源缺省参数。 */
     @Data
     public static class Minio {
 
@@ -63,7 +63,7 @@ public class FileCenterConfig {
         private String artifactBucket = "artifacts";
     }
 
-    /** 本地磁盘数据源缺省参数 */
+    /** 本地磁盘数据源缺省参数。 */
     @Data
     public static class Local {
 

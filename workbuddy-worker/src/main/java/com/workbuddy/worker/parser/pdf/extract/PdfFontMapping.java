@@ -15,12 +15,12 @@ public final class PdfFontMapping {
     private PdfFontMapping() {
     }
 
-    /** 字体是否缺 Unicode 映射 */
+    /** 字体是否缺 Unicode 映射。 */
     public static boolean lacksUnicodeMapping(PDFont font) {
         return NullUtil.isNotNull(font) && lacksUnicodeMapping(font.getCOSObject());
     }
 
-    /** 字典口径：Type0 子类型且无 ToUnicode 项 */
+    /** 字典口径：Type0 子类型且无 ToUnicode 项。 */
     public static boolean lacksUnicodeMapping(COSDictionary fontDictionary) {
         if (NullUtil.isNull(fontDictionary)) {
             return false;

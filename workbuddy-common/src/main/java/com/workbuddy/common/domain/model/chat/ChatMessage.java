@@ -14,17 +14,17 @@ public class ChatMessage {
     /** 消息内容 */
     private String content;
 
-    /** 系统提示消息 */
+    /** 系统提示消息。 */
     public static ChatMessage system(String content) {
         return of(Role.SYSTEM, content);
     }
 
-    /** 用户输入消息 */
+    /** 用户输入消息。 */
     public static ChatMessage user(String content) {
         return of(Role.USER, content);
     }
 
-    /** 模型回复消息 */
+    /** 模型回复消息。 */
     public static ChatMessage assistant(String content) {
         return of(Role.ASSISTANT, content);
     }
@@ -36,7 +36,7 @@ public class ChatMessage {
         return message;
     }
 
-    /** 消息角色 */
+    /** 消息角色。 */
     public enum Role {
 
         /** 系统提示 */

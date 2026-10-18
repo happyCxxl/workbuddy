@@ -22,7 +22,7 @@ public class RetrievalCapabilityRegistry {
         log.info("===> RetrievalCapabilityRegistry 检索能力开关: {}", enabled);
     }
 
-    /** 能力是否已启用 */
+    /** 能力是否已启用。 */
     public boolean isEnabled(RetrievalCapability capability) {
         return enabled.contains(capability.name());
     }

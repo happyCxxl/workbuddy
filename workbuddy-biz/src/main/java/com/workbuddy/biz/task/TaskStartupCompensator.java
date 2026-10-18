@@ -38,7 +38,7 @@ public class TaskStartupCompensator {
     private final RedisLock redisLock;
     private final TaskQueueProperties properties;
 
-    /** 应用就绪后执行一次启动补偿（补投 + 孤儿恢复） */
+    /** 应用就绪后执行一次启动补偿（补投 + 孤儿恢复）。 */
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
         compensate("启动补偿");
@@ -48,7 +48,7 @@ public class TaskStartupCompensator {
         }
     }
 
-    /** 低频兜底周期扫描（开关 low-freq-sweep-enabled 默认开启；间隔在启动时固定） */
+    /** 低频兜底周期扫描（开关 low-freq-sweep-enabled 默认开启；间隔在启动时固定）。 */
     @Scheduled(fixedDelayString = "#{@taskQueueProperties.lowFreqSweepInterval.toMillis()}")
     public void scheduledSweep() {
         if (!properties.isLowFreqSweepEnabled()) {

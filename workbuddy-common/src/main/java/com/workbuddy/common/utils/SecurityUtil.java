@@ -13,7 +13,7 @@ public final class SecurityUtil {
     }
 
     /**
-     * 取当前登录用户；无认证上下文返回 null
+     * 取当前登录用户；无认证上下文返回 null。
      */
     public static KnowledgeUser getUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

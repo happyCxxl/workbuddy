@@ -66,7 +66,7 @@ public class IndexRowAssembler {
         return rows;
     }
 
-    /** 向量产物位置 → EmbeddingSet（读取失败返回 null） */
+    /** 向量产物位置 → EmbeddingSet（读取失败返回 null）。 */
     public EmbeddingSet readEmbeddingSet(ObjectRef ref) {
         try {
             byte[] content = fileStorage.getObject(ref);
@@ -80,7 +80,7 @@ public class IndexRowAssembler {
         }
     }
 
-    /** 切片产物位置 → chunkId 索引（读取失败返回 null，增强字段降级为空） */
+    /** 切片产物位置 → chunkId 索引（读取失败返回 null，增强字段降级为空）。 */
     public Map<String, Chunk> readChunkIndex(ObjectRef ref) {
         try {
             byte[] content = fileStorage.getObject(ref);

@@ -154,21 +154,21 @@ public class ChainStorageSupport {
     }
 
     /**
-     * 当前启用的数据源 ID（随数据源切换热替换）
+     * 当前启用的数据源 ID（随数据源切换热替换）。
      */
     public Long currentSourceId() {
         return storageRouter.currentSourceId();
     }
 
     /**
-     * 当前启用的数据源显示名
+     * 当前启用的数据源显示名。
      */
     public String currentSourceName() {
         return sourceName(currentSourceId());
     }
 
     /**
-     * 数据源显示名：未注册的 ID 回落该数据源的存储类型显示名，取不到类型时带上 ID
+     * 数据源显示名：未注册的 ID 回落该数据源的存储类型显示名，取不到类型时带上 ID。
      */
     public String sourceName(Long sourceId) {
         if (NullUtil.isNull(sourceId)) {
@@ -183,7 +183,7 @@ public class ChainStorageSupport {
     }
 
     /**
-     * 存储类型显示名（新增存储类型时这里补一行）
+     * 存储类型显示名（新增存储类型时这里补一行）。
      */
     public static String storageName(StorageType type) {
         return switch (type) {

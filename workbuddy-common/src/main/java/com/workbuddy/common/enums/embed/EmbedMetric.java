@@ -29,17 +29,17 @@ public enum EmbedMetric {
         this.desc = desc;
     }
 
-    /** 序列化键 */
+    /** 序列化键。 */
     public String key() {
         return key;
     }
 
-    /** 说明（人类可读） */
+    /** 说明（人类可读）。 */
     public String desc() {
         return desc;
     }
 
-    /** 按键精确查找；未识别返回 null */
+    /** 按键精确查找；未识别返回 null。 */
     public static EmbedMetric of(String key) {
         if (StrUtil.isBlank(key)) {
             return null;

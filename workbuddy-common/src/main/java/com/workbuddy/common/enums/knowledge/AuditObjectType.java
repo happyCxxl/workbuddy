@@ -37,17 +37,17 @@ public enum AuditObjectType {
         this.label = label;
     }
 
-    /** 码值 */
+    /** 码值。 */
     public String key() {
         return key;
     }
 
-    /** 中文名 */
+    /** 中文名。 */
     public String label() {
         return label;
     }
 
-    /** 按码值查找；未识别返回 null */
+    /** 按码值查找；未识别返回 null。 */
     public static AuditObjectType of(String key) {
         if (StrUtil.isBlank(key)) {
             return null;

@@ -13,7 +13,7 @@ public class RetrievalRunSettings {
 
     private final RetrievalRunProperties properties;
 
-    /** 生产检索是否落运行记录 */
+    /** 生产检索是否落运行记录。 */
     public boolean recordProduction() {
         return properties.isRecordProduction();
     }

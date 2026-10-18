@@ -29,27 +29,27 @@ import com.workbuddy.common.utils.NullUtil;
  */
 public record ObjectRef(Long sourceId, StorageType storageType, String bucket, String objectKey) {
 
-    /** 源文件位置（wb_file_object 档案行） */
+    /** 源文件位置（wb_file_object 档案行）。 */
     public static ObjectRef ofFile(WbFileObject row) {
         return of(row.getStorageSourceId(), row.getStorageType(), row.getBucket(), row.getObjectKey());
     }
 
-    /** 阶段产物位置（wb_knowledge_pipeline_product 行） */
+    /** 阶段产物位置（wb_knowledge_pipeline_product 行）。 */
     public static ObjectRef ofProduct(WbPipelineProduct row) {
         return of(row.getStorageSourceId(), row.getStorageType(), row.getBucket(), row.getArtifactId());
     }
 
-    /** 切片集合位置（wb_knowledge_chunk_set 行） */
+    /** 切片集合位置（wb_knowledge_chunk_set 行）。 */
     public static ObjectRef ofChunkSet(WbChunkSet row) {
         return of(row.getStorageSourceId(), row.getStorageType(), row.getBucket(), row.getArtifactId());
     }
 
-    /** 向量集合位置（wb_knowledge_embedding_set 行） */
+    /** 向量集合位置（wb_knowledge_embedding_set 行）。 */
     public static ObjectRef ofEmbeddingSet(WbEmbeddingSet row) {
         return of(row.getStorageSourceId(), row.getStorageType(), row.getBucket(), row.getArtifactId());
     }
 
-    /** 头像位置（wb_user 行）；未设置头像返回 null */
+    /** 头像位置（wb_user 行）；未设置头像返回 null。 */
     public static ObjectRef ofAvatar(WbUser row) {
         if (NullUtil.isNull(row) || NullUtil.isNull(row.getAvatar())) {
             return null;
@@ -79,7 +79,7 @@ public record ObjectRef(Long sourceId, StorageType storageType, String bucket, S
         return new ObjectRef(sourceId, type, bucket, objectKey);
     }
 
-    /** 存储内完整路径（日志与报错用） */
+    /** 存储内完整路径（日志与报错用）。 */
     public String path() {
         return storageType.getCode() + "/" + bucket + "/" + objectKey;
     }

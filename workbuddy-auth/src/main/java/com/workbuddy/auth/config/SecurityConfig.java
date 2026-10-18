@@ -32,7 +32,7 @@ public class SecurityConfig {
 
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
-    /** 安全过滤链：登录/注册与健康探针放行；其余请求需登录，角色由方法注解判定 */
+    /** 安全过滤链：登录/注册与健康探针放行；其余请求需登录，角色由方法注解判定。 */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
@@ -52,7 +52,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /** 密码编码器（BCrypt） */
+    /** 密码编码器（BCrypt）。 */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

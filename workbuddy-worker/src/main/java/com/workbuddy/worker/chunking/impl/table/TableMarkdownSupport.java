@@ -29,7 +29,7 @@ public final class TableMarkdownSupport {
     private TableMarkdownSupport() {
     }
 
-    /** 行数据 + 与行对齐的来源单元格 ID */
+    /** 行数据 + 与行对齐的来源单元格 ID。 */
     public static final class TableRows {
         public final List<Map<Integer, String>> rows;
         public final List<List<String>> ids;
@@ -56,7 +56,7 @@ public final class TableMarkdownSupport {
         return new TablePrep(table, headerByCol, prepared);
     }
 
-    /** 视图单元格检索文本索引（cellId → normalizedText） */
+    /** 视图单元格检索文本索引（cellId → normalizedText）。 */
     public static Map<String, String> textByCell(ViewElement element) {
         Map<String, String> map = new HashMap<>();
         if (NullUtil.isNotNull(element.getCells())) {
@@ -69,7 +69,7 @@ public final class TableMarkdownSupport {
         return map;
     }
 
-    /** 表头（isHeader 单元格，按列；空文本不算表头） */
+    /** 表头（isHeader 单元格，按列；空文本不算表头）。 */
     public static Map<Integer, String> headerByCol(UnifiedElement table, Map<String, String> textByCell) {
         Map<Integer, String> headerByCol = new HashMap<>();
         for (UnifiedElement cell : table.getCells()) {
@@ -83,7 +83,7 @@ public final class TableMarkdownSupport {
         return headerByCol;
     }
 
-    /** 数据行（非表头单元格按行分组，按行序；空白单元格跳过，全空行跳过） */
+    /** 数据行（非表头单元格按行分组，按行序；空白单元格跳过，全空行跳过）。 */
     public static TableRows prepareRows(UnifiedElement table, Map<String, String> textByCell) {
         Map<Integer, List<UnifiedElement>> grouped = new LinkedHashMap<>();
         for (UnifiedElement cell : table.getCells()) {
@@ -116,7 +116,7 @@ public final class TableMarkdownSupport {
         return new TableRows(rows, ids);
     }
 
-    /** 列集：有表头用表头列；否则用行内出现过的列（均按列序） */
+    /** 列集：有表头用表头列；否则用行内出现过的列（均按列序）。 */
     public static List<Integer> columns(Map<Integer, String> headerByCol, List<Map<Integer, String>> rows) {
         List<Integer> columns = new ArrayList<>();
         if (!headerByCol.isEmpty()) {
@@ -130,7 +130,7 @@ public final class TableMarkdownSupport {
         return columns;
     }
 
-    /** 行组 → Markdown 表格内容（有表头：表头行 + 分隔行 + 数据行；无表头：仅数据行） */
+    /** 行组 → Markdown 表格内容（有表头：表头行 + 分隔行 + 数据行；无表头：仅数据行）。 */
     public static String markdownContent(List<Map<Integer, String>> groupRows, Map<Integer, String> headerByCol) {
         List<Integer> columns = columns(headerByCol, groupRows);
         List<String> lines = new ArrayList<>();
@@ -144,18 +144,18 @@ public final class TableMarkdownSupport {
         return String.join("\n", lines);
     }
 
-    /** 单元格列表 → Markdown 行（管道转义与换行折叠见 sanitizeCell） */
+    /** 单元格列表 → Markdown 行（管道转义与换行折叠见 sanitizeCell）。 */
     public static String markdownRow(List<String> cells) {
         return "| " + cells.stream().map(TableMarkdownSupport::sanitizeCell)
                 .collect(Collectors.joining(" | ")) + " |";
     }
 
-    /** Markdown 表头分隔行（列数下限 1） */
+    /** Markdown 表头分隔行（列数下限 1）。 */
     public static String markdownSeparator(int columns) {
         return "|" + "---|".repeat(Math.max(1, columns));
     }
 
-    /** 单元格文本净化：管道转义 + 换行折叠为空格 + trim（空值返回空串） */
+    /** 单元格文本净化：管道转义 + 换行折叠为空格 + trim（空值返回空串）。 */
     public static String sanitizeCell(String value) {
         if (StrUtil.isBlank(value)) {
             return "";
@@ -163,11 +163,11 @@ public final class TableMarkdownSupport {
         return value.replace("|", "\\|").replaceAll("[\\r\\n]+", " ").trim();
     }
 
-    /** 数据行遍历项：行数据 + 与行对齐的来源单元格 ID + 行字符长度 */
+    /** 数据行遍历项：行数据 + 与行对齐的来源单元格 ID + 行字符长度。 */
     public record RowEntry(Map<Integer, String> cells, List<String> ids, int length) {
     }
 
-    /** 数据行遍历（行长度 = 行内单元格文本长度之和） */
+    /** 数据行遍历（行长度 = 行内单元格文本长度之和）。 */
     public static List<RowEntry> rowEntries(TableRows prepared) {
         List<RowEntry> entries = new ArrayList<>();
         for (int i = 0; i < prepared.rows.size(); i++) {
@@ -176,7 +176,7 @@ public final class TableMarkdownSupport {
         return entries;
     }
 
-    /** 行级切片：短行（< groupThreshold）每 groupSize 行一组，长行单行成片（表头随片） */
+    /** 行级切片：短行（< groupThreshold）每 groupSize 行一组，长行单行成片（表头随片）。 */
     public static List<Chunk> rowSlice(TableRows prepared, Map<Integer, String> headerByCol,
                                        ViewElement element, UnifiedElement table, SliceContext context,
                                        int groupThreshold, int groupSize) {
@@ -202,7 +202,7 @@ public final class TableMarkdownSupport {
         return chunks;
     }
 
-    /** 行组切片：行数 ≥ groupSize 或组内字符累计 + 当前行 > maxLen 即结算成片（表头随片） */
+    /** 行组切片：行数 ≥ groupSize 或组内字符累计 + 当前行 > maxLen 即结算成片（表头随片）。 */
     public static List<Chunk> rowGroupSlice(TableRows prepared, Map<Integer, String> headerByCol,
                                             ViewElement element, UnifiedElement table, SliceContext context,
                                             int groupSize, int maxLen) {
@@ -256,7 +256,7 @@ public final class TableMarkdownSupport {
         }
     }
 
-    /** 构建表格片（tableRef=视图元素 ID；页码取整表 pageRange/page，来源=行内单元格 ID 并集） */
+    /** 构建表格片（tableRef=视图元素 ID；页码取整表 pageRange/page，来源=行内单元格 ID 并集）。 */
     public static Chunk buildChunk(String content, ViewElement element, UnifiedElement table,
                                    SliceContext context, List<List<String>> rowIds) {
         Chunk chunk = new Chunk();

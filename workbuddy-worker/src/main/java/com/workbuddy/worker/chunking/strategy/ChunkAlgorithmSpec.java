@@ -25,7 +25,7 @@ public final class ChunkAlgorithmSpec {
 
     // ---------------- 默认算法与支持集 ----------------
 
-    /** 各路默认算法 */
+    /** 各路默认算法。 */
     public static ChunkAlgorithm defaultAlgorithm(ChunkRoute route) {
         return switch (route) {
             case BODY -> ChunkAlgorithm.BODY_PARAGRAPH_AGGREGATE;
@@ -35,7 +35,7 @@ public final class ChunkAlgorithmSpec {
         };
     }
 
-    /** 算法键是否在当前支持集（biz 保存校验 + 前端置灰依据） */
+    /** 算法键是否在当前支持集（biz 保存校验 + 前端置灰依据）。 */
     public static boolean isSupported(ChunkRoute route, String algorithmKey) {
         ChunkAlgorithm algorithm = ChunkAlgorithm.of(route, algorithmKey);
         return NullUtil.isNotNull(algorithm) && algorithm.supported();
@@ -82,7 +82,7 @@ public final class ChunkAlgorithmSpec {
         defaultParams(route, config.getAlgorithm(), properties).forEach(config.getParams()::putIfAbsent);
     }
 
-    /** 各算法默认参数（值源 = ChunkProperties 全局默认，application.yml 同名 kebab-case 键）；算法键未识别时不补参数 */
+    /** 各算法默认参数（值源 = ChunkProperties 全局默认，application.yml 同名 kebab-case 键）；算法键未识别时不补参数。 */
     public static Map<String, String> defaultParams(ChunkRoute route, String algorithmKey, ChunkProperties properties) {
         Map<String, String> defaults = new LinkedHashMap<>();
         ChunkAlgorithm algorithm = ChunkAlgorithm.of(route, algorithmKey);

@@ -57,7 +57,7 @@ public final class StrategySnapshotSupport {
         return strategy;
     }
 
-    /** 快照为空/损坏的异常：消息带截断后的快照（排查用） */
+    /** 快照为空/损坏的异常：消息带截断后的快照（排查用）。 */
     public static IllegalStateException corrupt(String stageLabel, String snapshot, Throwable cause) {
         return new IllegalStateException(stageLabel + "策略快照为空或已损坏，无法解析, snapshot="
                 + StrUtil.maxLength(String.valueOf(snapshot), SNAPSHOT_KEEP), cause);

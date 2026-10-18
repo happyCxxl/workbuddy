@@ -109,7 +109,7 @@ public final class TextUtil {
         return jaccardSet(bigramSet(a), bigramSet(b));
     }
 
-    /** 文本 → 字符二元组集合（含空文本 → 空集合） */
+    /** 文本 → 字符二元组集合（含空文本 → 空集合）。 */
     public static Set<String> bigramSet(String text) {
         Set<String> set = new HashSet<>();
         for (int i = 0; i < text.length() - 1; i++) {
@@ -118,7 +118,7 @@ public final class TextUtil {
         return set;
     }
 
-    /** 集合 Jaccard 相似度（两端同为空集视为不相似，返回 0） */
+    /** 集合 Jaccard 相似度（两端同为空集视为不相似，返回 0）。 */
     public static double jaccardSet(Set<String> a, Set<String> b) {
         if (a.isEmpty() && b.isEmpty()) {
             return 0;
@@ -137,7 +137,7 @@ public final class TextUtil {
     public record BigramSummary(int count, long fingerprint) {
     }
 
-    /** 文本 → bigram 摘要（内部集合瞬时释放） */
+    /** 文本 → bigram 摘要（内部集合瞬时释放）。 */
     public static BigramSummary bigramSummary(String text) {
         Set<String> bigrams = bigramSet(text);
         long fingerprint = 0;

@@ -43,7 +43,7 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
      */
     protected abstract void parseNative(ParseSource source, byte[] data, ParseContext context);
 
-    /** 表格元素追加单元格（cells 惰性建表，各格式表格单元格统一入口） */
+    /** 表格元素追加单元格（cells 惰性建表，各格式表格单元格统一入口）。 */
     protected static void appendCell(ParseElement tableElement, ParseElement cellElement) {
         if (NullUtil.isNull(tableElement.getCells())) {
             tableElement.setCells(new ArrayList<>());
@@ -125,7 +125,7 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
         fillUnitMetrics(source, pages, imageCounts);
     }
 
-    /** 逐单元指标回填（Excel 每 worksheet = 1 单元）：单元数即判定单元数 */
+    /** 逐单元指标回填（Excel 每 worksheet = 1 单元）：单元数即判定单元数。 */
     protected void fillUnitMetrics(ParseSource source, List<String> unitTexts, List<Integer> unitImageCounts) {
         List<PageMetric> metrics = new ArrayList<>();
         for (int i = 0; i < unitTexts.size(); i++) {
@@ -162,7 +162,7 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
         return text.toString();
     }
 
-    /** 嵌入图片元素数 */
+    /** 嵌入图片元素数。 */
     protected static int imageCount(ParseSource source) {
         return (int) source.getElements().stream()
                 .filter(element -> ElementType.IMAGE.name().equals(element.getType()))

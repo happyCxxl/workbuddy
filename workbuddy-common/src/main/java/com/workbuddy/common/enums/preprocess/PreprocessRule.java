@@ -38,17 +38,17 @@ public enum PreprocessRule {
         this.desc = desc;
     }
 
-    /** 策略快照中的序列化键（JSON 契约） */
+    /** 策略快照中的序列化键（JSON 契约）。 */
     public String key() {
         return key;
     }
 
-    /** 规则说明（人类可读） */
+    /** 规则说明（人类可读）。 */
     public String desc() {
         return desc;
     }
 
-    /** 三态规则（有 action，无 enabled） */
+    /** 三态规则（有 action，无 enabled）。 */
     public boolean triState() {
         return this == HEADER_FOOTER || this == TOC || this == NOISE || this == REPEAT;
     }
@@ -60,7 +60,7 @@ public enum PreprocessRule {
         return this == REPEAT;
     }
 
-    /** 按序列化键精确查找；未识别返回 null */
+    /** 按序列化键精确查找；未识别返回 null。 */
     public static PreprocessRule of(String key) {
         if (StrUtil.isBlank(key)) {
             return null;

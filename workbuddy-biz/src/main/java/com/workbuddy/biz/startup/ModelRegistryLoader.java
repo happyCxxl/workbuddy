@@ -44,7 +44,7 @@ public class ModelRegistryLoader {
         return rows.size();
     }
 
-    /** 启动即装载：失败上抛终止启动（空表合法，注册表为空） */
+    /** 启动即装载：失败上抛终止启动（空表合法，注册表为空）。 */
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
         reload();

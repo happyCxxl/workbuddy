@@ -26,12 +26,12 @@ public enum EmbedRecordStatus {
         this.desc = desc;
     }
 
-    /** 说明（人类可读） */
+    /** 说明（人类可读）。 */
     public String desc() {
         return desc;
     }
 
-    /** 按状态名精确查找；未识别返回 null */
+    /** 按状态名精确查找；未识别返回 null。 */
     public static EmbedRecordStatus of(String name) {
         if (StrUtil.isBlank(name)) {
             return null;

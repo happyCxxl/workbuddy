@@ -70,7 +70,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     private final TaskDetailSupport detailSupport;
     private final FileResultAccessGuard accessGuard;
 
-    /** 不带状态与切片过滤的重载：与两个过滤参数都传空是同一口径 */
+    /** 不带状态与切片过滤的重载：与两个过滤参数都传空是同一口径。 */
     public StageContentVO stageContent(Long fileResultId, String stage, Long taskId, Long docPage,
                                        Integer page, Integer limit) {
         return stageContent(fileResultId, stage, taskId, docPage, page, limit, null, null);

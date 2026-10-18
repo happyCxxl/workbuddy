@@ -18,7 +18,7 @@ import java.util.List;
 @Component
 public class EmbedVoAssembler {
 
-    /** 集合摘要：基础字段直搬 + 记录三态统计（SUCCESS/FAILED/SKIPPED） */
+    /** 集合摘要：基础字段直搬 + 记录三态统计（SUCCESS/FAILED/SKIPPED）。 */
     public EmbedSummaryVO toSummary(WbEmbeddingSet set, List<WbEmbeddingRecord> records) {
         EmbedSummaryVO vo = new EmbedSummaryVO();
         vo.setEmbeddingSetId(set.getEmbeddingSetId());
@@ -52,7 +52,7 @@ public class EmbedVoAssembler {
         return vo;
     }
 
-    /** 记录行 → 记录条目 VO 列表 */
+    /** 记录行 → 记录条目 VO 列表。 */
     public List<EmbedRecordItemVO> toRecordItemVOs(List<WbEmbeddingRecord> records) {
         return records.stream().map(this::toRecordItemVO).toList();
     }

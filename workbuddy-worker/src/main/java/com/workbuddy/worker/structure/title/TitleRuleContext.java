@@ -12,17 +12,17 @@ import com.workbuddy.worker.structure.StructureProperties;
  */
 public record TitleRuleContext(UnifiedElement element, double medianSize, StructureProperties properties) {
 
-    /** 候选文本（trim 后） */
+    /** 候选文本（trim 后）。 */
     public String text() {
         return StrUtil.trim(element.getText());
     }
 
-    /** 候选文本是否短句（标题候选长度上限内，防编号误判） */
+    /** 候选文本是否短句（标题候选长度上限内，防编号误判）。 */
     public boolean shortText() {
         return text().length() <= properties.getTitleCandidateMaxLength();
     }
 
-    /** 原生样式（Heading1~9 等；无 → null） */
+    /** 原生样式（Heading1~9 等；无 → null）。 */
     public String style() {
         if (NullUtil.isNull(element.getExtension())) {
             return null;
@@ -31,17 +31,17 @@ public record TitleRuleContext(UnifiedElement element, double medianSize, Struct
         return NullUtil.isNull(value) ? null : String.valueOf(value);
     }
 
-    /** 字号（无 → null） */
+    /** 字号（无 → null）。 */
     public Double fontSize() {
         return NullUtil.isNotNull(element.getFont()) ? element.getFont().getSize() : null;
     }
 
-    /** 是否加粗 */
+    /** 是否加粗。 */
     public boolean bold() {
         return NullUtil.isNotNull(element.getFont()) && Boolean.TRUE.equals(element.getFont().getBold());
     }
 
-    /** 字号佐证：加粗，或字号不低于文档中位数 × 配置比例（默认 1.05） */
+    /** 字号佐证：加粗，或字号不低于文档中位数 × 配置比例（默认 1.05）。 */
     public boolean fontBacked() {
         return bold() || (NullUtil.isNotNull(fontSize()) && medianSize > 0
                 && fontSize() >= medianSize * properties.getFontBackedSizeRatio());

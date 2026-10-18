@@ -22,6 +22,8 @@ public class KnowledgeException extends RuntimeException {
     }
 
     /**
+     * 构造业务异常，用 detail 覆盖错误码自带的默认消息。
+     *
      * @param detail 补充原因（覆盖默认消息）
      */
     public KnowledgeException(ErrorCode errorCode, String detail) {

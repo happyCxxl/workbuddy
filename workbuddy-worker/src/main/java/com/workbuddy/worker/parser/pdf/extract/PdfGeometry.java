@@ -16,7 +16,7 @@ public final class PdfGeometry {
     private PdfGeometry() {
     }
 
-    /** 一组盒式元素的包围盒：左/上取最小、右/下取最大（行与字符共用同一实现） */
+    /** 一组盒式元素的包围盒：左/上取最小、右/下取最大（行与字符共用同一实现）。 */
     public static <T> BBox boundsOf(List<T> items, ToDoubleFunction<T> x, ToDoubleFunction<T> y,
                              ToDoubleFunction<T> width, ToDoubleFunction<T> height) {
         double left = items.stream().mapToDouble(x).min().orElse(0);
@@ -28,7 +28,7 @@ public final class PdfGeometry {
         return new BBox(left, top, right - left, bottom - top);
     }
 
-    /** 表格是否贴到页底：包围盒底边进入页面底部比例 */
+    /** 表格是否贴到页底：包围盒底边进入页面底部比例。 */
     public static boolean cutAtPageBottom(BBox bounds, double pageHeight) {
         return bounds.getY() + bounds.getHeight() >= pageHeight * PAGE_BOTTOM_RATIO;
     }

@@ -36,7 +36,7 @@ public final class BodyChunkSupport {
     public record BodyBuffer(String text, List<String> elementIds, List<Integer> pages) {
     }
 
-    /** 构建切片（content/type/titlePath/来源/页码/字符数统一口径） */
+    /** 构建切片（content/type/titlePath/来源/页码/字符数统一口径）。 */
     public static Chunk buildChunk(String contentType, String content, SliceContext context,
                                    List<String> sourceIds, List<Integer> pages) {
         Chunk chunk = new Chunk();
@@ -49,12 +49,12 @@ public final class BodyChunkSupport {
         return chunk;
     }
 
-    /** 单元素页码（无页 → null） */
+    /** 单元素页码（无页 → null）。 */
     public static List<Integer> pageRangeOf(ViewElement element) {
         return NullUtil.isNotNull(element.getPage()) ? List.of(element.getPage()) : null;
     }
 
-    /** 合并组内元素页码（去重升序；无页 → null） */
+    /** 合并组内元素页码（去重升序；无页 → null）。 */
     public static List<Integer> mergePages(List<ViewElement> group) {
         Set<Integer> pages = new HashSet<>();
         for (ViewElement element : group) {
@@ -82,7 +82,7 @@ public final class BodyChunkSupport {
         return new BodyBuffer(text, new ArrayList<>(ids), pages);
     }
 
-    /** 缓冲文本总长（空白文本不计） */
+    /** 缓冲文本总长（空白文本不计）。 */
     public static int bufferLength(List<ViewElement> buffer) {
         int length = 0;
         for (ViewElement element : buffer) {
@@ -93,7 +93,7 @@ public final class BodyChunkSupport {
         return length;
     }
 
-    /** 按句边界切分（保留分隔符，空白句过滤） */
+    /** 按句边界切分（保留分隔符，空白句过滤）。 */
     public static List<String> splitSentences(String text) {
         List<String> sentences = new ArrayList<>();
         for (String part : text.split("(?<=" + SENTENCE_BOUNDARIES + ")")) {

@@ -196,10 +196,10 @@ public final class HeaderFooterDetector {
                 || text.matches("^第\\s*[0-9一二三四五六七八九十百]+\\s*页$");
     }
 
-    /** 页脚判定结果：重复文本基础键 + 已确认的页码横向中心（页码按行位置与内容空洞度命中） */
+    /** 页脚判定结果：重复文本基础键 + 已确认的页码横向中心（页码按行位置与内容空洞度命中）。 */
     public record FooterKeys(Set<String> texts, List<Double> pageNumberCenters) {
 
-        /** 行是否命中页脚：基础文本键命中，或页码中心命中且该行内容空洞 */
+        /** 行是否命中页脚：基础文本键命中，或页码中心命中且该行内容空洞。 */
         public boolean matches(String footerBaseKey, TextLine line, PageLines page, ParseProperties properties) {
             if (texts.contains(footerBaseKey)) {
                 return true;

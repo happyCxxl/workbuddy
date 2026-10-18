@@ -63,7 +63,7 @@ public enum DelFlag {
         return null;
     }
 
-    /** 是否已删除：只有显式 "1" 才算已删（null 与未知值一律按未删除处理） */
+    /** 是否已删除：只有显式 "1" 才算已删（null 与未知值一律按未删除处理）。 */
     public static boolean isDeleted(String code) {
         return of(code) == DELETED;
     }

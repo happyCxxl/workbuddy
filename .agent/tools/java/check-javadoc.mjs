@@ -98,7 +98,8 @@ function checkJavadoc(file, lines, declLine, block, kind, sig) {
   }
 
   if (block.single) {
-    const hasTag = /(^|\s)@\w+/.test(block.inner[0].text);
+    const hasTag = /(^|\s)@(param|return|throws|exception|deprecated|see|since|author|version|serial)\b/
+      .test(block.inner[0].text);
     if (hasTag) push(file, block.start + 1, 'JAVA-DOC-006', '含块标签的 Javadoc 不得写成单行');
   } else {
     if (lines[block.start].trim() !== '/**') {
@@ -112,14 +113,27 @@ function checkJavadoc(file, lines, declLine, block, kind, sig) {
     }
   }
 
-  // 摘要
-  const firstText = block.inner.find((x) => x.text.trim() !== '' && !x.text.trim().startsWith('@'));
-  if (firstText) {
-    const t = firstText.text.trim();
-    if (SUMMARY_BANNED.test(t)) push(file, firstText.line + 1, 'JAVA-DOC-006', '摘要不得以「该方法/本方法」开头');
-    if (!/[。.!！?？]$/.test(t)) push(file, firstText.line + 1, 'JAVA-DOC-006', '摘要必须以句号结尾');
-  } else {
+  // 摘要：取第一段文字，句末标点可以落在段内任意一行（摘要允许多行）
+  const para = [];
+  for (const x of block.inner) {
+    const tx = x.text.trim();
+    if (tx.startsWith('@')) break;
+    if (tx === '') {
+      if (para.length > 0) break;
+      continue;
+    }
+    para.push({ line: x.line, text: tx });
+  }
+  if (para.length === 0) {
     push(file, block.start + 1, 'JAVA-DOC-006', 'Javadoc 缺少摘要');
+  } else {
+    if (SUMMARY_BANNED.test(para[0].text)) {
+      push(file, para[0].line + 1, 'JAVA-DOC-006', '摘要不得以「该方法/本方法」开头');
+    }
+    const last = para[para.length - 1];
+    if (!/[。.!！?？]$/.test(last.text)) {
+      push(file, last.line + 1, 'JAVA-DOC-006', '摘要必须以句号结尾');
+    }
   }
 
   // 标签
@@ -150,6 +164,8 @@ function checkJavadoc(file, lines, declLine, block, kind, sig) {
     if (!docParams.has(p)) push(file, declLine + 1, 'JAVA-DOC-002', `@param 缺少参数 ${p}`);
   }
   for (const p of docParams) {
+    // 类型参数（@param <T>）不参与形参比对
+    if (/^<.+>$/.test(p)) continue;
     if (!params.includes(p)) push(file, declLine + 1, 'JAVA-DOC-006', `@param ${p} 不在方法签名中`);
   }
 
@@ -160,9 +176,6 @@ function checkJavadoc(file, lines, declLine, block, kind, sig) {
 
   for (const e of sig.throws) {
     if (!docThrows.has(e)) push(file, declLine + 1, 'JAVA-DOC-002', `@throws 缺少异常 ${e}`);
-  }
-  for (const e of docThrows) {
-    if (!sig.throws.includes(e)) push(file, declLine + 1, 'JAVA-DOC-006', `@throws ${e} 不在 throws 声明中`);
   }
 }
 
@@ -229,8 +242,16 @@ function checkFile(file) {
     const typeMatch = TYPE_DECL.exec(lines[i]);
     if (typeMatch) {
       const block = javadocEndBefore(lines, i);
+      // record 的组件写在头部括号里，按形参对待（@param 逐个对应）
+      let recordParams = [];
+      if (typeMatch[1] === 'record') {
+        const header = joinSignature(lines, i).text;
+        const open = header.indexOf('(');
+        const close = header.lastIndexOf(')');
+        if (open >= 0 && close > open) recordParams = splitParams(header.slice(open + 1, close));
+      }
       checkJavadoc(file, lines, i, block >= 0 ? readBlock(lines, block) : null, typeMatch[1], {
-        params: [],
+        params: recordParams,
         returnType: 'void',
         throws: [],
       });

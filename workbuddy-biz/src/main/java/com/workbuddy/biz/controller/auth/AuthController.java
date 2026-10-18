@@ -25,14 +25,14 @@ public class AuthController {
 
     private final AuthService authService;
 
-    /** 登录 */
+    /** 登录。 */
     @PostMapping("/login")
     @RateLimit()
     public R<LoginVO> login(@Valid @RequestBody LoginDTO request) {
         return R.ok(authService.login(request));
     }
 
-    /** 注册 */
+    /** 注册。 */
     @PostMapping("/register")
     public R<Void> register(@Valid @RequestBody RegisterDTO request) {
         authService.register(request);
