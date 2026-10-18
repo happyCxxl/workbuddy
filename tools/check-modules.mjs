@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 模块依赖一致性校验：比对 `.agent/standards/java/01-分层与包结构.md` §1 的表与各模块 pom.xml。
+ * 模块依赖一致性校验：比对 `.agent/standards/java/01-分层与依赖.md` §1 的表与各模块 pom.xml。
  *
  * <p>pom 里有、表里没有的边 = ERROR（新增依赖未登记，推送拦下）；
  * 表里有、pom 里没有的边 = WARN（文档过期，提示清理）；
@@ -13,7 +13,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DOC = join(ROOT, '.agent', 'standards', 'java', '01-分层与包结构.md');
+const DOC = join(ROOT, '.agent', 'standards', 'java', '01-分层与依赖.md');
 
 /** 从文档 §1 的表里读出 { 模块名: { deps, dependents } } */
 function readMatrix() {
@@ -148,7 +148,7 @@ if (errors.length) {
     console.log(`ERROR ${e}`);
   }
   console.log('');
-  console.log(`模块依赖一致性：${errors.length} 处未登记依赖；修复＝改 .agent/standards/java/01-分层与包结构.md §1，或删掉 pom 里多余的依赖`);
+  console.log(`模块依赖一致性：${errors.length} 处未登记依赖；修复＝改 .agent/standards/java/01-分层与依赖.md §1，或删掉 pom 里多余的依赖`);
   process.exit(1);
 }
 const edgeCount = [...matrix.values()].reduce((sum, v) => sum + v.deps.size, 0);

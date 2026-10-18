@@ -11,7 +11,7 @@
 |---------------------|-------------------------------------------------------------------------------------------------|
 | 基础设施            | `cd docker && docker compose up -d`（首次自动建库建表）                                         |
 | 后端构建 + 静态门禁 | `mvn verify`（SpotBugs / Checkstyle / PMD / CPD，有告警即失败）                                 |
-| 后端测试            | `mvn -o test`（推送门禁已含全量；开发期按改动范围分档见 `.agent/standards/java/05-测试.md` §8） |
+| 后端测试            | `mvn -o test`（推送门禁已含全量；开发期按改动范围分档见 `.agent/standards/java/06-测试.md` §8） |
 | 改了公共模块后      | `mvn -o -q install -DskipTests` 回写本地 `.m2`（否则 CLI 门禁读旧 jar）                         |
 | 前端全量校验        | `cd web && pnpm lint`                                                                           |
 | 推送门禁预跑        | `sh tools/pre-push-gate.sh`（`FORCE_GATE=1` 强制重跑）                                          |
@@ -75,7 +75,7 @@
 1. **先决策后动手**：在 `.agent/adr/` 记一条接入决策（技术栈选型、与既有功能域的关系、目录落位）。
 2. **目录落位**：新功能域在仓库根新建独立顶层目录，不塞进既有 `workbuddy-*` 模块或 `web/`；
    Java 侧新模块沿用 `workbuddy-<域>` 命名并保持依赖方向单一。
-3. **依赖矩阵同步**：新模块或模块间新增依赖边，必须改 `.agent/standards/java/01-分层与包结构.md` §1 的表并写 ADR；
+3. **依赖矩阵同步**：新模块或模块间新增依赖边，必须改 `.agent/standards/java/01-分层与依赖.md` §1 的表并写 ADR；
    `node tools/check-modules.mjs` 校验文档与 `pom.xml` 一致，不一致推送被拦。
 4. **规范就近落位**：新功能域目录下建自己的 `AGENTS.md`（命令 + Never + 指针）；条款正文统一收进 `.agent/standards/<域>/`，入口只留指针。
 5. **门禁接入**：新语言的 lint / 类型检查 / 测试须接入 pre-push 门禁与 CI（`tools/pre-push-gate.sh` 与 workflow 各加一步），

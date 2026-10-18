@@ -17,7 +17,7 @@
 - **构建门禁**：`mvn verify` 阶段自动执行 spotbugs:check（阈值 Low）+ checkstyle:check + pmd:check + pmd:cpd-check，有告警构建失败；
 - **推送门禁**：`tools/pre-push-gate.sh`（`.husky/pre-push` 转发，按推送范围触发；也可手动预跑）。改动涉及 `.java` 或 `pom.xml` 时先跑全量单元测试（`mvn -o test`），再跑静态门禁。全部步骤通过后写指纹缓存 `.git/workbuddy-prepush-ok`：同一次推送重试直接跳过，任何文件改动都让缓存失效并全量重跑；
 - **交付自检**：写完代码后手动执行 `mvn compile spotbugs:check checkstyle:check pmd:check pmd:cpd-check`，0 告警才交付；
-- **模块依赖一致性**：`node tools/check-modules.mjs` 比对 `01-分层与包结构.md` §1 的矩阵与各模块 `pom.xml`：pom 多出未登记的边报错，文档登记但 pom 已删的边告警；
+- **模块依赖一致性**：`node tools/check-modules.mjs` 比对 `01-分层与依赖.md` §1 的模块表与各模块 `pom.xml`：pom 多出未登记的边报错，文档登记但 pom 已删的边告警；
 - **注释口径**：不在 `mvn verify` 里，由跨前后端的 `tools/check-comments.mjs` 检查（见 `.agent/checkers/README.md`），是推送门禁的第 1 步；
 - 检查须从仓库根目录执行（规则文件经 `${maven.multiModuleProjectDirectory}` 解析）。
 
