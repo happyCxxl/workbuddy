@@ -110,6 +110,7 @@ run_frontend=0
 run_source=0
 run_bytecode=0
 run_tests=0
+run_coverage=0
 run_modules=0
 if printf '%s\n' "$changed" | grep -qE '(\.java$|\.ts$|\.vue$|\.css$|\.mjs$|\.md$|^\.husky/|^\.agent/tools/check-comments\.mjs$)'; then
   run_comments=1
@@ -127,9 +128,10 @@ if printf '%s\n' "$changed" | grep -qE '(\.java$|pom\.xml$|^\.agent/tools/backen
   run_source=1
   run_bytecode=1
   run_tests=1
+  run_coverage=1
   run_modules=1
 fi
-total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_tests + run_bytecode + run_modules))
+total=$((run_comments + run_encoding + run_agents + run_frontend + run_source + run_tests + run_coverage + run_bytecode + run_modules))
 
 echo ""
 echo "==================== 推送前检查 ===================="
@@ -272,7 +274,7 @@ if [ "$run_source" = "1" ]; then
   started=$(date +%s)
   echo ""
   echo ">>>> [$step/$total] 后端单元测试：mvn -o test"
-  echo "     （范围：$bytecode_scope；推送前全量兜底，开发期的分档见 .agent/standards/java/05-测试.md §8）"
+  echo "     （范围：$bytecode_scope；推送前全量兜底，开发期的分档见 .agent/standards/java/06-测试.md §8）"
   if eval "mvn -o $scope_arg test"; then
     echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
   else
@@ -280,6 +282,22 @@ if [ "$run_source" = "1" ]; then
     echo "!!!! [$step/$total] 后端单元测试失败"
     echo "     复跑：mvn -o $scope_arg test"
     echo "     说明：失败可能来自「改坏了代码」或「测试已过时」，先看失败用例的断言信息再判断"
+    exit 1
+  fi
+
+  step=$((step + 1))
+  started=$(date +%s)
+  echo ""
+  echo ">>>> [$step/$total] 覆盖率：jacoco:report + jacoco:check（全库语句 ≥70%）"
+  echo "     （范围：$bytecode_scope）"
+  if eval "mvn -o $scope_arg jacoco:report jacoco:check"; then
+    echo "---- [$step/$total] 通过（$(( $(date +%s) - started ))s）"
+  else
+    echo ""
+    echo "!!!! [$step/$total] 覆盖率未达标"
+    echo "     复跑：mvn -o $scope_arg jacoco:report jacoco:check"
+    echo "     报告：<模块>/target/site/jacoco/index.html"
+    echo "     提示：报「plugin ... has not been downloaded」时，先联网跑一次 mvn verify 缓存插件"
     exit 1
   fi
 
