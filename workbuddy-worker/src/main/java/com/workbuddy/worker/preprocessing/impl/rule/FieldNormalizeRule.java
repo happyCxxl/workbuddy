@@ -223,7 +223,8 @@ public class FieldNormalizeRule implements CleanRule {
                 }
                 traces.add(TraceEntry.of("unit-normalize-v1", PreprocessFieldType.AREA.name(),
                         TraceEntry.ACTION_REPLACE, match.group(), repl, "面积单位统一为平方米"));
-                fields.add(NormalizedField.of(PreprocessFieldType.AREA.name(), match.group(1), "平方米", "unit-normalize-v1"));
+                fields.add(NormalizedField.of(PreprocessFieldType.AREA.name(), match.group(1), "平方米",
+                        "unit-normalize-v1"));
                 changed[0]++;
                 return repl;
             });
@@ -246,7 +247,8 @@ public class FieldNormalizeRule implements CleanRule {
                 traces.add(TraceEntry.of("cert-extract-v1", PreprocessFieldType.CERT_NO.name(),
                         TraceEntry.ACTION_EXTRACT, matchPrefix(work, certMatcher), certMatcher.group(2),
                         "证书编号提取（原文不变）"));
-                fields.add(NormalizedField.of(PreprocessFieldType.CERT_NO.name(), certMatcher.group(2), null, "cert-extract-v1"));
+                fields.add(NormalizedField.of(PreprocessFieldType.CERT_NO.name(), certMatcher.group(2), null,
+                        "cert-extract-v1"));
             }
         }
     }

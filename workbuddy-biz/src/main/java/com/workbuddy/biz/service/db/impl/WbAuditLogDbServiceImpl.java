@@ -26,7 +26,8 @@ public class WbAuditLogDbServiceImpl extends InfraDbServiceImpl<WbAuditLogMapper
     private static final String FALLBACK_OPERATOR = "system";
 
     @Override
-    public void saveAudit(AuditActionType action, String objectType, Long objectId, String beforeJson, String afterJson) {
+    public void saveAudit(AuditActionType action, String objectType, Long objectId, String beforeJson,
+                          String afterJson) {
         KnowledgeUser user = currentUser();
         WbAuditLog audit = new WbAuditLog();
         audit.setActionType(action.name());

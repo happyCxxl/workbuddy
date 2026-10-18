@@ -141,7 +141,8 @@ public class EmbedPipeline implements EmbedderPort {
         }
         outcome.setSuggestedStatus(batchResult.failedBatches > 0 || !outcome.getWarnings().isEmpty()
                 ? PipelineTaskStatus.PARTIAL_SUCCESS : PipelineTaskStatus.SUCCESS);
-        log.info("===> EmbedPipeline 向量化完成, fileResultId={}, status={}, recordCount={}, cachedCount={}, warningCount={}",
+        log.info("===> EmbedPipeline 向量化完成, fileResultId={}, status={}, recordCount={},"
+                        + " cachedCount={}, warningCount={}",
                 context.getFileResultId(), outcome.getSuggestedStatus().name(), records.size(),
                 cachedCount, outcome.getWarnings().size());
         return outcome;
@@ -256,7 +257,8 @@ public class EmbedPipeline implements EmbedderPort {
         int totalBatches = 0;
         for (int from = 0; from < pending.size(); from += batchSize) {
             totalBatches++;
-            List<EmbeddingRecord> batch = new ArrayList<>(pending.subList(from, Math.min(from + batchSize, pending.size())));
+            List<EmbeddingRecord> batch =
+                    new ArrayList<>(pending.subList(from, Math.min(from + batchSize, pending.size())));
             BatchOutcome batchOutcome = callWithRetry(batch, strategy, result);
             if (batchOutcome.consistencyRejected) {
                 result.consistencyRejected = true;

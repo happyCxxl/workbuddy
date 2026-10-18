@@ -37,7 +37,8 @@ public final class TableContinuationSupport {
 
     /** 续表判据：列数一致，且表头行文本重复、或上一页表格贴页底且列区间重合 */
     private static boolean isContinuation(ParseElement previous, ParseElement current, double overlapRatio) {
-        if (NullUtil.isNull(previous) || NullUtil.isNull(current.getCols()) || !current.getCols().equals(previous.getCols())) {
+        if (NullUtil.isNull(previous) || NullUtil.isNull(current.getCols())
+                || !current.getCols().equals(previous.getCols())) {
             return false;
         }
         if (!firstRow(current).isEmpty() && firstRow(current).equals(firstRow(previous))) {

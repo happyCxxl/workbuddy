@@ -37,7 +37,8 @@ public class MinMergeProcessor implements ChunkPostProcessor {
         for (Chunk chunk : chunks) {
             if (isBody(chunk)) {
                 // 仅与"紧邻的前一个正文片"合并（不跨表格/图片，保持正文组连续口径）
-                if (chunk.getCharCount() < minMergeLen && NullUtil.isNotNull(lastBody) && lastBodyIndex == kept.size() - 1) {
+                if (chunk.getCharCount() < minMergeLen && NullUtil.isNotNull(lastBody)
+                        && lastBodyIndex == kept.size() - 1) {
                     mergeInto(lastBody, chunk);
                     continue;
                 }

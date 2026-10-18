@@ -40,7 +40,8 @@ public final class AlgorithmRegistry<T> {
             ThrowUtil.throwIf(!allowed.test(candidate), () -> new IllegalStateException(
                     kindLabel + "归属校验失败（算法不应注册到本表）: algorithm=" + algorithm.key()));
             T existed = byAlgorithm.put(algorithm, candidate);
-            ThrowUtil.throwIf(NullUtil.isNotNull(existed), () -> new IllegalStateException(kindLabel + "重复注册: algorithm=" + algorithm.key()));
+            ThrowUtil.throwIf(NullUtil.isNotNull(existed),
+                    () -> new IllegalStateException(kindLabel + "重复注册: algorithm=" + algorithm.key()));
         }
     }
 

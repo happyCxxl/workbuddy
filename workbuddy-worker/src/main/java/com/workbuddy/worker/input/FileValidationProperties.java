@@ -8,7 +8,8 @@ import java.util.List;
 
 /**
  * 文件校验配置（knowledge.file 前缀）。
- * 配置来源 = knowledge-biz 的 config/knowledge-file.yml 同名 kebab-case 键（由主文件 application.yml 的 spring.config.import 清单载入）；未配置时取内置默认值。
+ * 配置来源 = knowledge-biz 的 config/knowledge-file.yml 同名 kebab-case 键（由主文件 application.yml 的
+ * spring.config.import 清单载入）；未配置时取内置默认值。
  *
  * @author cxxl
  */

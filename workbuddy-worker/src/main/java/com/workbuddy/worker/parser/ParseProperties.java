@@ -5,7 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * 解析阈值配置（knowledge.parse 前缀；同名 kebab-case 键全量落在 knowledge-biz 的 config/knowledge-parse.yml，由主文件 application.yml 的 spring.config.import 清单载入）。
+ * 解析阈值配置（knowledge.parse 前缀；同名 kebab-case 键全量落在 knowledge-biz 的
+ * config/knowledge-parse.yml，由主文件 application.yml 的 spring.config.import 清单载入）。
  * 阈值为初值，待真实样本标定。
  *
  * @author cxxl

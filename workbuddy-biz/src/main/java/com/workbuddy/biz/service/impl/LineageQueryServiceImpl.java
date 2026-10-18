@@ -143,7 +143,8 @@ public class LineageQueryServiceImpl implements LineageQueryService {
         List<LineageNodeVO> nodes = new ArrayList<>();
         List<LineageEdgeVO> edges = new ArrayList<>();
         for (WbPipelineTask task : ordered) {
-            WbPipelineProduct product = NullUtil.isNull(task.getProductId()) ? null : productById.get(task.getProductId());
+            WbPipelineProduct product =
+                    NullUtil.isNull(task.getProductId()) ? null : productById.get(task.getProductId());
             nodes.add(toNode(task, product, chunkSetByArtifact, embedSetByArtifact, stepAgg, artifacts));
             if (NullUtil.isNotNull(task.getUpstreamProductId())) {
                 Long fromTaskId = taskIdByProductId.get(task.getUpstreamProductId());

@@ -31,9 +31,11 @@ public class KnowledgeFileChunkController {
     public R<ChunkTriggerVO> chunk(
             @PathVariable("fileResultId") Long fileResultId,
             StageTriggerQueryDto query) {
-        log.info("===> KnowledgeFileChunkController chunk 触发切片, fileResultId={}, strategyVersionId={}, upstreamProductId={}",
+        log.info("===> KnowledgeFileChunkController chunk 触发切片, fileResultId={}, strategyVersionId={},"
+                        + " upstreamProductId={}",
                 fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId());
-        return R.ok(chunkControlService.chunk(fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId()));
+        return R.ok(chunkControlService.chunk(fileResultId, query.getStrategyVersionId(),
+                query.getUpstreamProductId()));
     }
 
     @GetMapping("/{fileResultId}/chunk-detail")

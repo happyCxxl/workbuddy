@@ -117,7 +117,8 @@ public class ModelServiceImpl implements ModelService {
         row.setVendorCode(StrUtil.trimToNull(dto.getVendorCode()));
         row.setModelKey(StrUtil.trimToNull(dto.getModelKey()));
         row.setCapabilities(capabilities(dto.getCapabilities()));
-        row.setThinkingEnabled(NullUtil.isNull(dto.getThinkingEnabled()) ? Integer.valueOf(0) : dto.getThinkingEnabled());
+        row.setThinkingEnabled(
+                NullUtil.isNull(dto.getThinkingEnabled()) ? Integer.valueOf(0) : dto.getThinkingEnabled());
         row.setInputLimit(dto.getInputLimit());
         row.setOutputLimit(dto.getOutputLimit());
         row.setThinkingInputLimit(dto.getThinkingInputLimit());

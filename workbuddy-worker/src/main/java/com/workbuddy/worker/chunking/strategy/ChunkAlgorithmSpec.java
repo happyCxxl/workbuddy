@@ -129,7 +129,10 @@ public final class ChunkAlgorithmSpec {
 
     // ---------------- 保存校验（biz 调用；返回 null = 通过，否则为错误信息） ----------------
 
-    /** 校验配置 JSON 结构；非法返回错误信息，合法返回 null。configSnapshot 应为 {"routes":{...},"pipeline":{...}} 结构（无 type/name/version 顶层键）。 */
+    /**
+     * 校验配置 JSON 结构；非法返回错误信息，合法返回 null。configSnapshot 应为
+     * {"routes":{...},"pipeline":{...}} 结构（无 type/name/version 顶层键）。
+     */
     @SuppressWarnings("unchecked")
     public static String validate(Map<String, Object> config) {
         if (NullUtil.isNull(config)) {

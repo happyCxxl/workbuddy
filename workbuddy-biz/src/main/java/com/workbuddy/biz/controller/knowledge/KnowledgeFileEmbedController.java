@@ -32,9 +32,11 @@ public class KnowledgeFileEmbedController {
     public R<EmbedTriggerVO> embed(
             @PathVariable("fileResultId") Long fileResultId,
             StageTriggerQueryDto query) {
-        log.info("===> KnowledgeFileEmbedController embed 触发向量化, fileResultId={}, strategyVersionId={}, upstreamProductId={}",
+        log.info("===> KnowledgeFileEmbedController embed 触发向量化, fileResultId={}, strategyVersionId={},"
+                        + " upstreamProductId={}",
                 fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId());
-        return R.ok(embedControlService.embed(fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId()));
+        return R.ok(embedControlService.embed(fileResultId, query.getStrategyVersionId(),
+                query.getUpstreamProductId()));
     }
 
     @GetMapping("/{fileResultId}/embed-detail")

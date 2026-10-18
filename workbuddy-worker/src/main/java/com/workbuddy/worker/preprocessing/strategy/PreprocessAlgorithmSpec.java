@@ -256,7 +256,8 @@ public final class PreprocessAlgorithmSpec {
                 return "自定义规则动作非法: " + action + "（允许 " + CustomRuleAction.names() + "）";
             }
             Object replacement = ruleMap.get("replacement");
-            if (customAction.needsReplacement() && (NullUtil.isNull(replacement) || String.valueOf(replacement).isEmpty())) {
+            if (customAction.needsReplacement()
+                    && (NullUtil.isNull(replacement) || String.valueOf(replacement).isEmpty())) {
                 return "替换动作需填写替换文本";
             }
             if (!customAction.needsReplacement() && NullUtil.isNotNull(replacement)) {

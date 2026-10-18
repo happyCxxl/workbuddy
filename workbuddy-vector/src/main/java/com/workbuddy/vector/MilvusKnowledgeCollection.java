@@ -164,7 +164,8 @@ public class MilvusKnowledgeCollection implements KnowledgeCollectionPort {
     /**
      * 检索请求公共组装：向量与全文检索共用字段，仅 data 与目标字段不同
      */
-    private SearchResp searchInternal(String collectionName, BaseVector data, String annsField, int topK, String filter) {
+    private SearchResp searchInternal(String collectionName, BaseVector data, String annsField, int topK,
+                                      String filter) {
         return milvusClientV2.search(SearchReq.builder()
                 .collectionName(collectionName)
                 .data(List.of(data))

@@ -47,7 +47,8 @@ public class NormalizerImpl implements ElementNormalizer {
         return outcome;
     }
 
-    private UnifiedElement toUnified(ParseElement element, ParseSource source, Map<String, Integer> unmappedTypeCounts) {
+    private UnifiedElement toUnified(ParseElement element, ParseSource source,
+                                     Map<String, Integer> unmappedTypeCounts) {
         String provider = source.getProvider();
         UnifiedElementType type = mapType(element.getType());
         if (NullUtil.isNull(type)) {

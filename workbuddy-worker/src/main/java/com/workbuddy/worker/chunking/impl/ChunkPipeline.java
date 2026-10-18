@@ -10,7 +10,11 @@ import com.workbuddy.common.domain.rules.PreprocessViewRules;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.domain.structure.UnifiedElement;
 import com.workbuddy.common.domain.task.StepLogInfo;
-import com.workbuddy.common.enums.chunk.*;
+import com.workbuddy.common.enums.chunk.ChunkAlgorithm;
+import com.workbuddy.common.enums.chunk.ChunkContentType;
+import com.workbuddy.common.enums.chunk.ChunkKind;
+import com.workbuddy.common.enums.chunk.ChunkRoute;
+import com.workbuddy.common.enums.chunk.PipelineKey;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
@@ -27,7 +31,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 切片编排（模板方法模式）：固定流程骨架 + 可替换策略（registry 按 (路, 算法) 查找）。

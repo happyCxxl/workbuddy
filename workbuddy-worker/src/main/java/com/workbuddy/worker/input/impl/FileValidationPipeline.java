@@ -76,7 +76,8 @@ public class FileValidationPipeline implements FileValidatorPort {
             String sha256 = spill.sha256Hex();
             FileValidationResult passed = FileValidationResult.pass(context.getFormat(),
                     context.getMediaType(), context.getSize(), sha256);
-            log.info("===> FileValidationPipeline 校验通过, fileId={}, format={}, mimeType={}, size={}B, sha256={}, 总耗时={}ms",
+            log.info("===> FileValidationPipeline 校验通过, fileId={}, format={}, mimeType={}, size={}B,"
+                            + " sha256={}, 总耗时={}ms",
                     fileId, context.getFormat(), context.getMediaType(), context.getSize(),
                     sha256.substring(0, Math.min(12, sha256.length())), System.currentTimeMillis() - start);
             return passed;

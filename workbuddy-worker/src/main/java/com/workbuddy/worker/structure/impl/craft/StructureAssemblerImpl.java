@@ -283,7 +283,8 @@ public class StructureAssemblerImpl implements StructureAssembler {
             }
             if (NullUtil.isNotNull(previous)) {
                 relations.add(new DocumentRelation(RelationType.NEXT.name(), previous.getId(), element.getId(), null));
-                relations.add(new DocumentRelation(RelationType.PREVIOUS.name(), element.getId(), previous.getId(), null));
+                relations.add(new DocumentRelation(
+                        RelationType.PREVIOUS.name(), element.getId(), previous.getId(), null));
             }
             previous = element;
         }

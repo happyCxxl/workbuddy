@@ -487,7 +487,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         if (!validationResult.isPassed()) {
             return recordFailAndReturn(knowledgeBaseId, request, validationResult.getFailReason().name());
         }
-        log.info("===> KnowledgeBaseServiceImpl submit 文件校验通过, kbId={}, fileId={}, format={}, size={}B, sha256={}, 校验耗时={}ms",
+        log.info("===> KnowledgeBaseServiceImpl submit 文件校验通过, kbId={}, fileId={}, format={}, size={}B,"
+                        + " sha256={}, 校验耗时={}ms",
                 knowledgeBaseId, request.getFileId(), validationResult.getFormat(),
                 validationResult.getSize(), validationResult.getSha256(),
                 System.currentTimeMillis() - validationStart);
@@ -572,7 +573,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         Map<Long, WbSourceFile> sourceMap = sourceIds.isEmpty() ? Map.of()
                 : sourceFileDbService.listByIds(sourceIds).stream()
                         .collect(Collectors.toMap(WbSourceFile::getId, Function.identity()));
-        IPage<FileResultVO> voPage = page.convert(result -> inputVoAssembler.toFileResultVO(result, sourceMap.get(result.getSourceFileId())));
+        IPage<FileResultVO> voPage = page.convert(
+                result -> inputVoAssembler.toFileResultVO(result, sourceMap.get(result.getSourceFileId())));
 
         // 存储口径：所属数据源按来源文件的 fileId 批量取档案，当前启用的数据源取运行时生效值
         List<String> chainFileIds = sourceMap.values().stream()
@@ -799,7 +801,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     /** 开关归一化：null/非 0 一律视为开启（1） */
     private Integer resolveBindingEnabled(Integer value) {
-        return StrategyBindingSwitch.isOn(value) ? StrategyBindingSwitch.ON.getCode() : StrategyBindingSwitch.OFF.getCode();
+        return StrategyBindingSwitch.isOn(value)
+                ? StrategyBindingSwitch.ON.getCode() : StrategyBindingSwitch.OFF.getCode();
     }
 
     /**

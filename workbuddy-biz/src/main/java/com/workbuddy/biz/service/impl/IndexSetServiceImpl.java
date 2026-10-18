@@ -375,9 +375,11 @@ public class IndexSetServiceImpl implements IndexSetService {
         }
         boolean chunkOk = chunkSets.stream().anyMatch(s ->
                 target.getChunkStrategy().equals(s.getChunkStrategyVersion())
-                        && targetPreprocess.equals(lineageResolver.resolvePreprocessStrategy(s.getUpstreamProductId())));
+                        && targetPreprocess.equals(
+                                lineageResolver.resolvePreprocessStrategy(s.getUpstreamProductId())));
         if (!chunkOk) {
-            WbPipelineStrategyVersion strategyRow = strategyRowOf(PipelineStage.CHUNK.name(), target.getChunkStrategy());
+            WbPipelineStrategyVersion strategyRow =
+                    strategyRowOf(PipelineStage.CHUNK.name(), target.getChunkStrategy());
             if (NullUtil.isNull(strategyRow)) {
                 log.warn("===> IndexSetServiceImpl 补齐中止：目标切片策略不存在, strategy={}", target.getChunkStrategy());
                 return;
@@ -419,7 +421,8 @@ public class IndexSetServiceImpl implements IndexSetService {
                 continue;
             }
             try {
-                PreprocessStrategy strategy = JsonUtil.toObject(product.getCapabilitySnapshot(), PreprocessStrategy.class);
+                PreprocessStrategy strategy =
+                        JsonUtil.toObject(product.getCapabilitySnapshot(), PreprocessStrategy.class);
                 if (NullUtil.isNotNull(strategy) && targetPreprocess.equals(strategy.fullVersion())) {
                     return product.getId();
                 }

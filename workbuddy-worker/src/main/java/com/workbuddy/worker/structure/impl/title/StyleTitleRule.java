@@ -18,7 +18,8 @@ import java.util.regex.Pattern;
 public class StyleTitleRule implements TitleRule {
 
     /** DOCX 样式标题：Heading1~9（锚定匹配，Heading1Char 这类字符样式名不算） */
-    private static final Pattern STYLE_PATTERN = Pattern.compile("^\\s*Heading\\s*(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern STYLE_PATTERN =
+            Pattern.compile("^\\s*Heading\\s*(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
 
     /** 级数下限：Heading0 之类的越界值不作为标题 */
     private static final int MIN_LEVEL = 1;

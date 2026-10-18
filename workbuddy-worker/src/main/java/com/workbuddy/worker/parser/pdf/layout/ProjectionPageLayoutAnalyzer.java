@@ -104,9 +104,11 @@ public class ProjectionPageLayoutAnalyzer implements PageLayoutAnalyzer {
                 .sorted(Comparator.comparingDouble(index -> boxes.get(index).y()))
                 .forEach(index -> placed.add(new Result.Placed(index, -1)));
         band.stream()
-                .filter(index -> !PageLayoutAnalyzer.crossesAny(boxes.get(index).x(), boxes.get(index).width(), gutters))
+                .filter(index -> !PageLayoutAnalyzer.crossesAny(boxes.get(index).x(),
+                        boxes.get(index).width(), gutters))
                 .sorted(Comparator
-                        .comparingInt((Integer index) -> PageLayoutAnalyzer.columnOf(boxes.get(index).x(), boxes.get(index).width(), gutters))
+                        .comparingInt((Integer index) -> PageLayoutAnalyzer.columnOf(boxes.get(index).x(),
+                                boxes.get(index).width(), gutters))
                         .thenComparingDouble(index -> boxes.get(index).y()))
                 .forEach(index -> placed.add(new Result.Placed(
                         index, PageLayoutAnalyzer.columnOf(boxes.get(index).x(), boxes.get(index).width(), gutters))));

@@ -98,8 +98,10 @@ public class DedupMergerImpl implements DedupMerger {
     }
 
     private boolean isCrossSource(UnifiedElement a, UnifiedElement b) {
-        Object sourceA = NullUtil.isNull(a.getExtension()) ? null : a.getExtension().get(ElementExtensionKey.SOURCE.key());
-        Object sourceB = NullUtil.isNull(b.getExtension()) ? null : b.getExtension().get(ElementExtensionKey.SOURCE.key());
+        Object sourceA = NullUtil.isNull(a.getExtension())
+                ? null : a.getExtension().get(ElementExtensionKey.SOURCE.key());
+        Object sourceB = NullUtil.isNull(b.getExtension())
+                ? null : b.getExtension().get(ElementExtensionKey.SOURCE.key());
         return NullUtil.isNotNull(sourceA) && NullUtil.isNotNull(sourceB) && !sourceA.equals(sourceB);
     }
 
@@ -113,7 +115,8 @@ public class DedupMergerImpl implements DedupMerger {
 
     /** 来源顺序序号：来源缺失或不可识别时排最后，不参与优先（顺序表不接受 null 查询，空值先短路） */
     private int priorityOf(UnifiedElement element) {
-        Object raw = NullUtil.isNull(element.getExtension()) ? null : element.getExtension().get(ElementExtensionKey.SOURCE.key());
+        Object raw = NullUtil.isNull(element.getExtension())
+                ? null : element.getExtension().get(ElementExtensionKey.SOURCE.key());
         ParseSourceType source = NullUtil.isNull(raw) ? null : ParseSourceType.ofValue(String.valueOf(raw));
         if (NullUtil.isNull(source)) {
             return Integer.MAX_VALUE;

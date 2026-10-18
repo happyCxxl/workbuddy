@@ -25,7 +25,8 @@ public interface WbEmbeddingSetDbService extends InfraDbService<WbEmbeddingSet> 
     /**
      * 取文件结果 + 同策略的历史成功集合（createTime 新→旧，上限 limit；账本复用回溯候选数据源）。
      */
-    List<WbEmbeddingSet> listHistoryByFileResultIdAndStrategyVersion(Long fileResultId, String strategyVersion, int limit);
+    List<WbEmbeddingSet> listHistoryByFileResultIdAndStrategyVersion(
+            Long fileResultId, String strategyVersion, int limit);
 
     /**
      * 按产物指纹精确取向量集合（历史任务详情数据源；无 → null），id 降序取最新。

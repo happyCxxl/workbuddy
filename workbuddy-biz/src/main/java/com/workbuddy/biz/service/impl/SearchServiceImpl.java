@@ -218,7 +218,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /** 规则解析：显式 ruleId → 版本行默认 → kb 默认 → 引擎基线（不落库常量） */
-    private WbPipelineStrategyVersion resolveRuleRow(Long knowledgeBaseId, WbIndexVersion version, Long explicitRuleId) {
+    private WbPipelineStrategyVersion resolveRuleRow(
+            Long knowledgeBaseId, WbIndexVersion version, Long explicitRuleId) {
         Long ruleId = NullUtil.isNotNull(explicitRuleId) ? explicitRuleId : version.getDefaultRuleId();
         if (NullUtil.isNull(ruleId)) {
             WbKnowledgeBase kb = knowledgeBaseDbService.getById(knowledgeBaseId);

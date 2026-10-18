@@ -21,7 +21,8 @@ public final class EmbedAlgorithmSpec {
     }
 
     /** docTemplate 允许的占位符 */
-    private static final Set<String> DOC_PLACEHOLDERS = Set.of("{content}", "{titlePath}", "{contentType}", "{tableRef}");
+    private static final Set<String> DOC_PLACEHOLDERS =
+            Set.of("{content}", "{titlePath}", "{contentType}", "{tableRef}");
 
     /** queryTemplate 允许的占位符 */
     private static final Set<String> QUERY_PLACEHOLDERS = Set.of("{query}");
@@ -72,7 +73,8 @@ public final class EmbedAlgorithmSpec {
         if (StrUtil.isBlank(model)) {
             return "模型不能为空";
         }
-        String templateError = validateTemplate(config.get("docTemplate"), "{content}", DOC_PLACEHOLDERS, "docTemplate");
+        String templateError = validateTemplate(config.get("docTemplate"), "{content}", DOC_PLACEHOLDERS,
+                "docTemplate");
         if (NullUtil.isNotNull(templateError)) {
             return templateError;
         }

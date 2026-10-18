@@ -51,7 +51,8 @@ public class TitleBoundarySliceStrategy implements SliceStrategy {
         buffer.clear();
 
         if (content.length() <= maxLen) {
-            return List.of(BodyChunkSupport.buildChunk(ChunkContentType.PARAGRAPH.name(), content, context, ids, pages));
+            return List.of(BodyChunkSupport.buildChunk(
+                    ChunkContentType.PARAGRAPH.name(), content, context, ids, pages));
         }
         // 超长节：走兜底降级（与正文聚合类共用同一入口，每片合法、带 fallbackReason）
         return BodyChunkSupport.fallbackChunks(content, ids, pages, context,

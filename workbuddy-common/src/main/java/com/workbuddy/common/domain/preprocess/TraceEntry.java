@@ -50,7 +50,8 @@ public class TraceEntry {
     /** 命中证据（判定依据描述） */
     private String evidence;
 
-    public static TraceEntry of(String rule, String field, String action, String before, String after, String evidence) {
+    public static TraceEntry of(String rule, String field, String action, String before, String after,
+                                String evidence) {
         return new TraceEntry(rule, field, action, before, after, evidence);
     }
 }

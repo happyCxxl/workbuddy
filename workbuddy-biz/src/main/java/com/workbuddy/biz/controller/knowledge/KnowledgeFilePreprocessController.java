@@ -31,7 +31,8 @@ public class KnowledgeFilePreprocessController {
     public R<PreprocessTriggerVO> preprocess(
             @PathVariable("fileResultId") Long fileResultId,
             StageTriggerQueryDto query) {
-        log.info("===> KnowledgeFilePreprocessController preprocess 触发预处理, fileResultId={}, strategyVersionId={}, upstreamProductId={}",
+        log.info("===> KnowledgeFilePreprocessController preprocess 触发预处理, fileResultId={},"
+                        + " strategyVersionId={}, upstreamProductId={}",
                 fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId());
         return R.ok(preprocessControlService.preprocess(fileResultId, query.getStrategyVersionId(),
                 query.getUpstreamProductId()));

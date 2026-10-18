@@ -12,7 +12,9 @@
 
     <module name="LineLength">
         <property name="max" value="120"/>
-        <property name="ignorePattern" value="^import |^package |^\s*\*"/>
+        <!-- 只放过 import/package：单条语句没有换行点，Google 行宽规范同样豁免这两类。
+             注释的 * 续行可以换行，不列入豁免，行宽对注释同样成立（JAVA-DOC-006）。 -->
+        <property name="ignorePattern" value="^import |^package "/>
     </module>
 
     <module name="NewlineAtEndOfFile"/>

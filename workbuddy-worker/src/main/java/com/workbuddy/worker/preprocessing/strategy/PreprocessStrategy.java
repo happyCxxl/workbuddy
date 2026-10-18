@@ -83,7 +83,8 @@ public class PreprocessStrategy implements StageStrategy {
     /** 规则参数字符串值（缺失回退默认） */
     public String param(PreprocessRule rule, String key, String defaultValue) {
         PreprocessRuleConfig config = rule(rule);
-        String value = NullUtil.isNull(config) || NullUtil.isNull(config.getParams()) ? null : config.getParams().get(key);
+        String value = NullUtil.isNull(config) || NullUtil.isNull(config.getParams())
+                ? null : config.getParams().get(key);
         return StrUtil.isBlank(value) ? defaultValue : value;
     }
 
@@ -105,7 +106,8 @@ public class PreprocessStrategy implements StageStrategy {
 
     /** 生效的自定义规则列表（总开关 OFF 或无规则 → 空列表） */
     public List<PreprocessCustomRule> customRules() {
-        if (NullUtil.isNull(custom) || !ON.equalsIgnoreCase(custom.getEnabled()) || NullUtil.isNull(custom.getRules())) {
+        if (NullUtil.isNull(custom) || !ON.equalsIgnoreCase(custom.getEnabled())
+                || NullUtil.isNull(custom.getRules())) {
             return List.of();
         }
         return custom.getRules();
