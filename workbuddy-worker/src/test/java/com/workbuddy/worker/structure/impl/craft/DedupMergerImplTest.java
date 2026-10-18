@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * 去重合并单测：IoU+文本相似双判定 / 原生优先 / 同框不同内容冲突 PRIMARY-BACKUP。
- *
- * @author cxxl
  */
 class DedupMergerImplTest {
 

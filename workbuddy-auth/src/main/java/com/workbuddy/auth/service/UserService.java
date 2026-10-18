@@ -13,8 +13,6 @@ import com.workbuddy.common.dto.response.user.UserVO;
  *
  * <p>维护类操作（新增/编辑/删除）由管理员接口调用，服务层负责唯一性、自保护与
  * 「最后一个管理员」守卫。
- *
- * @author cxxl
  */
 public interface UserService {
 

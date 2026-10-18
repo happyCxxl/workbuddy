@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 触发预处理响应 VO：任务触发结果的对外视图（任务 ID + 生效策略版本，触发时固定）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

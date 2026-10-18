@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * 表格规则失败降级处置：区域降级为段落（写告警，不计失败单元）。
- *
- * @author cxxl
  */
 @Component
 public class TableRuleFailedFallbackHandler implements SignalFallbackHandler {

@@ -42,8 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * PDFBox 原生解析器单测：段落聚合、页级指标、HEADER 识别、表格列对齐启发式。
- *
- * @author cxxl
  */
 class PdfBoxDocumentParserTest {
 

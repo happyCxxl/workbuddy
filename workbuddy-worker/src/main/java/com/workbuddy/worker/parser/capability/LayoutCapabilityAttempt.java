@@ -13,8 +13,6 @@ import java.util.List;
 /**
  * 复杂页的版面能力尝试：按页面图像调一次版面分析，成功给出「区域清单 + 阅读顺序 + 能力补强事实」，
  * 未接入 / 页面为空 / 调用失败 / 结果不可用给出「无顺序 + 版面降级事实」，由取用方决定是否回落几何口径。
- *
- * @author cxxl
  */
 public final class LayoutCapabilityAttempt {
 

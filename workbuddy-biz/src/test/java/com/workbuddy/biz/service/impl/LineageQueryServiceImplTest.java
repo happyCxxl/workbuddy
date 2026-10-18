@@ -60,8 +60,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 执行树聚合单测：多分支节点/血缘边/统计摘要/解析环节统计/产物不可读/未完成任务的节点可见性/孤立节点/空文件/40432。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class LineageQueryServiceImplTest {

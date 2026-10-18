@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 执行树聚合 Controller：链图数据源，纯读聚合。
- *
- * @author cxxl
  */
 @RestController
 @RequiredArgsConstructor

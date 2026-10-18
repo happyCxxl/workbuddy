@@ -24,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * 重复识别的等价性证明：随机夹具上把新实现与"逐个比 Jaccard"的参照实现逐项对比，
  * 外加规模带边界用例与规模冒烟；用于保证剪枝、按需重建与指纹快车道不改变判定结果。
- *
- * @author cxxl
  */
 class RepeatNoiseMarkerEquivalenceTest {
 

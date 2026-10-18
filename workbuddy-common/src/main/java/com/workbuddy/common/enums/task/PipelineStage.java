@@ -7,8 +7,6 @@ import java.util.Set;
 /**
  * 处理链环节：一次环节触发 = 一条 wb_knowledge_pipeline_task。
  * 枚举常量名是落库、血缘与接口传参用的英文码（{@link #name()}）；中文标签只供展示与日志（{@link #getLabel()}）。
- *
- * @author cxxl
  */
 @Getter
 public enum PipelineStage {

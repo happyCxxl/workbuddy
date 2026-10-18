@@ -24,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 页码判定的内容空洞度门限：贴正文的页底数字行按正文处理，与正文留出空白的才按页码。
- *
- * @author cxxl
  */
 class PdfPageNumberTest {
 

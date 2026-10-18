@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.chunk;
 
 /**
  * 流程层设置键：ChunkStrategy.pipeline 映射的键目录。
- *
- * @author cxxl
  */
 public enum PipelineKey {
 

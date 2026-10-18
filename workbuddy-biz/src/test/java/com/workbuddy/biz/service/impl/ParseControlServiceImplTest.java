@@ -49,8 +49,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 解析控制面服务单测：触发防重/建任务入队、解析详情组装。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class ParseControlServiceImplTest {

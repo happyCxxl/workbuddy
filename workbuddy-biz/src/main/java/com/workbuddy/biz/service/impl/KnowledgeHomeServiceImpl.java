@@ -49,8 +49,6 @@ import java.util.Set;
  *
  * <p>所有码值都走枚举（{@link StrategyType} / {@link FileFormat} / {@link KnowledgeBaseStatus}），
  * 本类不持有字符串常量与映射表。
- *
- * @author cxxl
  */
 @Service
 @RequiredArgsConstructor

@@ -39,8 +39,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 解析消费循环单测（停机：在跑任务显式置 FAILED + 正常收尾任务不误标）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class PipelineTaskConsumerTest {

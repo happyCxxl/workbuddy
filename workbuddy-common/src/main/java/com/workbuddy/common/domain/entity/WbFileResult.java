@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
 /**
  * 文件结果（wb_file_result）：一次提交 = 一行结果，是各环节任务的挂靠锚点。
  * 同一文件重复提交复用 wb_source_file、但新建本行（历史运行产物随之留存）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

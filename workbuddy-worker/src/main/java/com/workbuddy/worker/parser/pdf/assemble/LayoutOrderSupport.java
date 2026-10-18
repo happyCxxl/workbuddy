@@ -13,8 +13,6 @@ import java.util.List;
  * 模型阅读顺序落到页面行：按行中心落在哪个模型区域给出行序（区域顺序取模型给的 order，
  * 区域未在 order 里出现时排在末尾），落在所有区域之外的行保持原有几何相对次序并排在末尾。
  * 坐标口径与请求一致（pt、左上原点）。
- *
- * @author cxxl
  */
 public final class LayoutOrderSupport {
 

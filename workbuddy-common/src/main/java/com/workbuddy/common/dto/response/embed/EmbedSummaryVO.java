@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 向量化摘要：最新 EmbeddingSet 的元数据统计。
- *
- * @author cxxl
  */
 @Data
 public class EmbedSummaryVO {

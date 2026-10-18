@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 标题推定证据：层级推定可审计（级联层/字号/加粗/编号模式/模型证据）。
- *
- * @author cxxl
  */
 @Data
 public class TitleEvidence {

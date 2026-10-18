@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 自定义规则组：总开关 + 有序规则列表（自上而下顺序执行）。
- *
- * @author cxxl
  */
 @Data
 public class CustomRuleGroup {

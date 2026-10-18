@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 元素标准化单测：表格单元格 row/col/isHeader 透传（切片环节表头随片与行组依赖的回归）。
- *
- * @author cxxl
  */
 class NormalizerImplTest {
 

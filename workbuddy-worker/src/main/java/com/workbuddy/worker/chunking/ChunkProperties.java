@@ -7,8 +7,6 @@ import org.springframework.stereotype.Component;
 /**
  * 切片参数配置（knowledge.chunk 前缀；application.yml 同名 kebab-case 键）。
  * 参数为草案值，随代表性样本标定。
- *
- * @author cxxl
  */
 @Data
 @Component

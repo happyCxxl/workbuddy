@@ -11,8 +11,6 @@ import java.util.Set;
 /**
  * 对齐图剪枝：把「行」当节点，两行落在同一列上即连通，保留最大连通块作为表格主体，
  * 其余行判为混入的正文（它们在列上独来独往，不与表格主体共享列）。行数相同时保留 token 更多的连通块。
- *
- * @author cxxl
  */
 public final class TableAlignmentPruner {
 

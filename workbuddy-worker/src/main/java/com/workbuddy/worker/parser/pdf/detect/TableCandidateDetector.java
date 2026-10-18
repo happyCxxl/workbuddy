@@ -12,8 +12,6 @@ import java.util.List;
  * 行级"宽列距"启发式判候选 → 列区间划分 → 覆盖度校验。
  * 列边界同时取 token 左起点与右边界（数字列右对齐时左起点逐行不同、右边界一致），
  * 容差按字号折算、由入参给出，不写固定像素值。
- *
- * @author cxxl
  */
 public final class TableCandidateDetector {
 

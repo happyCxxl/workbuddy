@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * 向量化策略规格单测：保存校验（模型/模板/范围/枚举/未知键透传）。
- *
- * @author cxxl
  */
 class EmbedAlgorithmSpecTest {
 

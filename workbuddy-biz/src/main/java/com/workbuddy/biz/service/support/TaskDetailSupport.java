@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
 /**
  * 环节详情共用助手：任务解析、详情骨架回填、该次运行的产物引用三件事各环节完全同构，
  * 集中在这里，各控制服务只留自己环节特有的产物装配。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

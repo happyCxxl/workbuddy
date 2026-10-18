@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 处理轨迹条目：单次规则命中的摘要（前后文本为摘要级，防膨胀）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

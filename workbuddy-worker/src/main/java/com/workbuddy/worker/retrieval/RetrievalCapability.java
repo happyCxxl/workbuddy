@@ -5,8 +5,6 @@ package com.workbuddy.worker.retrieval;
  * 预留未开放的能力清单（默认全关）——规则注册校验与执行引擎按此拒执行（40451），
  * 解锁 = 配置项 `retrieval.capabilities.enabled` 加枚举名，结构零迁移。
  * 恒开的能力（三通道/RRF/父片展开）不进本清单。
- *
- * @author cxxl
  */
 public enum RetrievalCapability {
 

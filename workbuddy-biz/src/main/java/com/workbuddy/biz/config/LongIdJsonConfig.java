@@ -33,8 +33,6 @@ import java.io.IOException;
  * 不影响内部自己 new 的 ObjectMapper、也不影响 worker / vector 模块。
  * <p>入参方向不需要额外处理：前端把 ID 当字符串传回来时，Jackson 反序列化到
  * {@code Long} 字段本来就能正确转换（已实测）。
- *
- * @author cxxl
  */
 @Configuration
 public class LongIdJsonConfig {

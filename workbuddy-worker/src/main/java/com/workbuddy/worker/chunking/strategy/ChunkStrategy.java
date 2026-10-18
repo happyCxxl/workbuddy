@@ -16,8 +16,6 @@ import java.util.Map;
  * 切片策略快照（结构化模型）：类型/名称/版本 + 四路算法配置（routes）+ 流程层设置（pipeline）。
  * 触发时快照进任务，执行只用快照（可复现）；解析时由 {@link ChunkAlgorithmSpec#normalize} 补全缺省路由与默认参数。
  * 旧扁平格式（parentChild 单键平铺）不再支持。
- *
- * @author cxxl
  */
 @Data
 public class ChunkStrategy implements StageStrategy {

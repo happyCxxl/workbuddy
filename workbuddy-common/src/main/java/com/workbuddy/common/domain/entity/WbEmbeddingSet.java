@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 /**
  * 向量产物集合（wb_knowledge_embedding_set）：一次 EMBED 运行的元数据；向量本体在产物存储（EmbeddingSet JSON），本表只存引用与血缘。
  * 机器表：append-only 仅 create_time（与 wb_knowledge_chunk_set 同口径）。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_embedding_set")

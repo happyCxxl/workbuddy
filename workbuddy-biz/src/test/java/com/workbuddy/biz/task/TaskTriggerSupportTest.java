@@ -39,8 +39,6 @@ import static org.mockito.Mockito.when;
 /**
  * 环节任务触发单测：存储一致性守卫（40453，委托 ChainStorageSupport）/ 执行键查重（命中一律 40431）/
  * 新建任务落库入队 / 入队失败落 FAILED 且异常继续抛出。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class TaskTriggerSupportTest {

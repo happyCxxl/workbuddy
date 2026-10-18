@@ -13,8 +13,6 @@ import java.util.Map;
 
 /**
  * 任务队列配置（knowledge.task 前缀）。
- *
- * @author cxxl
  */
 @Data
 @Component

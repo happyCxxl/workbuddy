@@ -29,8 +29,6 @@ import java.io.ByteArrayInputStream;
 /**
  * DOC（HWPF 二进制）原生结构解析器（POI 路径）。
  * 能力弱于 DOCX：表格合并信息读不到，只取行列文本；嵌入图片按序记录引用（定位到段落成本高）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component
@@ -51,7 +49,8 @@ public class DocDocumentParser extends AbstractPoiDocumentParser {
             for (int i = 0; i < range.numParagraphs(); i++) {
                 Paragraph paragraph = range.getParagraph(i);
                 if (paragraph.isInTable()) {
-                    continue; // 表格内容由 TableIterator 统一输出
+                    // 表格内容由 TableIterator 统一输出
+                    continue;
                 }
                 ParseElement element = toDocParagraphElement(doc, paragraph, paragraphIndex, fileId);
                 if (NullUtil.isNotNull(element)) {

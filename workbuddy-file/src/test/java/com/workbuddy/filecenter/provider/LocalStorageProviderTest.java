@@ -25,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 本地磁盘存储提供者测试：两层目录布局、覆盖写、存在性、路径逃逸防护与存储根取值。
  *
  * <p>用 {@link TempDir} 而不是固定路径：测试不写进仓库目录，也不会互相干扰。
- *
- * @author cxxl
  */
 class LocalStorageProviderTest {
 

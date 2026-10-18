@@ -5,8 +5,6 @@ import java.time.LocalDateTime;
 /**
  * 子步骤字段契约（StepLogInfo / wb_knowledge_pipeline_step_log 实体 / StepLogVO 同构十一字段）：
  * 统一拷贝入口，各层免重复映射。
- *
- * @author cxxl
  */
 public interface StepLogFields {
 

@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 跨页续表接续单测：四条件主规则 / 放宽规则疑似 / 非相邻页不接续。
- *
- * @author cxxl
  */
 class TableContinuationResolverImplTest {
 

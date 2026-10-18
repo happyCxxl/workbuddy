@@ -6,8 +6,6 @@ import com.workbuddy.infra.persistence.InfraDbService;
 
 /**
  * 操作审计数据访问服务（表：wb_audit_log）：append-only，只写入。
- *
- * @author cxxl
  */
 public interface WbAuditLogDbService extends InfraDbService<WbAuditLog> {
 

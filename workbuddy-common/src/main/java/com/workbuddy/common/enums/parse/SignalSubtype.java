@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.parse;
 /**
  * 信号子类型：信号判定的结构化结论，是管线降级分支的控制流依据。
  * evidence 仅作展示，分支判定一律按本枚举（不依赖文案）。
- *
- * @author cxxl
  */
 public enum SignalSubtype {
 

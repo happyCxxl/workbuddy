@@ -25,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>列名由 MyBatis-Plus 按驼峰转下划线推导，字段名写错不会编译失败，只在运行期报「Unknown column」；
  * 这里把数据源表与五处对象引用点的列名钉住。
- *
- * @author cxxl
  */
 class StorageEntityColumnMappingTest {
 

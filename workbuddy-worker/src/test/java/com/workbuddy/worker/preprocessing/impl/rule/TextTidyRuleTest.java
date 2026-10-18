@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 段落/表格文本整理规则单测：连字符/软连字符/重复标点/项目符号；表格无变化记 KEEP。
- *
- * @author cxxl
  */
 class TextTidyRuleTest {
 

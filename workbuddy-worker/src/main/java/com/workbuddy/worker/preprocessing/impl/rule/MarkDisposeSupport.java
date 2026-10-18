@@ -10,8 +10,6 @@ import com.workbuddy.worker.preprocessing.rule.RuleOutcome;
 /**
  * 标记类规则的三档处置（package-private）：剔除 / 保留 / 标记（默认）。
  * 三档都会落一条追踪；剔除档同时清检索文本与表格单元格文本。状态名与追踪文案由各规则传入。
- *
- * @author cxxl
  */
 final class MarkDisposeSupport {
 

@@ -5,8 +5,6 @@ import lombok.Data;
 
 /**
  * 表格识别区域（表格结构识别输入）。
- *
- * @author cxxl
  */
 @Data
 public class TableRegion {

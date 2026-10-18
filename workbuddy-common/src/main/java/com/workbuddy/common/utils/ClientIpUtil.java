@@ -8,8 +8,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
  *
  * <p>只认 {@code getRemoteAddr()}，不读 {@code X-Forwarded-For}：该请求头由客户端自行伪造，
  * 无条件信任等于把限流与锁定维度交给攻击者。将来前面加了反向代理，需在此处按可信代理白名单解析。
- *
- * @author cxxl
  */
 public final class ClientIpUtil {
 

@@ -16,8 +16,6 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * 文件下载服务实现：读取元数据与文件流并写入响应。
- *
- * @author cxxl
  */
 @Service
 public class FileServiceImpl implements FileService {

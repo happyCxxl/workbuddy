@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>查询对象收参（{@link HomeRecentSubmitQueryDTO}）：DTO 字段按同名的独立查询参数绑定。
  *
  * <p>分页条件不加 `@Valid`：DTO 没有约束注解，取值由 `currentOrDefault` / `sizeOrDefault` 兜底。
- *
- * @author cxxl
  */
 @RestController
 @RequiredArgsConstructor

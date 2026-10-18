@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * 全局异常处理：
  * 业务异常 → 错误码 + 可读原因（warn）；参数校验失败/请求体缺失或格式错误 → 40001；未知异常 → 40500 兜底（error 带堆栈，不暴露给客户端）。
  * HTTP 状态码保持 200，错误语义走 R.code。
- *
- * @author cxxl
  */
 @Slf4j
 @RestControllerAdvice

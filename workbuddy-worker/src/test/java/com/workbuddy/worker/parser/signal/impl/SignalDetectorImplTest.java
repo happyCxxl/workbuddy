@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 疑似图片单元判定单测：两条口径分开验证 —— PDF 侧看文字占比，Office 侧（无面积口径）看「图片数 + 字符数」；
  * 两条都不成立时不产信号。
- *
- * @author cxxl
  */
 class SignalDetectorImplTest {
 

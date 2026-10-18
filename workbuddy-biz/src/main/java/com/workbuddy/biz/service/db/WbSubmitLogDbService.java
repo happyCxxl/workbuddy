@@ -6,8 +6,6 @@ import com.workbuddy.infra.persistence.InfraDbService;
 
 /**
  * 提交日志数据访问服务（wb_submit_log）：append-only，只新增与查询。
- *
- * @author cxxl
  */
 public interface WbSubmitLogDbService extends InfraDbService<WbSubmitLog> {
 

@@ -23,8 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 整表切片器单测：整表一片 / 超 maxLen 降级行级。
- *
- * @author cxxl
  */
 class TableWholeStrategyTest {
 

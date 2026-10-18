@@ -32,8 +32,6 @@ import static org.mockito.Mockito.*;
 /**
  * 模型管理服务单测（数据访问打桩）：清单过滤与字段映射、新增与编辑的校验逐条、
  * 启停的定点回写与审计、厂商码必须在配置里的校验。
- *
- * @author cxxl
  */
 class ModelServiceImplTest {
 

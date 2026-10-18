@@ -11,8 +11,6 @@ import java.io.Serial;
 
 /**
  * 用户（表：wb_user）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

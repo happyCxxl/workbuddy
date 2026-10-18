@@ -8,8 +8,6 @@ import java.text.Normalizer;
  * 文本基座处理（编码规范化规则与文本整理规则共用，单一口径）：
  * tidyDisplay = 空白/换行/乱码整理（displayText 口径）；
  * normalizeBase = tidyDisplay + Unicode NFKC 规范化（normalizedText 基座，全角→半角由 NFKC 承担）。
- *
- * @author cxxl
  */
 public final class TextBase {
 

@@ -5,8 +5,6 @@ import com.workbuddy.common.dto.response.task.StageTriggerVO;
 
 /**
  * 结构组装控制面服务（组装环节）：触发组装（手动逐环节，重跑同入口）+ 组装详情。
- *
- * @author cxxl
  */
 public interface StructureControlService {
 

@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 标题边界切片器单测：一节一片 / 超 maxLen 走兜底降级 / 空白不缓冲。
- *
- * @author cxxl
  */
 class TitleBoundarySliceStrategyTest {
 

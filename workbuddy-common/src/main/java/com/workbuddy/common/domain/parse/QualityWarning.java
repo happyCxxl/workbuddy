@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 质量告警：只标记不阻断，是否继续由成功单元占比门槛统一裁决。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

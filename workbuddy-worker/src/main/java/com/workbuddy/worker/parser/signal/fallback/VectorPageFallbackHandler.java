@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 /**
  * 纯矢量页降级处置：写 VECTOR_PAGE_SUSPECTED 告警 + 登记空白页（无文本无图片，同样不计失败单元、
  * 同样从成功占比的分母剔除），计 0 个失败单元。
- *
- * @author cxxl
  */
 @Component
 public class VectorPageFallbackHandler implements SignalFallbackHandler {

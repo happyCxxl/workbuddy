@@ -45,8 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 预处理管线单测：规则顺序与开关（8 规则全量装配，对齐生产 Spring 容器）、BACKUP/IMAGE 口径、规则异常隔离、空文档、确定性。
- *
- * @author cxxl
  */
 class PreprocessPipelineTest {
 

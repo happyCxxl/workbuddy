@@ -31,8 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 且各自钉住声明的 order 档位（改档位属有意识操作，必须同时改本用例）。
  *
  * <p>本用例横跨各模块——只有 biz 能看见全部校验项，故落在此处。
- *
- * @author cxxl
  */
 class StartupCheckContractTest {
 

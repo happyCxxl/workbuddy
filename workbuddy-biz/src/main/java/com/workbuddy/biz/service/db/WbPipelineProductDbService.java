@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 阶段产物数据访问服务（wb_knowledge_pipeline_product）。
- *
- * @author cxxl
  */
 public interface WbPipelineProductDbService extends InfraDbService<WbPipelineProduct> {
 

@@ -40,8 +40,6 @@ import java.util.Map;
  *
  * <p>管理员维护类操作的守卫：用户名唯一、角色合法、不得操作自身、
  * 不得让系统失去最后一个启用的管理员。
- *
- * @author cxxl
  */
 @Service
 @RequiredArgsConstructor

@@ -10,8 +10,6 @@ import java.util.List;
 
 /**
  * 处理链任务数据访问服务（wb_knowledge_pipeline_task）。
- *
- * @author cxxl
  */
 public interface WbPipelineTaskDbService extends InfraDbService<WbPipelineTask> {
 

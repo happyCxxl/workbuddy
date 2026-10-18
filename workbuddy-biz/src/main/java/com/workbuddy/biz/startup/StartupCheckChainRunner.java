@@ -31,8 +31,6 @@ import java.util.List;
  *   <li>Milvus 目标库探测/创建与客户端连接：{@code MilvusClientFactory#milvusClientV2}，{@code @Bean}，
  *       属基础设施创建；其中探测/建库失败只告警，不阻断启动。</li>
  * </ul>
- *
- * @author cxxl
  */
 @Slf4j
 @Component

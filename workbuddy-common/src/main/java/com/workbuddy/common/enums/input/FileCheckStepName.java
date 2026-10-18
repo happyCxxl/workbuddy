@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.input;
 
 /**
  * 文件校验步骤名（FileCheck 步骤的 stepName；同 ParseStepName 先例：步骤名枚举化收口）。
- *
- * @author cxxl
  */
 public enum FileCheckStepName {
 

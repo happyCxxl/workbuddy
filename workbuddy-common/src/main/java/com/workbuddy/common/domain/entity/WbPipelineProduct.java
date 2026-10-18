@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 /**
  * 阶段产物：本体在产物存储（sha256 寻址），本表只存引用与血缘。
  * 机器表：后台线程写入、append-only、不逻辑删——不挂平台五件套（仅 create_time）。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_pipeline_product")

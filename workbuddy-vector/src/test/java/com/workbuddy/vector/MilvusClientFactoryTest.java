@@ -23,8 +23,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Milvus 客户端工厂单测：缺库时以 default 库探测并建库、库已存在时只连不建、default 与空库名不探测。
- *
- * @author cxxl
  */
 class MilvusClientFactoryTest {
 

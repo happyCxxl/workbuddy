@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 能力尝试单测（测试桩 provider，不走 HTTP）：拿到结构时出表格元素 + 补强事实；
  * 未接入 / 区域为空 / 结果不完整三种情况都只给降级留痕。
- *
- * @author cxxl
  */
 class TableCapabilityAttemptTest {
 

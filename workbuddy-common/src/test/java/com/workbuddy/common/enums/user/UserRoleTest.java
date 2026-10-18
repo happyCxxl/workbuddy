@@ -6,8 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * 用户角色枚举测试。
- *
- * @author cxxl
  */
 class UserRoleTest {
 

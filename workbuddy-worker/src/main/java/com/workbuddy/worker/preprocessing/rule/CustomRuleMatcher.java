@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
  * @param action        动作（REMOVE/REPLACE/EXTRACT）
  * @param replacement   替换文本（仅 REPLACE；支持 $1 组引用）
  * @param sourcePattern 原始正则（trace 展示用）
- * @author cxxl
  */
 public record CustomRuleMatcher(Pattern pattern, CustomRuleAction action, String replacement, String sourcePattern) {
 }

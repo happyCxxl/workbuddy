@@ -7,8 +7,6 @@ import com.workbuddy.common.domain.parse.capability.TableResult;
 /**
  * 表格结构识别能力接口：规则路径判不出结构的表交本接口补强。
  * 值对象见 common.domain.parse（TableResult/TableRegion/TableCell）。
- *
- * @author cxxl
  */
 public interface TableStructureProvider {
 

@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 
 /**
  * 提交日志数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbSubmitLogDbServiceImpl extends InfraDbServiceImpl<WbSubmitLogMapper, WbSubmitLog>

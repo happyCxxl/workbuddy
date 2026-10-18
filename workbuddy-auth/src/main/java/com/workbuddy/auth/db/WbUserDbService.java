@@ -6,8 +6,6 @@ import com.workbuddy.infra.persistence.InfraDbService;
 
 /**
  * 用户数据访问服务（表：wb_user）。
- *
- * @author cxxl
  */
 public interface WbUserDbService extends InfraDbService<WbUser> {
 

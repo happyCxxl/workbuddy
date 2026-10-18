@@ -12,8 +12,6 @@ import java.util.TreeMap;
  * 模型厂商连接配置（配置键 `workbuddy.model.vendors.<厂商码>`，厂商码即 Map 键）。
  *
  * <p>整段可缺省：不配即没有厂商进入运行时，本地与 CI 无需密钥即可启动。字段留空的口径见各字段说明。
- *
- * @author cxxl
  */
 @Data
 @Component

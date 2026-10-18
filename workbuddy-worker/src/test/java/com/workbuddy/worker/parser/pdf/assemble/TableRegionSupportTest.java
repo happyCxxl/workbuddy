@@ -27,8 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 失败表 → 请求区域单测：页码、视口包围盒与块内文本按产物口径装进 TableRegion；空块返回 null。
- *
- * @author cxxl
  */
 class TableRegionSupportTest {
 

@@ -12,8 +12,6 @@ import java.util.function.UnaryOperator;
  * 策略快照解析共用骨架：快照 JSON → 策略对象。
  * 空快照、非法 JSON、反序列化为 null 与补全失败一律抛 {@link IllegalStateException}
  * （数据问题按异常处置，不做任何内置默认策略兜底）；缺省参数的补全由各环节的 normalizer 负责。
- *
- * @author cxxl
  */
 public final class StrategySnapshotSupport {
 

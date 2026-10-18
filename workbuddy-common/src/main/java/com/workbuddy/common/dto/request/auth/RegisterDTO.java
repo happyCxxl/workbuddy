@@ -8,8 +8,6 @@ import java.io.Serial;
 
 /**
  * 注册请求（自助注册，落库一律普通用户）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

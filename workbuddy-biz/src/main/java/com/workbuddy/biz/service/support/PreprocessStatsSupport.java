@@ -23,8 +23,6 @@ import java.util.Map;
  *
  * <p>纯读取，不落库、不改产物；执行树的预处理节点与预处理详情共用同一份口径。
  * 键值含义见本类的 {@code KEY_*} 常量。
- *
- * @author cxxl
  */
 public final class PreprocessStatsSupport {
 

@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
  *
  * <p>链路缺环、档案行缺失、档案未记数据源或当前没有启用的数据源时都不判定为不一致：这些情况取不到链的
  * 数据源，交由执行与读取阶段按记录给出更明确的错误码。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

@@ -81,8 +81,6 @@ import static org.mockito.Mockito.when;
  * 发布三级指针 + 旧版退役 + 审计 / 回退指针切回 + 补齐（无差异 COMPENSATE / 有差异 CHUNK 投递）/
  * currentPublished / 回收（在线禁删、正常回收）/
  * 冻结集（追加路由范围感知、LIST 禁发布禁回退 40449、构建范围校验与 ALL 归一化）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class IndexSetServiceImplTest {

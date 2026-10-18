@@ -14,8 +14,6 @@ import java.util.List;
 
 /**
  * 知识库-策略绑定数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbStrategyBindingDbServiceImpl

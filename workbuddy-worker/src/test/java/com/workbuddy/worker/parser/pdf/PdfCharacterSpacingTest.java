@@ -31,8 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 行文本空格口径单测：字距加宽排版（字符间距成片）不得把单词拆成单字符，
  * 真实空格字符与词边界补空格保持原口径。样例文件见 samples/pdf-parse-01。
- *
- * @author cxxl
  */
 class PdfCharacterSpacingTest {
 

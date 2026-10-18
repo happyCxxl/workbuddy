@@ -16,8 +16,6 @@ import java.lang.annotation.Target;
  * {@link RoleExpressions#ADMIN_ONLY}，避免各接口散落字符串字面量。
  *
  * <p>使用前提：启动类所在应用需开启方法级安全（{@code @EnableMethodSecurity}）。
- *
- * @author cxxl
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

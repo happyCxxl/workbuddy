@@ -12,8 +12,6 @@ import java.util.List;
 /**
  * 表格切片器（整表一片）：整表 Markdown 一片（表头行+分隔行+全部数据行）；
  * 总长 > maxLen 时降级为行级切片（复用 row-slice 分组逻辑，短行阈值/组大小回退 30/3），保证不产出超长片。
- *
- * @author cxxl
  */
 @Component
 public class TableWholeStrategy extends AbstractTableSliceStrategy {

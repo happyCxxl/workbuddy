@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * 任务消费线程池 bean 单测（具名注册 + 同名限定注入，挡住两个同类型 bean 的歧义）。
- *
- * @author cxxl
  */
 class TaskExecutorConfigTest {
 

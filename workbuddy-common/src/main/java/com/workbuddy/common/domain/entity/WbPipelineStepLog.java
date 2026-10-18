@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 /**
  * 子步骤记录：环节内每个子步骤一条（路由/原生解析/质量检查…），审计与排查依据。
  * 机器表：后台线程写入、append-only、不逻辑删——不挂平台五件套（仅 create_time）。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_pipeline_step_log")

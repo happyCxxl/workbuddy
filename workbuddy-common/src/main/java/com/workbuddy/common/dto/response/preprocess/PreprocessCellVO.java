@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 视图单元格 VO：ViewCell 的对外视图（表格单元格的派生副本：原文 text + 检索文本）。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessCellVO {

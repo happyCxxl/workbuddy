@@ -8,8 +8,6 @@ import lombok.Getter;
  *
  * <p>**三态语义**：1 开启 / 0 关闭 / **null 视为开启**（历史数据与新建库都可能不落这一列）。
  * 判断"是否开启"一律走 {@link #isOn(Integer)}，不要在各处自己写 `!Integer.valueOf(0).equals(...)`。
- *
- * @author cxxl
  */
 @Getter
 public enum StrategyBindingSwitch {

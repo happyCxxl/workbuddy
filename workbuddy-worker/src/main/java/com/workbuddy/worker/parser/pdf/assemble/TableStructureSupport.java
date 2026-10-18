@@ -16,8 +16,6 @@ import java.util.Map;
  * 结构识别结果 → 表格元素：按结果的行列、每格 row/col span、bbox 与置信度组装 `TABLE` 与 `TABLE_CELL`。
  * 表头行取「表头格最多的行」（模型给了 `isHeader` 用模型结论）；坐标与解析器同口径（pt、左上原点），
  * 请求里带的区域 bbox 与响应里的格 bbox 在同一个坐标系。元素 ID 与表格溯源由页内后处理补。
- *
- * @author cxxl
  */
 public final class TableStructureSupport {
 

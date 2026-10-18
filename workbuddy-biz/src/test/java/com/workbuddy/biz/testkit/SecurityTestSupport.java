@@ -13,8 +13,6 @@ import java.util.List;
  *
  * <p>归属规则读的是 Spring Security 上下文里的 principal，单测里直接放一个进去，
  * 比给每个测试类加静态 mock 更贴近真实链路。
- *
- * @author cxxl
  */
 public final class SecurityTestSupport {
 

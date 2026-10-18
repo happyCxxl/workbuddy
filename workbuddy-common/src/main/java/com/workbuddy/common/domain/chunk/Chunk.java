@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 切片：检索命中的最小单元。content = 预处理环节 normalizedText 口径；
  * sourceElementIds 继承组装环节元素溯源链；chunkId 集合内顺序号（跨策略不承诺稳定）。
- *
- * @author cxxl
  */
 @Data
 public class Chunk {

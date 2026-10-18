@@ -30,8 +30,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * <p>新增环节：平台级配置加 `config/workbuddy-<域>.yml`，知识库功能专属配置加 `config/knowledge/knowledge-<域>.yml`，
  * 在 `application.yml` 的清单里加一行，在本用例的 `DOMAINS` 里登记该文件的键前缀。
- *
- * @author cxxl
  */
 class ConfigImportManifestTest {
 

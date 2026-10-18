@@ -9,8 +9,6 @@ import java.util.List;
 /**
  * 解析结果封装（环节最终产物，落产物存储的 JSON 本体）。
  * 按来源分组多路、不合并；合并裁决归组装环节。
- *
- * @author cxxl
  */
 @Data
 public class ParseResult {

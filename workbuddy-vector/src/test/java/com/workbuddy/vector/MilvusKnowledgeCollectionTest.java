@@ -34,8 +34,6 @@ import static org.mockito.Mockito.when;
 /**
  * Milvus 知识库集合实现单测：行 upsert（schema 字段名/空值归一化）/ 向量检索（命中映射）/
  * 全文检索（EmbeddedText + 关键词清洗）/ 分页拉取 / 主键查询与空输入。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class MilvusKnowledgeCollectionTest {

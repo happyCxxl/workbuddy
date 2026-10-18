@@ -28,8 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
  * 厂商连接与密钥也都在配置里，本 Controller **没有密钥相关的入口**。
  *
  * <p>查询条件成组时收进 {@link ModelQueryDTO}（页码与页长口径见其父类），DTO 字段按同名的独立查询参数绑定。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

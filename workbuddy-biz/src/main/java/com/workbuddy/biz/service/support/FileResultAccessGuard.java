@@ -21,8 +21,6 @@ import org.springframework.stereotype.Component;
  *
  * <p>不可访问与不存在在响应上完全一致（{@link ErrorCode#KB_NOT_FOUND}），
  * 不把别人的 ID 变成可探测的信息。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

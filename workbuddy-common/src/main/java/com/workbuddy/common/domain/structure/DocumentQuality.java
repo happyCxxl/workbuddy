@@ -8,8 +8,6 @@ import java.util.List;
 
 /**
  * 统一文档质量：告警 + 冲突（只标记不阻断）。
- *
- * @author cxxl
  */
 @Data
 public class DocumentQuality {

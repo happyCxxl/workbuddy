@@ -17,8 +17,6 @@ import java.util.Set;
 /**
  * 切片算法规格：默认算法 / 支持集判定 / 参数默认补齐 / 保存配置校验。
  * 算法目录与支持状态在 {@link ChunkAlgorithm}（单一事实源）；biz 保存校验、前端置灰均与该口径一致。
- *
- * @author cxxl
  */
 public final class ChunkAlgorithmSpec {
 
@@ -179,7 +177,8 @@ public final class ChunkAlgorithmSpec {
         for (Map.Entry<String, Object> entry : params.entrySet()) {
             ChunkParam param = allowed.get(entry.getKey());
             if (NullUtil.isNull(param)) {
-                continue; // 未知参数键透传不报错（前向兼容）
+                // 未知参数键透传不报错（前向兼容）
+                continue;
             }
             try {
                 int value = Integer.parseInt(String.valueOf(entry.getValue()).trim());

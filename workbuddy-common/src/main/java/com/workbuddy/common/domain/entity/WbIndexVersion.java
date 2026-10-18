@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 /**
  * 索引版本行：组合快照 + 状态机 + 发布/退役留痕。
  * 机器表：append-only、仅 create_time、不挂平台五件套。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_index_version")

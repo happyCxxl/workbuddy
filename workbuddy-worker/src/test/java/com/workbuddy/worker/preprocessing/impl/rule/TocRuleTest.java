@@ -24,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 目录处置规则单测：整页聚合阈值（PDF）/连续窗口（Word）/非目录页不受影响/三档处置。
- *
- * @author cxxl
  */
 class TocRuleTest {
 

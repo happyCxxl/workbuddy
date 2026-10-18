@@ -12,8 +12,6 @@ import java.util.List;
  * 段落如 `p1_3_72_700`、表如 `t1_4_72_320`（位置取 bbox 左上角的整 pt）；序号按元素产出顺序递增，
  * ID 单页内唯一且同一输入可复算。表格单元格挂在表 ID 下（`t1_4_72_320_c0_0`），
  * 同页多表的单元格不重号。
- *
- * @author cxxl
  */
 public final class PageElementIds {
 

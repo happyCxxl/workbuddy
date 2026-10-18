@@ -7,8 +7,6 @@ import lombok.EqualsAndHashCode;
 /**
  * 预处理输出：派生视图 + 状态壳（继承 StageOutcome；warnings 记规则异常隔离）。
  * 状态建议由管线给出，biz 落库回写（与 ParseOutcome/AssembleOutcome 同构）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -11,8 +11,6 @@ import cn.hutool.core.util.StrUtil;
 /**
  * 能力调用留痕：模型补强成功记一条「能力补强」事实，失败（未配置 / 非 2xx / 超时 / 结果不完整）记一条
  * 「能力失败已降级」事实 —— 两类都挂 `TABLE` 事实类型，靠证据文案区分，降级子类型仍由事实类型推导。
- *
- * @author cxxl
  */
 public final class CapabilityFacts {
 

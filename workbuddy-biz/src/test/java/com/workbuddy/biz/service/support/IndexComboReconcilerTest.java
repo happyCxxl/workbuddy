@@ -36,8 +36,6 @@ import static org.mockito.Mockito.when;
  * 对账器按同一维度判定不完整，两者口径一致）；
  * 单一取数口径——selectComboProducts（血统匹配/缺口/血统不符）、latestChunkMap（同策略取 id 最大）、
  * computeExpected 尊重 LIST 范围（范围外文件不参与）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class IndexComboReconcilerTest {

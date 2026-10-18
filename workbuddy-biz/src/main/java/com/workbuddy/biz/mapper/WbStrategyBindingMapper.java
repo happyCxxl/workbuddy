@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 知识库-策略绑定 Mapper。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbStrategyBindingMapper extends BaseMapper<WbStrategyBinding> {

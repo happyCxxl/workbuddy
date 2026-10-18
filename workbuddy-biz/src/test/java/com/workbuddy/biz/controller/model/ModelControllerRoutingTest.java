@@ -38,8 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 四个方法都不要求管理员（模型管理对所有登录用户开放）。
  *
  * <p>用独立 MockMvc 装配单个 Controller：不加载数据源与容器，只验证 URL 到方法的映射与收参绑定。
- *
- * @author cxxl
  */
 class ModelControllerRoutingTest {
 

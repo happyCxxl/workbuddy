@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.preprocess;
 
 /**
  * 标准化字段类型（招投标字段规范化 11.4 规则表）。
- *
- * @author cxxl
  */
 public enum PreprocessFieldType {
 

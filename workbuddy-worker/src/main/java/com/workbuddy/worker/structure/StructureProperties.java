@@ -7,8 +7,6 @@ import org.springframework.stereotype.Component;
 /**
  * 组装阈值配置（knowledge.structure 前缀；application.yml 同名 kebab-case 键）。
  * 阈值为草案值，待代表性样本标定。
- *
- * @author cxxl
  */
 @Data
 @Component

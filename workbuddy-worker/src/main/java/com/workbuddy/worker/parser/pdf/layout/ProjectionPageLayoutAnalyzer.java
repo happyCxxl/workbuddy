@@ -13,8 +13,6 @@ import java.util.List;
  * 投影法分栏实现：字符横向覆盖做成直方图，其中竖直覆盖比例低于门槛、且宽度达标的横向带算栏沟；
  * 跨栏行（横跨栏沟的行）把页面切成上下若干带，带内跨栏行在前、其余按栏序与栏内纵向顺序。
  * 单栏页（无栏沟）返回纵向顺序，与不启用分栏时一致。
- *
- * @author cxxl
  */
 @Component
 public class ProjectionPageLayoutAnalyzer implements PageLayoutAnalyzer {

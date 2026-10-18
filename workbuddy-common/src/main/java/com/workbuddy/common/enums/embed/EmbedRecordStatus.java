@@ -4,8 +4,6 @@ import cn.hutool.core.util.StrUtil;
 
 /**
  * 向量记录状态：SUCCESS（新算）/ CACHED（账本复用命中）/ SKIPPED（父片/空文本跳过）/ FAILED（批次失败）。
- *
- * @author cxxl
  */
 public enum EmbedRecordStatus {
 

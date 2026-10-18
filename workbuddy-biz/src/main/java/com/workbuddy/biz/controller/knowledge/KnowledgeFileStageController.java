@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
  * 环节产物内容 Controller：各环节共用的产物内容（白名单五环节）。
  *
  * <p>解析环节自己的触发与详情在 {@link KnowledgeFileParseController}；本类只承载五环节共用的内容读取。
- *
- * @author cxxl
  */
 @RestController
 @RequiredArgsConstructor

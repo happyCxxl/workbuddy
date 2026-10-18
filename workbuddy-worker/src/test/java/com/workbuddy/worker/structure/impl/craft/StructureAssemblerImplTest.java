@@ -35,8 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 结构组装单测：标题判定规则链（六规则真实实例，样式/编号模式/字号加粗/候选告警）+ Excel sheet→SECTION + 章节树。
- *
- * @author cxxl
  */
 class StructureAssemblerImplTest {
 

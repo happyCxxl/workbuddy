@@ -31,8 +31,6 @@ import static org.mockito.Mockito.when;
 /**
  * 产物落库助手的执行幂等单测：一次执行至多一份产物 ——
  * 首次落库写对象并插行，同一任务再次落库复用既有行（不写对象、不插行、不覆盖任务指针）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class ProductPersistenceTest {

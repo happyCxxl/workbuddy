@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.structure;
 /**
  * 关系类型（字典）：章节树 + 阅读顺序 + 归属 + 跨页延续 + 派生来源（全平台血缘核心纽带）。
  * 落库/落产物形式：name()。
- *
- * @author cxxl
  */
 public enum RelationType {
 

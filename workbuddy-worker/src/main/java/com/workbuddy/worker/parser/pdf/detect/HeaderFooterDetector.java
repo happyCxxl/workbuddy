@@ -21,8 +21,6 @@ import java.util.Set;
  * 同页多条纯数字行不判，紧贴正文的页底数字行按正文处理。
  *
  * <p>输入是行级轻量摘要 {@link PageLines}（大文件分窗时全档只留这一层），判定只看文本与盒子。
- *
- * @author cxxl
  */
 public final class HeaderFooterDetector {
 

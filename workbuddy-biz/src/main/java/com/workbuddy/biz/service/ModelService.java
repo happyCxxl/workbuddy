@@ -12,8 +12,6 @@ import com.workbuddy.common.dto.response.model.ModelItemVO;
  *
  * <p>厂商连接与密钥都在配置（`workbuddy.model.vendors`），本服务只按该配置校验厂商码是否存在；
  * 写入只落 `wb_model` 的业务列。格式校验在 DTO 注解，本服务只做要查库查配置的判定。
- *
- * @author cxxl
  */
 public interface ModelService {
 

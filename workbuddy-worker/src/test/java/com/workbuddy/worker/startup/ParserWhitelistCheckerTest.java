@@ -18,8 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 白名单与解析器一致性校验单测：真实解析器集合配默认可通过；白名单里有格式没解析器时启动期抛错；
  * 未知格式名直接暴露为配置错误。
- *
- * @author cxxl
  */
 class ParserWhitelistCheckerTest {
 

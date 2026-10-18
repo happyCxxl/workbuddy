@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 /**
  * 向量记录（wb_knowledge_embedding_record）：一个切片一条；向量本体只进集合文件，不进 DB。
  * 机器表：append-only 仅 create_time（与 wb_knowledge_chunk 同口径）。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_embedding_record")

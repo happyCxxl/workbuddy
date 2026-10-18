@@ -15,8 +15,6 @@ import org.springframework.stereotype.Component;
 /**
  * ③ 页眉页脚处置：识别在解析环节（HEADER/FOOTER 元素），本规则按处置方式处理
  * KEEP（保留）/MARK（标记，默认）/EXCLUDE（剔除出检索文本内容流，展示视图完整）。
- *
- * @author cxxl
  */
 @Component
 public class HeaderFooterRule implements CleanRule {

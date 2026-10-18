@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 模型内存注册表单测：全量替换、空与 null 容忍、缺模型名的行丢弃。
- *
- * @author cxxl
  */
 class ModelRegistryTest {
 

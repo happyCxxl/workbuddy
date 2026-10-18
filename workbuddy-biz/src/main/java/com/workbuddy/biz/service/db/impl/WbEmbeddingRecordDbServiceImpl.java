@@ -11,8 +11,6 @@ import java.util.List;
 
 /**
  * 向量记录数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbEmbeddingRecordDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingRecordMapper, WbEmbeddingRecord>

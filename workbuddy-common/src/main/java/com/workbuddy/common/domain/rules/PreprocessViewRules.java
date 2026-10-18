@@ -7,8 +7,6 @@ import java.util.stream.Stream;
 
 /**
  * 预处理视图规则：派生视图的展示统计口径（biz/worker 可引用）。
- *
- * @author cxxl
  */
 public final class PreprocessViewRules {
 

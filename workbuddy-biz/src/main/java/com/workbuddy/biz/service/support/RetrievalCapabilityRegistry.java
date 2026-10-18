@@ -10,8 +10,6 @@ import java.util.Set;
 /**
  * 检索能力开关（能力分层解锁）：已启用能力取自 {@link RetrievalCapabilityProperties}（默认空 = 全关）。
  * 注册校验（RetrievalRuleResolver）与执行引擎共用本注册表——解锁只改配置，结构与快照零迁移。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
  * 认证接口：登录与注册。
  *
  * <p>用户账号的查询与维护见 {@link UserController}。
- *
- * @author cxxl
  */
 @RestController
 @RequestMapping("/auth")

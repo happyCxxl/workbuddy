@@ -14,8 +14,6 @@ import java.util.List;
  * 向量化上下文：上游切片产物（只读）+ 策略快照（触发时固定）+ 参数配置 + 复用候选账本（新→旧）。
  * 复用候选账本由 biz 侧加载（同 fileResultId + 同策略 + 成功态，回溯上限内），worker 管线只做查表复用，不碰 DB/产物存储。
  * 切片策略快照（chunkStrategy/chunkProperties）供前置校验推算切片最大片长。
- *
- * @author cxxl
  */
 @Data
 public class EmbedContext {

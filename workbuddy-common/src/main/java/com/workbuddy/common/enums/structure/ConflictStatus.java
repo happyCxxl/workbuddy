@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.structure;
 /**
  * 冲突裁决状态（字典）：同框不同内容且无法裁决时，两路元素的留存标记。
  * 落库/落产物形式：name()。
- *
- * @author cxxl
  */
 public enum ConflictStatus {
 

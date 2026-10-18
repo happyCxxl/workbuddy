@@ -9,8 +9,6 @@ import java.util.List;
 
 /**
  * 去重合并产出：合并后元素 + 冲突记录 + 合并对数（仅供组装流程内部流转）。
- *
- * @author cxxl
  */
 @Data
 public class MergeOutcome {

@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 续表判定结果（模型判断兜底输出）。
- *
- * @author cxxl
  */
 @Data
 public class ContinuationJudgeResult {

@@ -13,8 +13,6 @@ import java.io.InputStream;
 /**
  * 大小统计步骤：单遍读流统计字节数 + 更新 sha256 摘要 + 写入校验缓冲；
  * 超过大小上限即停（不再继续读取），返回 FILE_TOO_LARGE。字节数写入上下文供后续步骤使用。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

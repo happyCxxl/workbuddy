@@ -11,8 +11,6 @@ import java.util.Map;
  * 索引版本视图（列表与详情共用）：
  * 组合快照结构化展开（文件范围/切片策略/向量策略/形态）+ 状态机 + 统计 + 发布/退役留痕 + 在线标记。
  * 在线口径：wb_knowledge_index_set.currentPublishedVersionId 命中（online=true），与状态值解耦。
- *
- * @author cxxl
  */
 @Data
 public class IndexVersionVO {

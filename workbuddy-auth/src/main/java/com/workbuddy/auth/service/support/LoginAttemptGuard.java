@@ -9,8 +9,6 @@ import java.time.Duration;
 
 /**
  * 登录失败防护：按「账号 + IP」与「IP」两个维度计数，达阈值即拒绝登录。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

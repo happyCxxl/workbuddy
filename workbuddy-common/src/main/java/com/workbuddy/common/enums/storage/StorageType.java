@@ -11,8 +11,6 @@ import lombok.Getter;
  *
  * <p>{@link #of(String)} 对空值与未知码值返回 null：读路径据此报「存储后端未配置」，
  * 不回落成别的后端。
- *
- * @author cxxl
  */
 @Getter
 public enum StorageType {

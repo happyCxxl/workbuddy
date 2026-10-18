@@ -45,8 +45,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 用户维护守卫测试：唯一性、角色合法性、自保护、最后一个管理员保护、密码加密。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplGuardTest {

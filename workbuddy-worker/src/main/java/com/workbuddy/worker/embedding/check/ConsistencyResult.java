@@ -5,8 +5,6 @@ import java.util.List;
 /**
  * 四关校验结果：passed=true 通过；否则 problems 非空且 retryable 指明失败类别
  * （true=数量/空值坏值，批次整体重试；false=维度/度量冲突，拒绝写入）。
- *
- * @author cxxl
  */
 public record ConsistencyResult(boolean passed, boolean retryable, List<String> problems) {
 

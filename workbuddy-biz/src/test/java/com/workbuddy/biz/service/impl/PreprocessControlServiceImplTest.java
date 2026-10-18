@@ -61,8 +61,6 @@ import static org.mockito.Mockito.when;
 /**
  * 预处理控制面服务单测：策略解析两档（显式指定 / 知识库绑定）/ 上游产物校验 / 执行键查重 /
  * 建任务快照入队 / 预处理详情。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class PreprocessControlServiceImplTest {

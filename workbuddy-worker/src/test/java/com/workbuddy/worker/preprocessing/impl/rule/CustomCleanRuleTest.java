@@ -21,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 自定义规则执行器单测：REMOVE/REPLACE 组引用/EXTRACT/顺序执行/单元格/开关。
- *
- * @author cxxl
  */
 class CustomCleanRuleTest {
 

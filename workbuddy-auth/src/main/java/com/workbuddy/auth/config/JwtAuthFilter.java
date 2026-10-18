@@ -23,8 +23,6 @@ import java.util.Objects;
 
 /**
  * JWT 认证过滤器：解析请求令牌并写入安全上下文。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

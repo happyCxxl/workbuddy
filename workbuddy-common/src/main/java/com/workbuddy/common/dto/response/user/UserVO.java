@@ -8,8 +8,6 @@ import java.time.LocalDateTime;
 
 /**
  * 用户视图对象（status 返回码值 1/0；不含密码字段）。
- *
- * @author cxxl
  */
 @Data
 public class UserVO implements Serializable {

@@ -8,8 +8,6 @@ import java.io.Serializable;
 
 /**
  * 知识库-策略绑定请求。
- *
- * @author cxxl
  */
 @Data
 public class StrategyBindingUpdateDTO implements Serializable {

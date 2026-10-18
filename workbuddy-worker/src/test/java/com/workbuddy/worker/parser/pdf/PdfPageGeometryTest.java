@@ -27,8 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * 页几何单测：页尺寸与元素 bbox 必须是**视口坐标**（与 pdf.js `getViewport({scale:1})` 同口径）。
  * 期望值取自 pdf.js 对同批样例的实测（`getTextContent` 项变换到视口空间）；
  * 样例文件见 samples/pdf-parse-03。
- *
- * @author cxxl
  */
 class PdfPageGeometryTest {
 

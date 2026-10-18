@@ -5,8 +5,6 @@ import java.util.Set;
 
 /**
  * 文本工具：乱码率判定与 Jaccard 相似度的公共口径（解析/组装/预处理环节共用，避免各写一套）。
- *
- * @author cxxl
  */
 public final class TextUtil {
 

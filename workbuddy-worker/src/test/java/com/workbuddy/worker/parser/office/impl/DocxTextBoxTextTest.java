@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * DOCX 文本框补取单测：`w:txbxContent` 内的 `w:t` 按出现顺序取出（POI 的 getText 不含文本框）；
  * 多个文本框拼接、无文本框给空串。
- *
- * @author cxxl
  */
 class DocxTextBoxTextTest {
 

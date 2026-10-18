@@ -46,8 +46,6 @@ import java.util.List;
  * 策略解析两档：显式指定（校验存在/类型/启用，任一不满足 40433）→ 知识库绑定；两档都不命中一律 40438。
  * 上游 CHUNK 产物校验（必填，未指定或传 0 报 40436；产出任务未成功报 40439）→ 窗口前置校验（不兜底，触发时明确报错）→
  * 执行键查重（已有任务一律拒绝 40431）→ 建任务入队。QUEUED 补投归启动补偿与低频扫描。
- *
- * @author cxxl
  */
 @Slf4j
 @Service
@@ -133,7 +131,8 @@ public class EmbedControlServiceImpl implements EmbedControlService {
         EmbedWindowRules.WindowBound window = EmbedWindowRules.resolve(
                 chunkStrategy, chunkProperties, strategy, embedProperties);
         if (!window.computable()) {
-            return; // 兜底 none 不可推算：跳过（评测专用口径）
+            // 兜底 none 不可推算：跳过（评测专用口径）
+            return;
         }
         ThrowUtil.throwIf(window.bound() > window.allowed(), ErrorCode.EMBED_MODEL_INCOMPATIBLE,
                 "切片策略最大片长 " + window.bound() + " 字符超过模型窗口 " + window.allowed() + " 字符，请更换模型或调整切片策略");

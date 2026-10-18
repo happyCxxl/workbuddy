@@ -6,8 +6,6 @@ import com.workbuddy.common.domain.chunk.Chunk;
  * 输入模板渲染 Port（向量化扩展接口）：按策略模板把切片渲染成编码输入文本。
  * 唯一实现 {@link com.workbuddy.worker.embedding.impl.IdentityTemplate}（原样编码，
  * 行为零改动——实验对比语义由上游切片策略保证）；类型化模板（评分标准/报价表等）将来只新增实现类。
- *
- * @author cxxl
  */
 public interface InputTemplatePort {
 

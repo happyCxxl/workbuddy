@@ -4,8 +4,6 @@ package com.workbuddy.common.enums.structure;
  * 统一元素扩展区键名（字典）：UnifiedElement.extension 的合法键，
  * 解析环节写入、组装/下游环节读取的跨环节契约。
  * 落库/落产物形式：key()。
- *
- * @author cxxl
  */
 public enum ElementExtensionKey {
 

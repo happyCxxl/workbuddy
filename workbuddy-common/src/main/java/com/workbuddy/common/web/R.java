@@ -12,7 +12,6 @@ import java.io.Serializable;
  * <p>code=0 表示成功；错误语义由 code 表达。
  *
  * @param <T> 业务数据类型
- * @author cxxl
  */
 @Setter
 @Getter

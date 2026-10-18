@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 原文定位信息（溯源）：PDF 用页码 + 字符范围/对象路径；Office 用结构路径（段落索引/表格行列/sheet）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

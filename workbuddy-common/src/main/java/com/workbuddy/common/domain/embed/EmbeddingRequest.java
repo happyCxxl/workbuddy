@@ -7,8 +7,6 @@ import java.util.List;
 /**
  * 向量化请求（ModelGatewayPort.embed 入参）：一批输入文本 + 模型 + 调用口径。
  * worker 网关适配器按此组装 RemoteEmbeddingService 调用。
- *
- * @author cxxl
  */
 @Data
 public class EmbeddingRequest {

@@ -6,8 +6,6 @@ import lombok.Getter;
 /**
  * 知识库状态（wb_knowledge_base.status，TINYINT 码值）。
  * 1 启用（ACTIVE）/ 0 停用（DISABLED）；逻辑删除由 del_flag 承载，与本枚举无关。
- *
- * @author cxxl
  */
 @Getter
 public enum KnowledgeBaseStatus {

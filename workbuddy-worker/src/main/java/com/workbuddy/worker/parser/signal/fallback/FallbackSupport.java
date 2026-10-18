@@ -6,8 +6,6 @@ import com.workbuddy.common.utils.NullUtil;
 /**
  * 信号降级公共口径（package-private，各 handler 共用）：
  * region 页码解析与失败/扫描页登记。
- *
- * @author cxxl
  */
 final class FallbackSupport {
 

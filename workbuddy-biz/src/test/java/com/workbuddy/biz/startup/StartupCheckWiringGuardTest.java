@@ -18,8 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 启动校验接线守卫：全仓库只允许校验链驱动方实现 {@code ApplicationRunner} / {@code CommandLineRunner}，
  * 启动校验一律实现 {@link StartupCheck} 并由链按 order 串起。
- *
- * @author cxxl
  */
 class StartupCheckWiringGuardTest {
 

@@ -18,8 +18,6 @@ import java.io.IOException;
  * 鉴权失败响应处理：Security 的拒绝发生在 Controller 之前，
  * 不经过 {@code GlobalExceptionHandler}，这里统一成 R 响应体与 200 状态，
  * 避免前端拿到裸 403 而无法按 code 语义处理。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

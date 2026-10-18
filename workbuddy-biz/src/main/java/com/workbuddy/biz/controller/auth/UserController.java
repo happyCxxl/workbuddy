@@ -31,8 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>管理类接口逐个标注 {@link AdminOnly}；个人信息接口对本人开放。
  * **新增管理类方法必须一并标注 {@link AdminOnly}**，类级注解已移除，漏标即对普通用户开放。
- *
- * @author cxxl
  */
 @RestController
 @RequestMapping("/user")

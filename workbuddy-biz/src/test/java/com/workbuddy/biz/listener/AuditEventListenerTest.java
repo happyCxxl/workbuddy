@@ -13,8 +13,6 @@ import static org.mockito.Mockito.verify;
 
 /**
  * 审计事件监听测试：事件字段应原样落到审计数据服务。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class AuditEventListenerTest {

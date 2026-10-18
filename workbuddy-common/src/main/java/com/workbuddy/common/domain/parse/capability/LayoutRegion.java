@@ -5,8 +5,6 @@ import lombok.Data;
 
 /**
  * 版面区域（区域分类 + 位置 + 置信度）。
- *
- * @author cxxl
  */
 @Data
 public class LayoutRegion {

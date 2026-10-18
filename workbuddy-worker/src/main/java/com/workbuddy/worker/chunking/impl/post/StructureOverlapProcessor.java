@@ -14,8 +14,6 @@ import java.util.List;
 /**
  * 结构切片重叠（structureOverlap，默认 0）：相邻 BODY/TABLE 片的前缀式重叠——本片 content 前缀上一片末尾 N 字符。
  * 缓解片边界语义断裂；跨章节不生效（管线按章列表调用）；0=不处理（现状口径）。
- *
- * @author cxxl
  */
 @Order(1)
 @Component

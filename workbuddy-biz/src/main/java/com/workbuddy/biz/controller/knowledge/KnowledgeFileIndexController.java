@@ -25,8 +25,6 @@ import java.util.List;
 /**
  * 索引构建与发布 Controller：
  * 候选构建 → 验证 → 原子发布 → 回退 → 回收，挂 /knowledge-base/{id}。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

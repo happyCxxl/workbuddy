@@ -31,8 +31,6 @@ import java.util.Locale;
  * PPT / PPTX 解析器：幻灯片对象模型走 POI 的 `sl.usermodel` 公共接口（XSLF 与 HSLF 两条读取路径只在开档处分流），
  * 产出 native 路 —— 每张幻灯片一条单元指标（页单位 = 幻灯片序号），形状按类型转元素：文本框与占位符文字成段落、
  * 表格成 TABLE（行列与表头判定复用 Office 统一口径）、图片成 IMAGE（引用 + needsOcr）并按页记一条 OCR_IMAGE 事实。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

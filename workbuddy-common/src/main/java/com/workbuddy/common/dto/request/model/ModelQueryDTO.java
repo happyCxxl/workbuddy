@@ -12,8 +12,6 @@ import java.io.Serializable;
  * 模型目录清单的分页查询条件（管理接口收参）：能力 / 状态 / 关键字三项都可留空。
  *
  * <p>能力与状态的取值校验在本类注解（Controller `@Valid` 触发）；关键字在模型名列上做模糊匹配。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

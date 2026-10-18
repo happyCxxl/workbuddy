@@ -29,8 +29,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 任务队列补偿单测（补投 QUEUED + RUNNING 孤儿恢复）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class TaskStartupCompensatorTest {

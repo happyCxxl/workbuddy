@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 环节策略版本 Mapper。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbPipelineStrategyVersionMapper extends BaseMapper<WbPipelineStrategyVersion> {

@@ -6,8 +6,6 @@ import com.workbuddy.common.dto.response.retrieval.RetrievalRulePublishVO;
 /**
  * 检索规则服务：规则列表复用策略版本机制（RETRIEVAL 白名单）
  * 与选优发布（更新索引版本行 default_rule_id + 审计）。
- *
- * @author cxxl
  */
 public interface RetrievalRuleService {
 

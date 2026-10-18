@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.parse;
 /**
  * 解析路类型（字典）：ParseSource.source 的合法取值与来源优先级依据。
  * 落库/落产物形式：value()（小写）。
- *
- * @author cxxl
  */
 public enum ParseSourceType {
 

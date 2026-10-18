@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 标准化字段：金额/日期/面积/证书号的结构化形式（精确过滤/精确匹配用）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

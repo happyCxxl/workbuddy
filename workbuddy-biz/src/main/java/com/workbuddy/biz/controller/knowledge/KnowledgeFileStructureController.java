@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 结构组装控制面 Controller（组装环节触发点）。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

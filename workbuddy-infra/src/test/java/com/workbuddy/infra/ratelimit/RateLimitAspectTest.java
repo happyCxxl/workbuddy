@@ -26,8 +26,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 限流切面测试。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class RateLimitAspectTest {

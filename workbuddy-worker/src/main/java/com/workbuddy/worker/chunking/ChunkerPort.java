@@ -5,8 +5,6 @@ import com.workbuddy.common.domain.chunk.ChunkOutcome;
 /**
  * 切片接口：把预处理视图（检索文本口径）按"结构优先 + 招投标行规"切成片段集合。
  * 输入视图与组装环节原结构只读零改动；策略快照由上下文携带（触发时固定）。
- *
- * @author cxxl
  */
 public interface ChunkerPort {
 

@@ -12,8 +12,6 @@ import java.util.List;
 
 /**
  * 文件档案数据访问实现。
- *
- * @author cxxl
  */
 @Service
 public class WbFileObjectDbServiceImpl extends InfraDbServiceImpl<WbFileObjectMapper, WbFileObject>

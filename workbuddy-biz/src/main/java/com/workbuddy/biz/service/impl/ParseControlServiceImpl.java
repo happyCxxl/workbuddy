@@ -23,8 +23,6 @@ import java.util.List;
 
 /**
  * 解析控制面服务实现。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

@@ -12,8 +12,6 @@ import java.time.LocalDateTime;
 
 /**
  * 公共字段自动填充：插入/更新时填充逻辑删除标记与创建/更新留痕字段。
- *
- * @author cxxl
  */
 @Configuration
 public class KnowledgeMetaObjectHandler implements MetaObjectHandler {

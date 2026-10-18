@@ -6,8 +6,6 @@ import java.time.LocalDateTime;
 
 /**
  * 运行记录 VO：文件某环节的一次任务运行（运行历史列表数据源）。
- *
- * @author cxxl
  */
 @Data
 public class RunRecordVO {

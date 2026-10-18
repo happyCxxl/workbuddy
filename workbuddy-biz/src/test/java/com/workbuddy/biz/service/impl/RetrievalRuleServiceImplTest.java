@@ -31,8 +31,6 @@ import static org.mockito.Mockito.when;
 /**
  * 检索规则服务单测：列表委托 RETRIEVAL 白名单 / 选优发布切版本行默认规则 + 审计 /
  * 规则不存在或类型不符 40450 / 版本行不属本库拒绝。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class RetrievalRuleServiceImplTest {

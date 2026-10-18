@@ -45,8 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 组装管线单测：未识别元素类型的跳过计数与质量告警（避免跨环节类型集合不匹配时静默丢元素）。
- *
- * @author cxxl
  */
 class AssemblerPipelineTest {
 

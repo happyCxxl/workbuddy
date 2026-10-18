@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
  *
  * <p>监听为同步调用，审计写入与发布方的业务操作处于同一事务：
  * 业务回滚时审计一并回滚，不会留下"操作没生效却有审计"的脏记录。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

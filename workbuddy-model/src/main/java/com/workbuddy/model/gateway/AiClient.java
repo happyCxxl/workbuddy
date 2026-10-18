@@ -9,8 +9,6 @@ import com.workbuddy.common.exception.KnowledgeException;
  *
  * <p>入参只带模型名，厂商由实现按目录解析（同名多厂商启用时拒绝）；
  * 失败统一抛 {@link KnowledgeException}，码值取 MODEL_* 族。
- *
- * @author cxxl
  */
 public interface AiClient {
 

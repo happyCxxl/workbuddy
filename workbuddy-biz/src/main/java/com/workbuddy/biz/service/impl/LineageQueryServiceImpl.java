@@ -54,8 +54,6 @@ import java.util.stream.Collectors;
  * 节点=一次运行；边=upstreamProductId 血缘反查（task.productId → product.id → 产出任务）；
  * 统计摘要按 artifactId 匹配（CHUNK=chunkCount、EMBED=recordCount/cachedCount、PREPROCESS=step_log 聚合），
  * PARSE 另读产物本体汇总元素构成、问题单元与耗时（每个解析任务一次对象读取）。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

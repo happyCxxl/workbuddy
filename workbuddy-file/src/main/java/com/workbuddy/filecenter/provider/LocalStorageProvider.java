@@ -23,8 +23,6 @@ import java.nio.file.StandardCopyOption;
  *
  * <p>**不是原子的**：写入用临时文件 + 移动实现"内容不半截"，不做 fsync、不加锁；
  * 并发与断电语义不承诺强于对象存储。
- *
- * @author cxxl
  */
 @Slf4j
 public class LocalStorageProvider implements StorageProvider {

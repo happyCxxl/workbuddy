@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 页眉页脚处置规则单测：KEEP/MARK/EXCLUDE 三档与类型路由。
- *
- * @author cxxl
  */
 class HeaderFooterRuleTest {
 

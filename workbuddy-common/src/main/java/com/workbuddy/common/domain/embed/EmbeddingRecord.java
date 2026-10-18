@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 向量记录：一个切片一条。inputText = chunk.content（原样编码口径）；
  * status=CACHED 表示复用历史账本向量本体（cacheHit=true，免网关调用）；向量本体只进集合文件，不进 DB。
- *
- * @author cxxl
  */
 @Data
 public class EmbeddingRecord {

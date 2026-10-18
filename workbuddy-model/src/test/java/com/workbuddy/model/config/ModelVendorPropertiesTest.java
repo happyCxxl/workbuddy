@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 厂商配置单测：键映射绑定、留空字段的默认口径、启动期校验逐条规则与错误码。
- *
- * @author cxxl
  */
 class ModelVendorPropertiesTest {
 

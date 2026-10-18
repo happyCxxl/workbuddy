@@ -12,8 +12,6 @@ import java.io.Serial;
  *
  * <p>联系方式三件套（真实姓名 / 邮箱 / 手机号）及其校验在父类 {@link UserContactBaseDTO}，
  * 这里只加"创建"特有的两项：登录用户名与密码。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

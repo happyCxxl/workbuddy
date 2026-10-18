@@ -29,8 +29,6 @@ import java.util.Set;
  *
  * <p>纯读取，不落库、不改产物；执行树的切片节点与切片详情共用同一份口径。
  * 键值含义见本类的 {@code KEY_*} 常量。
- *
- * @author cxxl
  */
 public final class ChunkStatsSupport {
 

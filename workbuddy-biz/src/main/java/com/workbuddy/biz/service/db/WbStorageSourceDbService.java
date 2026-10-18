@@ -8,8 +8,6 @@ import java.util.List;
 
 /**
  * 存储数据源数据访问服务（表：wb_storage_source）。
- *
- * @author cxxl
  */
 public interface WbStorageSourceDbService extends InfraDbService<WbStorageSource> {
 

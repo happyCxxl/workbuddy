@@ -14,8 +14,6 @@ import java.io.Serial;
  * 上层应用接入后按知识库直接取用绑定策略；切片触发解析顺序两档：
  * 显式传参 → KB 绑定（两档都不命中报 40438）。
  * 解绑为逻辑删除；重新绑定复用原行（uk 不冲突）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

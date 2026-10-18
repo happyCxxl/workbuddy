@@ -18,8 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 组装统计单测：溯源口径（结构性节点不计入分母、表格经由单元格可回溯）与结论文案。
- *
- * @author cxxl
  */
 class StructureStatsSupportTest {
 

@@ -10,8 +10,6 @@ import java.util.List;
 /**
  * 兜底切片器注册表：按算法索引（AlgorithmRegistry 泛型收口）；
  * 同 SliceStrategyRegistry 的开闭原则与查找失败报错口径。
- *
- * @author cxxl
  */
 @Component
 public class FallbackSlicerRegistry {

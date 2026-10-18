@@ -8,8 +8,6 @@ import com.workbuddy.common.domain.preprocess.ViewElement;
  * 清洗规则：固定规则链（order 1~8）的一步；自定义规则链尾执行，不实现本接口。
  * 顺序固定、逐条开关；规则只改派生视图元素（status/displayText/normalizedText/fields/trace），
  * 不碰原文 UnifiedDocument（原文零改动红线）。
- *
- * @author cxxl
  */
 public interface CleanRule {
 

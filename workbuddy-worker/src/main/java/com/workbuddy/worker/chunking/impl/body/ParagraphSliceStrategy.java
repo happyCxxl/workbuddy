@@ -19,8 +19,6 @@ import java.util.List;
  * 参数从策略 body 路由配置读取（targetMaxLen/softMaxLen，解析时已补默认）；
  * 超长降级走策略所选兜底切片器（context.getFallback()）。
  * 聚合缓冲放在 SliceContext（每次运行独立），切片器本身无状态、并发安全；标题不成片——章节栈由管线维护。
- *
- * @author cxxl
  */
 @Component
 public class ParagraphSliceStrategy extends AbstractBodySliceStrategy {

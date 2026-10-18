@@ -5,8 +5,6 @@ import lombok.Data;
 /**
  * 用户自定义正则规则：pattern + 动作；REPLACE 携带 replacement（支持 $1 组引用）。
  * 保存校验（biz 40001）保证 pattern 合法、上限与动作约束。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessCustomRule {

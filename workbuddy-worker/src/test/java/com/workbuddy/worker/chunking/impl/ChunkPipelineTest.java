@@ -52,8 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 切片管线单测：四路路由、父子层级、titlePath、剔除跳过、兜底降级、异常隔离、确定性、空集合；
  * 算法选择/flush 规则/tableInBodyFlow/leadParagraph/后置处理链/未支持算法报错。
- *
- * @author cxxl
  */
 class ChunkPipelineTest {
 

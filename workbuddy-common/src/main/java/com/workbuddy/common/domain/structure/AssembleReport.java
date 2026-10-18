@@ -7,8 +7,6 @@ import java.util.Map;
 /**
  * 组装报告：多工艺统计 + 溯源可回溯占比。
  * 内部流转：不落产物、不落子步骤记录（详情页统计由 biz 侧按产物现算，本类只服务管线内判定与日志）。
- *
- * @author cxxl
  */
 @Data
 public class AssembleReport {

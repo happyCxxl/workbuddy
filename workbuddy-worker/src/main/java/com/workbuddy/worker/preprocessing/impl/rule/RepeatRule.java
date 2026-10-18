@@ -16,8 +16,6 @@ import org.springframework.stereotype.Component;
  * ⑤ 重复处置：判定依赖组装环节标记（REPEATED_SEGMENT 元素 / REPEATED_PAGE 页，除首份外），
  * 本规则按处置方式处理 EXCLUDE（默认，只保留首份，重复份不进检索文本内容流）/ MARK（标记，重复份仍在内容流）/ KEEP（不改动，只统计）。
  * 重复份计数来自组装环节的标记，与处置动作无关。
- *
- * @author cxxl
  */
 @Component
 public class RepeatRule implements CleanRule {

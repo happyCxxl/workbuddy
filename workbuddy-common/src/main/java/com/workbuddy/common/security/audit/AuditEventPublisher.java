@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
  * 审计事件发布器：业务侧统一通过它落审计，不直接依赖审计表数据访问层。
  *
  * <p>事件同步派发：审计写入与业务操作处于同一事务（与既有 saveAudit 口径一致）。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

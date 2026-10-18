@@ -15,8 +15,6 @@ import java.util.List;
  * 表格切片器（表+引导段落）：基于行级切片（groupThreshold/groupSize 同 row-slice），每片 content 首行前
  * 拼接前导文本段落（该表前最近一个非空 BODY 元素，截断 leadMaxLen，超长加省略号）。
  * 前导段由管线维护在 SliceContext.leadParagraph。与流程层 tableInBodyFlow 互斥（保存校验 40001）。
- *
- * @author cxxl
  */
 @Component
 public class TableContextMergedStrategy extends AbstractTableSliceStrategy {

@@ -13,8 +13,6 @@ import java.util.List;
 
 /**
  * 来源文件数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbSourceFileDbServiceImpl extends InfraDbServiceImpl<WbSourceFileMapper, WbSourceFile>

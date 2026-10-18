@@ -5,8 +5,6 @@ import lombok.Data;
 
 /**
  * 表格单元格（结构识别结果单元）：行列号 + 合并跨度 + 文本 + 表头标记 + 格级包围盒与置信度。
- *
- * @author cxxl
  */
 @Data
 public class TableCell {

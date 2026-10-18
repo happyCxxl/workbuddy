@@ -10,8 +10,6 @@ import org.springframework.stereotype.Component;
  * 触发（runner 读任务快照）与保存侧（控制面 toStrategy）共用同一解析口径；
  * 快照为空或损坏一律抛异常，由上层按数据问题处置，本类不提供任何内置默认策略。
  * 旧扁平格式（options 单键）不再支持。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

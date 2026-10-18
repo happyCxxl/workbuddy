@@ -6,8 +6,6 @@ import java.util.List;
 
 /**
  * 视图元素 VO：ViewElement 的对外视图（UnifiedElement 的派生副本：原文/展示/检索三层文本 + 处置状态 + 标准化字段）。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessElementVO {

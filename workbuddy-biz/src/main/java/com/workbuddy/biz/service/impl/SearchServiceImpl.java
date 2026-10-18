@@ -51,8 +51,6 @@ import java.util.stream.Collectors;
  * 检索引擎编排实现：唯一执行路径 search(kbId, query, ruleSpec, collectionName)。
  * 生产检索（回退链）与测试台检索（显式版本+规则）同引擎；预留能力经 RetrievalRuleResolver.validate
  * 双保险拒执行；查询向量化跟随集合 EMBED 策略（queryTemplate 口径）；网关失败该通道降级为空。
- *
- * @author cxxl
  */
 @Slf4j
 @Service
@@ -267,7 +265,7 @@ public class SearchServiceImpl implements SearchService {
         }
         String template = StrUtil.isBlank(strategy.getQueryTemplate()) ? "{query}" : strategy.getQueryTemplate();
         String input = template.replace("{query}", query);
-        // TODO 模型调用层已移除：查询向量化不可用时走既有降级分支（返回 null，检索降级）。
+        // 模型调用层已移除：查询向量化不可用时走既有降级分支（返回 null，检索降级）。
         //  接入模型模块后在此按 strategy.getModel() 编码 input，取返回向量的第一个作为查询向量。
         log.warn("===> SearchServiceImpl 查询向量化跳过：模型调用层待接入, versionId={}, input长度={}",
                 version.getId(), input.length());
@@ -332,7 +330,8 @@ public class SearchServiceImpl implements SearchService {
             IndexRow parent = StrUtil.isBlank(hit.getParentChunkId()) ? null : parentRows.get(hit.getParentChunkId());
             String dedupeKey = NullUtil.isNull(parent) ? hit.getChunkId() : parent.getChunkId();
             if (deduped.containsKey(dedupeKey)) {
-                continue; // 同父片多子片命中 → 保留最高融合分（已按序遍历）
+                // 同父片多子片命中 → 保留最高融合分（已按序遍历）
+                continue;
             }
             if (NullUtil.isNotNull(parent)) {
                 hit.setContent(parent.getContent());

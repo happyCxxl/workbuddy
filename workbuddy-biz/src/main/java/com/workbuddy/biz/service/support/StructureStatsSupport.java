@@ -26,8 +26,6 @@ import java.util.Map;
  * 组装产物统计汇总：读统一文档产物 → 元素构成 / 层级分布 / 溯源覆盖率 → 摘要文案。
  *
  * <p>纯读取，不落库、不改产物、不进能力快照。执行树的组装节点与组装详情共用同一份口径。
- *
- * @author cxxl
  */
 public final class StructureStatsSupport {
 

@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 页面基准：全部坐标的统一基准"左上角原点 + pt"。XLS/XLSX 无页概念，pages[] 为空。
- *
- * @author cxxl
  */
 @Data
 public class UnifiedPage {

@@ -8,8 +8,6 @@ import java.util.List;
 
 /**
  * 文件档案数据访问。
- *
- * @author cxxl
  */
 public interface WbFileObjectDbService extends InfraDbService<WbFileObject> {
 

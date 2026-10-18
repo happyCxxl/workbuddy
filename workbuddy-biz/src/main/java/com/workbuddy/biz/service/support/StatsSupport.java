@@ -22,8 +22,6 @@ import java.util.function.Supplier;
  * 环节统计公共口径：读产物本体、耗时、结论文案的前置判断，各环节的统计支持类共用。
  *
  * <p>纯读取，不落库、不改产物；各环节自己的口径（元素归类、异常项陈述）留在各自的类里。
- *
- * @author cxxl
  */
 @Slf4j
 public final class StatsSupport {

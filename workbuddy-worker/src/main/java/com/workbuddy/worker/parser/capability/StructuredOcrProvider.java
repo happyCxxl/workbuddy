@@ -8,8 +8,6 @@ import com.workbuddy.common.domain.parse.capability.StructuredOcrResult;
  * 结构化 OCR 能力接口：整页无文本且含图片的页交本接口补出文字层。
  * 实现一个类 + 注册 + 打开配置即接入，主流程零改动。
  * 输出结构经平台视觉模态返回（值对象见 common.domain.parse）。
- *
- * @author cxxl
  */
 public interface StructuredOcrProvider {
 

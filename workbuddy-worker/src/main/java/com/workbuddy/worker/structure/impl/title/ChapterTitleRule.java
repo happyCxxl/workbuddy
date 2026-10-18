@@ -9,8 +9,6 @@ import java.util.regex.Pattern;
 
 /**
  * 章级编号标题规则：第X章（一级）。
- *
- * @author cxxl
  */
 @Component
 public class ChapterTitleRule implements TitleRule {

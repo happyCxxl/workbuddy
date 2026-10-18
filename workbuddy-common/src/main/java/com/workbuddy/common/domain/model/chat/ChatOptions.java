@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 对话采样参数：字段可空，空值由适配层走厂商缺省。
- *
- * @author cxxl
  */
 @Data
 public class ChatOptions {

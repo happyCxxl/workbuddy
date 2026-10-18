@@ -10,8 +10,6 @@ import java.io.Serializable;
  *
  * <p>三个数**同一可见范围**：普通用户统计自己创建的知识库（及其下文档），管理员统计全部。
  * 它不是"平台资产"而是"当前用户可见的资产"。
- *
- * @author cxxl
  */
 @Data
 public class KnowledgeBaseStatsVO implements Serializable {

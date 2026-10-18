@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.input;
 /**
  * 文件校验失败原因。
  * 落库：wb_submit_log.fail_reason 存枚举名（name()），校验失败不建结果、不建任务。
- *
- * @author cxxl
  */
 public enum FileValidationFailReason {
 

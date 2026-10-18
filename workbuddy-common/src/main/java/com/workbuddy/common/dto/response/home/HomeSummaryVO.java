@@ -10,8 +10,6 @@ import java.io.Serializable;
  *
  * <p>**知识库与文档两类计数按可见范围过滤**（普通用户只数自己创建的库及其下文档，
  * 管理员数全部），与知识库列表页同一口径；策略版本数是平台级资产，不按归属过滤。
- *
- * @author cxxl
  */
 @Data
 public class HomeSummaryVO implements Serializable {

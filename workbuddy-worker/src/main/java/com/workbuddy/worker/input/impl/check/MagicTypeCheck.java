@@ -21,8 +21,6 @@ import java.util.Set;
 /**
  * 魔数识别步骤：Tika 真实格式识别（不信扩展名）→ 加密探测（ooxml-protected）→
  * 图片 OCR 预留判定 → 格式白名单。识别结果（mediaType/format）写入上下文供后续步骤与结果组装使用。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

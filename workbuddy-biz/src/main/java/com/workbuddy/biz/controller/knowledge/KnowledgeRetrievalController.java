@@ -25,8 +25,6 @@ import java.util.List;
 /**
  * 检索与评测 Controller：
  * 生产检索（回退链）/ 测试台检索（显式版本+规则，落运行记录）/ 勾选对比回放 / 规则选优发布。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

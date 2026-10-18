@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.input;
 
 /**
  * 提交结果状态：每次提交一条，无论成败。
- *
- * @author cxxl
  */
 public enum SubmitStatus {
 

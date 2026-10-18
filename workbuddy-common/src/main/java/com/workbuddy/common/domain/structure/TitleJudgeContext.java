@@ -6,8 +6,6 @@ import java.util.List;
 
 /**
  * 标题判定上下文（模型判断兜底输入）。
- *
- * @author cxxl
  */
 @Data
 public class TitleJudgeContext {

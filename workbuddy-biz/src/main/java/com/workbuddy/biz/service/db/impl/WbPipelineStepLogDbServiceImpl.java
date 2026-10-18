@@ -12,8 +12,6 @@ import java.util.List;
 
 /**
  * 子步骤记录数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbPipelineStepLogDbServiceImpl extends InfraDbServiceImpl<WbPipelineStepLogMapper, WbPipelineStepLog>

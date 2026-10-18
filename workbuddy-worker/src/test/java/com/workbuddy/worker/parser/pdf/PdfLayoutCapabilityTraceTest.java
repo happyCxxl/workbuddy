@@ -37,8 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 复杂页判定与版面能力接线的端到端单测：三栏未拆开的页（行内跨栏间隙）判为复杂页，
  * 解析时确实去问了模型并记下能力引用与补强事实；未接入能力时两样都不留痕。
- *
- * @author cxxl
  */
 class PdfLayoutCapabilityTraceTest {
 

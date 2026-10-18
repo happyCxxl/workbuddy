@@ -67,8 +67,6 @@ import static org.mockito.Mockito.when;
 /**
  * 向量化任务执行器单测：成功落库链（EmbeddingSet 产物 + product + 两表分批 + 子步骤）/
  * 上游切片产物缺失 / 管线失败 / 复用候选账本加载（cacheOn/Off）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class EmbedTaskRunnerTest {

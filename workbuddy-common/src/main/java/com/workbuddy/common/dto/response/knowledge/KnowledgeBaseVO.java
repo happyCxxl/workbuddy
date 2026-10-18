@@ -8,8 +8,6 @@ import java.time.LocalDateTime;
 
 /**
  * 知识库视图对象（status 返回码值 1/0）。
- *
- * @author cxxl
  */
 @Data
 public class KnowledgeBaseVO implements Serializable {

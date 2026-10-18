@@ -37,8 +37,6 @@ import java.util.Set;
  *
  * <p>校验全部在 DTO 注解（Controller `@Valid` 触发）；本类只做能力逐项字典解析，
  * 唯一键冲突由 uk_vendor_model 索引拦下转 40001，清单分页的过滤全在 SQL 侧完成。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

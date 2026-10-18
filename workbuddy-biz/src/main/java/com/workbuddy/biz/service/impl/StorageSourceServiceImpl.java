@@ -46,8 +46,6 @@ import java.util.Map;
  * <p>设为当前启用按「连接测试 → 先清后置 is_current → 回写探测结论 → 落审计 → 替换运行时当前启用」
  * 推进，连接测试不通过就抛出，库与运行时都不留半截状态。连接探测的结论落在数据源行的
  * last_probe_ok / last_probe_at 两列，列表接口只读这两列、不做实时探测。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

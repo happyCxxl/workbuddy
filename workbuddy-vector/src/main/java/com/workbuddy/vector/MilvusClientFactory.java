@@ -19,8 +19,6 @@ import java.util.List;
  *
  * <p>连接前先保证目标库存在：Milvus 只自带 {@code default} 库，而连接参数里的库名必须是已存在的库，
  * 库名对不上时客户端建不出来、整个应用起不来。缺库时先用 {@code default} 库连一次并建库，口径与集合懒建一致。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

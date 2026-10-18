@@ -11,8 +11,6 @@ import java.util.List;
  *
  * <p>数据源一行 = 一个实例（可同名类型多行），当前启用全表至多一行；新对象写到当前启用的数据源，
  * 读取按对象记录里的数据源 ID。设为当前启用前先做连接测试，不通过不落库。
- *
- * @author cxxl
  */
 public interface StorageSourceService {
 

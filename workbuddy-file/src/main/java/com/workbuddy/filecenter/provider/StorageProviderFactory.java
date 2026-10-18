@@ -11,8 +11,6 @@ import java.util.List;
  *
  * <p>路由持有的实例与连接测试的临时实例都从这里出，构造参数一律取定义里的参数；
  * 必填参数不齐时按「存储后端未配置」拒绝，不构造半可用的实例。
- *
- * @author cxxl
  */
 public final class StorageProviderFactory {
 

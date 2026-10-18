@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 向量产物集合 Mapper。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbEmbeddingSetMapper extends BaseMapper<WbEmbeddingSet> {

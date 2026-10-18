@@ -34,8 +34,6 @@ import java.util.Objects;
  * 预处理任务执行器（消费循环调用）：领任务 → 读任务策略快照（触发时固定）→ 读上游 STRUCTURE 产物
  * （反序列化 UnifiedDocument）→ 调 worker 预处理管线 → 写产物存储 + 落库（product/9 条 step_log）→
  * 回写任务终态。原文 UnifiedDocument 只读零改动。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

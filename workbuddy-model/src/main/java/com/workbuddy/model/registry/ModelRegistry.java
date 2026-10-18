@@ -12,8 +12,6 @@ import java.util.List;
  * <p>biz 装载器在启动与刷新时经 {@link #reload(List)} 全量推入（多实例经 Redis 广播各自重载）；
  * 停用行的过滤在装载侧完成，快照里的行一律是启用行。
  * 查询面随 chat 选路层定形后开放，本类不预先提供查询方法。
- *
- * @author cxxl
  */
 @Component
 public class ModelRegistry {

@@ -6,8 +6,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * 登录失败防护配置（前缀 knowledge.auth.guard）。
- *
- * @author cxxl
  */
 @Data
 @Component

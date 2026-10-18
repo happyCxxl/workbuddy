@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 /**
  * 向量化参数配置（knowledge.embed 前缀；application.yml 同名 kebab-case 键）。
  * 值源 = EmbedStrategy 参数缺省（策略快照未显式配置时补默认）。
- *
- * @author cxxl
  */
 @Data
 @Component

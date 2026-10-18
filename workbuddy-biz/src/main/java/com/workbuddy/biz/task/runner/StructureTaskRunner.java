@@ -34,8 +34,6 @@ import java.util.Objects;
  * 统一组装任务执行器（STRUCTURE 环节）：领任务 → 读上游 ParseResult 产物 →
  * 调 worker 组装管线 → 写 UnifiedDocument 产物 + STRUCTURE 产物行（upstream 链）→
  * 子步骤记录 → 回写终态（空树 FAILED / 其余 SUCCESS）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

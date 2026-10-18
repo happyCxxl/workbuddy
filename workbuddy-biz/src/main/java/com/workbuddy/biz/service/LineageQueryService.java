@@ -4,8 +4,6 @@ import com.workbuddy.common.dto.response.lineage.LineageVO;
 
 /**
  * 执行树聚合查询：一个文件的全部运行节点 + 血缘边，纯读聚合。
- *
- * @author cxxl
  */
 public interface LineageQueryService {
 

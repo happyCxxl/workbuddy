@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 向量产物集合数据访问服务。
- *
- * @author cxxl
  */
 public interface WbEmbeddingSetDbService extends InfraDbService<WbEmbeddingSet> {
 

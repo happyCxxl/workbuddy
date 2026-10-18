@@ -8,8 +8,6 @@ import java.util.List;
  * 四关一致性校验（写入前强制）：数量与顺序 / 维度 / 空值坏值 / 度量与归一化。
  * 返回 {@link ConsistencyResult}：pass=false 时按 retryable 分流——可重试（数量/空值，批次整体重试）
  * 或不可重试（维度/度量冲突，模型与目录不符，重试无意义 → 拒绝）。
- *
- * @author cxxl
  */
 public interface ConsistencyChecker {
 

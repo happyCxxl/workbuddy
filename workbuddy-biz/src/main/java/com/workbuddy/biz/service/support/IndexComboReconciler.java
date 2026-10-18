@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
  * 组合范围内逐文件取「该组合血缘匹配的最新成功」CHUNK+EMBED 产物，计算期望 chunkId 集合
  * （**以校验时刻实时重算**——构建期间新完成的文件天然被吸收）+ 维度/完整性/血缘结论 + 冒烟样本。
  * 构建任务全量对账（IndexBuildTaskRunner）与 validate API 共用同一口径，单一事实源。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

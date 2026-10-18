@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 不兜底切片器单测：原样单片 / 空白返回空。
- *
- * @author cxxl
  */
 class NoneFallbackTest {
 

@@ -8,8 +8,6 @@ import java.util.List;
 
 /**
  * 固定窗口兜底切片：忽略语义边界，纯窗口 len + 重叠 overlap 硬切（评测基线口径）。
- *
- * @author cxxl
  */
 @Component
 public class FixedWindowFallback extends AbstractFallbackSlicer {

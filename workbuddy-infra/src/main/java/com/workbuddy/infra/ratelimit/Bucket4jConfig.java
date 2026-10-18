@@ -17,8 +17,6 @@ import java.time.Duration;
 
 /**
  * 限流桶的 Redis 装配：复用工程已有的 Lettuce 客户端，不引入第二个 Redis 客户端。
- *
- * @author cxxl
  */
 @Configuration
 public class Bucket4jConfig {

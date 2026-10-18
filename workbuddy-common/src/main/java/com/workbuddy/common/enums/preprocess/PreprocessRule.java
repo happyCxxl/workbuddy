@@ -6,8 +6,6 @@ import cn.hutool.core.util.StrUtil;
  * 预处理规则目录：rules 映射的七个固定规则键。
  * 单一事实源：biz 保存校验、前端表单分组与置灰、解析补默认均以此为准。
  * 自定义规则（custom）是规则链上的第 8 个节点，但不进本目录（它携带用户自定义正则列表，见 worker CustomRuleGroup）。
- *
- * @author cxxl
  */
 public enum PreprocessRule {
 

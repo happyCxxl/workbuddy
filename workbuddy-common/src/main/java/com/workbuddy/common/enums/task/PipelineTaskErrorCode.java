@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.task;
 
 /**
  * 任务错误码：落 wb_knowledge_pipeline_task.error_code，与 API 错误码（ErrorCode 40xxx）分层。
- *
- * @author cxxl
  */
 public enum PipelineTaskErrorCode {
 

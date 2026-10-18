@@ -29,8 +29,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 任务数据访问单测：过期 QUEUED / 孤儿 RUNNING 查询条件、终态回写的迁移守卫与回写条件。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class WbPipelineTaskDbServiceImplTest {

@@ -5,8 +5,6 @@ import lombok.EqualsAndHashCode;
 
 /**
  * 向量检索命中行：CollectionRow + 相似度分数。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

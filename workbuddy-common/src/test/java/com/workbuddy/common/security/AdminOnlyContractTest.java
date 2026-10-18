@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 且「ROLE_ADMIN 放行 / ROLE_USER 拒绝」的判定成立。
  *
  * <p>注解在运行期是否真的拦住请求，由接口级测试覆盖；这里锁定注解与角色口径。
- *
- * @author cxxl
  */
 class AdminOnlyContractTest {
 

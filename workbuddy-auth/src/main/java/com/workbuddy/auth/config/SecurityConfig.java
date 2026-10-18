@@ -19,8 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *
  * <p>接口级角色控制走方法注解（{@code @AdminOnly} / {@code @PreAuthorize}），
  * 由 {@code @EnableMethodSecurity} 开启；这里只声明「谁免登录、其余一律需认证」。
- *
- * @author cxxl
  */
 @Configuration
 @EnableWebSecurity

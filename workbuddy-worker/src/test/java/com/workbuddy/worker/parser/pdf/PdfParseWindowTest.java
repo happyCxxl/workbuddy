@@ -28,8 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 大文件分窗：窗口大小不影响产物（全档行摘要用于跨页识别、窗口只定装配粒度），
  * 跨窗口仍能识别页眉页脚；大输入走临时文件按需读取。
- *
- * @author cxxl
  */
 class PdfParseWindowTest {
 

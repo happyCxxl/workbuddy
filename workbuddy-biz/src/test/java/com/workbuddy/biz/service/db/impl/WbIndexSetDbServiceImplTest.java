@@ -27,8 +27,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 索引集合数据访问服务单测：按库查询 / 幂等创建（uk 冲突兜底）/ 二级指针更新。
- *
- * @author cxxl
  */
 class WbIndexSetDbServiceImplTest {
 

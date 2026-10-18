@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 投影法分栏单测：栏沟检测（竖直覆盖口径）、页级与栏级门槛、跨栏行分带排序。
- *
- * @author cxxl
  */
 class ProjectionPageLayoutAnalyzerTest {
 

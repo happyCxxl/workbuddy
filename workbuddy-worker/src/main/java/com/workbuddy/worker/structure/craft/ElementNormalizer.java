@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 元素标准化：各路元素 → 统一元素雏形 + 坐标统一（左上角原点 + pt）。
- *
- * @author cxxl
  */
 public interface ElementNormalizer {
 

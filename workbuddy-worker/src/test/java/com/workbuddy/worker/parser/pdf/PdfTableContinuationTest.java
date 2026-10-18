@@ -23,8 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * 跨页续表单测：下一页重复表头时，该表标为续表（{@code headerRepeated=true}）；首表不标。
- *
- * @author cxxl
  */
 class PdfTableContinuationTest {
 

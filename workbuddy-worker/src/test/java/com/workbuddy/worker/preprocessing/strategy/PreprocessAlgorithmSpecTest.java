@@ -15,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 预处理算法规格单测：默认档（三态默认标记、重复默认剔除）与保存校验（含重复旧开关格式的迁移口径）。
- *
- * @author cxxl
  */
 class PreprocessAlgorithmSpecTest {
 

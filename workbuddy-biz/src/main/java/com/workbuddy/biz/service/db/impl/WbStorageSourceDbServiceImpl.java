@@ -11,8 +11,6 @@ import java.util.List;
 
 /**
  * 存储数据源数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbStorageSourceDbServiceImpl extends InfraDbServiceImpl<WbStorageSourceMapper, WbStorageSource>

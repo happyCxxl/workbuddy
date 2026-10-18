@@ -9,8 +9,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * 任务消费线程池（具名 bean）：看门狗池与执行池分开，供消费循环按名注入。
- *
- * @author cxxl
  */
 @Configuration
 public class TaskExecutorConfig {

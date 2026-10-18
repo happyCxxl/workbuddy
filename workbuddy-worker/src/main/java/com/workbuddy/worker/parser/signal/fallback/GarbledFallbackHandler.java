@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * 乱码页降级处置：写 GARBLED_PAGE 告警 + 登记失败页，计 1 个失败单元。
- *
- * @author cxxl
  */
 @Component
 public class GarbledFallbackHandler implements SignalFallbackHandler {

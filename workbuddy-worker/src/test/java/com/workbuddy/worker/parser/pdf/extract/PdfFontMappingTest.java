@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 字体 Unicode 映射判据单测：Type0 且缺 ToUnicode 才判映射失败。
- *
- * @author cxxl
  */
 class PdfFontMappingTest {
 

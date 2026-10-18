@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 /**
  * 版面规则失败降级处置：按顺序输出（写告警，不计失败单元）。
  * 预留：当前没有事实产出方，版面能力接入后由 provider 产 LAYOUT 事实才会走到本分支。
- *
- * @author cxxl
  */
 @Component
 public class LayoutRuleFailedFallbackHandler implements SignalFallbackHandler {

@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.preprocess;
 
 /**
  * 预处理三态处置动作。
- *
- * @author cxxl
  */
 public enum PreprocessAction {
 

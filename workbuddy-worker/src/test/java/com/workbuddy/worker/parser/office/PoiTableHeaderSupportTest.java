@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 表头行判定口径单测（DOC / DOCX 共用助手）：首行有非空文本即判第 0 行为表头行，
  * 首行全空则给 null；单元格 isHeader 收敛为该判定。
- *
- * @author cxxl
  */
 class PoiTableHeaderSupportTest {
 

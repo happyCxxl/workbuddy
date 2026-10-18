@@ -16,8 +16,6 @@ import java.util.List;
  * ② 维度——每条约=模型目录声明（策略快照冗余锁定）；
  * ③ 空值/坏值——空向量、NaN/Infinity 拦截；
  * ④ 度量与归一化——COSINE 必须归一化、L2 必须非归一化、IP 无约束（与目录冗余冲突即拒绝）。
- *
- * @author cxxl
  */
 @Component
 public class EmbedConsistencyChecker implements ConsistencyChecker {
@@ -42,7 +40,8 @@ public class EmbedConsistencyChecker implements ConsistencyChecker {
             }
             if (expectedDimension > 0 && vector.size() != expectedDimension) {
                 problems.add("第 " + (i + 1) + " 条向量维度 " + vector.size() + " ≠ 目录声明 " + expectedDimension);
-                retryable = false; // 维度不符是模型与目录不一致，重试无意义
+                // 维度不符是模型与目录不一致，重试无意义
+                retryable = false;
                 break;
             }
             for (int j = 0; j < vector.size(); j++) {

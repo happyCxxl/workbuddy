@@ -21,8 +21,6 @@ import java.util.Objects;
  * ① 编码规范化（基础层，默认开，策略可关）：字符级整理产出 displayText（空白/换行/乱码）
  * 与 normalizedText 基座（+Unicode NFKC 全角→半角）；表格单元格同样处理。
  * 原文 rawText 永不动。
- *
- * @author cxxl
  */
 @Component
 public class EncodingCleanRule implements CleanRule {

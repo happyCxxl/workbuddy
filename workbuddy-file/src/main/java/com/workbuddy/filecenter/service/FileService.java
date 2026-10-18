@@ -6,8 +6,6 @@ import java.io.IOException;
 
 /**
  * 文件下载服务。
- *
- * @author cxxl
  */
 public interface FileService {
 

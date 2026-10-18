@@ -15,8 +15,6 @@ import java.time.LocalDateTime;
  *
  * <p>同名类型可以有多行，对象记录按 {@code storage_source_id} 定位到具体哪一行。
  * 当前启用（{@code is_current} = 1）全表至多一行，决定新对象写到哪个数据源。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

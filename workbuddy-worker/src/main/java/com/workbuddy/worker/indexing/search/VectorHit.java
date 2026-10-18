@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 向量检索命中：返回字段原样入索引，命中直取不回查库。
- *
- * @author cxxl
  */
 @Data
 @Builder

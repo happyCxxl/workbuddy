@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 任务状态真值表测试：合法迁移图（5×5 全组合）、终态判定与非法迁移拦截。
- *
- * @author cxxl
  */
 class PipelineTaskStatusTest {
 

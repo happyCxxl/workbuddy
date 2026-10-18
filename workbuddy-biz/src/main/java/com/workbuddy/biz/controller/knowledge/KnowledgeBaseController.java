@@ -38,8 +38,6 @@ import java.util.List;
  * 业务编排在 `KnowledgeBaseService` 实现（含文档提交建档、提交记录与文件结果查询），本类只做薄转发。
  *
  * <p>**可见范围**：普通用户只读写自己创建的知识库，管理员不限归属
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

@@ -11,8 +11,6 @@ import java.io.Serializable;
  * <p>strategyVersionId 可选：不传用知识库绑定的策略版本（两档都不命中报 40438）。
  * upstreamProductId 必填：未指定或传 0 报 40436，不存在按 40432 拒绝。
  * 两字段按同名的独立查询参数绑定。
- *
- * @author cxxl
  */
 @Data
 public class StageTriggerQueryDTO implements Serializable {

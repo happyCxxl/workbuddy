@@ -6,8 +6,6 @@ import java.time.LocalDateTime;
 
 /**
  * 子步骤记录信息：ParsePipeline 产出，由 biz 落 wb_knowledge_pipeline_step_log。
- *
- * @author cxxl
  */
 @Data
 public class StepLogInfo implements StepLogFields {

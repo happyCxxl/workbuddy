@@ -9,8 +9,6 @@ import java.util.Map;
 
 /**
  * 文件结果数据访问服务（wb_file_result）。
- *
- * @author cxxl
  */
 public interface WbFileResultDbService extends InfraDbService<WbFileResult> {
 

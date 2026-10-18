@@ -10,8 +10,6 @@ import java.util.Map;
  * 预处理派生视图（五层）：rawText 永为原文，displayText 供展示，
  * normalizedText 供检索（切片环节 content 口径），normalizedFields 供精确过滤，
  * preprocessTrace 记录命中规则与前后摘要。原文 UnifiedDocument 零改动。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessView {

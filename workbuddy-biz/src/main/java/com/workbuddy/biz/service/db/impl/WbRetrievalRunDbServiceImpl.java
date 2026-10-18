@@ -13,8 +13,6 @@ import java.util.List;
 
 /**
  * 检索运行记录数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbRetrievalRunDbServiceImpl

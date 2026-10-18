@@ -26,8 +26,6 @@ import java.util.StringJoiner;
  * 多厂商配置与单厂商配置都直接放行。
  *
  * <p>在启动校验链里排在 {@link #ORDER_CREDENTIALS} 档：它依赖密钥等外部凭据。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

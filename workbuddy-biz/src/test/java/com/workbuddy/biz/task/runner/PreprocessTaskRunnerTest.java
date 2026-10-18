@@ -56,8 +56,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 预处理任务执行器单测：成功落库（upstream 链 + 9 步日志）/ 上游缺失 PREPROCESS_EMPTY / 管线失败。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class PreprocessTaskRunnerTest {

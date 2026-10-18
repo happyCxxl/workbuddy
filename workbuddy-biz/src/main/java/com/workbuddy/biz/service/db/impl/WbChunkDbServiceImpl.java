@@ -17,8 +17,6 @@ import java.util.List;
 
 /**
  * 切片数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbChunkDbServiceImpl extends InfraDbServiceImpl<WbChunkMapper, WbChunk>

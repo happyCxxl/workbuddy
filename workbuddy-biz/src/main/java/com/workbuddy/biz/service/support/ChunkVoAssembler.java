@@ -19,8 +19,6 @@ import java.util.Map;
 /**
  * 切片详情 VO 组装器（纯映射，不查库）：切片集合/切片行 → 统计/切片列表视图。
  * 集合与切片由 Service 查好传入；任务/子步骤字段组装不归本类。
- *
- * @author cxxl
  */
 @Component
 public class ChunkVoAssembler {

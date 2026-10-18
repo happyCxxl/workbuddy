@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 全文检索命中：TEXT_MATCH 匹配召回（无 BM25 分数，score 恒为 null）。
- *
- * @author cxxl
  */
 @Data
 @Builder

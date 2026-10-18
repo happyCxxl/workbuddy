@@ -9,8 +9,6 @@ import java.util.List;
 
 /**
  * 解析详情 VO：工作台"解析详情"页数据源。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -6,8 +6,6 @@ import java.util.List;
 
 /**
  * 版面分析结果（区域分类 + 阅读顺序）。
- *
- * @author cxxl
  */
 @Data
 public class LayoutResult {

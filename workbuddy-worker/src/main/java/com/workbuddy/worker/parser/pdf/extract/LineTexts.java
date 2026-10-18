@@ -12,8 +12,6 @@ import java.util.List;
  * 内容流里的真实空白压缩为一个空格；两侧同为 CJK 时不补空格。
  * 字距加宽排版的行（字符间隙显著且成片）不按词边界补空格 —— PDFBox 在字距加宽时
  * 会把每个字符当作独立的词回调，照词边界补空格会把单词拆成单字符。
- *
- * @author cxxl
  */
 public final class LineTexts {
 

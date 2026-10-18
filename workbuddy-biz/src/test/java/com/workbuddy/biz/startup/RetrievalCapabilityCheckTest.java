@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 检索能力名校验单测：合法名与空配置通过并推进链；非法名即拒、消息里带出非法名且不推进。
- *
- * @author cxxl
  */
 class RetrievalCapabilityCheckTest {
 

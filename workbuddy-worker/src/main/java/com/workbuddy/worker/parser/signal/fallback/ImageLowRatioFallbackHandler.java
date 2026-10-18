@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 /**
  * 疑似图片页降级处置：解析已产出内容，只告警不计失败单元
  * （真正"整页一张图、无文本"的页由扫描页规则覆盖计失败）。
- *
- * @author cxxl
  */
 @Component
 public class ImageLowRatioFallbackHandler implements SignalFallbackHandler {

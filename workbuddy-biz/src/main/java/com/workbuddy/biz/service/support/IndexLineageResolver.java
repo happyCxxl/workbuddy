@@ -16,8 +16,6 @@ import org.springframework.stereotype.Component;
  * 存有完整 PreprocessStrategy JSON（PreprocessTaskRunner 落库口径），解析出 name-version。
  * 组合映射按环节可扩展：新增环节策略时，按同模式从对应产物的 capabilitySnapshot 读取，
  * ComboSnapshot 结构与索引构建逻辑零改动。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 质量信息：告警清单 + 扫描页/失败页清单（只标记，裁决在成功占比门槛）。
- *
- * @author cxxl
  */
 @Data
 public class QualityInfo {

@@ -26,8 +26,6 @@ import java.util.List;
 /**
  * 无边框表（文本对齐路径）：列对齐聚类（支持度过滤）成表，格内文本按列区间归属；
  * 列对齐失败或空白率过高时出 TABLE 事实并把块降级为段落。
- *
- * @author cxxl
  */
 public final class TextTableBuilder {
 

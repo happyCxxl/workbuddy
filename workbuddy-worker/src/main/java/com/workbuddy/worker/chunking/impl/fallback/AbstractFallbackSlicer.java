@@ -9,8 +9,6 @@ import java.util.List;
 
 /**
  * 窗口类兜底切片器骨架：空文本返回空片，其余从 fallback 路由读 len/overlap 交给 doSlice。
- *
- * @author cxxl
  */
 public abstract class AbstractFallbackSlicer implements FallbackSlicer {
 

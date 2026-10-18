@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * EmbeddingSet JSON 往返单测：向量本体/记录元数据/目录冗余完整往返。
- *
- * @author cxxl
  */
 class EmbeddingSetJsonTest {
 

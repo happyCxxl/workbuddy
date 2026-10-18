@@ -11,8 +11,6 @@ import java.util.Map;
 /**
  * JSON 工具类（基于 hutool，供 biz / worker 共用）。
  * 注意：hutool 默认把 LocalDateTime 序列化成时间戳数字，本类统一配置为可读时间字符串。
- *
- * @author cxxl
  */
 public final class JsonUtil {
 

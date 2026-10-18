@@ -11,8 +11,6 @@ import java.lang.annotation.Target;
  *
  * <p>实现在 {@code knowledge-infra} 的限流切面（{@code RateLimitAspect}）：
  * 注解是契约、留在 common，切面与令牌桶是基础设施、放在 infra。
- *
- * @author cxxl
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

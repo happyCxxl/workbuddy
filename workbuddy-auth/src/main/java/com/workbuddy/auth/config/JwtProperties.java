@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
  * 令牌签发配置（knowledge.auth.jwt 前缀）。
  *
  * <p>取值域校验落在启动校验链（{@code AuthConfigCheck}）：密钥为空、有效期非正都在启动期拒绝。
- *
- * @author cxxl
  */
 @Data
 @Component

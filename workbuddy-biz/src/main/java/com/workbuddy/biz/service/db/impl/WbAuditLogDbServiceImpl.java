@@ -14,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 /**
  * 操作审计数据访问服务实现：审计行组装内聚在此，append-only。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

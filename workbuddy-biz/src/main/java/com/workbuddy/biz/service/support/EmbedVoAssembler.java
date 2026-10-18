@@ -14,8 +14,6 @@ import java.util.List;
  * 向量化详情 VO 组装器（纯映射，不查库）：集合行 + 记录行 → 集合摘要/记录条目视图。
  * 集合与记录由 Service 查好传入；任务/子步骤字段组装不归本类。
  * 摘要三态统计口径：SUCCESS/FAILED/SKIPPED 计数，CACHED 不参与（复用命中单独展示 cachedCount）。
- *
- * @author cxxl
  */
 @Component
 public class EmbedVoAssembler {

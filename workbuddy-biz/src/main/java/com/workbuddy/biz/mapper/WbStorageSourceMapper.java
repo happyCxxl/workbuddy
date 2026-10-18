@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 存储数据源 Mapper（表：wb_storage_source）。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbStorageSourceMapper extends BaseMapper<WbStorageSource> {

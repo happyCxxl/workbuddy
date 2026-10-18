@@ -7,7 +7,6 @@ import com.workbuddy.common.enums.input.FileValidationFailReason;
  *
  * @param passed     是否通过
  * @param failReason 失败原因（通过时为 null）
- * @author cxxl
  */
 public record FileCheckResult(boolean passed, FileValidationFailReason failReason) {
 

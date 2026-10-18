@@ -8,8 +8,6 @@ import lombok.EqualsAndHashCode;
  * 解析产出（ParsePipeline 返回值）：结果封装 + 单元统计 + 状态壳（继承 StageOutcome）。
  * biz 据此写产物存储、落库并回写任务状态。
  * 质量告警明细在 ParseResult.quality（与结果本体一起落产物），本类 warnings 不消费。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

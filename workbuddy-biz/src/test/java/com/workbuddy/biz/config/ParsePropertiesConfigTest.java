@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 解析阈值配置口径：配置面（主文件与 `spring.config.import` 清单里的环节文件合成一本）的 `knowledge.parse`
  * 覆盖 ParseProperties 的全部字段，且初始值与代码默认值一致（配置面与代码面不许偏）。
- *
- * @author cxxl
  */
 class ParsePropertiesConfigTest {
 

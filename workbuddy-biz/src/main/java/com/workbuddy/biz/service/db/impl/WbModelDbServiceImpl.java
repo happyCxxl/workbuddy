@@ -16,8 +16,6 @@ import java.util.List;
 
 /**
  * 模型目录数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbModel> implements WbModelDbService {

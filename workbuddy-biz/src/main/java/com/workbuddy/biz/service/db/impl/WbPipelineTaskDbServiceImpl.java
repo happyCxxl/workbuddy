@@ -17,8 +17,6 @@ import java.util.List;
 
 /**
  * 处理链任务数据访问服务实现。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

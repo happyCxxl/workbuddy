@@ -34,8 +34,6 @@ import java.util.Objects;
  * 解析任务执行器（消费循环调用）：领任务 → 读文档输入环节建档数据 → 开流调 worker 解析管线 →
  * 写产物存储 + 落库（product/step_log）→ 回写任务终态。
  * 状态回写只更新 wb_knowledge_pipeline_task 自身与产物引用，不回写领域规则。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

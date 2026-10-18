@@ -13,8 +13,6 @@ import java.io.Serializable;
  * docPage 同样只在产物内容接口上生效，用于只取某个文档页的元素；
  * status 同样只在产物内容接口上生效，用于只取某些处置状态的元素（预处理环节核对剔除内容用）；
  * contentType/fallback/hasParent 同样只在产物内容接口上生效，用于收窄切片内容（切片环节按类型 / 兜底 / 父子查看用）。
- *
- * @author cxxl
  */
 @Data
 public class StageDetailQueryDTO implements Serializable {

@@ -15,8 +15,6 @@ import java.util.List;
  * 标题入正文（titleInContent，默认 ON，对齐开源 LangChain strip_headers=false 口径）：
  * 非父片 content 首行拼接标题链（titlePath + "\n" + 原内容），charCount 重算。
  * 父片=子片拼接（子片已带标题），不加；OFF = 标题只在 titlePath 元数据。
- *
- * @author cxxl
  */
 @Order(3)
 @Component

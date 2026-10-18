@@ -18,8 +18,6 @@ import java.util.List;
 /**
  * 页内图片元素与事实：面积占比达门槛的图片产 IMAGE 元素（仅引用 + needsOcr + bbox 定位），
  * 逐张产 OCR_IMAGE 事实（仅告警）；元素按页内自上而下追加在本页正文之后。
- *
- * @author cxxl
  */
 public final class PdfImageEmitter {
 

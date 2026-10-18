@@ -11,8 +11,6 @@ package com.workbuddy.common.startup;
  * 一处漏调会静默跳过后面所有校验，故除有意短路外，每条通过路径都必须调用它。
  *
  * <p>{@link #order()} 的档位取本接口的三个常量，留 10 的间隔：值小的先执行。
- *
- * @author cxxl
  */
 public interface StartupCheck {
 

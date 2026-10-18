@@ -11,8 +11,6 @@ import java.util.Set;
 /**
  * 策略版本服务：切片策略的下拉查询与管理（预处理/向量化等类型随对应环节加入）。
  * 口径：策略版本行不可变——编辑 = 复制新行；停用代替删除（有绑定引用禁物理删除）。
- *
- * @author cxxl
  */
 public interface StrategyVersionService {
 

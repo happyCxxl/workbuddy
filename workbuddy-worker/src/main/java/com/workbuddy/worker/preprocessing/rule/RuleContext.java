@@ -12,8 +12,6 @@ import java.util.Set;
 
 /**
  * 规则执行上下文：文档级预计算集合（管线执行前一次算好，规则只读）。
- *
- * @author cxxl
  */
 @Data
 public class RuleContext {

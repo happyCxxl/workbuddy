@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 向量化策略解析器单测：默认补齐 / 空与非法快照抛异常 / parseConfig 不设 name/version。
- *
- * @author cxxl
  */
 class EmbedStrategyParserTest {
 

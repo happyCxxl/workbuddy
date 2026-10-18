@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 触发切片响应：任务 ID + 生效策略版本（触发时固定）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

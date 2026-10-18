@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 固定窗口兜底切片器单测：窗口长度 + 重叠。
- *
- * @author cxxl
  */
 class FixedWindowFallbackTest {
 

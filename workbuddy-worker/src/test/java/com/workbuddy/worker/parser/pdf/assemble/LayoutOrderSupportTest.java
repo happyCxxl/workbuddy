@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * 模型阅读顺序落到页面行单测：行按中心命中区域取模型位次；区域外的行保持相对次序并排在末尾。
- *
- * @author cxxl
  */
 class LayoutOrderSupportTest {
 

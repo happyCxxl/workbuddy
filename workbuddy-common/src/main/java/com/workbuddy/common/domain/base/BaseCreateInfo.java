@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 
 /**
  * 轻量创建留痕基类：仅 create_by/create_time，无逻辑删除与更新字段。
- *
- * @author cxxl
  */
 @Data
 public class BaseCreateInfo implements Serializable {

@@ -19,8 +19,6 @@ import org.springframework.stereotype.Component;
  * 存储一致性校验 + 执行键查重（已有任务一律拒绝 40431）+ 新建 QUEUED 任务入队，口径与各环节一致。
  *
  * <p>存储一致性校验委托 {@link ChainStorageSupport}（产物写入入口共用同一份判定）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

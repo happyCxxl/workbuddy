@@ -10,8 +10,6 @@ import java.util.Arrays;
  * 其余可识别格式预留、默认关闭），识别依据 = Tika 魔数，不信任扩展名。
  * 纯图片（JPG/PNG/TIFF/BMP）不进本字典，识别后单独走 IMAGE_OCR_RESERVED（OCR 预留）。
  * mimeType 为各格式的真实 MIME 值——单一事实源：校验映射与各解析器路由共用。
- *
- * @author cxxl
  */
 @Getter
 public enum FileFormat {

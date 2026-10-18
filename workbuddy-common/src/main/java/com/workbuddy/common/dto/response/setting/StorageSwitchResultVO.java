@@ -5,8 +5,6 @@ import lombok.EqualsAndHashCode;
 
 /**
  * 存储数据源切换结果 VO：目标数据源、切换前后的当前数据源与本次切换的影响面。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

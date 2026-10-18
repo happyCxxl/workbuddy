@@ -11,8 +11,6 @@ import java.util.List;
  * Milvus 索引 Port（策略集合模型）。
  * 一个组合 = 一个集合（kb_{kbId}_{versionNo}）；本 Port 所有操作按集合名寻址，
  * 集合即边界：无 version 过滤、无 kb_id 过滤，查询只带业务过滤（documentId/owner/contentType）。
- *
- * @author cxxl
  */
 public interface MilvusIndexPort {
 

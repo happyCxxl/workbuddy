@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 编码规范化规则单测：displayText 口径（空白/乱码）+ normalizedText 基座（NFKC 全角→半角）+ 单元格。
- *
- * @author cxxl
  */
 class EncodingCleanRuleTest {
 

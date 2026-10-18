@@ -7,7 +7,6 @@ package com.workbuddy.worker.parser.pdf.model;
  * @param top    上边界
  * @param right  右边界
  * @param bottom 下边界
- * @author cxxl
  */
 public record Region(double left, double top, double right, double bottom) {
 

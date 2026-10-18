@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 /**
  * 索引集合：一知识库一行，承载二级发布指针 currentPublishedVersionId。
  * 机器表：append-only、仅 create_time、不挂平台五件套（与 wb_knowledge_pipeline_task 同款）。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_index_set")

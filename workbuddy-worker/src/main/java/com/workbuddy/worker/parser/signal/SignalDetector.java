@@ -10,8 +10,6 @@ import java.util.List;
  * 信号判定器：native 路元素 + 页级指标 + 解析事实 → 信号集合。
  * 判定顺序先便宜后贵（页级字符统计 → 乱码率 → 文字占比 → 表格 → 版面 → 结构缺口），
  * 全链执行、聚合信号（不命中即断链），供能力扩展点按需升级。
- *
- * @author cxxl
  */
 public interface SignalDetector {
 

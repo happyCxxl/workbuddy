@@ -21,8 +21,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 模型注册表装载器单测：启用行映射（能力解析）、空表合法、查库失败上抛。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class ModelRegistryLoaderTest {

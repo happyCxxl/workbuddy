@@ -45,8 +45,6 @@ import java.util.Set;
  * 流程：剔除过滤 → 标题章节栈维护（标题不成片）→ 内容路由分派切片器（表格可并入正文流）→
  * 后置处理链（结构重叠→碎片合并→标题入正文）→ 父子层级 → 编号/token → ChunkSet 组装与状态判定。
  * 纯算法，不碰 DB/产物存储（落库回写由 biz ChunkTaskRunner 编排）；确定性执行（策略无状态，状态全在 SliceContext）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

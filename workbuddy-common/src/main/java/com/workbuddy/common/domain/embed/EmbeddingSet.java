@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 向量产物集合：一次 EMBED 策略运行的产物（多套策略 = 多个集合并存，平行候选）。
  * 每次运行**完整自包含**（复用 + 新算全量 record，向量本体完整复制，不存指针）。
- *
- * @author cxxl
  */
 @Data
 public class EmbeddingSet {

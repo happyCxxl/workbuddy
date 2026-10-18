@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 文档信息：血缘起点（documentId/sourceFileRef/parserRunId）+ schema 版本 + 能力快照。
- *
- * @author cxxl
  */
 @Data
 public class DocumentInfo {

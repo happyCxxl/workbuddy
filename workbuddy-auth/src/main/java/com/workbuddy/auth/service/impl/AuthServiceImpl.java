@@ -24,8 +24,6 @@ import java.util.Objects;
 
 /**
  * 认证服务实现。
- *
- * @author cxxl
  */
 @Service
 @RequiredArgsConstructor

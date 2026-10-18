@@ -6,8 +6,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * 检索运行记录开关：测试台检索必记；生产检索按 {@link RetrievalRunProperties} 决定（默认关，逐查询记录量大）。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

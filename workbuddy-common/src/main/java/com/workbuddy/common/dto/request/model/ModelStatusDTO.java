@@ -9,8 +9,6 @@ import java.io.Serializable;
 
 /**
  * 模型启停的请求体：只带目标状态。
- *
- * @author cxxl
  */
 @Data
 public class ModelStatusDTO implements Serializable {

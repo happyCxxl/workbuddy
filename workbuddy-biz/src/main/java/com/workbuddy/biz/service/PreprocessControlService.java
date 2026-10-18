@@ -5,8 +5,6 @@ import com.workbuddy.common.dto.response.preprocess.PreprocessTriggerVO;
 
 /**
  * 预处理控制面：触发预处理/重跑（手动逐环节）+ 预处理详情。
- *
- * @author cxxl
  */
 public interface PreprocessControlService {
 

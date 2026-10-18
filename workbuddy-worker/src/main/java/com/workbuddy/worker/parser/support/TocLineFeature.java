@@ -8,8 +8,6 @@ import cn.hutool.core.util.StrUtil;
  * 目录行级特征判定（PDF 行 / DOCX 段落共用，单一口径）：
  * 行尾页码（阿拉伯数字或中文数字）+ 点线引导符（连续点/省略号/长空白）。
  * 只标特征行，"整页判目录页"聚合在预处理环节。
- *
- * @author cxxl
  */
 public final class TocLineFeature {
 

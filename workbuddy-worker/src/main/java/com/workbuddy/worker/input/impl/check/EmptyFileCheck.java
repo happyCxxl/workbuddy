@@ -10,8 +10,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * 空文件判定步骤：流式统计字节数为 0 视为损坏（空文件无可解析内容）。
- *
- * @author cxxl
  */
 @Component
 public class EmptyFileCheck implements FileCheck {

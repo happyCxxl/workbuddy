@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 向量记录行（详情抽屉列表）：元数据与状态，不含向量本体（本体不下发前端）。
- *
- * @author cxxl
  */
 @Data
 public class EmbedRecordItemVO {

@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 索引集合 Mapper。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbIndexSetMapper extends BaseMapper<WbIndexSet> {

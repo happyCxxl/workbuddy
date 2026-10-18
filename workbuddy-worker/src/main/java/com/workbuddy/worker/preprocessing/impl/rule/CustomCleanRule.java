@@ -23,8 +23,6 @@ import java.util.regex.Matcher;
  * ⑧ 自定义规则（链尾）：用户自定义正则规则（REMOVE/REPLACE/EXTRACT），
  * 按序作用于元素 displayText/normalizedText 与单元格文本，不动结构（与 TextTidyRule 同口径）。
  * 正则由管线在 buildRuleContext 预编译一次（RuleContext.customRuleMatchers），执行期只匹配。
- *
- * @author cxxl
  */
 @Component
 public class CustomCleanRule implements CleanRule {

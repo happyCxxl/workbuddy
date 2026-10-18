@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 表格单元格 VO（文档内容大纲 TABLE 渲染用）。
- *
- * @author cxxl
  */
 @Data
 public class StructureCellVO {

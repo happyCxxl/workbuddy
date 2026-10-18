@@ -5,8 +5,6 @@ import com.workbuddy.common.dto.response.task.StageTriggerVO;
 
 /**
  * 解析控制面服务：触发解析（手动逐环节，首次解析与失败重跑同一入口）与解析详情。
- *
- * @author cxxl
  */
 public interface ParseControlService {
 

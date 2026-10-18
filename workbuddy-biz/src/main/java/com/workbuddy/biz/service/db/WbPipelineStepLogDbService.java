@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 子步骤记录数据访问服务（wb_knowledge_pipeline_step_log）。
- *
- * @author cxxl
  */
 public interface WbPipelineStepLogDbService extends InfraDbService<WbPipelineStepLog> {
 

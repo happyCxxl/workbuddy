@@ -9,8 +9,6 @@ import org.springframework.context.annotation.Bean;
 
 /**
  * MyBatis-Plus 自动配置：注册分页插件（MySQL 方言）。
- *
- * @author cxxl
  */
 @AutoConfiguration
 public class MybatisPlusAutoConfiguration {

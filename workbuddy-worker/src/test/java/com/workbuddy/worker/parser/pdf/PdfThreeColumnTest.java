@@ -26,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 三栏页阅读顺序与段落边界：同排的多栏文字按栏切开、段落不跨栏合并，跨栏行单独成段。
  * 样例文件见 samples/pdf-parse-06。
- *
- * @author cxxl
  */
 class PdfThreeColumnTest {
 

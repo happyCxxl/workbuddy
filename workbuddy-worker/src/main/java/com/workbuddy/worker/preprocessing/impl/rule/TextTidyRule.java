@@ -23,8 +23,6 @@ import java.util.regex.Pattern;
  * 折行段落合并（同段内硬折行合成一行，段间与列表项不动）、
  * 标点与引号统一（重复标点折叠+弯引号转直引号）、断词连字符合并（软连字符剔除+英文断行）、
  * 项目符号后补空格、移除 URL/邮箱。无变化：表格记 KEEP，段落不记轨迹。
- *
- * @author cxxl
  */
 @Component
 public class TextTidyRule implements CleanRule {

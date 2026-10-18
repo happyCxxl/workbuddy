@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * CID 映射失败降级处置：写 CID_MAPPING_FAILED_PAGE 告警 + 登记失败页，计 1 个失败单元。
- *
- * @author cxxl
  */
 @Component
 public class CidMappingFallbackHandler implements SignalFallbackHandler {

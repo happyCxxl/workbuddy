@@ -11,8 +11,6 @@ import java.util.UUID;
 
 /**
  * Redis 分布式锁：SET NX EX 抢占，Lua 比对 token 后释放。
- *
- * @author cxxl
  */
 @Component
 public class RedisLock {

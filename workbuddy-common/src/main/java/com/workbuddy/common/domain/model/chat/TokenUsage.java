@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 对话 token 用量。
- *
- * @author cxxl
  */
 @Data
 public class TokenUsage {

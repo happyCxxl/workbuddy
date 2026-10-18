@@ -13,8 +13,6 @@ import org.springframework.stereotype.Component;
  * <p>该值只是数据源播种与回落的兜底来源，数据源表里已有可用行时不会被读到；取值非法会一直潜伏到
  * 某次重建数据源表才在一次无关的启动里暴露。本项在启动期先验一遍，取值判定复用
  * {@link FileCenterConfig#defaultType()}。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

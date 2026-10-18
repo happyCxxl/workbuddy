@@ -5,8 +5,6 @@ import com.workbuddy.common.dto.response.embed.EmbedTriggerVO;
 
 /**
  * 向量化控制面服务（手动逐环节，与切片/预处理同构）。
- *
- * @author cxxl
  */
 public interface EmbedControlService {
 

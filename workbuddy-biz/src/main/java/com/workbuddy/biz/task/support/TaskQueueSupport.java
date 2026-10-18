@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 /**
  * 任务唤醒队列：Redis 只当"叫号器"，DB 任务表是唯一状态账本；
  * 消费侧被叫醒后扫库领批、重读 DB 校验，消息内容（taskId）仅作参考。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

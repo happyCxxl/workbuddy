@@ -9,8 +9,6 @@ import java.io.Serial;
  * 新增用户请求（管理员操作）。
  *
  * <p>字段与自助注册一致，另可指定角色与状态；两者都不传时缺省为普通用户、启用。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

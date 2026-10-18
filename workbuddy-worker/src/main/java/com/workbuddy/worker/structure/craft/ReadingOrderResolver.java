@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 阅读顺序统一：XY-cut 递归切分（行带→块→递归，上→下、左→右）；
  * 无坐标元素（Office）保持解析环节文档顺序直通；版面模型顺序优先（预留）。
- *
- * @author cxxl
  */
 public interface ReadingOrderResolver {
 

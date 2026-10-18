@@ -13,8 +13,6 @@ import java.util.Map;
  *
  * <p>数据源表为空时用两条内置定义 seed 两行（MinIO / 本地磁盘）；表里没有可用行时用配置指明的
  * 那一条回落注册。定义里的主键由这里生成，落库与注册共用同一个 ID。
- *
- * @author cxxl
  */
 public final class FileCenterDefaults {
 

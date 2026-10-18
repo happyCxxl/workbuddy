@@ -25,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 字段规范化规则单测：11.4 全表（金额/日期/单位/证书号/编号/限定词）+ 冲突优先级 + MANUAL_REVIEW。
- *
- * @author cxxl
  */
 class FieldNormalizeRuleTest {
 

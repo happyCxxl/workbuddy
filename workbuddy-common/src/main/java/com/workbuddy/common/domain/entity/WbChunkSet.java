@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 /**
  * 切片产物集合：一次切片策略运行的产物集合（多套策略 = 多个集合并存）。
  * 机器表：后台线程写入、append-only、不逻辑删——不挂平台五件套（仅 create_time）。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_chunk_set")

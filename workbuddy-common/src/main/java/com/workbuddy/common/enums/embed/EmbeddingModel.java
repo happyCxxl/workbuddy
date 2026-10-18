@@ -11,8 +11,6 @@ import java.util.List;
  * 当前供应商 = 阿里云 DashScope（模型名即 DashScope 渠道名）。
  *
  * <p>数值为占位/厂商口径值，联调实测后只改本枚举常量即可。</p>
- *
- * @author cxxl
  */
 public enum EmbeddingModel {
 
@@ -46,10 +44,10 @@ public enum EmbeddingModel {
     /** 是否归一化（COSINE 度量必须归一化） */
     private final boolean normalized;
 
-    /** 上下文窗口（tokens）；TODO 待用户查证 */
+    /** 上下文窗口（tokens）；取值待核对模型文档 */
     private final int contextWindowTokens;
 
-    /** 单批上限（条）；TODO 待用户查证 */
+    /** 单批上限（条）；取值待核对模型文档 */
     private final int batchLimit;
 
     /** 是否启用（目录校验：未启用模型拒绝保存/触发） */

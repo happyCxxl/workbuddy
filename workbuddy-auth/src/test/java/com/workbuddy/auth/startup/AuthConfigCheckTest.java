@@ -15,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 认证配置校验单测：密钥为空、有效期非正、防护阈值为非正即拒；防护关闭时跳过阈值校验。
- *
- * @author cxxl
  */
 class AuthConfigCheckTest {
 

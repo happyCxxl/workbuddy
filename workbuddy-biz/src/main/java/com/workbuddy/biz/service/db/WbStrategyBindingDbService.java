@@ -8,8 +8,6 @@ import java.util.List;
 
 /**
  * 知识库-策略绑定数据访问服务。
- *
- * @author cxxl
  */
 public interface WbStrategyBindingDbService extends InfraDbService<WbStrategyBinding> {
 

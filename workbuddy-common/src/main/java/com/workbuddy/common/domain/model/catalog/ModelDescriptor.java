@@ -13,8 +13,6 @@ import java.util.Set;
  *
  * <p>本类型是平台侧契约语义，落在 common；库表实体与 Mapper 留在 knowledge-biz，端口消费方看不到库结构。
  * 能力是多值（D26）：一个模型可以同时出现在多个能力的候选集里，而限额与健康状态只按模型算一份。
- *
- * @author cxxl
  */
 @Data
 public class ModelDescriptor {

@@ -6,8 +6,6 @@ import lombok.Data;
 /**
  * 提交文件请求：body 只有 fileId + requestId（knowledgeBaseId 从路径取，提交人从登录态取）。
  * requestId 为空时的拒绝语义（REQUEST_ID_MISSING）在 service 校验，不走参数校验。
- *
- * @author cxxl
  */
 @Data
 public class FileSubmitDTO {

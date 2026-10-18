@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * 能力契约 JSON 单测：模型按契约给出的表格结构能直接映射到 TableRegion / TableResult / TableCell，
  * 字段名与格级 bbox / 置信度是契约的一部分，改动即测试失败。
- *
- * @author cxxl
  */
 class CapabilityContractJsonTest {
 

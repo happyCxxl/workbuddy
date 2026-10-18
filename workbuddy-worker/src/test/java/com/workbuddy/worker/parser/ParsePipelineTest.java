@@ -46,8 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 解析管线编排单测：路由、门槛三档、纯扫描件、信号降级处置（六 handler 真实实例）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class ParsePipelineTest {

@@ -6,8 +6,6 @@ import java.util.List;
 
 /**
  * 对话请求：消息列表 + 可空参数组；模型由模块在注册表候选集中选定，请求不指定模型。
- *
- * @author cxxl
  */
 @Data
 public class ChatRequest {

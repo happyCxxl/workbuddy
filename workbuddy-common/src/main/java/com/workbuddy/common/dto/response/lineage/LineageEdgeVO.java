@@ -5,8 +5,6 @@ import lombok.Data;
 /**
  * 执行树血缘边：上游任务 → 下游任务。
  * 边来源：下游任务 upstreamProductId → 产物行 → 反查产出该产物的任务（task.productId）。
- *
- * @author cxxl
  */
 @Data
 public class LineageEdgeVO {

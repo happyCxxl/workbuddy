@@ -6,8 +6,6 @@ import com.workbuddy.common.utils.NullUtil;
 
 /**
  * 派生视图元素公共操作（剔除/跳过处置共用口径）。
- *
- * @author cxxl
  */
 public final class ViewElementHelper {
 

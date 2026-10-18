@@ -10,8 +10,6 @@ import java.util.Map;
 /**
  * 结构组装产出：元素（类型/层级更新）+ 推定统计（内部流转，不出 worker）；
  * 关系由 {@link StructureAssembler#buildRelations} 在接续之后按最终元素表生成。
- *
- * @author cxxl
  */
 @Data
 public class TreeOutcome {

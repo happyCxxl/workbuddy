@@ -10,8 +10,6 @@ import java.io.Serializable;
 
 /**
  * 更新知识库请求。
- *
- * @author cxxl
  */
 @Data
 public class KnowledgeBaseUpdateDTO implements Serializable {

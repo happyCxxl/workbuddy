@@ -9,8 +9,6 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 /**
  * 字体 Unicode 映射判据：Type0（CID）字体且 COS 字典无 ToUnicode 映射时，
  * 字符码点无法按 Unicode 还原，提取出的文本可能是错位码点（`ÿþ¤` 这类可打印乱码）。
- *
- * @author cxxl
  */
 public final class PdfFontMapping {
 

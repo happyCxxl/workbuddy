@@ -25,8 +25,6 @@ import java.util.function.Function;
  * **终态收尾**各环节完全同构，集中在这里，执行器只管自己的管线调用与落库。
  *
  * <p>手动逐环节口径：成功后停在终态，不自动触发下游。
- *
- * @author cxxl
  */
 @Slf4j
 public final class TaskRunnerSupport {

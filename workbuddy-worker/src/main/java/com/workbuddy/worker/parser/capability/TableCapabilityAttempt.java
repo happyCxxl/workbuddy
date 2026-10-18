@@ -12,8 +12,6 @@ import com.workbuddy.worker.parser.pdf.assemble.TableStructureSupport;
 /**
  * 规则失败表的能力尝试：按区域调一次表格结构识别，成功给出「表格元素 + 能力补强事实」，
  * 未接入 / 区域为空 / 调用失败 / 结果不可用给出「无表格元素 + 能力降级事实」，由取用方决定是否降级。
- *
- * @author cxxl
  */
 public final class TableCapabilityAttempt {
 

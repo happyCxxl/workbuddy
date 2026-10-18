@@ -10,8 +10,6 @@ import java.util.List;
 /**
  * 切片器注册表（工厂）：启动时把 Spring 注入的全部 SliceStrategy 按算法建索引（AlgorithmRegistry 泛型收口）。
  * 新增算法 = 新增一个 @Component 实现，自动收录（开闭原则）；查找不到 → 明确报错，不静默回退。
- *
- * @author cxxl
  */
 @Component
 public class SliceStrategyRegistry {

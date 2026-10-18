@@ -9,8 +9,6 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
  * 版面判定（行聚合、分栏、页眉页脚带、表格网格）在**版面坐标**里做（裁剪框左上原点），
  * 产出元素时用本类换算到**视口坐标** —— 与 pdf.js `getViewport({ scale: 1 })` 同一套坐标，
  * 前端预览按它画高亮框，两边必须一致。
- *
- * @author cxxl
  */
 public record PdfPageGeometry(double textWidth, double textHeight, int rotation) {
 

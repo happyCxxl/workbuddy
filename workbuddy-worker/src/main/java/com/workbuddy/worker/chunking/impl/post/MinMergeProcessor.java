@@ -18,8 +18,6 @@ import java.util.Set;
  * 碎片合并（minMergeLen，默认 300）：正文碎片（< minMergeLen）并入同章前一个正文片，避免"一句话一片"。
  * 只作用于正文片；仅与"紧邻的前一个正文片"合并（不跨表格/图片，保持正文组连续口径）；
  * 跨章节不生效；无相邻上一正文片则保留原样。
- *
- * @author cxxl
  */
 @Order(2)
 @Component

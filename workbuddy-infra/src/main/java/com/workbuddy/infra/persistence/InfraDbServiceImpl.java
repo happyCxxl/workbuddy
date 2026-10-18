@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
  *
  * @param <M> Mapper 类型
  * @param <T> 实体类型
- * @author cxxl
  */
 public class InfraDbServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M, T> implements InfraDbService<T> {
 }

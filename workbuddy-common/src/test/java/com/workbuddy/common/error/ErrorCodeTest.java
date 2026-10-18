@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 错误码单测：模型调用分区的十个码值与文案、号段连续性与全仓唯一性。
- *
- * @author cxxl
  */
 class ErrorCodeTest {
 

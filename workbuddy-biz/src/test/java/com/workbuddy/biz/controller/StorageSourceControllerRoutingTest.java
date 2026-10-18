@@ -27,8 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 存储数据源接口路由测试：清单、切换预览与设为当前启用的路径映射，以及已下线的动作段不再占用路径。
  *
  * <p>用独立 MockMvc 装配单个 Controller：不加载数据源与容器，只验证 URL 到方法的映射。
- *
- * @author cxxl
  */
 class StorageSourceControllerRoutingTest {
 

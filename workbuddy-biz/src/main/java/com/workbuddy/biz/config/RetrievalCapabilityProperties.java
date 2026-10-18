@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
  * 检索能力开关配置（retrieval.capabilities 前缀）：能力分层解锁的清单，默认空即全关。
  *
  * <p>解锁只改配置：结构与策略快照零迁移。名字是否合法由启动校验项 {@code RetrievalCapabilityCheck} 判定。
- *
- * @author cxxl
  */
 @Data
 @Component

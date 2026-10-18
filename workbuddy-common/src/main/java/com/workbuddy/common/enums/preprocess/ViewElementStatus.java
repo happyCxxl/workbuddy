@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.preprocess;
 /**
  * 视图元素处置状态（字典）：只落在派生视图副本，原结构树不变。
  * 落库/落产物形式：name()。
- *
- * @author cxxl
  */
 public enum ViewElementStatus {
 

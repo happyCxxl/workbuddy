@@ -15,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 切片策略解析器单测：结构化解析补全默认 / 空与非法快照抛异常 / pipeline 单键配置映射 / parseConfig 语义。
- *
- * @author cxxl
  */
 class ChunkStrategyParserTest {
 

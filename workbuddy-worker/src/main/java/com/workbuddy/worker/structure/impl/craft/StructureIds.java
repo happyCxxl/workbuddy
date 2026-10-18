@@ -9,8 +9,6 @@ import java.security.NoSuchAlgorithmException;
 /**
  * 统一元素 ID 生成：来源前缀 + 内容哈希（sha256 前 12 位）。
  * 单文档内唯一；跨处理不承诺稳定（跨处理对照用 provenance + 内容哈希）。
- *
- * @author cxxl
  */
 final class StructureIds {
 

@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
  * 有坐标元素按页分组、页内 XY-cut（横向切行带 → 带内纵向切块 → 块内递归，上→下、左→右）；
  * 无坐标元素（Office 结构路径）保持解析环节文档顺序直通；
  * HEADER/FOOTER 排除出正文流（仍在树内，仅不参与 NEXT 排序）。
- *
- * @author cxxl
  */
 @Component
 public class ReadingOrderResolverImpl implements ReadingOrderResolver {

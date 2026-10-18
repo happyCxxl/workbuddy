@@ -38,8 +38,6 @@ import java.util.stream.Collectors;
  * Excel（XLS/XLSX）原生结构解析器（POI 路径）。
  * 每个 sheet 产出 TABLE 元素；定位 = sheet + 行列（无页码概念）；
  * 合并区域 origin 单元格记 span、其余跳过；公式格取缓存值。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

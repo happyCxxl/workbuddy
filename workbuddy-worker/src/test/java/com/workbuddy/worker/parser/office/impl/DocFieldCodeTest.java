@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * DOC 域代码剥离单测：`0x13` 起始到 `0x14` 分隔之间是域指令（丢弃），`0x14` 之后是域结果（保留），
  * `0x15` 结束控制符清掉；无域的文本原样返回。
- *
- * @author cxxl
  */
 class DocFieldCodeTest {
 

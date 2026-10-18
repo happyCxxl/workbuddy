@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 /**
  * 环节状态 VO：文件列表行内各环节最新任务的状态。
  * 无任务时列表不含该环节条目。
- *
- * @author cxxl
  */
 @Data
 public class StageStatusVO implements TaskStatusVO {

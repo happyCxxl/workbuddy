@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 冲突记录：无法裁决的两路元素（双路并存契约：两路都保留，PRIMARY/BACKUP 标记）。
- *
- * @author cxxl
  */
 @Data
 public class ConflictRecord {

@@ -6,8 +6,6 @@ import java.time.LocalDateTime;
 
 /**
  * 策略版本 VO：前端策略选择下拉与管理列表数据源。
- *
- * @author cxxl
  */
 @Data
 public class StrategyVersionVO {

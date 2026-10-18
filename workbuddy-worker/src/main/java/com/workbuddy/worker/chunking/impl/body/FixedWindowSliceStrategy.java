@@ -19,8 +19,6 @@ import java.util.List;
 /**
  * 正文切片器（固定窗口 + 重叠）：忽略语义边界，flush 时对缓冲文本按 len 窗口切、相邻窗口重叠 overlap。
  * contentType=PARAGRAPH（能力名与策略版本区分口径）；评测基线用途。
- *
- * @author cxxl
  */
 @Component
 public class FixedWindowSliceStrategy implements SliceStrategy {

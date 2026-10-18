@@ -17,8 +17,6 @@ import java.util.List;
  *
  * <p>环节名写错由绑定期拦下（{@link TaskQueueProperties#timeout} 的键是枚举），本项补的是值域：
  * 超时给 0 或负数会让该环节任务一启动就被判超时，或在孤儿恢复里把正常任务误判成失败。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

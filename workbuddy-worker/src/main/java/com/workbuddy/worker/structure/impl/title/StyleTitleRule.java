@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 
 /**
  * 原生样式标题规则（级联第一层）：DOCX Heading1~9 直接定级（样式名须完整匹配，级数收敛到 1~9）。
- *
- * @author cxxl
  */
 @Component
 public class StyleTitleRule implements TitleRule {

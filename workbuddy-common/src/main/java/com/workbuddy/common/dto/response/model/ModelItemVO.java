@@ -11,8 +11,6 @@ import java.util.List;
  *
  * <p>能力按字典名逐个下发（页面渲染成一枚枚标签）；`vendorName` 是厂商码的展示名，配置里没有这一项；
  * 价格四列与限额两列可为空，留空表示该口径未登记。
- *
- * @author cxxl
  */
 @Data
 public class ModelItemVO {

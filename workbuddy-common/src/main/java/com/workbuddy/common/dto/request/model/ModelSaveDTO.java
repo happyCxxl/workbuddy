@@ -19,8 +19,6 @@ import java.util.List;
  *
  * <p>校验全部在本类注解（Controller `@Valid` 触发）；服务层只做能力逐项按字典解析，
  * 唯一键冲突由 `uk_vendor_model` 索引拦下并转业务异常。
- *
- * @author cxxl
  */
 @Data
 public class ModelSaveDTO implements Serializable {

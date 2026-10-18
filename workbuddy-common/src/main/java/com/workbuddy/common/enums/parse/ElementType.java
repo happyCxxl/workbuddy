@@ -4,8 +4,6 @@ package com.workbuddy.common.enums.parse;
  * 元素类型。解析环节只产"解析事实"，标题层级推定（TITLE 类）归组装环节。
  * 当前实际产出：PARAGRAPH / TABLE / TABLE_CELL / IMAGE / HEADER / FOOTER；
  * FIGURE_CAPTION / LIST 枚举保留不产出。
- *
- * @author cxxl
  */
 public enum ElementType {
 

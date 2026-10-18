@@ -7,8 +7,6 @@ import java.io.Serial;
 
 /**
  * 统一业务异常：携带错误码，默认消息取错误码文案。
- *
- * @author cxxl
  */
 @Getter
 public class KnowledgeException extends RuntimeException {

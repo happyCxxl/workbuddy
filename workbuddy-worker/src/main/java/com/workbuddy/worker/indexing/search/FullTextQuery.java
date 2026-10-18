@@ -5,8 +5,6 @@ import lombok.Data;
 
 /**
  * 全文检索查询：Milvus TEXT_MATCH 全文匹配（content/titlePath 配 chinese analyzer）。
- *
- * @author cxxl
  */
 @Data
 @Builder

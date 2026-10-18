@@ -16,8 +16,6 @@ import java.util.List;
 /**
  * 正文切片器（标题边界，一节一片）：缓冲本节全部文本元素，只在 TITLE 边界与文档末尾结算（管线 flush 规则
  * 保证表格/图片不断片）；结算时文本 ≤ maxLen 成一片（PARAGRAPH），超过则走所选兜底算法降级（FALLBACK）。
- *
- * @author cxxl
  */
 @Component
 public class TitleBoundarySliceStrategy implements SliceStrategy {

@@ -13,8 +13,6 @@ import java.util.List;
  * 注册表 {@link SliceStrategyRegistry} 按算法枚举索引；新增算法 = 新增一个 @Component 实现，管线零改动。
  * 参数从 context.getStrategy() 的路由配置读取（解析时已补默认值），切片器保持无状态（确定性）。
  * 子步骤 capability 由 {@link #algorithm()} 的键推导（见 ChunkPipeline 步骤日志）。
- *
- * @author cxxl
  */
 public interface SliceStrategy {
 

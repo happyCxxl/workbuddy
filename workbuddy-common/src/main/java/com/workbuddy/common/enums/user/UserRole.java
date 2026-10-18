@@ -7,8 +7,6 @@ import lombok.Getter;
  * 用户角色：决定可见菜单与可访问接口的范围。
  *
  * <p>落库为码值字符串（wb_user.role）；令牌载荷同名键携带角色，供网关侧鉴权。
- *
- * @author cxxl
  */
 @Getter
 public enum UserRole {

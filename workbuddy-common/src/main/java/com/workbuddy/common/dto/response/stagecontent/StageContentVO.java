@@ -12,8 +12,6 @@ import java.util.List;
  * 按默认上限返回首页，并由 truncated 标明是否被截断。
  *
  * <p>文档页过滤：传了 docPage 时 total 与 items 都只覆盖该页元素。
- *
- * @author cxxl
  */
 @Data
 public class StageContentVO {

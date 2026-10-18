@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 边界框（pt，左上角原点）。PDF 元素带完整坐标；Office 元素可空（以结构路径溯源）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

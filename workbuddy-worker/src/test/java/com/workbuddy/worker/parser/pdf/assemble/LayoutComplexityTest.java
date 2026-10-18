@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 复杂页判定单测：行内相邻 token 间隙超过门槛即判该行跨栏（提取阶段没把多栏拆开），
  * 跨栏行数达到门槛判复杂页；普通词距不触发。
- *
- * @author cxxl
  */
 class LayoutComplexityTest {
 

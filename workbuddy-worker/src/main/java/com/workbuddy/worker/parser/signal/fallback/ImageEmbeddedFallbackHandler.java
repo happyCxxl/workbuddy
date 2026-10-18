@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * 嵌入图片降级处置：结构缺口——嵌入图片仅引用，写告警不判失败（不计失败单元）。
- *
- * @author cxxl
  */
 @Component
 public class ImageEmbeddedFallbackHandler implements SignalFallbackHandler {

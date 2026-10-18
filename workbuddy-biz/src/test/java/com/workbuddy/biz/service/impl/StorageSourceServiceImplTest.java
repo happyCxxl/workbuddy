@@ -58,8 +58,6 @@ import static org.mockito.Mockito.when;
  * 存储数据源服务单测：空表 seed / 未停用行注册与当前启用标记 / 回落注册 /
  * 清单的连接参数与探测结论 / 切换预览不落库与目标的可用性校验 /
  * 切换的先清后置、探测回写、注册与审计。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class StorageSourceServiceImplTest {

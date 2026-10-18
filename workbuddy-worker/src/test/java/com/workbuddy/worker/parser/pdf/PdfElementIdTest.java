@@ -27,8 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * PDF 元素 ID 口径：`类型前缀 + 页码 + 页内序号 + 位置`，表格单元格挂在表 ID 下。
  * 样例文件见 samples/pdf-parse-12。
- *
- * @author cxxl
  */
 class PdfElementIdTest {
 

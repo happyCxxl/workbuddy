@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 预处理控制面 Controller（手动逐环节触发点）。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

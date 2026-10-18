@@ -10,8 +10,6 @@ import java.io.Serializable;
  *
  * <p>单体查询返回一个库的绑定；批量查询（见 {@code GET /knowledge-base/strategy-bindings}）
  * 一次返回该策略类型下所有已绑定的库，每行靠 {@link #knowledgeBaseId} 区分。
- *
- * @author cxxl
  */
 @Data
 public class StrategyBindingVO implements Serializable {

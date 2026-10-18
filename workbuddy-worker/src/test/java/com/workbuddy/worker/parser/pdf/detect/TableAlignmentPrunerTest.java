@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * 对齐图剪枝单测：与他人共享列的行构成表格主体，独来独往的行被剪掉；全部连通时不动。
- *
- * @author cxxl
  */
 class TableAlignmentPrunerTest {
 

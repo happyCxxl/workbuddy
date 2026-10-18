@@ -47,8 +47,6 @@ import java.util.stream.Collectors;
  * 内置降级处置（策略：SignalFallbackHandler）→ 结果封装 → 成功占比门槛评估。
  * 骨架固定，变化点在策略（DocumentParserPort 解析器 / SignalFallbackHandler 信号处置）；
  * 纯算法，不碰 DB/产物存储（落库回写由 biz 编排）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component
@@ -141,7 +139,8 @@ public class ParsePipeline {
 
         // ⑤ 成功占比门槛评估
         evaluate(outcome, nativeSource, failedUnits, quality);
-        summarizeQuality(nativeSource, quality); // ⑥ 坏页比例达门槛时补一条维度汇总告警
+        // ⑥ 坏页比例达门槛时补一条维度汇总告警
+        summarizeQuality(nativeSource, quality);
 
         // 失败诊断留痕：告警明细进质量检查子步骤（落 wb_knowledge_pipeline_step_log.error，可查询）
         if (outcome.getSuggestedStatus() == PipelineTaskStatus.FAILED) {

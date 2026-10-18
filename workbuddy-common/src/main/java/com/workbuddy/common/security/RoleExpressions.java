@@ -5,8 +5,6 @@ package com.workbuddy.common.security;
  *
  * <p>权限值由 JwtAuthFilter 按 {@code "ROLE_" + 角色码值} 写入安全上下文，
  * 与 {@link com.workbuddy.common.enums.user.UserRole} 一一对应。
- *
- * @author cxxl
  */
 public final class RoleExpressions {
 

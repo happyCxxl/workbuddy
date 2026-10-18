@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
  * 检索运行记录：四元组（kbId/versionId/ruleId/query）+ 执行时刻结果快照 + 耗时。
  * 评测原始数据账本：勾选对比/跨会话回放按快照回放（集合 append-only 不可重放，快照即证据）。
  * 机器表：append-only、仅 create_time、不挂平台五件套。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_retrieval_run")

@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
  * ④ 目录处置：识别在解析环节（TOC_LINE 行级特征），本规则做"整页判目录页"聚合
  * （PDF：该页 TOC_LINE 元素数 ≥ tocMinLinesPerPage；Word：连续窗口）后按处置方式处理。
  * 非目录页的特征行不受影响（防误删）。
- *
- * @author cxxl
  */
 @Component
 public class TocRule implements CleanRule {

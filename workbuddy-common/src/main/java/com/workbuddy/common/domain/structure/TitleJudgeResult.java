@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 标题判定结果（模型判断兜底输出）。
- *
- * @author cxxl
  */
 @Data
 public class TitleJudgeResult {

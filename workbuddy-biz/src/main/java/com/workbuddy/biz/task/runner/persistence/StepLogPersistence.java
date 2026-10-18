@@ -15,8 +15,6 @@ import java.util.List;
  * 子步骤日志落库（各环节任务执行器共用）：StepLogInfo → wb_knowledge_pipeline_step_log 逐条保存。
  * 收口五处同构的 saveStepLogs 私有副本（解析/组装/预处理/切片/向量化）；
  * 默认值补齐（attempt=1、warning/matched/changed/avgLen=0）+ 错误文案截断（1000 字符）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

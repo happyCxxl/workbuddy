@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
  * 检索运行记录配置（retrieval.run 前缀）。
  *
  * <p>测试台检索必记；生产检索是否落记录由 {@link #recordProduction} 决定，默认关（逐查询记录量大）。
- *
- * @author cxxl
  */
 @Data
 @Component

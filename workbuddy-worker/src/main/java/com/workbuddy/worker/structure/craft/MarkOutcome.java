@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 重复/噪声识别结果：标记统计 + 告警（预处理环节处置依据）。
- *
- * @author cxxl
  */
 @Data
 public class MarkOutcome {

@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 启动校验链的推进口径：按 order 排序后逐项执行、失败即止且原异常原样抛出、不推进即短路。
- *
- * @author cxxl
  */
 class StartupCheckChainRunnerTest {
 

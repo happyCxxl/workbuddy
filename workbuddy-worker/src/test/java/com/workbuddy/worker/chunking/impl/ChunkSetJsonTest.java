@@ -13,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * ChunkSet JSON 往返单测（schema 只增不删的序列化基线）。
- *
- * @author cxxl
  */
 class ChunkSetJsonTest {
 

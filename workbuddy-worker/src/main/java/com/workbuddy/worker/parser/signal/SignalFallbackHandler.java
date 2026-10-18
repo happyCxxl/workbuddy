@@ -8,8 +8,6 @@ import com.workbuddy.common.enums.parse.SignalSubtype;
  * 信号降级处置策略（责任链）：每个 SignalSubtype 一个实现，管线按 subtype 查找执行。
  * 内置降级口径：写质量告警 + 登记失败/扫描页；返回该信号计入的失败单元数（0 或 1）。
  * 新增信号子类型 = 新增实现类（管线零改动）；接入能力（OCR 等）后替换对应实现即可。
- *
- * @author cxxl
  */
 public interface SignalFallbackHandler {
 

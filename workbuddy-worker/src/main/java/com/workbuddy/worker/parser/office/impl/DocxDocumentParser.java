@@ -36,8 +36,6 @@ import java.util.regex.Pattern;
  * DOCX 原生结构解析器（POI 路径）。
  * 产出 native 路：段落（含样式与字体事实，无样式标题不猜层级）、表格（行列/合并/isHeader 候选）、
  * 图片引用（仅引用+needsOcr）、页眉页脚部件、Office 结构路径溯源。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

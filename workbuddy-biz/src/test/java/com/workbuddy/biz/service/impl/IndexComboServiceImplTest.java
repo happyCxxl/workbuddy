@@ -34,8 +34,6 @@ import static org.mockito.Mockito.when;
  * 索引组合口径服务单测（范围收窄枚举）：
  * 绑定单组合（预处理+切片+向量化三环节）/ 枚举完整组合（三维血缘匹配）/ 血统缺失排除 / 开关分发
  * / 指定文件范围枚举（完整性判定复用 IndexComboReconciler.selectComboProducts 单一口径）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class IndexComboServiceImplTest {

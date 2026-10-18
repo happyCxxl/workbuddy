@@ -43,8 +43,6 @@ import java.util.Map;
  * 集合生命周期（schema 建表/回读校验/加载/回收）+ 行读写（upsert/向量检索/BM25 全文检索/分页拉取/主键查询）。
  * 口径钉版：全文通道字段（content/title_path，BM25 + chinese analyzer）、标量倒排字段（document_id/owner/content_type）、
  * 向量通道（FloatVector + HNSW + COSINE）、显式 STRONG 一致性（写后立读可见）。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

@@ -5,8 +5,6 @@ import java.util.List;
 /**
  * 单页的行级轻量摘要（页号 + 页高 + 行摘要列表）：跨页页眉页脚识别的输入，
  * 与 {@link PageContent} 同口径但只带行文本与盒子。
- *
- * @author cxxl
  */
 public record PageLines(int pageNo, double pageHeight, List<TextLine> lines) {
 

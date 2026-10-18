@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 /**
  * 扫描页降级处置：写 SCANNED_PAGE 告警 + 登记扫描页与失败页，计 1 个失败单元。
  * OCR 能力接入后由能力调用替换本处置（扩展点）。
- *
- * @author cxxl
  */
 @Component
 public class ScannedFallbackHandler implements SignalFallbackHandler {

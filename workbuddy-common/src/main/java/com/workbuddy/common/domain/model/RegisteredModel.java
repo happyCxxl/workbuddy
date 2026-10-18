@@ -10,8 +10,6 @@ import java.util.Set;
  *
  * <p>biz 装载器把 wb_model 的启用行映射成本类型（能力 CSV 解析一次）；
  * 只带运行时要用的字段，限额 / 窗口 / 价格在接入对应功能时再加。
- *
- * @author cxxl
  */
 @Data
 public class RegisteredModel {

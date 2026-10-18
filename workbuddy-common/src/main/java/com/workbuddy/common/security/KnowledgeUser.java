@@ -9,8 +9,6 @@ import java.time.Instant;
 
 /**
  * 用户模型。
- *
- * @author cxxl
  */
 @Data
 public class KnowledgeUser implements Serializable {

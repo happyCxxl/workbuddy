@@ -31,8 +31,6 @@ import static org.mockito.Mockito.when;
 /**
  * Milvus 索引 Port 单测（薄壳适配器）：业务行映射 / 业务过滤拼装 / 命中映射 / 生命周期委托 /
  * 集合命名约定 / 主键查询与空输入。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class MilvusIndexPortImplTest {

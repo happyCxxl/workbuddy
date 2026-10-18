@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 /**
  * 大小双源比对步骤：文件档案元数据大小 vs 流式统计字节数，不一致 = METADATA_MISMATCH
  * （拦截传输截断/元数据漂移）。元数据缺省（null）跳过比对。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

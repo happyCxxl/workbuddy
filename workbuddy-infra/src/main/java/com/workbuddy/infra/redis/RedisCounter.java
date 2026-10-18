@@ -12,8 +12,6 @@ import java.util.List;
 
 /**
  * Redis 计数器：自增并返回新值，key 首次创建时写入过期时间。
- *
- * @author cxxl
  */
 @Component
 public class RedisCounter {

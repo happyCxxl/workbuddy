@@ -10,8 +10,6 @@ import java.util.List;
  * 模型目录数据访问服务（表：wb_model）：清单分页查询与三处定点回写。
  *
  * <p>状态与关键字在 SQL 里筛，能力按逗号分隔清单整项匹配；清单按厂商码与模型名升序，取值稳定。
- *
- * @author cxxl
  */
 public interface WbModelDbService extends InfraDbService<WbModel> {
 

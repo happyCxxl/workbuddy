@@ -9,8 +9,6 @@ import java.util.Set;
  * 失败即该环节终局，不设取消态：链路只由输入与策略推导，状态不参与链路决策。
  *
  * <p>合法迁移的权威定义是 {@link #allowedTargets()}，上面的箭头图只是它的摘要。
- *
- * @author cxxl
  */
 public enum PipelineTaskStatus {
 

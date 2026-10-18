@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 冲突记录 VO：ConflictRecord 的对外视图，树内两路都留，PRIMARY 为主路、BACKUP 为被裁决方。
- *
- * @author cxxl
  */
 @Data
 public class StructureConflictVO {

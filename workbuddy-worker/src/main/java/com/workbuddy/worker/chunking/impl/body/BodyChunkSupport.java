@@ -17,8 +17,6 @@ import java.util.Set;
 
 /**
  * 正文切片公共工具：切片构建 / 页码合并 / 缓冲长度 / 句边界切分 / 缓冲结算（各正文策略与兜底共用口径）。
- *
- * @author cxxl
  */
 public final class BodyChunkSupport {
 

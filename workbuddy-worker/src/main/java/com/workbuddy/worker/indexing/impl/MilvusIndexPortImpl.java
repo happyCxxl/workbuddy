@@ -23,8 +23,6 @@ import java.util.List;
  * Milvus 索引 Port 实现（薄壳适配器）：业务行/命中类型 ↔ 向量库模块行类型的映射，
  * Milvus 客户端/集合/查询/口径封装全部下沉 knowledge-vector 模块。
  * 一个组合 = 一个集合（kb_{kbId}_{versionNo}）；集合即边界，查询只带业务过滤。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

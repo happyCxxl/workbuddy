@@ -13,8 +13,6 @@ import java.io.Serializable;
  *
  * <p>用户名不可修改：它是登录凭据与留痕口径，改动会让历史记录对不上。
  * 密码不传表示不重置；角色与状态不传表示保持不变。
- *
- * @author cxxl
  */
 @Data
 public class UserUpdateDTO implements Serializable {

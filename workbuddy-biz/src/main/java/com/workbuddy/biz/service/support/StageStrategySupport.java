@@ -23,8 +23,6 @@ import java.util.function.Function;
 /**
  * 环节策略解析共用助手：显式指定 → KB 绑定两档口径完全同构，集中在这里；
  * 两档都不命中一律拒绝（不做「取启用中最新」这类兜底，也不在代码里造默认策略）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

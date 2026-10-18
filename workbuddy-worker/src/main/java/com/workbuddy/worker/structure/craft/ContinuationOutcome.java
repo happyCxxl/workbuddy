@@ -9,8 +9,6 @@ import java.util.List;
 
 /**
  * 跨页接续产出：接续后元素 + 关系（CONTINUATION_OF）+ 统计（内部流转，不出 worker）。
- *
- * @author cxxl
  */
 @Data
 public class ContinuationOutcome {

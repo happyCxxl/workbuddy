@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * JWT 令牌工具测试。
- *
- * @author cxxl
  */
 class JwtUtilTest {
 

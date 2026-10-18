@@ -21,8 +21,6 @@ import java.util.Objects;
  * 阶段产物落库共用助手（各环节任务执行器共用）：
  * 执行键复用判定（该任务已有产物即复用）→ 存储一致性校验 → JSON 序列化 → 内容寻址写产物存储 →
  * 产物行（task/stage/upstream/能力快照/存储类型与桶名）→ 回写任务产物引用。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

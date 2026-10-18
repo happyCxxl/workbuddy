@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
  * begin/finish 一对记真实耗时（统一口径）；elapsedMillis 供批量统计式步骤累计各阶段耗时；
  * build 供批量统计式步骤统一组装（状态 SUCCESS、平均长度=总长÷命中数）。
  * 收口解析/组装两份相同私有 newStep/finishStep，以及切片/向量化/预处理三家的手工构造。
- *
- * @author cxxl
  */
 public final class StepLogHelper {
 

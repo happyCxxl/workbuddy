@@ -16,8 +16,6 @@ import java.io.Serial;
  * 是失败文件的留痕与幂等查询载体。
  *
  * <p>幂等：request_id 唯一约束（uk_request_id），同 requestId 重复提交返回已有记录。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

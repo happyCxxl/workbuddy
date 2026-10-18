@@ -11,7 +11,6 @@ import com.workbuddy.common.enums.storage.StorageType;
  *
  * @param storageType 存储类型码值（StorageType 枚举码，可空/未知）
  * @param sourceId    数据源实例 ID（wb_storage_source.id，可空）
- * @author cxxl
  */
 public record StorageRef(String storageType, Long sourceId) {
 

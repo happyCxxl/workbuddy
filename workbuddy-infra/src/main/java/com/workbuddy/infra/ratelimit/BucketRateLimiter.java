@@ -11,8 +11,6 @@ import java.time.Duration;
 
 /**
  * 令牌桶限流器：桶按 key 存放在 Redis，跨实例共享（由 bucket4j 的分布式代理完成）。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

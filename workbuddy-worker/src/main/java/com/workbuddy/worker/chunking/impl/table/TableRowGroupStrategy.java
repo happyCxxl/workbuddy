@@ -13,8 +13,6 @@ import java.util.List;
 /**
  * 表格切片器（行组）：数据行依次入组，行数 ≥ groupSize 或组内字符累计 ≥ maxLen 即结算成片；
  * 每片合法 Markdown 表格（表头随片）。中间粒度：比行级切片更大、比整表更细。
- *
- * @author cxxl
  */
 @Component
 public class TableRowGroupStrategy extends AbstractTableSliceStrategy {

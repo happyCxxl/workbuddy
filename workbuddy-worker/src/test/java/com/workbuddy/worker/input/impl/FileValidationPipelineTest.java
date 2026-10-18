@@ -37,8 +37,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 文件校验步骤链单测：编排器（FileValidationPipeline）+ 五校验步骤（真实实例）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class FileValidationPipelineTest {

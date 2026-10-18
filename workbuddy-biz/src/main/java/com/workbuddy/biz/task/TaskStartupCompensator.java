@@ -24,8 +24,6 @@ import java.util.List;
  * 任务队列补偿：启动补偿一次（补投过期未执行的 QUEUED 任务）+ 低频兜底周期扫描
  * （开关 `knowledge.task.low-freq-sweep-enabled` 默认开启、间隔默认 1 分钟；关掉它时只剩启动补偿一次）。
  * 补投 = 重新入队，消费侧重读 DB 校验，多投无害；多实例下 SET NX EX 锁防重。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

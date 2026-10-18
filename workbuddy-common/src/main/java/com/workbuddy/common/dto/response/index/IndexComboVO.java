@@ -12,8 +12,6 @@ import java.util.Map;
  * fileResultIds = 该组合血统匹配的成员文件（范围收窄时仅计范围内文件）；
  * fileCount = 成员数；vectorCount = Σ 成员最新向量集合 recordCount
  * （含 FAILED/SKIPPED 少量偏差，构建以实际写入行数为准）。
- *
- * @author cxxl
  */
 @Data
 public class IndexComboVO {

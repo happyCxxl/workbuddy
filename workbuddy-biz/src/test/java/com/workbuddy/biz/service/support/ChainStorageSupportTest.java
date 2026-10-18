@@ -30,8 +30,6 @@ import static org.mockito.Mockito.when;
 /**
  * 处理链存储口径单测：链的数据源取「文件结果 → 来源文件 → 文件档案」三段；
  * 链路缺环、档案数据源取不到、当前没有启用的数据源都不判定为不一致；两侧都取到且不同时拒绝执行（40453）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class ChainStorageSupportTest {

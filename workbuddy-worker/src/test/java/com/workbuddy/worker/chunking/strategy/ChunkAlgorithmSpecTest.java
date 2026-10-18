@@ -20,8 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 切片算法规格单测：保存校验口径（支持集/参数范围/不变量/互斥/非法结构）+ 支持集判定 + 默认参数补齐。
- *
- * @author cxxl
  */
 class ChunkAlgorithmSpecTest {
 

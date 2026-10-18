@@ -15,8 +15,6 @@ import java.io.Serializable;
  * <p>自助注册与管理员新增走 {@link UserCreateBaseDTO}（三件套 + 用户名 + 密码），
  * 本人改资料走 {@link ProfileUpdateDTO}（只有三件套）。抽到这里单点定义：
  * 改一处三处同步，也消掉这段平行样板（56 tokens，在更严的 CPD 阈值下会被判成重复代码）。
- *
- * @author cxxl
  */
 @Data
 public abstract class UserContactBaseDTO implements Serializable {

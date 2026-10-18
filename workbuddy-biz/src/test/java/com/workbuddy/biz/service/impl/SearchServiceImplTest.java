@@ -53,8 +53,6 @@ import static org.mockito.Mockito.when;
  * 检索引擎编排单测：生产回退链（三级→基线）/ 测试台显式版本+规则（含冻结集）/
  * HYBRID RRF 融合排序 / 纯全文跳过向量化 / 父片展开 / 预留能力引擎拒执行 / 未发布 40446 /
  * 测试台落运行记录 / 勾选对比回放快照。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class SearchServiceImplTest {

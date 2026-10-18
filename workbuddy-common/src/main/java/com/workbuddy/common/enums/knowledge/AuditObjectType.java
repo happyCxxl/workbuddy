@@ -5,8 +5,6 @@ import cn.hutool.core.util.StrUtil;
 /**
  * 审计对象类型（wb_audit_log.object_type）：码值与中文名集中在这里，
  * 写入侧一律取 {@link #key()}，不写字符串字面量。
- *
- * @author cxxl
  */
 public enum AuditObjectType {
 

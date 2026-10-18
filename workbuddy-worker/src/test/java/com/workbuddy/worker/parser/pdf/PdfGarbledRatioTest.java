@@ -21,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 乱码率口径：拉丁补充区（可打印乱码带）成片出现的页面按乱码计；正常中英文正文不受影响。
- *
- * @author cxxl
  */
 class PdfGarbledRatioTest {
 

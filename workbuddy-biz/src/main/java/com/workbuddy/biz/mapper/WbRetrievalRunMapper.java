@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 检索运行记录 Mapper。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbRetrievalRunMapper extends BaseMapper<WbRetrievalRun> {

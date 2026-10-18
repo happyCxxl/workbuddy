@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 结构识别结果回填单测：行列数与每格 row/col span 按模型结论写入，表头行取表头格最多的行，
  * 格级置信度落到单元格元素上；结果不完整时返回 null 走内置降级。
- *
- * @author cxxl
  */
 class TableStructureSupportTest {
 

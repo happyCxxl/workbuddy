@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 派生视图单元格：表格单元格的派生副本（原文 text + 检索文本 + 轨迹）。
- *
- * @author cxxl
  */
 @Data
 public class ViewCell {

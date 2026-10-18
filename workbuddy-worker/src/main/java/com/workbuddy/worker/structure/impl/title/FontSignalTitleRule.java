@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 /**
  * 字号/加粗启发式标题规则（最弱层）：短句 + 加粗 + 字号 ≥ 文档中位数 × 配置比例（默认 1.15）→ 二级档
  * （深层标题靠编号模式，本层只兜无编号场景）。
- *
- * @author cxxl
  */
 @Component
 public class FontSignalTitleRule implements TitleRule {

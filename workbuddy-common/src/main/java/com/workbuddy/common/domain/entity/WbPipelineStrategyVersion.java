@@ -12,8 +12,6 @@ import java.time.LocalDateTime;
  * 口径（策略版本行不可变）：行一旦注册不可改——编辑 = 复制新版本行
  * （uk_type_name_version 唯一键兜底），停用代替删除（有绑定引用禁物理删除），启停保留。
  * 对齐 DDL 原设计（表注释"不可变，修改即新版本"）；历史任务自持策略快照，不受影响。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_pipeline_strategy_version")

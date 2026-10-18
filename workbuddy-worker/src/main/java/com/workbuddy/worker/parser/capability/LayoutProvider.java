@@ -7,8 +7,6 @@ import com.workbuddy.common.domain.parse.capability.ProviderContext;
 /**
  * 版面分析能力接口：复杂页的阅读顺序交本接口补强。
  * 值对象见 common.domain.parse（LayoutResult/PageImage/LayoutRegion）。
- *
- * @author cxxl
  */
 public interface LayoutProvider {
 

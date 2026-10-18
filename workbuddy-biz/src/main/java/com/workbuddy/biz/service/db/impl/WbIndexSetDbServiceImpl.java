@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 
 /**
  * 索引集合数据访问服务实现。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

@@ -13,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * 切片详情 VO 组装器单测（纯映射无状态类，用真实实例断言）。
- *
- * @author cxxl
  */
 class ChunkVoAssemblerTest {
 

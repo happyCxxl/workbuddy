@@ -23,8 +23,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * DbService 单测：saveAudit 的审计行组装规则（登录态操作人/字段映射/无认证兜底）。
- *
- * @author cxxl
  */
 class WbAuditLogDbServiceImplTest {
 

@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 页面尺寸（解析环节回填；组装环节构建 UnifiedDocument.pages 的输入）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

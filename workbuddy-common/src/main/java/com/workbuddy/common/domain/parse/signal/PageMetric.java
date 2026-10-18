@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 页级原始指标（PDF 解析器逐页统计；信号判定器的输入）。
- *
- * @author cxxl
  */
 @Data
 public class PageMetric {

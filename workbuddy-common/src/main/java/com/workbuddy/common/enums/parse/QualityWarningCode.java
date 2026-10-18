@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.parse;
 /**
  * 质量告警码（落产物 JSON quality.warnings[].code，与详情页/下游环节的展示契约）。
  * 跨环节共享（解析/组装等环节均经 QualityWarning 落告警）。
- *
- * @author cxxl
  */
 public enum QualityWarningCode {
 

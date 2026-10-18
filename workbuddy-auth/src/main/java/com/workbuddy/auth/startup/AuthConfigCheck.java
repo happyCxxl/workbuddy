@@ -19,8 +19,6 @@ import org.springframework.stereotype.Component;
  * 密钥短于 {@value #MIN_SECRET_LENGTH} 字符只告警：本地开发用短密钥是常见做法，不阻断启动。
  *
  * <p>防护阈值只在 {@code knowledge.auth.guard.enabled=true} 时校验：关掉防护时这些值不参与任何判断。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

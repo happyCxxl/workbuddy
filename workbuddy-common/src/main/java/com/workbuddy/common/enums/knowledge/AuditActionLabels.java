@@ -13,8 +13,6 @@ import java.util.Map;
  * <p>作用域口径：码值是省事的（`CREATE` 这种通用词），同一个码在不同对象上语义不同
  * （知识库「创建」≠ 账号「新增」），这里给的是**知识库语境**下的说法；
  * 遇到账号类动作（USER_*）按各自语义单独列出。
- *
- * @author cxxl
  */
 public final class AuditActionLabels {
 

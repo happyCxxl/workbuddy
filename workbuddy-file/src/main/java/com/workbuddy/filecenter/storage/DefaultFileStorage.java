@@ -22,8 +22,6 @@ import java.io.InputStream;
  * 内容寻址与指定 key 的对象读写继承自 {@link AbstractFileStorage}。
  *
  * <p>类名与后端无关：注入的 StorageRouter 按数据源定义决定字节落在 MinIO 还是本地磁盘。
- *
- * @author cxxl
  */
 @Service
 public class DefaultFileStorage extends AbstractFileStorage {

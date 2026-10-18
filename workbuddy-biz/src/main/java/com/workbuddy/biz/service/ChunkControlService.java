@@ -5,8 +5,6 @@ import com.workbuddy.common.dto.response.chunk.ChunkTriggerVO;
 
 /**
  * 切片控制面：触发切片/重跑（手动逐环节）+ 切片详情。
- *
- * @author cxxl
  */
 public interface ChunkControlService {
 

@@ -6,8 +6,6 @@ import com.workbuddy.common.domain.parse.ParseSource;
  * 文档解析器接口（策略：每个文件格式/路径一个实现类，如 POI 路径、PDFBox 路径）。
  * 文件级路由按 {@link #supports(String)}（文档输入环节识别的真实 MIME）分派。
  * 解析不关闭输入流。
- *
- * @author cxxl
  */
 public interface DocumentParserPort {
 

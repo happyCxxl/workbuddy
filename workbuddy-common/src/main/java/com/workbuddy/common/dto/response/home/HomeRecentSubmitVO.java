@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
  * 即"文件能不能进处理链"；**不是处理链进度**。
  * 校验通过 ≠ 处理完成 —— 后者在 `wb_knowledge_pipeline_task`，要用得再 join 任务表。
  * 这里叫"最近提交"，不叫"处理进度"。
- *
- * @author cxxl
  */
 @Data
 public class HomeRecentSubmitVO implements Serializable {

@@ -7,8 +7,6 @@ import java.io.IOException;
 /**
  * 解析输入流公共口径（PDF 与 Office 解析器共用）：全量读入内存
  * （POI/PDFBox 均需全量加载）；失败抛运行时异常由管线记 PARSE_CORRUPTED。
- *
- * @author cxxl
  */
 public final class ParserStreamSupport {
 

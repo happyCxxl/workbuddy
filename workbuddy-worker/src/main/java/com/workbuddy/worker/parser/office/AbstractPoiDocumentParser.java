@@ -20,8 +20,6 @@ import java.util.List;
 /**
  * POI 系解析器基类（非 Spring Bean）：能力标识、parse 骨架
  * （读全输入 → 建 native 源 → parseNative）与解析事实组装；输入流读取见 {@link ParserStreamSupport}。
- *
- * @author cxxl
  */
 public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
 

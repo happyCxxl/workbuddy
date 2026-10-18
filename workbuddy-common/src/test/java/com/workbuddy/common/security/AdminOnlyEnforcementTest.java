@@ -32,8 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * {@code preAuthorizeAuthorizationMethodInterceptor} 这个基础设施 Bean 作为切面，
  * 它借助 Spring Core 的 {@code MergedAnnotations} 解析注解，能识别把
  * {@code @PreAuthorize} 作为元注解的 {@link AdminOnly}。
- *
- * @author cxxl
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = AdminOnlyEnforcementTest.TestConfig.class)

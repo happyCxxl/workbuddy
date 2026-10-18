@@ -14,8 +14,6 @@ import java.util.List;
 /**
  * 表格两条路径（线框 / 文本）共用的门限与降级留痕：
  * 假表门限判定，以及规则失败时「出 TABLE 事实 + 区域降级为段落」的统一口径。
- *
- * @author cxxl
  */
 final class TableSupport {
 

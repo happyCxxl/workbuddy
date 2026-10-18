@@ -11,8 +11,6 @@ import java.io.Serializable;
  * 修改密码请求（本人操作）。
  *
  * <p>当前密码用于校验身份；新密码长度须为 8-10 位且不得与当前密码相同。
- *
- * @author cxxl
  */
 @Data
 public class PasswordUpdateDTO implements Serializable {

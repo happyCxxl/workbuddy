@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 切片项 VO：wb_knowledge_chunk 行的展示副本（检索命中最小单元）。
- *
- * @author cxxl
  */
 @Data
 public class ChunkItemVO {

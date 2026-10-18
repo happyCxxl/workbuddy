@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 /**
  * 空白页降级处置：写 BLANK_PAGE 告警 + 登记空白页，不计失败单元
  * （无文本也无图片，既不能算成功也不该算失败）。
- *
- * @author cxxl
  */
 @Component
 public class BlankFallbackHandler implements SignalFallbackHandler {

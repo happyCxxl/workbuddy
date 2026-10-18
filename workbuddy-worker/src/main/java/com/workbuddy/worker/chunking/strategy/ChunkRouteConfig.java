@@ -12,8 +12,6 @@ import java.util.Map;
 /**
  * 某一路内容（body/table/image/fallback）的算法配置：算法键 + 该算法的专属参数（字符串存，读取时按需转换）。
  * 参数表在策略解析时由 {@link ChunkAlgorithmSpec} 补全默认值，运行时参数总是完整可读。
- *
- * @author cxxl
  */
 @Data
 public class ChunkRouteConfig {

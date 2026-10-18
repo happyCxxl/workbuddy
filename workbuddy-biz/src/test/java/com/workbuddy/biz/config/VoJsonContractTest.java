@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * ID 转字符串由 {@link LongIdJsonConfig} 的全局口径决定，裸 mapper 测不出真实行为。
  *
  * <p>日期字段的**格式**不在本测试范围内（由 MVC 层 JavaTimeModule 决定）。
- *
- * @author cxxl
  */
 class VoJsonContractTest {
 

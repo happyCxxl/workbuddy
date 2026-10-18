@@ -9,8 +9,6 @@ import com.workbuddy.worker.structure.StructureProperties;
 /**
  * 标题判定上下文：候选元素 + 文档字号基准（中位数）+ 阈值配置。
  * 规则链内共享的派生口径（短句/样式/字号佐证）收敛在此，规则自身不重复计算。
- *
- * @author cxxl
  */
 public record TitleRuleContext(UnifiedElement element, double medianSize, StructureProperties properties) {
 

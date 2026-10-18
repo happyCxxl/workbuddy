@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 检索规则选优发布响应。
- *
- * @author cxxl
  */
 @Data
 public class RetrievalRulePublishVO {

@@ -8,8 +8,6 @@ import lombok.Data;
 /**
  * 切片上下文：预处理视图（检索文本口径）+ 统一文档（结构参照：标题层级/图注/表格行）+
  * 策略快照（触发时固定）+ 参数配置。fileResultId/upstreamProductRef 由 biz 注入回填集合头。
- *
- * @author cxxl
  */
 @Data
 public class ChunkContext {

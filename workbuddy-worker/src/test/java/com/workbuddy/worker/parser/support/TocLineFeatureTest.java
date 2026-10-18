@@ -6,8 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 目录行级特征单测：点线引导符 + 行尾页码正例；正文反例。
- *
- * @author cxxl
  */
 class TocLineFeatureTest {
 

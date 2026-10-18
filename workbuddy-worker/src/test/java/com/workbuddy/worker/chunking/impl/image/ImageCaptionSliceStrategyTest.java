@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 图片切片器单测：图注占位内容 + 图注关联；无图注降级。
- *
- * @author cxxl
  */
 class ImageCaptionSliceStrategyTest {
 

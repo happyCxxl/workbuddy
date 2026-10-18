@@ -23,8 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 表+引导段落切片器单测：前导段前缀（含截断）/ 无前导段退化行级。
- *
- * @author cxxl
  */
 class TableContextMergedStrategyTest {
 

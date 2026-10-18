@@ -36,8 +36,6 @@ import static org.mockito.Mockito.when;
 /**
  * 策略版本服务单测：类型白名单 / 列表（启用中 vs 全部）/ 创建 / 编辑=复制新版本 / 启停 /
  * 删除（有绑定引用禁删）/ CHUNK 与 PREPROCESS 配置校验。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class StrategyVersionServiceImplTest {

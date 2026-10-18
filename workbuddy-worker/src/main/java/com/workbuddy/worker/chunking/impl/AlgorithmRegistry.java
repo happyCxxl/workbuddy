@@ -17,7 +17,6 @@ import java.util.function.Predicate;
  * 新增算法 = 新增一个 @Component 实现，自动收录（开闭原则）；查找不到明确报错，不静默回退。
  *
  * @param <T> 注册的算法实现类型（SliceStrategy / FallbackSlicer）
- * @author cxxl
  */
 public final class AlgorithmRegistry<T> {
 

@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 关系：type + from/to 元素 ID + 说明。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.structure;
 /**
  * 元素级标记（字典）：识别环节（解析/组装）写入、处置环节（预处理）读取。
  * 只增不删；标记不影响结构树与阅读顺序。
- *
- * @author cxxl
  */
 public enum ElementMark {
 

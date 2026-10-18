@@ -20,8 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 噪声处置规则单测：KEEP（只统计不处置）/ MARK / EXCLUDE 三档；非噪声页不命中。
- *
- * @author cxxl
  */
 class NoiseRuleTest {
 

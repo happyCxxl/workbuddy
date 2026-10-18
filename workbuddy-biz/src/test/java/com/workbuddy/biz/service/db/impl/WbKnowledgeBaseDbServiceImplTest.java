@@ -27,8 +27,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * DbService 单测：getActiveById 的对象级获取语义 + 归属集合查询的过滤条件。
- *
- * @author cxxl
  */
 class WbKnowledgeBaseDbServiceImplTest {
 

@@ -8,8 +8,6 @@ import java.util.List;
 
 /**
  * 索引写入行：一条可检索向量记录（向量化记录的可检索子集，SUCCESS/CACHED）。
- *
- * @author cxxl
  */
 @Data
 public class IndexRow implements Serializable {

@@ -18,8 +18,6 @@ import java.util.List;
  * 反向差异（有解析器但未进白名单）只打警告：文件侧不会放行这类文件。
  *
  * <p>在启动校验链里排在 {@link #ORDER_ASSEMBLY} 档：它依赖容器把解析器装配齐全。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

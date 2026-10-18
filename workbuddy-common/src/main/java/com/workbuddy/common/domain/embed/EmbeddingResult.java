@@ -7,8 +7,6 @@ import java.util.List;
 /**
  * 向量化结果（ModelGatewayPort.embed 出参）：向量列表（与输入顺序一一对应）+ 维度 + 模型回显 + requestId。
  * 四关校验在管线侧消费本对象。
- *
- * @author cxxl
  */
 @Data
 public class EmbeddingResult {

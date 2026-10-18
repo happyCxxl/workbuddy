@@ -6,8 +6,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * Milvus 连接配置（knowledge.vector.milvus 前缀，application.yml 同名 kebab-case 键）。
- *
- * @author cxxl
  */
 @Data
 @Component

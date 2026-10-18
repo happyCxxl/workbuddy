@@ -22,8 +22,6 @@ import java.util.Map;
  *
  * <p>执行树的解析节点与解析详情页共用同一份口径，两处展示不会走偏。
  * 纯读取，不落库、不改产物。
- *
- * @author cxxl
  */
 public final class ParseStatsSupport {
 

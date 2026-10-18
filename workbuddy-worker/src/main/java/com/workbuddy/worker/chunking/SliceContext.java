@@ -15,8 +15,6 @@ import java.util.Map;
 /**
  * 切片器上下文（Context Object）：一次运行的全部共享状态，策略实现保持无状态。
  * 参数一律从 strategy 的路由配置/流程层读取（解析时已补默认值），不再持有全局 ChunkProperties。
- *
- * @author cxxl
  */
 @Data
 public class SliceContext {

@@ -11,8 +11,6 @@ import com.workbuddy.common.enums.task.RowStatus;
  * 向量化落库行装配：集合行与记录行的字段口径集中在这里。
  *
  * <p>主键、缓存命中、创建时间不由本类设置（这三项随写入场景不同）。
- *
- * @author cxxl
  */
 public final class EmbedRowSupport {
 

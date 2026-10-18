@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 对象位置单测：四段字段的装配、各表工厂的取值口径，以及缺段时的「存储后端未配置」拒绝。
- *
- * @author cxxl
  */
 class ObjectRefTest {
 

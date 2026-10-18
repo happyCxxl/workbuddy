@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 /**
  * 标题判定结果（规则链内部载体）：
  * title（命中 + 层级 + 证据）/ candidate（编号模式命中但缺字号佐证，只告警）/ paragraph（非标题）。
- *
- * @author cxxl
  */
 @Getter
 @RequiredArgsConstructor

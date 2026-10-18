@@ -9,8 +9,6 @@ import java.io.Serializable;
 
 /**
  * 创建知识库请求。
- *
- * @author cxxl
  */
 @Data
 public class KnowledgeBaseCreateDTO implements Serializable {

@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * 任务队列配置单测：按环节取超时（枚举名与配置键两种写法都归一化命中、认不出回退默认），
  * 以及环节超时的绑定期口径（键是 PipelineStage 枚举，写错名直接拒）。
- *
- * @author cxxl
  */
 class TaskQueuePropertiesTest {
 

@@ -8,8 +8,6 @@ import lombok.Data;
 /**
  * 预处理上下文：统一文档（只读，底片）+ 策略快照（触发时固定）+ 阈值配置。
  * fileResultId/upstreamProductRef 由 biz 注入，回填视图头（血缘）。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessContext {

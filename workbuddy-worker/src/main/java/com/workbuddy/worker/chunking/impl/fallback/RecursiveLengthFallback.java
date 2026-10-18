@@ -11,8 +11,6 @@ import java.util.List;
 /**
  * 递归兜底切片（现状逻辑接口化）：句边界优先；单句仍超长按固定 len + 重叠 overlap 硬切。
  * 参数从 fallback 路由配置读取（len/overlap，解析时已补默认）。重叠只用于本路（结构切片不用重叠）。
- *
- * @author cxxl
  */
 @Component
 public class RecursiveLengthFallback extends AbstractFallbackSlicer {

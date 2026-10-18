@@ -8,8 +8,6 @@ import java.util.List;
 
 /**
  * 检索运行记录数据访问服务。
- *
- * @author cxxl
  */
 public interface WbRetrievalRunDbService extends InfraDbService<WbRetrievalRun> {
 

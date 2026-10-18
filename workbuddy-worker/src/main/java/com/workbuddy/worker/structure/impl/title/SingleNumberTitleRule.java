@@ -13,8 +13,6 @@ import java.util.regex.Pattern;
  * 单级编号标题规则：1 总则 / 1、总则 / 1. 总则 / 1) 总则（点数定级的多级形态归 NumberTitleRule）；
  * 分隔符后的内容须以非数字开头，避开 3.14 这类以数字开头的正文；
  * 防误判：含 CJK + 字号佐证才定级，无佐证只计候选告警。
- *
- * @author cxxl
  */
 @Component
 public class SingleNumberTitleRule implements TitleRule {

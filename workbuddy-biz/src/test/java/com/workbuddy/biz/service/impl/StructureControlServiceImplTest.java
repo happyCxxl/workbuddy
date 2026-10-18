@@ -50,8 +50,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 结构组装控制面服务单测：上游产物校验 / 防重 / 建任务入队（upstream 链）/ 组装详情。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class StructureControlServiceImplTest {

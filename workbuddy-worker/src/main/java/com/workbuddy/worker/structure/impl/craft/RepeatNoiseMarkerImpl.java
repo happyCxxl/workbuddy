@@ -34,8 +34,6 @@ import java.util.function.Supplier;
  * 噪声页——无元素页/仅图片页/乱码率 > noiseGarbledRatio（标 NOISE_PAGE）；页覆盖范围按 pageRange 计，跨页表覆盖到的页不判空白。
  * Word（无页概念）跳过页级、重复段照做；标记只增不改结构。
  * 判定语义与"逐个比 Jaccard"一致：已见项按集合规模分桶剪枝、集合按需重建（不常驻）、有界 LRU 控内存。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor
@@ -219,11 +217,13 @@ public class RepeatNoiseMarkerImpl implements RepeatNoiseMarker {
         boolean isDuplicate(Object key, Supplier<String> textSource, double threshold, boolean rememberAlways) {
             TextUtil.BigramSummary summary = TextUtil.bigramSummary(textSource.get());
             if (summary.count() == 0) {
-                return false; // 空集合与谁都不相似（jaccardSet 对空集返回 0）
+                // 空集合与谁都不相似（jaccardSet 对空集返回 0）
+                return false;
             }
             Set<String> current = set(key, textSource);
             if (threshold < 1 && matchesFingerprint(summary.fingerprint(), current)) {
-                return true; // 集合完全相同 ⇒ Jaccard = 1 > 阈值，与原判定一致
+                // 集合完全相同 ⇒ Jaccard = 1 > 阈值，与原判定一致
+                return true;
             }
             boolean duplicate = exceedsInBand(summary.count(), threshold, current);
             if (rememberAlways || !duplicate) {

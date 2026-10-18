@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 索引验证子项：CONSISTENCY（一致性自检）/ VECTOR_SMOKE（向量冒烟）/ FULLTEXT_SMOKE（全文冒烟）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

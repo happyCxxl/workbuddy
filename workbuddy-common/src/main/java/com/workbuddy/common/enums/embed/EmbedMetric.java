@@ -6,8 +6,6 @@ import cn.hutool.core.util.StrUtil;
  * 向量度量（模型目录带出，与 Milvus metric 对齐）：
  * COSINE（余弦，向量需归一化）/ IP（内积）/ L2（欧氏距离）。
  * 四关校验与建索引共用本口径。
- *
- * @author cxxl
  */
 public enum EmbedMetric {
 

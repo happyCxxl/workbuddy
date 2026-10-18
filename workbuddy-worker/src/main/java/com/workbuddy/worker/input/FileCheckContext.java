@@ -10,8 +10,6 @@ import java.io.InputStream;
 /**
  * 校验链共享上下文：一次校验内各步骤累积状态的唯一载体。
  * 单次下载流语义：sourceStream 由编排器打开、仅大小统计步骤消费；后续步骤经 spill 重开流探测。
- *
- * @author cxxl
  */
 @Data
 @RequiredArgsConstructor

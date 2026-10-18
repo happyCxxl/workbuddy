@@ -14,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 /**
  * 用户数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbUserDbServiceImpl extends InfraDbServiceImpl<WbUserMapper, WbUser> implements WbUserDbService {

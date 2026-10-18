@@ -11,8 +11,6 @@ import java.io.Serial;
 
 /**
  * 文件档案：上传文件的元数据记录（append-only）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

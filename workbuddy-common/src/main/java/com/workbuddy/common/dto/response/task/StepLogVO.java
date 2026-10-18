@@ -8,8 +8,6 @@ import java.time.LocalDateTime;
 
 /**
  * 环节子步骤 VO（四环节通用：解析/组装/预处理/切片步骤日志同构）。
- *
- * @author cxxl
  */
 @Data
 public class StepLogVO implements StepLogFields {

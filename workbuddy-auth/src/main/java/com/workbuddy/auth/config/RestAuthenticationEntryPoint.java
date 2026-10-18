@@ -22,8 +22,6 @@ import java.io.IOException;
  * <p>这里与 {@link RestAccessDeniedHandler} 同款口径：统一成 R 响应体 + HTTP 200，
  * 响应体带 {@code code=40101}（未认证）。
  * 两者区别：本类处理「没登录」，RestAccessDeniedHandler 处理「登录了但无权限」。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

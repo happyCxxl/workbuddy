@@ -21,8 +21,6 @@ import java.util.Map;
 /**
  * 元素标准化实现：ParseElement → UnifiedElement 雏形（类型映射 + 全局 ID + 扩展区透传）。
  * 坐标口径由解析环节统一为左上角原点 + pt，当前直通；像素×72÷DPI 路径随 OCR 接入补充。
- *
- * @author cxxl
  */
 @Component
 public class NormalizerImpl implements ElementNormalizer {

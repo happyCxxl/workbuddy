@@ -34,8 +34,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 认证服务测试。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {

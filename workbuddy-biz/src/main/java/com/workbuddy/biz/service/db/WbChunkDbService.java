@@ -9,8 +9,6 @@ import java.util.List;
 
 /**
  * 切片数据访问服务（批量插入由 InfraDbService.saveBatch(list, size) 承担，≤500/批）。
- *
- * @author cxxl
  */
 public interface WbChunkDbService extends InfraDbService<WbChunk> {
 

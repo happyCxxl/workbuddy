@@ -25,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>序列化器本身的阈值判定（拆箱/装箱两种 Long）；</li>
  *   <li>自定义器装上 builder 之后确实生效（Bean 未被 Spring 扫到时会全绿而线上失效）。</li>
  * </ol>
- *
- * @author cxxl
  */
 class LongIdJsonConfigTest {
 

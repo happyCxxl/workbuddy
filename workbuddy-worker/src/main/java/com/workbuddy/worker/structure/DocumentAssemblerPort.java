@@ -6,8 +6,6 @@ import com.workbuddy.common.domain.structure.AssembleOutcome;
 /**
  * 文档组装器：把解析环节多路结果焊接成唯一 UnifiedDocument（固定环节，无策略配置）。
  * 多道工艺按序执行（标准化/去重合并/阅读顺序/结构组装/跨页接续/溯源校验/重复噪声识别）；biz 只依赖本接口。
- *
- * @author cxxl
  */
 public interface DocumentAssemblerPort {
 

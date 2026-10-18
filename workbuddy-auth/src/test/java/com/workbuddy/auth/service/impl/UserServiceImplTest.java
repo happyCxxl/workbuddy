@@ -26,8 +26,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 用户服务测试：分页映射与敏感字段隔离。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {

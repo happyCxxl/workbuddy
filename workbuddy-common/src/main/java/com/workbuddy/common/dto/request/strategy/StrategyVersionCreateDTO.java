@@ -6,8 +6,6 @@ import lombok.EqualsAndHashCode;
 
 /**
  * 策略版本创建请求：type/name/version/configSnapshot 必填；configSnapshot 为 JSON 文本（规则开关）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

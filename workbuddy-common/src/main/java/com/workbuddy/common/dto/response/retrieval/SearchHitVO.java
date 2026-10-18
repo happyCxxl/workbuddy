@@ -5,8 +5,6 @@ import lombok.Data;
 /**
  * 检索命中：命中字段原样入 VO（命中直取不回查库）；
  * 父片展开命中 = 父片内容 + isParent=true。
- *
- * @author cxxl
  */
 @Data
 public class SearchHitVO {

@@ -18,8 +18,6 @@ import java.util.Map;
 
 /**
  * 文件结果数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbFileResultDbServiceImpl extends InfraDbServiceImpl<WbFileResultMapper, WbFileResult>

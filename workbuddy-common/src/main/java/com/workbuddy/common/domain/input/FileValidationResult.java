@@ -9,8 +9,6 @@ import lombok.Data;
  * 通过时携带建档三写所需：format（真实格式）/ mimeType（Tika 识别媒体类型，落 wb_source_file.mime_type）
  * / size（流式统计字节数）/ sha256（文件指纹）；失败时携带 failReason
  * （wb_submit_log.fail_reason 存其枚举名），其余字段为空。
- *
- * @author cxxl
  */
 @Data
 public class FileValidationResult {

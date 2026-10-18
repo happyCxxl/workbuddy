@@ -55,8 +55,6 @@ import java.util.stream.Collectors;
  * 产物内容查询实现：
  * 白名单五环节；按 task.productId 精确取该次运行的产物内容（与详情接口同口径，历史任务同样可展示）；
  * 对齐键：PARSE/STRUCTURE/PREPROCESS=elementId、CHUNK/EMBED=顺序号。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

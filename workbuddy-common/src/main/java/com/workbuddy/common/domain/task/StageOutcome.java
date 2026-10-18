@@ -10,8 +10,6 @@ import java.util.List;
  * 环节输出公共基类（各环节 Outcome 继承）：状态壳——建议状态/错误码/错误信息/子步骤记录/告警。
  * 各环节只保留自己的业务载荷（parseResult/document/view/chunkSet/embeddingSet），
  * 跨环节的状态判定与子步骤记录字段统一在此声明，不重复。
- *
- * @author cxxl
  */
 @Data
 public abstract class StageOutcome {

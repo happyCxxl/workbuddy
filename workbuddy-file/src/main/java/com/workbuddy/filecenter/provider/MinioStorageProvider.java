@@ -16,8 +16,6 @@ import java.io.InputStream;
  *
  * <p>端点与凭据取自数据源定义的参数；客户端在构造时建立（不发网络请求），
  * {@link #initialize()} 才连服务并确保文件桶与产物桶存在。
- *
- * @author cxxl
  */
 @Slf4j
 public class MinioStorageProvider implements StorageProvider {

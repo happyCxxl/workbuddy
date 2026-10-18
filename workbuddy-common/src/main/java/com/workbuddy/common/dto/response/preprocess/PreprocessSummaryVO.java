@@ -6,8 +6,6 @@ import java.util.Map;
 
 /**
  * 预处理统计 VO：PreprocessView 统计指标的对外视图（从派生视图推导的汇总指标，展示用）。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessSummaryVO {

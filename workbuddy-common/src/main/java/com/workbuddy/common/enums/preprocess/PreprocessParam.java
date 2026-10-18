@@ -6,8 +6,6 @@ import com.workbuddy.common.utils.NullUtil;
 /**
  * 预处理参数键目录：每条参数带规则归属、范围与默认值。
  * 数值参数（numeric，min/max 非空）与开关参数（ON/OFF）两类；保存校验与前端表单范围均以此为准。
- *
- * @author cxxl
  */
 public enum PreprocessParam {
 

@@ -6,8 +6,6 @@ import java.util.List;
 
 /**
  * 文档内容大纲 VO：统一文档元素按阅读顺序（组装结果预览）。
- *
- * @author cxxl
  */
 @Data
 public class StructureOutlineVO {

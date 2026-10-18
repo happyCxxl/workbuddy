@@ -22,8 +22,6 @@ import java.util.Set;
  * 去重与合并实现：IoU + 文本相似（Jaccard）双判定缺一不可；原生优先裁决；
  * 同框不同内容（IoU 高、相似度低）→ 无法裁决 → PRIMARY/BACKUP 保留两路 + CONFLICT。
  * 当前 native 单路直通（无跨来源对）；框架完整，OCR/模型路接入即生效。
- *
- * @author cxxl
  */
 @Component
 public class DedupMergerImpl implements DedupMerger {

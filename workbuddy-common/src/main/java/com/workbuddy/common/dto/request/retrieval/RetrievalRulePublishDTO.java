@@ -5,8 +5,6 @@ import lombok.Data;
 
 /**
  * 检索规则选优发布请求：把规则行设为指定索引版本行的默认规则。
- *
- * @author cxxl
  */
 @Data
 public class RetrievalRulePublishDTO {

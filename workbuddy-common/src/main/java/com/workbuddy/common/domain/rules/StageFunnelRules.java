@@ -12,8 +12,6 @@ import java.util.Map;
  * 环节漏斗规则：文件结果列表按环节过滤时，"到达某环节" = 存在该环节上游的成功产物。
  *
  * <p>映射关系是处理链环节依赖的领域知识（PARSE→STRUCTURE→PREPROCESS→CHUNK→EMBED）。
- *
- * @author cxxl
  */
 public final class StageFunnelRules {
 

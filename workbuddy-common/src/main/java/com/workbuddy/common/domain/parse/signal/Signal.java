@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 /**
  * 信号：判定器输出，也是能力调用的输入（能力注册表按 type 查找实现）。
  * subtype 为结构化结论，是管线降级分支的控制流依据；evidence 仅作展示。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

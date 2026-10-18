@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 跨页元素的分页框：页内片段各记一个边界框（坐标统一为该页左上角原点 + pt）。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

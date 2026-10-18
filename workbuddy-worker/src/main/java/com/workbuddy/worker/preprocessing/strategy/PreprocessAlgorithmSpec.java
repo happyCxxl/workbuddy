@@ -18,8 +18,6 @@ import java.util.regex.PatternSyntaxException;
 /**
  * 预处理算法规格：默认补齐 / 保存校验（biz 调用）。
  * 规则目录与参数目录在 common.enums.preprocess（单一事实源）；前端表单范围与置灰口径一致。
- *
- * @author cxxl
  */
 public final class PreprocessAlgorithmSpec {
 
@@ -143,7 +141,8 @@ public final class PreprocessAlgorithmSpec {
             }
             PreprocessRule rule = PreprocessRule.of(entry.getKey());
             if (NullUtil.isNull(rule)) {
-                continue; // 未知规则键透传不报错（前向兼容）
+                // 未知规则键透传不报错（前向兼容）
+                continue;
             }
             Object ruleValue = entry.getValue();
             if (NullUtil.isNotNull(ruleValue) && !(ruleValue instanceof Map)) {
@@ -190,7 +189,8 @@ public final class PreprocessAlgorithmSpec {
         for (Map.Entry<String, Object> entry : params.entrySet()) {
             PreprocessParam param = PreprocessParam.of(rule, entry.getKey());
             if (NullUtil.isNull(param)) {
-                continue; // 未知参数键透传不报错（前向兼容）
+                // 未知参数键透传不报错（前向兼容）
+                continue;
             }
             String value = String.valueOf(entry.getValue());
             if (param.numeric()) {

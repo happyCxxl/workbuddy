@@ -24,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 行组切片器单测：行数上限结算 / 长度上限结算 / 表头随片。
- *
- * @author cxxl
  */
 class TableRowGroupStrategyTest {
 

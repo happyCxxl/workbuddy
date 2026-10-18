@@ -19,8 +19,6 @@ import java.util.List;
  * 信号判定器实现：页级指标按阈值判定（先便宜后贵）+ 解析事实直接转信号。
  * 全链执行、聚合信号（命中不中断，一个文件可同时命中多类信号）。
  * 每个信号显式携带子类型（SignalSubtype），管线分支不依赖 evidence 文案。
- *
- * @author cxxl
  */
 @Component
 public class SignalDetectorImpl implements SignalDetector {

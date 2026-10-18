@@ -12,8 +12,6 @@ import java.util.List;
  * 规则实现见 {@link ProjectionPageLayoutAnalyzer}；接入版面模型或外部服务时另加实现，解析器不改。
  *
  * <p>切行口径 {@link #crossesAny} / {@link #columnOf} 由解析器与实现共用，保证两边判栏一致。
- *
- * @author cxxl
  */
 public interface PageLayoutAnalyzer {
 

@@ -5,8 +5,6 @@ import java.util.List;
 /**
  * 知识库向量集合 Port：按集合名寻址的通用集合管理/查询封装（口径钉版）。
  * 一个索引组合 = 一个集合（kb_{kbId}_{versionNo}）；集合即边界，查询只带业务过滤。
- *
- * @author cxxl
  */
 public interface KnowledgeCollectionPort {
 

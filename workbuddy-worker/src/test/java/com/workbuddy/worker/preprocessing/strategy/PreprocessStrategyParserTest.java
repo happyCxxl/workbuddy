@@ -13,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 预处理策略解析器单测：结构化解析补全默认 / 重复旧开关换算 / 空与非法快照抛异常 / custom 解析。
- *
- * @author cxxl
  */
 class PreprocessStrategyParserTest {
 

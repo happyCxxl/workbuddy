@@ -15,8 +15,6 @@ import java.math.BigDecimal;
  *
  * <p>厂商连接与密钥在配置（knowledge.model.vendors.*），本行只存厂商码；能力是多值（逗号分隔，D26）。
  * 限额只写在本行（无厂商级限额，D30）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

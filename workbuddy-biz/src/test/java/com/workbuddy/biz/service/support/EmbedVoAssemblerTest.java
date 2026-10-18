@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 向量化详情 VO 组装器单测：集合摘要三态统计（SUCCESS/FAILED/SKIPPED 计数、CACHED 不参与）/ 记录条目映射。
- *
- * @author cxxl
  */
 class EmbedVoAssemblerTest {
 

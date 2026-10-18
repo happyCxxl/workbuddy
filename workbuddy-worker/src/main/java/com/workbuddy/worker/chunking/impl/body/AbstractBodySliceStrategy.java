@@ -11,8 +11,6 @@ import java.util.List;
 /**
  * 正文聚合类切片器骨架：以 {@code SliceContext.bodyBuffer} 做跨元素缓冲。
  * 空文本空片、超长降级、累计到上限结算由本类处理，聚合粒度由子类实现。
- *
- * @author cxxl
  */
 public abstract class AbstractBodySliceStrategy implements SliceStrategy {
 

@@ -13,8 +13,6 @@ import com.workbuddy.common.utils.NullUtil;
 
 /**
  * 知识库规则：状态两态（启用/停用）迁移校验 + 可见范围（归属）。
- *
- * @author cxxl
  */
 public final class KnowledgeBaseRules {
 

@@ -16,8 +16,6 @@ import java.util.List;
 /**
  * 正文切片器（句子聚合）：跨元素按句聚合（句边界与兜底同口径），累计 ≥ targetMaxLen 结算；
  * 超长单句先结算缓冲再走兜底降级（FALLBACK）。每句以合成元素入正文缓冲（复用 SliceContext.bodyBuffer）。
- *
- * @author cxxl
  */
 @Component
 public class SentenceAggregateSliceStrategy extends AbstractBodySliceStrategy {

@@ -7,8 +7,6 @@ import java.time.Duration;
 
 /**
  * Redis 队列：List 的左入队与右阻塞弹出。
- *
- * @author cxxl
  */
 @Component
 public class RedisQueueSupport {

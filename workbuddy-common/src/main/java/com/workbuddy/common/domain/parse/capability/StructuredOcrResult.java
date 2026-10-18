@@ -6,8 +6,6 @@ import java.util.List;
 
 /**
  * 结构化 OCR 识别结果。
- *
- * @author cxxl
  */
 @Data
 public class StructuredOcrResult {

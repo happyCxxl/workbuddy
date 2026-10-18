@@ -12,8 +12,6 @@ import java.util.regex.Pattern;
 /**
  * 多级数字编号标题规则：1.1 / 1.1.1 …（点数定级）；
  * 防误判：含 CJK + 字号佐证才定级，否则只计候选告警。
- *
- * @author cxxl
  */
 @Component
 public class NumberTitleRule implements TitleRule {

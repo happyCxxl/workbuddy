@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
  * 解析环节 Controller：触发解析 + 解析详情（解析环节专属）。
  *
  * <p>各环节共用的产物内容在 {@link KnowledgeFileStageController}。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

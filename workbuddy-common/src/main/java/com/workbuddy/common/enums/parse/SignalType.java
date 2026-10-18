@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.parse;
 
 /**
  * 信号类型（升级触发依据）：判定器输出 = 能力调用输入。
- *
- * @author cxxl
  */
 public enum SignalType {
 

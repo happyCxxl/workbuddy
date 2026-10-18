@@ -11,8 +11,6 @@ import java.io.Serial;
  *
  * <p>页码与页长口径见 {@link PageQueryDTO}；环节合法值 PARSE / STRUCTURE / PREPROCESS / CHUNK / EMBED，
  * 非法取值在服务层按 40001 拒绝。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

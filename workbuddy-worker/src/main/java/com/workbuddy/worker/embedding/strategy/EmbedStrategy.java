@@ -9,8 +9,6 @@ import lombok.Data;
  * type/name/version + 模型 + 模板 + 批量/调用参数 + 执行口径开关 + 目录冗余（维度/度量/归一化/窗口/批上限）。
  * 触发时快照进任务，执行只用快照（可复现）。
  * 目录冗余字段由 {@link EmbedAlgorithmSpec#normalize} 从模型目录带出并锁定（保存时已冗余进快照）。
- *
- * @author cxxl
  */
 @Data
 public class EmbedStrategy implements StageStrategy {

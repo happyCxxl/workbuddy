@@ -7,8 +7,6 @@ import com.workbuddy.common.utils.NullUtil;
  * 切片算法目录：每个 (路由, 算法键) 一个常量，携带序列化键、当前支持状态与正文 flush 规则。
  * 单一事实源：biz 保存校验、前端置灰、注册表索引、默认算法与管线 flush 矩阵均以此为准。
  * 上线新算法 = ① 新增常量（supported=false）② 实现切片器并声明本常量 ③ 改 supported=true（前端随之解除置灰）。
- *
- * @author cxxl
  */
 public enum ChunkAlgorithm {
 

@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.chunk;
 /**
  * 切片路由（策略配置分区）：routes 映射的四个分区键。
  * 与 {@link ChunkKind}（切片器分发口径）分工：路由含兜底分区，兜底不是切片 kind（它是正文路超长元素的降级模式）。
- *
- * @author cxxl
  */
 public enum ChunkRoute {
 

@@ -6,8 +6,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * 任务机制 VO 组装器（跨环节共用）：处理链任务实体 → 任务机制对外 VO 的纯映射。
- *
- * @author cxxl
  */
 @Component
 public class TaskVoAssembler {

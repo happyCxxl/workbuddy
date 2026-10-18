@@ -26,8 +26,6 @@ import java.util.Map;
  *
  * <p>写入走当前启用的数据源（{@link StorageRouter#writer()}），桶名取该数据源的参数；
  * 读取按记录里的数据源 ID 选后端，桶名取自记录，不由定义回填。
- *
- * @author cxxl
  */
 public abstract class AbstractFileStorage implements FileStorage {
 

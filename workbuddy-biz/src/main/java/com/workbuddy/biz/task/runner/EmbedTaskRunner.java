@@ -50,8 +50,6 @@ import java.util.Objects;
  * 向量化任务执行器（消费循环调用）：领任务 → 读任务策略快照（触发时固定）→ 读最新 CHUNK 产物（ChunkSet）
  * → 加载复用候选账本（同文件同策略历史集合，新→旧，回溯上限内）→ 调 worker 向量化管线 →
  * 写产物存储 + 落库（product/wb_knowledge_embedding_set/wb_knowledge_embedding_record 分批/子步骤）→ 回写任务终态。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

@@ -7,7 +7,6 @@ package com.workbuddy.worker.parser.pdf.model;
  * @param y1 起点 y
  * @param x2 终点 x
  * @param y2 终点 y
- * @author cxxl
  */
 public record Segment(double x1, double y1, double x2, double y2) {
 

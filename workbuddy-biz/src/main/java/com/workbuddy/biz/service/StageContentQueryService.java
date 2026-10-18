@@ -5,8 +5,6 @@ import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 
 /**
  * 产物内容查询：对比视图内容层数据源，纯读。
- *
- * @author cxxl
  */
 public interface StageContentQueryService {
 

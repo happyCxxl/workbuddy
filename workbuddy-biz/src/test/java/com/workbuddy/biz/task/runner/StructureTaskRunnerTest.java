@@ -50,8 +50,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 统一组装任务执行器单测：成功落库（upstream 链）/ 空树失败 / 上游缺失。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class StructureTaskRunnerTest {

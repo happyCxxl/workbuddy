@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 /**
  * 自定义规则动作目录：用户自定义正则规则的三种动作，带说明与替换文本约束。
  * 保存校验的取值清单与替换文本约束、以及前端动作下拉的说明文案均以此为准。
- *
- * @author cxxl
  */
 public enum CustomRuleAction {
 

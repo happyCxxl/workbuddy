@@ -35,8 +35,6 @@ import java.util.Set;
  * 结构组装实现：标题判定规则链（样式→章级→多级数字→中文括号→中文顿号→字号加粗，按 order 依次尝试）+ 模型兜底
  * （规则全 miss 且开关开才调用）+ 章节树 PARENT_CHILD + NEXT/PREVIOUS + TABLE_CELL_OF + Excel sheet→SECTION。
  * "拿不准" → 固定规则降级（按正文）+ 标题候选告警；模型兜底在规则之后、告警之前。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor
@@ -230,7 +228,8 @@ public class StructureAssemblerImpl implements StructureAssembler {
                 addParentChild(relations, stack, element, null);
                 push(stack, stackLevels, stackTypes, element.getId(), level, type);
             } else if (UnifiedElementType.SECTION.name().equals(type)) {
-                popSameOrDeeper(stack, stackLevels, stackTypes, 0); // 同级章节互为兄弟
+                // 同级章节互为兄弟
+                popSameOrDeeper(stack, stackLevels, stackTypes, 0);
                 addParentChild(relations, stack, element, "sheet 章节");
                 push(stack, stackLevels, stackTypes, element.getId(), 0, type);
             } else if (!UnifiedElementType.HEADER.name().equals(type)
@@ -279,7 +278,8 @@ public class StructureAssemblerImpl implements StructureAssembler {
         for (UnifiedElement element : elements) {
             String type = element.getType();
             if (UnifiedElementType.HEADER.name().equals(type) || UnifiedElementType.FOOTER.name().equals(type)) {
-                continue; // 页眉页脚排除正文流（仍在树内）
+                // 页眉页脚排除正文流（仍在树内）
+                continue;
             }
             if (NullUtil.isNotNull(previous)) {
                 relations.add(new DocumentRelation(RelationType.NEXT.name(), previous.getId(), element.getId(), null));

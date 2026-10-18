@@ -5,8 +5,6 @@ import com.workbuddy.infra.persistence.InfraBaseMapper;
 
 /**
  * 文件档案表 Mapper。
- *
- * @author cxxl
  */
 public interface WbFileObjectMapper extends InfraBaseMapper<WbFileObject> {
 }

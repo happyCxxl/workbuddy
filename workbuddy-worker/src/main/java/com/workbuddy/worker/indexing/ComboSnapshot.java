@@ -24,8 +24,6 @@ import java.util.Map;
  * 格式断言：stageStrategies 三环节维度是组合的身份与血缘载体，{@link #requireStageStrategies()}
  * 是缺少该维度的快照的唯一拒绝点；业务路径按需显式断言，不再散点防御。
  * 候选构建"待绑定补齐"场景用非抛断言 {@link #hasCompleteStageStrategies()} 判断后再补齐。
- *
- * @author cxxl
  */
 @Data
 public class ComboSnapshot implements Serializable {

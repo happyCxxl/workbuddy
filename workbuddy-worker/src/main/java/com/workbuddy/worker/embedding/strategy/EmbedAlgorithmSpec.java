@@ -12,8 +12,6 @@ import java.util.Set;
 /**
  * 向量化策略规格：默认补齐（normalize）/ 保存校验（validate）。
  * biz 保存校验与前端表单共用本口径。
- *
- * @author cxxl
  */
 public final class EmbedAlgorithmSpec {
 
@@ -100,13 +98,15 @@ public final class EmbedAlgorithmSpec {
                 return enumError;
             }
         }
-        return null; // 未知键透传不报错（前向兼容）
+        // 未知键透传不报错（前向兼容）
+        return null;
     }
 
     /** 模板校验：非空时必含 required 占位符且全部占位符在白名单内 */
     private static String validateTemplate(Object value, String required, Set<String> allowed, String field) {
         if (NullUtil.isNull(value) || StrUtil.isBlank(String.valueOf(value))) {
-            return null; // 空走默认，不校验
+            // 空走默认，不校验
+            return null;
         }
         String template = String.valueOf(value);
         if (!template.contains(required)) {

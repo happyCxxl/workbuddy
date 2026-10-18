@@ -13,8 +13,6 @@ import lombok.Getter;
  *
  * <p>本枚举只管"这一行还在不在"；业务启停（ACTIVE / INACTIVE）见
  * {@link com.workbuddy.common.enums.task.RowStatus}。
- *
- * @author cxxl
  */
 @Getter
 public enum DelFlag {

@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 跨页续表接续：四条件（相邻页+页尾/页首+表头一致+列数相同）+
  * 放宽规则（列数+列宽模式一致，标疑似）——只针对 PDF 表格。
- *
- * @author cxxl
  */
 public interface TableContinuationResolver {
 

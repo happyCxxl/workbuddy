@@ -19,8 +19,6 @@ import java.util.List;
 
 /**
  * 知识库数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbKnowledgeBaseDbServiceImpl extends InfraDbServiceImpl<WbKnowledgeBaseMapper, WbKnowledgeBase>

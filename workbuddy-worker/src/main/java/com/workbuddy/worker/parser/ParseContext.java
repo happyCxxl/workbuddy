@@ -8,8 +8,6 @@ import java.io.InputStream;
 /**
  * 解析上下文（解析机制的执行上下文，留在 worker：持有输入流与解析配置引用）。
  * 不关闭输入流。
- *
- * @author cxxl
  */
 @Data
 public class ParseContext {

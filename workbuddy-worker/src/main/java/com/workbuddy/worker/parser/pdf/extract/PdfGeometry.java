@@ -7,8 +7,6 @@ import java.util.function.ToDoubleFunction;
 
 /**
  * PDF 解析共用几何口径：盒式元素的包围盒与页底截断判定。
- *
- * @author cxxl
  */
 public final class PdfGeometry {
 

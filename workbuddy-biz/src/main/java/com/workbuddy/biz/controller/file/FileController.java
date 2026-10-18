@@ -17,8 +17,6 @@ import java.io.IOException;
 
 /**
  * 文件接口：上传与下载（薄转发，业务逻辑在 service 层）。
- *
- * @author cxxl
  */
 @RestController
 @RequestMapping("/files")

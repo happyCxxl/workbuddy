@@ -5,8 +5,6 @@ import com.workbuddy.vector.CollectionRow;
 /**
  * 检索命中的公共字段契约：片 ID / 文档 / 类型 / 父片 / 内容 / 标题路径 / 来源元素，
  * 以及"索引行 → 命中"的映射（{@link #fillFrom}）。
- *
- * @author cxxl
  */
 public interface IndexHit {
 

@@ -38,8 +38,6 @@ import java.util.Set;
  * PDFBox 原生解析器（数字 PDF）：编排三段 —— 逐页提取（{@link PdfPageExtractor}）→
  * 页眉页脚识别（{@link HeaderFooterDetector}）→ 逐页装配元素（{@link PdfBodyAssembler} +
  * {@link RuledTableBuilder}/{@link TextTableBuilder} + {@link PdfImageEmitter}）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

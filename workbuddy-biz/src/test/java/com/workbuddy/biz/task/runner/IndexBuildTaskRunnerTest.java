@@ -56,8 +56,6 @@ import static org.mockito.Mockito.when;
  * 组合缺口 FAILED / 维度不一致 FAILED / 血统不符 FAILED / 集合初始化失败 FAILED /
  * 一致性失败保留集合 FAILED / 对账通过 READY（COMPENSATE 自动发布、REBUILD 停留、INCREMENT 绑定开自动、统计收敛）/
  * LIST 冻结集回填后 READY 且任何触发都不自动发布。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class IndexBuildTaskRunnerTest {

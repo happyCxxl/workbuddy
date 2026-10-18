@@ -22,8 +22,6 @@ import java.util.List;
 
 /**
  * 策略版本管理 Controller：列表（下拉/管理）+ 创建/编辑（复制新行）/启停/删除（有绑定引用禁删）。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

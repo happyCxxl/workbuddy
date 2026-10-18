@@ -13,8 +13,6 @@ import java.util.List;
 
 /**
  * 向量产物集合数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingSetMapper, WbEmbeddingSet>

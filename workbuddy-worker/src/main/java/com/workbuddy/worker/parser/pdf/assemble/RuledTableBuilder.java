@@ -23,8 +23,6 @@ import java.util.Map;
 /**
  * 有边框表（线网格路径）：线网格定行列与合并跨度，格内文本按格矩形归属
  * （行中心落带 + 字符落列区间）；网格拟合不出来时退回文本路径。
- *
- * @author cxxl
  */
 public final class RuledTableBuilder {
 

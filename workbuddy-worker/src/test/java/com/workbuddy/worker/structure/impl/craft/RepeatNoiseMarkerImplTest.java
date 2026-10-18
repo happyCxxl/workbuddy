@@ -18,8 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 重复/噪声识别单测：重复页（首份不标）/重复段（长度门槛、排除页眉页脚）/噪声页（空白/纯图片/乱码）。
- *
- * @author cxxl
  */
 class RepeatNoiseMarkerImplTest {
 

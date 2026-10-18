@@ -47,8 +47,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 解析任务执行器单测：领任务防重、成功/失败回写、产物与子步骤落库。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class ParseTaskRunnerTest {

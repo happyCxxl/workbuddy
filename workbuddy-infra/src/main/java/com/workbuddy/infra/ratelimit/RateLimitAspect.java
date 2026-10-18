@@ -14,8 +14,6 @@ import org.springframework.util.StringUtils;
 
 /**
  * 限流切面：拦截标注 {@link RateLimit} 的方法，按客户端 IP 与接口名各自计数。
- *
- * @author cxxl
  */
 @Aspect
 @Component

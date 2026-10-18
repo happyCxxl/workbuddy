@@ -8,8 +8,6 @@ import lombok.Data;
  * <p>字段与 {@link com.workbuddy.common.domain.parse.CapabilitySnapshot} 一一对应；
  * {@code ocr/layout/table} 为预留能力，未接入时三者均为 null（与领域对象口径一致：
  * null 显式表示"未接该能力"，而不是"未知"）。引用以 {@link CapabilityRefVO} 表达。
- *
- * @author cxxl
  */
 @Data
 public class LineageCapabilityVO {

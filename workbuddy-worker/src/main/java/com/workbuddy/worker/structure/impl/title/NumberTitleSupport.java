@@ -8,8 +8,6 @@ import java.util.regex.Pattern;
 
 /**
  * 编号标题规则共用口径：短句约束 + 正则整体匹配；含 CJK 且有字号佐证才定级，无佐证只计候选告警。
- *
- * @author cxxl
  */
 final class NumberTitleSupport {
 

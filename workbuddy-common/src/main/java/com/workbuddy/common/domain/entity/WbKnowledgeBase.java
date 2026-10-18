@@ -12,8 +12,6 @@ import java.io.Serial;
 /**
  * 知识库：一个业务场景 = 一个知识库。
  * 平台五件套继承自 {@link BaseInfo}。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -51,6 +49,6 @@ public class WbKnowledgeBase extends BaseInfo {
     /** 当前发布索引 */
     private Long publishedIndexSetId;
 
-    /** 创建用户ID（占位 NULL；TODO 接认证后取登录用户） */
+    /** 创建用户ID（占位 NULL；接入认证后取登录用户） */
     private Long userId;
 }

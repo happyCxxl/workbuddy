@@ -13,8 +13,6 @@ import java.io.Serial;
  * 来源文件：文件服务的 fileId 引用与指纹。
  * 无逻辑删除与更新字段（append-only），继承 {@link BaseCreateInfo}。
  * 同一 fileId 唯一（uk_file_id）：同一文件再次提交复用本行、新建 wb_file_result。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -20,8 +20,6 @@ import java.util.List;
  * <p>启动装载与刷新（Redis 广播、刷新端点）共用 {@link #reload()} 这一条路径；
  * 查库失败异常上抛：启动期终止启动，刷新期报错给操作方。
  * 行序沿用查询口径（厂商码、模型名升序）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

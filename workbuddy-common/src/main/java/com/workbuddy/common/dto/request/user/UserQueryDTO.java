@@ -10,8 +10,6 @@ import java.io.Serial;
  * 用户清单的分页查询条件（管理员接口收参）：用户名 / 角色 / 状态三项都可留空。
  *
  * <p>页码与页长口径见 {@link PageQueryDTO}。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

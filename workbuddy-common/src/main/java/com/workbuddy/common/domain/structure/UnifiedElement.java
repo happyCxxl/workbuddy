@@ -10,8 +10,6 @@ import java.util.Map;
 
 /**
  * 统一元素：单文档内唯一、稳定公共字段；解析器特有信息放 extension（下游只依赖公共字段）。
- *
- * @author cxxl
  */
 @Data
 public class UnifiedElement {

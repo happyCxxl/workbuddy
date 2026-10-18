@@ -10,8 +10,6 @@ import java.io.Serial;
  * 知识库清单的分页查询条件：名称 / 状态 / 排序三项都可留空。
  *
  * <p>页码与页长口径见 {@link PageQueryDTO}；排序取值 DEFAULT / UPDATED / NAME，未知取值按默认。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

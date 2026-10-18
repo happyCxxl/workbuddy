@@ -5,8 +5,6 @@ import lombok.Data;
 
 /**
  * OCR 文本行（结构化识别结果单元）。
- *
- * @author cxxl
  */
 @Data
 public class OcrLine {

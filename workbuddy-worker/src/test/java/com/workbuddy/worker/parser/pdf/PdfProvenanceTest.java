@@ -26,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * PDF 元素溯源：表与单元格按页内表序号定位，段落回指本页提取字符流的区间。
  * 样例文件见 samples/pdf-parse-12。
- *
- * @author cxxl
  */
 class PdfProvenanceTest {
 

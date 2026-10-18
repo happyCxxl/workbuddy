@@ -2,8 +2,6 @@ package com.workbuddy.common.domain.rules;
 
 /**
  * 切片规则：biz 控制面与执行器共用的契约常量。
- *
- * @author cxxl
  */
 public final class ChunkRules {
 

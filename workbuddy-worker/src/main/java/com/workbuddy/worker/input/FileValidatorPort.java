@@ -7,8 +7,6 @@ import com.workbuddy.worker.input.check.FileCheck;
  * 文件校验入口（文档输入环节）。
  * 实现形态为校验步骤链（{@link FileCheck} 有序步骤，薄编排器 FileValidationPipeline 依次执行）；
  * Tika 3.1.0 真实格式识别 + 白名单 + 大小双源比对 + 损坏/加密探测 + sha256 流式计算，单次下载流内完成。
- *
- * @author cxxl
  */
 public interface FileValidatorPort {
 

@@ -32,8 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 表格能力接线的回归单测：注册表为 null（能力默认关）时规则路径照常出表，且不出现任何能力留痕事实 ——
  * 接线引入的入参不改变默认行为。
- *
- * @author cxxl
  */
 class PdfTableCapabilityWiringTest {
 

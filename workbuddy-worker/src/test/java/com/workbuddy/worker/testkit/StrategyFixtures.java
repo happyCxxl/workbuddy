@@ -10,8 +10,6 @@ import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategyParser;
 /**
  * 测试作用域的环节策略夹具：按模板参数（与 init.sql 种子行同参）补全的基线策略。
  * 主代码不再保留任何内置默认策略，用例的基线由这里以「模板名/版本 + 空配置」解析得到。
- *
- * @author cxxl
  */
 public final class StrategyFixtures {
 

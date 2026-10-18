@@ -7,8 +7,6 @@ import cn.hutool.core.util.StrUtil;
  *
  * <p>取值与设计字典一致：常规、容量偏高、延迟偏高、健康不佳、恢复放行、由别的模型降级而来。
  * 无配额层、无灰度，故不含预算越线与影子流量两档。
- *
- * @author cxxl
  */
 public enum RouteReason {
 

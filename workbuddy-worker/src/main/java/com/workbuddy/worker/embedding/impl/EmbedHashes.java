@@ -6,8 +6,6 @@ import java.security.MessageDigest;
 /**
  * 输入文本指纹：sha256 hex（复用键之一；与产物存储 sha256 寻址同一算法）。
  * 不用 hutool-crypto（worker 只依赖 hutool-core），与 LocalFileArtifactRepository/StructureIds 同风格。
- *
- * @author cxxl
  */
 final class EmbedHashes {
 

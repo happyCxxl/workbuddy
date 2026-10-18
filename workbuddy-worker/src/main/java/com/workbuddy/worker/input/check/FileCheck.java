@@ -9,8 +9,6 @@ import com.workbuddy.worker.input.FileCheckContext;
  * 薄编排器（FileValidationPipeline）按 {@link #order()} 升序依次执行，首个失败即终止（fail 快速失败）；
  * 步骤间经 {@link FileCheckContext} 共享单次下载流的累积状态（大小/指纹/缓冲/识别结果），
  * 步骤自身无状态。新增校验 = 新增实现类 + 枚举常量（order 间隔 10 预留插入位），既有步骤零改动。
- *
- * @author cxxl
  */
 public interface FileCheck {
 

@@ -19,8 +19,6 @@ import java.util.List;
 /**
  * 组装详情 VO 组装器（纯映射，不查库）：UnifiedDocument 产物 → 统计/告警/冲突/大纲视图。
  * 产物由 Service 读好传入；任务/子步骤字段组装不归本类。
- *
- * @author cxxl
  */
 @Component
 public class StructureVoAssembler {

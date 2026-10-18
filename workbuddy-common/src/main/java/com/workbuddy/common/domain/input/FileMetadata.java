@@ -6,8 +6,6 @@ import java.time.LocalDateTime;
 
 /**
  * 文件元数据：文件服务档案的领域视图。
- *
- * @author cxxl
  */
 @Data
 public class FileMetadata {

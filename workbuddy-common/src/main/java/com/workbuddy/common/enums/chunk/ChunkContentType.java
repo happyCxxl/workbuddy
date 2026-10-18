@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.chunk;
 
 /**
  * 切片内容类型：父片（SECTION）与四路切片产物。
- *
- * @author cxxl
  */
 public enum ChunkContentType {
 

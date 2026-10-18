@@ -11,8 +11,6 @@ import java.util.List;
 
 /**
  * 阶段产物数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbPipelineProductDbServiceImpl extends InfraDbServiceImpl<WbPipelineProductMapper, WbPipelineProduct>

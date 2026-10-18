@@ -5,8 +5,6 @@ import lombok.Data;
 /**
  * 能力快照：本次解析实际使用的组件/模型版本（可复现）。
  * ocr/layout/table 为 null 时显式声明"未接该能力"。
- *
- * @author cxxl
  */
 @Data
 public class CapabilitySnapshot {

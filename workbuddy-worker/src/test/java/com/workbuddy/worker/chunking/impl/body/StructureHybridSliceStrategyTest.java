@@ -20,8 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 结构混合切片器单测：复用段落聚合行为（算法键不同）；聚合结算 / 超长降级。
- *
- * @author cxxl
  */
 class StructureHybridSliceStrategyTest {
 

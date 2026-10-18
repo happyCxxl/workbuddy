@@ -16,8 +16,6 @@ import java.util.Map;
  * 预处理策略快照（结构化模型）：类型/名称/版本 + 七规则配置（rules）+ 自定义规则组（custom）。
  * 触发时快照进任务，执行只用快照（可复现）；解析时由 {@link PreprocessAlgorithmSpec#normalize} 补全缺省规则与默认参数。
  * 旧扁平格式（options 平铺）不再支持。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessStrategy implements StageStrategy {

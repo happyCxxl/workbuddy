@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 向量化控制面 Controller（手动逐环节触发点）。
  * 接口全部走平台资源服务器鉴权（需 Bearer token）。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

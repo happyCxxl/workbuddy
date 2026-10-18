@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 一条对话消息：角色 + 文本内容。
- *
- * @author cxxl
  */
 @Data
 public class ChatMessage {

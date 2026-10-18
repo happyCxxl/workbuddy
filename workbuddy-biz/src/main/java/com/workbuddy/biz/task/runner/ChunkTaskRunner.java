@@ -45,8 +45,6 @@ import java.util.Objects;
  * 切片任务执行器（消费循环调用）：领任务 → 读任务策略快照（触发时固定）→ 读最新 PREPROCESS 视图产物
  * （+ 其上游 STRUCTURE 统一文档作结构参照，缺失不阻断、titlePath/图注降级）→ 调 worker 切片管线 →
  * 写产物存储 + 落库（product/wb_knowledge_chunk_set/wb_knowledge_chunk 分批/6 条 step_log）→ 回写任务终态。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

@@ -9,8 +9,6 @@ import java.util.List;
  * 统一文档模型：组装环节把多路解析结果焊接成的知识库内部唯一稳定结构。
  * 下游环节只读、永不修改；schema 变更走版本（{@link #SCHEMA_VERSION}）——新增字段保持向后兼容，
  * 破坏性变更递增版本号并同步下游兼容处理。
- *
- * @author cxxl
  */
 @Data
 public class UnifiedDocument {

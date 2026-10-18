@@ -11,8 +11,6 @@ import java.util.function.Supplier;
  * <p>两类口径分开：业务拒绝走 {@link #throwIf(boolean, ErrorCode)} 系列（KnowledgeException + 业务码，
  * 全局异常处理按业务异常记 warn 级日志）；内部缺陷（编程错误、开发期校验、"不该发生"的状态）走
  * {@link #throwIf(boolean, Supplier)}，保持 JDK 异常类型，全局异常处理按系统异常记 error 级日志。
- *
- * @author cxxl
  */
 public final class ThrowUtil {
 

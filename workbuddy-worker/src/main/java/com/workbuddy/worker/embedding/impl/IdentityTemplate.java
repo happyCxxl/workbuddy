@@ -6,8 +6,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * 原样模板（唯一实现）：inputText = chunk.content。
- *
- * @author cxxl
  */
 @Component
 public class IdentityTemplate implements InputTemplatePort {

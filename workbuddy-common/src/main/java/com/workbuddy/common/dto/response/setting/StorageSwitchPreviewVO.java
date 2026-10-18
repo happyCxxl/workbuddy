@@ -7,8 +7,6 @@ import lombok.Data;
  *
  * <p>预览响应里的 {@code current*} 是切换前的值；确认切换后的响应复用本类，
  * 那一份由服务在切换完成后按新的生效值回填。
- *
- * @author cxxl
  */
 @Data
 public class StorageSwitchPreviewVO {

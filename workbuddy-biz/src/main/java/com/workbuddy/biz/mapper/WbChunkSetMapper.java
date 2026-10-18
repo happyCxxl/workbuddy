@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 切片产物集合 Mapper。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbChunkSetMapper extends BaseMapper<WbChunkSet> {

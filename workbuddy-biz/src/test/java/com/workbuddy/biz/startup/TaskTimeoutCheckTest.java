@@ -15,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 单任务超时值校验单测：默认值通过并推进链；某个环节的超时非正即拒且不推进。
- *
- * @author cxxl
  */
 class TaskTimeoutCheckTest {
 

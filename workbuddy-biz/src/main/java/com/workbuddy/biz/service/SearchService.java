@@ -10,8 +10,6 @@ import java.util.List;
  * 检索引擎编排：生产与测试台**同一执行引擎**。
  * 生产检索：不传 ruleId/versionId → 回退链（在线版本行 → kb 默认 → 引擎基线）；
  * 测试台检索：显式 (versionId, ruleId)，可检索候选冻结集，执行即落运行记录。
- *
- * @author cxxl
  */
 public interface SearchService {
 

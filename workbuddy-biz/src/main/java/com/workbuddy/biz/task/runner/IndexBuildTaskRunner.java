@@ -42,8 +42,6 @@ import java.util.Map;
  * 单一取数口径批量追加，幂等）→ ③ 全量对账（产物 chunkId == 集合 chunkId；失败保留集合可重试）→ ④ READY +
  * 活账本统计收敛 → ⑤ 发布判定（COMPENSATE 恒自动；INCREMENT 且绑定开启自动；LIST 永不自动；其余停留 READY）。
  * 行写入：ALL 组合走产物就绪回调（onFileProductsReady）追加；LIST 冻结集由本任务回填 + 回调范围感知路由。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

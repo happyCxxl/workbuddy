@@ -9,8 +9,6 @@ import java.util.List;
 /**
  * 文件结果 VO：执行链工作台列表行（wb_file_result + wb_source_file 摘要 + 各环节最新任务状态）。
  * id 类字段由全局 Long 序列化口径转字符串（见 LongIdJsonConfig），防前端 JS 精度丢失。
- *
- * @author cxxl
  */
 @Data
 public class FileResultVO {

@@ -24,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 表格切片器单测：Markdown 表格形态（表头行 + 分隔行 + 数据行、拆片重复表头）、行组（<30 字符每 3 行）、
  * 评分项不分离、无表头降级（仅数据行）、空表头视为无表头、sourceElementIds/pageRange/tableRef。
- *
- * @author cxxl
  */
 class TableRowSliceStrategyTest {
 

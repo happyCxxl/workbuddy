@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 跨页续表判定（PDF 产物后处理）：相邻页同列表头重复、或上一页表格贴页底且列区间重合，
  * 即把本表标为续表（{@code headerRepeated=true}），供组装环节接续。
- *
- * @author cxxl
  */
 public final class TableContinuationSupport {
 

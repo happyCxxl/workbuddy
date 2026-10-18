@@ -7,8 +7,6 @@ import cn.hutool.core.util.StrUtil;
  *
  * <p>不下发对象存储的绝对地址：那是部署细节（容器里的主机名浏览器解析不了），私有桶还需要会过期的
  * 预签名地址。走本接口的相对路径后，开发期由 Vite 代理、生产由反向代理转发，与存储地址解耦。
- *
- * @author cxxl
  */
 public final class AvatarUrlUtil {
 

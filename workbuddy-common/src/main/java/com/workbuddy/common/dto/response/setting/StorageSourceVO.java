@@ -9,8 +9,6 @@ import java.util.Map;
  * 存储数据源条目 VO：数据源清单里的一行。
  *
  * <p>连接参数按键值原样下发，密钥类参数同样包含在内。
- *
- * @author cxxl
  */
 @Data
 public class StorageSourceVO {

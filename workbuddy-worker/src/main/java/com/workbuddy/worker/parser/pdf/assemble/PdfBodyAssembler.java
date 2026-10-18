@@ -28,8 +28,6 @@ import java.util.Set;
 /**
  * 单页正文装配：页眉/页脚元素（每页各一条）→ 线框区域分段 → 段落聚合与表格候选块结算；
  * 表格结算委托 {@link TextTableBuilder}（无边框）与 {@link RuledTableBuilder}（有边框）。
- *
- * @author cxxl
  */
 public final class PdfBodyAssembler {
 

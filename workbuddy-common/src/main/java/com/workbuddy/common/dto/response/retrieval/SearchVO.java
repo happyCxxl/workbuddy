@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 检索响应：命中列表 + 执行口径（规则/版本/耗时/运行记录 ID）。
- *
- * @author cxxl
  */
 @Data
 public class SearchVO {

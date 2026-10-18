@@ -11,7 +11,6 @@ import java.util.List;
  * @param rows       行边界 y（升序，含上下外侧）
  * @param columnGaps 列分隔线缺失矩阵
  * @param rowGaps    行分隔线缺失矩阵
- * @author cxxl
  */
 public record Grid(List<Double> columns, List<Double> rows,
                    List<List<Boolean>> columnGaps, List<List<Boolean>> rowGaps) {

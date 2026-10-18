@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 
 /**
  * 切片产物集合数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbChunkSetDbServiceImpl extends InfraDbServiceImpl<WbChunkSetMapper, WbChunkSet>

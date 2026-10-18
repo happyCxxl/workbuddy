@@ -20,7 +20,6 @@ import java.util.Map;
  * @param name   数据源名称（日志与提示文案用）
  * @param type   存储类型
  * @param params 连接参数（按键取值，缺失返回 null）
- * @author cxxl
  */
 public record StorageSourceDef(Long id, String name, StorageType type, Map<String, String> params) {
 

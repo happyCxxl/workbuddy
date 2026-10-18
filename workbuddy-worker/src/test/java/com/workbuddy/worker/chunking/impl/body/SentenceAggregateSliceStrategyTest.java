@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 句子聚合切片器单测：跨元素句级聚合 / 目标长度结算 / 超长句兜底降级。
- *
- * @author cxxl
  */
 class SentenceAggregateSliceStrategyTest {
 

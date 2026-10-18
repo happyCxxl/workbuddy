@@ -30,8 +30,6 @@ import java.util.Objects;
  * 放宽规则：列数相同 + 列宽模式一致（表头不一致/无表头）→ 疑似接续（标告警，模型兜底可介入）；
  * 第二页自带表头 = 两张独立表（主规则表头一致除外）。
  * 合并结果保留首页的 page 与 bbox，跨页位置由 pageRange/bboxes 逐页累积承载。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor
@@ -93,15 +91,18 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
             return NOT_MERGED;
         }
         if (NullUtil.isNull(b.getBbox()) || b.getBbox().getY() >= context.getProperties().getPageTopThreshold()) {
-            return NOT_MERGED; // 下一页表格不在页首
+            // 下一页表格不在页首
+            return NOT_MERGED;
         }
         boolean columnsKnown = NullUtil.isNotNull(a.getCols()) && NullUtil.isNotNull(b.getCols());
         if (columnsKnown && !Objects.equals(a.getCols(), b.getCols())) {
-            return NOT_MERGED; // 列数已知且不同
+            // 列数已知且不同
+            return NOT_MERGED;
         }
         // 主规则要求列数已知且表头可读且相似；任一条件不可判定即落放宽规则（按参考行列宽判定）
         if (columnsKnown && headerSimilarity(a, b) >= context.getProperties().getContinuationHeaderSimilarity()) {
-            return MERGED; // 主规则
+            // 主规则
+            return MERGED;
         }
         if (!columnWidthPatternMatch(a, b, context)) {
             return NOT_MERGED;
@@ -122,7 +123,8 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
         int droppedRows = appendRows(mergedCells, b, baseRows);
         a.setCells(mergedCells);
         a.setRows(baseRows + declaredRowsOf(b) - droppedRows);
-        a.setHeaderInherited(droppedRows > 0); // 仅在确实丢弃了续页表头行时才算表头继承
+        // 仅在确实丢弃了续页表头行时才算表头继承
+        a.setHeaderInherited(droppedRows > 0);
         // 跨页位置以列表承载：pageRange/bboxes 逐页累积；首页的 page 与 bbox 保留在元素上
         a.setPageRange(appendPageRange(a, b));
         a.setBboxes(appendBboxes(a, b));
@@ -170,7 +172,8 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
         for (UnifiedElement cell : b.getCells()) {
             if (NullUtil.isNotNull(cell.getRow())) {
                 if (isHeaderRow(b, cell.getRow())) {
-                    continue; // 重复表头行不再拼接
+                    // 重复表头行不再拼接
+                    continue;
                 }
                 cell.setRow(rowNumbers.get(cell.getRow()));
             }

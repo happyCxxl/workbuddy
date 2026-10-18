@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * 阅读顺序单测：XY-cut 双栏页面（左栏上→下、右栏上→下）+ 无坐标元素直通。
- *
- * @author cxxl
  */
 class ReadingOrderResolverImplTest {
 

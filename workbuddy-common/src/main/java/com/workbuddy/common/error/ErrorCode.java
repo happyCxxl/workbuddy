@@ -6,8 +6,6 @@ import lombok.Getter;
  * 统一错误码。
  *
  * <p>登记规则：新错误码必须在此枚举登记；编码分段：40001 参数、401xx 认证、402xx 限流、404xx 业务（40460~40469 模型调用）、40500 系统兜底。
- *
- * @author cxxl
  */
 @Getter
 public enum ErrorCode {

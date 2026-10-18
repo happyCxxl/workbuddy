@@ -5,8 +5,6 @@ import java.util.List;
 
 /**
  * 固定窗口切分工具：len + 重叠 overlap 硬切（正文固定窗口算法与兜底共用口径；不足一片按实际长度）。
- *
- * @author cxxl
  */
 public final class WindowSlicer {
 

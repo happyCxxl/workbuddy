@@ -53,8 +53,6 @@ import java.util.regex.Pattern;
  * 预处理编排：预计算文档级集合 → 逐元素构建派生副本 → 按固定顺序执行启用规则
  * （逐元素 try/catch 隔离，异常只影响该规则产物）→ 派生视图组装 + 9 条子步骤（8 规则 + 视图组装）。
  * 纯算法，不碰 DB/产物存储（落库回写由 biz PreprocessTaskRunner 编排）；确定性执行。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

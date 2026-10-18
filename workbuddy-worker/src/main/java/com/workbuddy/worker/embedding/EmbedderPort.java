@@ -5,8 +5,6 @@ import com.workbuddy.common.domain.embed.EmbedOutcome;
 /**
  * 向量化编排入口：切片文本按绑定策略原样编码为向量本体（EmbeddingSet）。
  * 纯算法，不碰 DB/产物存储（落库回写由 biz EmbedTaskRunner 编排）；确定性执行（状态全在 EmbedContext）。
- *
- * @author cxxl
  */
 public interface EmbedderPort {
 

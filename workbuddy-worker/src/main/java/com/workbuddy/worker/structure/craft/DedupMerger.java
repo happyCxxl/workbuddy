@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 去重与合并：多路结果找"同一个东西"（IoU + 文本相似双判定，缺一不可）。
  * 当前 native 单路直通；冲突无法裁决时双路并存保留（PRIMARY/BACKUP）。
- *
- * @author cxxl
  */
 public interface DedupMerger {
 

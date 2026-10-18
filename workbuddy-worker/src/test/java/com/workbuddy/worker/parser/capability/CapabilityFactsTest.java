@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 能力留痕单测：补强与降级都挂 TABLE 事实，证据文案区分两类，模型名缺省有落点。
- *
- * @author cxxl
  */
 class CapabilityFactsTest {
 

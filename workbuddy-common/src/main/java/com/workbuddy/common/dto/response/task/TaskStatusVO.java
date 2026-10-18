@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 /**
  * 任务状态视图契约（StageStatusVO/ParseDetailVO 等详情视图通用字段）：
  * 任务摘要七字段的统一映射入口，视图侧免重复赋值。
- *
- * @author cxxl
  */
 public interface TaskStatusVO {
 

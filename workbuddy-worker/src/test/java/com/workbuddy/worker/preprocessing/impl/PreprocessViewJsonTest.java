@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * 预处理派生视图 JSON 往返单测（schema 只增不删的序列化基线）。
- *
- * @author cxxl
  */
 class PreprocessViewJsonTest {
 

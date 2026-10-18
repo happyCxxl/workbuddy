@@ -10,8 +10,6 @@ import java.io.Serializable;
  * 分页查询条件（列表类接口共用）。
  *
  * <p>页码与页长都可空，取值小于 1 或未传时按默认值兜底。
- *
- * @author cxxl
  */
 @Data
 public class PageQueryDTO implements Serializable {

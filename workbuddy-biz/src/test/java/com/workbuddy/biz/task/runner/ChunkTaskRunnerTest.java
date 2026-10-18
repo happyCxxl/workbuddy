@@ -63,8 +63,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 切片任务执行器单测：成功落库链（ChunkSet 产物 + 两表 + 6 步日志）/ 上游缺失 / 管线失败 / 结构参照。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class ChunkTaskRunnerTest {

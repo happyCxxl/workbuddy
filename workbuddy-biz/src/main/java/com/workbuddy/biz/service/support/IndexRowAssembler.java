@@ -24,8 +24,6 @@ import java.util.Map;
 /**
  * 索引行装配器：单文件装配 IndexRow——向量产物 SUCCESS/CACHED 记录子集；content=record.inputText；
  * titlePath/sourceElementIds 自切片产物按 chunkId 关联。追加路径与批量构建共用。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

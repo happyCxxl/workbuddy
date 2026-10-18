@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 组装统计 VO：UnifiedDocument 统计指标的对外视图（从统一文档产物推导，展示用）。
- *
- * @author cxxl
  */
 @Data
 public class StructureSummaryVO {

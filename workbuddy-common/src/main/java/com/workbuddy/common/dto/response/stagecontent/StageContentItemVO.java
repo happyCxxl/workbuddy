@@ -7,8 +7,6 @@ import java.util.Map;
 /**
  * 产物内容项（通用化，前端按环节渲染）：
  * 对齐键 alignKey——PARSE/STRUCTURE/PREPROCESS=elementId（跨运行稳定）；CHUNK/EMBED=顺序号（chunkId 跨策略不承诺稳定）。
- *
- * @author cxxl
  */
 @Data
 public class StageContentItemVO {

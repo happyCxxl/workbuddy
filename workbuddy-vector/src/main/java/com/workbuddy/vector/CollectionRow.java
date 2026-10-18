@@ -7,8 +7,6 @@ import java.util.List;
 /**
  * 向量库行：与集合 schema 字段一一对应（id/document_id/owner/content_type/parent_chunk_id/
  * content/title_path/source_element_ids/vector）。
- *
- * @author cxxl
  */
 @Data
 public class CollectionRow {

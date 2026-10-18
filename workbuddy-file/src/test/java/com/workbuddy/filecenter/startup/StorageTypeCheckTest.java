@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 存储类型校验单测：合法码值通过并推进链；非法码值即拒且不推进。
- *
- * @author cxxl
  */
 class StorageTypeCheckTest {
 

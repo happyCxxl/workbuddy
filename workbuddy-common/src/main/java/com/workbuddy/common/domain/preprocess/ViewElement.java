@@ -9,8 +9,6 @@ import java.util.List;
 /**
  * 派生视图元素：对应一个 UnifiedElement 的派生副本。
  * rawText 永为原文；处置状态（status）只落在本副本，原结构树不变。
- *
- * @author cxxl
  */
 @Data
 public class ViewElement {

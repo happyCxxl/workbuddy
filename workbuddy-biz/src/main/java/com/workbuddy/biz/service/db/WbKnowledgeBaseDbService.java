@@ -9,8 +9,6 @@ import java.util.List;
 
 /**
  * 知识库数据访问服务（表：wb_knowledge_base）。
- *
- * @author cxxl
  */
 public interface WbKnowledgeBaseDbService extends InfraDbService<WbKnowledgeBase> {
 

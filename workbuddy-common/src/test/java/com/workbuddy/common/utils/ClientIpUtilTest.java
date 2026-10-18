@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * 客户端 IP 工具测试。
- *
- * @author cxxl
  */
 class ClientIpUtilTest {
 

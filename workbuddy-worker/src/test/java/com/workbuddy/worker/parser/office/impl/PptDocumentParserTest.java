@@ -26,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * PPTX 解析器单测：文本框成段落、表格成 TABLE（表头判定走统一口径）、图片成 IMAGE 并按页记 OCR_IMAGE 事实；
  * 页单位为幻灯片，页级指标按幻灯片回填。
- *
- * @author cxxl
  */
 class PptDocumentParserTest {
 

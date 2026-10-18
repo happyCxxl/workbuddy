@@ -6,8 +6,6 @@ import java.util.Map;
 
 /**
  * 切片统计：最新切片集合的汇总指标（展示用）。
- *
- * @author cxxl
  */
 @Data
 public class ChunkSummaryVO {

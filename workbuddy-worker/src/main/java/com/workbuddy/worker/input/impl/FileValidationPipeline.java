@@ -27,8 +27,6 @@ import java.util.List;
  * 流程：取文件档案 → 打开单次取流 → 按 {@link FileCheck#order()} 依次执行校验步骤
  * （首个失败即返回对应 failReason）→ 全过组装 pass（format/mimeType/size/sha256）。
  * 校验逻辑全部在 {@link FileCheck} 步骤里（新增校验 = 新增步骤类）；本类只负责资源生命周期与顺序。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

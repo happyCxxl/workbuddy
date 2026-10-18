@@ -3,8 +3,6 @@ package com.workbuddy.common.enums.structure;
 /**
  * 统一文档模型元素类型（字典，14 类）：下游切片环节内容类型路由的依据。
  * 落库/落产物形式：name()。
- *
- * @author cxxl
  */
 public enum UnifiedElementType {
 

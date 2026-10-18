@@ -41,8 +41,6 @@ import java.util.List;
  *       文件校验不通过记 FAIL 提交日志并正常返回；</li>
  *   <li>提交成功只建档、不触发解析——后续环节由页面在文件结果页手动触发（手动逐环节口径）。</li>
  * </ul>
- *
- * @author cxxl
  */
 public interface KnowledgeBaseService {
 

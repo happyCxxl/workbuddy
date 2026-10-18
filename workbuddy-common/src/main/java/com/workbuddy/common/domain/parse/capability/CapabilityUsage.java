@@ -6,7 +6,6 @@ package com.workbuddy.common.domain.parse.capability;
  * @param kind    能力类别（{@link #KIND_OCR} / {@link #KIND_LAYOUT} / {@link #KIND_TABLE}）
  * @param model   模型名
  * @param version 模型版本
- * @author cxxl
  */
 public record CapabilityUsage(String kind, String model, String version) {
 

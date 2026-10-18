@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 索引版本数据访问服务。
- *
- * @author cxxl
  */
 public interface WbIndexVersionDbService extends IService<WbIndexVersion> {
 

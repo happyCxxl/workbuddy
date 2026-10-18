@@ -33,8 +33,6 @@ import java.util.Set;
 /**
  * 单页提取：字符 + 坐标 + 字体 → 页级指标（字符数/乱码率/文字占比/图片面积）→
  * 行聚合（y 容差）→ 按栏沟切行 → 阅读顺序重排 → token 分词，产出 {@link PageContent}。
- *
- * @author cxxl
  */
 public class PdfPageExtractor {
 

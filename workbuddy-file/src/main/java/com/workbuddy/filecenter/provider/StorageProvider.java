@@ -9,8 +9,6 @@ import java.io.InputStream;
  *
  * <p>实现按 {@link #type()} 交给 StorageRouter 管理：当前启用的数据源在标记为当前启用时
  * {@link #initialize()}（建桶或建存储根目录），其余数据源首次用到才初始化。
- *
- * @author cxxl
  */
 public interface StorageProvider {
 

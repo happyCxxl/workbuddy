@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * 状态规则与可见范围规则纯单测（AIR/BCDE：合法路径 + 错误路径 + 边界 null）。
- *
- * @author cxxl
  */
 class KnowledgeBaseRulesTest {
 

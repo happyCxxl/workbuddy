@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * 切片产物集合：一次切片策略运行的产物（多套策略 = 多个集合并存，平行候选）。
- *
- * @author cxxl
  */
 @Data
 public class ChunkSet {

@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 页面图像（版面分析输入）。
- *
- * @author cxxl
  */
 @Data
 public class PageImage {

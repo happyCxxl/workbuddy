@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 版面能力尝试单测（测试桩 provider，不走 HTTP）：拿到区域与顺序时给出补强事实与能力引用；
  * 未接入 / 页面为空 / 结果不完整三种情况都只给降级留痕。
- *
- * @author cxxl
  */
 class LayoutCapabilityAttemptTest {
 

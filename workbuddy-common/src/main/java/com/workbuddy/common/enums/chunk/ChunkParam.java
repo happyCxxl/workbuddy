@@ -10,8 +10,6 @@ import java.util.List;
  * 单一事实源：biz 保存校验的参数范围、前端表单的范围提示、文档的范围表均以此为准；
  * 参数键本身在 {@link com.workbuddy.worker.chunking.strategy.ChunkParamKeys}（JSON 契约常量），
  * 默认值在 {@code ChunkProperties}（application.yml 同名 kebab-case 键），本目录只管"允许填多少、这个键是什么意思"。
- *
- * @author cxxl
  */
 public enum ChunkParam {
 

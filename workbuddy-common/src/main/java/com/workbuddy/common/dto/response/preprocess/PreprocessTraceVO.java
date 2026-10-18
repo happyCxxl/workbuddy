@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 处理轨迹条目 VO：TraceEntry 的对外视图（规则 / 字段 / 动作 / 前后摘要 / 判定证据）。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessTraceVO {

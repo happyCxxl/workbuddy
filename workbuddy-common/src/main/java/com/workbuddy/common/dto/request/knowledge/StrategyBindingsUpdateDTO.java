@@ -12,8 +12,6 @@ import java.util.List;
 /**
  * 知识库策略集合批量绑定请求：一次调用设置整套（发布=知识库策略集合）。
  * 局部更新语义：仅处理请求中出现的类型，未提及类型不动；strategyVersionId 空 = 解绑。
- *
- * @author cxxl
  */
 @Data
 public class StrategyBindingsUpdateDTO implements Serializable {

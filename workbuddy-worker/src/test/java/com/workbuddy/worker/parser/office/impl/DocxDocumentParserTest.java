@@ -30,8 +30,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * DOCX 原生解析器单测：段落/表格/合并、页眉页脚部件、目录行特征、supports 与能力标识。
- *
- * @author cxxl
  */
 class DocxDocumentParserTest {
 

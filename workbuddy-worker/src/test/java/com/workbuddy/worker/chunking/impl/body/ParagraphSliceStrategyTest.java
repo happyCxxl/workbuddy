@@ -18,8 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 正文切片器单测：段落聚合（缓冲在 SliceContext，跨元素合并/flush 结算）、超长递归降级、titlePath。
- *
- * @author cxxl
  */
 class ParagraphSliceStrategyTest {
 

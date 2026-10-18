@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 组装详情 VO 组装器单测（纯映射无状态类，用真实实例断言）。
- *
- * @author cxxl
  */
 class StructureVoAssemblerTest {
 

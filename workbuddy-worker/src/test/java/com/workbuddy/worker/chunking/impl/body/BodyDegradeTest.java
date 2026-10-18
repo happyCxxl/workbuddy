@@ -21,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 正文超长降级单测：标题边界与段落聚合共用同一降级入口（FALLBACK 片 + fallbackReason + 片长受兜底参数约束）。
- *
- * @author cxxl
  */
 class BodyDegradeTest {
 

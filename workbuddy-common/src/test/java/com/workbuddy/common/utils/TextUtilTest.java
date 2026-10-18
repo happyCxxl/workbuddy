@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 乱码口径单测：正常书写系统与符号不判乱码；替换字符/私用区/未分配码点判乱码；分母为非空白字符。
- *
- * @author cxxl
  */
 class TextUtilTest {
 

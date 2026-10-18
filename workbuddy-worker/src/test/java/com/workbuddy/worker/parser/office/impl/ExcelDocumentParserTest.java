@@ -28,8 +28,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Excel 原生解析器单测：XLSX 合并区域、XLS 同路径、supports 与能力标识。
- *
- * @author cxxl
  */
 class ExcelDocumentParserTest {
 

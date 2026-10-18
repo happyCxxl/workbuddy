@@ -14,8 +14,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Redis 队列封装单测：入队/阻塞弹出参数正确传递。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class RedisQueueSupportTest {

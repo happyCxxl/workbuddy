@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
  * 通用字段基类：逻辑删除标记 + 创建/更新留痕字段。
  *
  * <p>del_flag 按逻辑删除处理；创建/更新字段统一自动填充。
- *
- * @author cxxl
  */
 @Data
 public class BaseInfo implements Serializable {

@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 依赖方向守卫：common 是最底层，不得依赖任何 workbuddy-* 模块。
  *
  * <p>随 {@code mvn verify} 一起执行，零新增依赖。
- *
- * @author cxxl
  */
 class ModuleDependencyGuardTest {
 

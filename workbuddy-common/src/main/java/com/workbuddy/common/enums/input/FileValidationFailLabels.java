@@ -11,8 +11,6 @@ import java.util.Map;
  * <p>与 {@link AuditActionLabels} 同一套做法：{@link FileValidationFailReason} 是**领域码值**
  * （落库存 `name()`），中文只在读日志时要用，单独放一层映射，
  * 码值语义变更时写入侧不受影响。
- *
- * @author cxxl
  */
 public final class FileValidationFailLabels {
 

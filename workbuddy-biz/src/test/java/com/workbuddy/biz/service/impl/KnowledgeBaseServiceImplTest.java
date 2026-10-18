@@ -70,8 +70,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 知识库管理应用服务单测（含策略绑定与归属可见范围）。
- *
- * @author cxxl
  */
 class KnowledgeBaseServiceImplTest {
 

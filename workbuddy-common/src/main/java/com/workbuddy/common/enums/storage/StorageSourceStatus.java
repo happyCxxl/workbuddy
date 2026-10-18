@@ -8,8 +8,6 @@ import lombok.Getter;
  *
  * <p>落库为码值字符串（wb_storage_source.status）；停用的数据源不注册进存储路由，
  * 读取落在它上面的对象会按「存储后端未配置」报错。
- *
- * @author cxxl
  */
 @Getter
 public enum StorageSourceStatus {

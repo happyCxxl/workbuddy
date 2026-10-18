@@ -19,8 +19,6 @@ import java.util.Set;
  * 检索规则解析/校验器：规则快照 JSON ↔ RetrievalRuleSpec；
  * 注册口径 = 字段白名单 + 取值白名单 + 参数边界 + **预留能力锁定**（未启用能力设非默认值 → 40451）。
  * 执行引擎同样经本类解析，并对锁定能力拒执行（双保险）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

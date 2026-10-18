@@ -25,8 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 文件接口路由测试：上传与下载两条路径的映射，以及未定义的路径不占位。
  *
  * <p>用独立 MockMvc 装配单个 Controller：不加载数据源与容器，只验证 URL 到方法的映射与收参绑定。
- *
- * @author cxxl
  */
 class FileControllerRoutingTest {
 

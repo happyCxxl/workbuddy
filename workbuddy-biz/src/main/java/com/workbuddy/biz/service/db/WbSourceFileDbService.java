@@ -8,8 +8,6 @@ import java.util.List;
 
 /**
  * 来源文件数据访问服务（wb_source_file）。
- *
- * @author cxxl
  */
 public interface WbSourceFileDbService extends InfraDbService<WbSourceFile> {
 

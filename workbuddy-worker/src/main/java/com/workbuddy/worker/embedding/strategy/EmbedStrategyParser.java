@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
  * 向量化策略解析器：快照 JSON → EmbedStrategy（补默认）。
  * 触发（runner 读任务快照）与保存侧（控制面 toStrategy）共用同一解析口径；
  * 快照为空或损坏一律抛异常，由上层按数据问题处置，本类不提供任何内置默认策略。
- *
- * @author cxxl
  */
 @Component
 @RequiredArgsConstructor

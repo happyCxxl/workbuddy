@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 文件引用：文件 ID 的领域内包装。
- *
- * @author cxxl
  */
 @Data
 @NoArgsConstructor

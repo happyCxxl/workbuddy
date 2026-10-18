@@ -21,8 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>**当前启用**（{@link #currentSourceId()}）：业务层标记的那一个，新对象写入走它；
  * **读取**按记录里的数据源 ID（{@link #of(ObjectRef)}），与当前启用的数据源无关。
  * 未注册的 ID 抛 40455，不回落成当前启用的数据源。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

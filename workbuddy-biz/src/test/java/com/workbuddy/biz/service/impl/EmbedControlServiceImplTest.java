@@ -63,8 +63,6 @@ import static org.mockito.Mockito.when;
 /**
  * 向量化控制面服务单测：策略解析两档（显式指定 / 知识库绑定）/ 上游切片产物校验 /
  * 窗口前置校验（触发时明确报错）/ 执行键查重 / 建任务快照入队 / 详情组装。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class EmbedControlServiceImplTest {

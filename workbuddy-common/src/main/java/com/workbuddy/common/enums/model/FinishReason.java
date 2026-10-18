@@ -2,8 +2,6 @@ package com.workbuddy.common.enums.model;
 
 /**
  * 对话停止原因。
- *
- * @author cxxl
  */
 public enum FinishReason {
 

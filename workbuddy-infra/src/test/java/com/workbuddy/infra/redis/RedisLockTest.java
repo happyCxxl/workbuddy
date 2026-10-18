@@ -22,8 +22,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Redis 分布式锁单测：SET NX EX 抢占与 Lua 比对释放。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class RedisLockTest {

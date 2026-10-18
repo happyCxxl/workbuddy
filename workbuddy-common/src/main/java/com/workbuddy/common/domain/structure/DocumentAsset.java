@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 二进制资源引用：只存引用不复制（原图指 file-manager、截图指产物存储）。
- *
- * @author cxxl
  */
 @Data
 public class DocumentAsset {

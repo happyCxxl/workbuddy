@@ -5,8 +5,6 @@ import lombok.Data;
 
 /**
  * 对话结果：回复文本 + 模型名回显 + 停止原因与 token 用量。
- *
- * @author cxxl
  */
 @Data
 public class ChatResult {

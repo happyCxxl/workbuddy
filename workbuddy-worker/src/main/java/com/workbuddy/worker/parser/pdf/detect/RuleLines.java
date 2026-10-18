@@ -20,8 +20,6 @@ import java.util.List;
  * 页面线条收集与线网格：采集页面矢量线段（横线/竖线），按相交关系聚成线框区域，
  * 再由区域内线条求列边界、行边界与分隔线缺失（合并单元格）。
  * 坐标统一为左上原点，与字符 y 同口径。
- *
- * @author cxxl
  */
 public final class RuleLines {
 

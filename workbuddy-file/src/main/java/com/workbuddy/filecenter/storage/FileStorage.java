@@ -14,8 +14,6 @@ import java.util.Map;
  *
  * <p>寻址方式三档：fileId 寻址（上传文件，元数据入档案库）、sha256 内容寻址（阶段产物、
  * 切片集合、向量集合，同内容幂等复用）、指定 key（头像，键写在业务表里）。
- *
- * @author cxxl
  */
 public interface FileStorage {
 

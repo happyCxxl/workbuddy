@@ -7,8 +7,6 @@ import lombok.Data;
  *
  * <p>四类元素计数与总数同口径（总数 = 四类之和 + 其它类型）；某项在产物里取不到时为 null，
  * 由前端按"缺失"渲染，不回落 0。
- *
- * @author cxxl
  */
 @Data
 public class LineageParseStatsVO {

@@ -27,8 +27,6 @@ import java.util.Set;
 /**
  * 索引组合口径服务实现（组合 = 预处理×切片×向量化 环节策略映射）。
  * 血缘与枚举取数走 IndexComboReconciler（预处理策略沿切片产物的上游链读取，capabilitySnapshot 为载体，不新增列）。
- *
- * @author cxxl
  */
 @Slf4j
 @Service

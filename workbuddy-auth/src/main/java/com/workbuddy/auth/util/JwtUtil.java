@@ -19,8 +19,6 @@ import java.util.Objects;
 
 /**
  * JWT 令牌工具：签发与解析。
- *
- * @author cxxl
  */
 @Component
 public class JwtUtil {

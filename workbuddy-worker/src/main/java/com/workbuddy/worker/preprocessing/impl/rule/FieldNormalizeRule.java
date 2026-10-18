@@ -32,8 +32,6 @@ import java.util.regex.Pattern;
  * <p>口径（11.7 示例为准）：中文大写金额只提取字段不改写文本（大写是合规原文）；
  * 千分位去逗号、中文日期/分隔符日期转 ISO、㎡ 族统一"平方米"会改写检索文本；
  * ￥/元/RMB 不做文本映射；编号层级字符串（1.11）与限定词（不低于）原样保留。
- *
- * @author cxxl
  */
 @Component
 public class FieldNormalizeRule implements CleanRule {

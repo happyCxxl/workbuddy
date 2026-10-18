@@ -37,8 +37,6 @@ import java.time.Duration;
  * 多实例防重靠"条件更新领任务"（受影响行数=1 才执行，见各 Runner）。
  * 停机：停领批 → 关池等在跑任务至多 knowledge.task.shutdown-wait → 中断并回写 FAILED(TASK_SHUTDOWN_INTERRUPTED)。
  * 其他环节任务的领批与分发随各自环节 Runner 落地后接入。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
  *
  * <p>三个雪花 ID 字段都做了字符串序列化：**前端要拿 id 回传调勾选对比接口**，
  * 裸数字下发会被 JSON.parse 丢精度，失真后报"运行记录不存在"。
- *
- * @author cxxl
  */
 @Data
 public class RetrievalRunVO {

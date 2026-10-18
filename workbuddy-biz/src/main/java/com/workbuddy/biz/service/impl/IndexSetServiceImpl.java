@@ -75,8 +75,6 @@ import java.util.stream.Collectors;
 /**
  * 索引构建与发布控制面实现（口径见 {@link IndexSetService}）。
  * 发布/回退为单事务三级指针（版本 publishedAt/By + 集合二级指针 + 知识库一级指针首次置位）。
- *
- * @author cxxl
  */
 @Slf4j
 @Service
@@ -249,7 +247,8 @@ public class IndexSetServiceImpl implements IndexSetService {
     /** 追加后处置：批次对账通过 → 版本 READY（活账本）；绑定开且产物组合==绑定组合 → 自动发布 */
     private void maybeAutoPublish(Long kbId, WbIndexVersion version, ComboSnapshot combo) {
         if (combo.isListScope()) {
-            return; // 评测冻结集永不自动发布（发布/回退亦拒 40449）
+            // 评测冻结集永不自动发布（发布/回退亦拒 40449）
+            return;
         }
         String status = version.getStatus();
         if (IndexVersionStatus.CREATED.name().equals(status) || IndexVersionStatus.BUILDING.name().equals(status)) {
@@ -501,7 +500,7 @@ public class IndexSetServiceImpl implements IndexSetService {
         indexSetDbService.updatePublishedVersion(set.getId(), versionId);
         version.setStatus(IndexVersionStatus.ONLINE.name());
         version.setPublishedAt(now);
-        // publishedBy 占位 null（TODO 接认证后取登录用户）
+        // publishedBy 占位 null（接入认证后取登录用户）
         indexVersionDbService.updateById(version);
 
         WbKnowledgeBase kb = knowledgeBaseDbService.getById(set.getKnowledgeBaseId());
@@ -781,7 +780,8 @@ public class IndexSetServiceImpl implements IndexSetService {
                     || IndexBuildTrigger.COMPENSATE.name().equals(trigger)) {
                 skip = buildingLike;
             } else {
-                skip = true; // NEW 候选：READY 也跳过
+                // NEW 候选：READY 也跳过
+                skip = true;
             }
             if (skip) {
                 log.info("===> IndexSetServiceImpl 组合已有活跃版本，跳过自动构建, kbId={}, versionId={}, trigger={}",

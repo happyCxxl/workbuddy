@@ -18,8 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 模型收参注解校验单测：必填与长度、非负、思考标记 0/1、币种与状态字典（Controller `@Valid` 的判定口径）。
- *
- * @author cxxl
  */
 class ModelDtoValidationTest {
 

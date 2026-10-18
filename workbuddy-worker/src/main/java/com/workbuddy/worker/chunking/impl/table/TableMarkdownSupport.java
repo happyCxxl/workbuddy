@@ -23,8 +23,6 @@ import java.util.stream.Collectors;
 /**
  * 表格切片公共支撑：单元格文本索引 / 表头收集（空文本不算表头）/ 数据行准备 /
  * Markdown 表格渲染 / 行级与行组切片分组 / Chunk 构建。表格路四个算法（行级/行组/整表/表+引导段）共用。
- *
- * @author cxxl
  */
 public final class TableMarkdownSupport {
 

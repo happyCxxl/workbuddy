@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 标准化字段 VO：NormalizedField 的对外视图（金额/日期/面积/证书号的结构化形式）。
- *
- * @author cxxl
  */
 @Data
 public class PreprocessFieldVO {

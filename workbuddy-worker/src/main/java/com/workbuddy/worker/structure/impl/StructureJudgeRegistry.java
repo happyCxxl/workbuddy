@@ -9,8 +9,6 @@ import java.util.List;
 /**
  * 结构判定能力注册：候选 = Spring Bean 集合 ∩ 开关
  * `knowledge.structure.model-fallback.enabled`（默认 false）；当前无实现类 → 恒 null，全走固定规则降级。
- *
- * @author cxxl
  */
 @Component
 public class StructureJudgeRegistry {

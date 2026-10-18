@@ -19,8 +19,6 @@ import java.security.NoSuchAlgorithmException;
  * 校验期缓冲：内存缓冲至阈值，超阈值溢写临时文件；同一校验内可重复开流读取。
  * 全量校验步骤共用一份实例：写入方（大小统计步骤）同时更新 sha256 摘要，
  * 读取方（魔数识别/试解析步骤）经 {@link #openStream()} 重开流，不重复下载。
- *
- * @author cxxl
  */
 @Slf4j
 public class SpillBuffer {

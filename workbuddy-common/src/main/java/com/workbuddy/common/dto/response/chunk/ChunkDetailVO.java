@@ -9,8 +9,6 @@ import java.util.List;
 /**
  * 切片详情 VO：工作台"切片详情"页数据源。
  * 注：策略版本按运行记录展示（RunRecordVO.strategyVersion），不进详情。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

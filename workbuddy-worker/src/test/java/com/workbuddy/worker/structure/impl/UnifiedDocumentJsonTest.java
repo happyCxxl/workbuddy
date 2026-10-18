@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * UnifiedDocument JSON 序列化往返单测（hutool JsonUtil 口径）。
- *
- * @author cxxl
  */
 class UnifiedDocumentJsonTest {
 

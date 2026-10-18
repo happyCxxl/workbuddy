@@ -28,8 +28,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 存储数据源数据访问服务单测：清单排序 / 当前启用标记的清与置 / 探测结论回写。
- *
- * @author cxxl
  */
 class WbStorageSourceDbServiceImplTest {
 

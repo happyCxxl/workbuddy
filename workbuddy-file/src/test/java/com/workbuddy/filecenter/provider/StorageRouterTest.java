@@ -25,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 存储路由测试：按数据源 ID 注册与取用、写入走当前启用的数据源、未注册的 ID 与没有当前启用时拒绝。
  *
  * <p>只用本地磁盘形态：MinIO 形态的初始化会连真实服务并建桶，不适合放在单测里。
- *
- * @author cxxl
  */
 class StorageRouterTest {
 

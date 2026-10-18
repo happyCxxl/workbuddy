@@ -63,8 +63,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 产物内容查询单测：白名单/历史运行精确取产物/预处理内容映射/切片与向量化列表。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class StageContentQueryServiceImplTest {

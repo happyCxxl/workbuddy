@@ -10,8 +10,6 @@ import java.util.List;
 /**
  * 规则执行结果：命中轨迹（可多条，如元素内多个金额）+ 结构化字段 + 变更数。
  * 由管线聚合进 ViewElement 与子步骤统计。
- *
- * @author cxxl
  */
 @Data
 public class RuleOutcome {

@@ -21,8 +21,6 @@ import static org.mockito.Mockito.when;
 /**
  * 策略版本数据访问服务单测：按类型查询语义（状态过滤/排序/取一）。
  * 注：LambdaQueryWrapper 的列名解析依赖实体 lambda 缓存，测试内先初始化。
- *
- * @author cxxl
  */
 class WbPipelineStrategyVersionDbServiceImplTest {
 

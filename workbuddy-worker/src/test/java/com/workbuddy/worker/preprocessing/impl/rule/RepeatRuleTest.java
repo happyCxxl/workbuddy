@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 重复处置规则单测：段级/页级标记按三档处置（EXCLUDE 只留首份 / MARK 标记保留 / KEEP 不改动）。
- *
- * @author cxxl
  */
 class RepeatRuleTest {
 

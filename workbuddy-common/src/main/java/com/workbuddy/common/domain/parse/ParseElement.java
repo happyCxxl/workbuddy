@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 解析元素（最小单元）：文本元素带 text，图片元素带 assetRef；
  * page/bbox/font/confidence 为组装环节阅读顺序、续表检测、标题层级推定的输入。
- *
- * @author cxxl
  */
 @Data
 public class ParseElement {

@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 固定窗口切片器单测：flush 点窗口切（len + overlap）/ 短文本单片 / 溯源字段。
- *
- * @author cxxl
  */
 class FixedWindowSliceStrategyTest {
 

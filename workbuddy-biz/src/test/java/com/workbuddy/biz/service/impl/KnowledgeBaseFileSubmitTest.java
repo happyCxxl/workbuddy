@@ -69,8 +69,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * 提交链路单测（文档输入：提交建档、提交记录、文件结果）。
- *
- * @author cxxl
  */
 @ExtendWith(MockitoExtension.class)
 class KnowledgeBaseFileSubmitTest {

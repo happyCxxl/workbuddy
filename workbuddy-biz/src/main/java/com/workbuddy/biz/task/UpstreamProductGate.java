@@ -20,8 +20,6 @@ import org.springframework.stereotype.Component;
  *
  * <p>放行集是 {@code SUCCESS} 与 {@code PARTIAL_SUCCESS} 两种终态；其余状态（{@code FAILED}、
  * {@code QUEUED}、{@code RUNNING}）一律拒绝。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

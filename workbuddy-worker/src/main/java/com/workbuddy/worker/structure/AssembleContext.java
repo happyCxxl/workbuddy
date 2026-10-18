@@ -4,8 +4,6 @@ import lombok.Data;
 
 /**
  * 组装上下文：任务标识与阈值配置引用（组装管线入参）。
- *
- * @author cxxl
  */
 @Data
 public class AssembleContext {

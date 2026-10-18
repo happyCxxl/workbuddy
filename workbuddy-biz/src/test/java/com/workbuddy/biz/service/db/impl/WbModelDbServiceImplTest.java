@@ -31,8 +31,6 @@ import static org.mockito.Mockito.when;
 /**
  * 模型目录数据访问单测（Mapper 打桩 + SQL 片段断言）：清单的过滤条件与排序、
  * 唯一键判定（含编辑时排除自身）、启停的定点回写、覆盖式更新的清空列。
- *
- * @author cxxl
  */
 class WbModelDbServiceImplTest {
 

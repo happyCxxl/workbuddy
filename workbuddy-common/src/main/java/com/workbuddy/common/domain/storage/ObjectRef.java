@@ -26,7 +26,6 @@ import com.workbuddy.common.utils.NullUtil;
  * @param storageType 存储类型
  * @param bucket      桶名（local 下为存储根下的一级子目录）
  * @param objectKey   对象键（fileId / sha256 / 头像相对 key）
- * @author cxxl
  */
 public record ObjectRef(Long sourceId, StorageType storageType, String bucket, String objectKey) {
 

@@ -13,8 +13,6 @@ import java.util.List;
 
 /**
  * 环节策略版本数据访问服务实现。
- *
- * @author cxxl
  */
 @Service
 public class WbPipelineStrategyVersionDbServiceImpl

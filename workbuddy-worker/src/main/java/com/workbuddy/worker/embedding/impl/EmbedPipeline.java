@@ -41,8 +41,6 @@ import java.util.Map;
  * 复用判定（账本回溯，同文件同策略，miss 清零即停）→ 分批模型调用（重试退避+失败批次隔离）→ 四关 → 组装。
  * 三条红线：不改内容（IdentityTemplate 原样编码）/ 不做兜底（前置校验报错）/ 不碰向量库（只落账本）。
  * 纯算法，不碰 DB/产物存储（复用候选账本由 biz 加载进 context；落库回写由 biz EmbedTaskRunner 编排）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component
@@ -56,7 +54,7 @@ public class EmbedPipeline implements EmbedderPort {
     /**
      * 一批文本的向量编码。
      *
-     * <p>TODO 模型调用层已移除，接入模型模块后在此调用向量编码门面（入参 {@link EmbeddingRequest}，
+     * <p>模型调用层已移除，接入模型模块后在此调用向量编码门面（入参 {@link EmbeddingRequest}，
      * 出参 {@link EmbeddingResult}）；当前一律失败，批次按失败隔离，不回写账本。
      *
      * @param request 本批入参
@@ -160,7 +158,8 @@ public class EmbedPipeline implements EmbedderPort {
         }
         ChunkStrategy chunkStrategy = context.getChunkStrategy();
         if (NullUtil.isNull(chunkStrategy)) {
-            return null; // 无切片策略快照时跳过窗口校验（历史任务兼容），实测片长由四关/上游保证
+            // 无切片策略快照时跳过窗口校验（历史任务兼容），实测片长由四关/上游保证
+            return null;
         }
         EmbedWindowRules.WindowBound window = EmbedWindowRules.resolve(
                 chunkStrategy, context.getChunkProperties(), strategy, properties);
@@ -214,7 +213,8 @@ public class EmbedPipeline implements EmbedderPort {
                     .filter(EmbedPipeline::isNotCached)
                     .toList();
             if (misses.isEmpty()) {
-                break; // miss 清零即停
+                // miss 清零即停
+                break;
             }
             Map<String, List<Float>> vectors = indexVectors(previous);
             for (EmbeddingRecord record : misses) {
@@ -250,7 +250,8 @@ public class EmbedPipeline implements EmbedderPort {
     private BatchResult invokeBatches(List<EmbeddingRecord> pending, EmbedStrategy strategy, EmbedOutcome outcome) {
         BatchResult result = new BatchResult();
         if (pending.isEmpty()) {
-            return result; // 全部复用命中：零模型调用
+            // 全部复用命中：零模型调用
+            return result;
         }
         int batchSize = Math.max(1, ObjectUtil.defaultIfNull(strategy.getBatchSize(), properties.getBatchSize()));
         int failedBatches = 0;

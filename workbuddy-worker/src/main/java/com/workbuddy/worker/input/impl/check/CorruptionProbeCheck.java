@@ -19,8 +19,6 @@ import java.util.Locale;
  * 损坏/加密探测步骤：试解析文件结构（只探测，不取全文）；
  * 异常链含 encrypt/password → FILE_ENCRYPTED，其余异常 → FILE_CORRUPTED。
  * 深层损坏（试解析未暴露）由解析环节失败回写，不在入口拦截。
- *
- * @author cxxl
  */
 @Slf4j
 @Component

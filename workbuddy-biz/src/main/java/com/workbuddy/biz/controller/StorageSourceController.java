@@ -21,8 +21,6 @@ import java.util.List;
 
 /**
  * 存储数据源 Controller：数据源清单、当前启用预览与设为当前启用，全部仅管理员可用。
- *
- * @author cxxl
  */
 @Slf4j
 @RestController

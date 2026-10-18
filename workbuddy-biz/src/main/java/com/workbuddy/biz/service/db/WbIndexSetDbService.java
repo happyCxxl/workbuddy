@@ -8,8 +8,6 @@ import java.util.Map;
 
 /**
  * 索引集合数据访问服务：一知识库一行，承载二级发布指针。
- *
- * @author cxxl
  */
 public interface WbIndexSetDbService extends IService<WbIndexSet> {
 

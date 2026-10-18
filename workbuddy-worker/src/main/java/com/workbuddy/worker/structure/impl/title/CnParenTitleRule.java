@@ -6,8 +6,6 @@ import java.util.regex.Pattern;
 
 /**
  * 中文括号序号标题规则：（一）…（三级；缺字号佐证只计候选）。
- *
- * @author cxxl
  */
 @Component
 public class CnParenTitleRule extends AbstractCnNumberTitleRule {

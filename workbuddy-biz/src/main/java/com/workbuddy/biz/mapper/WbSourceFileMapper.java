@@ -5,8 +5,6 @@ import com.workbuddy.infra.persistence.InfraBaseMapper;
 
 /**
  * 来源文件 Mapper（表：wb_source_file）。
- *
- * @author cxxl
  */
 public interface WbSourceFileMapper extends InfraBaseMapper<WbSourceFile> {
 }

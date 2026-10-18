@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
  *
  * <p>**绑定可分性**（{@link #bindable()}）：只有三件套能绑到知识库；检索规则不绑 KB ——
  * 它走索引版本行的 `default_rule_id`。
- *
- * @author cxxl
  */
 public enum StrategyType {
 

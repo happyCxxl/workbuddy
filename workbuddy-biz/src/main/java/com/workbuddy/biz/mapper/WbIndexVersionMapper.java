@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 索引版本 Mapper。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbIndexVersionMapper extends BaseMapper<WbIndexVersion> {

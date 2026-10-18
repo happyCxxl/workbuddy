@@ -12,8 +12,6 @@ import java.time.LocalDateTime;
  * （唯一键 uk_exec，0 表示"没有上游"与"该环节无策略"两档）。
  *
  * <p>机器表：无用户字段与更新留痕字段（仅 create_time）。
- *
- * @author cxxl
  */
 @Data
 @TableName("wb_knowledge_pipeline_task")

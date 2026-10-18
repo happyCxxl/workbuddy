@@ -8,8 +8,6 @@ import java.util.List;
 /**
  * 兜底切片器：正文路超长文本的最后降级手段。
  * 参数从路由配置（fallback 路）读取；同 FallbackSlicerRegistry 按 algorithm 索引。
- *
- * @author cxxl
  */
 public interface FallbackSlicer {
 

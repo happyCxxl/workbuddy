@@ -11,8 +11,6 @@ import java.io.Serial;
 
 /**
  * 操作审计（表：wb_audit_log）。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

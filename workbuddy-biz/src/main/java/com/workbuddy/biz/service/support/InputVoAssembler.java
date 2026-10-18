@@ -14,8 +14,6 @@ import org.springframework.stereotype.Component;
  *
  * <p>职责：提交日志/文件结果实体 → 输入环节对外 VO/响应的纯映射（不查库、不做业务判断）；
  * 需合成来源文件信息时 {@link WbSourceFile} 由外部传入，本类只做字段搬运。
- *
- * @author cxxl
  */
 @Component
 public class InputVoAssembler {

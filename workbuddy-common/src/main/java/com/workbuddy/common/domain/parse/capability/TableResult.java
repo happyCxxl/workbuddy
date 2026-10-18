@@ -6,8 +6,6 @@ import java.util.List;
 
 /**
  * 表格结构识别结果。
- *
- * @author cxxl
  */
 @Data
 public class TableResult {

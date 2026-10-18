@@ -50,8 +50,6 @@ import java.util.Map;
  * 组装编排（模板方法骨架）：标准化 → 去重与阅读顺序 → 结构组装（标题/章节）→ 跨页接续 → 关系重建 →
  * 溯源校验 → 重复与噪声识别 → 质量与空树判定（只产出 SUCCESS 或 STRUCTURE_EMPTY）。
  * 纯算法，不碰 DB/产物存储（落库回写由 biz StructureTaskRunner 编排）。
- *
- * @author cxxl
  */
 @Slf4j
 @Component
@@ -261,7 +259,8 @@ public class AssemblerPipeline implements DocumentAssemblerPort {
                 page.setOrigin(PAGE_ORIGIN);
                 pages.add(page);
             }
-            break; // 页面基准取首个含尺寸的路（native）
+            // 页面基准取首个含尺寸的路（native）
+            break;
         }
         return pages;
     }

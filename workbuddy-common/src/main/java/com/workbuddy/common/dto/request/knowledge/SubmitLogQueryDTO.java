@@ -10,8 +10,6 @@ import java.io.Serial;
  * 提交记录清单的分页查询条件：状态 / 文件名两项都可留空。
  *
  * <p>页码与页长口径见 {@link PageQueryDTO}。
- *
- * @author cxxl
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

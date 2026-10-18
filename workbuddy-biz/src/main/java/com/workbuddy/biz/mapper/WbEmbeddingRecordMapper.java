@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 向量记录 Mapper。
- *
- * @author cxxl
  */
 @Mapper
 public interface WbEmbeddingRecordMapper extends BaseMapper<WbEmbeddingRecord> {
