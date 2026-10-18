@@ -11,6 +11,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class StructureHybridSliceStrategy extends ParagraphSliceStrategy {
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 算法枚举
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.BODY_STRUCTURE_HYBRID;

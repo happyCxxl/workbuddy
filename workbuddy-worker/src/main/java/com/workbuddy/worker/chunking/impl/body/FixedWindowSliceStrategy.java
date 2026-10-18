@@ -23,11 +23,23 @@ import java.util.List;
 @Component
 public class FixedWindowSliceStrategy implements SliceStrategy {
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 固定窗口算法
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.BODY_FIXED_WINDOW;
     }
 
+    /**
+     * 只把整元素文本入缓冲，窗口切统一在 flush 点进行。
+     *
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 恒为空列表
+     */
     @Override
     public List<Chunk> slice(ViewElement element, SliceContext context) {
         if (StrUtil.isBlank(element.getNormalizedText())) {
@@ -43,6 +55,12 @@ public class FixedWindowSliceStrategy implements SliceStrategy {
         return List.of();
     }
 
+    /**
+     * 结算缓冲：按窗口长度与重叠切成多片。
+     *
+     * @param context 切片上下文
+     * @return 切片列表；缓冲为空时为空列表
+     */
     @Override
     public List<Chunk> flush(SliceContext context) {
         if (context.getBodyBuffer().isEmpty()) {

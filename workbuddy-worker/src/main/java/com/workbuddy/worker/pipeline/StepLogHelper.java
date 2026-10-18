@@ -17,7 +17,12 @@ public final class StepLogHelper {
     private StepLogHelper() {
     }
 
-    /** 开表：stepName + startedAt=now。 */
+    /**
+     * 开表：步骤名 + 开始时间。
+     *
+     * @param stepName 步骤名
+     * @return 步骤日志
+     */
     public static StepLogInfo begin(String stepName) {
         StepLogInfo step = new StepLogInfo();
         step.setStepName(stepName);
@@ -25,18 +30,37 @@ public final class StepLogHelper {
         return step;
     }
 
-    /** 收表：finishedAt=now + duration=真实毫秒（startedAt→now）。 */
+    /**
+     * 收表：写结束时间与真实耗时。
+     *
+     * @param step 步骤日志
+     */
     public static void finish(StepLogInfo step) {
         step.setFinishedAt(LocalDateTime.now());
         step.setDuration((int) Duration.between(step.getStartedAt(), step.getFinishedAt()).toMillis());
     }
 
-    /** 纳秒起点 → 已过毫秒（四舍五入；批量统计式步骤累计耗时用）。 */
+    /**
+     * 纳秒起点到当前已过的毫秒数（四舍五入；批量统计式步骤累计耗时用）。
+     *
+     * @param startedNanos 纳秒起点
+     * @return 已过毫秒
+     */
     public static long elapsedMillis(long startedNanos) {
         return Math.round((System.nanoTime() - startedNanos) / 1_000_000.0);
     }
 
-    /** 批量统计式子步骤组装：统一字段口径（状态 SUCCESS、平均长度=总长÷命中数）。 */
+    /**
+     * 批量统计式子步骤组装：统一字段口径（状态 SUCCESS、平均长度 = 总长 ÷ 命中数）。
+     *
+     * @param stepName       步骤名
+     * @param capability     能力版本
+     * @param matched        命中数
+     * @param totalLen       文本总长
+     * @param warnings       告警数
+     * @param durationMillis 耗时毫秒
+     * @return 步骤日志
+     */
     public static StepLogInfo build(String stepName, String capability, int matched, int totalLen,
                                     int warnings, long durationMillis) {
         StepLogInfo step = begin(stepName);

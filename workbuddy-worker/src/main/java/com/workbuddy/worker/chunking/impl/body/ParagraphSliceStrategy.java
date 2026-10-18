@@ -23,11 +23,24 @@ import java.util.List;
 @Component
 public class ParagraphSliceStrategy extends AbstractBodySliceStrategy {
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 段落聚合算法
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.BODY_PARAGRAPH_AGGREGATE;
     }
 
+    /**
+     * 段落聚合：超软上限先结算再降级；否则累计到目标上限在元素边界结算。
+     *
+     * @param text    元素检索文本（非空）
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 本次产出的切片
+     */
     @Override
     protected List<Chunk> sliceText(String text, ViewElement element, SliceContext context) {
         ChunkRouteConfig config = context.getStrategy().route(ChunkRoute.BODY);
@@ -53,6 +66,12 @@ public class ParagraphSliceStrategy extends AbstractBodySliceStrategy {
         return emitted;
     }
 
+    /**
+     * 结算当前缓冲为一组。
+     *
+     * @param context 切片上下文
+     * @return 结算出的切片
+     */
     @Override
     protected Chunk flushGroup(SliceContext context) {
         return flushGroup(context.getBodyBuffer(), context);

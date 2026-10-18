@@ -20,26 +20,54 @@ import org.springframework.stereotype.Component;
 @Component
 public class RepeatRule implements CleanRule {
 
+    /**
+     * 规则标识。
+     *
+     * @return 规则名（策略快照里落库的 name）
+     */
     @Override
     public String name() {
         return "repeat-dispose-v1";
     }
 
+    /**
+     * 子步骤展示名。
+     *
+     * @return 步骤名
+     */
     @Override
     public String stepName() {
         return "重复处置";
     }
 
+    /**
+     * 执行顺序。
+     *
+     * @return 顺序号（小的先执行）
+     */
     @Override
     public int order() {
         return 5;
     }
 
+    /**
+     * 该规则在策略里是否有配置。
+     *
+     * @param strategy 预处理策略
+     * @return 有配置为 true
+     */
     @Override
     public boolean enabledIn(PreprocessStrategy strategy) {
         return NullUtil.isNotNull(strategy.rule(PreprocessRule.REPEAT));
     }
 
+    /**
+     * 对单个元素执行重复处置：命中跨页重复时按处置方式处理。
+     *
+     * @param element 视图元素
+     * @param context 规则上下文
+     * @return 处置结果
+     */
     @Override
     public RuleOutcome apply(ViewElement element, RuleContext context) {
         boolean repeatedSegment = NullUtil.isNotNull(element.getMarks())

@@ -32,7 +32,11 @@ public final class TableCapabilityAttempt {
             this(table, fact, null);
         }
 
-        /** 是否拿到可用结构。 */
+        /**
+         * 是否拿到可用结构。
+         *
+         * @return 有可用表格为 true
+         */
         public boolean enhanced() {
             return NullUtil.isNotNull(table);
         }

@@ -20,11 +20,22 @@ public class SingleNumberTitleRule implements TitleRule {
     /** 单级阿拉伯数字 + 一个分隔符（顿号/点/右括号/空白）+ 非数字开头的内容 */
     private static final Pattern NUMBER_PATTERN = Pattern.compile("^(\\d{1,2})(?:[、.．)）]|\\s)\\s*(\\D.*)$");
 
+    /**
+     * 规则在链上的顺序。
+     *
+     * @return 顺序号（小的先匹配）
+     */
     @Override
     public int order() {
         return 25;
     }
 
+    /**
+     * 单数字编号标题：按单级数字编号匹配并取层级。
+     *
+     * @param context 标题判定上下文
+     * @return 命中结果；不适用时为 null
+     */
     @Override
     public TitleDecision tryMatch(TitleRuleContext context) {
         Matcher number = NumberTitleSupport.matchNumber(context, NUMBER_PATTERN);

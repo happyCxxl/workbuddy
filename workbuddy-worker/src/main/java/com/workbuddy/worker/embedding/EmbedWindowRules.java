@@ -17,8 +17,15 @@ public final class EmbedWindowRules {
     }
 
     /**
-     * 窗口兼容计算：bound = 切片策略最大片长（字符），allowed = 模型窗口允许字符数；
-     * computable=false 表示不可判定（无切片策略快照，或兜底 none 上界不可推算）。
+     * 窗口兼容计算：bound = 切片策略最大片长（字符），allowed = 模型窗口允许字符数。
+     *
+     * <p>computable=false 表示不可判定（无切片策略快照，或兜底 none 上界不可推算）。
+     *
+     * @param chunkStrategy   切片策略（可空）
+     * @param chunkProperties 切片全局默认值
+     * @param strategy        向量策略
+     * @param embedProperties 向量全局默认值
+     * @return 窗口兼容计算结果
      */
     public static WindowBound resolve(ChunkStrategy chunkStrategy, ChunkProperties chunkProperties,
                                       EmbedStrategy strategy, EmbedProperties embedProperties) {
@@ -34,7 +41,13 @@ public final class EmbedWindowRules {
         return new WindowBound(bound, allowed, true);
     }
 
-    /** 窗口兼容计算产物（bound/allowed 为字符数）。 */
+    /**
+     * 窗口兼容计算产物。
+     *
+     * @param bound      切片最大片长（字符）
+     * @param allowed    模型窗口允许字符数
+     * @param computable 是否可判定
+     */
     public record WindowBound(int bound, int allowed, boolean computable) {
     }
 }

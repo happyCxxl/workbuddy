@@ -32,7 +32,12 @@ public final class PreprocessAlgorithmSpec {
 
     // ---------------- 默认补齐 ----------------
 
-    /** 三态规则默认处置方式（开关规则返回 null）；重复默认剔除，与历史上开关 ON 的效果一致。 */
+    /**
+     * 三态规则默认处置方式（开关规则返回 null）；重复默认剔除，与历史上开关 ON 的效果一致。
+     *
+     * @param rule 规则
+     * @return 默认动作名；开关规则为 null
+     */
     public static String defaultAction(PreprocessRule rule) {
         if (rule == PreprocessRule.REPEAT) {
             return PreprocessAction.EXCLUDE.name();
@@ -40,7 +45,12 @@ public final class PreprocessAlgorithmSpec {
         return rule.triState() ? PreprocessAction.MARK.name() : null;
     }
 
-    /** 开关规则默认值（三态规则返回 false）。 */
+    /**
+     * 开关规则默认值（三态规则返回 false）。
+     *
+     * @param rule 规则
+     * @return 默认开启为 true
+     */
     public static boolean defaultEnabled(PreprocessRule rule) {
         return switch (rule) {
             case FIELD, TIDY, ENCODING -> true;
@@ -48,7 +58,13 @@ public final class PreprocessAlgorithmSpec {
         };
     }
 
-    /** 各规则默认参数（值源 = PreprocessProperties 全局默认，application.yml 同名 kebab-case 键）。 */
+    /**
+     * 各规则默认参数（值源 = PreprocessProperties 全局默认，application.yml 同名 kebab-case 键）。
+     *
+     * @param rule       规则
+     * @param properties 全局默认值
+     * @return 参数键到默认值的映射
+     */
     public static Map<String, String> defaultParams(PreprocessRule rule, PreprocessProperties properties) {
         Map<String, String> defaults = new LinkedHashMap<>();
         switch (rule) {
@@ -81,6 +97,10 @@ public final class PreprocessAlgorithmSpec {
     /**
      * 解析后补全：缺规则补默认（action/enabled）、缺参数补全局默认、custom 补默认。
      * 重复（repeat）的 action 缺省时先按旧开关 enabled 换算（ON=EXCLUDE / OFF=KEEP），无旧开关才用默认档。
+     *
+     * @param strategy   策略配置（原地补全）
+     * @param properties 全局默认值
+     * @return 补全后的策略配置
      */
     public static PreprocessStrategy normalize(PreprocessStrategy strategy, PreprocessProperties properties) {
         if (NullUtil.isNull(strategy.getRules())) {
@@ -124,7 +144,14 @@ public final class PreprocessAlgorithmSpec {
 
     // ---------------- 保存校验（biz 调用；返回 null = 通过，否则为错误信息） ----------------
 
-    /** 校验配置 JSON 结构；非法返回错误信息，合法返回 null。configSnapshot 应为 {"rules":{...},"custom":{...}} 结构。 */
+    /**
+     * 校验配置 JSON 结构；非法返回错误信息，合法返回 null。
+     *
+     * <p>configSnapshot 应为 {"rules":{...},"custom":{...}} 结构。
+     *
+     * @param config 解析后的配置对象
+     * @return 错误信息；合法时为 null
+     */
     @SuppressWarnings("unchecked")
     public static String validate(Map<String, Object> config) {
         if (NullUtil.isNull(config)) {

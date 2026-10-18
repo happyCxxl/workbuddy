@@ -19,6 +19,12 @@ import java.util.List;
 @Component
 public class StructureOverlapProcessor implements ChunkPostProcessor {
 
+    /**
+     * 就地处理切片列表（只改传入的列表元素，不返回新集合）。
+     *
+     * @param chunks  切片列表
+     * @param context 切片上下文
+     */
     @Override
     public void process(List<Chunk> chunks, SliceContext context) {
         int overlap = context.getStrategy().pipelineInt(PipelineKey.STRUCTURE_OVERLAP, 0);

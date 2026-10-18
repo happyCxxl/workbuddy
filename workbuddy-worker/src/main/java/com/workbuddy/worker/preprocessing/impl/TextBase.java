@@ -15,7 +15,10 @@ public final class TextBase {
     }
 
     /**
-     * 展示文本口径：全角空格→半角、控制字符→空格、空白折叠、未定义码点剔除、trim。
+     * 展示文本口径：全角空格转半角、控制字符转空格、空白折叠、未定义码点剔除、trim。
+     *
+     * @param raw 原始文本
+     * @return 展示文本
      */
     public static String tidyDisplay(String raw) {
         if (NullUtil.isNull(raw) || raw.isEmpty()) {
@@ -29,7 +32,10 @@ public final class TextBase {
     }
 
     /**
-     * 检索文本基座：展示口径 + Unicode NFKC（全角→半角、兼容字符规整）。
+     * 检索文本基座：展示口径基础上再做 Unicode NFKC（全角转半角、兼容字符规整）。
+     *
+     * @param tidy 展示文本
+     * @return 检索文本基座
      */
     public static String normalizeBase(String tidy) {
         if (NullUtil.isNull(tidy) || tidy.isEmpty()) {

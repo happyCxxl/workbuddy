@@ -28,6 +28,13 @@ public class NormalizerImpl implements ElementNormalizer {
     /** 类型为空时的计数键（与"未知类型"区分） */
     private static final String BLANK_TYPE = "(blank)";
 
+    /**
+     * 原生解析结果归一为统一元素模型（含元素 ID 映射）。
+     *
+     * @param sources 原生解析结果
+     * @param context 结构化上下文
+     * @return 归一结果（含未映射计数）
+     */
     @Override
     public NormalizeOutcome normalize(List<ParseSource> sources, AssembleContext context) {
         NormalizeOutcome outcome = new NormalizeOutcome();

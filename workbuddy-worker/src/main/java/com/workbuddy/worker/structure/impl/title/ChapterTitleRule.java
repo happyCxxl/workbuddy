@@ -16,11 +16,22 @@ public class ChapterTitleRule implements TitleRule {
     /** 一级：第X章 */
     private static final Pattern CHAPTER_PATTERN = Pattern.compile("^第[一二三四五六七八九十百零〇\\d]+章.*");
 
+    /**
+     * 规则在链上的顺序。
+     *
+     * @return 顺序号（小的先匹配）
+     */
     @Override
     public int order() {
         return 20;
     }
 
+    /**
+     * 章节编号标题：按章节编号模式匹配并取层级。
+     *
+     * @param context 标题判定上下文
+     * @return 命中结果；不适用时为 null
+     */
     @Override
     public TitleDecision tryMatch(TitleRuleContext context) {
         if (!context.shortText() || !CHAPTER_PATTERN.matcher(context.text()).matches()) {

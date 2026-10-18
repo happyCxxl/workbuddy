@@ -22,7 +22,13 @@ public class ChunkRouteConfig {
     /** 该算法专属参数（键值均为字符串；数值参数读取用 intParam） */
     private Map<String, String> params = new HashMap<>();
 
-    /** 数值参数读取：缺失/非法回退默认值。 */
+    /**
+     * 数值参数读取：缺失或非法回退默认值。
+     *
+     * @param key          参数键
+     * @param defaultValue 回退值
+     * @return 数值参数
+     */
     public int intParam(String key, int defaultValue) {
         String value = NullUtil.isNull(params) ? null : params.get(key);
         if (StrUtil.isBlank(value)) {
@@ -35,7 +41,13 @@ public class ChunkRouteConfig {
         }
     }
 
-    /** 字符串参数读取：缺失回退默认值。 */
+    /**
+     * 字符串参数读取：缺失回退默认值。
+     *
+     * @param key          参数键
+     * @param defaultValue 回退值
+     * @return 参数值
+     */
     public String strParam(String key, String defaultValue) {
         String value = NullUtil.isNull(params) ? null : params.get(key);
         return StrUtil.isBlank(value) ? defaultValue : value;

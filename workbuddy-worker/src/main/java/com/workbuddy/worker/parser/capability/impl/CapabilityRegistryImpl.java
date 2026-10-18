@@ -16,16 +16,31 @@ import org.springframework.stereotype.Component;
 @Component
 public class CapabilityRegistryImpl implements CapabilityRegistry {
 
+    /**
+     * 结构化 OCR 提供者。
+     *
+     * @return 提供者；未接入时为 null
+     */
     @Override
     public StructuredOcrProvider ocr() {
         return null;
     }
 
+    /**
+     * 版面分析提供者。
+     *
+     * @return 提供者；未接入时为 null
+     */
     @Override
     public LayoutProvider layout() {
         return null;
     }
 
+    /**
+     * 表格结构提供者。
+     *
+     * @return 提供者；未接入时为 null
+     */
     @Override
     public TableStructureProvider table() {
         return null;

@@ -33,6 +33,13 @@ public class DedupMergerImpl implements DedupMerger {
     private static final List<ParseSourceType> SOURCE_PRIORITY =
             List.of(ParseSourceType.NATIVE, ParseSourceType.OCR, ParseSourceType.LAYOUT, ParseSourceType.TABLE);
 
+    /**
+     * 跨页/跨栏去重合并。
+     *
+     * @param elements 待合并元素
+     * @param context  结构化上下文
+     * @return 合并结果
+     */
     @Override
     public MergeOutcome merge(List<UnifiedElement> elements, AssembleContext context) {
         MergeOutcome outcome = new MergeOutcome();

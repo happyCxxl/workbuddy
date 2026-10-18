@@ -16,12 +16,22 @@ public class SliceStrategyRegistry {
 
     private final AlgorithmRegistry<SliceStrategy> registry;
 
+    /**
+     * 构造注册表：排除 FALLBACK 路的切片器，重复注册即启动失败。
+     *
+     * @param strategies 切片策略实现
+     */
     public SliceStrategyRegistry(List<SliceStrategy> strategies) {
         this.registry = new AlgorithmRegistry<>(strategies, SliceStrategy::algorithm, "切片器",
                 strategy -> strategy.algorithm().route() != ChunkRoute.FALLBACK);
     }
 
-    /** 按算法取实现；未找到明确报错（执行失败而非静默降级）。 */
+    /**
+     * 按算法取实现；未找到明确报错（执行失败而非静默降级）。
+     *
+     * @param algorithm 切片算法
+     * @return 对应策略
+     */
     public SliceStrategy get(ChunkAlgorithm algorithm) {
         return registry.get(algorithm);
     }

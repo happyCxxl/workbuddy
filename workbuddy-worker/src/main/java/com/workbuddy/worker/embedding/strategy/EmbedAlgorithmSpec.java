@@ -28,7 +28,11 @@ public final class EmbedAlgorithmSpec {
     // ---------------- 默认补齐（解析时） ----------------
 
     /**
-     * 解析后补全：模板/批量/执行口径补默认。
+     * 解析后补全：模板、批量与执行口径补默认。
+     *
+     * @param strategy   向量策略（原地补全）
+     * @param properties 全局默认值
+     * @return 补全后的策略
      */
     public static EmbedStrategy normalize(EmbedStrategy strategy, EmbedProperties properties) {
         if (StrUtil.isBlank(strategy.getDocTemplate())) {
@@ -62,7 +66,14 @@ public final class EmbedAlgorithmSpec {
 
     // ---------------- 保存校验（biz 调用；返回 null = 通过，否则为错误信息） ----------------
 
-    /** 校验配置 JSON；非法返回错误信息，合法返回 null。config 应为模型/模板/批量/执行口径结构（无 type/name/version 顶层键）。 */
+    /**
+     * 校验配置 JSON；非法返回错误信息，合法返回 null。
+     *
+     * <p>config 应为模型、模板、批量与执行口径结构（无 type/name/version 顶层键）。
+     *
+     * @param config 解析后的配置对象
+     * @return 错误信息；合法时为 null
+     */
     public static String validate(Map<String, Object> config) {
         if (NullUtil.isNull(config)) {
             return "配置不能为空";

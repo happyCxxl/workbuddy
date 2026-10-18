@@ -72,6 +72,13 @@ public class AssemblerPipeline implements DocumentAssemblerPort {
     private final TableContinuationResolver continuationResolver;
     private final RepeatNoiseMarker repeatNoiseMarker;
 
+    /**
+     * 结构化环节入口：归一、去重、阅读顺序、结构判定与关系构建。
+     *
+     * @param parseResult 解析结果
+     * @param context     结构化上下文
+     * @return 结构化产出
+     */
     @Override
     public AssembleOutcome assemble(ParseResult parseResult, AssembleContext context) {
         AssembleOutcome outcome = new AssembleOutcome();

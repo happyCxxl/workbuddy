@@ -74,26 +74,54 @@ public class FieldNormalizeRule implements CleanRule {
             Map.entry('0', 0), Map.entry('1', 1), Map.entry('2', 2), Map.entry('3', 3), Map.entry('4', 4),
             Map.entry('5', 5), Map.entry('6', 6), Map.entry('7', 7), Map.entry('8', 8), Map.entry('9', 9));
 
+    /**
+     * 规则标识。
+     *
+     * @return 规则名（策略快照里落库的 name）
+     */
     @Override
     public String name() {
         return "field-normalize-v1";
     }
 
+    /**
+     * 子步骤展示名。
+     *
+     * @return 步骤名
+     */
     @Override
     public String stepName() {
         return "字段规范化";
     }
 
+    /**
+     * 执行顺序。
+     *
+     * @return 顺序号（小的先执行）
+     */
     @Override
     public int order() {
         return 6;
     }
 
+    /**
+     * 该规则在策略里是否有配置。
+     *
+     * @param strategy 预处理策略
+     * @return 有配置为 true
+     */
     @Override
     public boolean enabledIn(PreprocessStrategy strategy) {
         return strategy.enabled(PreprocessRule.FIELD, true);
     }
 
+    /**
+     * 对单个元素执行字段归一：金额、日期、面积与证书编号按开关抽取并统一单位。
+     *
+     * @param element 视图元素
+     * @param context 规则上下文
+     * @return 处置结果
+     */
     @Override
     public RuleOutcome apply(ViewElement element, RuleContext context) {
         RuleOutcome outcome = new RuleOutcome();

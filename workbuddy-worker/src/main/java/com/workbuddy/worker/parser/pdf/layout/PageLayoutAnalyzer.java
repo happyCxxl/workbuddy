@@ -110,7 +110,12 @@ public interface PageLayoutAnalyzer {
     record Options(double gutterMinWidth, double gutterMaxCoverage, double columnMinShare,
                    int columnMinChars, int pageMinChars, int maxColumns) {
 
-        /** 解析阈值 → 版面阈值。 */
+        /**
+         * 解析阈值转版面阈值。
+         *
+         * @param properties 解析阈值配置
+         * @return 版面分析阈值
+         */
         public static Options of(ParseProperties properties) {
             return new Options(properties.getColumnGutterMinWidth(),
                     properties.getColumnGutterMaxCoverage(), properties.getColumnMinShare(),

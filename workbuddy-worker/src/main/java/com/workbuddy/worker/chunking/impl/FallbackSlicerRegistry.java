@@ -16,12 +16,22 @@ public class FallbackSlicerRegistry {
 
     private final AlgorithmRegistry<FallbackSlicer> registry;
 
+    /**
+     * 构造注册表：只收 FALLBACK 路的切片器，重复注册即启动失败。
+     *
+     * @param slicers 兜底切片器实现
+     */
     public FallbackSlicerRegistry(List<FallbackSlicer> slicers) {
         this.registry = new AlgorithmRegistry<>(slicers, FallbackSlicer::algorithm, "兜底切片器",
                 slicer -> slicer.algorithm().route() == ChunkRoute.FALLBACK);
     }
 
-    /** 按算法取兜底切片器；未注册明确报错（SYSTEM_ERROR），不静默回退。 */
+    /**
+     * 按算法取兜底切片器；未注册明确报错（SYSTEM_ERROR），不静默回退。
+     *
+     * @param algorithm 兜底算法
+     * @return 对应切片器
+     */
     public FallbackSlicer get(ChunkAlgorithm algorithm) {
         return registry.get(algorithm);
     }

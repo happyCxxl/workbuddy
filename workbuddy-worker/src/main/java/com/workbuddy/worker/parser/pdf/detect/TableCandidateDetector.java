@@ -24,7 +24,12 @@ public final class TableCandidateDetector {
     private TableCandidateDetector() {
     }
 
-    /** 表格候选：多 token 且存在"宽列距"（普通正文单词间距窄，表格列距宽）。 */
+    /**
+     * 表格候选：多 token 且存在宽列距（普通正文单词间距窄，表格列距宽）。
+     *
+     * @param line 页面文本行
+     * @return 是候选为 true
+     */
     public static boolean isCandidate(PageLine line) {
         if (line.tokens().size() < MIN_TOKENS) {
             return false;
@@ -39,11 +44,22 @@ public final class TableCandidateDetector {
         return false;
     }
 
-    /** 列区间：版面坐标下的左右边界（保留的列首尾相接，覆盖整块宽度）。 */
+    /**
+     * 列区间：版面坐标下的左右边界（保留的列首尾相接，覆盖整块宽度）。
+     *
+     * @param left  左边界
+     * @param right 右边界
+     */
     public record Column(double left, double right) {
     }
 
-    /** 对齐线聚类：一组 x 值按容差合并为升序簇（左起点与右边界共用）。 */
+    /**
+     * 对齐线聚类：一组 x 值按容差合并为升序簇（左起点与右边界共用）。
+     *
+     * @param values    待聚类的坐标
+     * @param tolerance 合并容差
+     * @return 升序簇
+     */
     public static List<Double> clusterEdges(List<Double> values, double tolerance) {
         List<Double> sorted = new ArrayList<>(values);
         sorted.sort(Double::compare);
@@ -68,6 +84,7 @@ public final class TableCandidateDetector {
      * @param tokenMatrix    块内各行 token
      * @param minSupportRows 列被保留所需的最少行数
      * @param tolerance      边界合并容差（按字号折算后传入）
+     * @return 保留的列区间
      */
     public static List<Column> columns(List<List<Token>> tokenMatrix, int minSupportRows, double tolerance) {
         List<Double> edges = new ArrayList<>();
@@ -88,7 +105,13 @@ public final class TableCandidateDetector {
         return join(kept, tokenMatrix.stream().flatMap(List::stream).mapToDouble(Token::xEnd).max().orElse(0));
     }
 
-    /** token 是否落在列区间内（按中心点判定）。 */
+    /**
+     * token 是否落在列区间内（按中心点判定）。
+     *
+     * @param column 列区间
+     * @param token  文本 token
+     * @return 落在区间内为 true
+     */
     public static boolean contains(Column column, Token token) {
         double center = (token.xStart() + token.xEnd()) / 2;
         return center >= column.left() && center < column.right();
@@ -97,6 +120,10 @@ public final class TableCandidateDetector {
     /**
      * 表格置信校验：token 全部落在列上的行数达到 2 行、且占比不低于 60%。
      * 某些格为空的稀疏行只要没有列外 token 即计入覆盖；单 token 行不算独立行证据。
+     *
+     * @param tokenMatrix 块内各行 token
+     * @param columns     列区间
+     * @return 达到覆盖率门槛为 true
      */
     public static boolean enoughLinesCoverColumns(List<List<Token>> tokenMatrix, List<Column> columns) {
         int covered = 0;
@@ -134,6 +161,11 @@ public final class TableCandidateDetector {
     /**
      * 列内文本是否稀疏：每列取「token 跨度 ÷ 列宽」的中位数，半数以上列不超过上限即判为表格。
      * 正文分栏的每列被整行文字填满（比例接近 1），表格单元格相对列宽是稀疏的。
+     *
+     * @param tokenMatrix  块内各行 token
+     * @param columns      列区间
+     * @param maxFillRatio 填充比例上限
+     * @return 半数以上列稀疏为 true
      */
     public static boolean sparseColumns(List<List<Token>> tokenMatrix, List<Column> columns, double maxFillRatio) {
         if (columns.isEmpty()) {

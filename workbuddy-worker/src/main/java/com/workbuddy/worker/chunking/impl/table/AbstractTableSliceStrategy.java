@@ -16,6 +16,13 @@ import java.util.List;
  */
 public abstract class AbstractTableSliceStrategy implements SliceStrategy {
 
+    /**
+     * 切分表格元素：没有可切单元格时返回空列表，否则交给子类。
+     *
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 切片列表
+     */
     @Override
     public final List<Chunk> slice(ViewElement element, SliceContext context) {
         TableMarkdownSupport.TablePrep prep = TableMarkdownSupport.prepare(element, context);
@@ -31,11 +38,17 @@ public abstract class AbstractTableSliceStrategy implements SliceStrategy {
      * @param prep    表格准备结果
      * @param element 视图元素（检索文本口径）
      * @param context 切片上下文（含策略路由与标题路径）
+     * @return 切片列表
      */
     protected abstract List<Chunk> slicePrepared(TableMarkdownSupport.TablePrep prep,
                                                  ViewElement element, SliceContext context);
 
-    /** 表格路由参数（TABLE 路，解析时已补默认值）。 */
+    /**
+     * 表格路由参数（TABLE 路，解析时已补默认值）。
+     *
+     * @param context 切片上下文
+     * @return TABLE 路配置
+     */
     protected final ChunkRouteConfig tableRoute(SliceContext context) {
         return context.getStrategy().route(ChunkRoute.TABLE);
     }

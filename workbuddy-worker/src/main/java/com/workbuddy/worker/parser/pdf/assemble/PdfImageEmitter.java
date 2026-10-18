@@ -24,7 +24,15 @@ public final class PdfImageEmitter {
     private PdfImageEmitter() {
     }
 
-    /** 产出本页图片元素与事实（面积占比低于门槛的图片不产元素）。 */
+    /**
+     * 产出本页图片元素与事实（面积占比低于门槛的图片不产元素）。
+     *
+     * @param page       单页提取内容
+     * @param elements   产物元素（追加）
+     * @param source     解析结果
+     * @param fileId     文件 ID
+     * @param properties 解析阈值配置
+     */
     public static void emit(PageContent page, List<ParseElement> elements, ParseSource source,
                      String fileId, ParseProperties properties) {
         if (page.imageBoxes().isEmpty()) {

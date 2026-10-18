@@ -25,7 +25,12 @@ public final class ChunkAlgorithmSpec {
 
     // ---------------- 默认算法与支持集 ----------------
 
-    /** 各路默认算法。 */
+    /**
+     * 各路默认算法。
+     *
+     * @param route 切片路由
+     * @return 该路的默认算法
+     */
     public static ChunkAlgorithm defaultAlgorithm(ChunkRoute route) {
         return switch (route) {
             case BODY -> ChunkAlgorithm.BODY_PARAGRAPH_AGGREGATE;
@@ -35,7 +40,13 @@ public final class ChunkAlgorithmSpec {
         };
     }
 
-    /** 算法键是否在当前支持集（biz 保存校验 + 前端置灰依据）。 */
+    /**
+     * 算法键是否在当前支持集（保存校验与前端置灰依据）。
+     *
+     * @param route        切片路由
+     * @param algorithmKey 算法键
+     * @return 在支持集内为 true
+     */
     public static boolean isSupported(ChunkRoute route, String algorithmKey) {
         ChunkAlgorithm algorithm = ChunkAlgorithm.of(route, algorithmKey);
         return NullUtil.isNotNull(algorithm) && algorithm.supported();
@@ -44,7 +55,12 @@ public final class ChunkAlgorithmSpec {
     // ---------------- 参数默认补齐与流程层默认 ----------------
 
     /**
-     * 解析后补全：缺省路由用默认算法、缺省参数用全局默认（ChunkProperties，application.yml 同名 kebab-case 键）、流程层键补默认。
+     * 解析后补全：缺省路由用默认算法、缺省参数用全局默认（ChunkProperties，application.yml 同名 kebab-case 键）、
+     * 流程层键补默认。
+     *
+     * @param strategy   策略配置（原地补全）
+     * @param properties 全局默认值
+     * @return 补全后的策略配置
      */
     public static ChunkStrategy normalize(ChunkStrategy strategy, ChunkProperties properties) {
         if (NullUtil.isNull(strategy.getRoutes())) {
@@ -82,7 +98,14 @@ public final class ChunkAlgorithmSpec {
         defaultParams(route, config.getAlgorithm(), properties).forEach(config.getParams()::putIfAbsent);
     }
 
-    /** 各算法默认参数（值源 = ChunkProperties 全局默认，application.yml 同名 kebab-case 键）；算法键未识别时不补参数。 */
+    /**
+     * 各算法默认参数（值源 = ChunkProperties 全局默认，application.yml 同名 kebab-case 键）。
+     *
+     * @param route        切片路由
+     * @param algorithmKey 算法键
+     * @param properties   全局默认值
+     * @return 参数键到默认值的映射；算法键未识别时为空
+     */
     public static Map<String, String> defaultParams(ChunkRoute route, String algorithmKey, ChunkProperties properties) {
         Map<String, String> defaults = new LinkedHashMap<>();
         ChunkAlgorithm algorithm = ChunkAlgorithm.of(route, algorithmKey);
@@ -130,6 +153,9 @@ public final class ChunkAlgorithmSpec {
     /**
      * 校验配置 JSON 结构；非法返回错误信息，合法返回 null。configSnapshot 应为
      * {"routes":{...},"pipeline":{...}} 结构（无 type/name/version 顶层键）。
+     *
+     * @param config 解析后的配置对象
+     * @return 错误信息；合法时为 null
      */
     @SuppressWarnings("unchecked")
     public static String validate(Map<String, Object> config) {

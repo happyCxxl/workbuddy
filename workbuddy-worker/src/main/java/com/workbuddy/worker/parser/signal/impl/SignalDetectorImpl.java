@@ -23,6 +23,13 @@ import java.util.List;
 @Component
 public class SignalDetectorImpl implements SignalDetector {
 
+    /**
+     * 检测解析结果里的质量信号（扫描件、乱码、表格与版面线索等）。
+     *
+     * @param nativeSource 原生解析结果
+     * @param context      解析上下文
+     * @return 信号列表
+     */
     @Override
     public List<Signal> detect(ParseSource nativeSource, ParseContext context) {
         List<Signal> signals = new ArrayList<>();

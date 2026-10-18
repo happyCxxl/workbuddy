@@ -28,6 +28,8 @@ public class RuleOutcome {
 
     /**
      * 未命中结果。
+     *
+     * @return 未命中且无轨迹的结果
      */
     public static RuleOutcome none() {
         return new RuleOutcome();
@@ -35,6 +37,10 @@ public class RuleOutcome {
 
     /**
      * 单轨迹命中结果。
+     *
+     * @param trace        命中轨迹
+     * @param changedCount 实际改写次数
+     * @return 命中结果
      */
     public static RuleOutcome hit(TraceEntry trace, int changedCount) {
         RuleOutcome outcome = new RuleOutcome();

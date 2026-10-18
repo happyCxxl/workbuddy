@@ -100,7 +100,12 @@ public final class RuledTableBuilder {
         elements.add(table);
     }
 
-    /** 合并格划分：向右按列分隔线缺失扩张，再向下按行分隔线缺失扩张。 */
+    /**
+     * 合并格划分：向右按列分隔线缺失扩张，再向下按行分隔线缺失扩张。
+     *
+     * @param grid 线网格
+     * @return 合并格矩形列表
+     */
     public static List<CellRect> mergedCells(Grid grid) {
         int rows = grid.rowCount();
         int cols = grid.colCount();
@@ -174,7 +179,14 @@ public final class RuledTableBuilder {
         return center >= top && center < bottom;
     }
 
-    /** 合并格矩形：起始行列 + 跨度。 */
+    /**
+     * 合并格矩形。
+     *
+     * @param row     起始行
+     * @param col     起始列
+     * @param rowSpan 跨行数
+     * @param colSpan 跨列数
+     */
     public record CellRect(int row, int col, int rowSpan, int colSpan) {
     }
 }

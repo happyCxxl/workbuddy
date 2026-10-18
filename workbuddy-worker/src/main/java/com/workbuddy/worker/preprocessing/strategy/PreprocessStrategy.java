@@ -45,12 +45,23 @@ public class PreprocessStrategy implements StageStrategy {
     /** 自定义规则组（链尾执行，见 CustomCleanRule） */
     private CustomRuleGroup custom = new CustomRuleGroup();
 
-    /** 取某规则配置（解析后必存在；缺失返回 null）。 */
+    /**
+     * 取某规则的配置。
+     *
+     * @param rule 规则
+     * @return 规则配置；缺失时为 null
+     */
     public PreprocessRuleConfig rule(PreprocessRule rule) {
         return NullUtil.isNull(rules) || NullUtil.isNull(rule) ? null : rules.get(rule.key());
     }
 
-    /** 三态规则处置方式（action 缺省时按旧开关换算，再缺回退默认）。 */
+    /**
+     * 三态规则处置方式（action 缺省时按旧开关换算，再缺回退默认）。
+     *
+     * @param rule         规则
+     * @param defaultValue 回退值
+     * @return 处置动作名
+     */
     public String action(PreprocessRule rule, String defaultValue) {
         PreprocessRuleConfig config = rule(rule);
         if (NullUtil.isNull(config)) {
@@ -63,7 +74,13 @@ public class PreprocessStrategy implements StageStrategy {
         return StrUtil.isBlank(legacy) ? defaultValue : legacy;
     }
 
-    /** 旧开关格式（enabled）→ 三态处置：ON=EXCLUDE / OFF=KEEP；非旧开关规则或开关为空返回 null。 */
+    /**
+     * 旧开关格式（enabled）换算成三态处置：ON=EXCLUDE / OFF=KEEP。
+     *
+     * @param rule    规则
+     * @param enabled 旧开关值
+     * @return 处置动作名；非旧开关规则或开关为空时为 null
+     */
     public static String legacyAction(PreprocessRule rule, String enabled) {
         if (NullUtil.isNull(rule) || !rule.legacyToggle() || StrUtil.isBlank(enabled)) {
             return null;
@@ -71,14 +88,27 @@ public class PreprocessStrategy implements StageStrategy {
         return ON.equalsIgnoreCase(enabled) ? PreprocessAction.EXCLUDE.name() : PreprocessAction.KEEP.name();
     }
 
-    /** 开关规则取值（缺失回退默认）。 */
+    /**
+     * 开关规则取值（缺失回退默认）。
+     *
+     * @param rule         规则
+     * @param defaultValue 回退值
+     * @return 开启为 true
+     */
     public boolean enabled(PreprocessRule rule, boolean defaultValue) {
         PreprocessRuleConfig config = rule(rule);
         String value = NullUtil.isNull(config) ? null : config.getEnabled();
         return StrUtil.isBlank(value) ? defaultValue : ON.equalsIgnoreCase(value);
     }
 
-    /** 规则参数字符串值（缺失回退默认）。 */
+    /**
+     * 规则参数字符串值（缺失回退默认）。
+     *
+     * @param rule         规则
+     * @param key          参数键
+     * @param defaultValue 回退值
+     * @return 参数值
+     */
     public String param(PreprocessRule rule, String key, String defaultValue) {
         PreprocessRuleConfig config = rule(rule);
         String value = NullUtil.isNull(config) || NullUtil.isNull(config.getParams())
@@ -86,7 +116,14 @@ public class PreprocessStrategy implements StageStrategy {
         return StrUtil.isBlank(value) ? defaultValue : value;
     }
 
-    /** 规则数值参数（缺失/非法回退默认）。 */
+    /**
+     * 规则数值参数（缺失或非法回退默认）。
+     *
+     * @param rule         规则
+     * @param param        参数目录项
+     * @param defaultValue 回退值
+     * @return 数值参数
+     */
     public int intParam(PreprocessRule rule, PreprocessParam param, int defaultValue) {
         String value = param(rule, param.key(), String.valueOf(defaultValue));
         try {
@@ -96,13 +133,24 @@ public class PreprocessStrategy implements StageStrategy {
         }
     }
 
-    /** 规则开关参数（缺失/非法回退默认）。 */
+    /**
+     * 规则开关参数（缺失或非法回退默认）。
+     *
+     * @param rule         规则
+     * @param param        参数目录项
+     * @param defaultValue 回退值
+     * @return 开启为 true
+     */
     public boolean boolParam(PreprocessRule rule, PreprocessParam param, boolean defaultValue) {
         String value = param(rule, param.key(), defaultValue ? ON : OFF);
         return ON.equalsIgnoreCase(value);
     }
 
-    /** 生效的自定义规则列表（总开关 OFF 或无规则 → 空列表）。 */
+    /**
+     * 生效的自定义规则列表。
+     *
+     * @return 自定义规则；总开关关闭或无规则时为空列表
+     */
     public List<PreprocessCustomRule> customRules() {
         if (NullUtil.isNull(custom) || !ON.equalsIgnoreCase(custom.getEnabled())
                 || NullUtil.isNull(custom.getRules())) {
@@ -111,7 +159,11 @@ public class PreprocessStrategy implements StageStrategy {
         return custom.getRules();
     }
 
-    /** 完整版本串（name-version，如 preproc-default-v1）。 */
+    /**
+     * 完整版本串（name-version）。
+     *
+     * @return 版本串，如 preproc-default-v1
+     */
     public String fullVersion() {
         return name + "-" + version;
     }

@@ -62,6 +62,12 @@ public class PreprocessPipeline implements PreprocessorPort {
     private final List<CleanRule> rules;
     private final PreprocessProperties properties;
 
+    /**
+     * 预处理环节入口：按规则处置元素并产出视图。
+     *
+     * @param context 环节上下文
+     * @return 环节产出
+     */
     @Override
     public PreprocessOutcome preprocess(PreprocessContext context) {
         PreprocessOutcome outcome = new PreprocessOutcome();

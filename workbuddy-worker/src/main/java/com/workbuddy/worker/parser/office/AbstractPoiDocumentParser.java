@@ -26,6 +26,12 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
     private static final String CAPABILITY = "poi";
     private static final String CAPABILITY_VERSION = "5.4.0";
 
+    /**
+     * 统一入口：读全文件字节后交给子类的原生结构解析。
+     *
+     * @param context 解析上下文（文件引用等）
+     * @return 已填充的原生解析结果
+     */
     @Override
     public final ParseSource parse(ParseContext context) {
         byte[] data = ParserStreamSupport.readAll(context);
@@ -43,7 +49,12 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
      */
     protected abstract void parseNative(ParseSource source, byte[] data, ParseContext context);
 
-    /** 表格元素追加单元格（cells 惰性建表，各格式表格单元格统一入口）。 */
+    /**
+     * 表格元素追加单元格（cells 惰性建表）。
+     *
+     * @param tableElement 表格元素
+     * @param cellElement  单元格元素
+     */
     protected static void appendCell(ParseElement tableElement, ParseElement cellElement) {
         if (NullUtil.isNull(tableElement.getCells())) {
             tableElement.setCells(new ArrayList<>());
@@ -70,17 +81,33 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
         return headerRow;
     }
 
+    /**
+     * 能力名。
+     *
+     * @return 能力标识
+     */
     @Override
     public String capabilityName() {
         return CAPABILITY;
     }
 
+    /**
+     * 能力版本。
+     *
+     * @return 能力版本号
+     */
     @Override
     public String capabilityVersion() {
         return CAPABILITY_VERSION;
     }
 
-    /** 组装嵌入图片解析事实信号（OCR_IMAGE，图片仅引用无文字，由管线判定器汇总）。 */
+    /**
+     * 组装嵌入图片的解析事实信号（OCR_IMAGE，图片仅引用无文字，由管线判定器汇总）。
+     *
+     * @param region   信号所在区域
+     * @param evidence 证据描述
+     * @return 解析事实
+     */
     protected ParseFact fact(String region, String evidence) {
         ParseFact fact = new ParseFact();
         fact.setType(SignalType.OCR_IMAGE);
@@ -92,6 +119,9 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
     /**
      * Word 系单元指标：整档正文按 pageChars 折算虚拟页（页单位口径），逐单元回填字符数、乱码率与内嵌图片数；
      * 图片按它在正文里的**位置**归属当前单元（文本先推进、遇到图片计入当前单元），不再一律记在首个单元。
+     *
+     * @param source    解析结果（待回填页指标）
+     * @param pageChars 每虚拟页的字符数
      */
     protected void fillVirtualPageMetrics(ParseSource source, int pageChars) {
         List<String> pages = new ArrayList<>();
@@ -125,7 +155,13 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
         fillUnitMetrics(source, pages, imageCounts);
     }
 
-    /** 逐单元指标回填（Excel 每 worksheet = 1 单元）：单元数即判定单元数。 */
+    /**
+     * 逐单元指标回填（Excel 每 worksheet = 1 单元）。
+     *
+     * @param source           解析结果（待回填页指标）
+     * @param unitTexts        各单元文本
+     * @param unitImageCounts  各单元内嵌图片数
+     */
     protected void fillUnitMetrics(ParseSource source, List<String> unitTexts, List<Integer> unitImageCounts) {
         List<PageMetric> metrics = new ArrayList<>();
         for (int i = 0; i < unitTexts.size(); i++) {
@@ -144,6 +180,9 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
     /**
      * 单元预算元素：全档元素按产出顺序，**页眉页脚也算进预算**（口径：预算覆盖整档可见文字，
      * 不只正文），图片元素保留占位以便按位置归属单元。
+     *
+     * @param source 解析结果
+     * @return 参与预算的元素列表
      */
     protected static List<ParseElement> budgetElements(ParseSource source) {
         return source.getElements();
@@ -152,6 +191,9 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
     /**
      * 单元预算文本：段落取自身文本；表格取自身文本 + **各单元格文本**（单元格在嵌套 `cells` 里，
      * 只取表格元素自身会漏掉整张表的文字）；页眉页脚元素取自身文本。
+     *
+     * @param element 解析元素
+     * @return 该元素计入预算的文本
      */
     protected static String budgetText(ParseElement element) {
         StringBuilder text = new StringBuilder(StrUtil.blankToDefault(element.getText(), ""));
@@ -162,7 +204,12 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
         return text.toString();
     }
 
-    /** 嵌入图片元素数。 */
+    /**
+     * 嵌入图片元素数。
+     *
+     * @param source 解析结果
+     * @return 图片元素个数
+     */
     protected static int imageCount(ParseSource source) {
         return (int) source.getElements().stream()
                 .filter(element -> ElementType.IMAGE.name().equals(element.getType()))

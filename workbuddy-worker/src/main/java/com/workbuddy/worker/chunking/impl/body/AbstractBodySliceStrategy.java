@@ -14,6 +14,13 @@ import java.util.List;
  */
 public abstract class AbstractBodySliceStrategy implements SliceStrategy {
 
+    /**
+     * 切分单个元素：空白文本直接返回空列表，其余交给子类。
+     *
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 切片列表
+     */
     @Override
     public final List<Chunk> slice(ViewElement element, SliceContext context) {
         String text = element.getNormalizedText();
@@ -23,6 +30,12 @@ public abstract class AbstractBodySliceStrategy implements SliceStrategy {
         return sliceText(text, element, context);
     }
 
+    /**
+     * 结算正文缓冲：缓冲为空返回空列表，否则交由子类结算成一片。
+     *
+     * @param context 切片上下文
+     * @return 切片列表
+     */
     @Override
     public final List<Chunk> flush(SliceContext context) {
         if (context.getBodyBuffer().isEmpty()) {
@@ -37,10 +50,16 @@ public abstract class AbstractBodySliceStrategy implements SliceStrategy {
      * @param text    非空文本（元素检索文本口径）
      * @param element 视图元素
      * @param context 切片上下文（含策略路由、兜底切片器与正文缓冲）
+     * @return 切片列表
      */
     protected abstract List<Chunk> sliceText(String text, ViewElement element, SliceContext context);
 
-    /** 结算正文缓冲（调用前缓冲非空；结算后缓冲已清空）。 */
+    /**
+     * 结算正文缓冲（调用前缓冲非空；结算后缓冲已清空）。
+     *
+     * @param context 切片上下文
+     * @return 结算出的切片
+     */
     protected abstract Chunk flushGroup(SliceContext context);
 
     /**
@@ -51,6 +70,7 @@ public abstract class AbstractBodySliceStrategy implements SliceStrategy {
      * @param element 来源元素（取元素 ID 与页码）
      * @param context 切片上下文
      * @param reason  降级原因（写入 fallbackReason）
+     * @return 降级后的切片列表
      */
     protected final List<Chunk> fallbackChunks(String text, ViewElement element, SliceContext context, String reason) {
         return BodyChunkSupport.fallbackChunks(text, List.of(element.getElementId()),

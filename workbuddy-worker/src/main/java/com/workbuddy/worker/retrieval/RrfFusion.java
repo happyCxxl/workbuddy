@@ -16,12 +16,21 @@ public final class RrfFusion {
     private RrfFusion() {
     }
 
-    /** 融合命中（chunkId + 融合分）。 */
+    /**
+     * 融合命中。
+     *
+     * @param chunkId 切片 ID
+     * @param score   融合分
+     */
     public record FusedHit(String chunkId, double score) {
     }
 
     /**
-     * 各通道名次升序的 chunkId 列表 → 融合排序。
+     * 各通道名次升序的 chunkId 列表转融合排序（倒数排名融合）。
+     *
+     * @param rankedChannels 各通道的排名结果
+     * @param k              平滑常数（越大越削弱头部优势）
+     * @return 按融合分降序的命中
      */
     public static List<FusedHit> fuse(List<List<String>> rankedChannels, int k) {
         Map<String, Double> scores = new LinkedHashMap<>();

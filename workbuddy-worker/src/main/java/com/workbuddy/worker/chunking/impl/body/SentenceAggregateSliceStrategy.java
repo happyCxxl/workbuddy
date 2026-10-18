@@ -20,11 +20,24 @@ import java.util.List;
 @Component
 public class SentenceAggregateSliceStrategy extends AbstractBodySliceStrategy {
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 句子聚合算法
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.BODY_SENTENCE_AGGREGATE;
     }
 
+    /**
+     * 句子聚合：逐句入缓冲，超软上限的句子先结算再降级，累计到目标上限即结算。
+     *
+     * @param text    元素检索文本（非空）
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 本次产出的切片
+     */
     @Override
     protected List<Chunk> sliceText(String text, ViewElement element, SliceContext context) {
         ChunkRouteConfig bodyConfig = context.getStrategy().route(ChunkRoute.BODY);
@@ -53,6 +66,12 @@ public class SentenceAggregateSliceStrategy extends AbstractBodySliceStrategy {
         return emitted;
     }
 
+    /**
+     * 结算当前缓冲为一组。
+     *
+     * @param context 切片上下文
+     * @return 结算出的切片
+     */
     @Override
     protected Chunk flushGroup(SliceContext context) {
         BodyChunkSupport.BodyBuffer settled = BodyChunkSupport.settleBuffer(context);

@@ -25,11 +25,22 @@ public class StyleTitleRule implements TitleRule {
     /** 级数上限：DOCX Heading1~9 的 9 级 */
     private static final int MAX_LEVEL = 9;
 
+    /**
+     * 规则在链上的顺序。
+     *
+     * @return 顺序号（小的先匹配）
+     */
     @Override
     public int order() {
         return 10;
     }
 
+    /**
+     * 样式标题：按原生 Heading 样式取层级。
+     *
+     * @param context 标题判定上下文
+     * @return 命中结果；不适用时为 null
+     */
     @Override
     public TitleDecision tryMatch(TitleRuleContext context) {
         String style = context.style();

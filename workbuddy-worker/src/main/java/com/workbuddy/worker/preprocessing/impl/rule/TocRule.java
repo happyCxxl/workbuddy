@@ -21,26 +21,54 @@ import org.springframework.stereotype.Component;
 @Component
 public class TocRule implements CleanRule {
 
+    /**
+     * 规则标识。
+     *
+     * @return 规则名（策略快照里落库的 name）
+     */
     @Override
     public String name() {
         return "toc-dispose-v1";
     }
 
+    /**
+     * 子步骤展示名。
+     *
+     * @return 步骤名
+     */
     @Override
     public String stepName() {
         return "目录处置";
     }
 
+    /**
+     * 执行顺序。
+     *
+     * @return 顺序号（小的先执行）
+     */
     @Override
     public int order() {
         return 4;
     }
 
+    /**
+     * 该规则在策略里是否有配置。
+     *
+     * @param strategy 预处理策略
+     * @return 有配置为 true
+     */
     @Override
     public boolean enabledIn(PreprocessStrategy strategy) {
         return NullUtil.isNotNull(strategy.rule(PreprocessRule.TOC));
     }
 
+    /**
+     * 对单个元素执行目录处置：目录行且整页判定为目录页时按处置方式处理。
+     *
+     * @param element 视图元素
+     * @param context 规则上下文
+     * @return 处置结果
+     */
     @Override
     public RuleOutcome apply(ViewElement element, RuleContext context) {
         if (NullUtil.isNull(element.getMarks()) || !element.getMarks().contains(ElementMark.TOC_LINE.name())) {

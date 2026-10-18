@@ -65,6 +65,12 @@ public class EmbedPipeline implements EmbedderPort {
                 + "，条数=" + (NullUtil.isNull(request.getTexts()) ? 0 : request.getTexts().size()));
     }
 
+    /**
+     * 向量化环节入口：分批请求模型并落集合产物。
+     *
+     * @param context 环节上下文
+     * @return 环节产出
+     */
     @Override
     public EmbedOutcome embed(EmbedContext context) {
         EmbedOutcome outcome = new EmbedOutcome();

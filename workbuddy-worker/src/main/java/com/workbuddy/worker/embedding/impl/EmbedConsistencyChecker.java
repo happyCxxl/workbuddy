@@ -20,6 +20,14 @@ import java.util.List;
 @Component
 public class EmbedConsistencyChecker implements ConsistencyChecker {
 
+    /**
+     * 四关校验：数量、维度、度量与空值坏值。
+     *
+     * @param inputTexts 输入文本
+     * @param vectors    向量
+     * @param strategy   向量策略（维度、度量与归一化口径来源）
+     * @return 校验结果
+     */
     @Override
     public ConsistencyResult check(List<String> inputTexts, List<List<Float>> vectors, EmbedStrategy strategy) {
         List<String> problems = new ArrayList<>();

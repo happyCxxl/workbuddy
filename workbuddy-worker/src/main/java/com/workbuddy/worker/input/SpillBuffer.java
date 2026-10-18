@@ -29,6 +29,11 @@ public class SpillBuffer {
     private OutputStream target;
     private Path tempFile;
 
+    /**
+     * 构造缓冲：小于阈值时留在内存，超出后才溢写临时文件。
+     *
+     * @param threshold 溢写阈值（字节）
+     */
     public SpillBuffer(long threshold) {
         this.threshold = threshold;
         this.memory = new ByteArrayOutputStream();
@@ -41,7 +46,14 @@ public class SpillBuffer {
         }
     }
 
-    /** 写入缓冲：更新摘要；内存缓冲超阈值时先落内存再续写临时文件。 */
+    /**
+     * 写入缓冲：更新摘要；内存缓冲超阈值时转写临时文件。
+     *
+     * @param buffer 字节数组
+     * @param offset 起始偏移
+     * @param length 写入长度
+     * @throws IOException 写临时文件失败
+     */
     public void write(byte[] buffer, int offset, int length) throws IOException {
         digest.update(buffer, offset, length);
         if (NullUtil.isNotNull(tempFile)) {
@@ -59,7 +71,12 @@ public class SpillBuffer {
         target.write(buffer, offset, length);
     }
 
-    /** 重开读取流：溢写场景必须先 flush 落盘再开流。 */
+    /**
+     * 重开读取流：溢写场景先 flush 落盘再开流。
+     *
+     * @return 从头读取的流
+     * @throws IOException 打开临时文件失败
+     */
     public InputStream openStream() throws IOException {
         if (NullUtil.isNull(tempFile)) {
             return new ByteArrayInputStream(memory.toByteArray());
@@ -69,7 +86,11 @@ public class SpillBuffer {
         return new BufferedInputStream(Files.newInputStream(tempFile));
     }
 
-    /** 输出小写十六进制 sha256 指纹。 */
+    /**
+     * 输出小写十六进制 sha256 指纹。
+     *
+     * @return 内容指纹
+     */
     public String sha256Hex() {
         byte[] hash = digest.digest();
         StringBuilder sb = new StringBuilder(hash.length * 2);

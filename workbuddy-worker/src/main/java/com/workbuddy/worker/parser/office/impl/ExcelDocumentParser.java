@@ -43,13 +43,25 @@ import java.util.stream.Collectors;
 @Component
 public class ExcelDocumentParser extends AbstractPoiDocumentParser {
 
+    /**
+     * 是否支持该媒体类型。
+     *
+     * @param mimeType 媒体类型
+     * @return 支持 XLS 或 XLSX 为 true
+     */
     @Override
     public boolean supports(String mimeType) {
         return FileFormat.XLS.getMimeType().equals(mimeType)
                 || FileFormat.XLSX.getMimeType().equals(mimeType);
     }
 
-    /** Excel 主流程：逐 sheet 产出 TABLE 元素（定位 = sheet + 行列，无页码概念）。 */
+    /**
+     * Excel 主流程：逐 sheet 产出 TABLE 元素（定位 = sheet 与行列，无页码概念）。
+     *
+     * @param source  待填充的原生解析结果
+     * @param data    文件字节（已读全）
+     * @param context 解析上下文
+     */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
         String fileId = context.getFileRef().getFileId();

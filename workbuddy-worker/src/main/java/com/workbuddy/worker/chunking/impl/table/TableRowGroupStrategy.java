@@ -17,11 +17,24 @@ import java.util.List;
 @Component
 public class TableRowGroupStrategy extends AbstractTableSliceStrategy {
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 算法枚举
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.TABLE_ROW_GROUP;
     }
 
+    /**
+     * 行组切片：按行数或字符累计结算，表头随片。
+     *
+     * @param prep    表格准备结果
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 切片列表
+     */
     @Override
     protected List<Chunk> slicePrepared(TableMarkdownSupport.TablePrep prep, ViewElement element,
                                         SliceContext context) {

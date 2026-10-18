@@ -18,6 +18,10 @@ public final class ChunkWindowEstimator {
 
     /**
      * 推算切片策略可产生的最大片长（字符）；不可推算（兜底 none）返回 {@link Integer#MAX_VALUE}。
+     *
+     * @param strategy   切片策略
+     * @param properties 切片全局默认值
+     * @return 最大片长（字符）；不可推算时为 Integer.MAX_VALUE
      */
     public static int maxWindowChars(ChunkStrategy strategy, ChunkProperties properties) {
         if (NullUtil.isNull(strategy)) {

@@ -32,11 +32,26 @@ public final class BodyChunkSupport {
     private BodyChunkSupport() {
     }
 
-    /** 正文缓冲结算结果（归一文本/来源元素 ID/页码范围）。 */
+    /**
+     * 正文缓冲结算结果。
+     *
+     * @param text       归一文本（换行拼接）
+     * @param elementIds 来源元素 ID（去重保序）
+     * @param pages      页码（升序去重；无页为 null）
+     */
     public record BodyBuffer(String text, List<String> elementIds, List<Integer> pages) {
     }
 
-    /** 构建切片（content/type/titlePath/来源/页码/字符数统一口径）。 */
+    /**
+     * 构建切片：content/类型/标题路径/来源/页码/字符数统一口径。
+     *
+     * @param contentType 切片内容类型名
+     * @param content     切片正文
+     * @param context     切片上下文（标题路径来源）
+     * @param sourceIds   来源元素 ID
+     * @param pages       页码范围（可空）
+     * @return 切片
+     */
     public static Chunk buildChunk(String contentType, String content, SliceContext context,
                                    List<String> sourceIds, List<Integer> pages) {
         Chunk chunk = new Chunk();
@@ -49,12 +64,22 @@ public final class BodyChunkSupport {
         return chunk;
     }
 
-    /** 单元素页码（无页 → null）。 */
+    /**
+     * 单元素页码。
+     *
+     * @param element 视图元素
+     * @return 只含该元素页码的列表；无页时为 null
+     */
     public static List<Integer> pageRangeOf(ViewElement element) {
         return NullUtil.isNotNull(element.getPage()) ? List.of(element.getPage()) : null;
     }
 
-    /** 合并组内元素页码（去重升序；无页 → null）。 */
+    /**
+     * 合并组内元素页码（去重升序）。
+     *
+     * @param group 视图元素组
+     * @return 升序页码列表；组内都没有页码时为 null
+     */
     public static List<Integer> mergePages(List<ViewElement> group) {
         Set<Integer> pages = new HashSet<>();
         for (ViewElement element : group) {
@@ -68,7 +93,12 @@ public final class BodyChunkSupport {
         return pages.stream().sorted().toList();
     }
 
-    /** 缓冲结算：归一文本拼接 + 来源元素 ID 去重保序 + 页码合并 + 清空缓冲（每次运行独立）。 */
+    /**
+     * 缓冲结算：归一文本拼接 + 来源元素 ID 去重保序 + 页码合并，并清空缓冲。
+     *
+     * @param context 切片上下文（持有正文缓冲）
+     * @return 结算结果
+     */
     public static BodyBuffer settleBuffer(SliceContext context) {
         List<ViewElement> buffer = context.getBodyBuffer();
         String text = String.join("\n", buffer.stream().map(ViewElement::getNormalizedText)
@@ -82,7 +112,12 @@ public final class BodyChunkSupport {
         return new BodyBuffer(text, new ArrayList<>(ids), pages);
     }
 
-    /** 缓冲文本总长（空白文本不计）。 */
+    /**
+     * 缓冲文本总长（空白文本不计）。
+     *
+     * @param buffer 正文缓冲
+     * @return 字符数合计
+     */
     public static int bufferLength(List<ViewElement> buffer) {
         int length = 0;
         for (ViewElement element : buffer) {
@@ -93,7 +128,12 @@ public final class BodyChunkSupport {
         return length;
     }
 
-    /** 按句边界切分（保留分隔符，空白句过滤）。 */
+    /**
+     * 按句边界切分（保留分隔符，空白句过滤）。
+     *
+     * @param text 待切分的文本
+     * @return 句子列表
+     */
     public static List<String> splitSentences(String text) {
         List<String> sentences = new ArrayList<>();
         for (String part : text.split("(?<=" + SENTENCE_BOUNDARIES + ")")) {
@@ -113,6 +153,7 @@ public final class BodyChunkSupport {
      * @param pages     页码范围（可为 null）
      * @param context   切片上下文（含策略路由与兜底切片器）
      * @param reason    降级原因（写入 fallbackReason）
+     * @return 降级后的切片列表
      */
     public static List<Chunk> fallbackChunks(String text, List<String> sourceIds, List<Integer> pages,
                                              SliceContext context, String reason) {

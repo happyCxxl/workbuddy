@@ -41,6 +41,12 @@ public class RepeatNoiseMarkerImpl implements RepeatNoiseMarker {
 
     private final StructureProperties properties;
 
+    /**
+     * 标记跨页重复元素与噪声页元素。
+     *
+     * @param document 统一文档
+     * @return 标记结果
+     */
     @Override
     public MarkOutcome mark(UnifiedDocument document) {
         MarkOutcome outcome = new MarkOutcome();
@@ -199,6 +205,12 @@ public class RepeatNoiseMarkerImpl implements RepeatNoiseMarker {
         RepeatScan(int cacheSize) {
             this.cacheSize = Math.max(1, cacheSize);
             this.setCache = new LinkedHashMap<>(16, 0.75f, true) {
+                /**
+                 * LRU 淘汰：缓存条目超过上限即移除最久未用的那条。
+                 *
+                 * @param eldest 最久未使用的条目
+                 * @return 需要淘汰为 true
+                 */
                 @Override
                 protected boolean removeEldestEntry(Map.Entry<Object, Set<String>> eldest) {
                     return size() > RepeatScan.this.cacheSize;

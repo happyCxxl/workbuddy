@@ -10,6 +10,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class IdentityTemplate implements InputTemplatePort {
 
+    /**
+     * 模板渲染：把占位符替换为切片文本。
+     *
+     * @param template 模板串
+     * @param chunk    切片
+     * @return 渲染结果
+     */
     @Override
     public String render(String template, Chunk chunk) {
         return chunk.getContent();

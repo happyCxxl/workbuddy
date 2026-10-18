@@ -27,16 +27,32 @@ public class CorruptionProbeCheck implements FileCheck {
     /** 试解析输出上限（只探测结构，不取全文；1MB 足量） */
     private static final int PROBE_CHAR_LIMIT = 1024 * 1024;
 
+    /**
+     * 校验顺序。
+     *
+     * @return 顺序号（小的先执行）
+     */
     @Override
     public int order() {
         return 50;
     }
 
+    /**
+     * 校验步骤名。
+     *
+     * @return 步骤枚举
+     */
     @Override
     public FileCheckStepName name() {
         return FileCheckStepName.CORRUPTION_PROBE;
     }
 
+    /**
+     * 探测文件是否可读且结构完整：读流失败或结构异常按文件损坏处理。
+     *
+     * @param context 校验上下文（共享流与已识别事实）
+     * @return 校验结果
+     */
     @Override
     public FileCheckResult check(FileCheckContext context) {
         try (InputStream probeIn = context.getSpill().openStream()) {

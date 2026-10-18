@@ -16,17 +16,35 @@ abstract class AbstractCnNumberTitleRule implements TitleRule {
     private final Pattern pattern;
     private final String sample;
 
+    /**
+     * 构造中文章节编号规则。
+     *
+     * @param order   链上顺序
+     * @param pattern 编号模式
+     * @param sample  示例串（证据用）
+     */
     protected AbstractCnNumberTitleRule(int order, Pattern pattern, String sample) {
         this.order = order;
         this.pattern = pattern;
         this.sample = sample;
     }
 
+    /**
+     * 规则在链上的顺序。
+     *
+     * @return 顺序号
+     */
     @Override
     public final int order() {
         return order;
     }
 
+    /**
+     * 按章节编号模式匹配并取层级。
+     *
+     * @param context 标题判定上下文
+     * @return 命中结果；不适用时为 null
+     */
     @Override
     public final TitleDecision tryMatch(TitleRuleContext context) {
         if (!context.shortText() || !pattern.matcher(context.text()).matches()) {

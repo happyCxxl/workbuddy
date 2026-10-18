@@ -16,6 +16,9 @@ public final class TocLineFeature {
 
     /**
      * 是否目录行：行尾为页码且正文与页码之间存在点线引导符或长空白。
+     *
+     * @param text 行文本
+     * @return 是目录行为 true
      */
     public static boolean isTocLine(String text) {
         if (StrUtil.isBlank(text)) {

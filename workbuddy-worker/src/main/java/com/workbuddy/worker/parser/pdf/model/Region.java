@@ -13,7 +13,13 @@ public record Region(double left, double top, double right, double bottom) {
     /** 区域判定容差（pt） */
     private static final double TOLERANCE = 2.0;
 
-    /** 点是否落在区域内（含容差）。 */
+    /**
+     * 点是否落在区域内（含容差）。
+     *
+     * @param x 横坐标
+     * @param y 纵坐标
+     * @return 落在区域内为 true
+     */
     public boolean contains(double x, double y) {
         return x >= left - TOLERANCE && x <= right + TOLERANCE
                 && y >= top - TOLERANCE && y <= bottom + TOLERANCE;

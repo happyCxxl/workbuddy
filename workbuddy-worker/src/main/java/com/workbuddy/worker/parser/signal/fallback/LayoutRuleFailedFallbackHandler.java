@@ -16,11 +16,23 @@ import org.springframework.stereotype.Component;
 @Component
 public class LayoutRuleFailedFallbackHandler implements SignalFallbackHandler {
 
+    /**
+     * 处理的信号子类型。
+     *
+     * @return 子类型枚举
+     */
     @Override
     public SignalSubtype subtype() {
         return SignalSubtype.LAYOUT_RULE_FAILED;
     }
 
+    /**
+     * 版面规则失败：登记告警并标记该页需降级处理。
+     *
+     * @param signal  降级信号
+     * @param quality 质量信息（追加告警与标记）
+     * @return 计入失败单元的条数
+     */
     @Override
     public int handle(Signal signal, QualityInfo quality) {
         String region = StrUtil.blankToDefault(signal.getRegion(), "");

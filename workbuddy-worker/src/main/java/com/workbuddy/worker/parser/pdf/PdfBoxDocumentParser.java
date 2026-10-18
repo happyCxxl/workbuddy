@@ -49,33 +49,64 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
     private final PdfPageExtractor pageExtractor;
     private final CapabilityRegistry capabilityRegistry;
 
-    /** 只跑规则路径（不接模型能力）的构造器。 */
+    /**
+     * 只跑规则路径（不接模型能力）的构造器。
+     *
+     * @param layoutAnalyzer 版面分析器
+     */
     public PdfBoxDocumentParser(PageLayoutAnalyzer layoutAnalyzer) {
         this(layoutAnalyzer, null);
     }
 
-    /** 运行期构造器：注入能力注册表（未开启或未接入时注册表返回 null）。 */
+    /**
+     * 运行期构造器：注入能力注册表（未开启或未接入时注册表返回 null）。
+     *
+     * @param layoutAnalyzer     版面分析器
+     * @param capabilityRegistry 模型能力注册表（可空）
+     */
     @Autowired
     public PdfBoxDocumentParser(PageLayoutAnalyzer layoutAnalyzer, CapabilityRegistry capabilityRegistry) {
         this.pageExtractor = new PdfPageExtractor(layoutAnalyzer);
         this.capabilityRegistry = capabilityRegistry;
     }
 
+    /**
+     * 是否支持该媒体类型。
+     *
+     * @param mimeType 媒体类型
+     * @return 支持 PDF 为 true
+     */
     @Override
     public boolean supports(String mimeType) {
         return FileFormat.PDF.getMimeType().equals(mimeType);
     }
 
+    /**
+     * 能力名。
+     *
+     * @return 能力标识
+     */
     @Override
     public String capabilityName() {
         return CAPABILITY;
     }
 
+    /**
+     * 能力版本。
+     *
+     * @return 能力版本号
+     */
     @Override
     public String capabilityVersion() {
         return CAPABILITY_VERSION;
     }
 
+    /**
+     * 解析入口：大文件落临时文件按页读取，逐页提取后交给组装器。
+     *
+     * @param context 解析上下文
+     * @return 解析结果
+     */
     @Override
     public ParseSource parse(ParseContext context) {
         String fileId = context.getFileRef().getFileId();

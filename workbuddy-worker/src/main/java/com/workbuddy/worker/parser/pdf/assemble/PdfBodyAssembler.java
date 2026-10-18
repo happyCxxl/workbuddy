@@ -58,7 +58,18 @@ public final class PdfBodyAssembler {
         return LayoutOrderSupport.reorder(bodyLines, outcome.regions(), outcome.order());
     }
 
-    /** 单页元素组装：页眉/页脚元素（每页各一条） → 正文按 y 顺序推进（表格候选块与段落互斥结算）。 */
+    /**
+     * 单页元素组装：页眉/页脚元素（每页各一条）转正文按 y 顺序推进，表格候选块与段落互斥结算。
+     *
+     * @param page               单页提取内容
+     * @param headers            已确认的页眉文本键
+     * @param footers            已确认的页脚键
+     * @param elements           产物元素（追加）
+     * @param source             解析结果
+     * @param fileId             文件 ID
+     * @param properties         解析阈值配置
+     * @param capabilityRegistry 能力注册表
+     */
     public static void assemble(PageContent page, Set<String> headers, HeaderFooterDetector.FooterKeys footers,
                          List<ParseElement> elements, ParseSource source, String fileId,
                          ParseProperties properties, CapabilityRegistry capabilityRegistry) {

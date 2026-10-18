@@ -28,16 +28,32 @@ public class MagicTypeCheck implements FileCheck {
 
     private final Tika tika = new Tika();
 
+    /**
+     * 校验顺序。
+     *
+     * @return 顺序号（小的先执行）
+     */
     @Override
     public int order() {
         return 40;
     }
 
+    /**
+     * 校验步骤名。
+     *
+     * @return 步骤枚举
+     */
     @Override
     public FileCheckStepName name() {
         return FileCheckStepName.MAGIC_TYPE;
     }
 
+    /**
+     * 按文件头魔数识别真实格式，并与声明类型比对。
+     *
+     * @param context 校验上下文（共享流与已识别事实）
+     * @return 校验结果
+     */
     @Override
     public FileCheckResult check(FileCheckContext context) {
         String mediaType;

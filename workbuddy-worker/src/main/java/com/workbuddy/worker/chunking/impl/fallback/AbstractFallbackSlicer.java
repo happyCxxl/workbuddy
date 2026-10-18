@@ -12,6 +12,13 @@ import java.util.List;
  */
 public abstract class AbstractFallbackSlicer implements FallbackSlicer {
 
+    /**
+     * 读取兜底路由的 len/overlap 后交给子类切分；空白文本返回空片。
+     *
+     * @param text   待切分文本
+     * @param config 兜底路由配置
+     * @return 切片文本列表
+     */
     @Override
     public final List<String> slice(String text, ChunkRouteConfig config) {
         if (StrUtil.isBlank(text)) {
@@ -26,6 +33,7 @@ public abstract class AbstractFallbackSlicer implements FallbackSlicer {
      * @param text    非空文本
      * @param len     窗口长度（字符，解析时已补默认）
      * @param overlap 重叠长度（字符，仅本路使用）
+     * @return 切片文本列表
      */
     protected abstract List<String> doSlice(String text, int len, int overlap);
 }

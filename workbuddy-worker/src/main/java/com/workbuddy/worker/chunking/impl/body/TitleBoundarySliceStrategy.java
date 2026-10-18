@@ -20,11 +20,23 @@ import java.util.List;
 @Component
 public class TitleBoundarySliceStrategy implements SliceStrategy {
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 标题边界算法
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.BODY_TITLE_BOUNDARY;
     }
 
+    /**
+     * 只把元素入缓冲，不逐元素结算（一节一片在 flush 统一产出）。
+     *
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 恒为空列表
+     */
     @Override
     public List<Chunk> slice(ViewElement element, SliceContext context) {
         if (StrUtil.isBlank(element.getNormalizedText())) {
@@ -35,6 +47,12 @@ public class TitleBoundarySliceStrategy implements SliceStrategy {
         return List.of();
     }
 
+    /**
+     * 结算缓冲：一节文本成一片，超长走兜底降级。
+     *
+     * @param context 切片上下文
+     * @return 切片列表；缓冲为空时为空列表
+     */
     @Override
     public List<Chunk> flush(SliceContext context) {
         List<ViewElement> buffer = context.getBodyBuffer();

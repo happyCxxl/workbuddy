@@ -20,22 +20,44 @@ public final class TitleDecision {
 
     private final boolean candidate;
 
-    /** 命中工厂：title + 层级 + 证据。 */
+    /**
+     * 命中工厂。
+     *
+     * @param level    标题层级
+     * @param evidence 判定证据
+     * @return 命中结果
+     */
     public static TitleDecision title(int level, TitleEvidence evidence) {
         return new TitleDecision(true, level, evidence, false);
     }
 
-    /** 候选工厂：编号模式命中但缺字号佐证（只计入候选告警，不升级）。 */
+    /**
+     * 候选工厂：编号模式命中但缺字号佐证（只计入候选告警，不升级）。
+     *
+     * @return 候选结果
+     */
     public static TitleDecision candidate() {
         return new TitleDecision(false, 0, null, true);
     }
 
-    /** 非标题工厂。 */
+    /**
+     * 非标题工厂。
+     *
+     * @return 非标题结果
+     */
     public static TitleDecision paragraph() {
         return new TitleDecision(false, 0, null, false);
     }
 
-    /** 证据工厂：级联名 + 字号 + 加粗 + 模式串。 */
+    /**
+     * 证据工厂。
+     *
+     * @param cascade 级联名（样式或规则名）
+     * @param size    字号（可空）
+     * @param bold    是否加粗
+     * @param pattern 命中模式串（可空）
+     * @return 判定证据
+     */
     public static TitleEvidence evidence(String cascade, Double size, boolean bold, String pattern) {
         TitleEvidence evidence = new TitleEvidence();
         evidence.setCascade(cascade);

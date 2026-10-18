@@ -24,16 +24,32 @@ public class SizeLimitCheck implements FileCheck {
     /** 读流缓冲 8KB */
     private static final int BUFFER_SIZE = 8192;
 
+    /**
+     * 校验顺序。
+     *
+     * @return 顺序号（小的先执行）
+     */
     @Override
     public int order() {
         return 10;
     }
 
+    /**
+     * 校验步骤名。
+     *
+     * @return 步骤枚举
+     */
     @Override
     public FileCheckStepName name() {
         return FileCheckStepName.SIZE_LIMIT;
     }
 
+    /**
+     * 大小上限校验：超出上限失败，通过时回填实际字节数。
+     *
+     * @param context 校验上下文（共享流与已识别事实）
+     * @return 校验结果
+     */
     @Override
     public FileCheckResult check(FileCheckContext context) {
         try {

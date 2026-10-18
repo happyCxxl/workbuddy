@@ -41,12 +41,24 @@ import java.util.regex.Pattern;
 @Component
 public class DocxDocumentParser extends AbstractPoiDocumentParser {
 
+    /**
+     * 是否支持该媒体类型。
+     *
+     * @param mimeType 媒体类型
+     * @return 支持 DOCX 为 true
+     */
     @Override
     public boolean supports(String mimeType) {
         return FileFormat.DOCX.getMimeType().equals(mimeType);
     }
 
-    /** DOCX 主流程：按 body 顺序产出段落/表格元素 + 段落内嵌图片引用 + 页眉页脚部件。 */
+    /**
+     * DOCX 主流程：按 body 顺序产出段落、表格元素、段落内嵌图片引用与页眉页脚部件。
+     *
+     * @param source  待填充的原生解析结果
+     * @param data    文件字节（已读全）
+     * @param context 解析上下文
+     */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
         String fileId = context.getFileRef().getFileId();

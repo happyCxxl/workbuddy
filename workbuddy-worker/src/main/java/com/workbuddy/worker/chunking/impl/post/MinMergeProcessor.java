@@ -23,6 +23,12 @@ import java.util.Set;
 @Component
 public class MinMergeProcessor implements ChunkPostProcessor {
 
+    /**
+     * 就地处理切片列表（只改传入的列表元素，不返回新集合）。
+     *
+     * @param chunks  切片列表
+     * @param context 切片上下文
+     */
     @Override
     public void process(List<Chunk> chunks, SliceContext context) {
         int minMergeLen = context.getStrategy().pipelineInt(PipelineKey.MIN_MERGE_LEN, 300);

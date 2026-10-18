@@ -20,6 +20,13 @@ public class ProjectionPageLayoutAnalyzer implements PageLayoutAnalyzer {
     /** 覆盖直方图分箱宽度（pt） */
     private static final double BIN_WIDTH = 1.0;
 
+    /**
+     * 栏间空白（gutter）检测：按字符投影的空白带找出分栏位置。
+     *
+     * @param chars   行内字符
+     * @param options 版面分析阈值
+     * @return 分栏边界（升序横向坐标）
+     */
     @Override
     public List<Double> gutters(Input chars, Options options) {
         List<Box> boxes = chars.boxes().stream()
@@ -73,6 +80,13 @@ public class ProjectionPageLayoutAnalyzer implements PageLayoutAnalyzer {
         return accepted;
     }
 
+    /**
+     * 阅读顺序：按分栏边界把行归栏后重排。
+     *
+     * @param lines   行
+     * @param gutters 分栏边界
+     * @return 阅读顺序结果
+     */
     @Override
     public Result order(Input lines, List<Double> gutters) {
         List<Box> boxes = lines.boxes();

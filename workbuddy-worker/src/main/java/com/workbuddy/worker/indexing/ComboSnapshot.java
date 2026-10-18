@@ -43,27 +43,48 @@ public class ComboSnapshot implements Serializable {
     /** 环节策略映射：stage（PipelineStage 名）→ 策略 name-version（环节白名单：PREPROCESS/CHUNK/EMBED，构建入口校验） */
     private Map<String, String> stageStrategies = new LinkedHashMap<>();
 
-    /** 取某环节策略 name-version（无 → null）。 */
+    /**
+     * 取某环节策略 name-version。
+     *
+     * @param stage 环节名
+     * @return 策略 name-version；没有则为 null
+     */
     public String strategyOf(String stage) {
         return stageStrategies.get(stage);
     }
 
-    /** 预处理策略 name-version。 */
+    /**
+     * 预处理策略 name-version。
+     *
+     * @return 策略 name-version；缺失时为 null
+     */
     public String getPreprocessStrategy() {
         return strategyOf(PipelineStage.PREPROCESS.name());
     }
 
-    /** 切片策略 name-version。 */
+    /**
+     * 切片策略 name-version。
+     *
+     * @return 策略 name-version；缺失时为 null
+     */
     public String getChunkStrategy() {
         return strategyOf(PipelineStage.CHUNK.name());
     }
 
-    /** 向量策略 name-version。 */
+    /**
+     * 向量策略 name-version。
+     *
+     * @return 策略 name-version；缺失时为 null
+     */
     public String getEmbedStrategy() {
         return strategyOf(PipelineStage.EMBED.name());
     }
 
-    /** 格式断言（非抛）：预处理/切片/向量三环节策略维度齐全且非空。 */
+    /**
+     * 格式断言（不抛）：预处理、切片、向量三环节策略维度齐全且非空。
+     *
+     * @return 齐全为 true
+     */
     public boolean hasCompleteStageStrategies() {
         return NullUtil.isNotNull(stageStrategies)
                 && StrUtil.isNotBlank(strategyOf(PipelineStage.PREPROCESS.name()))
@@ -76,12 +97,23 @@ public class ComboSnapshot implements Serializable {
         ThrowUtil.throwIf(!hasCompleteStageStrategies(), ErrorCode.INDEX_COMBO_SNAPSHOT_LEGACY);
     }
 
-    /** 是否评测冻结集范围（LIST）。 */
+    /**
+     * 是否评测冻结集范围（LIST）。
+     *
+     * @return LIST 范围为 true
+     */
     public boolean isListScope() {
         return "LIST".equals(fileScopeMode);
     }
 
-    /** 三环节组合工厂（插入序 = 预处理/切片/向量化）。 */
+    /**
+     * 三环节组合工厂（插入序 = 预处理、切片、向量化）。
+     *
+     * @param preprocess 预处理策略 name-version
+     * @param chunk      切片策略 name-version
+     * @param embed      向量策略 name-version
+     * @return 组合快照
+     */
     public static ComboSnapshot of(String preprocess, String chunk, String embed) {
         ComboSnapshot combo = new ComboSnapshot();
         combo.getStageStrategies().put(PipelineStage.PREPROCESS.name(), preprocess);

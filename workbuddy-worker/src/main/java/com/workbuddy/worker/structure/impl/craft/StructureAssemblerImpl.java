@@ -43,6 +43,13 @@ public class StructureAssemblerImpl implements StructureAssembler {
     private final StructureJudgeRegistry judgeRegistry;
     private final List<TitleRule> titleRules;
 
+    /**
+     * 按标题层级把有序元素组装成结构树。
+     *
+     * @param ordered 有序元素
+     * @param context 结构化上下文
+     * @return 结构树
+     */
     @Override
     public TreeOutcome assembleTree(List<UnifiedElement> ordered, AssembleContext context) {
         TreeOutcome outcome = new TreeOutcome();
@@ -81,6 +88,13 @@ public class StructureAssemblerImpl implements StructureAssembler {
         return outcome;
     }
 
+    /**
+     * 构建元素间关系（父子、表格与图注、引用等）。
+     *
+     * @param elements 统一元素
+     * @param context  结构化上下文
+     * @return 关系列表
+     */
     @Override
     public List<DocumentRelation> buildRelations(List<UnifiedElement> elements, AssembleContext context) {
         List<DocumentRelation> relations = new ArrayList<>();

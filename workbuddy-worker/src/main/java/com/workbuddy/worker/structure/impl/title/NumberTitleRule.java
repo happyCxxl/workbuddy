@@ -19,11 +19,22 @@ public class NumberTitleRule implements TitleRule {
     /** 多级数字：1.1 / 1.1.1 …（点数定级） */
     private static final Pattern NUMBER_PATTERN = Pattern.compile("^(\\d+(?:\\.\\d+)+).*");
 
+    /**
+     * 规则在链上的顺序。
+     *
+     * @return 顺序号（小的先匹配）
+     */
     @Override
     public int order() {
         return 30;
     }
 
+    /**
+     * 数字编号标题：按数字编号模式匹配并取层级。
+     *
+     * @param context 标题判定上下文
+     * @return 命中结果；不适用时为 null
+     */
     @Override
     public TitleDecision tryMatch(TitleRuleContext context) {
         Matcher number = NumberTitleSupport.matchNumber(context, NUMBER_PATTERN);

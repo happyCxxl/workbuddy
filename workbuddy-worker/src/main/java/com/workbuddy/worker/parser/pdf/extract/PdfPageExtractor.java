@@ -44,6 +44,11 @@ public class PdfPageExtractor {
 
     private final PageLayoutAnalyzer layoutAnalyzer;
 
+    /**
+     * 构造页提取器。
+     *
+     * @param layoutAnalyzer 版面分析器
+     */
     public PdfPageExtractor(PageLayoutAnalyzer layoutAnalyzer) {
         this.layoutAnalyzer = layoutAnalyzer;
     }
@@ -53,7 +58,15 @@ public class PdfPageExtractor {
         return total > 0 ? (double) count / total : 0;
     }
 
-    /** 提取一页：字符级指标 → 行聚合 → 栏切分 → 阅读顺序 → 文字占比。 */
+    /**
+     * 提取一页：字符级指标、行聚合、栏切分、阅读顺序、文字占比。
+     *
+     * @param doc     PDF 文档
+     * @param pageNo  页码（从 1 开始）
+     * @param context 解析上下文
+     * @return 单页提取内容
+     * @throws IOException 读取页面内容失败
+     */
     public PageContent extractPage(PDDocument doc, int pageNo, ParseContext context) throws IOException {
         PositionStripper stripper = new PositionStripper();
         stripper.setStartPage(pageNo);
@@ -472,6 +485,12 @@ public class PdfPageExtractor {
             super();
         }
 
+        /**
+         * 文本片段回调：把每个字形连同其版面坐标收进字符事实。
+         *
+         * @param text          片段文本
+         * @param textPositions 字形位置
+         */
         @Override
         protected void writeString(String text, List<TextPosition> textPositions) {
             List<TextPosition> positions = textPositions.stream()

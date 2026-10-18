@@ -35,11 +35,22 @@ public final class RuleLines {
     private RuleLines() {
     }
 
-    /** 页面图元：横竖线段 + 图片占位矩形（均为左上原点坐标）。 */
+    /**
+     * 页面图元。
+     *
+     * @param segments   横竖线段（左上原点坐标）
+     * @param imageBoxes 图片占位矩形（左上原点坐标）
+     */
     public record Graphics(List<Segment> segments, List<Region> imageBoxes) {
     }
 
-    /** 采集页面图元；页面内容流异常时返回空结果（该页走文本表格路径）。 */
+    /**
+     * 采集页面图元；页面内容流异常时返回空结果（该页走文本表格路径）。
+     *
+     * @param page       页面
+     * @param pageHeight 页面高度（坐标系换算用）
+     * @return 页面图元
+     */
     public static Graphics collect(PDPage page, double pageHeight) {
         Collector collector = new Collector(page, pageHeight);
         try {
@@ -50,14 +61,28 @@ public final class RuleLines {
         return new Graphics(collector.segments, collector.imageBoxes);
     }
 
-    /** 单张图片的覆盖面积（超出页面的部分截掉，小于 0 记 0）。 */
+    /**
+     * 单张图片的覆盖面积（超出页面的部分截掉）。
+     *
+     * @param box        图片占位矩形
+     * @param pageWidth  页面宽度
+     * @param pageHeight 页面高度
+     * @return 有效覆盖面积；无交集时为 0
+     */
     public static double imageArea(Region box, double pageWidth, double pageHeight) {
         double width = Math.min(box.right(), pageWidth) - Math.max(box.left(), 0);
         double height = Math.min(box.bottom(), pageHeight) - Math.max(box.top(), 0);
         return width > 0 && height > 0 ? width * height : 0;
     }
 
-    /** 图片覆盖面积占比：各图片矩形面积之和 ÷ 页面面积（上限 1）。 */
+    /**
+     * 图片覆盖面积占比：各图片矩形面积之和除以页面面积。
+     *
+     * @param imageBoxes 图片占位矩形
+     * @param pageWidth  页面宽度
+     * @param pageHeight 页面高度
+     * @return 覆盖率（上限 1）；无图片或页面尺寸非法时为 0
+     */
     public static double imageAreaRatio(List<Region> imageBoxes, double pageWidth, double pageHeight) {
         if (imageBoxes.isEmpty() || pageWidth <= 0 || pageHeight <= 0) {
             return 0;
@@ -73,6 +98,11 @@ public final class RuleLines {
      * 矢量图形覆盖率：线段包围盒（所有线段的外接矩形）面积 ÷ 页面面积（上限 1）。
      * 图表、示意图这类纯矢量页靠它把「无文本无图片」的页与真空白页区分开：
      * 成框成轴的线段会撑出成片区域，而单条页脚分隔线（高度为 0）不算覆盖。
+     *
+     * @param segments   线段
+     * @param pageWidth  页面宽度
+     * @param pageHeight 页面高度
+     * @return 覆盖率（上限 1）
      */
     public static double vectorAreaRatio(List<Segment> segments, double pageWidth, double pageHeight) {
         if (segments.isEmpty() || pageWidth <= 0 || pageHeight <= 0) {
@@ -91,7 +121,13 @@ public final class RuleLines {
         return Math.min((maxX - minX) * (maxY - minY) / (pageWidth * pageHeight), 1);
     }
 
-    /** 线框区域：相交线条聚成组件，取外接矩形并保留能形成至少 2 列 2 行网格的组件。 */
+    /**
+     * 线框区域：相交线条聚成组件，取外接矩形并保留能形成至少 2 列 2 行网格的组件。
+     *
+     * @param segments       线段
+     * @param lineCoverRatio 线段覆盖率门槛
+     * @return 线框区域，按上边界升序
+     */
     public static List<Region> regions(List<Segment> segments, double lineCoverRatio) {
         List<Segment> usable = segments.stream()
                 .filter(s -> s.length() >= MIN_SEGMENT_LENGTH)
@@ -117,7 +153,14 @@ public final class RuleLines {
         return regions;
     }
 
-    /** 区域内求线网格；列或行不足 2 段时返回 null。 */
+    /**
+     * 区域内求线网格。
+     *
+     * @param segments       区域内的线段
+     * @param region         区域
+     * @param lineCoverRatio 线段覆盖率门槛
+     * @return 网格；列或行不足 2 段时为 null
+     */
     public static Grid fit(List<Segment> segments, Region region, double lineCoverRatio) {
         List<Segment> verticals = fullyInside(segments, region, true, lineCoverRatio);
         List<Segment> horizontals = fullyInside(segments, region, false, lineCoverRatio);
@@ -275,6 +318,14 @@ public final class RuleLines {
             this.pageHeight = pageHeight;
         }
 
+        /**
+         * 矩形拆成四条边，作为线框候选。
+         *
+         * @param p0 角点 0
+         * @param p1 角点 1
+         * @param p2 角点 2
+         * @param p3 角点 3
+         */
         @Override
         public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) {
             add(p0, p1);
@@ -283,6 +334,12 @@ public final class RuleLines {
             add(p3, p0);
         }
 
+        /**
+         * 记录子路径起点与当前点。
+         *
+         * @param x 横坐标
+         * @param y 纵坐标
+         */
         @Override
         public void moveTo(float x, float y) {
             startX = x;
@@ -291,6 +348,12 @@ public final class RuleLines {
             currentY = y;
         }
 
+        /**
+         * 当前点到目标点的连线；非横竖的斜线会被过滤掉。
+         *
+         * @param x 目标横坐标
+         * @param y 目标纵坐标
+         */
         @Override
         public void lineTo(float x, float y) {
             add(new Point2D.Double(currentX, currentY), new Point2D.Double(x, y));
@@ -298,12 +361,23 @@ public final class RuleLines {
             currentY = y;
         }
 
+        /**
+         * 曲线不参与线框判定，只把当前点推进到终点。
+         *
+         * @param x1 控制点 1 横坐标
+         * @param y1 控制点 1 纵坐标
+         * @param x2 控制点 2 横坐标
+         * @param y2 控制点 2 纵坐标
+         * @param x3 终点横坐标
+         * @param y3 终点纵坐标
+         */
         @Override
         public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) {
             currentX = x3;
             currentY = y3;
         }
 
+        /** 闭合子路径：当前点到起点补一条边。 */
         @Override
         public void closePath() {
             add(new Point2D.Double(currentX, currentY), new Point2D.Double(startX, startY));
@@ -311,31 +385,58 @@ public final class RuleLines {
             currentY = startY;
         }
 
+        /**
+         * 当前点。
+         *
+         * @return 当前点
+         */
         @Override
         public Point2D getCurrentPoint() {
             return new Point2D.Double(currentX, currentY);
         }
 
+        /** 路径结束：本实现只按路径操作收集线段，无需额外处理。 */
         @Override
         public void endPath() {
         }
 
+        /** 描边路径：线段在路径操作阶段已收集，这里无需处理。 */
         @Override
         public void strokePath() {
         }
 
+        /**
+         * 填充路径：不产生线框，无需处理。
+         *
+         * @param windingRule 填充规则
+         */
         @Override
         public void fillPath(int windingRule) {
         }
 
+        /**
+         * 填充并描边：线段已在路径操作阶段收集，无需处理。
+         *
+         * @param windingRule 填充规则
+         */
         @Override
         public void fillAndStrokePath(int windingRule) {
         }
 
+        /**
+         * 裁剪路径：不影响线框判定，无需处理。
+         *
+         * @param windingRule 裁剪规则
+         */
         @Override
         public void clip(int windingRule) {
         }
 
+        /**
+         * 图片：把占位矩形换算成左上原点坐标后收集。
+         *
+         * @param pdImage 页面上的图片
+         */
         @Override
         public void drawImage(PDImage pdImage) {
             // 图片占位矩形 = 单位正方形经当前变换矩阵映射（转成左上原点）
@@ -351,6 +452,11 @@ public final class RuleLines {
             imageBoxes.add(new Region(minX, pageHeight - maxY, maxX, pageHeight - minY));
         }
 
+        /**
+         * 渐变填充：不产生线框，无需处理。
+         *
+         * @param shadingName 渐变资源名
+         */
         @Override
         public void shadingFill(COSName shadingName) {
         }

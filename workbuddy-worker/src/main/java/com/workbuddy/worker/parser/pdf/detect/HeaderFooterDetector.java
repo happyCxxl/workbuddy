@@ -30,6 +30,9 @@ public final class HeaderFooterDetector {
     /**
      * 比较键空白归一化：去首尾空白、连续空白压成一个空格、去掉零宽字符。
      * 只用于文本比对，不改元素里的文本。
+     *
+     * @param text 原始文本
+     * @return 归一化后的比较键
      */
     public static String normalizeKey(String text) {
         if (StrUtil.isBlank(text)) {
@@ -43,7 +46,13 @@ public final class HeaderFooterDetector {
     private HeaderFooterDetector() {
     }
 
-    /** 页眉识别：页顶 headerAreaRatio 区域内按文本聚合，出现页数达阈值即判页眉。 */
+    /**
+     * 页眉识别：页顶 headerAreaRatio 区域内按文本聚合，出现页数达阈值即判页眉。
+     *
+     * @param pages   全部页的行
+     * @param context 解析上下文（阈值来源）
+     * @return 页眉文本集合
+     */
     public static Set<String> detectHeaders(List<PageLines> pages, ParseContext context) {
         double headerBand = context.getProperties().getHeaderAreaRatio();
         Map<String, Set<Integer>> pagesByText = new LinkedHashMap<>();
@@ -71,6 +80,10 @@ public final class HeaderFooterDetector {
      * ① 页脚文本：非页码行按"基础文本"聚合（页脚常与页码同行，"XX项目 3" 剥离行尾页码后再判多页重复）；
      * ② 页码：纯数字行按「跨页中心在容差内成组、组内页数达阈值」确认，且候选行需过内容空洞度门限
      * （与正上方的正文行留出空白），紧贴正文的页底数字行不进页码候选。
+     *
+     * @param pages   全部页的行
+     * @param context 解析上下文（阈值来源）
+     * @return 页脚文本基础键与页码中心
      */
     public static FooterKeys detectFooters(List<PageLines> pages, ParseContext context) {
         ParseProperties properties = context.getProperties();
@@ -181,6 +194,9 @@ public final class HeaderFooterDetector {
     /**
      * 页脚基础文本：纯页码行 → 共享键；否则剥离行尾页码（"XX项目 3"→"XX项目"），
      * 无行尾页码则原样（按完整文本聚合）。
+     *
+     * @param text 页脚行文本
+     * @return 基础文本键（纯页码行为共享键）
      */
     public static String footerBase(String text) {
         if (isPageNumberLine(text)) {
@@ -196,10 +212,23 @@ public final class HeaderFooterDetector {
                 || text.matches("^第\\s*[0-9一二三四五六七八九十百]+\\s*页$");
     }
 
-    /** 页脚判定结果：重复文本基础键 + 已确认的页码横向中心（页码按行位置与内容空洞度命中）。 */
+    /**
+     * 页脚判定结果。
+     *
+     * @param texts              重复出现的页脚文本基础键
+     * @param pageNumberCenters  已确认的页码横向中心
+     */
     public record FooterKeys(Set<String> texts, List<Double> pageNumberCenters) {
 
-        /** 行是否命中页脚：基础文本键命中，或页码中心命中且该行内容空洞。 */
+        /**
+         * 行是否命中页脚：基础文本键命中，或页码中心命中且该行内容空洞。
+         *
+         * @param footerBaseKey 行的页脚基础文本键
+         * @param line          文本行
+         * @param page          所在页
+         * @param properties    解析阈值配置
+         * @return 命中页脚为 true
+         */
         public boolean matches(String footerBaseKey, TextLine line, PageLines page, ParseProperties properties) {
             if (texts.contains(footerBaseKey)) {
                 return true;

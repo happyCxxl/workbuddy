@@ -15,11 +15,24 @@ import java.util.List;
 @Component
 public class RecursiveLengthFallback extends AbstractFallbackSlicer {
 
+    /**
+     * 本策略对应的兜底算法。
+     *
+     * @return 递归长度算法
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.FALLBACK_RECURSIVE;
     }
 
+    /**
+     * 按句累积到窗口长度再切，句子本身超长时继续下钻。
+     *
+     * @param text    非空文本
+     * @param len     窗口长度
+     * @param overlap 重叠长度
+     * @return 切片文本列表
+     */
     @Override
     protected List<String> doSlice(String text, int len, int overlap) {
         List<String> pieces = new ArrayList<>();

@@ -42,30 +42,57 @@ public class ChunkStrategy implements StageStrategy {
     /** 流程层设置（键 = PipelineKey.key()） */
     private Map<String, String> pipeline = new HashMap<>();
 
-    /** 取某一路配置（缺失返回 null）。 */
+    /**
+     * 取某一路配置。
+     *
+     * @param route 切片路由
+     * @return 路由配置；缺失时为 null
+     */
     public ChunkRouteConfig route(ChunkRoute route) {
         return NullUtil.isNull(routes) || NullUtil.isNull(route) ? null : routes.get(route.key());
     }
 
-    /** 某一路算法（解析后通常存在；键未识别返回 null）。 */
+    /**
+     * 某一路算法（解析后通常存在）。
+     *
+     * @param route 切片路由
+     * @return 算法；配置缺失或键未识别时为 null
+     */
     public ChunkAlgorithm routeAlgorithm(ChunkRoute route) {
         ChunkRouteConfig config = route(route);
         return NullUtil.isNull(config) || StrUtil.isBlank(config.getAlgorithm())
                 ? null : ChunkAlgorithm.of(route, config.getAlgorithm());
     }
 
-    /** 流程层字符串值（缺失回退默认）。 */
+    /**
+     * 流程层字符串值（缺失回退默认）。
+     *
+     * @param key          流程层键
+     * @param defaultValue 回退值
+     * @return 配置值
+     */
     public String pipelineValue(PipelineKey key, String defaultValue) {
         String value = NullUtil.isNull(pipeline) || NullUtil.isNull(key) ? null : pipeline.get(key.key());
         return NullUtil.isNull(value) || value.isBlank() ? defaultValue : value;
     }
 
-    /** 流程层开关判定（ON 大小写不敏感）。 */
+    /**
+     * 流程层开关判定（ON 大小写不敏感）。
+     *
+     * @param key 流程层键
+     * @return 开启为 true
+     */
     public boolean pipelineOn(PipelineKey key) {
         return ON.equalsIgnoreCase(pipelineValue(key, OFF));
     }
 
-    /** 流程层数值读取（缺失/非法回退默认）。 */
+    /**
+     * 流程层数值读取（缺失或非法回退默认）。
+     *
+     * @param key          流程层键
+     * @param defaultValue 回退值
+     * @return 数值
+     */
     public int pipelineInt(PipelineKey key, int defaultValue) {
         String value = pipelineValue(key, null);
         if (NullUtil.isNull(value)) {
@@ -78,7 +105,11 @@ public class ChunkStrategy implements StageStrategy {
         }
     }
 
-    /** 完整版本串（name-version，如 chunk-hybrid-v1）。 */
+    /**
+     * 完整版本串（name-version）。
+     *
+     * @return 版本串，如 chunk-hybrid-v1
+     */
     public String fullVersion() {
         return name + "-" + version;
     }

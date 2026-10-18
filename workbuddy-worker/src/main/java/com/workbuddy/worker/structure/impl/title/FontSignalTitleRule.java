@@ -13,11 +13,22 @@ import org.springframework.stereotype.Component;
 @Component
 public class FontSignalTitleRule implements TitleRule {
 
+    /**
+     * 规则在链上的顺序。
+     *
+     * @return 顺序号（小的先匹配）
+     */
     @Override
     public int order() {
         return 60;
     }
 
+    /**
+     * 字号信号标题：按字号与加粗信号判定层级。
+     *
+     * @param context 标题判定上下文
+     * @return 命中结果；不适用时为 null
+     */
     @Override
     public TitleDecision tryMatch(TitleRuleContext context) {
         Double size = context.fontSize();

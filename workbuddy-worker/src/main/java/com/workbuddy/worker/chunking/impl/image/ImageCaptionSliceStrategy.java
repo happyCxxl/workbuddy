@@ -21,11 +21,23 @@ import java.util.List;
 @Component
 public class ImageCaptionSliceStrategy implements SliceStrategy {
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 图片图注占位算法
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.IMAGE_CAPTION_PLACEHOLDER;
     }
 
+    /**
+     * 产出图片占位片：有图注时以图注为正文，否则只留占位标记。
+     *
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 切片列表
+     */
     @Override
     public List<Chunk> slice(ViewElement element, SliceContext context) {
         UnifiedElement unified = context.getById().get(element.getElementId());

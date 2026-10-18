@@ -44,7 +44,12 @@ public final class AlgorithmRegistry<T> {
         }
     }
 
-    /** 按算法取实现；未注册明确报错（SYSTEM_ERROR），不静默回退。 */
+    /**
+     * 按算法取实现；未注册明确报错（SYSTEM_ERROR），不静默回退。
+     *
+     * @param algorithm 算法键
+     * @return 注册的实现
+     */
     public T get(ChunkAlgorithm algorithm) {
         T candidate = NullUtil.isNull(algorithm) ? null : byAlgorithm.get(algorithm);
         ThrowUtil.throwIf(NullUtil.isNull(candidate), ErrorCode.SYSTEM_ERROR,

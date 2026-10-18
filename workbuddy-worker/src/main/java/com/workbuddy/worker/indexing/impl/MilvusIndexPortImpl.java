@@ -31,26 +31,55 @@ public class MilvusIndexPortImpl implements MilvusIndexPort {
 
     private final KnowledgeCollectionPort collectionPort;
 
+    /**
+     * 确保集合存在并校验维度。
+     *
+     * @param collectionName 集合名
+     * @param dimension      向量维度
+     */
     @Override
     public void ensureCollection(String collectionName, int dimension) {
         collectionPort.ensureCollection(collectionName, dimension);
     }
 
+    /**
+     * 把集合加载进内存（检索前预热）。
+     *
+     * @param collectionName 集合名
+     */
     @Override
     public void load(String collectionName) {
         collectionPort.load(collectionName);
     }
 
+    /**
+     * 回收集合。
+     *
+     * @param collectionName 集合名
+     */
     @Override
     public void drop(String collectionName) {
         collectionPort.drop(collectionName);
     }
 
+    /**
+     * 追加索引行（按主键 upsert）。
+     *
+     * @param collectionName 集合名
+     * @param rows           索引行
+     */
     @Override
     public void append(String collectionName, List<IndexRow> rows) {
         collectionPort.upsert(collectionName, rows.stream().map(this::toRow).toList());
     }
 
+    /**
+     * 向量检索：把查询条件翻成过滤表达式后取前 K 条。
+     *
+     * @param collectionName 集合名
+     * @param query          向量查询（向量、条数上限与过滤条件）
+     * @return 命中的行与相似度分数
+     */
     @Override
     public List<VectorHit> searchVector(String collectionName, VectorQuery query) {
         String filter = buildFilter(query.getDocumentId(), query.getOwner(), query.getContentType());
@@ -65,6 +94,13 @@ public class MilvusIndexPortImpl implements MilvusIndexPort {
         return hits;
     }
 
+    /**
+     * 全文检索：把查询条件翻成过滤表达式后按关键词检索。
+     *
+     * @param collectionName 集合名
+     * @param query          全文查询（关键词、条数上限与过滤条件）
+     * @return 命中的行
+     */
     @Override
     public List<FullTextHit> searchFullText(String collectionName, FullTextQuery query) {
         String filter = buildFilter(query.getDocumentId(), query.getOwner(), query.getContentType());
@@ -79,16 +115,36 @@ public class MilvusIndexPortImpl implements MilvusIndexPort {
         return hits;
     }
 
+    /**
+     * 列出集合内全部切片 ID。
+     *
+     * @param collectionName 集合名
+     * @return 切片 ID 列表
+     */
     @Override
     public List<String> listChunkIds(String collectionName) {
         return collectionPort.listIds(collectionName, "id != ''");
     }
 
+    /**
+     * 列出某文档的切片 ID。
+     *
+     * @param collectionName 集合名
+     * @param documentId     文档 ID
+     * @return 切片 ID 列表
+     */
     @Override
     public List<String> listChunkIds(String collectionName, Long documentId) {
         return collectionPort.listIds(collectionName, "document_id == " + documentId);
     }
 
+    /**
+     * 按切片 ID 批量取索引行。
+     *
+     * @param collectionName 集合名
+     * @param chunkIds       切片 ID 列表
+     * @return 索引行；入参为空时返回空列表
+     */
     @Override
     public List<IndexRow> queryChunkByIds(String collectionName, List<String> chunkIds) {
         if (chunkIds.isEmpty()) {

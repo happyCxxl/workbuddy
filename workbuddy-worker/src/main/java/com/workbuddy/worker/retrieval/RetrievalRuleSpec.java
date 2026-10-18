@@ -46,7 +46,11 @@ public class RetrievalRuleSpec {
     /** 向量相似度阈值（0 = 不启用；预留截断能力） */
     private double scoreThreshold = 0;
 
-    /** 引擎基线规则（回退链第三级，不落库）：混合 RRF + 父片展开。 */
+    /**
+     * 引擎基线规则（回退链第三级，不落库）：混合 RRF 与父片展开。
+     *
+     * @return 基线规则
+     */
     public static RetrievalRuleSpec baseline() {
         RetrievalRuleSpec spec = new RetrievalRuleSpec();
         spec.getPostprocess().setMode(MODE_PARENT_EXPAND);

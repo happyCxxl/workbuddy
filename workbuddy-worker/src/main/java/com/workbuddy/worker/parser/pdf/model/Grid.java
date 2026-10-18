@@ -15,12 +15,20 @@ import java.util.List;
 public record Grid(List<Double> columns, List<Double> rows,
                    List<List<Boolean>> columnGaps, List<List<Boolean>> rowGaps) {
 
-    /** 列数。 */
+    /**
+     * 列数。
+     *
+     * @return 由列边界推出的列数（边界数减一）
+     */
     public int colCount() {
         return columns.size() - 1;
     }
 
-    /** 行数。 */
+    /**
+     * 行数。
+     *
+     * @return 由行边界推出的行数（边界数减一）
+     */
     public int rowCount() {
         return rows.size() - 1;
     }

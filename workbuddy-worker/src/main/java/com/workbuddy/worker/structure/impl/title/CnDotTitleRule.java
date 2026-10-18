@@ -13,6 +13,9 @@ public class CnDotTitleRule extends AbstractCnNumberTitleRule {
     /** 中文序号：一、 */
     private static final Pattern CN_DOT_PATTERN = Pattern.compile("^[一二三四五六七八九十]+、.*");
 
+    /**
+     * 构造「一、二、」式编号规则。
+     */
     public CnDotTitleRule() {
         super(50, CN_DOT_PATTERN, "一、");
     }

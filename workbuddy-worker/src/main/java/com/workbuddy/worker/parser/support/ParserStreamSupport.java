@@ -13,7 +13,12 @@ public final class ParserStreamSupport {
     private ParserStreamSupport() {
     }
 
-    /** 输入流全量读入内存；失败抛运行时异常由管线记 PARSE_CORRUPTED。 */
+    /**
+     * 输入流全量读入内存；失败抛运行时异常由管线记 PARSE_CORRUPTED。
+     *
+     * @param context 解析上下文（提供输入流）
+     * @return 文件全部字节
+     */
     public static byte[] readAll(ParseContext context) {
         try {
             return context.getInputStream().readAllBytes();

@@ -12,11 +12,24 @@ import java.util.List;
 @Component
 public class FixedWindowFallback extends AbstractFallbackSlicer {
 
+    /**
+     * 本策略对应的兜底算法。
+     *
+     * @return 固定窗口算法
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.FALLBACK_FIXED_WINDOW;
     }
 
+    /**
+     * 按窗口长度与重叠硬切，忽略语义边界。
+     *
+     * @param text    非空文本
+     * @param len     窗口长度
+     * @param overlap 重叠长度
+     * @return 切片文本列表
+     */
     @Override
     protected List<String> doSlice(String text, int len, int overlap) {
         return WindowSlicer.slice(text, len, overlap);

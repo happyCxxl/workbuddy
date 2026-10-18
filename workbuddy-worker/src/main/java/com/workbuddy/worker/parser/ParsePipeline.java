@@ -59,6 +59,12 @@ public class ParsePipeline {
     private final ParseProperties properties;
     private final CapabilityRegistry capabilityRegistry;
 
+    /**
+     * 解析环节入口：按格式选解析器并产出原生结构。
+     *
+     * @param context 环节上下文
+     * @return 环节产出
+     */
     public ParseOutcome run(ParseContext context) {
         ParseOutcome outcome = new ParseOutcome();
         ParseResult result = new ParseResult();

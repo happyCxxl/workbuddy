@@ -203,6 +203,10 @@ public final class TextTableBuilder {
     /**
      * 行内某列的字符：token 按其**中心点**归列，整个 token 的字符进同一格 ——
      * 右对齐的数字列左起点逐行不同，按字符左边界切会把金额劈到相邻两格里。
+     *
+     * @param line   页面行
+     * @param column 列区间
+     * @return 落在该列的字符
      */
     private static List<CharInfo> cellChars(PageLine line, TableCandidateDetector.Column column) {
         return line.tokens().stream()
@@ -212,7 +216,14 @@ public final class TextTableBuilder {
                 .toList();
     }
 
-    /** 表头行判定：首行含数字占比不超上限，且表体含数字（或首行字号大于表体最大字号）。 */
+    /**
+     * 表头行判定：首行数字占比不超上限，且表体含数字（或首行字号大于表体最大字号）。
+     *
+     * @param rowTexts        各行文本
+     * @param rowFontSizes    各行字号
+     * @param maxNumericRatio 首行数字占比上限（超过即不判表头）
+     * @return 表头行号；无表头时为 null
+     */
     public static Integer detectHeaderRow(List<List<String>> rowTexts, List<Double> rowFontSizes,
                                    double maxNumericRatio) {
         if (rowTexts.size() < 2) {

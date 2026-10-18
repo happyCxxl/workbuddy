@@ -19,11 +19,24 @@ import java.util.List;
 @Component
 public class TableContextMergedStrategy extends AbstractTableSliceStrategy {
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 算法枚举
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.TABLE_CONTEXT_MERGED;
     }
 
+    /**
+     * 上下文合并切片：表格与其前后引导段落合并成片。
+     *
+     * @param prep    表格准备结果
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 切片列表
+     */
     @Override
     protected List<Chunk> slicePrepared(TableMarkdownSupport.TablePrep prep, ViewElement element,
                                         SliceContext context) {

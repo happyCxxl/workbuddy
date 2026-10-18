@@ -50,6 +50,13 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
     private record ContinuationDecision(boolean merged, boolean suspected) {
     }
 
+    /**
+     * 跨页表格续接：表头重复的下一页表格并回前表。
+     *
+     * @param ordered 有序元素
+     * @param context 结构化上下文
+     * @return 续接结果
+     */
     @Override
     public ContinuationOutcome joinContinuations(List<UnifiedElement> ordered, AssembleContext context) {
         ContinuationOutcome outcome = new ContinuationOutcome();

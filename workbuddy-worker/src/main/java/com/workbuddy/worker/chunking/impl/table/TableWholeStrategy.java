@@ -22,11 +22,24 @@ public class TableWholeStrategy extends AbstractTableSliceStrategy {
     /** 超长降级行级的组大小（行数，回退口径） */
     private static final int FALLBACK_GROUP_SIZE = 3;
 
+    /**
+     * 本策略对应的切片算法。
+     *
+     * @return 算法枚举
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.TABLE_WHOLE;
     }
 
+    /**
+     * 整表切片：未超长整表成片，超长降级为行级切片。
+     *
+     * @param prep    表格准备结果
+     * @param element 视图元素
+     * @param context 切片上下文
+     * @return 切片列表
+     */
     @Override
     protected List<Chunk> slicePrepared(TableMarkdownSupport.TablePrep prep, ViewElement element,
                                         SliceContext context) {

@@ -11,6 +11,9 @@ import java.util.List;
 @Data
 public class CustomRuleGroup {
 
+    /**
+     * 构造空规则组（字段由配置反序列化填充）。
+     */
     public CustomRuleGroup() {
         this.enabled = PreprocessStrategy.ON;
     }

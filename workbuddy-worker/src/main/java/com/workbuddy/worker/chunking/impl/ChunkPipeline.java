@@ -60,6 +60,12 @@ public class ChunkPipeline implements ChunkerPort {
      * 执行切片：预计算 → 逐元素路由分派 → 后置处理 → 父子层级 → 编号/token → ChunkSet 组装与状态判定。
      * 返回 ChunkOutcome（ChunkSet + 子步骤 + 建议状态）。
      */
+    /**
+     * 切片环节入口：按策略路由切分元素并结算缓冲。
+     *
+     * @param context 环节上下文
+     * @return 环节产出
+     */
     @Override
     public ChunkOutcome chunk(ChunkContext context) {
         ChunkOutcome outcome = new ChunkOutcome();

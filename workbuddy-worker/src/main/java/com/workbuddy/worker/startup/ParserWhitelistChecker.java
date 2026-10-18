@@ -26,16 +26,32 @@ public class ParserWhitelistChecker implements StartupCheck {
     private final List<DocumentParserPort> parsers;
     private final FileValidationProperties properties;
 
+    /**
+     * 构造校验项：登记全部解析器并读取白名单配置。
+     *
+     * @param parsers    解析器实现
+     * @param properties 文件校验配置
+     */
     public ParserWhitelistChecker(List<DocumentParserPort> parsers, FileValidationProperties properties) {
         this.parsers = parsers;
         this.properties = properties;
     }
 
+    /**
+     * 校验序号：参数类校验。
+     *
+     * @return 校验顺序
+     */
     @Override
     public int order() {
         return ORDER_ASSEMBLY;
     }
 
+    /**
+     * 校验各格式白名单内的解析器都已注册，通过后交给链上的下一项。
+     *
+     * @param next 启动校验链的下一项
+     */
     @Override
     public void check(StartupCheckChain next) {
         checkWhitelist(parsers, properties.getEnabledFormats());

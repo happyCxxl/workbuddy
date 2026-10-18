@@ -14,16 +14,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class EmptyFileCheck implements FileCheck {
 
+    /**
+     * 校验顺序。
+     *
+     * @return 顺序号（小的先执行）
+     */
     @Override
     public int order() {
         return 20;
     }
 
+    /**
+     * 校验步骤名。
+     *
+     * @return 步骤枚举
+     */
     @Override
     public FileCheckStepName name() {
         return FileCheckStepName.EMPTY_FILE;
     }
 
+    /**
+     * 空文件判定：实际字节数为 0 按空文件失败。
+     *
+     * @param context 校验上下文（共享流与已识别事实）
+     * @return 校验结果
+     */
     @Override
     public FileCheckResult check(FileCheckContext context) {
         if (NullUtil.isNotNull(context.getSize()) && context.getSize() == 0) {

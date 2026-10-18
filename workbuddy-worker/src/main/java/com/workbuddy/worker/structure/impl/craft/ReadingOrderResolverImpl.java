@@ -22,6 +22,13 @@ import java.util.stream.Collectors;
 @Component
 public class ReadingOrderResolverImpl implements ReadingOrderResolver {
 
+    /**
+     * 阅读顺序：把元素排成自上而下、分栏内先后的序列。
+     *
+     * @param elements 归一后的元素
+     * @param context  结构化上下文
+     * @return 有序元素
+     */
     @Override
     public List<UnifiedElement> resolve(List<UnifiedElement> elements, AssembleContext context) {
         List<UnifiedElement> withBBox = new ArrayList<>();

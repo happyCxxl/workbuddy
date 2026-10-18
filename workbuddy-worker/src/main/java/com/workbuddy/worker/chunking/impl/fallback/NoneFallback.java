@@ -14,11 +14,23 @@ import java.util.List;
 @Component
 public class NoneFallback implements FallbackSlicer {
 
+    /**
+     * 本策略对应的兜底算法。
+     *
+     * @return 不兜底算法
+     */
     @Override
     public ChunkAlgorithm algorithm() {
         return ChunkAlgorithm.FALLBACK_NONE;
     }
 
+    /**
+     * 不切分：空白文本返回空片，其余原样单片返回。
+     *
+     * @param text   待切分文本
+     * @param config 兜底路由配置（本实现不使用）
+     * @return 切片文本列表
+     */
     @Override
     public List<String> slice(String text, ChunkRouteConfig config) {
         return StrUtil.isBlank(text) ? List.of() : List.of(text);

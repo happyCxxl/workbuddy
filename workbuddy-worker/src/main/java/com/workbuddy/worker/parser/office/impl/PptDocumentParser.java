@@ -36,11 +36,24 @@ import java.util.Locale;
 @Component
 public class PptDocumentParser extends AbstractPoiDocumentParser {
 
+    /**
+     * 是否支持该媒体类型。
+     *
+     * @param mime 媒体类型
+     * @return 支持 PPT 为 true
+     */
     @Override
     public boolean supports(String mime) {
         return FileFormat.PPT.getMimeType().equals(mime) || FileFormat.PPTX.getMimeType().equals(mime);
     }
 
+    /**
+     * PPT 主流程：逐页产出标题与正文段落、表格与图片引用。
+     *
+     * @param source  待填充的原生解析结果
+     * @param data    文件字节（已读全）
+     * @param context 解析上下文
+     */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
         String fileId = context.getFileRef().getFileId();
