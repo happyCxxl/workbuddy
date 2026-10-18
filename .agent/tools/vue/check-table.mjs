@@ -1,38 +1,18 @@
 // 列表表格口径校验（§6.7~§6.9）：表格挂全局骨架类；同一张表各列同 min-width、不写 width、统一居中。
 // 列宽由 Element Plus 按各列 min-width 比例分配富余宽度，这几条只能靠列的写法保证，样式层管不到。
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
-import { loadConfig } from '../lib.mjs';
+import { lineOf, loadConfig, walkVueFiles } from '../lib.mjs';
 
-const cfg = loadConfig().vue;
+const cfg = loadConfig()['vue'];
 const srcDir = join(process.cwd(), cfg.srcDir);
 const errors = [];
-/** 逐列豁免标记：写在该列所在行 */
-const EXEMPT = cfg.tableExempt;
 const TABLE_CLASS = new RegExp(`class="[^"]*\\b${cfg.tableClass}\\b[^"]*"`);
 const COLUMN_TAG = cfg.columnTag;
 const COLUMN_MIN_WIDTH = /(?:^|\s):?min-width="(\d+)"/;
 const COLUMN_WIDTH = /(?:^|\s):?width="/;
 const COLUMN_ALIGN = /(?:^|\s)align="center"/;
-
-function walkVueFiles(dir) {
-  const out = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...walkVueFiles(full));
-    } else if (entry.name.endsWith('.vue')) {
-      out.push(full);
-    }
-  }
-  return out;
-}
-
-/** 行号：从文件头数到指定下标 */
-function lineOf(content, index) {
-  return content.slice(0, index).split('\n').length;
-}
 
 /**
  * 校验一张表：表块取 `<el-table …>` 到最近的 `</el-table>`，
@@ -52,10 +32,6 @@ function checkTable(rel, content, blockStart, block) {
     const tag = match[0];
     const index = blockStart + match.index;
     const line = lineOf(content, index);
-    const lineText = content.split('\n')[line - 1] ?? '';
-    if (lineText.includes(EXEMPT) || tag.includes(EXEMPT)) {
-      continue;
-    }
     if (COLUMN_WIDTH.test(tag)) {
       errors.push(
         `${rel}:${line}: 列不得写 width（该列退出富余宽度分配，等宽被打破）（见规范 §6.8）`,

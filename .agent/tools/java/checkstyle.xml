@@ -3,16 +3,15 @@
         "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
-<!-- 后端源码风格检查：与存量代码风格对齐的规则集。
-     行长上限 150（存量代码实际分布 ≤149，防劣化口径）；
-     星号导入不查（内部域包星号导入为存量风格，防劣化以 UnusedImports/RedundantImport 为准）。 -->
+<!-- 后端源码风格检查。行宽 120 取自阿里代码格式；星号导入按 Google 禁止。
+     依据见规范 java/08 与 JAVA-META-003。 -->
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
 
     <module name="FileTabCharacter"/>
 
     <module name="LineLength">
-        <property name="max" value="150"/>
+        <property name="max" value="120"/>
         <property name="ignorePattern" value="^import |^package |^\s*\*"/>
     </module>
 
@@ -21,6 +20,7 @@
     <module name="TreeWalker">
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
+        <module name="AvoidStarImport"/>
         <module name="NeedBraces"/>
         <module name="EmptyBlock"/>
         <module name="EmptyCatchBlock"/>
@@ -37,9 +37,5 @@
         <module name="ParameterName"/>
         <module name="TypeName"/>
         <module name="ConstantName"/>
-        <!-- 方法长度上限 100：核心 pipeline 编排方法 60-100 行属项目结构特征；上限拦住百行以上巨型方法 -->
-        <module name="MethodLength">
-            <property name="max" value="100"/>
-        </module>
     </module>
 </module>

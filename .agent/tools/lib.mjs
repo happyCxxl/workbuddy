@@ -91,3 +91,28 @@ function deepMerge(base, patch) {
   }
   return out;
 }
+
+/** 递归收集目录下的 .vue 文件（绝对路径）。 */
+export function walkVueFiles(dir) {
+  const out = [];
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const entry of entries) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...walkVueFiles(full));
+    } else if (entry.name.endsWith('.vue')) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+/** 下标所在行号（1 起）。 */
+export function lineOf(content, index) {
+  return content.slice(0, index).split('\n').length;
+}

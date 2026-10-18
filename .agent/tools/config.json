@@ -6,7 +6,6 @@
     "tableClass": "page-table",
     "tableTag": "el-table",
     "columnTag": "el-table-column",
-    "tableExempt": "表格豁免",
     "routerActiveClasses": ["router-link-active", "router-link-exact-active"]
   },
   "java": {

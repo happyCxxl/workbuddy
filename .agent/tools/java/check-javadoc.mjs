@@ -204,7 +204,7 @@ function checkFile(file) {
         /^(return|if|for|while|switch|new|import|package|System\.|this\.|super\.)\b/.test(body) ||
         /^[A-Za-z_$][\w.$]*\s*[=(]/.test(body);
       const looksLikeProse = /[。，、；：]$/.test(body) || /[\u4e00-\u9fa5]/.test(body);
-      if (looksLikeCode && !looksLikeProse && !/^(TODO|FIXME|口径豁免|表格豁免)/.test(body)) {
+      if (looksLikeCode && !looksLikeProse && !/^(TODO|FIXME)/.test(body)) {
         push(file, i + 1, 'JAVA-DOC-007', '不得保留注释掉的代码');
       }
     }

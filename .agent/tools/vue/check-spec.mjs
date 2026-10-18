@@ -3,9 +3,9 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
-import { loadConfig } from '../lib.mjs';
+import { loadConfig, walkVueFiles } from '../lib.mjs';
 
-const cfg = loadConfig().vue;
+const cfg = loadConfig()['vue'];
 const srcDir = join(process.cwd(), cfg.srcDir);
 const errors = [];
 const GENERIC_FAMILIES = new Set([
@@ -24,19 +24,6 @@ const GENERIC_FAMILIES = new Set([
   'fangsong',
 ]);
 const ROUTER_ACTIVE_CLASSES = new Set(cfg.routerActiveClasses);
-
-function walkVueFiles(dir) {
-  const out = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...walkVueFiles(full));
-    } else if (entry.name.endsWith('.vue')) {
-      out.push(full);
-    }
-  }
-  return out;
-}
 
 function collectTemplateClasses(template) {
   const classes = new Set();

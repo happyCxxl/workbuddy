@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import process from 'node:process';
 import { loadConfig } from '../lib.mjs';
 
-const { apiDir: apiRel, verbs } = loadConfig().vue;
+const { apiDir: apiRel, verbs } = loadConfig()['vue'];
 const apiDir = join(process.cwd(), apiRel);
 if (!existsSync(apiDir)) {
   console.log(`check-naming: ${apiRel} 不存在，跳过`);

@@ -9,7 +9,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 import { ROOT, loadConfig, trackedFiles } from '../lib.mjs';
 
-const MAX_FILE_LINES = loadConfig().java?.maxFileLines ?? 400;
+const MAX_FILE_LINES = loadConfig()['java']?.maxFileLines ?? 400;
 
 // 后缀词表：与规范 java/03 的词表保持一致
 const SUFFIXES = [
@@ -34,6 +34,10 @@ function classLine(lines) {
   return 0;
 }
 
+/**
+ * 检查单个 Java 文件。
+ * @param {string} file 仓库内相对路径
+ */
 function checkFile(file) {
   const abs = join(ROOT, file);
   if (!existsSync(abs)) return;
