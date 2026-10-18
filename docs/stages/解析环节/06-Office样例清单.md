@@ -42,34 +42,7 @@
 | OFF-13 | `.xls` 有公式格时路说明含「旧格式公式缓存可能未计算（本档 N 个公式格按缓存值取值）」                                                       |
 | OFF-14 | 文本框文字进入段落文本，且**只出现一次**（真实样例曾暴露重复采集，已修）                                                                   |
 
-## 三、复现命令
-
-生成样例（Python 部分：xlsx / docx / pptx）：
-
-```powershell
-<python> scripts\samples\gen-office-samples.py
-```
-
-生成 POI 专属样例（合并覆盖格带值的 xlsx、`w:vMerge` 续接的 docx、公式缓存值 xlsx、`.xls`）：
-
-```powershell
-# 先取依赖类路径（离线可跑）
-mvn -o -q -pl knowledge-worker dependency:build-classpath "-Dmdep.outputFile=target\cp-worker.txt"
-$cp = (Get-Content target\cp-worker.txt -Raw).Trim()
-$mods = (Get-ChildItem -Directory -Filter "knowledge-*" | ForEach-Object { "$($_.FullName)\target\classes" }) -join ";"
-java -cp "$mods;$cp" scripts\samples\gen-office-poi\GenOfficePoiSamples.java
-```
-
-核对样例（用仓库解析器逐个跑并打印产物）：
-
-```powershell
-java "-Dfile.encoding=UTF-8" "-Dstdout.encoding=UTF-8" -cp "$mods;$cp" scripts\samples\verify-office\VerifyOfficeSamples.java |
-    Tee-Object samples\office-parse-00-核对输出.txt
-```
-
-> 注意：`$mods` 必须排在依赖类路径之前 —— 本地仓库里安装的 `workbuddy-common` 可能缺少当前源码里的新方法。
-
-## 四、本次核对结论（样例产出摘要）
+## 三、本次核对结论（样例产出摘要）
 
 - OFF-01：`PARAGRAPH`/`TABLE(2×2, headerRow=0)`/`IMAGE` + 事实 + `images=1` ✓
 - OFF-02：`paragraph[0]` 与 `paragraph[2]` ✓
@@ -85,7 +58,7 @@ java "-Dfile.encoding=UTF-8" "-Dstdout.encoding=UTF-8" -cp "$mods;$cp" scripts\s
 - OFF-13：路说明「旧格式公式缓存可能未计算（本档 1 个公式格按缓存值取值）」✓
 - OFF-14：文本框文字进入段落且只出现一次 ✓（**该样例曾暴露重复采集问题，已随本轮修复**）
 
-## 五、未覆盖与限制
+## 四、未覆盖与限制
 
 1. **OFF-15（`.doc` 域代码）无样例**：POI 的 HWPF 只能读不能写旧二进制格式，当前环境 PATH 与 DSH 资源里也没有 LibreOffice 可做 `--convert-to doc`；该条目的验证仍停在「纯函数单测 + 代码级核实」。
 2. **DOC（`.doc`）相关的页面级改动**（段落样式、页眉页脚、表格 `cols`）同样没有真实文件回归，原因同上。

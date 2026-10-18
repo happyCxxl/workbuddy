@@ -271,12 +271,12 @@
           <proc>full</proc>
         </configuration>
       </plugin>
-      <!-- 源码风格检查：规则集与存量代码风格对齐，规则文件在 .agent/tools/backend/checkstyle.xml -->
+      <!-- 源码风格检查：规则集与存量代码风格对齐，规则文件在 .agent/tools/java/checkstyle.xml -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <configuration>
-          <configLocation>${maven.multiModuleProjectDirectory}/.agent/tools/backend/checkstyle.xml</configLocation>
+          <configLocation>${maven.multiModuleProjectDirectory}/.agent/tools/java/checkstyle.xml</configLocation>
           <failOnViolation>true</failOnViolation>
           <includeTestSourceDirectory>false</includeTestSourceDirectory>
         </configuration>
@@ -296,7 +296,7 @@
         <artifactId>maven-pmd-plugin</artifactId>
         <configuration>
           <rulesets>
-            <ruleset>${maven.multiModuleProjectDirectory}/.agent/tools/backend/pmd-ruleset.xml</ruleset>
+            <ruleset>${maven.multiModuleProjectDirectory}/.agent/tools/java/pmd-ruleset.xml</ruleset>
           </rulesets>
           <printFailingErrors>true</printFailingErrors>
           <!--
@@ -329,7 +329,7 @@
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
         <configuration>
-          <excludeFilterFile>${maven.multiModuleProjectDirectory}/.agent/tools/backend/spotbugs-exclude.xml</excludeFilterFile>
+          <excludeFilterFile>${maven.multiModuleProjectDirectory}/.agent/tools/java/spotbugs-exclude.xml</excludeFilterFile>
           <threshold>Low</threshold>
           <effort>Max</effort>
         </configuration>

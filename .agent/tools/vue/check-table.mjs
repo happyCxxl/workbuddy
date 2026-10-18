@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import process from 'node:process';
 import { loadConfig } from '../lib.mjs';
 
-const cfg = loadConfig().frontend;
+const cfg = loadConfig().vue;
 const srcDir = join(process.cwd(), cfg.srcDir);
 const errors = [];
 /** 逐列豁免标记：写在该列所在行 */

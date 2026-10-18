@@ -3,7 +3,7 @@
 // 通用约定：任何 Maven 多模块仓库都适用；不读取项目专有的白名单文件。
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, posix } from 'node:path';
-import { ROOT, trackedFiles } from './lib.mjs';
+import { ROOT, trackedFiles } from '../lib.mjs';
 
 const errors = [];
 const warns = [];

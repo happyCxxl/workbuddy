@@ -52,14 +52,12 @@
    ```
 
 > `mvn verify` 在打包之外还会执行静态检查门禁（SpotBugs / Checkstyle / PMD / CPD）；门禁绑在
-> `verify` 相位，因此 `mvn package` 不会触发它。推送前钩子（`.husky/pre-push` → `.agent/tools/pre-push-gate.sh`）
-> 对本次推送范围的改动跑同一套门禁，**并逐步打印进度**（`[i/N]` 横幅 + 每步耗时 + 失败定位与复跑命令，
-> 子命令输出照旧实时透传），推送过程随时可见进度；提交前钩子只做就地格式化（`.agent/standards/vue/04-检查手段.md`）。
+> `verify` 相位，因此 `mvn package` 不会触发它。推送前钩子（`.husky/pre-push` → `.agent/tools/common/pre-push-gate.sh`）
+> 按本次推送范围计算要跑的步骤，**并逐步打印进度**（`[i/N]` 横幅 + 失败定位与复跑命令），
+> 推送过程随时可见进度；提交前钩子只做就地格式化（`.agent/standards/vue/04-检查手段.md`）。
 >
-> 门禁结果按「推送范围 + 改动清单 + 钩子/检查器/pom 的内容哈希」缓存到 `.git/workbuddy-prepush-ok`：
-> **推送失败后原样重推会直接跳过**（打印上次通过时间），改过任何文件就自动全量重跑。想在推送前先跑，
-> 或想强制重跑：`sh .agent/tools/pre-push-gate.sh`（可带范围，如 `sh .agent/tools/pre-push-gate.sh origin/main..HEAD`）、
-> `FORCE_GATE=1 git push`。
+> 想在推送前先跑，或指定范围重跑：`sh .agent/tools/common/pre-push-gate.sh`（可带范围，如
+> `sh .agent/tools/common/pre-push-gate.sh origin/main..HEAD`）。
 
 构建环境的两处约定都在仓库里，不用每人配环境变量：
 
@@ -74,9 +72,9 @@
 
 ## 文档
 
-| 文档                          | 内容                                   |
-|-------------------------------|----------------------------------------|
-| `AGENTS.md` / `web/AGENTS.md` | AI 代理入口（全局 / 前端就近）         |
-| `.agent/standards/`           | 项目规范（common / java / vue + 索引） |
-| `.agent/tools/`               | 规范的手段：检查脚本与引擎配置         |
-| `docs/README.md`              | 业务文档根：页面 / 环节 / 调研 / 设计  |
+| 文档                          | 内容                                               |
+|-------------------------------|----------------------------------------------------|
+| `AGENTS.md` / `web/AGENTS.md` | AI 代理入口（全局 / 前端就近）                     |
+| `.agent/standards/`           | 项目规范（common / java / vue + 索引）             |
+| `.agent/tools/`               | 规范的手段：common / java / vue 三组检查器与规则集 |
+| `docs/README.md`              | 业务文档根：页面 / 环节 / 调研 / 设计              |

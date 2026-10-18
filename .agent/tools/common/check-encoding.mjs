@@ -20,7 +20,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { ROOT, isText, trackedFiles } from './lib.mjs';
+import { ROOT, isText, trackedFiles } from '../lib.mjs';
 
 /** 扫描范围：仓库内受版本控制的文本文件，不假设目录结构 */
 const files = trackedFiles().filter((f) => isText(f));
@@ -40,7 +40,7 @@ const MOJIBAKE = [
 const MARKERS = new Set('锛鈥鏄鐨涓浣鏂鎴鏈绾鍜鎺鎵鏇鏉瀹閿鏍鍙缂缁缃鑺鑳鍔鐩鍧妫閰'.split(''));
 
 /** 本文件自己必须写出这些序列作为判定依据，故跳过自身 */
-const SELF = '.agent/tools/check-encoding.mjs';
+const SELF = '.agent/tools/common/check-encoding.mjs';
 
 const HITS = [];
 const WARNS = [];

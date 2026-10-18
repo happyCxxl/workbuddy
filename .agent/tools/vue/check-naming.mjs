@@ -1,10 +1,10 @@
-// 命名词表校验：接口层导出的函数必须以约定的动词开头。配置见 config.json 的 frontend.verbs。
+// 命名词表校验：接口层导出的函数必须以约定的动词开头。配置见 config.json 的 vue.verbs。
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 import { loadConfig } from '../lib.mjs';
 
-const { apiDir: apiRel, verbs } = loadConfig().frontend;
+const { apiDir: apiRel, verbs } = loadConfig().vue;
 const apiDir = join(process.cwd(), apiRel);
 if (!existsSync(apiDir)) {
   console.log(`check-naming: ${apiRel} 不存在，跳过`);

@@ -4,7 +4,7 @@
 #
 # 用法：
 #   1) 由 git 钩子调用（从标准输入读 push 协议行）；
-#   2) 手动预跑：sh .agent/tools/pre-push-gate.sh [base..head]
+#   2) 手动预跑：sh .agent/tools/common/pre-push-gate.sh [base..head]
 #   3) FORCE_GATE=1 强制重跑
 set -u
 
@@ -62,36 +62,36 @@ run_step() {
 }
 
 if [ "$has_text" -gt 0 ]; then
-  run_step "注释口径：node .agent/tools/check-comments.mjs"
-  if node "$root/.agent/tools/check-comments.mjs"; then :; else
-    report_fail "$step" "注释口径不合规" "node .agent/tools/check-comments.mjs"
+  run_step "注释口径：node .agent/tools/common/check-comments.mjs"
+  if node "$root/.agent/tools/common/check-comments.mjs"; then :; else
+    report_fail "$step" "注释口径不合规" "node .agent/tools/common/check-comments.mjs"
   fi
 
-  run_step "编码完整性：node .agent/tools/check-encoding.mjs"
-  if node "$root/.agent/tools/check-encoding.mjs"; then :; else
-    report_fail "$step" "文件编码被破坏" "node .agent/tools/check-encoding.mjs"
+  run_step "编码完整性：node .agent/tools/common/check-encoding.mjs"
+  if node "$root/.agent/tools/common/check-encoding.mjs"; then :; else
+    report_fail "$step" "文件编码被破坏" "node .agent/tools/common/check-encoding.mjs"
   fi
 fi
 
 if [ "$has_agents" -gt 0 ]; then
-  run_step "入口指针：node .agent/tools/check-agents.mjs"
-  if node "$root/.agent/tools/check-agents.mjs"; then :; else
-    report_fail "$step" "入口文件指针失效" "node .agent/tools/check-agents.mjs"
+  run_step "入口指针：node .agent/tools/common/check-agents.mjs"
+  if node "$root/.agent/tools/common/check-agents.mjs"; then :; else
+    report_fail "$step" "入口文件指针失效" "node .agent/tools/common/check-agents.mjs"
   fi
 fi
 
 if [ "$has_java" -gt 0 ]; then
   run_step "Java 形态：check-java-conventions（本次改动）"
   java_files=$(printf '%s\n' "$changed" | grep -E '\.java$' || true)
-  if node "$root/.agent/tools/check-java-conventions.mjs" $java_files; then :; else
-    report_fail "$step" "Java 形态不合规" "node .agent/tools/check-java-conventions.mjs <文件>"
+  if node "$root/.agent/tools/java/check-java-conventions.mjs" $java_files; then :; else
+    report_fail "$step" "Java 形态不合规" "node .agent/tools/java/check-java-conventions.mjs <文件>"
   fi
 fi
 
 if [ "$has_pom" -gt 0 ]; then
-  run_step "模块结构：node .agent/tools/check-modules.mjs"
-  if node "$root/.agent/tools/check-modules.mjs"; then :; else
-    report_fail "$step" "模块结构有问题" "node .agent/tools/check-modules.mjs"
+  run_step "模块结构：node .agent/tools/common/check-modules.mjs"
+  if node "$root/.agent/tools/common/check-modules.mjs"; then :; else
+    report_fail "$step" "模块结构有问题" "node .agent/tools/common/check-modules.mjs"
   fi
 fi
 

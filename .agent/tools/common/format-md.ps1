@@ -19,12 +19,12 @@
   parse differently depending on encoding. Keep it ASCII-only.
 
 .EXAMPLE
-  powershell .agent/tools/format-md.ps1
-  powershell .agent/tools/format-md.ps1 -Paths docs
-  powershell .agent/tools/format-md.ps1 -Paths README.md,.agent/standards/README.md
+  powershell .agent/tools/common/format-md.ps1
+  powershell .agent/tools/common/format-md.ps1 -Paths docs
+  powershell .agent/tools/common/format-md.ps1 -Paths README.md,.agent/standards/README.md
 
 .EXAMPLE
-  powershell .agent/tools/format-md.ps1 -SelfTest
+  powershell .agent/tools/common/format-md.ps1 -SelfTest
   Verify the formatter against a fixed fixture; exits non-zero on mismatch.
 #>
 param(

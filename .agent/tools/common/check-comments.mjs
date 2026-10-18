@@ -7,15 +7,15 @@
  * 某行确实需要保留禁词时，在该行写 `口径豁免：<理由>`。
  *
  * 用法：
- *   node .agent/tools/check-comments.mjs              # 全量（代码 + 文档），命中 ERROR 即退出 1
- *   node .agent/tools/check-comments.mjs --strings     # 额外报告字符串字面量里的阶段词（不判失败）
+ *   node .agent/tools/common/check-comments.mjs              # 全量（代码 + 文档），命中 ERROR 即退出 1
+ *   node .agent/tools/common/check-comments.mjs --strings    # 额外报告字符串字面量里的阶段词（不判失败）
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const SKIP_DIRS = new Set(['node_modules', 'target', 'dist', 'build', '.git', '.idea', '.vscode', 'logs', 'volumes', '.cache', '.gradle']);
 const CODE_EXT = new Set(['.java', '.ts', '.vue', '.css', '.mjs', '.js']);
 const DOC_EXT = new Set(['.md']);
@@ -173,7 +173,7 @@ const warns = [];
 const stringHits = [];
 for (const file of files) {
   const rel = relative(ROOT, file).split(sep).join('/');
-  if (rel === '.agent/tools/check-comments.mjs') {
+  if (rel === '.agent/tools/common/check-comments.mjs') {
     continue;
   }
   const content = readFileSync(file, 'utf8');

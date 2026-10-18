@@ -1,5 +1,5 @@
 {
-  "frontend": {
+  "vue": {
     "srcDir": "src",
     "apiDir": "src/api",
     "verbs": ["add", "update", "delete", "get", "detail"],
@@ -11,13 +11,5 @@
   },
   "java": {
     "maxFileLines": 400
-  },
-  "backend": {
-    "checkstyle": "checkstyle.xml",
-    "pmd": "pmd-ruleset.xml",
-    "spotbugs": "spotbugs-exclude.xml",
-    "cpdTokens": 45,
-    "lineLength": 150,
-    "methodLength": 100
   }
 }

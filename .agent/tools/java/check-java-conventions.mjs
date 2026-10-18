@@ -2,11 +2,13 @@
 // Java 形态检查：把 Java 侧的形态规则落成可执行判定。
 // 通用约定：扫描仓库内受版本控制的 .java 文件，模块名取路径首段，不写死任何项目名称。
 // 用法：
-//   node .agent/tools/check-java-conventions.mjs             # 全量审计
-//   node .agent/tools/check-java-conventions.mjs a.java ...   # 只查指定文件（门禁按改动范围调用）
+//   node .agent/tools/java/check-java-conventions.mjs             # 全量审计
+//   node .agent/tools/java/check-java-conventions.mjs a.java ...   # 只查指定文件（门禁按改动范围调用）
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
-import { ROOT, trackedFiles } from './lib.mjs';
+import { ROOT, loadConfig, trackedFiles } from '../lib.mjs';
+
+const MAX_FILE_LINES = loadConfig().java?.maxFileLines ?? 400;
 
 // 后缀词表：与规范 java/03 的词表保持一致
 const SUFFIXES = [
@@ -57,7 +59,9 @@ function checkFile(file) {
     if (/\.printStackTrace\s*\(/.test(line)) error(file, i + 1, 'JAVA-LOG-001', '禁止 printStackTrace');
   });
 
-  if (lines.length > 400) error(file, 1, 'JAVA-LAYER-005', `单文件 ${lines.length} 行，超过 400 行上限`);
+  if (lines.length > MAX_FILE_LINES) {
+    error(file, 1, 'JAVA-LAYER-005', `单文件 ${lines.length} 行，超过 ${MAX_FILE_LINES} 行上限`);
+  }
 
   if (inTest) {
     if (!name.endsWith('Test')) error(file, classLine(lines) || 1, 'JAVA-TEST-001', '测试类必须以 Test 结尾');

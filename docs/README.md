@@ -237,7 +237,7 @@
 
 - 后端判空统一走 `NullUtil.isNull/isNotNull`（`../workbuddy-common/src/main/java/com/workbuddy/common/utils/NullUtil.java`）：参数标注可空、内部转发 Hutool `ObjectUtil`，语义与 Hutool 完全一致。
 - **不写裸 `== null` / `!= null`，也不直接调 `ObjectUtil.isNull/isNotNull`**：Hutool 判空方法的参数没有可空注解，SpotBugs 把"被静态证明为 null"的判空误报为空指针类告警（`NP_NONNULL_PARAM_VIOLATION` / `NP_LOAD_OF_KNOWN_NULL_VALUE`）；走 `NullUtil` 后这类告警不再出现。
-- **`.agent/tools/backend/spotbugs-exclude.xml` 不接受新增 `NP_*` 豁免**：撞上这类告警就改判空写法，别往豁免清单加条目。
+- **`.agent/tools/java/spotbugs-exclude.xml` 不接受新增 `NP_*` 豁免**：撞上这类告警就改判空写法，别往豁免清单加条目。
 - 其它判空语义（`ObjectUtil.isEmpty` / `isNotEmpty` / `defaultIfNull` 等）不属于本口径，按原样使用。
 
 ### 十、前端信息架构

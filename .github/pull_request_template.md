@@ -12,7 +12,7 @@
 
 ## 自查
 
-- [ ] 推送门禁全绿（`sh .agent/tools/pre-push-gate.sh`；或说明为何不涉及）
+- [ ] 推送门禁全绿（`sh .agent/tools/common/pre-push-gate.sh`；或说明为何不涉及）
 - [ ] 后端改动：对照 `.agent/standards/java/00-总则与规则索引.md` §5 评审项逐项核对
 - [ ] 前端改动：对照 `.agent/standards/vue/00-规则索引.md` §6 评审项逐项核对
 - [ ] AI 参与生成的部分已按手写代码标准复核（You own the code）

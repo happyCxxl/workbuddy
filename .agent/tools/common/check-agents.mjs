@@ -5,9 +5,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { trackedFiles } from './lib.mjs';
-
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+import { ROOT, trackedFiles } from '../lib.mjs';
 
 // 通用约定：仓库内任意层级的 AGENTS.md 都是入口文件；行数预算取通用默认值。
 const DEFAULT_BUDGET = 200;

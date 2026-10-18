@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import process from 'node:process';
 import { loadConfig } from '../lib.mjs';
 
-const cfg = loadConfig().frontend;
+const cfg = loadConfig().vue;
 const srcDir = join(process.cwd(), cfg.srcDir);
 const errors = [];
 const GENERIC_FAMILIES = new Set([

@@ -1,5 +1,5 @@
 #!/bin/sh
 set -e
-# pre-push：把 push 协议行转交给 .agent/tools/pre-push-gate.sh（范围计算、指纹缓存、步骤进度都在脚本里）。
+# pre-push：把 push 协议行转交给 .agent/tools/common/pre-push-gate.sh（范围计算、步骤进度都在脚本里）。
 # 门禁有「钩子触发」与「手动预跑」两条入口，逻辑集中在脚本，钩子只做转发。
-exec sh "$(git rev-parse --show-toplevel)/.agent/tools/pre-push-gate.sh"
+exec sh "$(git rev-parse --show-toplevel)/.agent/tools/common/pre-push-gate.sh"

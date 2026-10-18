@@ -1,4 +1,4 @@
-# CI 门禁：本地推送门禁（.agent/tools/pre-push-gate.sh）的远端强制版——本地钩子可被 --no-verify 绕过，CI 不可以。
+# CI 门禁：本地推送门禁（.agent/tools/common/pre-push-gate.sh）的远端强制版——本地钩子可被 --no-verify 绕过，CI 不可以。
 # 与本地版的差异：无推送范围概念，跑全量；mvn 不带 -o（远端首次需联网拉依赖）。
 # 新语言/新功能域接入时在此追加检查步骤（CONTRIBUTING §7）。
 name: gate
@@ -33,13 +33,13 @@ jobs:
           cache-dependency-path: web/pnpm-lock.yaml
 
       - name: 注释口径
-        run: node .agent/tools/check-comments.mjs
+        run: node .agent/tools/common/check-comments.mjs
 
       - name: 文件编码
-        run: node .agent/tools/check-encoding.mjs
+        run: node .agent/tools/common/check-encoding.mjs
 
       - name: AGENTS 入口体检
-        run: node .agent/tools/check-agents.mjs
+        run: node .agent/tools/common/check-agents.mjs
 
       - name: 前端全量检查
         working-directory: web
