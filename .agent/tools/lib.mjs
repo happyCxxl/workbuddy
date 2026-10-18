@@ -67,14 +67,6 @@ function walk(relDir) {
   return out;
 }
 
-/** 读取文本文件的各行；读不到返回空数组。 */
-export function readLines(relPath) {
-  try {
-    return readFileSync(join(ROOT, relPath), 'utf8').split(/\r?\n/);
-  } catch {
-    return [];
-  }
-}
 
 /**
  * 检查器配置：插件内置 default（config.json），宿主可在仓库根放 project.config.json 覆盖。

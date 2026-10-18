@@ -31,13 +31,15 @@ step=0
 total=0
 has_text=$(printf '%s\n' "$changed" | grep -cE '\.(java|kt|ts|tsx|js|mjs|cjs|vue|css|scss|md|yml|yaml|json|xml|sql|sh|ps1|properties|html)$' || true)
 has_java=$(printf '%s\n' "$changed" | grep -cE '\.java$' || true)
+has_md=$(printf '%s\n' "$changed" | grep -cE '\.md$' || true)
 has_agents=$(printf '%s\n' "$changed" | grep -cE 'AGENTS\.md$' || true)
 has_pom=$(printf '%s\n' "$changed" | grep -cE '(^|/)pom\.xml$' || true)
 has_web=$(printf '%s\n' "$changed" | grep -cE '^(web|frontend|ui)/' || true)
 
-[ "$has_text" -gt 0 ] && total=$((total + 2))
+[ "$has_text" -gt 0 ] && total=$((total + 1))
+[ "$has_md" -gt 0 ] && total=$((total + 1))
 [ "$has_agents" -gt 0 ] && total=$((total + 1))
-[ "$has_java" -gt 0 ] && total=$((total + 1))
+[ "$has_java" -gt 0 ] && total=$((total + 2))
 [ "$has_pom" -gt 0 ] && total=$((total + 1))
 if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
   [ -f "$root/pom.xml" ] && total=$((total + 1))
@@ -62,14 +64,16 @@ run_step() {
 }
 
 if [ "$has_text" -gt 0 ]; then
-  run_step "注释口径：node .agent/tools/common/check-comments.mjs"
-  if node "$root/.agent/tools/common/check-comments.mjs"; then :; else
-    report_fail "$step" "注释口径不合规" "node .agent/tools/common/check-comments.mjs"
-  fi
-
   run_step "编码完整性：node .agent/tools/common/check-encoding.mjs"
   if node "$root/.agent/tools/common/check-encoding.mjs"; then :; else
     report_fail "$step" "文件编码被破坏" "node .agent/tools/common/check-encoding.mjs"
+  fi
+fi
+
+if [ "$has_md" -gt 0 ]; then
+  run_step "文档结构：node .agent/tools/common/check-docs.mjs"
+  if node "$root/.agent/tools/common/check-docs.mjs"; then :; else
+    report_fail "$step" "文档出现禁止的小节" "node .agent/tools/common/check-docs.mjs"
   fi
 fi
 
@@ -85,6 +89,11 @@ if [ "$has_java" -gt 0 ]; then
   java_files=$(printf '%s\n' "$changed" | grep -E '\.java$' || true)
   if node "$root/.agent/tools/java/check-java-conventions.mjs" $java_files; then :; else
     report_fail "$step" "Java 形态不合规" "node .agent/tools/java/check-java-conventions.mjs <文件>"
+  fi
+
+  run_step "Javadoc：check-javadoc（本次改动）"
+  if node "$root/.agent/tools/java/check-javadoc.mjs" $java_files; then :; else
+    report_fail "$step" "Javadoc 不合规" "node .agent/tools/java/check-javadoc.mjs <文件>"
   fi
 fi
 

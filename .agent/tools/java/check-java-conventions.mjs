@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Java 形态检查：把 Java 侧的形态规则落成可执行判定。
+// Java 形态检查：把 Java 侧的形态规则落成可执行判定（注释覆盖与格式由 check-javadoc 负责）。
 // 通用约定：扫描仓库内受版本控制的 .java 文件，模块名取路径首段，不写死任何项目名称。
 // 用法：
 //   node .agent/tools/java/check-java-conventions.mjs             # 全量审计
 //   node .agent/tools/java/check-java-conventions.mjs a.java ...   # 只查指定文件（门禁按改动范围调用）
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
+import process from 'node:process';
 import { ROOT, loadConfig, trackedFiles } from '../lib.mjs';
 
 const MAX_FILE_LINES = loadConfig().java?.maxFileLines ?? 400;
@@ -33,16 +34,6 @@ function classLine(lines) {
   return 0;
 }
 
-function hasClassJavadoc(lines) {
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i].trim();
-    if (line === '') continue;
-    if (line.startsWith('package ') || line.startsWith('import ')) continue;
-    return line.startsWith('/**') || line.startsWith('/*');
-  }
-  return false;
-}
-
 function checkFile(file) {
   const abs = join(ROOT, file);
   if (!existsSync(abs)) return;
@@ -54,7 +45,6 @@ function checkFile(file) {
   const inTest = /\/src\/test\//.test(file);
 
   lines.forEach((line, i) => {
-    if (/@author\b/.test(line)) error(file, i + 1, 'JAVA-DOC-004', '注释不得写作者');
     if (/System\.(out|err)\s*\./.test(line)) error(file, i + 1, 'JAVA-LOG-001', '禁止 System.out / System.err');
     if (/\.printStackTrace\s*\(/.test(line)) error(file, i + 1, 'JAVA-LOG-001', '禁止 printStackTrace');
   });
@@ -69,7 +59,6 @@ function checkFile(file) {
   }
 
   const line = classLine(lines);
-  if (!hasClassJavadoc(lines)) error(file, line || 1, 'JAVA-DOC-001', '缺少类级注释');
 
   for (const s of FORBIDDEN_SUFFIX) {
     if (name.endsWith(s)) error(file, line || 1, 'JAVA-NAME-002', `禁止使用 ${s} 后缀：请求用 DTO、响应用 VO`);

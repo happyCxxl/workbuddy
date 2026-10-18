@@ -32,8 +32,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
 
-      - name: 注释口径
-        run: node .agent/tools/common/check-comments.mjs
+      - name: 文档结构
+        run: node .agent/tools/common/check-docs.mjs
 
       - name: 文件编码
         run: node .agent/tools/common/check-encoding.mjs
@@ -49,6 +49,9 @@ jobs:
 
       - name: 后端源码级门禁（checkstyle + pmd + cpd）
         run: mvn -B checkstyle:check pmd:check pmd:cpd-check
+
+      - name: Javadoc 检查
+        run: node .agent/tools/java/check-javadoc.mjs
 
       - name: 后端字节码门禁（compile + spotbugs）
         run: mvn -B compile spotbugs:check

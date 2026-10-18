@@ -17,7 +17,7 @@
 
 1. **禁止用 PowerShell 文本写入方式（`Set-Content` / `Out-File` / `>` 重定向）改仓库内任何文件**——会按系统编码（GBK）
    破坏 UTF-8 中文；写文件一律用代理自带的写文件工具。根 `README.md` 曾因此整文件损坏（`.` 全部变 `g`）。
-2. 注释只写「做什么」（职责与行为），不写「谁写的 / 为什么 / 从哪来 / 阶段编号」——`.agent/tools/common/check-comments.mjs` 推送时机器拦截。
+2. 注释只写契约（做什么、约束、副作用），不写沿革、阶段、人员；格式与覆盖由 `.agent/tools/java/check-javadoc.mjs` 机器拦截。
 3. 提交信息用 Conventional Commits + 中文描述 + scope：`refactor(模型): ...`、`fix(docker): ...`。
 4. 不新增第三方依赖，除非任务明确要求且交付说明里给理由。
 5. 不削弱门禁：`.agent/tools/java/checkstyle.xml` / `.agent/tools/java/pmd-ruleset.xml` / `web/eslint.config.mjs` / 钩子脚本的任何放宽须用户明确批准。
@@ -41,14 +41,14 @@
 
 开发期按改动范围选档，推送前一律全量；拿不准时取更全的一档。细则见 `.agent/standards/java/06-测试.md` §8。
 
-| 改动                   | 验证命令                                                |
-|------------------------|---------------------------------------------------------|
-| 文档、注释、规范       | `node .agent/tools/common/check-comments.mjs`           |
-| 前端                   | `cd web && pnpm lint`                                   |
-| 单个模块的类           | `mvn -o -pl <模块名> test`                              |
-| 公共模块，或改动跨模块 | `mvn -o -pl <模块名> -amd test`                         |
-| `pom.xml`、跨模块重构  | `mvn -o test`                                           |
-| 推送前                 | `sh .agent/tools/common/pre-push-gate.sh`（含全量测试） |
+| 改动                   | 验证命令                                                                               |
+|------------------------|----------------------------------------------------------------------------------------|
+| 文档、注释、规范       | `node .agent/tools/java/check-javadoc.mjs` + `node .agent/tools/common/check-docs.mjs` |
+| 前端                   | `cd web && pnpm lint`                                                                  |
+| 单个模块的类           | `mvn -o -pl <模块名> test`                                                             |
+| 公共模块，或改动跨模块 | `mvn -o -pl <模块名> -amd test`                                                        |
+| `pom.xml`、跨模块重构  | `mvn -o test`                                                                          |
+| 推送前                 | `sh .agent/tools/common/pre-push-gate.sh`（含全量测试）                                |
 
 ## 4. 跨会话恢复与行为守则
 

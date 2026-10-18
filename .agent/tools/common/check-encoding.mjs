@@ -13,13 +13,14 @@
  *    这一类抓的是精确词表抓不到的情形 —— 行内被吃掉一个字节（结尾变 ?），整行匹配必然失败。
  *    单字可能是真字，故要求一行至少两个，且先按 WARN 观察，确认无误报再收紧。
  *
- * 扫描范围含各模块 src、web、docs、tools、docker、sql，以及**仓库根与各模块的 pom.xml**。
- * 确需在文档里举例写出这些序列时，在该行写 `编码豁免：<理由>`。
+ * 扫描范围：仓库内受版本控制的文本文件。
+ * 无行内豁免；文档需要举例时改用转义序列（如 U+FFFD）。
  *
  * 退出码：有 ERROR 命中 → 1；只有 WARN 或全干净 → 0。
  */
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import process from 'node:process';
 import { ROOT, isText, trackedFiles } from '../lib.mjs';
 
 /** 扫描范围：仓库内受版本控制的文本文件，不假设目录结构 */
@@ -46,10 +47,6 @@ const HITS = [];
 const WARNS = [];
 let scanned = 0;
 
-function isExempt(line) {
-  return line.includes('编码豁免：');
-}
-
 function markerCount(line) {
   let count = 0;
   for (const ch of line) {
@@ -75,9 +72,6 @@ function scanFile(absPath) {
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
-    if (isExempt(line)) {
-      continue;
-    }
     if (line.includes('\uFFFD')) {
       HITS.push({ file: relative(ROOT, absPath), line: i + 1, kind: '替换字符 U+FFFD' });
       continue;

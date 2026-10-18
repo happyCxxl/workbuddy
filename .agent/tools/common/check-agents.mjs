@@ -3,8 +3,8 @@
 // 接入点：pre-push 门禁（改动涉及入口文件时）与 CI（每次推送全量跑）。
 // 动机：指向已删文件的入口条目比没有条目更糟——人与代理按图索骥必落空。
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import process from 'node:process';
 import { ROOT, trackedFiles } from '../lib.mjs';
 
 // 通用约定：仓库内任意层级的 AGENTS.md 都是入口文件；行数预算取通用默认值。
