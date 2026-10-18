@@ -17,12 +17,23 @@ public class TaskExecutorConfig {
      * 看门狗池：每个在跑任务占一个线程，等执行池的结果。
      * 与执行池不可合并：合并后看门狗线程会占满线程，它等待的运行任务还排在同一个队列里，形成自死锁。
      */
+    /**
+     * 看门狗线程池：每个在跑任务占一个线程，等执行池的结果。
+     *
+     * @param properties 队列与超时配置
+     * @return 看门狗线程池
+     */
     @Bean
     public ThreadPoolTaskExecutor taskWatchdogExecutor(TaskQueueProperties properties) {
         return build(properties, "task-watchdog-");
     }
 
-    /** 执行池：实际跑各环节 Runner 的线程，与看门狗池一一对应。 */
+    /**
+     * 执行池：实际跑各环节 Runner 的线程，与看门狗池一一对应。
+     *
+     * @param properties 队列与超时配置
+     * @return 执行线程池
+     */
     @Bean
     public ThreadPoolTaskExecutor taskRunnerExecutor(TaskQueueProperties properties) {
         return build(properties, "task-runner-");

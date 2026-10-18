@@ -65,6 +65,13 @@ public class StructureControlServiceImpl implements StructureControlService {
                 PipelineStage.STRUCTURE.getLabel());
     }
 
+    /**
+     * 结构化详情：任务状态、子步骤、统计与大纲、产物引用。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param taskId       任务 ID（可空表示取最新）
+     * @return 结构化详情
+     */
     @Override
     public StructureDetailVO structureDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);

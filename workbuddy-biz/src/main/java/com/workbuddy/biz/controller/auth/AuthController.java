@@ -25,14 +25,24 @@ public class AuthController {
 
     private final AuthService authService;
 
-    /** 登录。 */
+    /**
+     * 登录：返回令牌与用户信息，接口按 IP 限流。
+     *
+     * @param request 登录请求
+     * @return 令牌与用户信息
+     */
     @PostMapping("/login")
     @RateLimit()
     public R<LoginVO> login(@Valid @RequestBody LoginDTO request) {
         return R.ok(authService.login(request));
     }
 
-    /** 注册。 */
+    /**
+     * 注册新用户。
+     *
+     * @param request 注册请求
+     * @return 恒为成功响应
+     */
     @PostMapping("/register")
     public R<Void> register(@Valid @RequestBody RegisterDTO request) {
         authService.register(request);

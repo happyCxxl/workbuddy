@@ -76,6 +76,13 @@ public class SearchServiceImpl implements SearchService {
 
     private final RetrievalRunSettings runSettings;
 
+    /**
+     * 执行一次检索并记录运行。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param request         检索请求
+     * @return 检索结果
+     */
     @Override
     public SearchVO search(Long knowledgeBaseId, SearchDTO request) {
         long start = System.currentTimeMillis();
@@ -141,6 +148,13 @@ public class SearchServiceImpl implements SearchService {
         return vo;
     }
 
+    /**
+     * 最近的检索运行记录。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param limit           条数上限
+     * @return 运行记录列表
+     */
     @Override
     public List<RetrievalRunVO> listRuns(Long knowledgeBaseId, int limit) {
         return retrievalRunDbService.listByKb(knowledgeBaseId, limit).stream()
@@ -148,6 +162,13 @@ public class SearchServiceImpl implements SearchService {
                 .toList();
     }
 
+    /**
+     * 对比多次检索运行的结果。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param runIds          运行记录 ID 列表
+     * @return 各次运行的结果
+     */
     @Override
     public List<SearchVO> compareRuns(Long knowledgeBaseId, List<Long> runIds) {
         ThrowUtil.throwIf(NullUtil.isNull(runIds) || runIds.isEmpty(), ErrorCode.PARAM_INVALID, "runIds 不能为空");

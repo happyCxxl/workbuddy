@@ -36,12 +36,25 @@ public class KnowledgeFileIndexController {
 
     private final BuildOrderAssembler buildOrderAssembler;
 
+    /**
+     * 列出知识库的索引版本。
+     *
+     * @param id 知识库 ID
+     * @return 索引版本列表
+     */
     @GetMapping("/{id}/index-sets")
     public R<List<IndexVersionVO>> list(
             @PathVariable("id") Long id) {
         return R.ok(indexSetService.listVersions(id));
     }
 
+    /**
+     * 列出可构建的索引组合。
+     *
+     * @param id            知识库 ID
+     * @param fileResultIds 限定参与的文件结果 ID（可空）
+     * @return 组合列表
+     */
     @GetMapping("/{id}/index-combos")
     public R<List<IndexComboVO>> combos(
             @PathVariable("id") Long id,
@@ -49,6 +62,13 @@ public class KnowledgeFileIndexController {
         return R.ok(indexSetService.listCombos(id, fileResultIds));
     }
 
+    /**
+     * 触发候选索引构建：登记组合并投递 BUILD_INDEX 任务。
+     *
+     * @param id      知识库 ID
+     * @param request 构建请求
+     * @return 任务 ID 与生效策略
+     */
     @PostMapping("/{id}/index-sets")
     public R<IndexBuildTriggerVO> build(
             @PathVariable("id") Long id,
@@ -58,6 +78,13 @@ public class KnowledgeFileIndexController {
         return R.ok(indexSetService.buildCandidate(buildOrderAssembler.toCommand(request, id)), "构建任务已入队");
     }
 
+    /**
+     * 索引版本详情。
+     *
+     * @param id        知识库 ID
+     * @param versionId 版本 ID
+     * @return 版本详情
+     */
     @GetMapping("/{id}/index-sets/{versionId}")
     public R<IndexVersionVO> detail(
             @PathVariable("id") Long id,
@@ -65,6 +92,13 @@ public class KnowledgeFileIndexController {
         return R.ok(indexSetService.versionDetail(id, versionId));
     }
 
+    /**
+     * 校验索引候选：对账组合范围与向量集合是否一致。
+     *
+     * @param id        知识库 ID
+     * @param versionId 版本 ID
+     * @return 校验结果
+     */
     @PostMapping("/{id}/index-sets/{versionId}/validate")
     public R<IndexValidateVO> validate(
             @PathVariable("id") Long id,
@@ -72,6 +106,13 @@ public class KnowledgeFileIndexController {
         return R.ok(indexSetService.validate(versionId));
     }
 
+    /**
+     * 发布索引版本（原子切换线上版本）。
+     *
+     * @param id        知识库 ID
+     * @param versionId 版本 ID
+     * @return 恒为 true
+     */
     @PostMapping("/{id}/index-sets/{versionId}/publish")
     public R<Boolean> publish(
             @PathVariable("id") Long id,
@@ -81,6 +122,13 @@ public class KnowledgeFileIndexController {
         return R.ok(true, "发布成功");
     }
 
+    /**
+     * 回退到该索引版本。
+     *
+     * @param id        知识库 ID
+     * @param versionId 版本 ID
+     * @return 恒为 true
+     */
     @PostMapping("/{id}/index-sets/{versionId}/rollback")
     public R<Boolean> rollback(
             @PathVariable("id") Long id,
@@ -90,6 +138,13 @@ public class KnowledgeFileIndexController {
         return R.ok(true, "回退成功");
     }
 
+    /**
+     * 回收索引候选（删除版本与其向量集合）。
+     *
+     * @param id        知识库 ID
+     * @param versionId 版本 ID
+     * @return 恒为 true
+     */
     @DeleteMapping("/{id}/index-sets/{versionId}")
     public R<Boolean> delete(
             @PathVariable("id") Long id,

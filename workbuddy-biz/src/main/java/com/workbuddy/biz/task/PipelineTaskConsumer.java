@@ -58,7 +58,20 @@ public class PipelineTaskConsumer {
     /** 执行中的 taskId 集合（停机时据此显式置失败） */
     private final Set<Long> inFlight = ConcurrentHashMap.newKeySet();
 
-    /** 两个执行器 bean 同类型，构造参数按 bean 名限定（不用 Lombok 生成构造器，它不带走 @Qualifier）。 */
+    /**
+     * 构造消费者：两个执行器 bean 同类型，构造参数按 bean 名限定（不用 Lombok 生成构造器，它不带走 {@code @Qualifier}）。
+     *
+     * @param taskQueue             队列操作
+     * @param pipelineTaskDbService 任务数据访问
+     * @param properties            队列与超时配置
+     * @param runner                解析任务执行器
+     * @param structureRunner       结构化任务执行器
+     * @param preprocessRunner      预处理任务执行器
+     * @param chunkRunner           切片任务执行器
+     * @param embedRunner           向量化任务执行器
+     * @param watchdogExecutor      超时看门狗线程池
+     * @param runnerExecutor        任务执行线程池
+     */
     public PipelineTaskConsumer(TaskQueueSupport taskQueue, WbPipelineTaskDbService pipelineTaskDbService,
                              TaskQueueProperties properties, ParseTaskRunner runner,
                              StructureTaskRunner structureRunner, PreprocessTaskRunner preprocessRunner,

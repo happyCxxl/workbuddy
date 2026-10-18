@@ -19,16 +19,36 @@ public class WbPipelineStrategyVersionDbServiceImpl
         extends InfraDbServiceImpl<WbPipelineStrategyVersionMapper, WbPipelineStrategyVersion>
         implements WbPipelineStrategyVersionDbService {
 
+    /**
+     * 取某策略类型下的全部版本。
+     *
+     * @param type 策略类型码值
+     * @return 版本列表
+     */
     @Override
     public List<WbPipelineStrategyVersion> listByType(String type) {
         return list(byType(type));
     }
 
+    /**
+     * 取某策略类型下启用中的版本。
+     *
+     * @param type 策略类型码值
+     * @return 启用中的版本列表
+     */
     @Override
     public List<WbPipelineStrategyVersion> listEnabledByType(String type) {
         return list(enabledByType(type));
     }
 
+    /**
+     * 按类型、名称与版本号取策略版本。
+     *
+     * @param type    策略类型码值
+     * @param name    策略名称
+     * @param version 版本号
+     * @return 版本行；没有则为 null
+     */
     @Override
     public WbPipelineStrategyVersion getByTypeAndNameAndVersion(String type, String name, String version) {
         LambdaQueryWrapper<WbPipelineStrategyVersion> queryWrapper = new LambdaQueryWrapper<>();
@@ -40,6 +60,12 @@ public class WbPipelineStrategyVersionDbServiceImpl
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 统计某策略类型下启用中的版本数。
+     *
+     * @param type 策略类型
+     * @return 版本数
+     */
     @Override
     public long countEnabledByType(StrategyType type) {
         LambdaQueryWrapper<WbPipelineStrategyVersion> queryWrapper = new LambdaQueryWrapper<>();

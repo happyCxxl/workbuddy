@@ -104,6 +104,11 @@ public class IndexSetServiceImpl implements IndexSetService {
     /** 自身引用提供者（发布经代理调用保证事务生效；ObjectProvider 惰性解析，解除 Bean 自引用循环） */
     private final ObjectProvider<IndexSetService> self;
 
+    /**
+     * 文件产物就绪后的自动注册钩子：绑定开启时按最新产物登记组合。
+     *
+     * @param fileResultId 文件结果 ID
+     */
     @Override
     public void onFileProductsReady(Long fileResultId) {
         WbFileResult file = fileResultDbService.getById(fileResultId);
@@ -440,6 +445,12 @@ public class IndexSetServiceImpl implements IndexSetService {
                 && Objects.equals(a.getStageStrategies(), b.getStageStrategies());
     }
 
+    /**
+     * 手动构建候选索引：校验范围与策略 → 登记组合 → 投递 BUILD_INDEX 任务。
+     *
+     * @param order 构建命令
+     * @return 任务 ID 与生效策略
+     */
     @Override
     public IndexBuildTriggerVO buildCandidate(BuildOrder order) {
         ThrowUtil.throwIf(NullUtil.isNull(order) || NullUtil.isNull(order.getKnowledgeBaseId())
@@ -480,6 +491,11 @@ public class IndexSetServiceImpl implements IndexSetService {
         return tryBuild(kbId, combo, trigger, true);
     }
 
+    /**
+     * 发布索引版本：原子切换线上版本。
+     *
+     * @param versionId 版本 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publish(Long versionId) {
@@ -516,6 +532,11 @@ public class IndexSetServiceImpl implements IndexSetService {
                 NullUtil.isNull(old) ? null : old.getVersionNo());
     }
 
+    /**
+     * 回退到指定索引版本。
+     *
+     * @param versionId 版本 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rollback(Long versionId) {
@@ -549,7 +570,12 @@ public class IndexSetServiceImpl implements IndexSetService {
         compensate(set, target);
     }
 
-    /** 当前发布版本（versionNo → 集合名 kb_{kbId}_{versionNo} 直连检索）；无 → null。 */
+    /**
+     * 当前发布版本（versionNo → 集合名 kb_{kbId}_{versionNo} 直连检索）。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 当前发布的版本；没有则为 null
+     */
     public WbIndexVersion currentPublished(Long knowledgeBaseId) {
         WbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
         if (NullUtil.isNull(set) || NullUtil.isNull(set.getCurrentPublishedVersionId())) {
@@ -558,6 +584,11 @@ public class IndexSetServiceImpl implements IndexSetService {
         return indexVersionDbService.getById(set.getCurrentPublishedVersionId());
     }
 
+    /**
+     * 回收索引候选：删除版本与其向量集合。
+     *
+     * @param versionId 版本 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void recycle(Long versionId) {
@@ -579,6 +610,12 @@ public class IndexSetServiceImpl implements IndexSetService {
                 set.getKnowledgeBaseId(), versionId, version.getVersionNo());
     }
 
+    /**
+     * 列出知识库的索引版本。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 索引版本列表
+     */
     @Override
     public List<IndexVersionVO> listVersions(Long knowledgeBaseId) {
         WbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
@@ -590,6 +627,13 @@ public class IndexSetServiceImpl implements IndexSetService {
                 .toList();
     }
 
+    /**
+     * 索引版本详情。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param versionId       版本 ID
+     * @return 版本详情
+     */
     @Override
     public IndexVersionVO versionDetail(Long knowledgeBaseId, Long versionId) {
         WbIndexSet set = indexSetDbService.getByKb(knowledgeBaseId);
@@ -600,6 +644,13 @@ public class IndexSetServiceImpl implements IndexSetService {
         return toVersionVO(version, Objects.equals(versionId, set.getCurrentPublishedVersionId()));
     }
 
+    /**
+     * 列出可构建的索引组合。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param fileResultIds   限定参与的文件结果 ID（可空）
+     * @return 组合列表
+     */
     @Override
     public List<IndexComboVO> listCombos(Long knowledgeBaseId, List<Long> fileResultIds) {
         // 组合 × 成员口径（测评模式构建弹窗数据源）：候选三元组 = 范围内各文件各策略历史的并集；
@@ -653,6 +704,12 @@ public class IndexSetServiceImpl implements IndexSetService {
         return vo;
     }
 
+    /**
+     * 校验索引候选：对账组合范围与向量集合是否一致。
+     *
+     * @param versionId 版本 ID
+     * @return 校验结果
+     */
     @Override
     public IndexValidateVO validate(Long versionId) {
         WbIndexVersion version = requireVersion(versionId);

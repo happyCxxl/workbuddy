@@ -20,6 +20,12 @@ import java.util.List;
 @Service
 public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbModel> implements WbModelDbService {
 
+    /**
+     * 按状态列模型目录。
+     *
+     * @param status 状态码值（可空，空则不过滤）
+     * @return 模型列表，按厂商与模型键升序
+     */
     @Override
     public List<WbModel> listByCondition(String status) {
         return this.lambdaQuery()
@@ -29,6 +35,16 @@ public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbMo
                 .list();
     }
 
+    /**
+     * 按条件分页查模型，命中条件为空则不加该过滤条件。
+     *
+     * @param current    页码
+     * @param size       每页条数
+     * @param status     状态码值（可空）
+     * @param keyword    模型键模糊匹配（可空）
+     * @param capability 能力项，按逗号清单整项匹配（可空）
+     * @return 模型分页结果
+     */
     @Override
     public IPage<WbModel> pageByCondition(long current, long size, String status, String keyword,
             String capability) {
@@ -43,11 +59,25 @@ public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbMo
                 .page(new Page<>(current, size));
     }
 
+    /**
+     * 按 ID 取模型行。
+     *
+     * @param id 模型 ID（可空）
+     * @return 模型行；ID 为空或不存在时为 null
+     */
     @Override
     public WbModel getExistingById(Long id) {
         return NullUtil.isNull(id) ? null : getById(id);
     }
 
+    /**
+     * 厂商与模型键的组合是否已存在。
+     *
+     * @param vendorCode 厂商码值
+     * @param modelKey   模型键
+     * @param excludeId  排除的模型 ID（编辑时排除自身，可空）
+     * @return 已存在为 true
+     */
     @Override
     public boolean existsVendorAndModelKey(String vendorCode, String modelKey, Long excludeId) {
         // 只取主键列：判定存在性不需要整行
@@ -60,6 +90,11 @@ public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbMo
         return !rows.isEmpty();
     }
 
+    /**
+     * 更新模型：值为空的数值列显式写 NULL，否则实体更新策略会跳过、旧值清不掉。
+     *
+     * @param row 模型行
+     */
     @Override
     public void updateModel(WbModel row) {
         LambdaUpdateWrapper<WbModel> wrapper = new LambdaUpdateWrapper<>();
@@ -84,6 +119,12 @@ public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbMo
         }
     }
 
+    /**
+     * 只更新模型状态。
+     *
+     * @param id     模型 ID
+     * @param status 目标状态码值
+     */
     @Override
     public void updateStatus(Long id, String status) {
         this.lambdaUpdate()

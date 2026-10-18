@@ -142,6 +142,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     private final TaskVoAssembler taskVoAssembler;
 
+    /**
+     * 新建知识库。
+     *
+     * @param dto 新建请求
+     * @return 新知识库 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(KnowledgeBaseCreateDTO dto) {
@@ -158,6 +164,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return kb.getId();
     }
 
+    /**
+     * 修改知识库基本信息。
+     *
+     * @param dto 修改请求
+     * @return 更新成功为 true
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(KnowledgeBaseUpdateDTO dto) {
@@ -173,6 +185,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return true;
     }
 
+    /**
+     * 知识库详情。
+     *
+     * @param id 知识库 ID
+     * @return 知识库详情
+     */
     @Override
     public KnowledgeBaseVO detail(Long id) {
         KnowledgeBaseVO vo = toVO(getAccessibleById(id));
@@ -181,6 +199,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return vo;
     }
 
+    /**
+     * 分页查知识库。
+     *
+     * @param query 查询条件
+     * @return 知识库分页
+     */
     @Override
     public IPage<KnowledgeBaseVO> page(KnowledgeBaseQueryDTO query) {
         // 可见范围在服务端定：普通用户只查自己创建的，管理员不限（见 KnowledgeBaseRules.visibleOwnerId）
@@ -195,6 +219,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return voPage;
     }
 
+    /**
+     * 知识库总览统计。
+     *
+     * @return 统计视图
+     */
     @Override
     public KnowledgeBaseStatsVO stats() {
         KnowledgeBaseStatsVO vo = new KnowledgeBaseStatsVO();
@@ -261,6 +290,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         }
     }
 
+    /**
+     * 停用知识库。
+     *
+     * @param id 知识库 ID
+     * @return 变更成功为 true
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean disable(Long id) {
@@ -275,6 +310,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return true;
     }
 
+    /**
+     * 启用知识库。
+     *
+     * @param id 知识库 ID
+     * @return 变更成功为 true
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean enable(Long id) {
@@ -289,6 +330,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return true;
     }
 
+    /**
+     * 删除知识库（逻辑删除）。
+     *
+     * @param id 知识库 ID
+     * @return 删除成功为 true
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long id) {
@@ -299,6 +346,13 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return true;
     }
 
+    /**
+     * 取知识库在某策略类型上的绑定。
+     *
+     * @param id           知识库 ID
+     * @param strategyType 策略类型码值
+     * @return 绑定视图
+     */
     @Override
     public StrategyBindingVO strategyBinding(Long id, String strategyType) {
         WbKnowledgeBase kb = getAccessibleById(id);
@@ -319,6 +373,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return vo;
     }
 
+    /**
+     * 列出某策略类型下全部知识库的绑定。
+     *
+     * @param strategyType 策略类型码值
+     * @return 绑定视图列表
+     */
     @Override
     public List<StrategyBindingVO> strategyBindings(String strategyType) {
         ThrowUtil.throwIf(StrUtil.isBlank(strategyType)
@@ -354,6 +414,13 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return result;
     }
 
+    /**
+     * 绑定单个策略版本到知识库。
+     *
+     * @param id  知识库 ID
+     * @param dto 绑定请求
+     * @return 成功为 true
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean bindStrategy(Long id, StrategyBindingUpdateDTO dto) {
@@ -406,6 +473,13 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return true;
     }
 
+    /**
+     * 批量绑定策略版本到知识库。
+     *
+     * @param id      知识库 ID
+     * @param request 批量绑定请求
+     * @return 成功为 true
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean bindStrategies(Long id, StrategyBindingsUpdateDTO request) {

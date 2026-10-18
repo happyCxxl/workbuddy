@@ -67,6 +67,14 @@ public class EmbedControlServiceImpl implements EmbedControlService {
     private final FileResultAccessGuard accessGuard;
     private final UpstreamProductGate upstreamProductGate;
 
+    /**
+     * 触发向量化：策略解析 → 上游切片产物校验 → 执行键查重 → 新建 EMBED 任务入队。
+     *
+     * @param fileResultId      文件结果 ID
+     * @param strategyVersionId 策略版本行 ID（可空，不传用知识库绑定）
+     * @param upstreamProductId 上游切片产物 ID（必填）
+     * @return 触发响应（任务 ID + 生效策略版本）
+     */
     @Override
     public EmbedTriggerVO embed(Long fileResultId, Long strategyVersionId, Long upstreamProductId) {
         WbFileResult fileResult = accessGuard.requireExisting(fileResultId);
@@ -85,6 +93,13 @@ public class EmbedControlServiceImpl implements EmbedControlService {
         return new EmbedTriggerVO(fileResultId, triggered.getPipelineTaskId(), strategy.fullVersion());
     }
 
+    /**
+     * 向量化详情：任务状态、子步骤、向量统计与记录、产物引用。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param taskId       任务 ID（可空表示取最新）
+     * @return 向量化详情
+     */
     @Override
     public EmbedDetailVO embedDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);

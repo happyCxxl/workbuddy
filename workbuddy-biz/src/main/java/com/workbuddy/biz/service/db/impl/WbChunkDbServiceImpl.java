@@ -22,6 +22,12 @@ import java.util.List;
 public class WbChunkDbServiceImpl extends InfraDbServiceImpl<WbChunkMapper, WbChunk>
         implements WbChunkDbService {
 
+    /**
+     * 取某切片集合下的全部切片。
+     *
+     * @param chunkSetId 切片集合 ID
+     * @return 切片列表
+     */
     @Override
     public List<WbChunk> listByChunkSetId(Long chunkSetId) {
         LambdaQueryWrapper<WbChunk> queryWrapper = new LambdaQueryWrapper<>();
@@ -31,6 +37,15 @@ public class WbChunkDbServiceImpl extends InfraDbServiceImpl<WbChunkMapper, WbCh
         return list(queryWrapper);
     }
 
+    /**
+     * 按内容过滤条件分页查切片。
+     *
+     * @param chunkSetId 切片集合 ID
+     * @param filter     内容过滤条件（可空）
+     * @param current    页码
+     * @param size       每页条数
+     * @return 切片分页结果
+     */
     @Override
     public IPage<WbChunk> pageByChunkSetId(Long chunkSetId, ChunkContentFilterDTO filter, long current, long size) {
         LambdaQueryWrapper<WbChunk> queryWrapper = new LambdaQueryWrapper<>();

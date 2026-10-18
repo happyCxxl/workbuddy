@@ -16,6 +16,11 @@ import java.time.LocalDateTime;
 @Configuration
 public class KnowledgeMetaObjectHandler implements MetaObjectHandler {
 
+    /**
+     * 插入填充：删除标记、创建人/时间与更新人/时间。
+     *
+     * @param metaObject 元对象
+     */
     @Override
     public void insertFill(MetaObject metaObject) {
         String operator = currentOperator();
@@ -33,6 +38,8 @@ public class KnowledgeMetaObjectHandler implements MetaObjectHandler {
      * updateTime / updateBy，而 strictUpdateFill 只在字段为空时才填 —— 旧值被原样写进
      * SET 子句，反而让 DDL 上的 {@code ON UPDATE CURRENT_TIMESTAMP} 失效（显式赋值不触发），
      * 表现为"改了信息但更新时间不动"。updateBy 在无认证上下文时为 null，此时保持原值不动。
+     *
+     * @param metaObject 元对象
      */
     @Override
     public void updateFill(MetaObject metaObject) {
@@ -51,6 +58,11 @@ public class KnowledgeMetaObjectHandler implements MetaObjectHandler {
      *
      * <p>只影响调用 {@code fillStrategy} 的地方；插入走 {@code strictInsertFill}（另一个方法），
      * 插入语义不变。
+     *
+     * @param metaObject 元对象
+     * @param fieldName  字段名
+     * @param fieldVal   字段值
+     * @return 本处理器（链式）
      */
     @Override
     public MetaObjectHandler fillStrategy(MetaObject metaObject, String fieldName, Object fieldVal) {

@@ -47,6 +47,12 @@ public class ModelServiceImpl implements ModelService {
     private final ModelVendorProperties modelVendorProperties;
     private final AuditEventPublisher auditEventPublisher;
 
+    /**
+     * 分页查模型目录。
+     *
+     * @param query 查询条件
+     * @return 模型分页
+     */
     @Override
     public IPage<ModelItemVO> page(ModelQueryDTO query) {
         ModelQueryDTO source = NullUtil.isNull(query) ? new ModelQueryDTO() : query;
@@ -58,6 +64,12 @@ public class ModelServiceImpl implements ModelService {
         return target;
     }
 
+    /**
+     * 新增模型。
+     *
+     * @param dto 新增请求
+     * @return 新建的模型
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO create(ModelSaveDTO dto) {
@@ -73,6 +85,13 @@ public class ModelServiceImpl implements ModelService {
         return toItem(row);
     }
 
+    /**
+     * 编辑模型。
+     *
+     * @param id  模型 ID
+     * @param dto 编辑请求
+     * @return 更新后的模型
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO update(Long id, ModelUpdateDTO dto) {
@@ -91,6 +110,13 @@ public class ModelServiceImpl implements ModelService {
         return toItem(after);
     }
 
+    /**
+     * 更新模型状态。
+     *
+     * @param id  模型 ID
+     * @param dto 状态请求
+     * @return 更新后的模型
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO updateStatus(Long id, ModelStatusDTO dto) {

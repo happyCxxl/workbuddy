@@ -25,6 +25,13 @@ public class KnowledgeFileChunkController {
 
     private final ChunkControlService chunkControlService;
 
+    /**
+     * 触发切片：登记 CHUNK 任务并按上游预处理产物出队执行。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param query        触发参数（策略版本与上游产物，可空）
+     * @return 任务 ID 与生效策略版本
+     */
     @PostMapping("/{fileResultId}/chunk")
     public R<ChunkTriggerVO> chunk(
             @PathVariable("fileResultId") Long fileResultId,
@@ -36,6 +43,13 @@ public class KnowledgeFileChunkController {
                 query.getUpstreamProductId()));
     }
 
+    /**
+     * 切片详情：任务状态、子步骤、切片统计与列表、产物引用。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param query        查询参数（任务 ID，可空表示取最新）
+     * @return 切片详情
+     */
     @GetMapping("/{fileResultId}/chunk-detail")
     public R<ChunkDetailVO> chunkDetail(
             @PathVariable("fileResultId") Long fileResultId,

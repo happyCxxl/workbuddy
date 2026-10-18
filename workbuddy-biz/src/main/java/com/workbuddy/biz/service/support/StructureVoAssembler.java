@@ -23,7 +23,12 @@ import java.util.List;
 @Component
 public class StructureVoAssembler {
 
-    /** 组装统计：元素按类型计数 + 关系/冲突/告警数。 */
+    /**
+     * 组装统计：元素按类型计数 + 关系/冲突/告警数。
+     *
+     * @param document 统一文档产物
+     * @return 结构统计视图
+     */
     public StructureSummaryVO toSummary(UnifiedDocument document) {
         List<UnifiedElement> elements = ObjectUtil.defaultIfNull(document.getElements(), new ArrayList<>());
         DocumentQuality quality = ObjectUtil.defaultIfNull(document.getQuality(), new DocumentQuality());
@@ -39,7 +44,12 @@ public class StructureVoAssembler {
         return summary;
     }
 
-    /** 质量告警 → 展示文本列表（level + code + message）。 */
+    /**
+     * 质量告警转展示文本（级别 + 码值 + 说明）。
+     *
+     * @param quality 文档质量
+     * @return 告警文本列表；没有告警时为空列表
+     */
     public List<String> toWarningTexts(DocumentQuality quality) {
         if (NullUtil.isNull(quality) || NullUtil.isNull(quality.getWarnings())) {
             return new ArrayList<>();
@@ -49,7 +59,12 @@ public class StructureVoAssembler {
                 .toList();
     }
 
-    /** 冲突记录 → 冲突 VO 列表。 */
+    /**
+     * 冲突记录转冲突视图。
+     *
+     * @param quality 文档质量
+     * @return 冲突视图列表；没有冲突时为空列表
+     */
     public List<StructureConflictVO> toConflicts(DocumentQuality quality) {
         if (NullUtil.isNull(quality) || NullUtil.isNull(quality.getConflicts())) {
             return new ArrayList<>();
@@ -57,7 +72,12 @@ public class StructureVoAssembler {
         return quality.getConflicts().stream().map(this::toConflictVO).toList();
     }
 
-    /** 文档内容大纲：元素按阅读顺序全量返回（含标题/段落/表格/图片等），跳文档根与单元格。 */
+    /**
+     * 文档内容大纲：元素按阅读顺序全量返回（含标题/段落/表格/图片等），跳文档根与单元格。
+     *
+     * @param document 统一文档产物
+     * @return 大纲视图列表
+     */
     public List<StructureOutlineVO> toOutline(UnifiedDocument document) {
         List<UnifiedElement> elements = ObjectUtil.defaultIfNull(document.getElements(),
                 new ArrayList<>());

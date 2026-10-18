@@ -20,6 +20,11 @@ public class AuditEventListener {
 
     private final WbAuditLogDbService kbAuditLogDbService;
 
+    /**
+     * 审计事件落库：动作、对象与前后摘要原样写入审计表。
+     *
+     * @param event 审计事件
+     */
     @EventListener
     public void onAuditEvent(AuditEvent event) {
         kbAuditLogDbService.saveAudit(event.getAction(), event.getObjectType(), event.getObjectId(),

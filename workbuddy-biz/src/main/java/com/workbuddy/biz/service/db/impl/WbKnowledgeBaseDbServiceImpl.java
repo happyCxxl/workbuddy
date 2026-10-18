@@ -24,6 +24,17 @@ import java.util.List;
 public class WbKnowledgeBaseDbServiceImpl extends InfraDbServiceImpl<WbKnowledgeBaseMapper, WbKnowledgeBase>
         implements WbKnowledgeBaseDbService {
 
+    /**
+     * 按条件分页查知识库，命中条件为空则不加该过滤条件。
+     *
+     * @param current 页码
+     * @param size    每页条数
+     * @param name    名称模糊匹配（可空）
+     * @param status  状态码值（可空）
+     * @param sort    排序方式（可空取默认）
+     * @param ownerId 归属用户 ID（可空表示不加归属过滤）
+     * @return 知识库分页
+     */
     @Override
     public IPage<WbKnowledgeBase> pageByCondition(long current, long size, String name, Integer status,
                                                 KnowledgeBaseSort sort, Long ownerId) {
@@ -42,6 +53,13 @@ public class WbKnowledgeBaseDbServiceImpl extends InfraDbServiceImpl<WbKnowledge
         return page(new Page<>(current, size), queryWrapper);
     }
 
+    /**
+     * 按状态与归属统计知识库数。
+     *
+     * @param status  状态码值（可空）
+     * @param ownerId 归属用户 ID（可空表示不限）
+     * @return 知识库数
+     */
     @Override
     public long countByStatus(Integer status, Long ownerId) {
         LambdaQueryWrapper<WbKnowledgeBase> queryWrapper = new LambdaQueryWrapper<>();
@@ -50,6 +68,12 @@ public class WbKnowledgeBaseDbServiceImpl extends InfraDbServiceImpl<WbKnowledge
         return count(queryWrapper);
     }
 
+    /**
+     * 取归属某用户的全部知识库 ID。
+     *
+     * @param ownerId 归属用户 ID
+     * @return 知识库 ID 列表
+     */
     @Override
     public List<Long> listIdsByOwner(Long ownerId) {
         LambdaQueryWrapper<WbKnowledgeBase> queryWrapper = new LambdaQueryWrapper<>();
@@ -67,6 +91,12 @@ public class WbKnowledgeBaseDbServiceImpl extends InfraDbServiceImpl<WbKnowledge
 
     /**
      * 获取存在且未删除的知识库：getById 后判空，不存在/已删除抛 KB_NOT_FOUND（40401）。
+     */
+    /**
+     * 取处于启用状态的知识库。
+     *
+     * @param id 知识库 ID
+     * @return 知识库行；不存在或未启用时为 null
      */
     @Override
     public WbKnowledgeBase getActiveById(Long id) {

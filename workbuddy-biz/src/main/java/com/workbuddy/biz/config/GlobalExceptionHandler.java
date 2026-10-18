@@ -20,12 +20,24 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * 业务拒绝：错误码与可读原因原样透出，HTTP 状态保持 200。
+     *
+     * @param e 业务异常
+     * @return 统一失败响应
+     */
     @ExceptionHandler(KnowledgeException.class)
     public R<Void> handleKnowledgeException(KnowledgeException e) {
         log.warn("===> GlobalExceptionHandler 业务异常 code={}, msg={}", e.getCode(), e.getMessage());
         return new R<>(e.getCode(), e.getMessage(), null, null);
     }
 
+    /**
+     * 参数校验失败：取第一条字段错误的消息，错误码 40001。
+     *
+     * @param e 校验异常
+     * @return 统一失败响应
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public R<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         String msg = e.getBindingResult().getFieldErrors().stream()
@@ -36,6 +48,12 @@ public class GlobalExceptionHandler {
         return new R<>(ErrorCode.PARAM_INVALID.getCode(), msg, null, null);
     }
 
+    /**
+     * 请求体缺失或 JSON 格式错误：区分两种文案，错误码 40001。
+     *
+     * @param e 消息不可读异常
+     * @return 统一失败响应
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public R<Void> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
         String msg = "请求体解析失败，";
@@ -49,6 +67,12 @@ public class GlobalExceptionHandler {
         return new R<>(ErrorCode.PARAM_INVALID.getCode(), msg, null, null);
     }
 
+    /**
+     * 未知异常兜底：记 error 带堆栈，对外只回通用系统错误。
+     *
+     * @param e 未捕获的异常
+     * @return 统一失败响应
+     */
     @ExceptionHandler(Exception.class)
     public R<Void> handleException(Exception e) {
         log.error("===> GlobalExceptionHandler 系统异常", e);

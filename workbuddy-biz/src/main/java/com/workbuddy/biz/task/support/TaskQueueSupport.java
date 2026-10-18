@@ -17,11 +17,21 @@ public class TaskQueueSupport {
     private final TaskQueueProperties properties;
 
     /** 任务登记后入队（重复入队无害，消费侧重读 DB 校验）。 */
+    /**
+     * 任务入队。
+     *
+     * @param taskId 任务 ID
+     */
     public void enqueue(Long taskId) {
         redisQueueSupport.leftPush(properties.getQueueKey(), String.valueOf(taskId));
     }
 
     /** 阻塞弹出（消费循环接入前只定义不调用）。 */
+    /**
+     * 阻塞取一个任务。
+     *
+     * @return 任务 ID；超时为 null
+     */
     public String blockingPop() {
         return redisQueueSupport.rightPop(properties.getQueueKey(), properties.getWakeupTimeout());
     }

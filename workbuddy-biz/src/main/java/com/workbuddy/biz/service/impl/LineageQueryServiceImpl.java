@@ -87,6 +87,12 @@ public class LineageQueryServiceImpl implements LineageQueryService {
                                  Map<Long, PreprocessView> upstreamViews) {
     }
 
+    /**
+     * 文件血缘：从解析到索引的环节节点与依赖边。
+     *
+     * @param fileResultId 文件结果 ID
+     * @return 血缘视图
+     */
     @Override
     public LineageVO lineage(Long fileResultId) {
         accessGuard.requireExisting(fileResultId);

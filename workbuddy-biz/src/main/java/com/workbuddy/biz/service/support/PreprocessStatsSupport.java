@@ -180,14 +180,25 @@ public final class PreprocessStatsSupport {
         return String.join("；", notes);
     }
 
-    /** 指定状态的元素数。 */
+    /**
+     * 指定状态的元素数。
+     *
+     * @param elements 元素列表
+     * @param statuses 状态集合
+     * @return 命中状态的元素数
+     */
     public static int countStatuses(List<ViewElement> elements, List<String> statuses) {
         return (int) elements.stream()
                 .filter(element -> statuses.contains(element.getStatus()))
                 .count();
     }
 
-    /** 按状态分布（状态名 → 元素数；缺失状态归入 UNKNOWN）。 */
+    /**
+     * 按状态分布（状态名到元素数；缺失状态归入 UNKNOWN）。
+     *
+     * @param elements 元素列表
+     * @return 状态名到元素数的映射
+     */
     public static Map<String, Integer> statusCounts(List<ViewElement> elements) {
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (ViewElement element : elements) {
@@ -197,7 +208,12 @@ public final class PreprocessStatsSupport {
         return counts;
     }
 
-    /** 按字段类型分布（字段类型名 → 字段数）。 */
+    /**
+     * 按字段类型分布（字段类型名到字段数）。
+     *
+     * @param elements 元素列表
+     * @return 字段类型名到字段数的映射
+     */
     public static Map<String, Integer> fieldTypeCounts(List<ViewElement> elements) {
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (ViewElement element : elements) {
@@ -209,14 +225,24 @@ public final class PreprocessStatsSupport {
         return counts;
     }
 
-    /** 标准化字段总数。 */
+    /**
+     * 标准化字段总数。
+     *
+     * @param elements 元素列表
+     * @return 字段总数
+     */
     public static int countFields(List<ViewElement> elements) {
         return elements.stream()
                 .mapToInt(element -> ObjectUtil.defaultIfNull(element.getNormalizedFields(), List.of()).size())
                 .sum();
     }
 
-    /** 文本改写元素数：检索文本非空且与展示文本不同（与展示统计同一口径）。 */
+    /**
+     * 文本改写元素数：检索文本非空且与展示文本不同（与展示统计同一口径）。
+     *
+     * @param elements 元素列表
+     * @return 改写过检索文本的元素数
+     */
     public static int countChanged(List<ViewElement> elements) {
         return (int) elements.stream()
                 .filter(element -> StrUtil.isNotBlank(element.getNormalizedText())

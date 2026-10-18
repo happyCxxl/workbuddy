@@ -39,6 +39,12 @@ public class AvatarServiceImpl implements AvatarService {
 
     private final FileStorage fileStorage;
 
+    /**
+     * 上传头像：按文件头判定类型，写入存储并把对象位置写回用户记录。
+     *
+     * @param file 头像文件（PNG / JPG / WebP，不超过 2MB）
+     * @return 可直接渲染的新地址
+     */
     @Override
     public String upload(MultipartFile file) {
         ThrowUtil.throwIf(NullUtil.isNull(file) || file.isEmpty(), ErrorCode.PARAM_INVALID, "请选择头像文件");
@@ -62,6 +68,7 @@ public class AvatarServiceImpl implements AvatarService {
         return AvatarUrlUtil.readUrl(user.getId(), key);
     }
 
+    /** 移除头像：对象键与三列存储位置一并清空，已上传的对象留待清理。 */
     @Override
     public void remove() {
         WbUser user = currentUser();
@@ -72,6 +79,12 @@ public class AvatarServiceImpl implements AvatarService {
         userDbService.updateById(user);
     }
 
+    /**
+     * 读取头像内容。
+     *
+     * @param userId 用户 ID
+     * @return 头像内容；没有头像、记录不完整或对象不可用时为 null
+     */
     @Override
     public AvatarContent load(Long userId) {
         WbUser user = userDbService.getById(userId);

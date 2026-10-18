@@ -25,6 +25,12 @@ import java.util.stream.Collectors;
 public class WbIndexSetDbServiceImpl extends ServiceImpl<WbIndexSetMapper, WbIndexSet>
         implements WbIndexSetDbService {
 
+    /**
+     * 取知识库的索引集合。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 索引集合；没有则为 null
+     */
     @Override
     public WbIndexSet getByKb(Long knowledgeBaseId) {
         LambdaQueryWrapper<WbIndexSet> queryWrapper = new LambdaQueryWrapper<>();
@@ -33,6 +39,12 @@ public class WbIndexSetDbServiceImpl extends ServiceImpl<WbIndexSetMapper, WbInd
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 批量取索引集合。
+     *
+     * @param knowledgeBaseIds 知识库 ID 列表
+     * @return 知识库 ID 到索引集合的映射
+     */
     @Override
     public Map<Long, WbIndexSet> listByKbIds(List<Long> knowledgeBaseIds) {
         if (CollUtil.isEmpty(knowledgeBaseIds)) {
@@ -44,6 +56,12 @@ public class WbIndexSetDbServiceImpl extends ServiceImpl<WbIndexSetMapper, WbInd
                 .collect(Collectors.toMap(WbIndexSet::getKnowledgeBaseId, Function.identity(), (a, b) -> a));
     }
 
+    /**
+     * 取知识库的索引集合，没有则新建。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 已存在的或新建的索引集合
+     */
     @Override
     public WbIndexSet getOrCreateByKb(Long knowledgeBaseId) {
         WbIndexSet existing = getByKb(knowledgeBaseId);
@@ -62,6 +80,12 @@ public class WbIndexSetDbServiceImpl extends ServiceImpl<WbIndexSetMapper, WbInd
         }
     }
 
+    /**
+     * 回写索引集合当前发布的版本 ID。
+     *
+     * @param setId     索引集合 ID
+     * @param versionId 版本 ID
+     */
     @Override
     public void updatePublishedVersion(Long setId, Long versionId) {
         LambdaUpdateWrapper<WbIndexSet> updateWrapper = new LambdaUpdateWrapper<>();

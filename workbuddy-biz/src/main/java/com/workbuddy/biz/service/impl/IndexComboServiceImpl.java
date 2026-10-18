@@ -39,6 +39,12 @@ public class IndexComboServiceImpl implements IndexComboService {
     private final WbFileResultDbService fileResultDbService;
     private final IndexComboReconciler indexComboReconciler;
 
+    /**
+     * 按知识库绑定解析组合。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 绑定形成的组合；任一环节绑定缺失时为 null
+     */
     @Override
     public ComboSnapshot resolveBoundCombo(Long knowledgeBaseId) {
         String preprocess = boundStrategyOf(knowledgeBaseId, PipelineStage.PREPROCESS.name());
@@ -67,6 +73,9 @@ public class IndexComboServiceImpl implements IndexComboService {
 
     /**
      * 绑定关闭场景：枚举「全部文件 × 已运行（chunk, embed）策略组合」中产物完整的组合。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 产物完整的组合列表；知识库下没有文件时为空列表
      */
     public List<ComboSnapshot> enumerateCombos(Long knowledgeBaseId) {
         List<WbFileResult> files = fileResultDbService.listByKb(knowledgeBaseId);
@@ -78,7 +87,10 @@ public class IndexComboServiceImpl implements IndexComboService {
 
     /**
      * 绑定关闭场景（评测冻结集）：枚举范围收窄到指定文件——
-     * 只返回「范围内每个文件都完整」的三元组（fileResultIds 空 → 空列表）。
+     * 只返回「范围内每个文件都完整」的三元组。
+     *
+     * @param fileResultIds 范围内的文件结果 ID
+     * @return 完整的组合列表；入参为空时返回空列表
      */
     public List<ComboSnapshot> enumerateCombos(List<Long> fileResultIds) {
         if (NullUtil.isNull(fileResultIds) || fileResultIds.isEmpty()) {
@@ -107,6 +119,9 @@ public class IndexComboServiceImpl implements IndexComboService {
 
     /**
      * 按知识库策略绑定开关分发：开=单组合（空列表表示绑定不齐全）；关=枚举完整组合。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 可用组合列表
      */
     public List<ComboSnapshot> combosFor(Long knowledgeBaseId) {
         WbKnowledgeBase kb = knowledgeBaseDbService.getById(knowledgeBaseId);

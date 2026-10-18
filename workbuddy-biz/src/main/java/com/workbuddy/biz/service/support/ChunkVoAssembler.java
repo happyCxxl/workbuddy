@@ -23,7 +23,13 @@ import java.util.Map;
 @Component
 public class ChunkVoAssembler {
 
-    /** 切片统计：总数/总字符/平均片长/父子数/类型分布（父子口径与 ChunkContentType 一致）。 */
+    /**
+     * 切片统计：总数/总字符/平均片长/父子数/类型分布（父子口径与 ChunkContentType 一致）。
+     *
+     * @param chunkSet 切片集合行
+     * @param chunks   切片行列表
+     * @return 切片统计视图
+     */
     public ChunkSummaryVO toSummary(WbChunkSet chunkSet, List<WbChunk> chunks) {
         ChunkSummaryVO vo = new ChunkSummaryVO();
         vo.setChunkCount(chunkSet.getChunkCount());
@@ -55,6 +61,7 @@ public class ChunkVoAssembler {
      *
      * @param chunks          切片行（DB）
      * @param productChunks   切片产物里的片（键 = chunkId）：来源元素个数与兜底原因只在产物里，DB 无这两列
+     * @return 切片条目 VO 列表
      */
     public List<ChunkItemVO> toChunkItemVOs(List<WbChunk> chunks, Map<String, Chunk> productChunks) {
         return ObjectUtil.defaultIfNull(chunks, new ArrayList<WbChunk>()).stream()

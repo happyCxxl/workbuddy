@@ -33,11 +33,22 @@ public class KnowledgeHomeController {
 
     private final KnowledgeHomeService knowledgeHomeService;
 
+    /**
+     * 首页资产速览：各资产表计数。
+     *
+     * @return 速览统计
+     */
     @GetMapping("/summary")
     public R<HomeSummaryVO> summary() {
         return R.ok(knowledgeHomeService.summary());
     }
 
+    /**
+     * 最近提交：只返回当前登录用户的记录。
+     *
+     * @param query 分页条件
+     * @return 提交记录分页
+     */
     @GetMapping("/recent-submits")
     public R<IPage<HomeRecentSubmitVO>> recentSubmits(HomeRecentSubmitQueryDTO query) {
         return R.ok(knowledgeHomeService.recentSubmits(query));

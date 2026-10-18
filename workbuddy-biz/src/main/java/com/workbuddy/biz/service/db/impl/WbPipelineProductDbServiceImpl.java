@@ -16,6 +16,12 @@ import java.util.List;
 public class WbPipelineProductDbServiceImpl extends InfraDbServiceImpl<WbPipelineProductMapper, WbPipelineProduct>
         implements WbPipelineProductDbService {
 
+    /**
+     * 按任务取产物。
+     *
+     * @param taskId 任务 ID
+     * @return 产物行；没有则为 null
+     */
     @Override
     public WbPipelineProduct getByTaskId(Long taskId) {
         LambdaQueryWrapper<WbPipelineProduct> queryWrapper = new LambdaQueryWrapper<>();
@@ -25,6 +31,13 @@ public class WbPipelineProductDbServiceImpl extends InfraDbServiceImpl<WbPipelin
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 按文件结果与环节取产物。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param stage        环节名
+     * @return 产物行；没有则为 null
+     */
     @Override
     public WbPipelineProduct getByFileResultIdAndStage(Long fileResultId, String stage) {
         LambdaQueryWrapper<WbPipelineProduct> queryWrapper = new LambdaQueryWrapper<>();
@@ -35,6 +48,12 @@ public class WbPipelineProductDbServiceImpl extends InfraDbServiceImpl<WbPipelin
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 取某文件的全部产物，按 ID 升序。
+     *
+     * @param fileResultId 文件结果 ID
+     * @return 产物列表
+     */
     @Override
     public List<WbPipelineProduct> listByFileResultId(Long fileResultId) {
         LambdaQueryWrapper<WbPipelineProduct> queryWrapper = new LambdaQueryWrapper<>();

@@ -25,6 +25,13 @@ public class KnowledgeFileStructureController {
 
     private final StructureControlService structureControlService;
 
+    /**
+     * 触发结构化组装：登记 STRUCTURE 任务并按上游预处理产物出队执行。
+     *
+     * @param fileResultId      文件结果 ID
+     * @param upstreamProductId 上游预处理产物 ID（可空）
+     * @return 任务 ID 与生效策略版本
+     */
     @PostMapping("/{fileResultId}/structure")
     public R<StageTriggerVO> structure(
             @PathVariable("fileResultId") Long fileResultId,
@@ -34,6 +41,13 @@ public class KnowledgeFileStructureController {
         return R.ok(structureControlService.structure(fileResultId, upstreamProductId));
     }
 
+    /**
+     * 结构化详情：任务状态、子步骤、统计与大纲、产物引用。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param query        查询参数（任务 ID，可空表示取最新）
+     * @return 结构化详情
+     */
     @GetMapping("/{fileResultId}/structure-detail")
     public R<StructureDetailVO> structureDetail(
             @PathVariable("fileResultId") Long fileResultId,

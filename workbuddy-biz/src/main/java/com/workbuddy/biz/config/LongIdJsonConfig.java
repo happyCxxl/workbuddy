@@ -44,6 +44,11 @@ public class LongIdJsonConfig {
      */
     private static final long JS_MAX_SAFE_INTEGER = 9007199254740991L;
 
+    /**
+     * 注册长整型阈值序列化器：超出 JS 安全整数的 ID 输出为字符串。
+     *
+     * @return 序列化器定制器
+     */
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer longIdToStringCustomizer() {
         return builder -> {
@@ -63,6 +68,14 @@ public class LongIdJsonConfig {
      */
     static final class ThresholdLongSerializer extends JsonSerializer<Long> {
 
+        /**
+         * 按阈值输出：安全范围内写数字，超出写字符串。
+         *
+         * @param value       待序列化的长整型
+         * @param gen         输出器
+         * @param serializers 序列化上下文
+         * @throws IOException 写输出失败
+         */
         @Override
         public void serialize(Long value, JsonGenerator gen, SerializerProvider serializers)
                 throws IOException {

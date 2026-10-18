@@ -16,6 +16,12 @@ import java.util.List;
 public class WbEmbeddingRecordDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingRecordMapper, WbEmbeddingRecord>
         implements WbEmbeddingRecordDbService {
 
+    /**
+     * 取某向量集合下的全部向量记录。
+     *
+     * @param embeddingSetId 向量集合 ID
+     * @return 向量记录列表
+     */
     @Override
     public List<WbEmbeddingRecord> listByEmbeddingSetId(Long embeddingSetId) {
         LambdaQueryWrapper<WbEmbeddingRecord> queryWrapper = new LambdaQueryWrapper<>();

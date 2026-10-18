@@ -23,6 +23,15 @@ public class WbAuditLogDbServiceImpl extends InfraDbServiceImpl<WbAuditLogMapper
     /** 无认证上下文（后台线程/测试）时的操作人兜底 */
     private static final String FALLBACK_OPERATOR = "system";
 
+    /**
+     * 写一条审计日志：操作人取当前登录用户，无认证上下文时用兜底操作人。
+     *
+     * @param action     动作类型
+     * @param objectType 对象类型码值
+     * @param objectId   对象 ID
+     * @param beforeJson 变更前快照（可空）
+     * @param afterJson  变更后快照（可空）
+     */
     @Override
     public void saveAudit(AuditActionType action, String objectType, Long objectId, String beforeJson,
                           String afterJson) {

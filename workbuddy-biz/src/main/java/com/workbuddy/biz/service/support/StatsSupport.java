@@ -96,7 +96,13 @@ public final class StatsSupport {
         return body.get();
     }
 
-    /** 本次运行耗时：起止时间齐全时相减，缺失返回 null。 */
+    /**
+     * 本次运行耗时：起止时间齐全时相减，缺失返回 null。
+     *
+     * @param startedAt  开始时间（可空）
+     * @param finishedAt 结束时间（可空）
+     * @return 耗时毫秒数；任一时间为空时为 null
+     */
     public static Long durationMs(LocalDateTime startedAt, LocalDateTime finishedAt) {
         if (NullUtil.isNull(startedAt) || NullUtil.isNull(finishedAt)) {
             return null;

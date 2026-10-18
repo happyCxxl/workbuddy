@@ -51,6 +51,13 @@ public class ParseControlServiceImpl implements ParseControlService {
                 PipelineStage.PARSE.getLabel());
     }
 
+    /**
+     * 解析详情：任务状态、子步骤、解析统计与产物引用。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param taskId       任务 ID（可空表示取最新）
+     * @return 解析详情
+     */
     @Override
     public ParseDetailVO parseDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);

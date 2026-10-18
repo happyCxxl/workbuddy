@@ -30,18 +30,35 @@ public class StorageSourceController {
 
     private final StorageSourceService storageSourceService;
 
+    /**
+     * 列出全部存储数据源。
+     *
+     * @return 数据源列表
+     */
     @GetMapping
     @AdminOnly
     public R<List<StorageSourceVO>> list() {
         return R.ok(storageSourceService.list());
     }
 
+    /**
+     * 预览切换到该数据源的影响（不落库）。
+     *
+     * @param id 数据源 ID
+     * @return 切换影响预览
+     */
     @PostMapping("/{id}/current/preview")
     @AdminOnly
     public R<StorageSwitchPreviewVO> previewCurrent(@PathVariable Long id) {
         return R.ok(storageSourceService.previewCurrent(id));
     }
 
+    /**
+     * 把该数据源设为当前启用（探活通过才切换）。
+     *
+     * @param id 数据源 ID
+     * @return 切换结果
+     */
     @PostMapping("/{id}/current")
     @AdminOnly
     public R<StorageSwitchResultVO> switchCurrent(@PathVariable Long id) {

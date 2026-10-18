@@ -47,6 +47,7 @@ public class ProductPersistence {
      * @param upstreamProductId 上游产物 ID（可空）
      * @param capabilitySnapshot 能力/策略版本快照（JSON 文本）
      * @param payload           产物本体（JSON 序列化后写产物存储）
+     * @return 产物行（同任务重复调用时复用已有行）
      */
     public WbPipelineProduct persist(WbPipelineTask task, PipelineStage stage, Long upstreamProductId,
                                      String capabilitySnapshot, Object payload) {

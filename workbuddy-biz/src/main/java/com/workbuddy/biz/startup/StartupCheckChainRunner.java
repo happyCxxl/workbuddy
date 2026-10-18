@@ -39,6 +39,11 @@ public class StartupCheckChainRunner implements ApplicationRunner {
 
     private final List<StartupCheck> checks;
 
+    /**
+     * 启动后按 order 排序串起全部校验项并执行第一项，首个不通过即终止启动。
+     *
+     * @param args 启动参数
+     */
     @Override
     public void run(ApplicationArguments args) {
         List<StartupCheck> ordered = checks.stream()
@@ -78,6 +83,7 @@ public class StartupCheckChainRunner implements ApplicationRunner {
             this.ordered = ordered;
         }
 
+        /** 执行下一项校验；链尾直接返回（不调用即短路）。 */
         @Override
         public void proceed() {
             if (index >= ordered.size()) {

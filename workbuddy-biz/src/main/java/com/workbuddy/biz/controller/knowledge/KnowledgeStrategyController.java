@@ -31,6 +31,13 @@ public class KnowledgeStrategyController {
 
     private final StrategyVersionService strategyVersionService;
 
+    /**
+     * 列出某策略类型的版本。
+     *
+     * @param type            策略类型码值
+     * @param includeInactive 是否包含停用版本
+     * @return 策略版本列表
+     */
     @GetMapping
     public R<List<StrategyVersionVO>> list(
             @RequestParam("type") String type,
@@ -38,6 +45,12 @@ public class KnowledgeStrategyController {
         return R.ok(strategyVersionService.list(type, includeInactive));
     }
 
+    /**
+     * 新建策略版本。
+     *
+     * @param dto 新建请求
+     * @return 新建的策略版本
+     */
     @PostMapping
     public R<StrategyVersionVO> create(@Valid @RequestBody StrategyVersionCreateDTO dto) {
         log.info("===> StrategyVersionController create 创建策略版本, type={}, name={}, version={}",
@@ -45,6 +58,13 @@ public class KnowledgeStrategyController {
         return R.ok(strategyVersionService.create(dto), "创建成功");
     }
 
+    /**
+     * 编辑策略版本。
+     *
+     * @param id  策略版本行 ID
+     * @param dto 编辑请求
+     * @return 更新后的策略版本
+     */
     @PutMapping("/{id}")
     public R<StrategyVersionVO> update(
             @PathVariable("id") Long id,
@@ -53,6 +73,12 @@ public class KnowledgeStrategyController {
         return R.ok(strategyVersionService.update(id, dto), "更新成功");
     }
 
+    /**
+     * 启用策略版本。
+     *
+     * @param id 策略版本行 ID
+     * @return 更新后的策略版本
+     */
     @PostMapping("/{id}/enable")
     public R<StrategyVersionVO> enable(
             @PathVariable("id") Long id) {
@@ -60,6 +86,12 @@ public class KnowledgeStrategyController {
         return R.ok(strategyVersionService.enable(id), "启用成功");
     }
 
+    /**
+     * 停用策略版本。
+     *
+     * @param id 策略版本行 ID
+     * @return 更新后的策略版本
+     */
     @PostMapping("/{id}/disable")
     public R<StrategyVersionVO> disable(
             @PathVariable("id") Long id) {
@@ -67,6 +99,12 @@ public class KnowledgeStrategyController {
         return R.ok(strategyVersionService.disable(id), "停用成功");
     }
 
+    /**
+     * 删除策略版本（有绑定引用时拒绝）。
+     *
+     * @param id 策略版本行 ID
+     * @return 删除成功为 true
+     */
     @DeleteMapping("/{id}")
     public R<Boolean> delete(
             @PathVariable("id") Long id) {

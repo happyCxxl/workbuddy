@@ -60,6 +60,11 @@ public class KnowledgeHomeServiceImpl implements KnowledgeHomeService {
     private final WbSubmitLogDbService submitLogDbService;
     private final WbSourceFileDbService sourceFileDbService;
 
+    /**
+     * 首页资产速览：各资产表计数。
+     *
+     * @return 速览统计
+     */
     @Override
     public HomeSummaryVO summary() {
         HomeSummaryVO vo = new HomeSummaryVO();
@@ -85,6 +90,12 @@ public class KnowledgeHomeServiceImpl implements KnowledgeHomeService {
         return vo;
     }
 
+    /**
+     * 最近提交：只取当前登录用户的记录。
+     *
+     * @param query 分页条件
+     * @return 提交记录分页
+     */
     @Override
     public IPage<HomeRecentSubmitVO> recentSubmits(HomeRecentSubmitQueryDTO query) {
         long current = query.currentOrDefault();

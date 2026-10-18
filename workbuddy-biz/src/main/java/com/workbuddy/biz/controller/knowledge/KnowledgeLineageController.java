@@ -19,6 +19,12 @@ public class KnowledgeLineageController {
 
     private final LineageQueryService lineageQueryService;
 
+    /**
+     * 文件血缘：从解析到索引的环节节点与依赖边。
+     *
+     * @param fileResultId 文件结果 ID
+     * @return 血缘视图
+     */
     @GetMapping("/{fileResultId}/lineage")
     public R<LineageVO> lineage(
             @PathVariable("fileResultId") Long fileResultId) {

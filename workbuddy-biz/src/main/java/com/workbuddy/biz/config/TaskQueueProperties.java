@@ -66,6 +66,9 @@ public class TaskQueueProperties {
     /**
      * 取指定环节的单任务超时：环节标识支持枚举名（BUILD_INDEX）与配置键（build-index）两种写法；
      * 环节为空、认不出，或该环节未配置，一律回退默认 5 分钟。
+     *
+     * @param stage 环节标识
+     * @return 该环节的超时
      */
     public Duration timeoutOf(String stage) {
         PipelineStage parsed = parseStage(stage);

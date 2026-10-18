@@ -33,9 +33,13 @@ public class IndexRowAssembler {
     private final FileStorage fileStorage;
 
     /**
-     * 装配单文件索引行。
+     * 装配单文件索引行：只取 SUCCESS/CACHED 记录，切片产物用于补标题路径与来源元素。
      *
-     * @return 产物读取失败 → null；无 SUCCESS/CACHED 记录 → 空列表
+     * @param fileResultId 文件结果 ID
+     * @param owner        归属方标识
+     * @param chunkRow     切片集合行
+     * @param embedRow     向量集合行
+     * @return 索引行；产物读取失败时返回 null，无 SUCCESS/CACHED 记录时返回空列表
      */
     public List<IndexRow> assemble(Long fileResultId, String owner, WbChunkSet chunkRow, WbEmbeddingSet embedRow) {
         EmbeddingSet embedSet = readEmbeddingSet(ObjectRef.ofEmbeddingSet(embedRow));
@@ -66,7 +70,12 @@ public class IndexRowAssembler {
         return rows;
     }
 
-    /** 向量产物位置 → EmbeddingSet（读取失败返回 null）。 */
+    /**
+     * 读取向量产物。
+     *
+     * @param ref 向量产物位置
+     * @return 向量集合；读取或解析失败时为 null
+     */
     public EmbeddingSet readEmbeddingSet(ObjectRef ref) {
         try {
             byte[] content = fileStorage.getObject(ref);
@@ -80,7 +89,12 @@ public class IndexRowAssembler {
         }
     }
 
-    /** 切片产物位置 → chunkId 索引（读取失败返回 null，增强字段降级为空）。 */
+    /**
+     * 读取切片产物并建 chunkId 索引。
+     *
+     * @param ref 切片产物位置
+     * @return chunkId 到切片的映射；读取失败时为 null
+     */
     public Map<String, Chunk> readChunkIndex(ObjectRef ref) {
         try {
             byte[] content = fileStorage.getObject(ref);

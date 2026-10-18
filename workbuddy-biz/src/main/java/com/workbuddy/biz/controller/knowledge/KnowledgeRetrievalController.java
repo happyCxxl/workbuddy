@@ -36,6 +36,13 @@ public class KnowledgeRetrievalController {
 
     private final RetrievalRuleService retrievalRuleService;
 
+    /**
+     * 检索：按知识库默认规则执行一次查询并记录运行。
+     *
+     * @param id      知识库 ID
+     * @param request 检索请求
+     * @return 检索结果
+     */
     @PostMapping("/{id}/search")
     public R<SearchVO> search(
             @PathVariable("id") Long id,
@@ -43,6 +50,13 @@ public class KnowledgeRetrievalController {
         return R.ok(searchService.search(id, request));
     }
 
+    /**
+     * 检索测试：与正式检索同一口径，供参数调试。
+     *
+     * @param id      知识库 ID
+     * @param request 检索请求
+     * @return 检索结果
+     */
     @PostMapping("/{id}/retrieval-test")
     public R<SearchVO> retrievalTest(
             @PathVariable("id") Long id,
@@ -50,6 +64,13 @@ public class KnowledgeRetrievalController {
         return R.ok(searchService.search(id, request));
     }
 
+    /**
+     * 最近的检索运行记录。
+     *
+     * @param id    知识库 ID
+     * @param limit 条数上限
+     * @return 运行记录列表
+     */
     @GetMapping("/{id}/retrieval-runs")
     public R<List<RetrievalRunVO>> runs(
             @PathVariable("id") Long id,
@@ -57,6 +78,13 @@ public class KnowledgeRetrievalController {
         return R.ok(searchService.listRuns(id, limit));
     }
 
+    /**
+     * 对比多次检索运行的结果。
+     *
+     * @param id  知识库 ID
+     * @param dto 对比请求（运行记录 ID 列表）
+     * @return 各次运行的结果
+     */
     @PostMapping("/{id}/retrieval-runs/compare")
     public R<List<SearchVO>> compare(
             @PathVariable("id") Long id,
@@ -64,6 +92,13 @@ public class KnowledgeRetrievalController {
         return R.ok(searchService.compareRuns(id, dto.getRunIds()));
     }
 
+    /**
+     * 发布知识库的默认检索规则。
+     *
+     * @param id  知识库 ID
+     * @param dto 规则发布请求
+     * @return 发布结果
+     */
     @PostMapping("/{id}/retrieval-rules/publish")
     public R<RetrievalRulePublishVO> publishRule(
             @PathVariable("id") Long id,

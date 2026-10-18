@@ -66,6 +66,7 @@ public class StageStrategySupport {
      *
      * @param strategyVersionId 策略版本行 ID（非空）
      * @param type              期望的策略类型
+     * @return 校验通过的策略版本行
      */
     public WbPipelineStrategyVersion requireExplicit(Long strategyVersionId, String type) {
         WbPipelineStrategyVersion row = strategyVersionDbService.getById(strategyVersionId);

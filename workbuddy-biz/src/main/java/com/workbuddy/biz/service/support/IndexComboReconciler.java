@@ -46,6 +46,13 @@ public class IndexComboReconciler {
     /**
      * 对账期望（实时）。
      *
+     * @param chunkIds     组合范围内应有的切片 ID 集合
+     * @param vectorCount  应有向量条数
+     * @param dimension    向量维度
+     * @param complete     切片与向量是否都齐全
+     * @param gap          缺口说明（齐全时为空）
+     * @param dimConsistent 维度是否一致
+     * @param dimError     维度不一致说明（一致时为空）
      * @param sampleVector  冒烟样本：首条带向量的 SUCCESS/CACHED 记录（无 → null）
      * @param sampleKeyword 冒烟样本：首条非空 inputText 前 6 字（无 → null）
      */
@@ -57,9 +64,18 @@ public class IndexComboReconciler {
     /**
      * 单文件组合产物（单一取数口径）：该文件在组合下的最新成功切片/向量行；
      * 缺口时 gap 非空（chunkRow/embedRow 为 null）。
+     *
+     * @param chunkRow 最新成功切片行（缺口时为 null）
+     * @param embedRow 最新成功向量行（缺口时为 null）
+     * @param gap      缺口说明（齐全时为空）
      */
     public record ComboProducts(WbChunkSet chunkRow, WbEmbeddingSet embedRow, String gap) {
 
+        /**
+         * 切片与向量是否都取到。
+         *
+         * @return 齐全为 true
+         */
         public boolean complete() {
             return NullUtil.isNull(gap);
         }
@@ -68,6 +84,11 @@ public class IndexComboReconciler {
     /**
      * 组合枚举取数目录（枚举/列表弹窗共用批次口径）：文件级最新切片/向量行 +
      * 候选三元组（预处理策略 × 切片策略）对 + 向量策略集（血统缺失的切片策略不参与）。
+     *
+     * @param latestChunk       文件级最新成功切片行
+     * @param latestEmbed       文件级最新成功向量行
+     * @param preprocessByChunk 切片策略到可用预处理策略的映射
+     * @param embedStrategies   候选向量策略集合
      */
     public record ComboCatalog(Map<String, WbChunkSet> latestChunk, Map<String, WbEmbeddingSet> latestEmbed,
                                Map<String, Set<String>> preprocessByChunk, Set<String> embedStrategies) {
@@ -76,6 +97,9 @@ public class IndexComboReconciler {
     /**
      * 组合枚举取数目录（批量预取 + 候选三元组生成，单一口径）：
      * 预处理策略由切片行的上游产物血缘解析（血统缺失 → 该切片策略不进入候选）。
+     *
+     * @param fileResultIds 范围内的文件结果 ID
+     * @return 批次取数目录
      */
     public ComboCatalog catalog(List<Long> fileResultIds) {
         Map<String, WbChunkSet> latestChunk = latestChunkMap(fileResultIds);
@@ -95,7 +119,12 @@ public class IndexComboReconciler {
         return new ComboCatalog(latestChunk, latestEmbed, preprocessByChunk, embedStrategies);
     }
 
-    /** 文件级「同策略最新成功」切片行（追加表取 id 最大；对账/回填/枚举共用批次口径）。 */
+    /**
+     * 文件级「同策略最新成功」切片行（追加表取 id 最大；对账/回填/枚举共用批次口径）。
+     *
+     * @param fileResultIds 文件结果 ID
+     * @return 「文件ID#切片策略」到最新切片行的映射
+     */
     public Map<String, WbChunkSet> latestChunkMap(List<Long> fileResultIds) {
         Map<String, WbChunkSet> latest = new LinkedHashMap<>();
         for (WbChunkSet set : chunkSetDbService.listByFileResultIds(fileResultIds)) {
@@ -105,7 +134,12 @@ public class IndexComboReconciler {
         return latest;
     }
 
-    /** 文件级「同策略最新成功」向量行（追加表取 id 最大；对账/回填/枚举共用批次口径）。 */
+    /**
+     * 文件级「同策略最新成功」向量行（追加表取 id 最大；对账/回填/枚举共用批次口径）。
+     *
+     * @param fileResultIds 文件结果 ID
+     * @return 「文件ID#向量策略」到最新向量行的映射
+     */
     public Map<String, WbEmbeddingSet> latestEmbedMap(List<Long> fileResultIds) {
         Map<String, WbEmbeddingSet> latest = new LinkedHashMap<>();
         for (WbEmbeddingSet set : embeddingSetDbService.listByFileResultIds(fileResultIds)) {
@@ -119,6 +153,12 @@ public class IndexComboReconciler {
      * 单一取数口径（枚举/对账/回填共用）：从预取的批次最新行中选出某文件在该组合下的产物。
      * 切片 = 该文件 chunkStrategy 最新成功；向量 = 该文件 embedStrategy 最新成功；
      * 切片血缘（上游预处理策略）必须匹配组合预处理策略——不匹配/缺失 → gap（血统纯净，不拿异血统顶替）。
+     *
+     * @param combo        组合快照
+     * @param fileResultId 文件结果 ID
+     * @param latestChunk  预取的切片行映射
+     * @param latestEmbed  预取的向量行映射
+     * @return 该文件在组合下的产物，缺口时 gap 非空
      */
     public ComboProducts selectComboProducts(ComboSnapshot combo, Long fileResultId,
                                              Map<String, WbChunkSet> latestChunk,
@@ -136,7 +176,13 @@ public class IndexComboReconciler {
         return new ComboProducts(chunkRow, embedRow, null);
     }
 
-    /** 计算组合对账期望（实时重算口径）。 */
+    /**
+     * 计算组合对账期望（实时重算口径）。
+     *
+     * @param kbId  知识库 ID
+     * @param combo 组合快照
+     * @return 期望的切片集合、向量条数与一致性结论
+     */
     public ComboExpectation computeExpected(Long kbId, ComboSnapshot combo) {
         // 对账不变量：组合必须携带三环节策略维度（缺失即坏数据，已在快照读取处显式拒绝）
         if (NullUtil.isNull(combo) || !combo.hasCompleteStageStrategies()) {

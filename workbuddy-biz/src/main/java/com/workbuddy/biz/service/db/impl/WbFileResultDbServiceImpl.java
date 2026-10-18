@@ -23,6 +23,14 @@ import java.util.Map;
 public class WbFileResultDbServiceImpl extends InfraDbServiceImpl<WbFileResultMapper, WbFileResult>
         implements WbFileResultDbService {
 
+    /**
+     * 按知识库分页查文件结果。
+     *
+     * @param current         页码
+     * @param size            每页条数
+     * @param knowledgeBaseId 知识库 ID
+     * @return 文件结果分页
+     */
     @Override
     public IPage<WbFileResult> pageByKb(long current, long size, Long knowledgeBaseId) {
         LambdaQueryWrapper<WbFileResult> queryWrapper = new LambdaQueryWrapper<>();
@@ -31,6 +39,12 @@ public class WbFileResultDbServiceImpl extends InfraDbServiceImpl<WbFileResultMa
         return page(new Page<>(current, size), queryWrapper);
     }
 
+    /**
+     * 取某知识库下的全部文件结果。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 文件结果列表
+     */
     @Override
     public List<WbFileResult> listByKb(Long knowledgeBaseId) {
         LambdaQueryWrapper<WbFileResult> queryWrapper = new LambdaQueryWrapper<>();
@@ -39,6 +53,12 @@ public class WbFileResultDbServiceImpl extends InfraDbServiceImpl<WbFileResultMa
         return list(queryWrapper);
     }
 
+    /**
+     * 统计某知识库下的文件数。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 文件数
+     */
     @Override
     public long countByKb(Long knowledgeBaseId) {
         LambdaQueryWrapper<WbFileResult> queryWrapper = new LambdaQueryWrapper<>();
@@ -46,6 +66,12 @@ public class WbFileResultDbServiceImpl extends InfraDbServiceImpl<WbFileResultMa
         return count(queryWrapper);
     }
 
+    /**
+     * 按知识库分组统计文件数。
+     *
+     * @param knowledgeBaseIds 知识库 ID 列表
+     * @return 知识库 ID 到文件数的映射
+     */
     @Override
     public Map<Long, Long> countGroupByKb(List<Long> knowledgeBaseIds) {
         if (CollUtil.isEmpty(knowledgeBaseIds)) {
@@ -67,6 +93,12 @@ public class WbFileResultDbServiceImpl extends InfraDbServiceImpl<WbFileResultMa
         return result;
     }
 
+    /**
+     * 统计一组知识库的文件总数。
+     *
+     * @param knowledgeBaseIds 知识库 ID 列表
+     * @return 文件数
+     */
     @Override
     public long countByKbIds(List<Long> knowledgeBaseIds) {
         if (CollUtil.isEmpty(knowledgeBaseIds)) {

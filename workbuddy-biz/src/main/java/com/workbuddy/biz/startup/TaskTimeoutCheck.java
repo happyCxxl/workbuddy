@@ -25,11 +25,21 @@ public class TaskTimeoutCheck implements StartupCheck {
 
     private final TaskQueueProperties properties;
 
+    /**
+     * 校验序号：参数类校验。
+     *
+     * @return 校验顺序
+     */
     @Override
     public int order() {
         return ORDER_PARAMETERS;
     }
 
+    /**
+     * 校验各环节超时都是正数，通过后交给链上的下一项。
+     *
+     * @param next 启动校验链的下一项
+     */
     @Override
     public void check(StartupCheckChain next) {
         List<String> illegal = properties.getTimeout().entrySet().stream()

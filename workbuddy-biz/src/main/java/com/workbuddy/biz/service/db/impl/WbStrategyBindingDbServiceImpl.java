@@ -20,6 +20,13 @@ public class WbStrategyBindingDbServiceImpl
         extends InfraDbServiceImpl<WbStrategyBindingMapper, WbStrategyBinding>
         implements WbStrategyBindingDbService {
 
+    /**
+     * 取知识库在某策略类型上的生效绑定。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param strategyType    策略类型码值
+     * @return 绑定行；没有则为 null
+     */
     @Override
     public WbStrategyBinding getByKbAndType(Long knowledgeBaseId, String strategyType) {
         LambdaQueryWrapper<WbStrategyBinding> queryWrapper = new LambdaQueryWrapper<>();
@@ -29,6 +36,13 @@ public class WbStrategyBindingDbServiceImpl
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 取知识库在某策略类型上的绑定（不区分启用状态）。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param strategyType    策略类型码值
+     * @return 绑定行；没有则为 null
+     */
     @Override
     public WbStrategyBinding getAnyByKbAndType(Long knowledgeBaseId, String strategyType) {
         LambdaQueryWrapper<WbStrategyBinding> queryWrapper = new LambdaQueryWrapper<>();
@@ -41,6 +55,13 @@ public class WbStrategyBindingDbServiceImpl
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 批量取多个知识库在某策略类型上的生效绑定。
+     *
+     * @param strategyType    策略类型码值
+     * @param knowledgeBaseIds 知识库 ID 集合
+     * @return 绑定列表；入参为空时返回空列表
+     */
     @Override
     public List<WbStrategyBinding> listActiveByTypeAndKbIds(String strategyType, Collection<Long> knowledgeBaseIds) {
         if (NullUtil.isNull(knowledgeBaseIds) || knowledgeBaseIds.isEmpty()) {
@@ -52,6 +73,12 @@ public class WbStrategyBindingDbServiceImpl
         return list(queryWrapper);
     }
 
+    /**
+     * 是否有知识库绑定了该策略版本。
+     *
+     * @param strategyVersionId 策略版本行 ID
+     * @return 有绑定为 true
+     */
     @Override
     public boolean existsByStrategyVersionId(Long strategyVersionId) {
         LambdaQueryWrapper<WbStrategyBinding> queryWrapper = new LambdaQueryWrapper<>();

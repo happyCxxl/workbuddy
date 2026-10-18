@@ -80,6 +80,13 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
         return new PreprocessTriggerVO(fileResultId, triggered.getPipelineTaskId(), strategy.fullVersion());
     }
 
+    /**
+     * 预处理详情：任务状态、子步骤、字段与剔除统计、产物引用。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param taskId       任务 ID（可空表示取最新）
+     * @return 预处理详情
+     */
     @Override
     public PreprocessDetailVO preprocessDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);

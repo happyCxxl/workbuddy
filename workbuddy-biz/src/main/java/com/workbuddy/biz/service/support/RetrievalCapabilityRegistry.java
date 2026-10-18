@@ -17,12 +17,22 @@ public class RetrievalCapabilityRegistry {
 
     private final Set<String> enabled;
 
+    /**
+     * 构造注册表：一次性读出启用的能力名。
+     *
+     * @param properties 检索能力配置
+     */
     public RetrievalCapabilityRegistry(RetrievalCapabilityProperties properties) {
         this.enabled = properties.enabledNames();
         log.info("===> RetrievalCapabilityRegistry 检索能力开关: {}", enabled);
     }
 
-    /** 能力是否已启用。 */
+    /**
+     * 能力是否已启用。
+     *
+     * @param capability 检索能力
+     * @return 已启用为 true
+     */
     public boolean isEnabled(RetrievalCapability capability) {
         return enabled.contains(capability.name());
     }

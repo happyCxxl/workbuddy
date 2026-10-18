@@ -89,6 +89,13 @@ public class ChunkControlServiceImpl implements ChunkControlService {
         return new ChunkTriggerVO(fileResultId, triggered.getPipelineTaskId(), strategy.fullVersion());
     }
 
+    /**
+     * 切片详情：任务状态、子步骤、切片统计与列表、产物引用。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param taskId       任务 ID（可空表示取最新）
+     * @return 切片详情
+     */
     @Override
     public ChunkDetailVO chunkDetail(Long fileResultId, Long taskId) {
         accessGuard.requireExisting(fileResultId);

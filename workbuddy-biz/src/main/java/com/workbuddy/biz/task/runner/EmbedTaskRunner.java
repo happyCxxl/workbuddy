@@ -77,6 +77,8 @@ public class EmbedTaskRunner {
 
     /**
      * 执行单个向量化任务（由消费循环提交，外层看门狗负责超时）。
+     *
+     * @param taskId 任务 ID
      */
     public void run(Long taskId) {
         TaskRunnerSupport.Claimed claimed = TaskRunnerSupport.claimFileResult(pipelineTaskDbService,

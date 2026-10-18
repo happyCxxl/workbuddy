@@ -42,6 +42,13 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
 
     private final RetrievalRuleResolver retrievalRuleResolver;
 
+    /**
+     * 列出某策略类型的版本。
+     *
+     * @param type            策略类型码值
+     * @param includeInactive 是否包含停用版本
+     * @return 策略版本列表
+     */
     @Override
     public List<StrategyVersionVO> list(String type, boolean includeInactive) {
         ThrowUtil.throwIf(StrUtil.isBlank(type) || !SUPPORTED_TYPES.contains(type),
@@ -52,6 +59,12 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         return rows.stream().map(this::toVO).toList();
     }
 
+    /**
+     * 新建策略版本。
+     *
+     * @param dto 新建请求
+     * @return 新建的策略版本
+     */
     @Override
     public StrategyVersionVO create(StrategyVersionCreateDTO dto) {
         ThrowUtil.throwIf(!SUPPORTED_TYPES.contains(dto.getType()),
@@ -59,6 +72,13 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         return register(dto.getType(), dto.getName(), dto.getVersion(), dto.getConfigSnapshot());
     }
 
+    /**
+     * 编辑策略版本：版本行不可变，编辑等于复制一行新版本，旧行原样保留。
+     *
+     * @param id  策略版本行 ID
+     * @param dto 编辑请求
+     * @return 新的策略版本
+     */
     @Override
     public StrategyVersionVO update(Long id, StrategyVersionUpdateDTO dto) {
         // 策略版本行不可变：编辑 = 复制新行（旧行原样保留；新版本号撞唯一键 → 40001）
@@ -86,6 +106,12 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         return toVO(row);
     }
 
+    /**
+     * 启用策略版本。
+     *
+     * @param id 策略版本行 ID
+     * @return 更新后的策略版本
+     */
     @Override
     public StrategyVersionVO enable(Long id) {
         WbPipelineStrategyVersion row = requireById(id);
@@ -94,6 +120,12 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         return toVO(row);
     }
 
+    /**
+     * 停用策略版本。
+     *
+     * @param id 策略版本行 ID
+     * @return 更新后的策略版本
+     */
     @Override
     public StrategyVersionVO disable(Long id) {
         WbPipelineStrategyVersion row = requireById(id);
@@ -102,6 +134,12 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         return toVO(row);
     }
 
+    /**
+     * 删除策略版本：有绑定引用时拒绝（停用代替删除，引用不悬空）。
+     *
+     * @param id 策略版本行 ID
+     * @return 删除成功为 true
+     */
     @Override
     public boolean delete(Long id) {
         // 策略版本行不可变：有绑定引用禁物理删除（停用代替删除，引用不悬空）

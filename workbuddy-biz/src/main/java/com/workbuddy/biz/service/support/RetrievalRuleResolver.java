@@ -43,7 +43,12 @@ public class RetrievalRuleResolver {
 
     private final RetrievalCapabilityRegistry capabilityRegistry;
 
-    /** 解析规则快照 JSON（空/非法 JSON → 40001）。 */
+    /**
+     * 解析规则快照 JSON（空/非法 JSON → 40001）。
+     *
+     * @param configSnapshot 规则快照 JSON
+     * @return 解析出的规则配置
+     */
     public RetrievalRuleSpec parse(String configSnapshot) {
         ThrowUtil.throwIf(StrUtil.isBlank(configSnapshot), ErrorCode.PARAM_INVALID, "检索规则配置不能为空");
         try {
@@ -55,6 +60,9 @@ public class RetrievalRuleResolver {
 
     /**
      * 注册校验：字段/取值白名单 + 参数边界 + 预留能力锁定。违规 40001/40451。
+     *
+     * @param configSnapshot 规则快照 JSON
+     * @return 校验通过的规则配置
      */
     public RetrievalRuleSpec validate(String configSnapshot) {
         RetrievalRuleSpec spec = parse(configSnapshot);

@@ -18,6 +18,12 @@ import java.util.List;
 public class WbIndexVersionDbServiceImpl extends ServiceImpl<WbIndexVersionMapper, WbIndexVersion>
         implements WbIndexVersionDbService {
 
+    /**
+     * 取索引集合下的全部版本。
+     *
+     * @param indexSetId 索引集合 ID
+     * @return 版本列表
+     */
     @Override
     public List<WbIndexVersion> listByIndexSetId(Long indexSetId) {
         LambdaQueryWrapper<WbIndexVersion> queryWrapper = new LambdaQueryWrapper<>();
@@ -26,6 +32,12 @@ public class WbIndexVersionDbServiceImpl extends ServiceImpl<WbIndexVersionMappe
         return list(queryWrapper);
     }
 
+    /**
+     * 生成下一个版本号（v1、v2 …）。
+     *
+     * @param indexSetId 索引集合 ID
+     * @return 新的版本号
+     */
     @Override
     public String nextVersionNo(Long indexSetId) {
         // 取现有最大数字后缀 + 1：回收会物理删行，行数+1 在删行后会重号；
@@ -39,6 +51,12 @@ public class WbIndexVersionDbServiceImpl extends ServiceImpl<WbIndexVersionMappe
         return "v" + (max + 1);
     }
 
+    /**
+     * 按构建任务取版本。
+     *
+     * @param taskId 任务 ID
+     * @return 版本行；没有则为 null
+     */
     @Override
     public WbIndexVersion getByTaskId(Long taskId) {
         LambdaQueryWrapper<WbIndexVersion> queryWrapper = new LambdaQueryWrapper<>();

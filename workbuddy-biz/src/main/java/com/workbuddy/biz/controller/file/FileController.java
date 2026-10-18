@@ -26,13 +26,24 @@ public class FileController {
     private final FileStorage fileStorage;
     private final FileService fileService;
 
-    /** 上传文件，返回 fileId。 */
+    /**
+     * 上传文件。
+     *
+     * @param file 上传的文件
+     * @return 新建的 fileId
+     */
     @PostMapping
     public R<String> upload(@RequestParam("file") MultipartFile file) {
         return R.ok(fileStorage.putFile(file));
     }
 
-    /** 按 fileId 下载。 */
+    /**
+     * 按 fileId 下载文件：以附件形式写进响应流。
+     *
+     * @param fileId   文件 ID
+     * @param response 响应
+     * @throws IOException 读对象或写响应失败
+     */
     @GetMapping("/{fileId}")
     public void download(@PathVariable String fileId, HttpServletResponse response) throws IOException {
         fileService.download(fileId, response);

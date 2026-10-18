@@ -27,11 +27,21 @@ public class RetrievalCapabilityCheck implements StartupCheck {
 
     private final RetrievalCapabilityProperties properties;
 
+    /**
+     * 校验序号：参数类校验。
+     *
+     * @return 校验顺序
+     */
     @Override
     public int order() {
         return ORDER_PARAMETERS;
     }
 
+    /**
+     * 校验配置里的检索能力名都是合法枚举名，通过后交给链上的下一项。
+     *
+     * @param next 启动校验链的下一项
+     */
     @Override
     public void check(StartupCheckChain next) {
         Set<String> legal = Arrays.stream(RetrievalCapability.values())

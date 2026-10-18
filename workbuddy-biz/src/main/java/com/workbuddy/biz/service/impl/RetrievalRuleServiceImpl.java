@@ -47,12 +47,22 @@ public class RetrievalRuleServiceImpl implements RetrievalRuleService {
     private final WbAuditLogDbService kbAuditLogDbService;
 
     /**
-     * 规则列表（type=RETRIEVAL；includeInactive=false 只启用中——测试台选择器用，true 全部——管理页用）。
+     * 规则列表（type=RETRIEVAL）。
+     *
+     * @param includeInactive 是否包含停用版本（测试台选择器传 false，管理页传 true）
+     * @return 检索规则版本列表
      */
     public List<StrategyVersionVO> listRules(boolean includeInactive) {
         return strategyVersionService.list("RETRIEVAL", includeInactive);
     }
 
+    /**
+     * 发布知识库的默认检索规则：校验版本归属后写回默认规则列。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param dto             规则发布请求
+     * @return 发布结果
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public RetrievalRulePublishVO publishDefaultRule(Long knowledgeBaseId, RetrievalRulePublishDTO dto) {

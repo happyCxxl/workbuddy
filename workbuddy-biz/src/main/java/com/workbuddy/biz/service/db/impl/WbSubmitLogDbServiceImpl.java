@@ -17,6 +17,12 @@ import org.springframework.stereotype.Service;
 public class WbSubmitLogDbServiceImpl extends InfraDbServiceImpl<WbSubmitLogMapper, WbSubmitLog>
         implements WbSubmitLogDbService {
 
+    /**
+     * 按幂等键取提交日志。
+     *
+     * @param requestId 幂等键
+     * @return 提交日志；没有则为 null
+     */
     @Override
     public WbSubmitLog getByRequestId(String requestId) {
         LambdaQueryWrapper<WbSubmitLog> queryWrapper = new LambdaQueryWrapper<>();
@@ -24,6 +30,16 @@ public class WbSubmitLogDbServiceImpl extends InfraDbServiceImpl<WbSubmitLogMapp
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 按知识库分页查提交日志。
+     *
+     * @param current         页码
+     * @param size            每页条数
+     * @param knowledgeBaseId 知识库 ID
+     * @param status          状态码值（可空）
+     * @param fileName        文件名模糊匹配（可空）
+     * @return 提交日志分页
+     */
     @Override
     public IPage<WbSubmitLog> pageByKb(long current, long size, Long knowledgeBaseId, String status, String fileName) {
         LambdaQueryWrapper<WbSubmitLog> queryWrapper = new LambdaQueryWrapper<>();
@@ -34,6 +50,14 @@ public class WbSubmitLogDbServiceImpl extends InfraDbServiceImpl<WbSubmitLogMapp
         return page(new Page<>(current, size), queryWrapper);
     }
 
+    /**
+     * 分页取某用户最近的提交记录。
+     *
+     * @param current 页码
+     * @param size    每页条数
+     * @param userId  用户 ID
+     * @return 提交日志分页
+     */
     @Override
     public IPage<WbSubmitLog> pageRecentByUser(long current, long size, Long userId) {
         LambdaQueryWrapper<WbSubmitLog> queryWrapper = new LambdaQueryWrapper<>();

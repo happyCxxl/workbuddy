@@ -52,7 +52,12 @@ public final class TaskRunnerSupport {
         return pipelineTaskDbService.claim(taskId) == 1 ? task : null;
     }
 
-    /** 领任务 + 取文件结果的结果对（领不到或文件结果缺失时为 null）。 */
+    /**
+     * 领任务与文件结果的结果对。
+     *
+     * @param task       已抢占的任务（领不到时为 null）
+     * @param fileResult 任务对应的文件结果（缺失时为 null）
+     */
     public record Claimed(WbPipelineTask task, WbFileResult fileResult) {
     }
 
@@ -214,7 +219,16 @@ public final class TaskRunnerSupport {
                 StrUtil.isBlank(errorMsg) ? null : StrUtil.maxLength(errorMsg, MAX_ERROR_MESSAGE_LENGTH));
     }
 
-    /** 终态收尾：按建议状态分派成功/失败路径。 */
+    /**
+     * 终态收尾：按建议状态分派成功/失败路径。
+     *
+     * @param pipelineTaskDbService 任务数据访问
+     * @param stepLogPersistence    步骤日志落库
+     * @param taskId                任务 ID
+     * @param outcome               环节执行结果
+     * @param onSuccess             成功时的产物回写动作
+     * @param onFailure             失败时的回写动作
+     */
     public static void complete(WbPipelineTaskDbService pipelineTaskDbService,
                                 StepLogPersistence stepLogPersistence, Long taskId,
                                 StageOutcome outcome, Runnable onSuccess, FailedFinisher onFailure) {
@@ -233,6 +247,13 @@ public final class TaskRunnerSupport {
     /**
      * 完成日志（落库收尾共用）：label 传完整前缀（如 "ParseTaskRunner 解析完成"），logger 用调用方自己的，
      * 日志类别与文案仍留在各执行器上。
+     *
+     * @param log          调用方的 logger
+     * @param label        日志前缀（含执行器与动作）
+     * @param task         任务行
+     * @param fileResultId 文件结果 ID
+     * @param outcome      环节执行结果
+     * @param artifactId   产物 ID（可空）
      */
     public static void logPersisted(Logger log, String label, WbPipelineTask task, Long fileResultId,
                                     StageOutcome outcome, String artifactId) {

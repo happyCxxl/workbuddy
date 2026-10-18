@@ -29,7 +29,11 @@ public class TaskDetailSupport {
     /**
      * 解析详情任务：taskId 指定则查该次运行并校验归属与环节（不匹配 40001）；缺省取该环节最新任务（可为空）。
      *
-     * @param stageLabel 环节中文名（错误提示用）
+     * @param fileResultId 文件结果 ID
+     * @param stage        环节
+     * @param taskId       指定任务 ID（可空，空则取该环节最新任务）
+     * @param stageLabel   环节中文名（错误提示用）
+     * @return 任务行；缺省取最新且没有任务时为 null
      */
     public WbPipelineTask resolveTask(Long fileResultId, PipelineStage stage, Long taskId, String stageLabel) {
         if (NullUtil.isNull(taskId)) {
@@ -62,6 +66,9 @@ public class TaskDetailSupport {
 
     /**
      * 该次运行的产物：按 {@code task.productId} 取；无任务或无产物时返回 null（各环节据此留空）。
+     *
+     * @param task 任务行（可空）
+     * @return 产物行；无任务、无产物或产物不存在时为 null
      */
     public WbPipelineProduct productOfTask(WbPipelineTask task) {
         return NullUtil.isNull(task) || NullUtil.isNull(task.getProductId()) ? null

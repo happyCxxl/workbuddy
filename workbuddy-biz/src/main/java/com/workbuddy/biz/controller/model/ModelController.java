@@ -37,21 +37,47 @@ public class ModelController {
 
     private final ModelService modelService;
 
+    /**
+     * 分页查模型目录。
+     *
+     * @param query 查询条件
+     * @return 模型分页
+     */
     @GetMapping("/page")
     public R<IPage<ModelItemVO>> page(@Valid ModelQueryDTO query) {
         return R.ok(modelService.page(query));
     }
 
+    /**
+     * 新增模型。
+     *
+     * @param dto 新增请求
+     * @return 新建的模型
+     */
     @PostMapping("/create")
     public R<ModelItemVO> create(@Valid @RequestBody ModelSaveDTO dto) {
         return R.ok(modelService.create(dto), "新增成功");
     }
 
+    /**
+     * 编辑模型。
+     *
+     * @param id  模型 ID
+     * @param dto 编辑请求
+     * @return 更新后的模型
+     */
     @PutMapping("/update/{id}")
     public R<ModelItemVO> update(@PathVariable Long id, @Valid @RequestBody ModelUpdateDTO dto) {
         return R.ok(modelService.update(id, dto), "更新成功");
     }
 
+    /**
+     * 更新模型状态（启用/停用）。
+     *
+     * @param id  模型 ID
+     * @param dto 状态请求
+     * @return 更新后的模型
+     */
     @PatchMapping("/updateStatus/{id}")
     public R<ModelItemVO> updateStatus(@PathVariable Long id, @Valid @RequestBody ModelStatusDTO dto) {
         return R.ok(modelService.updateStatus(id, dto), "状态已更新");

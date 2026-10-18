@@ -24,6 +24,12 @@ public class StepLogPersistence {
     private final WbPipelineStepLogDbService stepLogDbService;
 
     /** 逐条保存子步骤日志（公共字段拷贝 + 默认值补齐 + 错误文案截断）。 */
+    /**
+     * 批量落库步骤日志：先清掉该任务的旧记录，再按顺序写入。
+     *
+     * @param taskId   任务 ID
+     * @param stepLogs 步骤日志
+     */
     public void save(Long taskId, List<StepLogInfo> stepLogs) {
         for (StepLogInfo step : stepLogs) {
             WbPipelineStepLog stepLog = new WbPipelineStepLog();

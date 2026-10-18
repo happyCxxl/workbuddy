@@ -18,6 +18,12 @@ import java.util.List;
 public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingSetMapper, WbEmbeddingSet>
         implements WbEmbeddingSetDbService {
 
+    /**
+     * 取该文件最新一条向量集合。
+     *
+     * @param fileResultId 文件结果 ID
+     * @return 最新向量集合；没有则为 null
+     */
     @Override
     public WbEmbeddingSet getLatestByFileResultId(Long fileResultId) {
         LambdaQueryWrapper<WbEmbeddingSet> queryWrapper = new LambdaQueryWrapper<>();
@@ -27,6 +33,12 @@ public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingS
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 取该文件的全部向量集合，按 ID 升序。
+     *
+     * @param fileResultId 文件结果 ID
+     * @return 向量集合列表
+     */
     @Override
     public List<WbEmbeddingSet> listByFileResultId(Long fileResultId) {
         LambdaQueryWrapper<WbEmbeddingSet> queryWrapper = new LambdaQueryWrapper<>();
@@ -35,6 +47,14 @@ public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingS
         return list(queryWrapper);
     }
 
+    /**
+     * 取同策略的历史成功集合，按 ID 降序限制条数。
+     *
+     * @param fileResultId    文件结果 ID
+     * @param strategyVersion 向量策略版本
+     * @param limit           条数上限（小于 1 按 1 处理）
+     * @return 命中的向量集合列表
+     */
     @Override
     public List<WbEmbeddingSet> listHistoryByFileResultIdAndStrategyVersion(Long fileResultId,
                                                                             String strategyVersion, int limit) {
@@ -47,6 +67,12 @@ public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingS
         return list(queryWrapper);
     }
 
+    /**
+     * 按产物指纹取向量集合。
+     *
+     * @param artifactId 产物 ID
+     * @return 命中的向量集合；没有则为 null
+     */
     @Override
     public WbEmbeddingSet getByArtifactId(String artifactId) {
         LambdaQueryWrapper<WbEmbeddingSet> queryWrapper = new LambdaQueryWrapper<>();
@@ -56,6 +82,12 @@ public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingS
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * 批量取向量集合，按 ID 升序。
+     *
+     * @param fileResultIds 文件结果 ID 列表
+     * @return 命中的向量集合；入参为空时返回空列表
+     */
     @Override
     public List<WbEmbeddingSet> listByFileResultIds(List<Long> fileResultIds) {
         if (NullUtil.isNull(fileResultIds) || fileResultIds.isEmpty()) {

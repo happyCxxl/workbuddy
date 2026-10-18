@@ -13,7 +13,11 @@ public class RetrievalRunSettings {
 
     private final RetrievalRunProperties properties;
 
-    /** 生产检索是否落运行记录。 */
+    /**
+     * 生产检索是否落运行记录。
+     *
+     * @return 落库为 true
+     */
     public boolean recordProduction() {
         return properties.isRecordProduction();
     }

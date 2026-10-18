@@ -34,13 +34,22 @@ public class AvatarController {
 
     private final AvatarService avatarService;
 
-    /** 上传头像：按文件头判定类型，成功返回可直接渲染的新地址。 */
+    /**
+     * 上传头像：按文件头判定类型，成功返回可直接渲染的新地址。
+     *
+     * @param file 头像文件（PNG / JPG / WebP，不超过 2MB）
+     * @return 新头像地址
+     */
     @PostMapping
     public R<String> upload(@RequestParam("file") MultipartFile file) {
         return R.ok(avatarService.upload(file), "头像已更新");
     }
 
-    /** 移除头像：四列一并清空（key + 存储类型 + 数据源 + 桶名）。 */
+    /**
+     * 移除头像：四列一并清空（key + 存储类型 + 数据源 + 桶名）。
+     *
+     * @return 恒为成功响应
+     */
     @DeleteMapping
     public R<Void> remove() {
         avatarService.remove();
@@ -50,6 +59,9 @@ public class AvatarController {
     /**
      * 读取头像：未设置头像与用户不存在都回 404，两种情况响应完全一致，
      * 探测不出"某个 userId 是否存在"。
+     *
+     * @param userId 用户 ID
+     * @return 头像字节；没有头像或对象不可用时 404
      */
     @GetMapping("/{userId}")
     public ResponseEntity<byte[]> read(@PathVariable Long userId) {

@@ -106,17 +106,35 @@ public class StorageSourceServiceImpl implements StorageSourceService {
         recordProbeQuietly(sourceId, true);
     }
 
+    /**
+     * 列出全部存储数据源。
+     *
+     * @return 数据源视图列表
+     */
     @Override
     public List<StorageSourceVO> list() {
         return storageSourceDbService.listAll().stream().map(this::toVO).toList();
     }
 
+    /**
+     * 预览切换到该数据源的影响（统计受影响的记录数，不落库）。
+     *
+     * @param id 数据源 ID
+     * @return 切换影响预览
+     */
     @Override
     public StorageSwitchPreviewVO previewCurrent(Long id) {
         WbStorageSource target = requireSwitchable(id);
         return toPreview(target, countImpact(id));
     }
 
+    /**
+     * 把该数据源设为当前启用（探活通过才切换，记录操作人）。
+     *
+     * @param id       数据源 ID
+     * @param operator 操作人
+     * @return 切换结果
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StorageSwitchResultVO switchCurrent(Long id, String operator) {

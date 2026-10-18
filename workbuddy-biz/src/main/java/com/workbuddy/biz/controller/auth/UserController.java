@@ -39,34 +39,70 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * 当前登录用户的档案。
+     *
+     * @return 用户档案
+     */
     @GetMapping("/profile")
     public R<UserVO> getUserProfile() {
         return R.ok(userService.getUserProfile(currentUserId()));
     }
 
+    /**
+     * 修改当前登录用户的档案（展示名、邮箱、手机号）。
+     *
+     * @param request 档案修改请求
+     * @return 恒为成功响应
+     */
     @PutMapping("/profile")
     public R<Void> updateProfile(@Valid @RequestBody ProfileUpdateDTO request) {
         userService.updateProfile(currentUserId(), request);
         return R.ok(null, "更新成功");
     }
 
+    /**
+     * 改密码：成功后返回重签的令牌，旧令牌全部失效。
+     *
+     * @param request 改密请求
+     * @return 重签的令牌
+     */
     @PutMapping("/password")
     public R<String> changePassword(@Valid @RequestBody PasswordUpdateDTO request) {
         return R.ok(userService.changePassword(currentUserId(), request), "密码已修改");
     }
 
+    /**
+     * 分页查用户（管理员）。
+     *
+     * @param query 查询条件
+     * @return 用户分页
+     */
     @AdminOnly
     @GetMapping("/page")
     public R<IPage<UserVO>> pageUsers(@Valid UserQueryDTO query) {
         return R.ok(userService.pageUsers(query));
     }
 
+    /**
+     * 新增用户（管理员）。
+     *
+     * @param request 新增用户请求
+     * @return 新用户 ID
+     */
     @AdminOnly
     @PostMapping("/add")
     public R<String> addUser(@Valid @RequestBody UserCreateDTO request) {
         return R.ok(String.valueOf(userService.addUser(request)), "新增成功");
     }
 
+    /**
+     * 修改指定用户（管理员，不允许改自己的角色与状态）。
+     *
+     * @param id      用户 ID
+     * @param request 修改请求
+     * @return 恒为成功响应
+     */
     @AdminOnly
     @PutMapping("/{id}")
     public R<Void> updateUser(
@@ -76,6 +112,12 @@ public class UserController {
         return R.ok(null, "更新成功");
     }
 
+    /**
+     * 删除指定用户（管理员，不允许删自己与最后一个启用的管理员）。
+     *
+     * @param id 用户 ID
+     * @return 恒为成功响应
+     */
     @AdminOnly
     @DeleteMapping("/{id}")
     public R<Void> deleteUser(

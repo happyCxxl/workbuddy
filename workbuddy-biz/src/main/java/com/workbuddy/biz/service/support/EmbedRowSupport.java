@@ -24,6 +24,7 @@ public final class EmbedRowSupport {
      * @param set             向量化集合（环节产物）
      * @param strategyVersion 生效策略版本（种子注入用内置版本口径）
      * @param ref             产物对象位置
+     * @return 集合行（状态 ACTIVE）
      */
     public static WbEmbeddingSet setRow(Long fileResultId, EmbeddingSet set, String strategyVersion,
                                         ObjectRef ref) {
@@ -51,6 +52,7 @@ public final class EmbedRowSupport {
      *
      * @param embeddingSetId 所属集合行 ID
      * @param record         向量化记录（环节产物元素）
+     * @return 记录行
      */
     public static WbEmbeddingRecord recordRow(Long embeddingSetId, EmbeddingRecord record) {
         WbEmbeddingRecord row = new WbEmbeddingRecord();
