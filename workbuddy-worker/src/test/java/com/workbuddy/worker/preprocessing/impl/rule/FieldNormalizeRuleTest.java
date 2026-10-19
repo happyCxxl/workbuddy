@@ -61,6 +61,9 @@ class FieldNormalizeRuleTest {
                 "rule", f.getRule())).toList();
     }
 
+    /**
+     * 守护 {@code thousandSeparatorShouldStripCommas}：该场景行为改动即失败。
+     */
     @Test
     void thousandSeparatorShouldStripCommas() {
         ViewElement element = element("预算￥1,234,567.89元");
@@ -73,6 +76,9 @@ class FieldNormalizeRuleTest {
                 "unit", "元", "rule", "thousand-sep-v1")));
     }
 
+    /**
+     * 守护 {@code chineseUppercaseAmountShouldExtractFieldWithoutRewritingText}：该场景行为改动即失败。
+     */
     @Test
     void chineseUppercaseAmountShouldExtractFieldWithoutRewritingText() {
         // 11.7 口径：大写保留原文、只提取字段
@@ -86,6 +92,9 @@ class FieldNormalizeRuleTest {
                 && "amount-cn-v1".equals(f.get("rule"))));
     }
 
+    /**
+     * 守护 {@code chineseUppercaseAmountWithYiWanShouldParse}：该场景行为改动即失败。
+     */
     @Test
     void chineseUppercaseAmountWithYiWanShouldParse() {
         ViewElement element = element("中标金额壹亿贰仟叁佰肆拾伍万陆仟柒佰捌拾玖元整");
@@ -95,6 +104,9 @@ class FieldNormalizeRuleTest {
         assertTrue(fields(outcome).stream().anyMatch(f -> "123456789.00".equals(f.get("value"))));
     }
 
+    /**
+     * 守护 {@code complexAmountShouldMarkManualReview}：该场景行为改动即失败。
+     */
     @Test
     void complexAmountShouldMarkManualReview() {
         ViewElement element = element("预算壹亿贰亿叁万元整（拿不准）");
@@ -106,6 +118,9 @@ class FieldNormalizeRuleTest {
         assertTrue(outcome.getFields().isEmpty());
     }
 
+    /**
+     * 守护 {@code chineseDateShouldConvertToIso}：该场景行为改动即失败。
+     */
     @Test
     void chineseDateShouldConvertToIso() {
         ViewElement element = element("开标时间：二〇二六年八月二十五日");
@@ -118,6 +133,9 @@ class FieldNormalizeRuleTest {
                 "unit", "", "rule", "chinese-date-v1")));
     }
 
+    /**
+     * 守护 {@code chineseDateWithTensDayShouldConvert}：该场景行为改动即失败。
+     */
     @Test
     void chineseDateWithTensDayShouldConvert() {
         ViewElement element = element("工期截至二〇二六年十二月三十一日");
@@ -127,6 +145,9 @@ class FieldNormalizeRuleTest {
         assertTrue(element.getNormalizedText().contains("2026-12-31"));
     }
 
+    /**
+     * 守护 {@code separatorDateShouldUnifyAndPad}：该场景行为改动即失败。
+     */
     @Test
     void separatorDateShouldUnifyAndPad() {
         ViewElement element = element("投标截止：2026/8/25");
@@ -136,6 +157,9 @@ class FieldNormalizeRuleTest {
         assertTrue(element.getNormalizedText().contains("2026-08-25"));
     }
 
+    /**
+     * 守护 {@code isoDateShouldBeIdempotent}：该场景行为改动即失败。
+     */
     @Test
     void isoDateShouldBeIdempotent() {
         ViewElement element = element("投标截止：2026-08-25");
@@ -146,6 +170,9 @@ class FieldNormalizeRuleTest {
         assertTrue(outcome.getTraces().isEmpty());
     }
 
+    /**
+     * 守护 {@code unitShouldNormalizeAndExtractArea}：该场景行为改动即失败。
+     */
     @Test
     void unitShouldNormalizeAndExtractArea() {
         ViewElement element = element("建筑面积 10㎡，另有 20m2 的场地");
@@ -158,6 +185,9 @@ class FieldNormalizeRuleTest {
                 "unit", "平方米", "rule", "unit-normalize-v1")));
     }
 
+    /**
+     * 守护 {@code certNoShouldExtractWithoutRewriting}：该场景行为改动即失败。
+     */
     @Test
     void certNoShouldExtractWithoutRewriting() {
         ViewElement element = element("证书编号：NO.123456，注册号: AB-7890");
@@ -170,6 +200,9 @@ class FieldNormalizeRuleTest {
         assertTrue(fields(outcome).stream().anyMatch(f -> "AB-7890".equals(f.get("value"))));
     }
 
+    /**
+     * 守护 {@code numberHierarchyAndQualifiersShouldStayUntouched}：该场景行为改动即失败。
+     */
     @Test
     void numberHierarchyAndQualifiersShouldStayUntouched() {
         ViewElement element = element("1.11 工期：质保期不低于 36 个月，不得少于 2 次培训");
@@ -181,6 +214,9 @@ class FieldNormalizeRuleTest {
         assertTrue(outcome.getTraces().isEmpty());
     }
 
+    /**
+     * 守护 {@code ganzhiYearShouldMarkManualReview}：该场景行为改动即失败。
+     */
     @Test
     void ganzhiYearShouldMarkManualReview() {
         ViewElement element = element("庚子年三月五日签订");
@@ -192,6 +228,9 @@ class FieldNormalizeRuleTest {
                         && t.getRule().equals("chinese-date-v1")));
     }
 
+    /**
+     * 守护 {@code impossibleSeparatorDateShouldMarkManualReviewAndKeepText}：该场景行为改动即失败。
+     */
     @Test
     void impossibleSeparatorDateShouldMarkManualReviewAndKeepText() {
         ViewElement element = element("投标截止：2026/2/30");
@@ -205,6 +244,9 @@ class FieldNormalizeRuleTest {
                         && t.getRule().equals("date-sep-v1")));
     }
 
+    /**
+     * 守护 {@code outOfRangeSeparatorDateShouldMarkManualReviewAndKeepText}：该场景行为改动即失败。
+     */
     @Test
     void outOfRangeSeparatorDateShouldMarkManualReviewAndKeepText() {
         ViewElement element = element("开标时间 2026/13/45");
@@ -216,6 +258,9 @@ class FieldNormalizeRuleTest {
                 .anyMatch(t -> TraceEntry.ACTION_MANUAL_REVIEW.equals(t.getAction())));
     }
 
+    /**
+     * 守护 {@code leapDaySeparatorDateShouldConvert}：该场景行为改动即失败。
+     */
     @Test
     void leapDaySeparatorDateShouldConvert() {
         ViewElement element = element("投标截止：2028/2/29");
@@ -225,6 +270,9 @@ class FieldNormalizeRuleTest {
         assertTrue(element.getNormalizedText().contains("2028-02-29"));
     }
 
+    /**
+     * 守护 {@code impossibleChineseDateShouldMarkManualReviewAndKeepText}：该场景行为改动即失败。
+     */
     @Test
     void impossibleChineseDateShouldMarkManualReviewAndKeepText() {
         ViewElement element = element("开标时间：二〇二六年二月三十日");
@@ -238,6 +286,9 @@ class FieldNormalizeRuleTest {
                         && t.getRule().equals("chinese-date-v1")));
     }
 
+    /**
+     * 守护 {@code disabledShouldReportOff}：该场景行为改动即失败。
+     */
     @Test
     void disabledShouldReportOff() {
         PreprocessStrategy strategy = StrategyFixtures.preprocessDefaults();
@@ -247,6 +298,9 @@ class FieldNormalizeRuleTest {
         assertTrue(rule.enabledIn(StrategyFixtures.preprocessDefaults()));
     }
 
+    /**
+     * 守护 {@code cellsShouldBeNormalizedWithTraceOnCell}：该场景行为改动即失败。
+     */
     @Test
     void cellsShouldBeNormalizedWithTraceOnCell() {
         ViewElement element = element(null);

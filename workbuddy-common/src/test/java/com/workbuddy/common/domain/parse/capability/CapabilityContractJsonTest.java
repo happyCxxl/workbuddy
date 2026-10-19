@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class CapabilityContractJsonTest {
 
-    /** 请求区域：页码、包围盒与可选 OCR 文本 */
+    /** 请求区域：页码、包围盒与可选 OCR 文本（{@code regionShouldRoundTripWithPageAndBBox}）。 */
     @Test
     void regionShouldRoundTripWithPageAndBBox() {
         TableRegion region = new TableRegion();
@@ -34,7 +34,7 @@ class CapabilityContractJsonTest {
         assertEquals("项目 分值", parsed.getOcrText());
     }
 
-    /** 响应体：grid + 每格 row/col span + bbox + 置信度 + 模型标识 */
+    /** 响应体：grid + 每格 row/col span + bbox + 置信度 + 模型标识（{@code tableResultShouldMapGridSpansBBoxAndConfidence}）。 */
     @Test
     void tableResultShouldMapGridSpansBBoxAndConfidence() {
         String json = "{\"rows\":2,\"cols\":2,\"confidence\":0.93,\"crossPage\":false,"

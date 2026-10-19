@@ -22,6 +22,9 @@ class StartupCheckChainRunnerTest {
     /** 执行轨迹（每个假校验项被调用时记名） */
     private final List<String> calls = new ArrayList<>();
 
+    /**
+     * 守护 {@code shouldRunChecksInOrder}：该场景行为改动即失败。
+     */
     @Test
     void shouldRunChecksInOrder() {
         new StartupCheckChainRunner(List.of(
@@ -33,6 +36,9 @@ class StartupCheckChainRunnerTest {
         assertEquals(List.of("a", "b", "c"), calls);
     }
 
+    /**
+     * 守护 {@code shouldKeepInputOrderWhenOrderEqual}：该场景行为改动即失败。
+     */
     @Test
     void shouldKeepInputOrderWhenOrderEqual() {
         new StartupCheckChainRunner(List.of(
@@ -43,6 +49,9 @@ class StartupCheckChainRunnerTest {
         assertEquals(List.of("first", "second"), calls);
     }
 
+    /**
+     * 守护 {@code shouldStopAtFirstFailureAndRethrowOriginal}：该场景行为改动即失败。
+     */
     @Test
     void shouldStopAtFirstFailureAndRethrowOriginal() {
         IllegalStateException failure = new IllegalStateException("坏配置");
@@ -60,6 +69,9 @@ class StartupCheckChainRunnerTest {
         assertEquals(List.of("a", "b"), calls, "失败即止，链上后续校验项不执行");
     }
 
+    /**
+     * 守护 {@code shouldShortCircuitWhenCheckDoesNotProceed}：该场景行为改动即失败。
+     */
     @Test
     void shouldShortCircuitWhenCheckDoesNotProceed() {
         new StartupCheckChainRunner(List.of(
@@ -71,6 +83,9 @@ class StartupCheckChainRunnerTest {
         assertEquals(List.of("a"), calls, "不调用 proceed 即中止链上后续校验项");
     }
 
+    /**
+     * 守护 {@code shouldTolerateEmptyCheckList}：该场景行为改动即失败。
+     */
     @Test
     void shouldTolerateEmptyCheckList() {
         assertDoesNotThrow(() -> new StartupCheckChainRunner(List.of()).run(null));

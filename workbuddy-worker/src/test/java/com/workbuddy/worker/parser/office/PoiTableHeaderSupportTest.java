@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PoiTableHeaderSupportTest {
 
-    /** 首行有文本：判表头行 0，且只有第 0 行置 isHeader */
+    /** 首行有文本：判表头行 0，且只有第 0 行置 isHeader（{@code firstRowWithTextShouldBeHeaderRow}）。 */
     @Test
     void firstRowWithTextShouldBeHeaderRow() {
         ParseElement table = table(cell(0, 0, "评分项"), cell(0, 1, "分值"), cell(1, 0, "A1"), cell(1, 1, "30"));
@@ -29,7 +29,7 @@ class PoiTableHeaderSupportTest {
                 .filter(c -> Integer.valueOf(1).equals(c.getRow())).anyMatch(ParseElement::getIsHeader));
     }
 
-    /** 首行全空：不判表头，headerRow 为 null，且没有任何单元格标表头 */
+    /** 首行全空：不判表头，headerRow 为 null，且没有任何单元格标表头（{@code blankFirstRowShouldGiveNullHeaderRow}）。 */
     @Test
     void blankFirstRowShouldGiveNullHeaderRow() {
         ParseElement table = table(cell(0, 0, "  "), cell(0, 1, null), cell(1, 0, "A1"), cell(1, 1, "30"));
@@ -40,7 +40,7 @@ class PoiTableHeaderSupportTest {
         assertFalse(table.getCells().stream().anyMatch(ParseElement::getIsHeader));
     }
 
-    /** 空表（无单元格）：不判表头，不抛异常 */
+    /** 空表（无单元格）：不判表头，不抛异常（{@code emptyTableShouldGiveNullHeaderRow}）。 */
     @Test
     void emptyTableShouldGiveNullHeaderRow() {
         ParseElement table = ParseElement.of(ElementType.TABLE);

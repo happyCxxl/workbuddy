@@ -23,6 +23,9 @@ class TaskTimeoutCheckTest {
 
     private final StartupCheckChain next = () -> proceeded.set(true);
 
+    /**
+     * 守护 {@code shouldPassWithDefaultTimeouts}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassWithDefaultTimeouts() {
         new TaskTimeoutCheck(new TaskQueueProperties()).check(next);
@@ -30,6 +33,9 @@ class TaskTimeoutCheckTest {
         assertTrue(proceeded.get(), "通过路径必须推进链");
     }
 
+    /**
+     * 守护 {@code shouldRejectZeroTimeout}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectZeroTimeout() {
         TaskQueueProperties properties = new TaskQueueProperties();
@@ -42,6 +48,9 @@ class TaskTimeoutCheckTest {
         assertFalse(proceeded.get(), "失败即止，不推进链");
     }
 
+    /**
+     * 守护 {@code shouldRejectNegativeTimeout}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectNegativeTimeout() {
         TaskQueueProperties properties = new TaskQueueProperties();

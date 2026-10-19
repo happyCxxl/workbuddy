@@ -137,6 +137,9 @@ class ChunkPipelineTest {
         return document;
     }
 
+    /**
+     * 守护 {@code missingStrategyShouldFailWithChunkFailed}：该场景行为改动即失败。
+     */
     @Test
     void missingStrategyShouldFailWithChunkFailed() {
         // 上下文无策略（快照缺失或损坏由 Runner 拦截）：管线自身同样拒绝，不构造默认策略
@@ -154,6 +157,9 @@ class ChunkPipelineTest {
         assertNull(outcome.getChunkSet());
     }
 
+    /**
+     * 守护 {@code fullChainShouldProduceMixedChunksWithParentChildAndTitlePath}：该场景行为改动即失败。
+     */
     @Test
     void fullChainShouldProduceMixedChunksWithParentChildAndTitlePath() {
         List<ViewElement> elements = new ArrayList<>();
@@ -259,6 +265,9 @@ class ChunkPipelineTest {
         return tableStruct;
     }
 
+    /**
+     * 守护 {@code tableShouldBreakBodyGroupAndKeepDocumentOrder}：该场景行为改动即失败。
+     */
     @Test
     void tableShouldBreakBodyGroupAndKeepDocumentOrder() {
         List<ViewElement> elements = new ArrayList<>();
@@ -282,6 +291,9 @@ class ChunkPipelineTest {
         assertTrue(chunks.stream().noneMatch(c -> c.getContent().contains("表格前段落\n表格后段落")));
     }
 
+    /**
+     * 守护 {@code excludedAndRepeatedShouldBeSkipped}：该场景行为改动即失败。
+     */
     @Test
     void excludedAndRepeatedShouldBeSkipped() {
         List<ViewElement> elements = new ArrayList<>();
@@ -295,6 +307,9 @@ class ChunkPipelineTest {
         assertEquals("正常段落内容", outcome.getChunkSet().getChunks().getFirst().getContent());
     }
 
+    /**
+     * 守护 {@code overlongParagraphShouldFallbackRecursively}：该场景行为改动即失败。
+     */
     @Test
     void overlongParagraphShouldFallbackRecursively() {
         List<ViewElement> elements = new ArrayList<>();
@@ -310,6 +325,9 @@ class ChunkPipelineTest {
         assertTrue(fallbacks.stream().allMatch(c -> c.getCharCount() <= 500));
     }
 
+    /**
+     * 守护 {@code titlePathShouldCapAtThreeLevels}：该场景行为改动即失败。
+     */
     @Test
     void titlePathShouldCapAtThreeLevels() {
         List<ViewElement> elements = new ArrayList<>();
@@ -327,6 +345,9 @@ class ChunkPipelineTest {
         assertEquals("标题2 > 标题3 > 标题4", last.getTitlePath());
     }
 
+    /**
+     * 守护 {@code emptyViewShouldFailWithChunkEmpty}：该场景行为改动即失败。
+     */
     @Test
     void emptyViewShouldFailWithChunkEmpty() {
         ChunkOutcome outcome = pipeline().chunk(context(view(new ArrayList<>()), document(new ArrayList<>())));
@@ -335,6 +356,9 @@ class ChunkPipelineTest {
         assertEquals(PipelineTaskErrorCode.CHUNK_EMPTY.name(), outcome.getErrorCode());
     }
 
+    /**
+     * 守护 {@code allExcludedShouldFailWithChunkEmpty}：该场景行为改动即失败。
+     */
     @Test
     void allExcludedShouldFailWithChunkEmpty() {
         List<ViewElement> elements = new ArrayList<>();
@@ -346,6 +370,9 @@ class ChunkPipelineTest {
         assertEquals(PipelineTaskErrorCode.CHUNK_EMPTY.name(), outcome.getErrorCode());
     }
 
+    /**
+     * 守护 {@code slicerExceptionShouldIsolateToPartialSuccess}：该场景行为改动即失败。
+     */
     @Test
     void slicerExceptionShouldIsolateToPartialSuccess() {
         ChunkPipeline pipeline = pipelineWith(new BrokenTableStrategy());
@@ -362,6 +389,9 @@ class ChunkPipelineTest {
         assertEquals(ChunkContentType.PARAGRAPH.name(), outcome.getChunkSet().getChunks().getFirst().getContentType());
     }
 
+    /**
+     * 守护 {@code sameInputSameStrategyShouldBeDeterministic}：该场景行为改动即失败。
+     */
     @Test
     void sameInputSameStrategyShouldBeDeterministic() {
         List<ViewElement> elements = new ArrayList<>();
@@ -381,6 +411,9 @@ class ChunkPipelineTest {
 
     // ---------------- 扩展用例 ----------------
 
+    /**
+     * 守护 {@code tableInBodyFlowShouldMergeTableIntoBodyChunk}：该场景行为改动即失败。
+     */
     @Test
     void tableInBodyFlowShouldMergeTableIntoBodyChunk() {
         List<ViewElement> elements = new ArrayList<>();
@@ -401,6 +434,9 @@ class ChunkPipelineTest {
         assertTrue(chunk.getContent().contains("表格后段落"));
     }
 
+    /**
+     * 守护 {@code contextMergedTableShouldCarryLeadParagraph}：该场景行为改动即失败。
+     */
     @Test
     void contextMergedTableShouldCarryLeadParagraph() {
         List<ViewElement> elements = new ArrayList<>();
@@ -417,6 +453,9 @@ class ChunkPipelineTest {
         assertTrue(tables.getFirst().getContent().startsWith("引出表格的说明段落\n| 评分项 | 分值 |"));
     }
 
+    /**
+     * 守护 {@code titleInContentOffShouldKeepContentClean}：该场景行为改动即失败。
+     */
     @Test
     void titleInContentOffShouldKeepContentClean() {
         List<ViewElement> elements = new ArrayList<>();
@@ -436,6 +475,9 @@ class ChunkPipelineTest {
         assertEquals("第一章 投标人须知", tableChunk.getTitlePath());
     }
 
+    /**
+     * 守护 {@code structureOverlapShouldPrefixAdjacentChunks}：该场景行为改动即失败。
+     */
     @Test
     void structureOverlapShouldPrefixAdjacentChunks() {
         String longText = "a".repeat(900);
@@ -452,6 +494,9 @@ class ChunkPipelineTest {
         assertTrue(chunks.get(1).getContent().startsWith(first.substring(first.length() - 50) + "\n"));
     }
 
+    /**
+     * 守护 {@code minMergeShouldMergeAdjacentBodyFragment}：该场景行为改动即失败。
+     */
     @Test
     void minMergeShouldMergeAdjacentBodyFragment() {
         List<ViewElement> elements = new ArrayList<>();
@@ -467,6 +512,9 @@ class ChunkPipelineTest {
         assertEquals(903, chunks.getFirst().getCharCount());
     }
 
+    /**
+     * 守护 {@code noneFallbackShouldKeepOverlongSingleChunk}：该场景行为改动即失败。
+     */
     @Test
     void noneFallbackShouldKeepOverlongSingleChunk() {
         List<ViewElement> elements = new ArrayList<>();
@@ -481,6 +529,9 @@ class ChunkPipelineTest {
         assertEquals(1200, chunks.getFirst().getCharCount());
     }
 
+    /**
+     * 守护 {@code unsupportedAlgorithmShouldFailClearly}：该场景行为改动即失败。
+     */
     @Test
     void unsupportedAlgorithmShouldFailClearly() {
         List<ViewElement> elements = new ArrayList<>();

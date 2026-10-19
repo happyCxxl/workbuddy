@@ -59,6 +59,9 @@ class RepeatRuleTest {
         return context;
     }
 
+    /**
+     * 守护 {@code repeatedSegmentShouldExcludeByDefault}：该场景行为改动即失败。
+     */
     @Test
     void repeatedSegmentShouldExcludeByDefault() {
         ViewElement element = element();
@@ -71,6 +74,9 @@ class RepeatRuleTest {
         assertNull(element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code repeatedPageShouldExcludeByDefault}：该场景行为改动即失败。
+     */
     @Test
     void repeatedPageShouldExcludeByDefault() {
         ViewElement element = element();
@@ -83,6 +89,9 @@ class RepeatRuleTest {
         assertNull(element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code repeatedSegmentMarkShouldKeepTextWithMarkedStatus}：该场景行为改动即失败。
+     */
     @Test
     void repeatedSegmentMarkShouldKeepTextWithMarkedStatus() {
         ViewElement element = element();
@@ -95,6 +104,9 @@ class RepeatRuleTest {
         assertEquals("重复段落内容", element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code repeatedSegmentKeepShouldResetStatusToNormal}：该场景行为改动即失败。
+     */
     @Test
     void repeatedSegmentKeepShouldResetStatusToNormal() {
         ViewElement element = element();
@@ -107,6 +119,9 @@ class RepeatRuleTest {
         assertEquals("重复段落内容", element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code repeatedPageMarkShouldKeepTextWithMarkedStatus}：该场景行为改动即失败。
+     */
     @Test
     void repeatedPageMarkShouldKeepTextWithMarkedStatus() {
         ViewElement element = element();
@@ -119,6 +134,9 @@ class RepeatRuleTest {
         assertEquals("重复段落内容", element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code enabledInShouldFollowRulePresence}：该场景行为改动即失败。
+     */
     @Test
     void enabledInShouldFollowRulePresence() {
         assertTrue(rule.enabledIn(StrategyFixtures.preprocessDefaults()));
@@ -129,6 +147,9 @@ class RepeatRuleTest {
         assertFalse(rule.enabledIn(removed));
     }
 
+    /**
+     * 守护 {@code unmarkedShouldNotMatch}：该场景行为改动即失败。
+     */
     @Test
     void unmarkedShouldNotMatch() {
         assertFalse(rule.apply(element(), context(new HashSet<>())).isMatched());

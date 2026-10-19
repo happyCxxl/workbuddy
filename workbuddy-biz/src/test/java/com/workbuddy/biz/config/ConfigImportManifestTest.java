@@ -70,6 +70,9 @@ class ConfigImportManifestTest {
     @TempDir
     Path tmp;
 
+    /**
+     * 守护 {@code importedFilesShouldExist}：该场景行为改动即失败。
+     */
     @Test
     void importedFilesShouldExist() throws Exception {
         List<ImportEntry> entries = importEntries();
@@ -113,6 +116,9 @@ class ConfigImportManifestTest {
         return files;
     }
 
+    /**
+     * 守护 {@code importedFilesShouldBeValidYaml}：该场景行为改动即失败。
+     */
     @Test
     void importedFilesShouldBeValidYaml() throws Exception {
         for (ImportEntry entry : importEntries()) {
@@ -131,6 +137,9 @@ class ConfigImportManifestTest {
         }
     }
 
+    /**
+     * 守护 {@code importedFilesShouldMatchTheirDomain}：该场景行为改动即失败。
+     */
     @Test
     void importedFilesShouldMatchTheirDomain() throws Exception {
         for (ImportEntry entry : importEntries()) {

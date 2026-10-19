@@ -54,6 +54,9 @@ class RateLimitAspectTest {
         RequestContextHolder.resetRequestAttributes();
     }
 
+    /**
+     * 守护 {@code shouldRejectWhenBucketExhausted}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectWhenBucketExhausted() throws Throwable {
         RateLimit annotation = sampleAnnotation();
@@ -68,6 +71,9 @@ class RateLimitAspectTest {
         verify(joinPoint, never()).proceed();
     }
 
+    /**
+     * 守护 {@code shouldProceedWhenTokenAcquired}：该场景行为改动即失败。
+     */
     @Test
     void shouldProceedWhenTokenAcquired() throws Throwable {
         RateLimit annotation = sampleAnnotation();

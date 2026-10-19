@@ -21,7 +21,7 @@ class SignalDetectorImplTest {
 
     private final SignalDetectorImpl detector = new SignalDetectorImpl();
 
-    /** Office 形态：无面积口径、有内嵌图片且字符极少 → 疑似图片单元，证据点名「无面积口径」 */
+    /** Office 形态：无面积口径、有内嵌图片且字符极少 → 疑似图片单元，证据点名「无面积口径」（{@code officeUnitWithPicturesAndFewCharsShouldBeSuspect}）。 */
     @Test
     void officeUnitWithPicturesAndFewCharsShouldBeSuspect() {
         PageMetric metric = metric(1, 10);
@@ -35,7 +35,7 @@ class SignalDetectorImplTest {
                 () -> "threshold=" + signals.getFirst().getThreshold());
     }
 
-    /** PDF 形态：文字占比低（无内嵌图片）也判疑似图片单元，证据带 textArea 实测值 */
+    /** PDF 形态：文字占比低（无内嵌图片）也判疑似图片单元，证据带 textArea 实测值（{@code pdfUnitWithLowTextRatioShouldBeSuspect}）。 */
     @Test
     void pdfUnitWithLowTextRatioShouldBeSuspect() {
         PageMetric metric = metric(1, 800);
@@ -49,7 +49,7 @@ class SignalDetectorImplTest {
                 () -> "threshold=" + signals.getFirst().getThreshold());
     }
 
-    /** 有图片但字符数够多：不判疑似图片单元（Office 口径的门槛在字符数上） */
+    /** 有图片但字符数够多：不判疑似图片单元（Office 口径的门槛在字符数上）（{@code officeUnitWithEnoughCharsShouldNotBeSuspect}）。 */
     @Test
     void officeUnitWithEnoughCharsShouldNotBeSuspect() {
         PageMetric metric = metric(1, 500);
@@ -58,7 +58,7 @@ class SignalDetectorImplTest {
         assertEquals(List.of(), detect(metric));
     }
 
-    /** 正常页：文字占比高且字符多 → 无信号 */
+    /** 正常页：文字占比高且字符多 → 无信号（{@code normalUnitShouldYieldNoSignal}）。 */
     @Test
     void normalUnitShouldYieldNoSignal() {
         PageMetric metric = metric(1, 1000);

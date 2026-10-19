@@ -89,6 +89,9 @@ class PdfBoxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code pdfShouldParseParagraphsAndHeader}：该场景行为改动即失败。
+     */
     @Test
     void pdfShouldParseParagraphsAndHeader() throws Exception {
         ParseContext context = context(buildPdf());
@@ -122,6 +125,9 @@ class PdfBoxDocumentParserTest {
         assertNotNull(paragraphs.getFirst().getBbox());
     }
 
+    /**
+     * 守护 {@code scannedPdfShouldEmitZeroCharMetrics}：该场景行为改动即失败。
+     */
     @Test
     void scannedPdfShouldEmitZeroCharMetrics() throws Exception {
         // 空白页（无文本层）→ 页级字符数为 0（扫描判定交给 SignalDetector）
@@ -135,6 +141,9 @@ class PdfBoxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code alignedColumnsShouldFormTable}：该场景行为改动即失败。
+     */
     @Test
     void alignedColumnsShouldFormTable() throws Exception {
         try (PDDocument doc = new PDDocument()) {
@@ -174,6 +183,9 @@ class PdfBoxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code repeatedFooterAndPageNumberShouldEmitFooterElements}：该场景行为改动即失败。
+     */
     @Test
     void repeatedFooterAndPageNumberShouldEmitFooterElements() throws Exception {
         try (PDDocument doc = new PDDocument()) {
@@ -219,6 +231,9 @@ class PdfBoxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code footerWithTrailingPageNumberShouldStripSuffixAndDetect}：该场景行为改动即失败。
+     */
     @Test
     void footerWithTrailingPageNumberShouldStripSuffixAndDetect() throws Exception {
         try (PDDocument doc = new PDDocument()) {
@@ -260,6 +275,9 @@ class PdfBoxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code tocLineShouldMarkTocCandidate}：该场景行为改动即失败。
+     */
     @Test
     void tocLineShouldMarkTocCandidate() throws Exception {
         try (PDDocument doc = new PDDocument()) {
@@ -294,6 +312,9 @@ class PdfBoxDocumentParserTest {
         return LineTexts.Options.of(new ParseProperties());
     }
 
+    /**
+     * 守护 {@code englishWordBoundariesShouldKeepSpaces}：该场景行为改动即失败。
+     */
     @Test
     void englishWordBoundariesShouldKeepSpaces() {
         List<CharInfo> chars = new ArrayList<>();
@@ -304,6 +325,9 @@ class PdfBoxDocumentParserTest {
         assertEquals("Chapter one body", LineTexts.lineText(chars, lineTextOptions()));
     }
 
+    /**
+     * 守护 {@code cjkWordBoundariesShouldNotInsertSpaces}：该场景行为改动即失败。
+     */
     @Test
     void cjkWordBoundariesShouldNotInsertSpaces() {
         List<CharInfo> chars = new ArrayList<>();
@@ -315,6 +339,9 @@ class PdfBoxDocumentParserTest {
         assertEquals("知识库", LineTexts.lineText(chars, lineTextOptions()));
     }
 
+    /**
+     * 守护 {@code mixedScriptBoundaryShouldKeepSpace}：该场景行为改动即失败。
+     */
     @Test
     void mixedScriptBoundaryShouldKeepSpace() {
         List<CharInfo> chars = new ArrayList<>();
@@ -326,12 +353,18 @@ class PdfBoxDocumentParserTest {
         assertEquals("知识库 knowledge", LineTexts.lineText(chars, lineTextOptions()));
     }
 
+    /**
+     * 守护 {@code lineSeparatorShouldFollowCjkRule}：该场景行为改动即失败。
+     */
     @Test
     void lineSeparatorShouldFollowCjkRule() {
         assertTrue(LineTexts.lineSeparator(line("知识库"), line("下一句")).isEmpty());
         assertEquals(" ", LineTexts.lineSeparator(line("Chapter one"), line("body")));
     }
 
+    /**
+     * 守护 {@code cjkCodePointShouldCoverHanAndFullwidthPunctuation}：该场景行为改动即失败。
+     */
     @Test
     void cjkCodePointShouldCoverHanAndFullwidthPunctuation() {
         assertTrue(LineTexts.isCjk('中'));
@@ -342,6 +375,9 @@ class PdfBoxDocumentParserTest {
         assertFalse(LineTexts.isCjk(','));
     }
 
+    /**
+     * 守护 {@code headerFooterKeyShouldNormalizeWhitespace}：该场景行为改动即失败。
+     */
     @Test
     void headerFooterKeyShouldNormalizeWhitespace() {
         assertEquals("XX Project Header", HeaderFooterDetector.normalizeKey("  XX   Project \t Header "));
@@ -349,6 +385,9 @@ class PdfBoxDocumentParserTest {
         assertEquals("", HeaderFooterDetector.normalizeKey("   "));
     }
 
+    /**
+     * 守护 {@code borderedTableShouldUseRuleGridWithSpanAndSparseRow}：该场景行为改动即失败。
+     */
     @Test
     void borderedTableShouldUseRuleGridWithSpanAndSparseRow() throws Exception {
         ParseSource source = parser.parse(context(buildRuledTable()));
@@ -376,6 +415,9 @@ class PdfBoxDocumentParserTest {
         assertEquals("30", cellText(table, 2, 2));
     }
 
+    /**
+     * 守护 {@code ruledEmptyGridShouldNotProduceTable}：该场景行为改动即失败。
+     */
     @Test
     void ruledEmptyGridShouldNotProduceTable() throws Exception {
         ParseSource source = parser.parse(context(buildRuledTable(false)));
@@ -384,6 +426,9 @@ class PdfBoxDocumentParserTest {
                 .noneMatch(e -> ElementType.TABLE.name().equals(e.getType())));
     }
 
+    /**
+     * 守护 {@code sparseRuledGridShouldBeRejectedByFilledGate}：该场景行为改动即失败。
+     */
     @Test
     void sparseRuledGridShouldBeRejectedByFilledGate() throws Exception {
         ParseSource source = parser.parse(context(buildSparseRuledGrid()));
@@ -394,6 +439,9 @@ class PdfBoxDocumentParserTest {
                 .anyMatch(f -> f.getEvidence() != null && f.getEvidence().contains("空白率")));
     }
 
+    /**
+     * 守护 {@code numericFirstRowShouldHaveNoHeader}：该场景行为改动即失败。
+     */
     @Test
     void numericFirstRowShouldHaveNoHeader() throws Exception {
         try (PDDocument doc = new PDDocument()) {
@@ -429,6 +477,9 @@ class PdfBoxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code columnsShouldDropUnsupportedColumns}：该场景行为改动即失败。
+     */
     @Test
     void columnsShouldDropUnsupportedColumns() {
         List<List<Token>> matrix = List.of(
@@ -443,7 +494,7 @@ class PdfBoxDocumentParserTest {
         assertTrue(TableCandidateDetector.enoughLinesCoverColumns(matrix, columns));
     }
 
-    /** 右对齐数字列：左起点逐行不同、右边界一致，两侧都作对齐线才认得出该列 */
+    /** 右对齐数字列：左起点逐行不同、右边界一致，两侧都作对齐线才认得出该列（{@code rightAlignedColumnShouldBeRecognized}）。 */
     @Test
     void rightAlignedColumnShouldBeRecognized() {
         List<List<Token>> matrix = List.of(
@@ -461,6 +512,9 @@ class PdfBoxDocumentParserTest {
                 .allMatch(token -> TableCandidateDetector.contains(columns.getLast(), token)));
     }
 
+    /**
+     * 守护 {@code columnToleranceShouldFollowFontSize}：该场景行为改动即失败。
+     */
     @Test
     void columnToleranceShouldFollowFontSize() {
         // 同一列起点在三行间抖动 10→14→18：24pt 字号下容差 6pt 能合成一列
@@ -474,6 +528,9 @@ class PdfBoxDocumentParserTest {
         assertEquals(1, TableCandidateDetector.columns(jittered, 2, 1.0).size());
     }
 
+    /**
+     * 守护 {@code smallFontToleranceShouldNotMergeNeighbourColumns}：该场景行为改动即失败。
+     */
     @Test
     void smallFontToleranceShouldNotMergeNeighbourColumns() {
         List<List<Token>> matrix = List.of(
@@ -489,6 +546,9 @@ class PdfBoxDocumentParserTest {
         return columns.stream().map(TableCandidateDetector.Column::left).toList();
     }
 
+    /**
+     * 守护 {@code detectHeaderRowShouldFollowNumericRule}：该场景行为改动即失败。
+     */
     @Test
     void detectHeaderRowShouldFollowNumericRule() {
         assertEquals(0, TextTableBuilder.detectHeaderRow(
@@ -499,6 +559,9 @@ class PdfBoxDocumentParserTest {
                 List.of(List.of("项目", "分值"), List.of("A1", "B1")), List.of(14.0, 10.0), 0.3));
     }
 
+    /**
+     * 守护 {@code mergedCellsShouldMergeAcrossMissingDividers}：该场景行为改动即失败。
+     */
     @Test
     void mergedCellsShouldMergeAcrossMissingDividers() {
         Grid grid = new Grid(
@@ -609,6 +672,9 @@ class PdfBoxDocumentParserTest {
         cs.stroke();
     }
 
+    /**
+     * 守护 {@code bodyLineEqualToHeaderTextShouldStayInBody}：该场景行为改动即失败。
+     */
     @Test
     void bodyLineEqualToHeaderTextShouldStayInBody() throws Exception {
         ParseSource source = parser.parse(context(
@@ -625,6 +691,9 @@ class PdfBoxDocumentParserTest {
                 () -> "elements=" + source.getElements());
     }
 
+    /**
+     * 守护 {@code bottomNumberOnSinglePageShouldStayInBody}：该场景行为改动即失败。
+     */
     @Test
     void bottomNumberOnSinglePageShouldStayInBody() throws Exception {
         ParseSource source = parser.parse(context(
@@ -638,6 +707,9 @@ class PdfBoxDocumentParserTest {
                 () -> "elements=" + source.getElements());
     }
 
+    /**
+     * 守护 {@code pageNumberShouldRequireSamePositionAcrossPages}：该场景行为改动即失败。
+     */
     @Test
     void pageNumberShouldRequireSamePositionAcrossPages() throws Exception {
         ParseSource source = parser.parse(context(buildPages(List.of(
@@ -652,6 +724,9 @@ class PdfBoxDocumentParserTest {
         assertTrue(footers.contains("2"));
     }
 
+    /**
+     * 守护 {@code pageNumberAtDifferentPositionsShouldStayInBody}：该场景行为改动即失败。
+     */
     @Test
     void pageNumberAtDifferentPositionsShouldStayInBody() throws Exception {
         ParseSource source = parser.parse(context(buildPages(List.of(
@@ -667,6 +742,9 @@ class PdfBoxDocumentParserTest {
         assertTrue(paragraphs.contains("2"), () -> "paragraphs=" + paragraphs);
     }
 
+    /**
+     * 守护 {@code multipleBottomNumbersOnSamePageShouldNotBePageNumbers}：该场景行为改动即失败。
+     */
     @Test
     void multipleBottomNumbersOnSamePageShouldNotBePageNumbers() throws Exception {
         ParseSource source = parser.parse(context(buildPages(List.of(
@@ -680,6 +758,9 @@ class PdfBoxDocumentParserTest {
                 () -> "elements=" + source.getElements());
     }
 
+    /**
+     * 守护 {@code twoColumnPageShouldReadByColumnAndNotBecomeTable}：该场景行为改动即失败。
+     */
     @Test
     void twoColumnPageShouldReadByColumnAndNotBecomeTable() throws Exception {
         ParseSource source = parser.parse(context(buildTwoColumnPage()));
@@ -695,6 +776,9 @@ class PdfBoxDocumentParserTest {
                 .noneMatch(e -> ElementType.TABLE.name().equals(e.getType())));
     }
 
+    /**
+     * 守护 {@code spanningHeadingShouldSplitBandsInTwoColumnPage}：该场景行为改动即失败。
+     */
     @Test
     void spanningHeadingShouldSplitBandsInTwoColumnPage() throws Exception {
         ParseSource source = parser.parse(context(buildSpanningHeadingPage()));
@@ -712,6 +796,9 @@ class PdfBoxDocumentParserTest {
                 paragraphs, () -> "elements=" + source.getElements());
     }
 
+    /**
+     * 守护 {@code fullPageImageShouldBeMeasuredAsImageCoverage}：该场景行为改动即失败。
+     */
     @Test
     void fullPageImageShouldBeMeasuredAsImageCoverage() throws Exception {
         ParseSource source = parser.parse(context(buildFullPageImagePdf()));
@@ -721,6 +808,9 @@ class PdfBoxDocumentParserTest {
         assertTrue(metric.getImageAreaRatio() > 0.5, () -> "image=" + metric.getImageAreaRatio());
     }
 
+    /**
+     * 守护 {@code pageImageShouldEmitImageElementAndFact}：该场景行为改动即失败。
+     */
     @Test
     void pageImageShouldEmitImageElementAndFact() throws Exception {
         ParseSource source = parser.parse(context(buildFullPageImagePdf()));
@@ -736,6 +826,9 @@ class PdfBoxDocumentParserTest {
         assertTrue(source.getFacts().stream().anyMatch(f -> SignalType.OCR_IMAGE == f.getType()));
     }
 
+    /**
+     * 守护 {@code smallPageImageShouldNotEmitElement}：该场景行为改动即失败。
+     */
     @Test
     void smallPageImageShouldNotEmitElement() throws Exception {
         ParseSource source = parser.parse(context(buildSmallImagePdf()));
@@ -746,7 +839,7 @@ class PdfBoxDocumentParserTest {
         assertTrue(source.getFacts().isEmpty(), () -> "facts=" + source.getFacts());
     }
 
-    /** 多图页：图片元素逐张产出，OCR_IMAGE 事实按页聚合成一条（证据带张数） */
+    /** 多图页：图片元素逐张产出，OCR_IMAGE 事实按页聚合成一条（证据带张数）（{@code multipleImagesOnPageShouldEmitSingleImageFact}）。 */
     @Test
     void multipleImagesOnPageShouldEmitSingleImageFact() throws Exception {
         ParseSource source = parser.parse(context(buildTwoImagePdf()));
@@ -761,7 +854,7 @@ class PdfBoxDocumentParserTest {
                 () -> "evidence=" + facts.getFirst().getEvidence());
     }
 
-    /** 纯矢量页：无文本无图片但成框的矢量线撑出成片覆盖 → 页级指标给出矢量覆盖率 */
+    /** 纯矢量页：无文本无图片但成框的矢量线撑出成片覆盖 → 页级指标给出矢量覆盖率（{@code vectorOnlyPageShouldReportVectorAreaRatio}）。 */
     @Test
     void vectorOnlyPageShouldReportVectorAreaRatio() throws Exception {
         ParseSource source = parser.parse(context(buildVectorChartPage()));

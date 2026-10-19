@@ -60,6 +60,9 @@ class CustomCleanRuleTest {
         return context;
     }
 
+    /**
+     * 守护 {@code removeShouldDropCopyrightLine}：该场景行为改动即失败。
+     */
     @Test
     void removeShouldDropCopyrightLine() {
         ViewElement element = element("正文内容\n版权所有 © 某招标公司");
@@ -70,6 +73,9 @@ class CustomCleanRuleTest {
         assertEquals("正文内容", element.getDisplayText().trim());
     }
 
+    /**
+     * 守护 {@code replaceShouldUseGroupReference}：该场景行为改动即失败。
+     */
     @Test
     void replaceShouldUseGroupReference() {
         ViewElement element = element("联系电话：13812345678");
@@ -81,6 +87,9 @@ class CustomCleanRuleTest {
         assertEquals("联系电话：***", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code extractShouldKeepOnlyMatch}：该场景行为改动即失败。
+     */
     @Test
     void extractShouldKeepOnlyMatch() {
         ViewElement element = element("招标编号：ABC-123，其余说明文字");
@@ -92,6 +101,9 @@ class CustomCleanRuleTest {
         assertEquals("招标编号：ABC-123", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code rulesShouldApplyInOrder}：该场景行为改动即失败。
+     */
     @Test
     void rulesShouldApplyInOrder() {
         ViewElement element = element("水印A 正文 水印B");
@@ -104,6 +116,9 @@ class CustomCleanRuleTest {
         assertEquals("内容 水印B", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code cellsShouldBeProcessed}：该场景行为改动即失败。
+     */
     @Test
     void cellsShouldBeProcessed() {
         ViewElement element = element(null);
@@ -120,6 +135,9 @@ class CustomCleanRuleTest {
         assertEquals("电话 ***", cell.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code offShouldNotEnable}：该场景行为改动即失败。
+     */
     @Test
     void offShouldNotEnable() {
         PreprocessStrategy strategy = StrategyFixtures.preprocessDefaults();
@@ -129,6 +147,9 @@ class CustomCleanRuleTest {
         assertFalse(rule.enabledIn(strategy));
     }
 
+    /**
+     * 守护 {@code unmatchedShouldReturnNone}：该场景行为改动即失败。
+     */
     @Test
     void unmatchedShouldReturnNone() {
         ViewElement element = element("无命中文本");

@@ -245,6 +245,9 @@ class EmbedTaskRunnerTest {
         });
     }
 
+    /**
+     * 守护 {@code shouldPersistProductAndFinishSuccess}：该场景行为改动即失败。
+     */
     @Test
     void shouldPersistProductAndFinishSuccess() {
         stubClaimAndUpstream();
@@ -271,6 +274,9 @@ class EmbedTaskRunnerTest {
         verify(indexSetService).onFileProductsReady(10L);
     }
 
+    /**
+     * 守护 {@code missingUpstreamProductShouldFailTaskUpstreamMissing}：该场景行为改动即失败。
+     */
     @Test
     void missingUpstreamProductShouldFailTaskUpstreamMissing() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
@@ -285,8 +291,13 @@ class EmbedTaskRunnerTest {
                 PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name(), "任务未指定上游切片产物");
         verify(fileStorage, never()).putObject(any(byte[].class));
         verify(embedder, never()).embed(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(embedder).getInvocations().stream()
+                .noneMatch(inv -> "embed".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code failedUpstreamTaskShouldFailEmbedFailed}：该场景行为改动即失败。
+     */
     @Test
     void failedUpstreamTaskShouldFailEmbedFailed() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
@@ -309,6 +320,9 @@ class EmbedTaskRunnerTest {
         verify(embedder, never()).embed(any());
     }
 
+    /**
+     * 守护 {@code corruptStrategySnapshotShouldFailEmbedFailed}：该场景行为改动即失败。
+     */
     @Test
     void corruptStrategySnapshotShouldFailEmbedFailed() {
         // 快照坏（"{oops"）：解析抛异常被显式接住，任务落 EMBED_FAILED 且文案干净可辨识
@@ -328,8 +342,13 @@ class EmbedTaskRunnerTest {
         // 守卫在读取上游产物本体之前：坏快照不读对象、不进管线
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
         verify(embedder, never()).embed(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(embedder).getInvocations().stream()
+                .noneMatch(inv -> "embed".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code corruptChunkCapabilitySnapshotShouldSkipWindowCheck}：该场景行为改动即失败。
+     */
     @Test
     void corruptChunkCapabilitySnapshotShouldSkipWindowCheck() {
         // 上游切片产物行的策略快照坏：该次运行跳过窗口兼容校验（留空），不阻断向量化
@@ -355,6 +374,9 @@ class EmbedTaskRunnerTest {
         verify(pipelineTaskDbService).finish(70L, PipelineTaskStatus.SUCCESS, null, null);
     }
 
+    /**
+     * 守护 {@code pipelineFailureShouldFinishFailed}：该场景行为改动即失败。
+     */
     @Test
     void pipelineFailureShouldFinishFailed() {
         stubClaimAndUpstream();
@@ -369,8 +391,13 @@ class EmbedTaskRunnerTest {
         verify(pipelineTaskDbService).finish(70L, PipelineTaskStatus.FAILED,
                 PipelineTaskErrorCode.EMBED_CONSISTENCY_FAILED.name(), "维度不一致");
         verify(fileStorage, never()).putObject(any(byte[].class));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+                .noneMatch(inv -> "putObject".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code reuseCandidatesShouldBeLoadedWhenCacheOn}：该场景行为改动即失败。
+     */
     @Test
     void reuseCandidatesShouldBeLoadedWhenCacheOn() {
         stubClaimAndUpstream();
@@ -397,6 +424,9 @@ class EmbedTaskRunnerTest {
         assertEquals("es-old", contextCaptor.getValue().getReuseCandidates().getFirst().getEmbeddingSetId());
     }
 
+    /**
+     * 守护 {@code reuseCandidatesShouldNotBeLoadedWhenCacheOff}：该场景行为改动即失败。
+     */
     @Test
     void reuseCandidatesShouldNotBeLoadedWhenCacheOff() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(taskWithCacheOff());
@@ -426,6 +456,9 @@ class EmbedTaskRunnerTest {
         return task;
     }
 
+    /**
+     * 守护 {@code persistShouldBatchRecordsAndFinishPartialSuccess}：该场景行为改动即失败。
+     */
     @Test
     void persistShouldBatchRecordsAndFinishPartialSuccess() {
         stubClaimAndUpstream();
@@ -443,6 +476,9 @@ class EmbedTaskRunnerTest {
         assertEquals(2, batchCaptor.getValue().size());
     }
 
+    /**
+     * 守护 {@code finishedTaskShouldBeSkipped}：该场景行为改动即失败。
+     */
     @Test
     void finishedTaskShouldBeSkipped() {
         WbPipelineTask finished = queuedTask();
@@ -453,5 +489,7 @@ class EmbedTaskRunnerTest {
 
         verify(pipelineTaskDbService, never()).claim(anyLong());
         verify(embedder, never()).embed(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(embedder).getInvocations().stream()
+                .noneMatch(inv -> "embed".equals(inv.getMethod().getName())));
     }
 }

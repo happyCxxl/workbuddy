@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class LayoutCapabilityAttemptTest {
 
-    /** 桩 provider 给出两个区域与顺序 → 顺序可用、补强事实带模型与区域数、能力引用带版本 */
+    /** 桩 provider 给出两个区域与顺序 → 顺序可用、补强事实带模型与区域数、能力引用带版本（{@code stubProviderShouldYieldOrderAndEnhancedFact}）。 */
     @Test
     void stubProviderShouldYieldOrderAndEnhancedFact() {
         LayoutResult result = new LayoutResult();
@@ -41,7 +41,7 @@ class LayoutCapabilityAttemptTest {
         assertTrue(outcome.fact().getEvidence().contains("2 个区域"), () -> outcome.fact().getEvidence());
     }
 
-    /** 未接入能力：无顺序、降级留痕，事实类型为 LAYOUT */
+    /** 未接入能力：无顺序、降级留痕，事实类型为 LAYOUT（{@code missingRegistryShouldYieldDegradedFactOnly}）。 */
     @Test
     void missingRegistryShouldYieldDegradedFactOnly() {
         LayoutCapabilityAttempt.Outcome outcome = LayoutCapabilityAttempt.attempt(null, page(), 1);
@@ -53,7 +53,7 @@ class LayoutCapabilityAttemptTest {
         assertTrue(outcome.fact().getEvidence().contains("未接入能力"), () -> outcome.fact().getEvidence());
     }
 
-    /** 页面为空：降级留痕点名原因 */
+    /** 页面为空：降级留痕点名原因（{@code emptyPageShouldYieldDegradedFact}）。 */
     @Test
     void emptyPageShouldYieldDegradedFact() {
         LayoutCapabilityAttempt.Outcome outcome =
@@ -63,7 +63,7 @@ class LayoutCapabilityAttemptTest {
         assertTrue(outcome.fact().getEvidence().contains("页面为空"), () -> outcome.fact().getEvidence());
     }
 
-    /** 桩 provider 返回只有区域没有顺序：不可用，降级原因写「调用失败或结果不完整」 */
+    /** 桩 provider 返回只有区域没有顺序：不可用，降级原因写「调用失败或结果不完整」（{@code unorderedResultShouldYieldDegradedFact}）。 */
     @Test
     void unorderedResultShouldYieldDegradedFact() {
         LayoutResult withoutOrder = new LayoutResult();

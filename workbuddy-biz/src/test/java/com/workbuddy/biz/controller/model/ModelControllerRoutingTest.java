@@ -51,6 +51,9 @@ class ModelControllerRoutingTest {
         mockMvc = MockMvcBuilders.standaloneSetup(new ModelController(modelService)).build();
     }
 
+    /**
+     * 守护 {@code pagePathShouldRouteToServiceWithBoundQuery}：该场景行为改动即失败。
+     */
     @Test
     void pagePathShouldRouteToServiceWithBoundQuery() throws Exception {
         when(modelService.page(any())).thenReturn(new Page<>(1, 10));
@@ -71,6 +74,9 @@ class ModelControllerRoutingTest {
         assertEquals("qwen", captor.getValue().getKeyword());
     }
 
+    /**
+     * 守护 {@code createPathShouldRouteToServiceWithBody}：该场景行为改动即失败。
+     */
     @Test
     void createPathShouldRouteToServiceWithBody() throws Exception {
         when(modelService.create(any())).thenReturn(new ModelItemVO());
@@ -88,6 +94,9 @@ class ModelControllerRoutingTest {
         assertEquals(600, dto.getRpmLimit());
     }
 
+    /**
+     * 守护 {@code updatePathShouldRouteToServiceWithIdAndBody}：该场景行为改动即失败。
+     */
     @Test
     void updatePathShouldRouteToServiceWithIdAndBody() throws Exception {
         when(modelService.update(any(), any())).thenReturn(new ModelItemVO());
@@ -104,6 +113,9 @@ class ModelControllerRoutingTest {
         assertEquals("qwen-plus", dtoCaptor.getValue().getModelKey());
     }
 
+    /**
+     * 守护 {@code statusPathShouldRouteToServiceWithStatus}：该场景行为改动即失败。
+     */
     @Test
     void statusPathShouldRouteToServiceWithStatus() throws Exception {
         when(modelService.updateStatus(any(), any())).thenReturn(new ModelItemVO());
@@ -117,6 +129,9 @@ class ModelControllerRoutingTest {
         assertEquals("DISABLED", captor.getValue().getStatus());
     }
 
+    /**
+     * 守护 {@code undefinedPathsShouldNotBeMapped}：该场景行为改动即失败。
+     */
     @Test
     void undefinedPathsShouldNotBeMapped() throws Exception {
         mockMvc.perform(get("/model/credentials")).andExpect(status().isNotFound());
@@ -128,6 +143,9 @@ class ModelControllerRoutingTest {
         verifyNoInteractions(modelService);
     }
 
+    /**
+     * 守护 {@code everyEndpointShouldBeOpenToAnyLoggedInUser}：该场景行为改动即失败。
+     */
     @Test
     void everyEndpointShouldBeOpenToAnyLoggedInUser() {
         for (String name : List.of("page", "create", "update", "updateStatus")) {

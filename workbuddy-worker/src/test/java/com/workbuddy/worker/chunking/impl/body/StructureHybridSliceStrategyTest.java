@@ -45,11 +45,17 @@ class StructureHybridSliceStrategyTest {
         return element;
     }
 
+    /**
+     * 守护 {@code algorithmIdentityShouldBeStructureHybrid}：该场景行为改动即失败。
+     */
     @Test
     void algorithmIdentityShouldBeStructureHybrid() {
         assertEquals(ChunkAlgorithm.BODY_STRUCTURE_HYBRID, strategy.algorithm());
     }
 
+    /**
+     * 守护 {@code smallElementsShouldAggregateOnFlush}：该场景行为改动即失败。
+     */
     @Test
     void smallElementsShouldAggregateOnFlush() {
         SliceContext context = context();
@@ -65,6 +71,9 @@ class StructureHybridSliceStrategyTest {
         assertEquals(List.of("n-1", "n-2"), chunks.getFirst().getSourceElementIds());
     }
 
+    /**
+     * 守护 {@code overlongElementShouldFallbackRecursively}：该场景行为改动即失败。
+     */
     @Test
     void overlongElementShouldFallbackRecursively() {
         SliceContext context = context();

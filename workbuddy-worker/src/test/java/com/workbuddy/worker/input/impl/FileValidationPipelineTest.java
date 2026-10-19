@@ -86,6 +86,9 @@ class FileValidationPipelineTest {
         return sb.toString();
     }
 
+    /**
+     * 守护 {@code validateSmallPdfShouldPassInMemory}：该场景行为改动即失败。
+     */
     @Test
     void validateSmallPdfShouldPassInMemory() throws Exception {
         byte[] bytes = minimalPdf();
@@ -100,6 +103,9 @@ class FileValidationPipelineTest {
         assertEquals(sha256(bytes), result.getSha256());
     }
 
+    /**
+     * 守护 {@code validateLargeFileShouldPassViaTempFileSpill}：该场景行为改动即失败。
+     */
     @Test
     void validateLargeFileShouldPassViaTempFileSpill() throws Exception {
         properties.setTempFileThreshold(10);
@@ -114,6 +120,9 @@ class FileValidationPipelineTest {
         assertEquals(bytes.length, result.getSize());
     }
 
+    /**
+     * 守护 {@code validateOversizeShouldFailFast}：该场景行为改动即失败。
+     */
     @Test
     void validateOversizeShouldFailFast() throws Exception {
         properties.setMaxSize(10);
@@ -127,6 +136,9 @@ class FileValidationPipelineTest {
         assertEquals(FileValidationFailReason.FILE_TOO_LARGE, result.getFailReason());
     }
 
+    /**
+     * 守护 {@code validateEmptyFileShouldFailCorrupted}：该场景行为改动即失败。
+     */
     @Test
     void validateEmptyFileShouldFailCorrupted() {
         stubFile("f1", new byte[0]);
@@ -137,6 +149,9 @@ class FileValidationPipelineTest {
         assertEquals(FileValidationFailReason.FILE_CORRUPTED, result.getFailReason());
     }
 
+    /**
+     * 守护 {@code validateMissingFileShouldFailFileNotFound}：该场景行为改动即失败。
+     */
     @Test
     void validateMissingFileShouldFailFileNotFound() {
         when(fileStorage.metadata("f1"))
@@ -148,6 +163,9 @@ class FileValidationPipelineTest {
         assertEquals(FileValidationFailReason.FILE_NOT_FOUND, result.getFailReason());
     }
 
+    /**
+     * 守护 {@code validateMetadataSizeMismatchShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void validateMetadataSizeMismatchShouldFail() throws Exception {
         byte[] bytes = minimalPdf();
@@ -162,6 +180,9 @@ class FileValidationPipelineTest {
         assertEquals(FileValidationFailReason.METADATA_MISMATCH, result.getFailReason());
     }
 
+    /**
+     * 守护 {@code validateMetadataSizeEqualShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void validateMetadataSizeEqualShouldPass() throws Exception {
         // 回归：包装类型 Long 引用比较会误判（相等值恒失败），必须数值比较
@@ -177,6 +198,9 @@ class FileValidationPipelineTest {
         assertEquals(bytes.length, result.getSize());
     }
 
+    /**
+     * 守护 {@code validateImageShouldReturnImageOcrReserved}：该场景行为改动即失败。
+     */
     @Test
     void validateImageShouldReturnImageOcrReserved() {
         // JPEG 魔数（仅探测需要；图片路径在试解析前返回）
@@ -189,6 +213,9 @@ class FileValidationPipelineTest {
         assertEquals(FileValidationFailReason.IMAGE_OCR_RESERVED, result.getFailReason());
     }
 
+    /**
+     * 守护 {@code validateDisabledFormatShouldFailNotAllowed}：该场景行为改动即失败。
+     */
     @Test
     void validateDisabledFormatShouldFailNotAllowed() {
         // text/plain 可识别（TXT）但默认不在白名单
@@ -200,6 +227,9 @@ class FileValidationPipelineTest {
         assertEquals(FileValidationFailReason.FORMAT_NOT_ALLOWED, result.getFailReason());
     }
 
+    /**
+     * 守护 {@code validateFormatEnabledByConfigShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void validateFormatEnabledByConfigShouldPass() {
         properties.setEnabledFormats(List.of("PDF", "TXT"));
@@ -211,6 +241,9 @@ class FileValidationPipelineTest {
         assertEquals(FileFormat.TXT, result.getFormat());
     }
 
+    /**
+     * 守护 {@code validateUnknownBinaryShouldFailNotAllowed}：该场景行为改动即失败。
+     */
     @Test
     void validateUnknownBinaryShouldFailNotAllowed() {
         stubFile("f1", new byte[]{0x00, 0x01, 0x02, 0x03});
@@ -221,6 +254,9 @@ class FileValidationPipelineTest {
         assertEquals(FileValidationFailReason.FORMAT_NOT_ALLOWED, result.getFailReason());
     }
 
+    /**
+     * 守护 {@code validateCorruptPdfShouldFailCorrupted}：该场景行为改动即失败。
+     */
     @Test
     void validateCorruptPdfShouldFailCorrupted() {
         // PDF 魔数通过但结构损坏：试解析失败 → 损坏判定
@@ -233,6 +269,9 @@ class FileValidationPipelineTest {
         verify(fileStorage).metadata("f1");
     }
 
+    /**
+     * 守护 {@code checksShouldRunInOrderRegardlessOfInjectionOrder}：该场景行为改动即失败。
+     */
     @Test
     void checksShouldRunInOrderRegardlessOfInjectionOrder() throws Exception {
         // 注入乱序（编排器按 order() 排序执行）：空文件仍应由空文件判定（而非魔数/试解析）拦截

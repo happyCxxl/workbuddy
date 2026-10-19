@@ -123,5 +123,7 @@ class RedisCounterTest {
         counter.reset("k");
 
         verify(template).delete("k");
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(template).getInvocations().stream()
+                .anyMatch(inv -> "delete".equals(inv.getMethod().getName())));
     }
 }

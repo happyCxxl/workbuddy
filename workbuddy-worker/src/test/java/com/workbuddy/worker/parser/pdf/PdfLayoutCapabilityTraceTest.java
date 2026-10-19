@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PdfLayoutCapabilityTraceTest {
 
-    /** 真实提取出的行：两行各含跨栏间隙 → 判复杂页 */
+    /** 真实提取出的行：两行各含跨栏间隙 → 判复杂页（{@code spanningLinesShouldBeTreatedAsComplexPage}）。 */
     @Test
     void spanningLinesShouldBeTreatedAsComplexPage() throws Exception {
         ParseContext context = context();
@@ -56,7 +56,7 @@ class PdfLayoutCapabilityTraceTest {
         }
     }
 
-    /** 已接入能力：复杂页真的调了模型，产物路由记下 layout 能力引用与补强事实 */
+    /** 已接入能力：复杂页真的调了模型，产物路由记下 layout 能力引用与补强事实（{@code complexPageShouldCallCapabilityAndTraceIt}）。 */
     @Test
     void complexPageShouldCallCapabilityAndTraceIt() {
         ParseSource source = new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer(), stubRegistry())
@@ -69,7 +69,7 @@ class PdfLayoutCapabilityTraceTest {
                 () -> "facts=" + source.getFacts());
     }
 
-    /** 未接入能力：不产生能力引用与补强事实 */
+    /** 未接入能力：不产生能力引用与补强事实（{@code withoutCapabilityShouldNotTraceAnything}）。 */
     @Test
     void withoutCapabilityShouldNotTraceAnything() {
         ParseSource source = new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer(), null)

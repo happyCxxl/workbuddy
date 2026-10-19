@@ -45,6 +45,9 @@ class DedupMergerImplTest {
         return element;
     }
 
+    /**
+     * 守护 {@code overlapSameTextShouldMergeNativeFirst}：该场景行为改动即失败。
+     */
     @Test
     void overlapSameTextShouldMergeNativeFirst() {
         BBox box = new BBox(72, 100, 300, 20);
@@ -59,6 +62,9 @@ class DedupMergerImplTest {
         assertNull(nativeEl.getConflictStatus());
     }
 
+    /**
+     * 守护 {@code overlapDifferentTextShouldConflictWithPrimaryBackup}：该场景行为改动即失败。
+     */
     @Test
     void overlapDifferentTextShouldConflictWithPrimaryBackup() {
         BBox box = new BBox(72, 100, 300, 20);
@@ -73,6 +79,9 @@ class DedupMergerImplTest {
         assertEquals("BACKUP", ocrEl.getConflictStatus());
     }
 
+    /**
+     * 守护 {@code sameSourceShouldNotMerge}：该场景行为改动即失败。
+     */
     @Test
     void sameSourceShouldNotMerge() {
         BBox box = new BBox(72, 100, 300, 20);
@@ -85,6 +94,9 @@ class DedupMergerImplTest {
         assertEquals(0, outcome.getMergePairs());
     }
 
+    /**
+     * 守护 {@code laterHigherPrioritySourceShouldWinOverEarlierLowerOne}：该场景行为改动即失败。
+     */
     @Test
     void laterHigherPrioritySourceShouldWinOverEarlierLowerOne() {
         BBox box = new BBox(72, 100, 300, 20);
@@ -101,6 +113,9 @@ class DedupMergerImplTest {
         assertEquals(1, outcome.getMergePairs());
     }
 
+    /**
+     * 守护 {@code unknownSourceShouldRankLast}：该场景行为改动即失败。
+     */
     @Test
     void unknownSourceShouldRankLast() {
         BBox box = new BBox(72, 100, 300, 20);
@@ -114,6 +129,9 @@ class DedupMergerImplTest {
         assertEquals("n-1", outcome.getElements().getFirst().getId());
     }
 
+    /**
+     * 守护 {@code sameRouteDifferentProviderShouldNotBeCrossSource}：该场景行为改动即失败。
+     */
     @Test
     void sameRouteDifferentProviderShouldNotBeCrossSource() {
         BBox box = new BBox(72, 100, 300, 20);

@@ -24,13 +24,13 @@ class ParserWhitelistCheckerTest {
     private final ParserWhitelistChecker checker = new ParserWhitelistChecker(
             realParsers(), new FileValidationProperties());
 
-    /** 真实解析器集合 + 默认白名单：应通过 */
+    /** 真实解析器集合 + 默认白名单：应通过（{@code defaultWhitelistShouldBeCoveredByRealParsers}）。 */
     @Test
     void defaultWhitelistShouldBeCoveredByRealParsers() {
         assertDoesNotThrow(() -> checker.checkWhitelist(realParsers(), List.of("PDF", "DOC", "DOCX", "XLS", "XLSX")));
     }
 
-    /** 白名单里的格式没有解析器：启动期抛错（PPT/PPTX 已登记格式但无解析器） */
+    /** 白名单里的格式没有解析器：启动期抛错（PPT/PPTX 已登记格式但无解析器）（{@code whitelistWithoutParserShouldFailFast}）。 */
     @Test
     void whitelistWithoutParserShouldFailFast() {
         IllegalStateException error = assertThrows(IllegalStateException.class,
@@ -39,7 +39,7 @@ class ParserWhitelistCheckerTest {
         assertTrue(error.getMessage().contains("PPTX"), () -> "message=" + error.getMessage());
     }
 
-    /** 白名单里的未知格式名：配置错误直接暴露 */
+    /** 白名单里的未知格式名：配置错误直接暴露（{@code unknownFormatNameShouldFailFast}）。 */
     @Test
     void unknownFormatNameShouldFailFast() {
         assertThrows(IllegalArgumentException.class, () -> checker.checkWhitelist(realParsers(), List.of("PDFX")));

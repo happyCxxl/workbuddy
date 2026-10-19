@@ -35,6 +35,9 @@ class ErrorCodeTest {
             "模型请求参数或内容被拒", "模型不存在", "模型请求被限流", "模型请求超时", "模型服务端错误", "模型服务不可达",
             "模型输出结构校验失败");
 
+    /**
+     * 守护 {@code modelCodesShouldSitInOneContinuousBlock}：该场景行为改动即失败。
+     */
     @Test
     void modelCodesShouldSitInOneContinuousBlock() {
         List<Integer> expected = new ArrayList<>();
@@ -50,6 +53,9 @@ class ErrorCodeTest {
         assertEquals(10, MODEL_CODES.size());
     }
 
+    /**
+     * 守护 {@code modelCodesShouldStayUniqueAgainstTheWholeRegistry}：该场景行为改动即失败。
+     */
     @Test
     void modelCodesShouldStayUniqueAgainstTheWholeRegistry() {
         Set<Integer> codes = new LinkedHashSet<>();
@@ -60,6 +66,9 @@ class ErrorCodeTest {
         assertEquals(ErrorCode.values().length, codes.size());
     }
 
+    /**
+     * 守护 {@code modelCodeMessagesShouldMatchTheirPhrases}：该场景行为改动即失败。
+     */
     @Test
     void modelCodeMessagesShouldMatchTheirPhrases() {
         List<String> actual = new ArrayList<>();
@@ -70,6 +79,9 @@ class ErrorCodeTest {
         assertEquals(MODEL_MESSAGES, actual);
     }
 
+    /**
+     * 守护 {@code modelCodeMessagesShouldBeChinesePhrases}：该场景行为改动即失败。
+     */
     @Test
     void modelCodeMessagesShouldBeChinesePhrases() {
         for (ErrorCode errorCode : MODEL_CODES) {

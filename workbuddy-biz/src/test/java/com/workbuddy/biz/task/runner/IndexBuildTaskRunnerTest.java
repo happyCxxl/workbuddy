@@ -151,6 +151,9 @@ class IndexBuildTaskRunnerTest {
                 .thenReturn(List.of(row));
     }
 
+    /**
+     * 守护 {@code runShouldFailWhenComboIncomplete}：该场景行为改动即失败。
+     */
     @Test
     void runShouldFailWhenComboIncomplete() {
         WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
@@ -173,6 +176,9 @@ class IndexBuildTaskRunnerTest {
         verify(milvusIndexPort, never()).listChunkIds(anyString());
     }
 
+    /**
+     * 守护 {@code runShouldFailWhenLineageMismatch}：该场景行为改动即失败。
+     */
     @Test
     void runShouldFailWhenLineageMismatch() {
         WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
@@ -192,6 +198,9 @@ class IndexBuildTaskRunnerTest {
                 PipelineTaskErrorCode.INDEX_INCOMPLETE.name(), version.getBuildError());
     }
 
+    /**
+     * 守护 {@code runShouldFailWhenDimensionMismatch}：该场景行为改动即失败。
+     */
     @Test
     void runShouldFailWhenDimensionMismatch() {
         WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
@@ -211,6 +220,9 @@ class IndexBuildTaskRunnerTest {
                 PipelineTaskErrorCode.INDEX_DIMENSION_MISMATCH.name(), version.getBuildError());
     }
 
+    /**
+     * 守护 {@code runShouldFailConsistencyAndKeepCollection}：该场景行为改动即失败。
+     */
     @Test
     void runShouldFailConsistencyAndKeepCollection() {
         WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
@@ -234,6 +246,9 @@ class IndexBuildTaskRunnerTest {
         verify(indexSetService, never()).publish(anyLong());
     }
 
+    /**
+     * 守护 {@code runShouldFailWhenCollectionInitThrows}：该场景行为改动即失败。
+     */
     @Test
     void runShouldFailWhenCollectionInitThrows() {
         WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
@@ -254,6 +269,9 @@ class IndexBuildTaskRunnerTest {
                 PipelineTaskErrorCode.INDEX_BUILD_FAILED.name(), "维度不一致");
     }
 
+    /**
+     * 守护 {@code runShouldBecomeReadyAndAutoPublishOnCompensate}：该场景行为改动即失败。
+     */
     @Test
     void runShouldBecomeReadyAndAutoPublishOnCompensate() {
         WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.COMPENSATE.name());
@@ -275,6 +293,9 @@ class IndexBuildTaskRunnerTest {
         verify(indexSetService).publish(100L);
     }
 
+    /**
+     * 守护 {@code runShouldBecomeReadyButNotPublishOnRebuild}：该场景行为改动即失败。
+     */
     @Test
     void runShouldBecomeReadyButNotPublishOnRebuild() {
         WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.REBUILD.name());
@@ -293,6 +314,9 @@ class IndexBuildTaskRunnerTest {
         verify(indexSetService, never()).publish(anyLong());
     }
 
+    /**
+     * 守护 {@code runShouldBecomeReadyAndAutoPublishOnIncrementWithBindingOn}：该场景行为改动即失败。
+     */
     @Test
     void runShouldBecomeReadyAndAutoPublishOnIncrementWithBindingOn() {
         WbPipelineTask task = queuedBuildTask(IndexBuildTrigger.INCREMENT.name());
@@ -311,8 +335,13 @@ class IndexBuildTaskRunnerTest {
         runner.run(1L);
 
         verify(indexSetService).publish(100L);
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(indexSetService).getInvocations().stream()
+                .anyMatch(inv -> "publish".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code runShouldBackfillFrozenScopeAndBecomeReady}：该场景行为改动即失败。
+     */
     @Test
     void runShouldBackfillFrozenScopeAndBecomeReady() {
         // LIST 冻结集构建 → 回填范围文件行 → 对账通过 → READY（REBUILD 停留不发布）
@@ -345,6 +374,9 @@ class IndexBuildTaskRunnerTest {
         verify(indexSetService, never()).publish(anyLong());
     }
 
+    /**
+     * 守护 {@code runShouldNotAutoPublishFrozenScopeEvenOnCompensate}：该场景行为改动即失败。
+     */
     @Test
     void runShouldNotAutoPublishFrozenScopeEvenOnCompensate() {
         // LIST 冻结集永不自动发布——即使 COMPENSATE 触发也停留 READY

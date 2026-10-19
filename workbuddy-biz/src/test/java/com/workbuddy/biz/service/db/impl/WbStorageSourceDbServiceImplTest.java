@@ -66,6 +66,9 @@ class WbStorageSourceDbServiceImplTest {
         return captor.getValue();
     }
 
+    /**
+     * 守护 {@code listAllShouldOrderById}：该场景行为改动即失败。
+     */
     @Test
     void listAllShouldOrderById() {
         when(mapper.selectList(any())).thenReturn(List.of(row(1L, "本地磁盘", 1)));
@@ -78,6 +81,9 @@ class WbStorageSourceDbServiceImplTest {
         assertTrue(sql.contains("id"), sql);
     }
 
+    /**
+     * 守护 {@code markCurrentShouldSetCurrentFlagOnTheRow}：该场景行为改动即失败。
+     */
     @Test
     void markCurrentShouldSetCurrentFlagOnTheRow() {
         when(mapper.updateById(any(WbStorageSource.class))).thenReturn(1);
@@ -90,6 +96,9 @@ class WbStorageSourceDbServiceImplTest {
         assertEquals(WbStorageSourceDbService.CURRENT_YES, captor.getValue().getIsCurrent());
     }
 
+    /**
+     * 守护 {@code clearCurrentShouldResetEveryCurrentRow}：该场景行为改动即失败。
+     */
     @Test
     void clearCurrentShouldResetEveryCurrentRow() {
         when(mapper.selectList(any())).thenReturn(List.of(row(9L, "本地磁盘", 1)));
@@ -102,6 +111,9 @@ class WbStorageSourceDbServiceImplTest {
         assertEquals(WbStorageSourceDbService.CURRENT_NO, captor.getValue().getIsCurrent());
     }
 
+    /**
+     * 守护 {@code clearCurrentShouldNotWriteWithoutCurrentRow}：该场景行为改动即失败。
+     */
     @Test
     void clearCurrentShouldNotWriteWithoutCurrentRow() {
         when(mapper.selectList(any())).thenReturn(List.of());
@@ -109,8 +121,14 @@ class WbStorageSourceDbServiceImplTest {
         impl.clearCurrent();
 
         verify(mapper, never()).updateById(any(WbStorageSource.class));
+
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(mapper).getInvocations().stream()
+                .noneMatch(inv -> "updateById".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code recordProbeShouldWriteProbeColumnsOnly}：该场景行为改动即失败。
+     */
     @Test
     void recordProbeShouldWriteProbeColumnsOnly() {
         LocalDateTime probeAt = LocalDateTime.of(2026, 10, 9, 10, 30, 15);

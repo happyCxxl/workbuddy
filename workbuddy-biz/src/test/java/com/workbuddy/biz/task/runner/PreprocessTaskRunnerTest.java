@@ -176,6 +176,9 @@ class PreprocessTaskRunnerTest {
         return fileResult;
     }
 
+    /**
+     * 守护 {@code successPathShouldPersistViewProductWithUpstreamChainAndNineSteps}：该场景行为改动即失败。
+     */
     @Test
     void successPathShouldPersistViewProductWithUpstreamChainAndNineSteps() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -214,6 +217,9 @@ class PreprocessTaskRunnerTest {
         verify(stepLogDbService, times(9)).save(any());
     }
 
+    /**
+     * 守护 {@code specifiedUpstreamProductShouldBePreferred}：该场景行为改动即失败。
+     */
     @Test
     void specifiedUpstreamProductShouldBePreferred() {
         WbPipelineTask task = queuedTask();
@@ -244,6 +250,9 @@ class PreprocessTaskRunnerTest {
         assertEquals(88L, productCaptor.getValue().getUpstreamProductId());
     }
 
+    /**
+     * 守护 {@code missingUpstreamProductShouldFailTaskUpstreamMissing}：该场景行为改动即失败。
+     */
     @Test
     void missingUpstreamProductShouldFailTaskUpstreamMissing() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -256,8 +265,13 @@ class PreprocessTaskRunnerTest {
         verify(pipelineTaskDbService).finish(eq(60L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name()), any());
         verify(fileStorage, never()).putObject(any(byte[].class));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+                .noneMatch(inv -> "putObject".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code failedUpstreamTaskShouldFailPreprocessFailed}：该场景行为改动即失败。
+     */
     @Test
     void failedUpstreamTaskShouldFailPreprocessFailed() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -278,6 +292,9 @@ class PreprocessTaskRunnerTest {
         verify(preprocessor, never()).preprocess(any());
     }
 
+    /**
+     * 守护 {@code corruptStrategySnapshotShouldFailPreprocessFailed}：该场景行为改动即失败。
+     */
     @Test
     void corruptStrategySnapshotShouldFailPreprocessFailed() {
         // 快照坏（"{oops"）：解析抛异常被显式接住，任务落 PREPROCESS_FAILED 且文案干净可辨识
@@ -296,8 +313,13 @@ class PreprocessTaskRunnerTest {
         // 守卫在读取上游产物本体之前：坏快照不读对象、不进管线
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
         verify(preprocessor, never()).preprocess(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(preprocessor).getInvocations().stream()
+                .noneMatch(inv -> "preprocess".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code failedOutcomeShouldFinishFailedWithoutProduct}：该场景行为改动即失败。
+     */
     @Test
     void failedOutcomeShouldFinishFailedWithoutProduct() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -318,5 +340,7 @@ class PreprocessTaskRunnerTest {
                 eq(PipelineTaskErrorCode.PREPROCESS_EMPTY.name()), any());
         verify(fileStorage, never()).putObject(any(byte[].class));
         verify(pipelineProductDbService, never()).save(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineProductDbService).getInvocations().stream()
+                .noneMatch(inv -> "save".equals(inv.getMethod().getName())));
     }
 }

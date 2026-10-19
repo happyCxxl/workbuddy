@@ -127,6 +127,9 @@ class PipelineTaskConsumerTest {
         return done;
     }
 
+    /**
+     * 守护 {@code stopShouldMarkInFlightTaskFailedWithShutdownCode}：该场景行为改动即失败。
+     */
     @Test
     void stopShouldMarkInFlightTaskFailedWithShutdownCode() throws InterruptedException {
         CountDownLatch entered = new CountDownLatch(1);
@@ -144,6 +147,9 @@ class PipelineTaskConsumerTest {
                 eq(PipelineTaskErrorCode.TASK_SHUTDOWN_INTERRUPTED.name()), eq("服务停机中断，任务未完成"));
     }
 
+    /**
+     * 守护 {@code stopShouldNotMarkTaskThatFinishedBeforeStop}：该场景行为改动即失败。
+     */
     @Test
     void stopShouldNotMarkTaskThatFinishedBeforeStop() throws InterruptedException {
         CountDownLatch entered = new CountDownLatch(1);
@@ -163,6 +169,9 @@ class PipelineTaskConsumerTest {
                 eq(PipelineTaskErrorCode.TASK_SHUTDOWN_INTERRUPTED.name()), anyString());
     }
 
+    /**
+     * 守护 {@code stopShouldLeaveUnclaimedQueuedTaskUntouched}：该场景行为改动即失败。
+     */
     @Test
     void stopShouldLeaveUnclaimedQueuedTaskUntouched() throws InterruptedException {
         CountDownLatch entered = new CountDownLatch(1);

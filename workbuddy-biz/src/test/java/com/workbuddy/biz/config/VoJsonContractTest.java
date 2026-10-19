@@ -52,6 +52,9 @@ class VoJsonContractTest {
         return vo;
     }
 
+    /**
+     * 守护 {@code shouldSerializeSnowflakeIdAsStringAndCountAsNumber}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("雪花 ID 以字符串下发，计数保持数字")
     void shouldSerializeSnowflakeIdAsStringAndCountAsNumber() throws Exception {
@@ -67,6 +70,9 @@ class VoJsonContractTest {
         assertTrue(json.contains("\"documentCount\":7"), "documentCount 应为数字，实际: " + json);
     }
 
+    /**
+     * 守护 {@code shouldSerializeFieldsConsumedByFrontend}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("前端依赖的字段名与取值口径")
     void shouldSerializeFieldsConsumedByFrontend() throws Exception {
@@ -79,6 +85,9 @@ class VoJsonContractTest {
         assertTrue(json.contains("\"embedStrategyVersion\":\"embed-default-v1\""), json);
     }
 
+    /**
+     * 守护 {@code shouldKeepNullsExplicitSoFrontendCanFallback}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("null 保持显式，前端才能用 ?? 回落")
     void shouldKeepNullsExplicitSoFrontendCanFallback() throws Exception {
@@ -92,6 +101,9 @@ class VoJsonContractTest {
         assertTrue(json.contains("\"documentCount\":null"), json);
     }
 
+    /**
+     * 守护 {@code statsCountsShouldStayNumbers}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("统计口径：计数字段保持数字")
     void statsCountsShouldStayNumbers() throws Exception {
@@ -106,6 +118,9 @@ class VoJsonContractTest {
         assertEquals("{\"knowledgeBaseCount\":12,\"enabledCount\":3,\"documentCount\":1284}", json);
     }
 
+    /**
+     * 守护 {@code homeSummaryCountsShouldStayNumbers}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("首页资产速览的计数字段同样是数字")
     void homeSummaryCountsShouldStayNumbers() throws Exception {
@@ -128,6 +143,9 @@ class VoJsonContractTest {
         }
     }
 
+    /**
+     * 守护 {@code collectionIdsShouldFollowSameRule}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("集合里的 ID 元素也走同一口径（成员文件 ID 列表）")
     void collectionIdsShouldFollowSameRule() throws Exception {
@@ -140,6 +158,9 @@ class VoJsonContractTest {
                 "数组元素应为字符串，实际: " + json);
     }
 
+    /**
+     * 守护 {@code boundaryShouldMatchJsSafeInteger}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("边界：2^53 是数字，2^53+1 起转字符串")
     void boundaryShouldMatchJsSafeInteger() throws Exception {

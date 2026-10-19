@@ -27,11 +27,17 @@ class EmbedAlgorithmSpecTest {
         return config;
     }
 
+    /**
+     * 守护 {@code validConfigShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void validConfigShouldPass() {
         assertNull(EmbedAlgorithmSpec.validate(validConfig()));
     }
 
+    /**
+     * 守护 {@code blankModelShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void blankModelShouldFail() {
         Map<String, Object> config = validConfig();
@@ -39,6 +45,9 @@ class EmbedAlgorithmSpecTest {
         assertEquals("模型不能为空", EmbedAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code templateMissingRequiredPlaceholderShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void templateMissingRequiredPlaceholderShouldFail() {
         Map<String, Object> config = validConfig();
@@ -46,6 +55,9 @@ class EmbedAlgorithmSpecTest {
         assertEquals("docTemplate 必须包含 {content} 占位符", EmbedAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code templateUnknownPlaceholderShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void templateUnknownPlaceholderShouldFail() {
         Map<String, Object> config = validConfig();
@@ -53,6 +65,9 @@ class EmbedAlgorithmSpecTest {
         assertEquals("queryTemplate 占位符不在白名单: {answer}", EmbedAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code rangesShouldBeEnforced}：该场景行为改动即失败。
+     */
     @Test
     void rangesShouldBeEnforced() {
         Map<String, Object> config = validConfig();
@@ -68,6 +83,9 @@ class EmbedAlgorithmSpecTest {
         assertEquals("maxRetries 越界（允许 0~5）", EmbedAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code enumValuesShouldBeEnforced}：该场景行为改动即失败。
+     */
     @Test
     void enumValuesShouldBeEnforced() {
         Map<String, Object> config = validConfig();
@@ -77,6 +95,9 @@ class EmbedAlgorithmSpecTest {
         assertNull(EmbedAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code unknownKeysShouldPassThrough}：该场景行为改动即失败。
+     */
     @Test
     void unknownKeysShouldPassThrough() {
         Map<String, Object> config = validConfig();

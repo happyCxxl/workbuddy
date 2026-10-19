@@ -19,6 +19,9 @@ class NormalizerImplTest {
 
     private final NormalizerImpl normalizer = new NormalizerImpl();
 
+    /**
+     * 守护 {@code tableCellsShouldCarryRowColAndHeaderThroughNormalization}：该场景行为改动即失败。
+     */
     @Test
     void tableCellsShouldCarryRowColAndHeaderThroughNormalization() {
         ParseElement table = ParseElement.of("t1", ElementType.TABLE);
@@ -69,6 +72,9 @@ class NormalizerImplTest {
         assertEquals(1, unifiedSecond.getCol());
     }
 
+    /**
+     * 守护 {@code extensionShouldCarrySourceRouteAndProvider}：该场景行为改动即失败。
+     */
     @Test
     void extensionShouldCarrySourceRouteAndProvider() {
         ParseElement paragraph = ParseElement.of("p1", ElementType.PARAGRAPH);
@@ -83,6 +89,9 @@ class NormalizerImplTest {
         assertEquals("pdfbox-3.0.4", extension.get("provider"));
     }
 
+    /**
+     * 守护 {@code extensionShouldSkipProviderWhenSourceHasNone}：该场景行为改动即失败。
+     */
     @Test
     void extensionShouldSkipProviderWhenSourceHasNone() {
         ParseElement paragraph = ParseElement.of("p1", ElementType.PARAGRAPH);

@@ -133,6 +133,9 @@ class AssemblerPipelineTest {
                 .toList();
     }
 
+    /**
+     * 守护 {@code unmappedTypeShouldSkipElementAndWarn}：该场景行为改动即失败。
+     */
     @Test
     void unmappedTypeShouldSkipElementAndWarn() {
         AssembleOutcome outcome = pipeline.assemble(
@@ -150,6 +153,9 @@ class AssemblerPipelineTest {
         assertTrue(messages.getFirst().contains("共 1 个元素已跳过"), messages.getFirst());
     }
 
+    /**
+     * 守护 {@code blankTypeShouldBeCountedAsBlank}：该场景行为改动即失败。
+     */
     @Test
     void blankTypeShouldBeCountedAsBlank() {
         AssembleOutcome outcome = pipeline.assemble(
@@ -160,6 +166,9 @@ class AssemblerPipelineTest {
         assertTrue(messages.getFirst().contains("(blank)"), messages.getFirst());
     }
 
+    /**
+     * 守护 {@code allUnmappedShouldFailWithTypeHint}：该场景行为改动即失败。
+     */
     @Test
     void allUnmappedShouldFailWithTypeHint() {
         AssembleOutcome outcome = pipeline.assemble(
@@ -170,6 +179,9 @@ class AssemblerPipelineTest {
         assertTrue(outcome.getErrorMsg().contains("类型未识别"), outcome.getErrorMsg());
     }
 
+    /**
+     * 守护 {@code knownTypesShouldNotWarnUnmapped}：该场景行为改动即失败。
+     */
     @Test
     void knownTypesShouldNotWarnUnmapped() {
         AssembleOutcome outcome = pipeline.assemble(
@@ -179,6 +191,9 @@ class AssemblerPipelineTest {
         assertEquals(0, warningMessages(outcome, QualityWarningCode.ELEMENT_TYPE_UNMAPPED).size());
     }
 
+    /**
+     * 守护 {@code excelSheetTableShouldNotWarnProvenance}：该场景行为改动即失败。
+     */
     @Test
     void excelSheetTableShouldNotWarnProvenance() {
         // 章节节点不计入分母；表格经由单元格定位回原文 → 覆盖率 100%，不再恒定告警
@@ -189,6 +204,9 @@ class AssemblerPipelineTest {
         assertEquals(0, warningMessages(outcome, QualityWarningCode.PROVENANCE_MISSING).size());
     }
 
+    /**
+     * 守护 {@code tableWithoutAnyProvenanceShouldStillWarnProvenance}：该场景行为改动即失败。
+     */
     @Test
     void tableWithoutAnyProvenanceShouldStillWarnProvenance() {
         AssembleOutcome outcome = pipeline.assemble(
@@ -230,6 +248,9 @@ class AssemblerPipelineTest {
         return element;
     }
 
+    /**
+     * 守护 {@code noisePageWarningShouldCarrySampleReasons}：该场景行为改动即失败。
+     */
     @Test
     void noisePageWarningShouldCarrySampleReasons() {
         // 5 页：前 4 页无元素（空白噪声页），第 5 页有正文
@@ -257,6 +278,9 @@ class AssemblerPipelineTest {
         return dimension;
     }
 
+    /**
+     * 守护 {@code mergedContinuationShouldNotLeaveDanglingRelations}：该场景行为改动即失败。
+     */
     @Test
     void mergedContinuationShouldNotLeaveDanglingRelations() {
         AssembleOutcome outcome = pipeline.assemble(parseResult(

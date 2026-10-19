@@ -86,6 +86,9 @@ class TableRowGroupStrategyTest {
         return table;
     }
 
+    /**
+     * 守护 {@code groupSizeShouldSettleChunkPerGroup}：该场景行为改动即失败。
+     */
     @Test
     void groupSizeShouldSettleChunkPerGroup() {
         UnifiedElement table = tableWith("行");
@@ -106,6 +109,9 @@ class TableRowGroupStrategyTest {
         assertEquals("t-1", chunks.getFirst().getTableRef());
     }
 
+    /**
+     * 守护 {@code maxLenShouldSettleChunkBeforeOverflow}：该场景行为改动即失败。
+     */
     @Test
     void maxLenShouldSettleChunkBeforeOverflow() {
         UnifiedElement table = tableWith("内容较长的一行");

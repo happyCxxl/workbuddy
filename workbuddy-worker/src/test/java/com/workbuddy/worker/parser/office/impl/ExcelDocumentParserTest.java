@@ -49,7 +49,7 @@ class ExcelDocumentParserTest {
         return context;
     }
 
-    /** 首行为空（行对象存在但无单元格）：cols 按实际数据算，不出负数也不抛异常 */
+    /** 首行为空（行对象存在但无单元格）：cols 按实际数据算，不出负数也不抛异常（{@code emptyFirstRowShouldStillGiveDataColumns}）。 */
     @Test
     void emptyFirstRowShouldStillGiveDataColumns() throws Exception {
         ParseSource source = parser.parse(context(buildXlsxWithEmptyFirstRow(), MIME_XLSX));
@@ -63,7 +63,7 @@ class ExcelDocumentParserTest {
         assertTrue(cellTexts(source).contains("分值"), () -> "cells=" + cellTexts(source));
     }
 
-    /** 承接列数口径：数据区比首行宽时，cols 取数据最大列，不被首行截短 */
+    /** 承接列数口径：数据区比首行宽时，cols 取数据最大列，不被首行截短（{@code narrowerFirstRowShouldNotTruncateColumns}）。 */
     @Test
     void narrowerFirstRowShouldNotTruncateColumns() throws Exception {
         ParseSource source = parser.parse(context(buildXlsxWithNarrowTitleRow(), MIME_XLSX));
@@ -73,7 +73,7 @@ class ExcelDocumentParserTest {
         assertEquals(3, table.getCols(), () -> "cols=" + table.getCols());
     }
 
-    /** 合并区被覆盖格带文本：并入锚格（换行分隔），不丢 */
+    /** 合并区被覆盖格带文本：并入锚格（换行分隔），不丢（{@code coveredCellTextShouldBeMergedIntoAnchor}）。 */
     @Test
     void coveredCellTextShouldBeMergedIntoAnchor() throws Exception {
         ParseSource source = parser.parse(context(buildXlsxWithCoveredText(), MIME_XLSX));
@@ -83,7 +83,7 @@ class ExcelDocumentParserTest {
                 () -> "cells=" + texts);
     }
 
-    /** 页眉页脚产元素：三区拼接成一条 HEADER、页脚一条 FOOTER，格式码被清掉 */
+    /** 页眉页脚产元素：三区拼接成一条 HEADER、页脚一条 FOOTER，格式码被清掉（{@code sheetHeaderFooterShouldEmitElements}）。 */
     @Test
     void sheetHeaderFooterShouldEmitElements() throws Exception {
         ParseSource source = parser.parse(context(buildXlsxWithHeaderFooter(), MIME_XLSX));
@@ -101,7 +101,7 @@ class ExcelDocumentParserTest {
         assertEquals("office#sheet[页眉表]/header", headers.getFirst().getProvenance().getPath());
     }
 
-    /** 格式码清理：段标记转分隔、格式码去掉、空白合并 */
+    /** 格式码清理：段标记转分隔、格式码去掉、空白合并（{@code headerFooterCodesShouldBeStripped}）。 */
     @Test
     void headerFooterCodesShouldBeStripped() {
         assertEquals("左 中 右", ExcelDocumentParser.sheetHeaderFooterText("&L左&C中&R右"));
@@ -109,7 +109,7 @@ class ExcelDocumentParserTest {
         assertEquals("", ExcelDocumentParser.sheetHeaderFooterText("   "));
     }
 
-    /** 工作表内嵌图片：产 IMAGE 元素（needsOcr）并按表记一条 OCR_IMAGE 事实 */
+    /** 工作表内嵌图片：产 IMAGE 元素（needsOcr）并按表记一条 OCR_IMAGE 事实（{@code embeddedPictureShouldEmitImageAndFact}）。 */
     @Test
     void embeddedPictureShouldEmitImageAndFact() throws Exception {
         ParseSource source = parser.parse(context(buildXlsxWithPicture(), MIME_XLSX));
@@ -143,7 +143,7 @@ class ExcelDocumentParserTest {
         }
     }
 
-    /** 首行空时表头行指向真实数据首行（第 1 行），isHeader 只标该行 */
+    /** 首行空时表头行指向真实数据首行（第 1 行），isHeader 只标该行（{@code headerRowShouldPointToFirstDataRow}）。 */
     @Test
     void headerRowShouldPointToFirstDataRow() throws Exception {
         ParseSource source = parser.parse(context(buildXlsxWithEmptyFirstRow(), MIME_XLSX));
@@ -161,7 +161,7 @@ class ExcelDocumentParserTest {
                 () -> "cells=" + table.getCells());
     }
 
-    /** .xls 公式缓存不可辨别：有公式格时按档在路说明里留痕，取值仍按缓存值 */
+    /** .xls 公式缓存不可辨别：有公式格时按档在路说明里留痕，取值仍按缓存值（{@code xlsFormulaCacheShouldBeNoted}）。 */
     @Test
     void xlsFormulaCacheShouldBeNoted() throws Exception {
         try (HSSFWorkbook workbook = new HSSFWorkbook()) {
@@ -179,7 +179,7 @@ class ExcelDocumentParserTest {
         }
     }
 
-    /** xlsx 公式缓存可辨别：不留旧格式口径说明 */
+    /** xlsx 公式缓存可辨别：不留旧格式口径说明（{@code xlsxFormulaCacheShouldNotBeNoted}）。 */
     @Test
     void xlsxFormulaCacheShouldNotBeNoted() throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -195,7 +195,7 @@ class ExcelDocumentParserTest {
         }
     }
 
-    /** 公式格以缓存显示值为准：手工把 <v> 写成 7（公式现算是 2）→ 产物取 7 */
+    /** 公式格以缓存显示值为准：手工把 <v> 写成 7（公式现算是 2）→ 产物取 7（{@code formulaShouldPreferCachedDisplayValue}）。 */
     @Test
     void formulaShouldPreferCachedDisplayValue() throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -307,6 +307,9 @@ class ExcelDocumentParserTest {
                 .map(ParseElement::getText).toList();
     }
 
+    /**
+     * 守护 {@code xlsxShouldParseSheetTableWithMerges}：该场景行为改动即失败。
+     */
     @Test
     void xlsxShouldParseSheetTableWithMerges() throws Exception {
         ParseSource source = parser.parse(context(buildXlsx(), MIME_XLSX));
@@ -333,6 +336,9 @@ class ExcelDocumentParserTest {
         assertTrue(merged.getProvenance().getPath().contains("sheet[评分表]"));
     }
 
+    /**
+     * 守护 {@code xlsShouldParseViaSameWorkbookPath}：该场景行为改动即失败。
+     */
     @Test
     void xlsShouldParseViaSameWorkbookPath() throws Exception {
         try (HSSFWorkbook workbook = new HSSFWorkbook()) {
@@ -349,6 +355,9 @@ class ExcelDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code formulaCellShouldUseCachedValueInsteadOfFormulaText}：该场景行为改动即失败。
+     */
     @Test
     void formulaCellShouldUseCachedValueInsteadOfFormulaText() throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -373,6 +382,9 @@ class ExcelDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code formulaWithoutCachedValueShouldBeEvaluated}：该场景行为改动即失败。
+     */
     @Test
     void formulaWithoutCachedValueShouldBeEvaluated() throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -389,6 +401,9 @@ class ExcelDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code unsupportedFormulaShouldFallBackToCachedValue}：该场景行为改动即失败。
+     */
     @Test
     void unsupportedFormulaShouldFallBackToCachedValue() throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -410,6 +425,9 @@ class ExcelDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code excelShouldFillSheetMetricsIncludingEmptySheet}：该场景行为改动即失败。
+     */
     @Test
     void excelShouldFillSheetMetricsIncludingEmptySheet() throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -431,6 +449,9 @@ class ExcelDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code sheetPictureShouldBeCountedInMetrics}：该场景行为改动即失败。
+     */
     @Test
     void sheetPictureShouldBeCountedInMetrics() throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -456,6 +477,9 @@ class ExcelDocumentParserTest {
         return out.toByteArray();
     }
 
+    /**
+     * 守护 {@code supportsShouldMatchExcelFormats}：该场景行为改动即失败。
+     */
     @Test
     void supportsShouldMatchExcelFormats() {
         assertTrue(parser.supports(MIME_XLS));

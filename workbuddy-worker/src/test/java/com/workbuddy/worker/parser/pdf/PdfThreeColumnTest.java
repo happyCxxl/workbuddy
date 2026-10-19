@@ -35,7 +35,7 @@ class PdfThreeColumnTest {
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
-    /** 同排文字（含一条溢出到邻栏、字符区间重叠的长行）→ 每栏各成一段，文本不跨栏 */
+    /** 同排文字（含一条溢出到邻栏、字符区间重叠的长行）→ 每栏各成一段，文本不跨栏（{@code sameRowColumnTextsShouldStayInTheirOwnParagraph}）。 */
     @Test
     void sameRowColumnTextsShouldStayInTheirOwnParagraph() throws Exception {
         ParseSource source = parser.parse(context(buildThreeColumnPage()));

@@ -37,7 +37,7 @@ class PdfParseWindowTest {
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
-    /** 窗口大小 1（每页一窗）与整档单窗的产物一致 */
+    /** 窗口大小 1（每页一窗）与整档单窗的产物一致（{@code windowedParseShouldMatchSingleWindowParse}）。 */
     @Test
     void windowedParseShouldMatchSingleWindowParse() throws Exception {
         byte[] data = buildThreePageDocument();
@@ -46,7 +46,7 @@ class PdfParseWindowTest {
                 fingerprint(parse(data, 1, IN_MEMORY_BYTES)));
     }
 
-    /** 分窗后跨页识别仍覆盖全档：页脚文本与页码按页各产一条 */
+    /** 分窗后跨页识别仍覆盖全档：页脚文本与页码按页各产一条（{@code footerDetectionShouldCoverAllPagesWhenWindowed}）。 */
     @Test
     void footerDetectionShouldCoverAllPagesWhenWindowed() throws Exception {
         ParseSource source = parse(buildThreePageDocument(), 1, IN_MEMORY_BYTES);
@@ -60,7 +60,7 @@ class PdfParseWindowTest {
                 () -> "footers=" + footers);
     }
 
-    /** 大输入落临时文件按需读取：产物与内存路径一致 */
+    /** 大输入落临时文件按需读取：产物与内存路径一致（{@code largeInputShouldLoadFromTempFileWithSameResult}）。 */
     @Test
     void largeInputShouldLoadFromTempFileWithSameResult() throws Exception {
         byte[] data = buildThreePageDocument();
@@ -69,7 +69,7 @@ class PdfParseWindowTest {
                 fingerprint(parse(data, 50, 1)));
     }
 
-    /** 临时文件不残留 */
+    /** 临时文件不残留（{@code tempFileShouldBeRemovedAfterParse}）。 */
     @Test
     void tempFileShouldBeRemovedAfterParse() throws Exception {
         Path tempDir = Path.of(System.getProperty("java.io.tmpdir"));

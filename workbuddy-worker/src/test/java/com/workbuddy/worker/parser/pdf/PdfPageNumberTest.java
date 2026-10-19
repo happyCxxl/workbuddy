@@ -30,7 +30,7 @@ class PdfPageNumberTest {
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
-    /** 页底数字行紧贴上方正文（与正文间无空白）→ 留在正文，不判页码 */
+    /** 页底数字行紧贴上方正文（与正文间无空白）→ 留在正文，不判页码（{@code bottomNumberTouchingBodyShouldStayInBody}）。 */
     @Test
     void bottomNumberTouchingBodyShouldStayInBody() throws Exception {
         ParseSource source = parser.parse(context(buildBodyTouchingNumbers(), new ParseProperties()));
@@ -42,7 +42,7 @@ class PdfPageNumberTest {
                 () -> "paragraphs=" + bodyTexts(source));
     }
 
-    /** 页底数字行与上方正文留出空白（孤立在页脚区）→ 判页码 */
+    /** 页底数字行与上方正文留出空白（孤立在页脚区）→ 判页码（{@code isolatedBottomNumberShouldBePageNumber}）。 */
     @Test
     void isolatedBottomNumberShouldBePageNumber() throws Exception {
         ParseSource source = parser.parse(context(buildIsolatedNumbers(), new ParseProperties()));
@@ -50,7 +50,7 @@ class PdfPageNumberTest {
         assertEquals(List.of("1", "2"), footerTexts(source), () -> "footers=" + footerTexts(source));
     }
 
-    /** 空洞度比例上收到配置：比例放大后同一份文档不再判页码 */
+    /** 空洞度比例上收到配置：比例放大后同一份文档不再判页码（{@code isolationRatioShouldComeFromProperties}）。 */
     @Test
     void isolationRatioShouldComeFromProperties() throws Exception {
         ParseProperties properties = new ParseProperties();

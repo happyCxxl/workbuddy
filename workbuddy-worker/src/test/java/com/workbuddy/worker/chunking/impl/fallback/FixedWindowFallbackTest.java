@@ -27,6 +27,9 @@ class FixedWindowFallbackTest {
         return config;
     }
 
+    /**
+     * 守护 {@code windowShouldSliceWithOverlap}：该场景行为改动即失败。
+     */
     @Test
     void windowShouldSliceWithOverlap() {
         List<String> pieces = fallback.slice("x".repeat(250), config(100, 20));
@@ -36,11 +39,17 @@ class FixedWindowFallbackTest {
         assertEquals(List.of(100, 100, 90), pieces.stream().map(String::length).toList());
     }
 
+    /**
+     * 守护 {@code shortTextShouldStaySinglePiece}：该场景行为改动即失败。
+     */
     @Test
     void shortTextShouldStaySinglePiece() {
         assertEquals(List.of("短文本"), fallback.slice("短文本", config(500, 50)));
     }
 
+    /**
+     * 守护 {@code blankShouldReturnEmpty}：该场景行为改动即失败。
+     */
     @Test
     void blankShouldReturnEmpty() {
         assertTrue(fallback.slice("  ", config(500, 50)).isEmpty());

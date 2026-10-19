@@ -470,6 +470,8 @@ class KnowledgeBaseServiceImplTest {
         // 没有任何库发布过索引时不应产生多余的查询
         verify(indexSetDbService, never()).listByKbIds(any());
         verify(indexVersionDbService, never()).listByIds(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(indexVersionDbService).getInvocations().stream()
+                .noneMatch(inv -> "listByIds".equals(inv.getMethod().getName())));
     }
 
     /**
@@ -644,6 +646,8 @@ class KnowledgeBaseServiceImplTest {
 
         verify(kbAuditLogDbService, times(2)).saveAudit(eq(AuditActionType.BIND), eq("KNOWLEDGE_BASE"),
                 eq(2L), eq("CHUNK=无"), eq("CHUNK=chunk-hybrid-v1"));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(kbAuditLogDbService).getInvocations().stream()
+                .anyMatch(inv -> "saveAudit".equals(inv.getMethod().getName())));
     }
 
     /**
@@ -666,6 +670,8 @@ class KnowledgeBaseServiceImplTest {
 
         verify(kbAuditLogDbService).saveAudit(eq(AuditActionType.BIND), eq("KNOWLEDGE_BASE"), eq(2L),
                 eq("CHUNK=失效"), eq("CHUNK=chunk-hybrid-v1"));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(kbAuditLogDbService).getInvocations().stream()
+                .anyMatch(inv -> "saveAudit".equals(inv.getMethod().getName())));
     }
 
     /**

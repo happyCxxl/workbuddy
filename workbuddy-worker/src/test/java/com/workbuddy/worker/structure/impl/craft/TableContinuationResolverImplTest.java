@@ -66,6 +66,9 @@ class TableContinuationResolverImplTest {
         return table;
     }
 
+    /**
+     * 守护 {@code fourConditionsShouldMergeAndInheritHeader}：该场景行为改动即失败。
+     */
     @Test
     void fourConditionsShouldMergeAndInheritHeader() {
         UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
@@ -83,6 +86,9 @@ class TableContinuationResolverImplTest {
         assertTrue(outcome.getRelations().stream().anyMatch(r -> "CONTINUATION_OF".equals(r.getType())));
     }
 
+    /**
+     * 守护 {@code relaxedRuleShouldMergeAsSuspected}：该场景行为改动即失败。
+     */
     @Test
     void relaxedRuleShouldMergeAsSuspected() {
         UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
@@ -97,6 +103,9 @@ class TableContinuationResolverImplTest {
         assertTrue(merged.getHeaderInherited());
     }
 
+    /**
+     * 守护 {@code nonAdjacentPagesShouldNotMerge}：该场景行为改动即失败。
+     */
     @Test
     void nonAdjacentPagesShouldNotMerge() {
         UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
@@ -108,6 +117,9 @@ class TableContinuationResolverImplTest {
         assertEquals(0, outcome.getContinuationCount());
     }
 
+    /**
+     * 守护 {@code threePageTableShouldMergeIntoOneChain}：该场景行为改动即失败。
+     */
     @Test
     void threePageTableShouldMergeIntoOneChain() {
         UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
@@ -128,6 +140,9 @@ class TableContinuationResolverImplTest {
         assertEquals(3, merged.getCells().size());
     }
 
+    /**
+     * 守护 {@code chainedRelationShouldCarryRealPageNumbers}：该场景行为改动即失败。
+     */
     @Test
     void chainedRelationShouldCarryRealPageNumbers() {
         UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
@@ -144,6 +159,9 @@ class TableContinuationResolverImplTest {
         assertEquals(List.of(firstId + "#p3->" + firstId + "#p2", firstId + "#p4->" + firstId + "#p2"), relations);
     }
 
+    /**
+     * 守护 {@code chainShouldStopAtNonAdjacentPage}：该场景行为改动即失败。
+     */
     @Test
     void chainShouldStopAtNonAdjacentPage() {
         UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
@@ -193,6 +211,9 @@ class TableContinuationResolverImplTest {
                 .findFirst().orElse(null);
     }
 
+    /**
+     * 守护 {@code noHeaderContinuationShouldRenumberRowsWithoutOverlap}：该场景行为改动即失败。
+     */
     @Test
     void noHeaderContinuationShouldRenumberRowsWithoutOverlap() {
         // 两侧表头都判不出：空对空相似度命中主规则 → 合并；B 没有可丢弃的表头行
@@ -215,6 +236,9 @@ class TableContinuationResolverImplTest {
         assertEquals(merged.getCells().size(), positions.size()); // 无 (row,col) 重叠
     }
 
+    /**
+     * 守护 {@code headerRowZeroContinuationShouldKeepRowNumbering}：该场景行为改动即失败。
+     */
     @Test
     void headerRowZeroContinuationShouldKeepRowNumbering() {
         UnifiedElement a = multiRowTable(2, 700, true, 0,
@@ -231,6 +255,9 @@ class TableContinuationResolverImplTest {
         assertTrue(merged.getCells().stream().noneMatch(c -> "tc-3-0-0".equals(c.getId()))); // B 表头行已丢弃
     }
 
+    /**
+     * 守护 {@code headerRowNotFirstShouldDropOnlyHeaderRow}：该场景行为改动即失败。
+     */
     @Test
     void headerRowNotFirstShouldDropOnlyHeaderRow() {
         UnifiedElement a = multiRowTable(2, 700, true, 0,
@@ -248,6 +275,9 @@ class TableContinuationResolverImplTest {
         assertTrue(merged.getCells().stream().noneMatch(c -> "tc-3-1-0".equals(c.getId())));
     }
 
+    /**
+     * 守护 {@code missingRowsFieldShouldFallBackToCellRows}：该场景行为改动即失败。
+     */
     @Test
     void missingRowsFieldShouldFallBackToCellRows() {
         UnifiedElement a = multiRowTable(2, 700, true, 0,
@@ -271,6 +301,9 @@ class TableContinuationResolverImplTest {
         }
     }
 
+    /**
+     * 守护 {@code unreadableHeadersShouldMergeAsSuspectedWhenWidthsMatch}：该场景行为改动即失败。
+     */
     @Test
     void unreadableHeadersShouldMergeAsSuspectedWhenWidthsMatch() {
         // 两侧表头都判不出：不再按"一致"走主规则，改由列宽模式判为疑似接续
@@ -288,6 +321,9 @@ class TableContinuationResolverImplTest {
                 .anyMatch(r -> "CONTINUATION_OF".equals(r.getType()) && r.getDetail().contains("疑似续表")));
     }
 
+    /**
+     * 守护 {@code unreadableHeadersWithDifferentWidthsShouldNotMerge}：该场景行为改动即失败。
+     */
     @Test
     void unreadableHeadersWithDifferentWidthsShouldNotMerge() {
         UnifiedElement a = multiRowTable(2, 700, true, null,
@@ -301,6 +337,9 @@ class TableContinuationResolverImplTest {
         assertEquals(0, outcome.getContinuationCount());
     }
 
+    /**
+     * 守护 {@code oneReadableHeaderShouldFallToRelaxedRule}：该场景行为改动即失败。
+     */
     @Test
     void oneReadableHeaderShouldFallToRelaxedRule() {
         UnifiedElement a = multiRowTable(2, 700, true, 0,
@@ -313,6 +352,9 @@ class TableContinuationResolverImplTest {
         assertEquals(1, outcome.getSuspectedCount());
     }
 
+    /**
+     * 守护 {@code missingColumnCountShouldNotPassAsEqual}：该场景行为改动即失败。
+     */
     @Test
     void missingColumnCountShouldNotPassAsEqual() {
         // 两侧列表都缺失：不再当作"列数相同"走主规则，改按参考行列宽判为疑似接续
@@ -329,6 +371,9 @@ class TableContinuationResolverImplTest {
         assertEquals(1, outcome.getSuspectedCount());
     }
 
+    /**
+     * 守护 {@code knownDifferentColumnCountShouldNotMerge}：该场景行为改动即失败。
+     */
     @Test
     void knownDifferentColumnCountShouldNotMerge() {
         UnifiedElement a = multiRowTable(2, 700, true, 0,

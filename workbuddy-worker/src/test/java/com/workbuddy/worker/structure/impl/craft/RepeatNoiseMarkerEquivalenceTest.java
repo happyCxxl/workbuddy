@@ -187,6 +187,9 @@ class RepeatNoiseMarkerEquivalenceTest {
 
     // ---------------- 用例 ----------------
 
+    /**
+     * 守护 {@code randomizedFixturesShouldMatchReferenceImplementation}：该场景行为改动即失败。
+     */
     @Test
     void randomizedFixturesShouldMatchReferenceImplementation() {
         Random random = new Random(20261005L);
@@ -204,6 +207,9 @@ class RepeatNoiseMarkerEquivalenceTest {
         }
     }
 
+    /**
+     * 守护 {@code jaccardExceedsShouldMatchJaccardSet}：该场景行为改动即失败。
+     */
     @Test
     void jaccardExceedsShouldMatchJaccardSet() {
         Random random = new Random(7L);
@@ -228,6 +234,9 @@ class RepeatNoiseMarkerEquivalenceTest {
         return set;
     }
 
+    /**
+     * 守护 {@code slightlyDifferentSizesShouldStillBeMarkedRepeated}：该场景行为改动即失败。
+     */
     @Test
     void slightlyDifferentSizesShouldStillBeMarkedRepeated() {
         String text = "评分项与分值说明：本表用于记录各项评分标准、权重与备注信息，供评审小组统一口径使用；"
@@ -249,6 +258,9 @@ class RepeatNoiseMarkerEquivalenceTest {
         assertEquals(1, outcome.getRepeatSegmentCount());
     }
 
+    /**
+     * 守护 {@code muchDifferentSizesShouldNotBeMarkedRepeated}：该场景行为改动即失败。
+     */
     @Test
     void muchDifferentSizesShouldNotBeMarkedRepeated() {
         String shortText = "投标保证金为人民币叁佰万元整，甲方应在合同签订后三十日内支付完毕。".repeat(2);
@@ -267,6 +279,9 @@ class RepeatNoiseMarkerEquivalenceTest {
         assertEquals(List.of(), actualRepeatedSegments(document));
     }
 
+    /**
+     * 守护 {@code largeDocumentSmokeShouldMarkExpectedRepeats}：该场景行为改动即失败。
+     */
     @Test
     void largeDocumentSmokeShouldMarkExpectedRepeats() {
         List<UnifiedElement> elements = new ArrayList<>();

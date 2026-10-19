@@ -300,6 +300,11 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort, never()).ensureCollection(anyString(), anyInt());
         verify(milvusIndexPort, never()).load(anyString());
         verify(milvusIndexPort, never()).append(anyString(), anyList());
+
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(indexVersionDbService).getInvocations().stream()
+                .noneMatch(inv -> "save".equals(inv.getMethod().getName())));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(milvusIndexPort).getInvocations().stream()
+                .noneMatch(inv -> "append".equals(inv.getMethod().getName())));
     }
 
     /**
@@ -413,6 +418,16 @@ class IndexSetServiceImplTest {
         // 规则三：按在线组合拓扑重放（缺预处理 → 投递预处理）
         verify(preprocessControlService).preprocess(10L, 77L, null);
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
+
+        org.mockito.ArgumentCaptor<String> collectionCaptor =
+                org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(milvusIndexPort).append(collectionCaptor.capture(), anyList());
+        assertEquals("kb_1_v1", collectionCaptor.getValue());
+        org.mockito.ArgumentCaptor<Long> preFileCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        org.mockito.ArgumentCaptor<Long> preStrategyCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        verify(preprocessControlService).preprocess(preFileCaptor.capture(), preStrategyCaptor.capture(), any());
+        assertEquals(10L, preFileCaptor.getValue());
+        assertEquals(77L, preStrategyCaptor.getValue());
     }
 
     /**
@@ -722,6 +737,12 @@ class IndexSetServiceImplTest {
         verify(indexSetDbService).updatePublishedVersion(5L, 15L);
         verify(preprocessControlService).preprocess(10L, 77L, null);
         verify(pipelineTaskDbService, never()).save(any());
+
+        org.mockito.ArgumentCaptor<Long> setCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        org.mockito.ArgumentCaptor<Long> newVersionCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        verify(indexSetDbService).updatePublishedVersion(setCaptor.capture(), newVersionCaptor.capture());
+        assertEquals(5L, setCaptor.getValue());
+        assertEquals(15L, newVersionCaptor.getValue());
     }
 
     /**
@@ -794,6 +815,11 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort).drop("kb_1_v3");
         verify(kbAuditLogDbService).saveAudit(AuditActionType.RECYCLE_INDEX, "INDEX_VERSION", 30L, "v3", null);
         verify(indexVersionDbService).removeById(30L);
+
+        org.mockito.ArgumentCaptor<java.io.Serializable> idCaptor =
+                org.mockito.ArgumentCaptor.forClass(java.io.Serializable.class);
+        verify(indexVersionDbService).removeById(idCaptor.capture());
+        assertEquals(30L, idCaptor.getValue());
     }
 
     /**
@@ -1235,6 +1261,11 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort).append(eq("kb_1_v9"), anyList());
         verify(milvusIndexPort, never()).append(eq("kb_1_v8"), anyList());
         verify(milvusIndexPort, never()).append(eq("kb_1_v7"), anyList());
+
+        org.mockito.ArgumentCaptor<String> frozenCaptor =
+                org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(milvusIndexPort).append(frozenCaptor.capture(), anyList());
+        assertEquals("kb_1_v9", frozenCaptor.getValue());
     }
 
     /**
@@ -1829,6 +1860,12 @@ class IndexSetServiceImplTest {
 
         verify(preprocessControlService).preprocess(10L, 77L, null);
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+
+        org.mockito.ArgumentCaptor<Long> preFileCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        org.mockito.ArgumentCaptor<Long> preStrategyCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        verify(preprocessControlService).preprocess(preFileCaptor.capture(), preStrategyCaptor.capture(), any());
+        assertEquals(10L, preFileCaptor.getValue());
+        assertEquals(77L, preStrategyCaptor.getValue());
     }
 
     /**
@@ -1908,6 +1945,15 @@ class IndexSetServiceImplTest {
 
         verify(chunkControlService).chunk(10L, 88L, 501L);
         verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
+
+        org.mockito.ArgumentCaptor<Long> chunkFileCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        org.mockito.ArgumentCaptor<Long> chunkStrategyCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        org.mockito.ArgumentCaptor<Long> upstreamCaptor = org.mockito.ArgumentCaptor.forClass(Long.class);
+        verify(chunkControlService).chunk(chunkFileCaptor.capture(), chunkStrategyCaptor.capture(),
+                upstreamCaptor.capture());
+        assertEquals(10L, chunkFileCaptor.getValue());
+        assertEquals(88L, chunkStrategyCaptor.getValue());
+        assertEquals(501L, upstreamCaptor.getValue());
     }
 
     /**
@@ -1945,6 +1991,9 @@ class IndexSetServiceImplTest {
 
         verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(preprocessControlService).getInvocations().isEmpty());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().isEmpty());
     }
 
     /**
@@ -1969,6 +2018,9 @@ class IndexSetServiceImplTest {
 
         verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(preprocessControlService).getInvocations().isEmpty());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().isEmpty());
     }
 
     /**
@@ -1997,6 +2049,8 @@ class IndexSetServiceImplTest {
 
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
         verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(preprocessControlService).getInvocations().stream()
+                .noneMatch(inv -> "preprocess".equals(inv.getMethod().getName())));
     }
 
     /**
@@ -2064,6 +2118,8 @@ class IndexSetServiceImplTest {
 
         verify(preprocessControlService).preprocess(10L, 77L, null);
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().stream()
+                .noneMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
     /**
@@ -2105,6 +2161,8 @@ class IndexSetServiceImplTest {
         service.rollback(15L);
 
         verify(chunkControlService).chunk(10L, 88L, 501L);
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().stream()
+                .anyMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
     /**
@@ -2140,6 +2198,8 @@ class IndexSetServiceImplTest {
         service.onFileProductsReady(10L);
 
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().stream()
+                .noneMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
     /**

@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class TableStructureSupportTest {
 
-    /** 模型结论：首行横向合并的表头 + 数据行 → 表头行 0、跨度与置信度回填 */
+    /** 模型结论：首行横向合并的表头 + 数据行 → 表头行 0、跨度与置信度回填（{@code tableResultShouldBackfillHeaderRowAndSpans}）。 */
     @Test
     void tableResultShouldBackfillHeaderRowAndSpans() {
         TableResult result = new TableResult();
@@ -52,7 +52,7 @@ class TableStructureSupportTest {
         assertEquals(40.0, table.getBbox().getHeight(), 0.0001);
     }
 
-    /** 模型没给表头标记：表头行为 null（不硬猜） */
+    /** 模型没给表头标记：表头行为 null（不硬猜）（{@code missingHeaderFlagShouldLeaveHeaderRowNull}）。 */
     @Test
     void missingHeaderFlagShouldLeaveHeaderRowNull() {
         TableResult result = new TableResult();
@@ -67,7 +67,7 @@ class TableStructureSupportTest {
         assertNull(table.getBbox());
     }
 
-    /** 结果不完整：行列或格子缺失时返回 null，走内置降级 */
+    /** 结果不完整：行列或格子缺失时返回 null，走内置降级（{@code incompleteResultShouldReturnNull}）。 */
     @Test
     void incompleteResultShouldReturnNull() {
         assertNull(TableStructureSupport.toTableElement(null, 1));

@@ -328,6 +328,15 @@ class WbPipelineTaskDbServiceImplTest {
             return w.getSqlSet().contains("product_id")
                     && w.getParamNameValuePairs().containsValue(77L);
         }));
+
+        org.mockito.ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<WbPipelineTask>> captor =
+                org.mockito.ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+        verify(mapper).update(isNull(), captor.capture());
+        com.baomidou.mybatisplus.core.conditions.AbstractWrapper<?, ?, ?> setWrapper =
+                (com.baomidou.mybatisplus.core.conditions.AbstractWrapper<?, ?, ?>) captor.getValue();
+        setWrapper.getSqlSegment();
+        assertTrue(setWrapper.getSqlSet().contains("product_id"));
+        assertTrue(setWrapper.getParamNameValuePairs().containsValue(77L));
     }
 
     /**

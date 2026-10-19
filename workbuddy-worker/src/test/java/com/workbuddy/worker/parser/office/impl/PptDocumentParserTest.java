@@ -34,7 +34,7 @@ class PptDocumentParserTest {
 
     private final PptDocumentParser parser = new PptDocumentParser();
 
-    /** 一页含文本框 + 表格 + 图片：元素与事实齐备，指标按页回填 */
+    /** 一页含文本框 + 表格 + 图片：元素与事实齐备，指标按页回填（{@code pptxSlideShouldYieldTextTablePictureAndMetrics}）。 */
     @Test
     void pptxSlideShouldYieldTextTablePictureAndMetrics() throws Exception {
         ParseSource source = parser.parse(context(buildPptx()));
@@ -65,7 +65,7 @@ class PptDocumentParserTest {
         assertEquals(1, source.getPageMetrics().getFirst().getImageCount());
     }
 
-    /** MIME 支持两种演示格式 */
+    /** MIME 支持两种演示格式（{@code supportsShouldAcceptPptAndPptx}）。 */
     @Test
     void supportsShouldAcceptPptAndPptx() {
         assertTrue(parser.supports(MIME_PPTX));

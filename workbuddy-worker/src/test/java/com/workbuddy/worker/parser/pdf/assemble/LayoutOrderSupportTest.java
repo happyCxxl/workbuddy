@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class LayoutOrderSupportTest {
 
-    /** 模型把第 1 区排在前：模型顺序与几何顺序相反时行序跟随模型 */
+    /** 模型把第 1 区排在前：模型顺序与几何顺序相反时行序跟随模型（{@code linesShouldFollowModelOrder}）。 */
     @Test
     void linesShouldFollowModelOrder() {
         PageLine lower = line(100);
@@ -26,7 +26,7 @@ class LayoutOrderSupportTest {
         assertEquals(List.of(lower, upper), sorted, "模型先第 1 区（下方）→ 下方的行排前");
     }
 
-    /** 未命中任何区域的行排在命中的行之后，且彼此保持几何相对次序 */
+    /** 未命中任何区域的行排在命中的行之后，且彼此保持几何相对次序（{@code linesOutsideRegionsShouldKeepRelativeOrderAtEnd}）。 */
     @Test
     void linesOutsideRegionsShouldKeepRelativeOrderAtEnd() {
         PageLine inside = line(100);
@@ -39,7 +39,7 @@ class LayoutOrderSupportTest {
         assertEquals(List.of(inside, outsideFirst, outsideSecond), sorted);
     }
 
-    /** 入参缺失：按原顺序返回（几何口径不动） */
+    /** 入参缺失：按原顺序返回（几何口径不动）（{@code missingInputShouldKeepOriginalOrder}）。 */
     @Test
     void missingInputShouldKeepOriginalOrder() {
         List<PageLine> lines = List.of(line(100), line(40));
@@ -49,7 +49,7 @@ class LayoutOrderSupportTest {
         assertEquals(List.of(), LayoutOrderSupport.reorder(List.of(), List.of(box(95)), List.of(0)));
     }
 
-    /** 顺序里越界的区域序号被跳过，不抛异常 */
+    /** 顺序里越界的区域序号被跳过，不抛异常（{@code outOfRangeRegionIndexShouldBeSkipped}）。 */
     @Test
     void outOfRangeRegionIndexShouldBeSkipped() {
         PageLine line = line(100);

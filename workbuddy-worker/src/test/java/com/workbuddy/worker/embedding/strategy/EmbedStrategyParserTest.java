@@ -17,6 +17,9 @@ class EmbedStrategyParserTest {
 
     private final EmbedStrategyParser parser = new EmbedStrategyParser(new EmbedProperties());
 
+    /**
+     * 守护 {@code configShouldFillDefaults}：该场景行为改动即失败。
+     */
     @Test
     void configShouldFillDefaults() {
         EmbedStrategy strategy = parser.parse("{\"model\":\"text-embedding-v4\",\"batchSize\":64,\"cacheEnabled\":\"OFF\"}");
@@ -32,7 +35,7 @@ class EmbedStrategyParserTest {
         assertEquals("OFF", strategy.getIncludeParent());
     }
 
-    /** 快照未写模型时保持为空，由保存校验报「模型不能为空」 */
+    /** 快照未写模型时保持为空，由保存校验报「模型不能为空」（{@code blankModelShouldStayBlank}）。 */
     @Test
     void blankModelShouldStayBlank() {
         EmbedStrategy strategy = parser.parse("{\"batchSize\":16}");
@@ -41,6 +44,9 @@ class EmbedStrategyParserTest {
         assertEquals(16, strategy.getBatchSize());
     }
 
+    /**
+     * 守护 {@code blankSnapshotShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void blankSnapshotShouldThrow() {
         IllegalStateException e = assertThrows(IllegalStateException.class, () -> parser.parse(null));
@@ -48,6 +54,9 @@ class EmbedStrategyParserTest {
         assertTrue(e.getMessage().contains("向量化策略快照为空或已损坏，无法解析"), e.getMessage());
     }
 
+    /**
+     * 守护 {@code invalidSnapshotShouldThrowWithTruncatedSnapshot}：该场景行为改动即失败。
+     */
     @Test
     void invalidSnapshotShouldThrowWithTruncatedSnapshot() {
         IllegalStateException e = assertThrows(IllegalStateException.class, () -> parser.parse("not-a-json"));
@@ -57,7 +66,7 @@ class EmbedStrategyParserTest {
         assertNotNull(e.getCause());
     }
 
-    /** 解析不校验模型存在与启用（保存侧校验），未收录的模型名原样保留 */
+    /** 解析不校验模型存在与启用（保存侧校验），未收录的模型名原样保留（{@code unknownModelShouldStillParse}）。 */
     @Test
     void unknownModelShouldStillParse() {
         EmbedStrategy strategy = parser.parse("{\"model\":\"text-embedding-v3\"}");
@@ -65,6 +74,9 @@ class EmbedStrategyParserTest {
         assertEquals("text-embedding-v3", strategy.getModel());
     }
 
+    /**
+     * 守护 {@code parseConfigShouldLeaveNameVersionNull}：该场景行为改动即失败。
+     */
     @Test
     void parseConfigShouldLeaveNameVersionNull() {
         EmbedStrategy strategy = parser.parseConfig("{\"model\":\"text-embedding-v4\"}");
@@ -74,6 +86,9 @@ class EmbedStrategyParserTest {
         assertEquals("text-embedding-v4", strategy.getModel());
     }
 
+    /**
+     * 守护 {@code parseConfigShouldThrowOnCorruptSnapshot}：该场景行为改动即失败。
+     */
     @Test
     void parseConfigShouldThrowOnCorruptSnapshot() {
         // parseConfig 与 parse 同一口径：坏快照抛异常，不再返回默认策略

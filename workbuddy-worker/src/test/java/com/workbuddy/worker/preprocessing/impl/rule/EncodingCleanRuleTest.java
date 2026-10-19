@@ -37,6 +37,9 @@ class EncodingCleanRuleTest {
         return element;
     }
 
+    /**
+     * 守护 {@code whitespaceAndControlShouldTidyDisplay}：该场景行为改动即失败。
+     */
     @Test
     void whitespaceAndControlShouldTidyDisplay() {
         ViewElement element = element("  a   b \u3000 c \n d ");
@@ -49,6 +52,9 @@ class EncodingCleanRuleTest {
         assertEquals("  a   b \u3000 c \n d ", element.getRawText());
     }
 
+    /**
+     * 守护 {@code fullwidthShouldConvertToHalfwidthInNormalizedOnly}：该场景行为改动即失败。
+     */
     @Test
     void fullwidthShouldConvertToHalfwidthInNormalizedOnly() {
         ViewElement element = element("预算￥１，２３４，５６７.８９");
@@ -60,6 +66,9 @@ class EncodingCleanRuleTest {
         assertEquals("预算¥1,234,567.89", element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code undefinedCodepointsShouldBeStripped}：该场景行为改动即失败。
+     */
     @Test
     void undefinedCodepointsShouldBeStripped() {
         ViewElement element = element("a\uFFFFb");
@@ -69,6 +78,9 @@ class EncodingCleanRuleTest {
         assertEquals("ab", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code cellsShouldBeNormalized}：该场景行为改动即失败。
+     */
     @Test
     void cellsShouldBeNormalized() {
         ViewElement element = element(null);
@@ -83,6 +95,9 @@ class EncodingCleanRuleTest {
         assertEquals("A cell", cell.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code unchangedShouldNotMatch}：该场景行为改动即失败。
+     */
     @Test
     void unchangedShouldNotMatch() {
         ViewElement element = element("plain text");

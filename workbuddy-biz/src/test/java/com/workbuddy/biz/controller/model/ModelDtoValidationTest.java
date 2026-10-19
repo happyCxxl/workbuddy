@@ -30,12 +30,18 @@ class ModelDtoValidationTest {
         FACTORY.close();
     }
 
+    /**
+     * 守护 {@code fullDtoShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void fullDtoShouldPass() {
         assertTrue(VALIDATOR.validate(saveDto()).isEmpty());
         assertTrue(VALIDATOR.validate(statusDto("disabled")).isEmpty());
     }
 
+    /**
+     * 守护 {@code blankOrOverlongTextShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void blankOrOverlongTextShouldFail() {
         ModelSaveDTO blankVendor = saveDto();
@@ -50,6 +56,9 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(overlong), "modelKey");
     }
 
+    /**
+     * 守护 {@code negativeNumbersShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void negativeNumbersShouldFail() {
         ModelSaveDTO price = saveDto();
@@ -61,7 +70,7 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(limit), "rpmLimit");
     }
 
-    /** 0 / 1 / 留空合法，越界取值拒绝 */
+    /** 0 / 1 / 留空合法，越界取值拒绝（{@code thinkingFlagShouldBoundToZeroOrOne}）。 */
     @Test
     void thinkingFlagShouldBoundToZeroOrOne() {
         ModelSaveDTO legalZero = saveDto();
@@ -76,7 +85,7 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(illegal), "thinkingEnabled");
     }
 
-    /** 厂商码大小写不敏感；与配置清单外的取值拒绝（含曾配置后停用的厂商） */
+    /** 厂商码大小写不敏感；与配置清单外的取值拒绝（含曾配置后停用的厂商）（{@code vendorCodeShouldMatchConfiguredSet}）。 */
     @Test
     void vendorCodeShouldMatchConfiguredSet() {
         ModelSaveDTO upper = saveDto();
@@ -91,7 +100,7 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(unknown), "vendorCode");
     }
 
-    /** 币种必填、只认 CNY / USD 精确大小写 */
+    /** 币种必填、只认 CNY / USD 精确大小写（{@code currencyShouldMatchDictionary}）。 */
     @Test
     void currencyShouldMatchDictionary() {
         ModelSaveDTO absent = saveDto();
@@ -106,6 +115,9 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(illegal), "currency");
     }
 
+    /**
+     * 守护 {@code statusShouldMatchDictionary}：该场景行为改动即失败。
+     */
     @Test
     void statusShouldMatchDictionary() {
         assertTrue(VALIDATOR.validate(statusDto("ENABLED")).isEmpty());
@@ -113,7 +125,7 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(statusDto(" ")), "status");
     }
 
-    /** 清单查询：三个能力取值与大小写不敏感都放行，字典外取值（含带空格的）拒绝 */
+    /** 清单查询：三个能力取值与大小写不敏感都放行，字典外取值（含带空格的）拒绝（{@code queryCapabilityShouldMatchDictionary}）。 */
     @Test
     void queryCapabilityShouldMatchDictionary() {
         for (String legal : new String[] { "CHAT", "embedding", "OCR", null }) {
@@ -125,6 +137,9 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(queryDto("EMBEDDING ", null)), "capability");
     }
 
+    /**
+     * 守护 {@code queryStatusShouldMatchDictionary}：该场景行为改动即失败。
+     */
     @Test
     void queryStatusShouldMatchDictionary() {
         assertTrue(VALIDATOR.validate(queryDto(null, "disabled")).isEmpty());

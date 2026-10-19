@@ -45,12 +45,18 @@ class PdfCharacterSpacingTest {
         return LineTexts.Options.of(new ParseProperties());
     }
 
+    /**
+     * 守护 {@code characterSpacingShouldNotInsertSpaces}：该场景行为改动即失败。
+     */
     @Test
     void characterSpacingShouldNotInsertSpaces() {
         // 字距加宽时 PDFBox 把每个字符当作一次独立的词回调，间隙均匀
         assertEquals("Hello", LineTexts.lineText(spacedWord("Hello", 100, 7, 3), options()));
     }
 
+    /**
+     * 守护 {@code wordBoundaryGapShouldKeepSpace}：该场景行为改动即失败。
+     */
     @Test
     void wordBoundaryGapShouldKeepSpace() {
         List<CharInfo> chars = new ArrayList<>(word("Hello", 100));
@@ -59,6 +65,9 @@ class PdfCharacterSpacingTest {
         assertEquals("Hello World", LineTexts.lineText(chars, options()));
     }
 
+    /**
+     * 守护 {@code realSpaceShouldSurviveCharacterSpacing}：该场景行为改动即失败。
+     */
     @Test
     void realSpaceShouldSurviveCharacterSpacing() {
         List<CharInfo> chars = new ArrayList<>(spacedWord("Hello", 100, 7, 3));
@@ -69,6 +78,9 @@ class PdfCharacterSpacingTest {
         assertEquals("Hello World", LineTexts.lineText(chars, options()));
     }
 
+    /**
+     * 守护 {@code cjkBoundaryShouldStillSuppressSpace}：该场景行为改动即失败。
+     */
     @Test
     void cjkBoundaryShouldStillSuppressSpace() {
         List<CharInfo> chars = new ArrayList<>(spacedWord("中文", 100, 12, 4));
@@ -76,6 +88,9 @@ class PdfCharacterSpacingTest {
         assertEquals("中文", LineTexts.lineText(chars, options()));
     }
 
+    /**
+     * 守护 {@code plainEnglishShouldKeepWordSpaces}：该场景行为改动即失败。
+     */
     @Test
     void plainEnglishShouldKeepWordSpaces() throws Exception {
         List<String> texts = paragraphTexts(pdf(false));
@@ -83,6 +98,9 @@ class PdfCharacterSpacingTest {
         assertEquals(List.of("Quarterly Report 2024", "Revenue grew steadily across all regions."), texts);
     }
 
+    /**
+     * 守护 {@code spacedTitleShouldNotSplitWords}：该场景行为改动即失败。
+     */
     @Test
     void spacedTitleShouldNotSplitWords() throws Exception {
         List<String> texts = paragraphTexts(pdf(true));
@@ -90,6 +108,9 @@ class PdfCharacterSpacingTest {
         assertEquals(List.of("INVOICE SUMMARY", "Prepared by the finance department."), texts);
     }
 
+    /**
+     * 守护 {@code spacedNumbersShouldStayWhole}：该场景行为改动即失败。
+     */
     @Test
     void spacedNumbersShouldStayWhole() throws Exception {
         try (PDDocument doc = new PDDocument()) {
@@ -106,6 +127,9 @@ class PdfCharacterSpacingTest {
         }
     }
 
+    /**
+     * 守护 {@code chineseBodyAndSpacedNumberShouldStayWhole}：该场景行为改动即失败。
+     */
     @Test
     void chineseBodyAndSpacedNumberShouldStayWhole() throws Exception {
         Assumptions.assumeTrue(new File(CJK_FONT).exists(), "缺少中文字体，跳过");
@@ -116,6 +140,9 @@ class PdfCharacterSpacingTest {
         assertTrue(texts.contains("合同编号：HT-2024-0087"), () -> "texts=" + texts);
     }
 
+    /**
+     * 守护 {@code spacedCellNumberShouldStayWhole}：该场景行为改动即失败。
+     */
     @Test
     void spacedCellNumberShouldStayWhole() throws Exception {
         try (PDDocument doc = new PDDocument()) {

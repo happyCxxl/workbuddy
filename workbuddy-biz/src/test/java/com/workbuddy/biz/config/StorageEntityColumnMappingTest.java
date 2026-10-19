@@ -48,6 +48,9 @@ class StorageEntityColumnMappingTest {
                 .orElse(null);
     }
 
+    /**
+     * 守护 {@code storageSourceColumnsShouldMatchSchema}：该场景行为改动即失败。
+     */
     @Test
     void storageSourceColumnsShouldMatchSchema() {
         TableInfo info = TableInfoHelper.getTableInfo(WbStorageSource.class);
@@ -68,6 +71,9 @@ class StorageEntityColumnMappingTest {
         assertEquals("update_time", columnOf(WbStorageSource.class, "updateTime"));
     }
 
+    /**
+     * 守护 {@code storageSourceShouldUseLogicDelete}：该场景行为改动即失败。
+     */
     @Test
     void storageSourceShouldUseLogicDelete() {
         TableInfo info = TableInfoHelper.getTableInfo(WbStorageSource.class);
@@ -78,6 +84,9 @@ class StorageEntityColumnMappingTest {
         assertEquals("0", info.getLogicDeleteFieldInfo().getLogicNotDeleteValue());
     }
 
+    /**
+     * 守护 {@code objectTablesShouldCarryStorageSourceIdColumn}：该场景行为改动即失败。
+     */
     @Test
     void objectTablesShouldCarryStorageSourceIdColumn() {
         assertEquals("storage_source_id", columnOf(WbFileObject.class, "storageSourceId"));
@@ -87,6 +96,9 @@ class StorageEntityColumnMappingTest {
         assertEquals("avatar_storage_source_id", columnOf(WbUser.class, "avatarStorageSourceId"));
     }
 
+    /**
+     * 守护 {@code objectTablesShouldKeepStorageTypeColumn}：该场景行为改动即失败。
+     */
     @Test
     void objectTablesShouldKeepStorageTypeColumn() {
         assertEquals("storage_type", columnOf(WbFileObject.class, "storageType"));

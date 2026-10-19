@@ -132,6 +132,9 @@ class ParseTaskRunnerTest {
         return outcome;
     }
 
+    /**
+     * 守护 {@code nonQueuedTaskShouldSkip}：该场景行为改动即失败。
+     */
     @Test
     void nonQueuedTaskShouldSkip() {
         WbPipelineTask task = queuedTask();
@@ -141,8 +144,13 @@ class ParseTaskRunnerTest {
         runner.run(20L);
 
         verify(pipelineTaskDbService, never()).claim(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+                .noneMatch(inv -> "claim".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code claimLostShouldSkip}：该场景行为改动即失败。
+     */
     @Test
     void claimLostShouldSkip() {
         when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
@@ -151,8 +159,13 @@ class ParseTaskRunnerTest {
         runner.run(20L);
 
         verify(fileResultDbService, never()).getById(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileResultDbService).getInvocations().stream()
+                .noneMatch(inv -> "getById".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code successPathShouldPersistProductAndFinish}：该场景行为改动即失败。
+     */
     @Test
     void successPathShouldPersistProductAndFinish() {
         when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
@@ -185,6 +198,9 @@ class ParseTaskRunnerTest {
         verify(stepLogDbService).save(any());
     }
 
+    /**
+     * 守护 {@code scannedOutcomeShouldFinishFailedWithoutProduct}：该场景行为改动即失败。
+     */
     @Test
     void scannedOutcomeShouldFinishFailedWithoutProduct() {
         when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
@@ -201,8 +217,13 @@ class ParseTaskRunnerTest {
         verify(pipelineTaskDbService).finish(20L, PipelineTaskStatus.FAILED,
                 PipelineTaskErrorCode.SCANNED_UNSUPPORTED.name(), "扫描件暂不支持（OCR 预留）");
         verify(pipelineProductDbService, never()).save(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineProductDbService).getInvocations().stream()
+                .noneMatch(inv -> "save".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code missingFileResultShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void missingFileResultShouldFail() {
         when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
@@ -213,8 +234,13 @@ class ParseTaskRunnerTest {
 
         verify(pipelineTaskDbService).finish(eq(20L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.PARSE_FAILED.name()), any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+                .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code fileGoneShouldFailWithClearReason}：该场景行为改动即失败。
+     */
     @Test
     void fileGoneShouldFailWithClearReason() {
         when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
@@ -227,5 +253,7 @@ class ParseTaskRunnerTest {
 
         verify(pipelineTaskDbService).finish(eq(20L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.PARSE_FAILED.name()), any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+                .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 }

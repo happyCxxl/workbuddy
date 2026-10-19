@@ -27,6 +27,9 @@ class ChunkAlgorithmSpecTest {
         return JsonUtil.toMap(json);
     }
 
+    /**
+     * 守护 {@code unsupportedAlgorithmShouldBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void unsupportedAlgorithmShouldBeRejected() {
         String error = ChunkAlgorithmSpec.validate(config("{\"routes\":{\"body\":{\"algorithm\":\"semantic\"}}}"));
@@ -35,6 +38,9 @@ class ChunkAlgorithmSpecTest {
         assertTrue(error.contains("semantic"));
     }
 
+    /**
+     * 守护 {@code paramOutOfRangeShouldBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void paramOutOfRangeShouldBeRejected() {
         String error = ChunkAlgorithmSpec.validate(config(
@@ -44,6 +50,9 @@ class ChunkAlgorithmSpecTest {
         assertTrue(error.contains("参数越界"));
     }
 
+    /**
+     * 守护 {@code softBelowTargetShouldBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void softBelowTargetShouldBeRejected() {
         String error = ChunkAlgorithmSpec.validate(config(
@@ -53,6 +62,9 @@ class ChunkAlgorithmSpecTest {
         assertTrue(error.contains("softMaxLen"));
     }
 
+    /**
+     * 守护 {@code contextMergedWithTableInBodyFlowShouldBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void contextMergedWithTableInBodyFlowShouldBeRejected() {
         String error = ChunkAlgorithmSpec.validate(config(
@@ -62,6 +74,9 @@ class ChunkAlgorithmSpecTest {
         assertTrue(error.contains("同时启用"));
     }
 
+    /**
+     * 守护 {@code invalidStructureShouldBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void invalidStructureShouldBeRejected() {
         String error = ChunkAlgorithmSpec.validate(config("{\"routes\":\"not-a-map\"}"));
@@ -70,6 +85,9 @@ class ChunkAlgorithmSpecTest {
         assertTrue(error.contains("routes"));
     }
 
+    /**
+     * 守护 {@code validConfigShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void validConfigShouldPass() {
         String error = ChunkAlgorithmSpec.validate(config(
@@ -78,6 +96,9 @@ class ChunkAlgorithmSpecTest {
         assertNull(error);
     }
 
+    /**
+     * 守护 {@code supportedSetShouldFollowCatalog}：该场景行为改动即失败。
+     */
     @Test
     void supportedSetShouldFollowCatalog() {
         assertTrue(ChunkAlgorithmSpec.isSupported(ChunkRoute.BODY, "paragraph-aggregate"));
@@ -85,6 +106,9 @@ class ChunkAlgorithmSpecTest {
         assertFalse(ChunkAlgorithmSpec.isSupported(ChunkRoute.BODY, "unknown-algorithm"));
     }
 
+    /**
+     * 守护 {@code defaultParamsShouldFillPerAlgorithm}：该场景行为改动即失败。
+     */
     @Test
     void defaultParamsShouldFillPerAlgorithm() {
         Map<String, String> defaults = ChunkAlgorithmSpec.defaultParams(ChunkRoute.TABLE, "row-group",
@@ -94,6 +118,9 @@ class ChunkAlgorithmSpecTest {
         assertEquals("600", defaults.get("maxLen"));
     }
 
+    /**
+     * 守护 {@code defaultParamsShouldAllExistInCatalogue}：该场景行为改动即失败。
+     */
     @Test
     void defaultParamsShouldAllExistInCatalogue() {
         for (ChunkAlgorithm algorithm : ChunkAlgorithm.values()) {
@@ -108,6 +135,9 @@ class ChunkAlgorithmSpecTest {
         }
     }
 
+    /**
+     * 守护 {@code catalogueShouldCoverEveryParamKeyConstant}：该场景行为改动即失败。
+     */
     @Test
     void catalogueShouldCoverEveryParamKeyConstant() {
         Set<String> keys = new HashSet<>();
@@ -121,6 +151,9 @@ class ChunkAlgorithmSpecTest {
         }
     }
 
+    /**
+     * 守护 {@code rangeBoundaryShouldBeAcceptedAtCatalogueEdges}：该场景行为改动即失败。
+     */
     @Test
     void rangeBoundaryShouldBeAcceptedAtCatalogueEdges() {
         assertNull(ChunkAlgorithmSpec.validate(config(
@@ -135,6 +168,9 @@ class ChunkAlgorithmSpecTest {
                 "{\"routes\":{\"fallback\":{\"algorithm\":\"recursive-length\",\"params\":{\"len\":\"5000\",\"overlap\":\"1001\"}}}}")));
     }
 
+    /**
+     * 守护 {@code unknownParamKeyShouldPassThrough}：该场景行为改动即失败。
+     */
     @Test
     void unknownParamKeyShouldPassThrough() {
         assertNull(ChunkAlgorithmSpec.validate(config(

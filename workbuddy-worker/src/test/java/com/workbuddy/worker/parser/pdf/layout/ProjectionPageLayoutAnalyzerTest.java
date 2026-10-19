@@ -19,6 +19,9 @@ class ProjectionPageLayoutAnalyzerTest {
 
     private final ProjectionPageLayoutAnalyzer analyzer = new ProjectionPageLayoutAnalyzer();
 
+    /**
+     * 守护 {@code shouldFindSingleGutterForTwoColumns}：该场景行为改动即失败。
+     */
     @Test
     void shouldFindSingleGutterForTwoColumns() {
         List<PageLayoutAnalyzer.Box> chars = new ArrayList<>(column(72, 4, 10));
@@ -30,11 +33,17 @@ class ProjectionPageLayoutAnalyzerTest {
         assertEquals(295.0, gutters.getFirst(), 2.0);
     }
 
+    /**
+     * 守护 {@code shouldReturnNoGutterForSingleColumn}：该场景行为改动即失败。
+     */
     @Test
     void shouldReturnNoGutterForSingleColumn() {
         assertTrue(analyzer.gutters(input(column(72, 4, 12)), OPTIONS).isEmpty());
     }
 
+    /**
+     * 守护 {@code shouldRejectGutterWhenColumnTooThin}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectGutterWhenColumnTooThin() {
         List<PageLayoutAnalyzer.Box> chars = new ArrayList<>(column(72, 4, 12));
@@ -43,6 +52,9 @@ class ProjectionPageLayoutAnalyzerTest {
         assertTrue(analyzer.gutters(input(chars), OPTIONS).isEmpty());
     }
 
+    /**
+     * 守护 {@code shouldReturnNoGutterWhenPageHasTooFewChars}：该场景行为改动即失败。
+     */
     @Test
     void shouldReturnNoGutterWhenPageHasTooFewChars() {
         List<PageLayoutAnalyzer.Box> chars = new ArrayList<>(column(72, 2, 2));
@@ -51,6 +63,9 @@ class ProjectionPageLayoutAnalyzerTest {
         assertTrue(analyzer.gutters(input(chars), OPTIONS).isEmpty());
     }
 
+    /**
+     * 守护 {@code shouldKeepGutterWhenSpanningHeadingCoversIt}：该场景行为改动即失败。
+     */
     @Test
     void shouldKeepGutterWhenSpanningHeadingCoversIt() {
         List<PageLayoutAnalyzer.Box> chars = new ArrayList<>(column(72, 4, 10));
@@ -63,6 +78,9 @@ class ProjectionPageLayoutAnalyzerTest {
         assertEquals(1, gutters.size(), () -> "gutters=" + gutters);
     }
 
+    /**
+     * 守护 {@code shouldIgnoreRaggedEdgeRun}：该场景行为改动即失败。
+     */
     @Test
     void shouldIgnoreRaggedEdgeRun() {
         List<PageLayoutAnalyzer.Box> chars = new ArrayList<>(column(72, 4, 10));
@@ -78,6 +96,9 @@ class ProjectionPageLayoutAnalyzerTest {
         assertEquals(300.0, gutters.getFirst(), 2.0);
     }
 
+    /**
+     * 守护 {@code shouldOrderByColumnWithinBand}：该场景行为改动即失败。
+     */
     @Test
     void shouldOrderByColumnWithinBand() {
         List<PageLayoutAnalyzer.Box> lines = List.of(
@@ -90,6 +111,9 @@ class ProjectionPageLayoutAnalyzerTest {
         assertEquals(List.of(0, 0, 1, 1), columns(result));
     }
 
+    /**
+     * 守护 {@code shouldStartNewBandAtSpanningLine}：该场景行为改动即失败。
+     */
     @Test
     void shouldStartNewBandAtSpanningLine() {
         List<PageLayoutAnalyzer.Box> lines = List.of(
@@ -102,6 +126,9 @@ class ProjectionPageLayoutAnalyzerTest {
         assertEquals(List.of(-1, 0, 1, -1, 0, 1), columns(result));
     }
 
+    /**
+     * 守护 {@code shouldKeepVerticalOrderWhenNoGutter}：该场景行为改动即失败。
+     */
     @Test
     void shouldKeepVerticalOrderWhenNoGutter() {
         List<PageLayoutAnalyzer.Box> lines = List.of(

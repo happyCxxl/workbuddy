@@ -27,7 +27,7 @@ class PdfGarbledRatioTest {
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
-    /** 字体映射错位出的可打印乱码（拉丁补充区成片）→ 乱码率按该带占比计 */
+    /** 字体映射错位出的可打印乱码（拉丁补充区成片）→ 乱码率按该带占比计（{@code printableMojibakeBandShouldRaiseGarbledRatio}）。 */
     @Test
     void printableMojibakeBandShouldRaiseGarbledRatio() throws Exception {
         ParseSource source = parser.parse(context(buildPage("¡¢£¤¥§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿")));
@@ -36,7 +36,7 @@ class PdfGarbledRatioTest {
                 () -> "garbled=" + source.getPageMetrics().getFirst().getGarbledRatio());
     }
 
-    /** 正常中英文正文：该带占比低于门槛，不乱判 */
+    /** 正常中英文正文：该带占比低于门槛，不乱判（{@code normalTextShouldKeepGarbledRatioLow}）。 */
     @Test
     void normalTextShouldKeepGarbledRatioLow() throws Exception {
         ParseSource source = parser.parse(context(buildPage("Bidding price 30 EUR")));

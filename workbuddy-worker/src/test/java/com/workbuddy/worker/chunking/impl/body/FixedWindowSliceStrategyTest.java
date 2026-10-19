@@ -43,6 +43,9 @@ class FixedWindowSliceStrategyTest {
         return element;
     }
 
+    /**
+     * 守护 {@code flushShouldWindowSliceWithOverlap}：该场景行为改动即失败。
+     */
     @Test
     void flushShouldWindowSliceWithOverlap() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"fixed-window\",\"params\":{\"len\":\"100\",\"overlap\":\"20\"}}}}");
@@ -61,6 +64,9 @@ class FixedWindowSliceStrategyTest {
         assertEquals("第一章 总则", chunks.getFirst().getTitlePath());
     }
 
+    /**
+     * 守护 {@code shortTextShouldProduceSingleChunk}：该场景行为改动即失败。
+     */
     @Test
     void shortTextShouldProduceSingleChunk() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"fixed-window\"}}}");

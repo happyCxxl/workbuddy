@@ -78,6 +78,9 @@ class UserServiceImplGuardTest {
         securityUtils.close();
     }
 
+    /**
+     * 守护 {@code addUserShouldEncodePasswordAndDefaultRole}：该场景行为改动即失败。
+     */
     @Test
     void addUserShouldEncodePasswordAndDefaultRole() {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
@@ -93,6 +96,9 @@ class UserServiceImplGuardTest {
         assertEquals(1, saved.getStatus());
     }
 
+    /**
+     * 守护 {@code addUserShouldRejectDuplicateUsername}：该场景行为改动即失败。
+     */
     @Test
     void addUserShouldRejectDuplicateUsername() {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser(1L));
@@ -104,6 +110,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).save(any());
     }
 
+    /**
+     * 守护 {@code addUserShouldRejectInvalidRole}：该场景行为改动即失败。
+     */
     @Test
     void addUserShouldRejectInvalidRole() {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
@@ -115,6 +124,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).save(any());
     }
 
+    /**
+     * 守护 {@code updateUserShouldRejectChangingOwnRole}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldRejectChangingOwnRole() {
         when(userDbService.getById(1L)).thenReturn(adminUser(1L));
@@ -129,6 +141,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).updateById(any());
     }
 
+    /**
+     * 守护 {@code updateUserShouldRejectDisablingOwnAccount}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldRejectDisablingOwnAccount() {
         when(userDbService.getById(1L)).thenReturn(adminUser(1L));
@@ -142,6 +157,9 @@ class UserServiceImplGuardTest {
         assertEquals(ErrorCode.USER_SELF_OPERATION_FORBIDDEN, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code updateUserShouldRejectDemotingLastEnabledAdmin}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldRejectDemotingLastEnabledAdmin() {
         when(userDbService.getById(2L)).thenReturn(adminUser(2L));
@@ -159,6 +177,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).updateById(any());
     }
 
+    /**
+     * 守护 {@code updateUserShouldAllowDemotingAdminWhenAnotherRemains}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldAllowDemotingAdminWhenAnotherRemains() {
         when(userDbService.getById(2L)).thenReturn(adminUser(2L));
@@ -175,6 +196,9 @@ class UserServiceImplGuardTest {
         assertEquals(UserRole.USER.getCode(), captor.getValue().getRole());
     }
 
+    /**
+     * 守护 {@code updateUserShouldRejectInvalidStatus}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldRejectInvalidStatus() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -189,6 +213,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).updateById(any());
     }
 
+    /**
+     * 守护 {@code addUserShouldRejectInvalidStatus}：该场景行为改动即失败。
+     */
     @Test
     void addUserShouldRejectInvalidStatus() {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
@@ -200,6 +227,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).save(any());
     }
 
+    /**
+     * 守护 {@code updateUserShouldBumpTokenVersionWhenPasswordChanges}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldBumpTokenVersionWhenPasswordChanges() {
         WbUser target = plainUser(2L);
@@ -219,6 +249,9 @@ class UserServiceImplGuardTest {
         assertEquals(5, captor.getValue().getTokenVersion());
     }
 
+    /**
+     * 守护 {@code updateUserShouldBumpTokenVersionWhenRoleChanges}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldBumpTokenVersionWhenRoleChanges() {
         WbUser target = plainUser(2L);
@@ -236,6 +269,9 @@ class UserServiceImplGuardTest {
         assertEquals(1, captor.getValue().getTokenVersion());
     }
 
+    /**
+     * 守护 {@code updateUserShouldKeepTokenVersionWhenNothingSensitiveChanges}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldKeepTokenVersionWhenNothingSensitiveChanges() {
         WbUser target = plainUser(2L);
@@ -253,6 +289,9 @@ class UserServiceImplGuardTest {
         assertEquals(4, captor.getValue().getTokenVersion());
     }
 
+    /**
+     * 守护 {@code updateUserShouldRejectDisablingLastEnabledAdmin}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldRejectDisablingLastEnabledAdmin() {
         when(userDbService.getById(2L)).thenReturn(adminUser(2L));
@@ -269,6 +308,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).updateById(any());
     }
 
+    /**
+     * 守护 {@code updateUserShouldAllowDisablingAdminWhenAnotherRemains}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldAllowDisablingAdminWhenAnotherRemains() {
         when(userDbService.getById(2L)).thenReturn(adminUser(2L));
@@ -285,6 +327,9 @@ class UserServiceImplGuardTest {
         assertEquals(0, captor.getValue().getStatus());
     }
 
+    /**
+     * 守护 {@code updateUserShouldEncodePasswordWhenProvided}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldEncodePasswordWhenProvided() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -301,6 +346,9 @@ class UserServiceImplGuardTest {
         assertEquals("encoded-new", captor.getValue().getPassword());
     }
 
+    /**
+     * 守护 {@code updateUserShouldKeepPasswordWhenNotProvided}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldKeepPasswordWhenNotProvided() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -318,6 +366,9 @@ class UserServiceImplGuardTest {
         verify(passwordEncoder, never()).encode(any());
     }
 
+    /**
+     * 守护 {@code updateUserShouldThrowWhenUserMissing}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldThrowWhenUserMissing() {
         when(userDbService.getById(anyLong())).thenReturn(null);
@@ -328,6 +379,9 @@ class UserServiceImplGuardTest {
         assertEquals(ErrorCode.USER_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code deleteUserShouldRejectSelfDeletion}：该场景行为改动即失败。
+     */
     @Test
     void deleteUserShouldRejectSelfDeletion() {
         when(userDbService.getById(1L)).thenReturn(adminUser(1L));
@@ -339,6 +393,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).removeById(anyLong());
     }
 
+    /**
+     * 守护 {@code deleteUserShouldRejectRemovingLastEnabledAdmin}：该场景行为改动即失败。
+     */
     @Test
     void deleteUserShouldRejectRemovingLastEnabledAdmin() {
         when(userDbService.getById(2L)).thenReturn(adminUser(2L));
@@ -351,6 +408,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).removeById(anyLong());
     }
 
+    /**
+     * 守护 {@code deleteUserShouldRemovePlainUser}：该场景行为改动即失败。
+     */
     @Test
     void deleteUserShouldRemovePlainUser() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -358,9 +418,15 @@ class UserServiceImplGuardTest {
 
         userService.deleteUser(2L);
 
-        verify(userDbService).removeById(eq(2L));
+        org.mockito.ArgumentCaptor<java.io.Serializable> idCaptor =
+                org.mockito.ArgumentCaptor.forClass(java.io.Serializable.class);
+        verify(userDbService).removeById(idCaptor.capture());
+        assertEquals(2L, idCaptor.getValue());
     }
 
+    /**
+     * 守护 {@code addUserShouldPublishCreateAuditWithoutPassword}：该场景行为改动即失败。
+     */
     @Test
     void addUserShouldPublishCreateAuditWithoutPassword() {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
@@ -378,6 +444,9 @@ class UserServiceImplGuardTest {
         assertFalse(event.getAfterSummary().contains("encoded"), "审计摘要不得含密码哈希");
     }
 
+    /**
+     * 守护 {@code updateUserShouldPublishUpdateAuditWithBeforeAndAfter}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldPublishUpdateAuditWithBeforeAndAfter() {
         WbUser target = plainUser(2L);
@@ -397,6 +466,9 @@ class UserServiceImplGuardTest {
         assertTrue(event.getAfterSummary().contains("ADMIN"));
     }
 
+    /**
+     * 守护 {@code updateUserShouldPublishDisableAuditWhenOnlyStatusChanges}：该场景行为改动即失败。
+     */
     @Test
     void updateUserShouldPublishDisableAuditWhenOnlyStatusChanges() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -410,6 +482,9 @@ class UserServiceImplGuardTest {
         assertEquals(AuditActionType.USER_DISABLE, captureAudit().getAction());
     }
 
+    /**
+     * 守护 {@code deleteUserShouldPublishDeleteAudit}：该场景行为改动即失败。
+     */
     @Test
     void deleteUserShouldPublishDeleteAudit() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -423,6 +498,9 @@ class UserServiceImplGuardTest {
         assertNull(event.getAfterSummary());
     }
 
+    /**
+     * 守护 {@code addUserShouldCarryProfileFields}：该场景行为改动即失败。
+     */
     @Test
     void addUserShouldCarryProfileFields() {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
@@ -442,6 +520,9 @@ class UserServiceImplGuardTest {
         assertEquals("13800000000", saved.getPhone());
     }
 
+    /**
+     * 守护 {@code getUserProfileShouldRejectMissingUser}：该场景行为改动即失败。
+     */
     @Test
     void getUserProfileShouldRejectMissingUser() {
         when(userDbService.getById(9L)).thenReturn(null);
@@ -452,6 +533,9 @@ class UserServiceImplGuardTest {
         assertEquals(ErrorCode.USER_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code getUserProfileShouldMapProfileFields}：该场景行为改动即失败。
+     */
     @Test
     void getUserProfileShouldMapProfileFields() {
         WbUser user = plainUser(2L);
@@ -466,6 +550,9 @@ class UserServiceImplGuardTest {
         assertEquals(UserRole.USER.getCode(), vo.getRole());
     }
 
+    /**
+     * 守护 {@code updateProfileShouldUpdateProfileFieldsAndAudit}：该场景行为改动即失败。
+     */
     @Test
     void updateProfileShouldUpdateProfileFieldsAndAudit() {
         WbUser user = plainUser(2L);
@@ -490,6 +577,9 @@ class UserServiceImplGuardTest {
         assertEquals(AuditActionType.USER_UPDATE, event.getAction());
     }
 
+    /**
+     * 守护 {@code updateProfileShouldNormalizeBlankContactToNull}：该场景行为改动即失败。
+     */
     @Test
     void updateProfileShouldNormalizeBlankContactToNull() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -503,6 +593,9 @@ class UserServiceImplGuardTest {
         assertNull(captor.getValue().getPhone());
     }
 
+    /**
+     * 守护 {@code changePasswordShouldRejectWrongOldPassword}：该场景行为改动即失败。
+     */
     @Test
     void changePasswordShouldRejectWrongOldPassword() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -515,6 +608,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).updateById(any());
     }
 
+    /**
+     * 守护 {@code changePasswordShouldRejectSamePassword}：该场景行为改动即失败。
+     */
     @Test
     void changePasswordShouldRejectSamePassword() {
         when(userDbService.getById(2L)).thenReturn(plainUser(2L));
@@ -527,6 +623,9 @@ class UserServiceImplGuardTest {
         verify(userDbService, never()).updateById(any());
     }
 
+    /**
+     * 守护 {@code changePasswordShouldEncodeBumpVersionAndResign}：该场景行为改动即失败。
+     */
     @Test
     void changePasswordShouldEncodeBumpVersionAndResign() {
         WbUser user = plainUser(2L);
@@ -554,6 +653,9 @@ class UserServiceImplGuardTest {
         assertNull(event.getAfterSummary());
     }
 
+    /**
+     * 守护 {@code changePasswordShouldRejectMissingUser}：该场景行为改动即失败。
+     */
     @Test
     void changePasswordShouldRejectMissingUser() {
         when(userDbService.getById(9L)).thenReturn(null);

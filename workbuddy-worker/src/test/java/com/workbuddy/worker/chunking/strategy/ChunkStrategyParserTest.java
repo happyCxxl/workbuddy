@@ -20,6 +20,9 @@ class ChunkStrategyParserTest {
 
     private final ChunkStrategyParser parser = new ChunkStrategyParser(new ChunkProperties());
 
+    /**
+     * 守护 {@code structuredConfigShouldFillMissingDefaults}：该场景行为改动即失败。
+     */
     @Test
     void structuredConfigShouldFillMissingDefaults() {
         ChunkStrategy strategy = parser.parse("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\"}}}");
@@ -39,6 +42,9 @@ class ChunkStrategyParserTest {
         assertEquals("300", strategy.pipelineValue(PipelineKey.MIN_MERGE_LEN, ""));
     }
 
+    /**
+     * 守护 {@code seedSnapshotWithAllRoutesShouldApplyEveryRoute}：该场景行为改动即失败。
+     */
     @Test
     void seedSnapshotWithAllRoutesShouldApplyEveryRoute() {
         String seed = "{\"routes\":{"
@@ -65,6 +71,9 @@ class ChunkStrategyParserTest {
         assertEquals("OFF", strategy.pipelineValue(PipelineKey.TABLE_IN_BODY_FLOW, ""));
     }
 
+    /**
+     * 守护 {@code emptyObjectSnapshotShouldStillFillDefaults}：该场景行为改动即失败。
+     */
     @Test
     void emptyObjectSnapshotShouldStillFillDefaults() {
         // 只有"空串/JSON 非法"算数据问题：合法 JSON 缺键由补全默认参数覆盖
@@ -75,6 +84,9 @@ class ChunkStrategyParserTest {
         assertEquals("ON", strategy.pipelineValue(PipelineKey.PARENT_CHILD, ""));
     }
 
+    /**
+     * 守护 {@code blankSnapshotShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void blankSnapshotShouldThrow() {
         IllegalStateException e = assertThrows(IllegalStateException.class, () -> parser.parse(null));
@@ -82,6 +94,9 @@ class ChunkStrategyParserTest {
         assertTrue(e.getMessage().contains("切片策略快照为空或已损坏，无法解析"), e.getMessage());
     }
 
+    /**
+     * 守护 {@code invalidSnapshotShouldThrowWithTruncatedSnapshot}：该场景行为改动即失败。
+     */
     @Test
     void invalidSnapshotShouldThrowWithTruncatedSnapshot() {
         IllegalStateException e = assertThrows(IllegalStateException.class, () -> parser.parse("not-a-json"));
@@ -91,6 +106,9 @@ class ChunkStrategyParserTest {
         assertNotNull(e.getCause());
     }
 
+    /**
+     * 守护 {@code pipelineOnlyConfigShouldMapParentChild}：该场景行为改动即失败。
+     */
     @Test
     void pipelineOnlyConfigShouldMapParentChild() {
         ChunkStrategy strategy = parser.parse("{\"pipeline\":{\"parentChild\":\"OFF\"}}");
@@ -99,6 +117,9 @@ class ChunkStrategyParserTest {
         assertEquals(ChunkAlgorithm.BODY_PARAGRAPH_AGGREGATE, strategy.routeAlgorithm(ChunkRoute.BODY));
     }
 
+    /**
+     * 守护 {@code parseConfigShouldLeaveNameVersionNull}：该场景行为改动即失败。
+     */
     @Test
     void parseConfigShouldLeaveNameVersionNull() {
         ChunkStrategy strategy = parser.parseConfig("{\"routes\":{}}");
@@ -108,6 +129,9 @@ class ChunkStrategyParserTest {
         assertEquals(ChunkAlgorithm.BODY_PARAGRAPH_AGGREGATE, strategy.routeAlgorithm(ChunkRoute.BODY));
     }
 
+    /**
+     * 守护 {@code parseConfigShouldThrowOnCorruptSnapshot}：该场景行为改动即失败。
+     */
     @Test
     void parseConfigShouldThrowOnCorruptSnapshot() {
         // parseConfig 与 parse 同一口径：坏快照抛异常，不再返回默认策略

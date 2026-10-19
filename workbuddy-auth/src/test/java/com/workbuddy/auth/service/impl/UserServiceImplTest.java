@@ -36,6 +36,9 @@ class UserServiceImplTest {
     @InjectMocks
     private UserServiceImpl userService;
 
+    /**
+     * 守护 {@code pageUsersShouldMapEntityToVo}：该场景行为改动即失败。
+     */
     @Test
     void pageUsersShouldMapEntityToVo() {
         Page<WbUser> source = new Page<>(1, 10, 2);
@@ -54,6 +57,9 @@ class UserServiceImplTest {
         assertEquals(UserRole.USER.getCode(), result.getRecords().get(1).getRole());
     }
 
+    /**
+     * 守护 {@code userVoShouldNotExposePasswordField}：该场景行为改动即失败。
+     */
     @Test
     void userVoShouldNotExposePasswordField() {
         // 密码泄漏是编译期就该拦住的：UserVO 不允许出现 password 属性
@@ -64,6 +70,9 @@ class UserServiceImplTest {
         assertTrue(fields.contains("role"), "UserVO 应包含 role 字段");
     }
 
+    /**
+     * 守护 {@code pageUsersShouldPassFiltersThrough}：该场景行为改动即失败。
+     */
     @Test
     void pageUsersShouldPassFiltersThrough() {
         Page<WbUser> source = new Page<>(2, 5, 0);

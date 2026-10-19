@@ -24,6 +24,9 @@ class ModelVendorPropertiesTest {
 
     private final ModelVendorValidator validator = new ModelVendorValidator(new ModelVendorProperties());
 
+    /**
+     * 守护 {@code shouldBindMultipleVendorsWithAllFields}：该场景行为改动即失败。
+     */
     @Test
     void shouldBindMultipleVendorsWithAllFields() {
         ModelVendorProperties properties = bind(Map.of(
@@ -52,6 +55,9 @@ class ModelVendorPropertiesTest {
         assertEquals(45000, custom.getTimeoutMs());
     }
 
+    /**
+     * 守护 {@code shouldKeepTimeoutAndRetriesEmptyWhenAbsent}：该场景行为改动即失败。
+     */
     @Test
     void shouldKeepTimeoutAndRetriesEmptyWhenAbsent() {
         ModelVendorProperties properties = bind(Map.of(
@@ -65,6 +71,9 @@ class ModelVendorPropertiesTest {
         assertDoesNotThrow(() -> validator.validate(properties));
     }
 
+    /**
+     * 守护 {@code shouldExposeNoVendorsWhenSectionAbsent}：该场景行为改动即失败。
+     */
     @Test
     void shouldExposeNoVendorsWhenSectionAbsent() {
         ModelVendorProperties properties = bind(Map.of());
@@ -72,6 +81,9 @@ class ModelVendorPropertiesTest {
         assertTrue(properties.getVendors().isEmpty());
     }
 
+    /**
+     * 守护 {@code shouldPassStartupWithEmptyVendors}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassStartupWithEmptyVendors() {
         ModelVendorProperties properties = new ModelVendorProperties();
@@ -79,11 +91,17 @@ class ModelVendorPropertiesTest {
         assertDoesNotThrow(() -> validator.validate(properties));
     }
 
+    /**
+     * 守护 {@code shouldPassStartupWithSingleVendor}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassStartupWithSingleVendor() {
         assertDoesNotThrow(() -> validator.validate(propertiesOf("dashscope", vendor())));
     }
 
+    /**
+     * 守护 {@code shouldPassStartupWithMultipleVendorsConfigured}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassStartupWithMultipleVendorsConfigured() {
         ModelVendorProperties properties = new ModelVendorProperties();
@@ -95,6 +113,9 @@ class ModelVendorPropertiesTest {
         assertDoesNotThrow(() -> validator.validate(properties));
     }
 
+    /**
+     * 守护 {@code shouldFailStartupWhenApiKeyMissing}：该场景行为改动即失败。
+     */
     @Test
     void shouldFailStartupWhenApiKeyMissing() {
         ModelVendorProperties.Vendor vendor = vendor();
@@ -109,6 +130,9 @@ class ModelVendorPropertiesTest {
         assertTrue(error.getMessage().contains("knowledge.model.vendors.dashscope.api-key"), error.getMessage());
     }
 
+    /**
+     * 守护 {@code shouldFailStartupWhenApiKeyBlank}：该场景行为改动即失败。
+     */
     @Test
     void shouldFailStartupWhenApiKeyBlank() {
         ModelVendorProperties.Vendor vendor = vendor();
@@ -121,6 +145,9 @@ class ModelVendorPropertiesTest {
         assertTrue(error.getMessage().contains("dashscope"), error.getMessage());
     }
 
+    /**
+     * 守护 {@code shouldFailStartupWhenAuthTypeAbsent}：该场景行为改动即失败。
+     */
     @Test
     void shouldFailStartupWhenAuthTypeAbsent() {
         ModelVendorProperties.Vendor vendor = vendor();
@@ -134,6 +161,9 @@ class ModelVendorPropertiesTest {
         assertTrue(error.getMessage().contains("auth-type"), error.getMessage());
     }
 
+    /**
+     * 守护 {@code shouldPassStartupWhenAuthTypeBearer}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassStartupWhenAuthTypeBearer() {
         ModelVendorProperties.Vendor vendor = vendor();
@@ -141,6 +171,9 @@ class ModelVendorPropertiesTest {
         assertDoesNotThrow(() -> validator.validate(propertiesOf("dashscope", vendor)));
     }
 
+    /**
+     * 守护 {@code shouldFailStartupWhenTimeoutNotPositive}：该场景行为改动即失败。
+     */
     @Test
     void shouldFailStartupWhenTimeoutNotPositive() {
         ModelVendorProperties.Vendor zero = vendor();
@@ -161,6 +194,9 @@ class ModelVendorPropertiesTest {
         assertTrue(negativeError.getMessage().contains("dashscope"), negativeError.getMessage());
     }
 
+    /**
+     * 守护 {@code shouldFailStartupWhenBaseUrlIllegal}：该场景行为改动即失败。
+     */
     @Test
     void shouldFailStartupWhenBaseUrlIllegal() {
         for (String baseUrl : new String[] {"not-a-url", "ftp://llm.example.com/v1", "http://", "https://"}) {
@@ -175,6 +211,9 @@ class ModelVendorPropertiesTest {
         }
     }
 
+    /**
+     * 守护 {@code shouldFailStartupWhenVendorCodeBlank}：该场景行为改动即失败。
+     */
     @Test
     void shouldFailStartupWhenVendorCodeBlank() {
         KnowledgeException error = assertThrows(KnowledgeException.class,
@@ -183,6 +222,9 @@ class ModelVendorPropertiesTest {
         assertEquals(ErrorCode.MODEL_VENDOR_UNKNOWN, error.getErrorCode());
     }
 
+    /**
+     * 守护 {@code shouldPassStartupWithFullVendorConfig}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassStartupWithFullVendorConfig() {
         ModelVendorProperties.Vendor vendor = vendor();

@@ -42,6 +42,9 @@ class ParagraphSliceStrategyTest {
         return element;
     }
 
+    /**
+     * 守护 {@code smallParagraphsShouldMergeAndFlushOnBoundary}：该场景行为改动即失败。
+     */
     @Test
     void smallParagraphsShouldMergeAndFlushOnBoundary() {
         SliceContext context = context();
@@ -63,6 +66,9 @@ class ParagraphSliceStrategyTest {
         assertTrue(context.getBodyBuffer().isEmpty());
     }
 
+    /**
+     * 守护 {@code overlongElementShouldFallbackRecursively}：该场景行为改动即失败。
+     */
     @Test
     void overlongElementShouldFallbackRecursively() {
         SliceContext context = context();
@@ -81,6 +87,9 @@ class ParagraphSliceStrategyTest {
         assertTrue(chunks.stream().skip(1).allMatch(c -> c.getCharCount() <= 500));
     }
 
+    /**
+     * 守护 {@code flushOnEmptyBufferShouldReturnEmpty}：该场景行为改动即失败。
+     */
     @Test
     void flushOnEmptyBufferShouldReturnEmpty() {
         assertTrue(strategy.flush(context()).isEmpty());

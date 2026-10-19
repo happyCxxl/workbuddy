@@ -31,6 +31,9 @@ class TaskExecutorConfigTest {
         }
     }
 
+    /**
+     * 守护 {@code contextShouldRegisterTwoNamedTaskExecutors}：该场景行为改动即失败。
+     */
     @Test
     void contextShouldRegisterTwoNamedTaskExecutors() {
         TaskQueueProperties properties = new TaskQueueProperties();

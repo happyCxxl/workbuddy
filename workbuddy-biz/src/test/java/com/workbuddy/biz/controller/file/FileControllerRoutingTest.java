@@ -41,6 +41,9 @@ class FileControllerRoutingTest {
         mockMvc = MockMvcBuilders.standaloneSetup(new FileController(fileStorage, fileService)).build();
     }
 
+    /**
+     * 守护 {@code uploadPathShouldBindMultipartFileAndRouteToStorage}：该场景行为改动即失败。
+     */
     @Test
     void uploadPathShouldBindMultipartFileAndRouteToStorage() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "a.pdf", "application/pdf", new byte[] {1, 2});
@@ -51,6 +54,9 @@ class FileControllerRoutingTest {
         verifyNoInteractions(fileService);
     }
 
+    /**
+     * 守护 {@code downloadPathShouldRouteToService}：该场景行为改动即失败。
+     */
     @Test
     void downloadPathShouldRouteToService() throws Exception {
         mockMvc.perform(get("/files/F-88")).andExpect(status().isOk());
@@ -59,6 +65,9 @@ class FileControllerRoutingTest {
         verify(fileStorage, never()).putFile(any());
     }
 
+    /**
+     * 守护 {@code unexpectedRequestFormsShouldNotReachHandler}：该场景行为改动即失败。
+     */
     @Test
     void unexpectedRequestFormsShouldNotReachHandler() throws Exception {
         // 根路径只映射上传（POST）：GET 命中同一路径的别的谓词，回方法不允许而不是找不到

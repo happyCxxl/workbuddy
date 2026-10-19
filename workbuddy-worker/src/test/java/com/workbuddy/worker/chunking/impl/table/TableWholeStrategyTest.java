@@ -85,6 +85,9 @@ class TableWholeStrategyTest {
         return table;
     }
 
+    /**
+     * 守护 {@code wholeTableShouldProduceSingleChunk}：该场景行为改动即失败。
+     */
     @Test
     void wholeTableShouldProduceSingleChunk() {
         UnifiedElement table = tableWith("行");
@@ -105,6 +108,9 @@ class TableWholeStrategyTest {
         assertEquals("t-1", chunk.getTableRef());
     }
 
+    /**
+     * 守护 {@code overlongTableShouldDegradeToRowSlice}：该场景行为改动即失败。
+     */
     @Test
     void overlongTableShouldDegradeToRowSlice() {
         // 每行 60 字符（长行），整表远超 maxLen=50 → 降级行级：每行一片

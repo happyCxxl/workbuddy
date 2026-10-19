@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class TableAlignmentPrunerTest {
 
-    /** 三行共享两列（表格主体）+ 两行各占一列（混入正文）→ 只保留前三行 */
+    /** 三行共享两列（表格主体）+ 两行各占一列（混入正文）→ 只保留前三行（{@code rowsSharingColumnsShouldBeKept}）。 */
     @Test
     void rowsSharingColumnsShouldBeKept() {
         List<List<Token>> rows = List.of(
@@ -27,7 +27,7 @@ class TableAlignmentPrunerTest {
         assertEquals(List.of(0, 1, 2), TableAlignmentPruner.keptRows(rows, columns));
     }
 
-    /** 所有行都共享列 → 全部保留（顺序与下标不变） */
+    /** 所有行都共享列 → 全部保留（顺序与下标不变）（{@code fullyConnectedRowsShouldAllBeKept}）。 */
     @Test
     void fullyConnectedRowsShouldAllBeKept() {
         List<List<Token>> rows = List.of(
@@ -39,7 +39,7 @@ class TableAlignmentPrunerTest {
                 TableAlignmentPruner.keptRows(rows, List.of(column(72), column(300))));
     }
 
-    /** 两个连通块大小相同时取 token 更多的那个 */
+    /** 两个连通块大小相同时取 token 更多的那个（{@code largerTokenGroupShouldWinOnTie}）。 */
     @Test
     void largerTokenGroupShouldWinOnTie() {
         List<List<Token>> rows = List.of(
@@ -51,7 +51,7 @@ class TableAlignmentPrunerTest {
         assertEquals(List.of(2), TableAlignmentPruner.keptRows(rows, columns));
     }
 
-    /** 没有列或没有行：不剪（返回全部下标） */
+    /** 没有列或没有行：不剪（返回全部下标）（{@code emptyInputShouldKeepEverything}）。 */
     @Test
     void emptyInputShouldKeepEverything() {
         assertEquals(List.of(), TableAlignmentPruner.keptRows(List.of(), List.of(column(72))));

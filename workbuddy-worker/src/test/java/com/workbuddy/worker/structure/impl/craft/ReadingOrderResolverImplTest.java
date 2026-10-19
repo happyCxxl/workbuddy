@@ -41,6 +41,9 @@ class ReadingOrderResolverImplTest {
         return element;
     }
 
+    /**
+     * 守护 {@code twoColumnPageShouldReadColumnByColumn}：该场景行为改动即失败。
+     */
     @Test
     void twoColumnPageShouldReadColumnByColumn() {
         // 双栏：左栏两段（x=72）、右栏两段（x=320），y 交错
@@ -56,6 +59,9 @@ class ReadingOrderResolverImplTest {
                 ordered.stream().map(UnifiedElement::getId).toList());
     }
 
+    /**
+     * 守护 {@code noBBoxShouldKeepOriginalOrder}：该场景行为改动即失败。
+     */
     @Test
     void noBBoxShouldKeepOriginalOrder() {
         UnifiedElement a = new UnifiedElement();
@@ -70,6 +76,9 @@ class ReadingOrderResolverImplTest {
         assertEquals(List.of("b", "a"), ordered.stream().map(UnifiedElement::getId).toList());
     }
 
+    /**
+     * 守护 {@code multiplePagesShouldKeepPageOrderAndSortInsideEachPage}：该场景行为改动即失败。
+     */
     @Test
     void multiplePagesShouldKeepPageOrderAndSortInsideEachPage() {
         // 第 2 页两段传入顺序颠倒：仍按页内自上而下重排，且页序保持 1 → 2

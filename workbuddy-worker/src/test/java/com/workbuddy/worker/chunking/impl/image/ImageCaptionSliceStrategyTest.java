@@ -52,6 +52,9 @@ class ImageCaptionSliceStrategyTest {
         return element;
     }
 
+    /**
+     * 守护 {@code captionShouldBeAttachedToPlaceholder}：该场景行为改动即失败。
+     */
     @Test
     void captionShouldBeAttachedToPlaceholder() {
         Chunk chunk = strategy.slice(imageElement(), context("附件二：资质证书（扫描件）")).getFirst();
@@ -64,6 +67,9 @@ class ImageCaptionSliceStrategyTest {
         assertEquals("第一章 > 1.2 附图", chunk.getTitlePath());
     }
 
+    /**
+     * 守护 {@code noCaptionShouldFallbackToPlaceholderOnly}：该场景行为改动即失败。
+     */
     @Test
     void noCaptionShouldFallbackToPlaceholderOnly() {
         Chunk chunk = strategy.slice(imageElement(), context(null)).getFirst();

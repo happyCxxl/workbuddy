@@ -23,6 +23,9 @@ class JwtUtilTest {
 
     private static final Duration TTL = Duration.ofDays(2);
 
+    /**
+     * 守护 {@code signAndParseShouldRoundTrip}：该场景行为改动即失败。
+     */
     @Test
     void signAndParseShouldRoundTrip() {
         JwtUtil jwtUtil = jwtUtil(7);
@@ -36,6 +39,9 @@ class JwtUtilTest {
         assertEquals(3, user.getTokenVersion());
     }
 
+    /**
+     * 守护 {@code signShouldApplyGivenTtl}：该场景行为改动即失败。
+     */
     @Test
     void signShouldApplyGivenTtl() {
         JwtUtil jwtUtil = jwtUtil(7);
@@ -47,6 +53,9 @@ class JwtUtilTest {
                 "到期时刻应接近 now + TTL，实际: " + user.getExpiresAt());
     }
 
+    /**
+     * 守护 {@code ttlShouldFollowConfiguration}：该场景行为改动即失败。
+     */
     @Test
     void ttlShouldFollowConfiguration() {
         JwtUtil jwtUtil = new JwtUtil(jwtProperties(1));
@@ -55,6 +64,9 @@ class JwtUtilTest {
         assertEquals(Duration.ofDays(30), jwtUtil.rememberTtl());
     }
 
+    /**
+     * 守护 {@code parseShouldReturnUserRoleForPlainUser}：该场景行为改动即失败。
+     */
     @Test
     void parseShouldReturnUserRoleForPlainUser() {
         JwtUtil jwtUtil = jwtUtil(7);
@@ -65,6 +77,9 @@ class JwtUtilTest {
         assertEquals(0, user.getTokenVersion());
     }
 
+    /**
+     * 守护 {@code parseShouldTreatNullTokenVersionAsZero}：该场景行为改动即失败。
+     */
     @Test
     void parseShouldTreatNullTokenVersionAsZero() {
         JwtUtil jwtUtil = jwtUtil(7);
@@ -75,6 +90,9 @@ class JwtUtilTest {
         assertEquals(0, user.getTokenVersion());
     }
 
+    /**
+     * 守护 {@code parseShouldThrowWhenTokenTampered}：该场景行为改动即失败。
+     */
     @Test
     void parseShouldThrowWhenTokenTampered() {
         JwtUtil jwtUtil = jwtUtil(7);
@@ -86,6 +104,9 @@ class JwtUtilTest {
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code parseShouldThrowWhenTokenExpired}：该场景行为改动即失败。
+     */
     @Test
     void parseShouldThrowWhenTokenExpired() {
         JwtUtil jwtUtil = jwtUtil(0);

@@ -704,6 +704,8 @@ class KnowledgeBaseFileSubmitTest {
         service.pageFileResults(1L, fileResultQuery(""));
 
         verify(kbFileResultDbService, times(4)).pageByKb(1L, 10L, 1L);
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(kbFileResultDbService).getInvocations().stream()
+                .anyMatch(inv -> "pageByKb".equals(inv.getMethod().getName())));
     }
 
     /**

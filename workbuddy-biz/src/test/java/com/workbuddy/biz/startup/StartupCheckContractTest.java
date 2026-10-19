@@ -34,6 +34,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class StartupCheckContractTest {
 
+    /**
+     * 守护 {@code realChecksShouldProceedOnPassPath}：该场景行为改动即失败。
+     */
     @Test
     void realChecksShouldProceedOnPassPath() {
         assertProceeds(new ModelVendorValidator(new ModelVendorProperties()));
@@ -44,6 +47,9 @@ class StartupCheckContractTest {
         assertProceeds(new AuthConfigCheck(jwtProperties(), new LoginGuardProperties()));
     }
 
+    /**
+     * 守护 {@code knownChecksShouldKeepTheirOrderTier}：该场景行为改动即失败。
+     */
     @Test
     void knownChecksShouldKeepTheirOrderTier() {
         assertEquals(StartupCheck.ORDER_CREDENTIALS, new ModelVendorValidator(new ModelVendorProperties()).order());

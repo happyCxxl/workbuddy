@@ -523,6 +523,8 @@ class StrategyVersionServiceImplTest {
         service.create(embedDto("{\"model\":\"no-such-model\",\"docTemplate\":\"{content}\",\"queryTemplate\":\"{query}\"}"));
 
         verify(strategyVersionDbService).save(any(WbPipelineStrategyVersion.class));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(strategyVersionDbService).getInvocations().stream()
+                .anyMatch(inv -> "save".equals(inv.getMethod().getName())));
     }
 
     /**
@@ -618,6 +620,8 @@ class StrategyVersionServiceImplTest {
         service.list("RETRIEVAL", false);
 
         verify(strategyVersionDbService).listEnabledByType("RETRIEVAL");
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(strategyVersionDbService).getInvocations().stream()
+                .anyMatch(inv -> "listEnabledByType".equals(inv.getMethod().getName())));
     }
 
     /**

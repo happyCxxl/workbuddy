@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PdfTableCapabilityWiringTest {
 
-    /** 两行两列宽间距文本：规则路径自己聚成 2×2 表；注册表为 null 时不接能力、不留痕 */
+    /** 两行两列宽间距文本：规则路径自己聚成 2×2 表；注册表为 null 时不接能力、不留痕（{@code withoutCapabilityShouldKeepRulePathUntouched}）。 */
     @Test
     void withoutCapabilityShouldKeepRulePathUntouched() throws Exception {
         ParseSource source = parse(buildTwoColumnBlockPdf(), null);
@@ -50,7 +50,7 @@ class PdfTableCapabilityWiringTest {
                 () -> "facts=" + source.getFacts());
     }
 
-    /** 能力补强：token 逐行漂移使列支撑不足 → 规则失败，桩 provider 给出的结构成为产物表格 */
+    /** 能力补强：token 逐行漂移使列支撑不足 → 规则失败，桩 provider 给出的结构成为产物表格（{@code failedTableShouldBeEnhancedByCapability}）。 */
     @Test
     void failedTableShouldBeEnhancedByCapability() throws Exception {
         ParseSource source = parse(buildDriftingBlockPdf(), stubRegistry());

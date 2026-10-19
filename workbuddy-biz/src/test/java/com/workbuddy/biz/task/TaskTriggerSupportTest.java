@@ -96,6 +96,9 @@ class TaskTriggerSupportTest {
         });
     }
 
+    /**
+     * 守护 {@code newTaskShouldBeQueuedAndEnqueued}：该场景行为改动即失败。
+     */
     @Test
     void newTaskShouldBeQueuedAndEnqueued() {
         noExistingTask();
@@ -113,6 +116,9 @@ class TaskTriggerSupportTest {
         verify(pipelineTaskDbService, never()).failQueued(any(), anyString(), anyString());
     }
 
+    /**
+     * 守护 {@code enqueueFailureShouldFailTheTaskAndRethrow}：该场景行为改动即失败。
+     */
     @Test
     void enqueueFailureShouldFailTheTaskAndRethrow() {
         noExistingTask();
@@ -127,6 +133,9 @@ class TaskTriggerSupportTest {
                 "任务入队失败，请重试");
     }
 
+    /**
+     * 守护 {@code existingRunningTaskShouldReject40431}：该场景行为改动即失败。
+     */
     @Test
     void existingRunningTaskShouldReject40431() {
         WbPipelineTask running = new WbPipelineTask();
@@ -147,6 +156,9 @@ class TaskTriggerSupportTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 守护 {@code existingSucceededTaskShouldAlsoReject40431}：该场景行为改动即失败。
+     */
     @Test
     void existingSucceededTaskShouldAlsoReject40431() {
         // 查重只看执行键、不看任务状态：成功任务同样占着这一档输入与策略
@@ -165,6 +177,9 @@ class TaskTriggerSupportTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 守护 {@code parseTriggerShouldWriteZeroSentinelsIntoExecKey}：该场景行为改动即失败。
+     */
     @Test
     void parseTriggerShouldWriteZeroSentinelsIntoExecKey() {
         // 解析是链路起点：上游产物与策略版本两档都按 0 落到执行键与任务行
@@ -181,6 +196,9 @@ class TaskTriggerSupportTest {
         verify(taskQueue).enqueue(64L);
     }
 
+    /**
+     * 守护 {@code mismatchedStorageShouldReject40453BeforeAnyTaskWork}：该场景行为改动即失败。
+     */
     @Test
     void mismatchedStorageShouldReject40453BeforeAnyTaskWork() {
         stubFileChain();
@@ -200,6 +218,9 @@ class TaskTriggerSupportTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 守护 {@code matchedStorageShouldPassTheGuard}：该场景行为改动即失败。
+     */
     @Test
     void matchedStorageShouldPassTheGuard() {
         stubFileChain();
@@ -214,6 +235,9 @@ class TaskTriggerSupportTest {
         verify(taskQueue).enqueue(62L);
     }
 
+    /**
+     * 守护 {@code missingFileChainShouldNotBlockTrigger}：该场景行为改动即失败。
+     */
     @Test
     void missingFileChainShouldNotBlockTrigger() {
         // 链路缺环（无文件结果）时不拦：由读取路径按记录给出「存储后端未配置」

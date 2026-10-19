@@ -68,6 +68,9 @@ class StructureAssemblerImplTest {
         return element;
     }
 
+    /**
+     * 守护 {@code styleTitleShouldGetLevelFromHeading}：该场景行为改动即失败。
+     */
     @Test
     void styleTitleShouldGetLevelFromHeading() {
         UnifiedElement styled = paragraph("第一章 投标人须知", 12d, false);
@@ -80,6 +83,9 @@ class StructureAssemblerImplTest {
         assertEquals("style", styled.getTitleEvidence().getCascade());
     }
 
+    /**
+     * 守护 {@code chapterPatternShouldBeLevelOneTitle}：该场景行为改动即失败。
+     */
     @Test
     void chapterPatternShouldBeLevelOneTitle() {
         UnifiedElement chapter = paragraph("第三章 技术要求", 14d, true);
@@ -92,6 +98,9 @@ class StructureAssemblerImplTest {
         assertEquals("第X章", chapter.getTitleEvidence().getPattern());
     }
 
+    /**
+     * 守护 {@code deepNumberPatternShouldGetLevelByDots}：该场景行为改动即失败。
+     */
     @Test
     void deepNumberPatternShouldGetLevelByDots() {
         UnifiedElement deep = paragraph("1.2.3.4.1 某某条款", 12d, true);
@@ -103,6 +112,9 @@ class StructureAssemblerImplTest {
         assertEquals("number-pattern", deep.getTitleEvidence().getCascade());
     }
 
+    /**
+     * 守护 {@code numberPatternWithoutFontSignalShouldBeCandidate}：该场景行为改动即失败。
+     */
     @Test
     void numberPatternWithoutFontSignalShouldBeCandidate() {
         UnifiedElement suspicious = paragraph("3.14 是 π", 12d, false);
@@ -114,6 +126,9 @@ class StructureAssemblerImplTest {
         assertTrue(outcome.getTitleCountByCascade().isEmpty());
     }
 
+    /**
+     * 守护 {@code boldLargeFontShouldBeTitleByFontSignal}：该场景行为改动即失败。
+     */
     @Test
     void boldLargeFontShouldBeTitleByFontSignal() {
         UnifiedElement boldLarge = paragraph("总体要求", 16d, true);
@@ -156,6 +171,9 @@ class StructureAssemblerImplTest {
                 new StructureJudgeRegistry(List.of(new FakeJudge()), properties), rules);
     }
 
+    /**
+     * 守护 {@code modelFallbackShouldTitleWhenRulesMiss}：该场景行为改动即失败。
+     */
     @Test
     void modelFallbackShouldTitleWhenRulesMiss() {
         StructureAssemblerImpl judgeAssembler = assemblerWithJudge(true);
@@ -170,6 +188,9 @@ class StructureAssemblerImplTest {
         assertEquals("fake-judge conf=0.87", candidate.getTitleEvidence().getModelEvidence());
     }
 
+    /**
+     * 守护 {@code modelFallbackShouldStayOffWhenDisabled}：该场景行为改动即失败。
+     */
     @Test
     void modelFallbackShouldStayOffWhenDisabled() {
         StructureAssemblerImpl judgeAssembler = assemblerWithJudge(false);
@@ -180,6 +201,9 @@ class StructureAssemblerImplTest {
         assertEquals(UnifiedElementType.PARAGRAPH.name(), candidate.getType());
     }
 
+    /**
+     * 守护 {@code headerFooterShouldStayOutOfChapterTreeAndOrderChain}：该场景行为改动即失败。
+     */
     @Test
     void headerFooterShouldStayOutOfChapterTreeAndOrderChain() {
         UnifiedElement header = new UnifiedElement();
@@ -213,6 +237,9 @@ class StructureAssemblerImplTest {
         assertEquals(List.of("t-1->c-1"), chain);
     }
 
+    /**
+     * 守护 {@code chapterTreeShouldAttachContentToNearestTitle}：该场景行为改动即失败。
+     */
     @Test
     void chapterTreeShouldAttachContentToNearestTitle() {
         UnifiedElement title = paragraph("第一章 总则", 14d, true);
@@ -232,6 +259,9 @@ class StructureAssemblerImplTest {
         assertTrue(relations.stream().anyMatch(r -> "NEXT".equals(r.getType())));
     }
 
+    /**
+     * 守护 {@code excelShouldBuildSheetSections}：该场景行为改动即失败。
+     */
     @Test
     void excelShouldBuildSheetSections() {
         UnifiedElement table = new UnifiedElement();
@@ -265,6 +295,9 @@ class StructureAssemblerImplTest {
         return table;
     }
 
+    /**
+     * 守护 {@code excelSectionsShouldInterleaveWithTheirSheets}：该场景行为改动即失败。
+     */
     @Test
     void excelSectionsShouldInterleaveWithTheirSheets() {
         TreeOutcome outcome = assembler.assembleTree(
@@ -275,6 +308,9 @@ class StructureAssemblerImplTest {
         assertEquals(List.of("评分表", "评分表 数据", "报价表", "报价表 数据"), order);
     }
 
+    /**
+     * 守护 {@code excelSectionsShouldBeSiblingsAndOwnTheirTables}：该场景行为改动即失败。
+     */
     @Test
     void excelSectionsShouldBeSiblingsAndOwnTheirTables() {
         AssembleContext ctx = context(XLSX_MIME);
@@ -293,6 +329,9 @@ class StructureAssemblerImplTest {
                 parentChild.stream().map(DocumentRelation::getTo).collect(Collectors.toSet()));
     }
 
+    /**
+     * 守护 {@code excelNextChainShouldFollowInterleavedOrder}：该场景行为改动即失败。
+     */
     @Test
     void excelNextChainShouldFollowInterleavedOrder() {
         AssembleContext ctx = context(XLSX_MIME);
@@ -312,6 +351,9 @@ class StructureAssemblerImplTest {
         assertEquals(expected, chain);
     }
 
+    /**
+     * 守护 {@code styleRuleShouldRejectStyleNameContainingHeading}：该场景行为改动即失败。
+     */
     @Test
     void styleRuleShouldRejectStyleNameContainingHeading() {
         UnifiedElement styled = paragraph("投标保证金为人民币叁佰万元整。", 10d, false);
@@ -322,6 +364,9 @@ class StructureAssemblerImplTest {
         assertEquals(UnifiedElementType.PARAGRAPH.name(), styled.getType());
     }
 
+    /**
+     * 守护 {@code styleRuleShouldClampDeepLevel}：该场景行为改动即失败。
+     */
     @Test
     void styleRuleShouldClampDeepLevel() {
         UnifiedElement styled = paragraph("第某章 标题", 12d, false);
@@ -333,6 +378,9 @@ class StructureAssemblerImplTest {
         assertEquals(9, styled.getLevel());
     }
 
+    /**
+     * 守护 {@code styleRuleShouldRequireShortText}：该场景行为改动即失败。
+     */
     @Test
     void styleRuleShouldRequireShortText() {
         UnifiedElement styled = paragraph("这是一段被套用了标题样式的长正文内容，用于确认样式规则同样要求短句约束，"
@@ -344,6 +392,9 @@ class StructureAssemblerImplTest {
         assertEquals(UnifiedElementType.PARAGRAPH.name(), styled.getType());
     }
 
+    /**
+     * 守护 {@code singleNumberHeadingShouldBeLevelOne}：该场景行为改动即失败。
+     */
     @Test
     void singleNumberHeadingShouldBeLevelOne() {
         UnifiedElement heading = paragraph("1 总则", 14d, true);
@@ -356,6 +407,9 @@ class StructureAssemblerImplTest {
         assertEquals("1", heading.getTitleEvidence().getPattern());
     }
 
+    /**
+     * 守护 {@code dotNumberHeadingShouldStayLevelTwo}：该场景行为改动即失败。
+     */
     @Test
     void dotNumberHeadingShouldStayLevelTwo() {
         UnifiedElement dotted = paragraph("1.1 范围", 14d, true);
@@ -368,6 +422,9 @@ class StructureAssemblerImplTest {
         assertEquals("1.1", dotted.getTitleEvidence().getPattern());
     }
 
+    /**
+     * 守护 {@code decimalParagraphShouldNotBecomeTitle}：该场景行为改动即失败。
+     */
     @Test
     void decimalParagraphShouldNotBecomeTitle() {
         UnifiedElement decimal = paragraph("3.14 是圆周率的近似值，属于正文说明。", 10d, false);
@@ -378,6 +435,9 @@ class StructureAssemblerImplTest {
         assertEquals(1, outcome.getTitleCandidateCount());
     }
 
+    /**
+     * 守护 {@code singleNumberBodyLineShouldBeCandidateOnly}：该场景行为改动即失败。
+     */
     @Test
     void singleNumberBodyLineShouldBeCandidateOnly() {
         UnifiedElement body = paragraph("2 个工作日", 10d, false);

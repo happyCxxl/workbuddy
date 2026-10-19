@@ -16,6 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class ChunkSetJsonTest {
 
+    /**
+     * 守护 {@code chunkSetShouldRoundTrip}：该场景行为改动即失败。
+     */
     @Test
     void chunkSetShouldRoundTrip() {
         ChunkSet chunkSet = new ChunkSet();

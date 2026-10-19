@@ -22,6 +22,9 @@ class StorageTypeCheckTest {
 
     private final StartupCheckChain next = () -> proceeded.set(true);
 
+    /**
+     * 守护 {@code shouldPassWithKnownStorageType}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassWithKnownStorageType() {
         new StorageTypeCheck(config("minio")).check(next);
@@ -29,11 +32,17 @@ class StorageTypeCheckTest {
         assertTrue(proceeded.get(), "通过路径必须推进链");
     }
 
+    /**
+     * 守护 {@code shouldPassWithLocalStorageType}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassWithLocalStorageType() {
         assertDoesNotThrow(() -> new StorageTypeCheck(config("local")).check(next));
     }
 
+    /**
+     * 守护 {@code shouldRejectUnknownStorageType}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectUnknownStorageType() {
         FileCenterConfig config = config("s3");

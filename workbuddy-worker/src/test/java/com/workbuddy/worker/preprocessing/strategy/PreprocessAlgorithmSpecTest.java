@@ -18,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PreprocessAlgorithmSpecTest {
 
+    /**
+     * 守护 {@code triStateRulesShouldDefaultToMarkAndRepeatToExclude}：该场景行为改动即失败。
+     */
     @Test
     void triStateRulesShouldDefaultToMarkAndRepeatToExclude() {
         assertEquals("MARK", PreprocessAlgorithmSpec.defaultAction(PreprocessRule.HEADER_FOOTER));
@@ -27,6 +30,9 @@ class PreprocessAlgorithmSpecTest {
         assertNull(PreprocessAlgorithmSpec.defaultAction(PreprocessRule.TIDY));
     }
 
+    /**
+     * 守护 {@code toggleRulesShouldKeepTheirDefaultSwitch}：该场景行为改动即失败。
+     */
     @Test
     void toggleRulesShouldKeepTheirDefaultSwitch() {
         assertTrue(PreprocessAlgorithmSpec.defaultEnabled(PreprocessRule.FIELD));
@@ -35,6 +41,9 @@ class PreprocessAlgorithmSpecTest {
         assertFalse(PreprocessAlgorithmSpec.defaultEnabled(PreprocessRule.REPEAT));
     }
 
+    /**
+     * 守护 {@code repeatActionShouldPassValidation}：该场景行为改动即失败。
+     */
     @Test
     void repeatActionShouldPassValidation() {
         Map<String, Object> config = Map.of("rules", Map.of("repeat", Map.of("action", "MARK")));
@@ -42,6 +51,9 @@ class PreprocessAlgorithmSpecTest {
         assertNull(PreprocessAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code legacyRepeatToggleShouldPassValidation}：该场景行为改动即失败。
+     */
     @Test
     void legacyRepeatToggleShouldPassValidation() {
         Map<String, Object> config = Map.of("rules", Map.of("repeat", Map.of("enabled", "OFF")));
@@ -49,6 +61,9 @@ class PreprocessAlgorithmSpecTest {
         assertNull(PreprocessAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code repeatWithBothActionAndEnabledShouldBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void repeatWithBothActionAndEnabledShouldBeRejected() {
         Map<String, Object> config = Map.of("rules", Map.of("repeat", Map.of("action", "MARK", "enabled", "ON")));
@@ -59,6 +74,9 @@ class PreprocessAlgorithmSpecTest {
         assertTrue(error.contains("只保留 action"));
     }
 
+    /**
+     * 守护 {@code toggleRuleWithActionShouldStillBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void toggleRuleWithActionShouldStillBeRejected() {
         Map<String, Object> config = Map.of("rules", Map.of("tidy", Map.of("action", "MARK")));
@@ -66,6 +84,9 @@ class PreprocessAlgorithmSpecTest {
         assertNotNull(PreprocessAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code otherTriStateRuleWithEnabledShouldStillBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void otherTriStateRuleWithEnabledShouldStillBeRejected() {
         Map<String, Object> config = Map.of("rules", Map.of("toc", Map.of("enabled", "ON")));
@@ -73,6 +94,9 @@ class PreprocessAlgorithmSpecTest {
         assertNotNull(PreprocessAlgorithmSpec.validate(config));
     }
 
+    /**
+     * 守护 {@code customGroupUnderRulesShouldBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void customGroupUnderRulesShouldBeRejected() {
         Map<String, Object> config = Map.of("rules", Map.of("custom", Map.of("enabled", "ON")));
@@ -83,6 +107,9 @@ class PreprocessAlgorithmSpecTest {
         assertTrue(error.contains("custom"));
     }
 
+    /**
+     * 守护 {@code customActionCatalogShouldDriveReplacementConstraint}：该场景行为改动即失败。
+     */
     @Test
     void customActionCatalogShouldDriveReplacementConstraint() {
         assertEquals("REMOVE/REPLACE/EXTRACT", CustomRuleAction.names());
@@ -92,6 +119,9 @@ class PreprocessAlgorithmSpecTest {
         assertTrue(CustomRuleAction.EXTRACT.desc().contains("命中"));
     }
 
+    /**
+     * 守护 {@code customRuleWithReplacementOnExtractShouldBeRejected}：该场景行为改动即失败。
+     */
     @Test
     void customRuleWithReplacementOnExtractShouldBeRejected() {
         Map<String, Object> config = Map.of("custom", Map.of("enabled", "ON", "rules",
@@ -103,6 +133,9 @@ class PreprocessAlgorithmSpecTest {
         assertTrue(error.contains("不允许携带替换文本"));
     }
 
+    /**
+     * 守护 {@code customRemoveRuleWithoutReplacementShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void customRemoveRuleWithoutReplacementShouldPass() {
         Map<String, Object> config = Map.of("custom", Map.of("enabled", "ON", "rules",

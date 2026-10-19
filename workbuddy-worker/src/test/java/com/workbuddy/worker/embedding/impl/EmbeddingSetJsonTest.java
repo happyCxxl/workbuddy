@@ -17,6 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class EmbeddingSetJsonTest {
 
+    /**
+     * 守护 {@code jsonRoundTripShouldPreserveRecordsAndVectors}：该场景行为改动即失败。
+     */
     @Test
     void jsonRoundTripShouldPreserveRecordsAndVectors() {
         EmbeddingSet set = new EmbeddingSet();

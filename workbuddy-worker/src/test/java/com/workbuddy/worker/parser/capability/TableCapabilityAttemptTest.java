@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class TableCapabilityAttemptTest {
 
-    /** 桩 provider 给出 1×2 表（首格表头）→ 表格元素 + 补强事实 */
+    /** 桩 provider 给出 1×2 表（首格表头）→ 表格元素 + 补强事实（{@code stubProviderShouldYieldTableAndEnhancedFact}）。 */
     @Test
     void stubProviderShouldYieldTableAndEnhancedFact() {
         TableResult result = new TableResult();
@@ -52,7 +52,7 @@ class TableCapabilityAttemptTest {
         assertTrue(outcome.fact().getEvidence().contains("stub-table 0.1"), () -> outcome.fact().getEvidence());
     }
 
-    /** 未接入能力：无表格元素，留痕为降级 */
+    /** 未接入能力：无表格元素，留痕为降级（{@code missingRegistryShouldYieldDegradedFactOnly}）。 */
     @Test
     void missingRegistryShouldYieldDegradedFactOnly() {
         TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(null, region(), 1);
@@ -63,7 +63,7 @@ class TableCapabilityAttemptTest {
         assertTrue(outcome.fact().getEvidence().contains("未接入能力"), () -> outcome.fact().getEvidence());
     }
 
-    /** 区域为空：降级留痕点名原因 */
+    /** 区域为空：降级留痕点名原因（{@code emptyRegionShouldYieldDegradedFact}）。 */
     @Test
     void emptyRegionShouldYieldDegradedFact() {
         TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(registry(new TableResult()), null, 2);
@@ -72,7 +72,7 @@ class TableCapabilityAttemptTest {
         assertTrue(outcome.fact().getEvidence().contains("区域为空"), () -> outcome.fact().getEvidence());
     }
 
-    /** 桩 provider 返回空结果：无表格元素，降级原因写「调用失败或结果不完整」 */
+    /** 桩 provider 返回空结果：无表格元素，降级原因写「调用失败或结果不完整」（{@code unusableResultShouldYieldDegradedFact}）。 */
     @Test
     void unusableResultShouldYieldDegradedFact() {
         TableCapabilityAttempt.Outcome outcome =

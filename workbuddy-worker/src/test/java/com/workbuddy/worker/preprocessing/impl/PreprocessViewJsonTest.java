@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class PreprocessViewJsonTest {
 
+    /**
+     * 守护 {@code viewShouldRoundTrip}：该场景行为改动即失败。
+     */
     @Test
     void viewShouldRoundTrip() {
         PreprocessView view = new PreprocessView();

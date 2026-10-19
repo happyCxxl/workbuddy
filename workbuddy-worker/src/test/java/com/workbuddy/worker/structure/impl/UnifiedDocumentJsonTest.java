@@ -19,6 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class UnifiedDocumentJsonTest {
 
+    /**
+     * 守护 {@code roundTripShouldPreserveStructure}：该场景行为改动即失败。
+     */
     @Test
     void roundTripShouldPreserveStructure() {
         UnifiedDocument document = createDocument();

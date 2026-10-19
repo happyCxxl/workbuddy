@@ -70,6 +70,9 @@ class ProductPersistenceTest {
         return task;
     }
 
+    /**
+     * 守护 {@code firstPersistShouldWriteObjectAndInsertRow}：该场景行为改动即失败。
+     */
     @Test
     void firstPersistShouldWriteObjectAndInsertRow() {
         when(pipelineProductDbService.getByTaskId(70L)).thenReturn(null);
@@ -90,6 +93,9 @@ class ProductPersistenceTest {
         verify(pipelineTaskDbService).updateProductId(70L, 80L);
     }
 
+    /**
+     * 守护 {@code secondPersistShouldReuseExistingRowWithoutWritingAgain}：该场景行为改动即失败。
+     */
     @Test
     void secondPersistShouldReuseExistingRowWithoutWritingAgain() {
         WbPipelineProduct existing = new WbPipelineProduct();

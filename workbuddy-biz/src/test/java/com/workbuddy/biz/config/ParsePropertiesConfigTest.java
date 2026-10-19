@@ -29,6 +29,9 @@ class ParsePropertiesConfigTest {
     /** 可选导入前缀：这类文件缺失即跳过（本机密钥覆盖文件被 gitignore，别的机器上没有） */
     private static final String OPTIONAL = "optional:";
 
+    /**
+     * 守护 {@code applicationYmlShouldCoverAllParseProperties}：该场景行为改动即失败。
+     */
     @Test
     void applicationYmlShouldCoverAllParseProperties() throws Exception {
         Map<String, Object> parse = parseBlock();

@@ -43,11 +43,17 @@ class KnowledgeBaseRulesTest {
         return k;
     }
 
+    /**
+     * 守护 {@code disableWhenActiveShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void disableWhenActiveShouldPass() {
         assertDoesNotThrow(() -> KnowledgeBaseRules.checkCanDisable(kb(KnowledgeBaseStatus.ACTIVE.getCode())));
     }
 
+    /**
+     * 守护 {@code disableWhenDisabledShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void disableWhenDisabledShouldThrow() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -55,16 +61,25 @@ class KnowledgeBaseRulesTest {
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code disableWhenStatusNullShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void disableWhenStatusNullShouldThrow() {
         assertThrows(KnowledgeException.class, () -> KnowledgeBaseRules.checkCanDisable(kb(null)));
     }
 
+    /**
+     * 守护 {@code enableWhenDisabledShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void enableWhenDisabledShouldPass() {
         assertDoesNotThrow(() -> KnowledgeBaseRules.checkCanEnable(kb(KnowledgeBaseStatus.DISABLED.getCode())));
     }
 
+    /**
+     * 守护 {@code enableWhenActiveShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void enableWhenActiveShouldThrow() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -72,16 +87,25 @@ class KnowledgeBaseRulesTest {
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code enableWhenStatusNullShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void enableWhenStatusNullShouldThrow() {
         assertThrows(KnowledgeException.class, () -> KnowledgeBaseRules.checkCanEnable(kb(null)));
     }
 
+    /**
+     * 守护 {@code submitWhenActiveShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void submitWhenActiveShouldPass() {
         assertDoesNotThrow(() -> KnowledgeBaseRules.checkCanSubmit(kb(KnowledgeBaseStatus.ACTIVE.getCode())));
     }
 
+    /**
+     * 守护 {@code submitWhenDisabledShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void submitWhenDisabledShouldThrow() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -89,6 +113,9 @@ class KnowledgeBaseRulesTest {
         assertEquals(ErrorCode.KB_NOT_ACTIVE, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code submitWhenStatusNullShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void submitWhenStatusNullShouldThrow() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -98,17 +125,26 @@ class KnowledgeBaseRulesTest {
 
     // ---------------- 可见范围（归属）----------------
 
+    /**
+     * 守护 {@code visibleOwnerIdForNormalUserShouldBeSelf}：该场景行为改动即失败。
+     */
     @Test
     void visibleOwnerIdForNormalUserShouldBeSelf() {
         assertEquals(ME, KnowledgeBaseRules.visibleOwnerId(user(ME, UserRole.USER)));
     }
 
+    /**
+     * 守护 {@code visibleOwnerIdForAdminShouldBeNullMeaningNoFilter}：该场景行为改动即失败。
+     */
     @Test
     void visibleOwnerIdForAdminShouldBeNullMeaningNoFilter() {
         // null = 不加归属条件（管理员视角）；与"用户为 null"是两件事
         assertNull(KnowledgeBaseRules.visibleOwnerId(user(ME, UserRole.ADMIN)));
     }
 
+    /**
+     * 守护 {@code visibleOwnerIdWithoutLoginShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void visibleOwnerIdWithoutLoginShouldThrow() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -116,6 +152,9 @@ class KnowledgeBaseRulesTest {
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code visibleOwnerIdWithNullIdShouldThrow}：该场景行为改动即失败。
+     */
     @Test
     void visibleOwnerIdWithNullIdShouldThrow() {
         KnowledgeUser user = user(ME, UserRole.USER);
@@ -127,12 +166,18 @@ class KnowledgeBaseRulesTest {
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code accessibleWhenOwnKbShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void accessibleWhenOwnKbShouldPass() {
         assertDoesNotThrow(() ->
                 KnowledgeBaseRules.checkAccessible(ownedKb(ME), user(ME, UserRole.USER)));
     }
 
+    /**
+     * 守护 {@code accessibleWhenOthersKbShouldThrowNotFound}：该场景行为改动即失败。
+     */
     @Test
     void accessibleWhenOthersKbShouldThrowNotFound() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -141,6 +186,9 @@ class KnowledgeBaseRulesTest {
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code accessibleWhenOwnerIsNullShouldThrowNotFoundForNormalUser}：该场景行为改动即失败。
+     */
     @Test
     void accessibleWhenOwnerIsNullShouldThrowNotFoundForNormalUser() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -148,6 +196,9 @@ class KnowledgeBaseRulesTest {
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code accessibleForAdminShouldPassOnAnyKb}：该场景行为改动即失败。
+     */
     @Test
     void accessibleForAdminShouldPassOnAnyKb() {
         assertDoesNotThrow(() ->
@@ -156,6 +207,9 @@ class KnowledgeBaseRulesTest {
                 KnowledgeBaseRules.checkAccessible(ownedKb(null), user(ME, UserRole.ADMIN)));
     }
 
+    /**
+     * 守护 {@code accessibleWithoutLoginShouldThrowUnauthorized}：该场景行为改动即失败。
+     */
     @Test
     void accessibleWithoutLoginShouldThrowUnauthorized() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -163,6 +217,9 @@ class KnowledgeBaseRulesTest {
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code accessibleWithNullKbShouldThrowNotFound}：该场景行为改动即失败。
+     */
     @Test
     void accessibleWithNullKbShouldThrowNotFound() {
         KnowledgeException e = assertThrows(KnowledgeException.class,

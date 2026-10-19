@@ -40,6 +40,9 @@ class StorageSourceControllerRoutingTest {
         mockMvc = MockMvcBuilders.standaloneSetup(new StorageSourceController(storageSourceService)).build();
     }
 
+    /**
+     * 守护 {@code listPathShouldRouteToService}：该场景行为改动即失败。
+     */
     @Test
     void listPathShouldRouteToService() throws Exception {
         when(storageSourceService.list()).thenReturn(List.of(new StorageSourceVO()));
@@ -49,6 +52,9 @@ class StorageSourceControllerRoutingTest {
         verify(storageSourceService).list();
     }
 
+    /**
+     * 守护 {@code previewPathShouldRouteToPreviewWithoutBody}：该场景行为改动即失败。
+     */
     @Test
     void previewPathShouldRouteToPreviewWithoutBody() throws Exception {
         when(storageSourceService.previewCurrent(11L)).thenReturn(new StorageSwitchPreviewVO());
@@ -59,6 +65,9 @@ class StorageSourceControllerRoutingTest {
         verify(storageSourceService, never()).switchCurrent(any(), any());
     }
 
+    /**
+     * 守护 {@code currentPathShouldRouteToSwitch}：该场景行为改动即失败。
+     */
     @Test
     void currentPathShouldRouteToSwitch() throws Exception {
         when(storageSourceService.switchCurrent(eq(11L), any())).thenReturn(new StorageSwitchResultVO());
@@ -69,6 +78,9 @@ class StorageSourceControllerRoutingTest {
         verify(storageSourceService, never()).previewCurrent(any());
     }
 
+    /**
+     * 守护 {@code removedActionPathsShouldNotBeMapped}：该场景行为改动即失败。
+     */
     @Test
     void removedActionPathsShouldNotBeMapped() throws Exception {
         // 详情、新增、编辑、启停、删除与连接测试都没有映射：GET 详情与各动作段一律 404，POST 清单路径没有对应方法

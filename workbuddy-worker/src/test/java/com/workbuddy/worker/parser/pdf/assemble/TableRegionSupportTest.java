@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class TableRegionSupportTest {
 
-    /** 行块转区域：页码与文本齐全、包围盒为正 */
+    /** 行块转区域：页码与文本齐全、包围盒为正（{@code linesShouldBecomeRegionWithPageBboxAndText}）。 */
     @Test
     void linesShouldBecomeRegionWithPageBboxAndText() throws Exception {
         ParseContext context = context(buildTwoLinePdf());
@@ -50,7 +50,7 @@ class TableRegionSupportTest {
         }
     }
 
-    /** 空块：返回 null（不发起调用） */
+    /** 空块：返回 null（不发起调用）（{@code emptyBlockShouldReturnNull}）。 */
     @Test
     void emptyBlockShouldReturnNull() throws Exception {
         ParseContext context = context(buildTwoLinePdf());

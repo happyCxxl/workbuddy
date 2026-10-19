@@ -25,6 +25,9 @@ class ModelRegistryTest {
         return model;
     }
 
+    /**
+     * 守护 {@code shouldKeepLoadedRows}：该场景行为改动即失败。
+     */
     @Test
     void shouldKeepLoadedRows() {
         registry.reload(List.of(
@@ -34,7 +37,7 @@ class ModelRegistryTest {
         assertEquals(2, registry.all().size());
     }
 
-    /** 同名跨厂商是合法录入：两行都原样保留，定位口径是 厂商码 + 模型名 */
+    /** 同名跨厂商是合法录入：两行都原样保留，定位口径是 厂商码 + 模型名（{@code shouldKeepDuplicateKeysAcrossVendors}）。 */
     @Test
     void shouldKeepDuplicateKeysAcrossVendors() {
         registry.reload(List.of(
@@ -44,7 +47,7 @@ class ModelRegistryTest {
         assertEquals(2, registry.all().size());
     }
 
-    /** reload 是全量替换：换一份清单后旧条目不再可见 */
+    /** reload 是全量替换：换一份清单后旧条目不再可见（{@code reloadShouldReplaceSnapshotEntirely}）。 */
     @Test
     void reloadShouldReplaceSnapshotEntirely() {
         registry.reload(List.of(model("deepseek", "deepseek-chat")));
@@ -54,6 +57,9 @@ class ModelRegistryTest {
         assertEquals("dashscope", registry.all().getFirst().getVendorCode());
     }
 
+    /**
+     * 守护 {@code shouldTolerateEmptyOrNullReload}：该场景行为改动即失败。
+     */
     @Test
     void shouldTolerateEmptyOrNullReload() {
         registry.reload(null);
@@ -63,7 +69,7 @@ class ModelRegistryTest {
         assertTrue(registry.all().isEmpty());
     }
 
-    /** 模型名为空的行没有定位意义，装载后不进快照 */
+    /** 模型名为空的行没有定位意义，装载后不进快照（{@code shouldDropRowsWithoutModelKey}）。 */
     @Test
     void shouldDropRowsWithoutModelKey() {
         registry.reload(List.of(model("deepseek", "deepseek-chat"), model("dashscope", null)));

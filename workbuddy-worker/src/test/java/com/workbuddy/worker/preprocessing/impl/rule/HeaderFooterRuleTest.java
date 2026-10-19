@@ -41,6 +41,9 @@ class HeaderFooterRuleTest {
         return context;
     }
 
+    /**
+     * 守护 {@code markShouldSetMarkedStatus}：该场景行为改动即失败。
+     */
     @Test
     void markShouldSetMarkedStatus() {
         ViewElement element = element("HEADER");
@@ -52,6 +55,9 @@ class HeaderFooterRuleTest {
         assertEquals(0, outcome.getChangedCount());
     }
 
+    /**
+     * 守护 {@code excludeShouldNullNormalizedText}：该场景行为改动即失败。
+     */
     @Test
     void excludeShouldNullNormalizedText() {
         ViewElement element = element("FOOTER");
@@ -63,6 +69,9 @@ class HeaderFooterRuleTest {
         assertEquals(1, outcome.getChangedCount());
     }
 
+    /**
+     * 守护 {@code keepShouldStayNormal}：该场景行为改动即失败。
+     */
     @Test
     void keepShouldStayNormal() {
         ViewElement element = element("HEADER");
@@ -73,6 +82,9 @@ class HeaderFooterRuleTest {
         assertEquals("XX项目招标文件", element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code nonHeaderFooterShouldNotMatch}：该场景行为改动即失败。
+     */
     @Test
     void nonHeaderFooterShouldNotMatch() {
         ViewElement element = element("PARAGRAPH");

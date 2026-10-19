@@ -80,6 +80,9 @@ class DocxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code docxShouldParseParagraphsTableAndMerges}：该场景行为改动即失败。
+     */
     @Test
     void docxShouldParseParagraphsTableAndMerges() throws Exception {
         ParseSource source = parser.parse(context(buildDocx()));
@@ -114,7 +117,7 @@ class DocxDocumentParserTest {
         assertEquals("评分表", cellText(table, 1, 3));
     }
 
-    /** vMerge=continue 格自带文本：并入起始格（换行分隔），不丢 */
+    /** vMerge=continue 格自带文本：并入起始格（换行分隔），不丢（{@code continueCellTextShouldBeMergedIntoRestartCell}）。 */
     @Test
     void continueCellTextShouldBeMergedIntoRestartCell() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -151,6 +154,7 @@ class DocxDocumentParserTest {
     /**
      * 段落序号取源文档序号：中间的空段不产元素但仍占号，元素序号不错位 ——
      * 预览按「段落序号」定位的前提（判定单元另有字符折算的虚拟页口径）。
+     * <p>守护 {@code paragraphOrdinalShouldFollowSourceDocument}：该场景行为改动即失败。
      */
     @Test
     void paragraphOrdinalShouldFollowSourceDocument() throws Exception {
@@ -171,7 +175,7 @@ class DocxDocumentParserTest {
         }
     }
 
-    /** 图片按位置归属单元：文本先推到第二单元，图片计入它所在的单元（不再一律记首单元） */
+    /** 图片按位置归属单元：文本先推到第二单元，图片计入它所在的单元（不再一律记首单元）（{@code pictureShouldBelongToItsUnitByPosition}）。 */
     @Test
     void pictureShouldBelongToItsUnitByPosition() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -193,7 +197,7 @@ class DocxDocumentParserTest {
         }
     }
 
-    /** 表格单元格文本计入单元预算：只有表格、单元格共 12 个非空白字符、预算 6 → 两个单元 */
+    /** 表格单元格文本计入单元预算：只有表格、单元格共 12 个非空白字符、预算 6 → 两个单元（{@code tableCellTextShouldCountIntoUnitBudget}）。 */
     @Test
     void tableCellTextShouldCountIntoUnitBudget() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -213,7 +217,7 @@ class DocxDocumentParserTest {
         }
     }
 
-    /** 页眉文本计入单元预算：正文为空但页眉有字 → 单元字符数不为 0 */
+    /** 页眉文本计入单元预算：正文为空但页眉有字 → 单元字符数不为 0（{@code headerTextShouldCountIntoUnitBudget}）。 */
     @Test
     void headerTextShouldCountIntoUnitBudget() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -231,6 +235,9 @@ class DocxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code docxVerticalMergeShouldFillRowSpan}：该场景行为改动即失败。
+     */
     @Test
     void docxVerticalMergeShouldFillRowSpan() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -279,6 +286,9 @@ class DocxDocumentParserTest {
         return cell.getCTTc().isSetTcPr() ? cell.getCTTc().getTcPr() : cell.getCTTc().addNewTcPr();
     }
 
+    /**
+     * 守护 {@code docxHeaderFooterPartsShouldEmitElements}：该场景行为改动即失败。
+     */
     @Test
     void docxHeaderFooterPartsShouldEmitElements() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -309,6 +319,9 @@ class DocxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code docxTocParagraphShouldMarkTocCandidate}：该场景行为改动即失败。
+     */
     @Test
     void docxTocParagraphShouldMarkTocCandidate() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -334,6 +347,9 @@ class DocxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code docxShouldFillUnitMetrics}：该场景行为改动即失败。
+     */
     @Test
     void docxShouldFillUnitMetrics() throws Exception {
         ParseSource source = parser.parse(context(buildDocx()));
@@ -345,6 +361,9 @@ class DocxDocumentParserTest {
         assertEquals(0.0, metric.getGarbledRatio());
     }
 
+    /**
+     * 守护 {@code longDocxShouldSplitUnitsByCharBudget}：该场景行为改动即失败。
+     */
     @Test
     void longDocxShouldSplitUnitsByCharBudget() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -360,6 +379,9 @@ class DocxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code imageOnlyDocxShouldReportImageUnit}：该场景行为改动即失败。
+     */
     @Test
     void imageOnlyDocxShouldReportImageUnit() throws Exception {
         try (XWPFDocument doc = new XWPFDocument()) {
@@ -377,6 +399,9 @@ class DocxDocumentParserTest {
         }
     }
 
+    /**
+     * 守护 {@code paragraphFontShouldComeFromFirstRunWithFontFacts}：该场景行为改动即失败。
+     */
     @Test
     void paragraphFontShouldComeFromFirstRunWithFontFacts() throws Exception {
         byte[] data;
@@ -410,6 +435,9 @@ class DocxDocumentParserTest {
         return out.toByteArray();
     }
 
+    /**
+     * 守护 {@code supportsShouldMatchDocxOnly}：该场景行为改动即失败。
+     */
     @Test
     void supportsShouldMatchDocxOnly() {
         assertTrue(parser.supports(MIME_DOCX));

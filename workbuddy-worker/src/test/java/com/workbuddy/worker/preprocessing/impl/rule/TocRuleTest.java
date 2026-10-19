@@ -61,6 +61,9 @@ class TocRuleTest {
         return context;
     }
 
+    /**
+     * 守护 {@code tocPageShouldMarkByThreshold}：该场景行为改动即失败。
+     */
     @Test
     void tocPageShouldMarkByThreshold() {
         Map<Integer, Integer> counts = new HashMap<>(Map.of(5, 3));
@@ -72,6 +75,9 @@ class TocRuleTest {
         assertEquals(ViewElementStatus.MARKED_TOC.name(), element.getStatus());
     }
 
+    /**
+     * 守护 {@code belowThresholdShouldNotDispose}：该场景行为改动即失败。
+     */
     @Test
     void belowThresholdShouldNotDispose() {
         Map<Integer, Integer> counts = new HashMap<>(Map.of(5, 2));
@@ -81,6 +87,9 @@ class TocRuleTest {
         assertEquals(ViewElementStatus.NORMAL.name(), element.getStatus());
     }
 
+    /**
+     * 守护 {@code wordWindowShouldDispose}：该场景行为改动即失败。
+     */
     @Test
     void wordWindowShouldDispose() {
         ViewElement element = tocElement(null);
@@ -92,6 +101,9 @@ class TocRuleTest {
         assertEquals(ViewElementStatus.MARKED_TOC.name(), element.getStatus());
     }
 
+    /**
+     * 守护 {@code excludeShouldNullNormalizedText}：该场景行为改动即失败。
+     */
     @Test
     void excludeShouldNullNormalizedText() {
         Map<Integer, Integer> counts = new HashMap<>(Map.of(5, 3));
@@ -103,6 +115,9 @@ class TocRuleTest {
         assertNull(element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code customThresholdShouldDriveDispose}：该场景行为改动即失败。
+     */
     @Test
     void customThresholdShouldDriveDispose() {
         PreprocessStrategy strategy = StrategyFixtures.preprocessDefaults();
@@ -121,6 +136,9 @@ class TocRuleTest {
         assertEquals(ViewElementStatus.MARKED_TOC.name(), atThreshold.getStatus());
     }
 
+    /**
+     * 守护 {@code keepShouldStayNormal}：该场景行为改动即失败。
+     */
     @Test
     void keepShouldStayNormal() {
         ViewElement element = tocElement(5);
@@ -132,6 +150,9 @@ class TocRuleTest {
         assertEquals("第一章 总则 ...... 1", element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code nonTocElementShouldNotMatch}：该场景行为改动即失败。
+     */
     @Test
     void nonTocElementShouldNotMatch() {
         ViewElement element = tocElement(5);

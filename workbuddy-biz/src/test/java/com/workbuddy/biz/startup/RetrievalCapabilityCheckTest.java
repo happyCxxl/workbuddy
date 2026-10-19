@@ -22,6 +22,9 @@ class RetrievalCapabilityCheckTest {
 
     private final StartupCheckChain next = () -> proceeded.set(true);
 
+    /**
+     * 守护 {@code shouldPassWhenNothingEnabled}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassWhenNothingEnabled() {
         new RetrievalCapabilityCheck(properties()).check(next);
@@ -29,7 +32,7 @@ class RetrievalCapabilityCheckTest {
         assertTrue(proceeded.get(), "通过路径必须推进链");
     }
 
-    /** 大小写与空白不敏感：小写与带空格的写法都算合法 */
+    /** 大小写与空白不敏感：小写与带空格的写法都算合法（{@code shouldPassWithLegalNames}）。 */
     @Test
     void shouldPassWithLegalNames() {
         new RetrievalCapabilityCheck(properties("WEIGHTED", " rerank ")).check(next);
@@ -37,6 +40,9 @@ class RetrievalCapabilityCheckTest {
         assertTrue(proceeded.get());
     }
 
+    /**
+     * 守护 {@code shouldRejectUnknownName}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectUnknownName() {
         RetrievalCapabilityCheck check = new RetrievalCapabilityCheck(properties("EXPANDS"));
@@ -47,7 +53,7 @@ class RetrievalCapabilityCheckTest {
         assertFalse(proceeded.get(), "失败即止，不推进链");
     }
 
-    /** 空白项忽略，不算非法名 */
+    /** 空白项忽略，不算非法名（{@code shouldIgnoreBlankEntries}）。 */
     @Test
     void shouldIgnoreBlankEntries() {
         new RetrievalCapabilityCheck(properties("  ")).check(next);

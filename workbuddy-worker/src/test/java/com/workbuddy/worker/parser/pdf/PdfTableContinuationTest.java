@@ -29,6 +29,9 @@ class PdfTableContinuationTest {
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
+    /**
+     * 守护 {@code repeatedHeaderShouldMarkContinuationTable}：该场景行为改动即失败。
+     */
     @Test
     void repeatedHeaderShouldMarkContinuationTable() throws Exception {
         List<ParseElement> tables = tables(parse(twoPages()));

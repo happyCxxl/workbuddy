@@ -41,6 +41,9 @@ class LongIdJsonConfigTest {
         return builder.build();
     }
 
+    /**
+     * 守护 {@code shouldSerializeSnowflakeIdAsString}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("雪花 ID 超过 JS 安全整数 → 以字符串下发")
     void shouldSerializeSnowflakeIdAsString() throws Exception {
@@ -48,6 +51,9 @@ class LongIdJsonConfigTest {
         assertEquals("{\"value\":\"" + SNOWFLAKE_ID + "\"}", json);
     }
 
+    /**
+     * 守护 {@code shouldKeepSmallNumbersAsNumbers}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("计数 / 耗时等小数值 → 保持数字，不得被字符串化")
     void shouldKeepSmallNumbersAsNumbers() throws Exception {
@@ -59,6 +65,9 @@ class LongIdJsonConfigTest {
         }
     }
 
+    /**
+     * 守护 {@code shouldSwitchExactlyAtJsSafeBoundary}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("阈值边界：2^53 保持数字，2^53+1 转字符串")
     void shouldSwitchExactlyAtJsSafeBoundary() throws Exception {
@@ -71,12 +80,18 @@ class LongIdJsonConfigTest {
         assertEquals("{\"value\":\"" + beyond + "\"}", json);
     }
 
+    /**
+     * 守护 {@code shouldSerializeNullAsNull}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("null 仍序列化为 null，不被当成数字或字符串")
     void shouldSerializeNullAsNull() throws Exception {
         assertEquals("{\"value\":null}", mapperFromConfig().writeValueAsString(new Holder(null)));
     }
 
+    /**
+     * 守护 {@code shouldApplyToCollectionElements}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("集合元素同样走阈值判定（List<Long> 的 ID 列表）")
     void shouldApplyToCollectionElements() throws Exception {
@@ -84,6 +99,9 @@ class LongIdJsonConfigTest {
         assertEquals("[7,\"" + SNOWFLAKE_ID + "\"]", json);
     }
 
+    /**
+     * 守护 {@code shouldCoverBothBoxedAndPrimitiveLong}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("装箱与拆箱两种 Long 都被覆盖")
     void shouldCoverBothBoxedAndPrimitiveLong() throws Exception {
@@ -100,6 +118,9 @@ class LongIdJsonConfigTest {
         assertTrue(primitiveMapper.writeValueAsString(new PrimitiveHolder(SNOWFLAKE_ID)).contains(SNOWFLAKE_ID + "\""));
     }
 
+    /**
+     * 守护 {@code shouldRegisterCustomizerAsSpringBean}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("自定义器被 Spring 容器注册为 Bean（证明 @Configuration 会被扫到）")
     void shouldRegisterCustomizerAsSpringBean() {
@@ -114,6 +135,9 @@ class LongIdJsonConfigTest {
                 });
     }
 
+    /**
+     * 守护 {@code shouldBeAnnotatedAsConfiguration}：该场景行为改动即失败。
+     */
     @Test
     @DisplayName("@Configuration 注解存在，且包路径在 Spring Boot 扫描范围内")
     void shouldBeAnnotatedAsConfiguration() {

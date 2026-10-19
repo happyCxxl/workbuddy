@@ -42,6 +42,9 @@ class WbAuditLogDbServiceImplTest {
         SecurityContextHolder.clearContext();
     }
 
+    /**
+     * 守护 {@code saveAuditShouldAssembleAndInsert}：该场景行为改动即失败。
+     */
     @Test
     void saveAuditShouldAssembleAndInsert() {
         doAnswer(inv -> {
@@ -62,6 +65,9 @@ class WbAuditLogDbServiceImplTest {
         assertEquals("{\"status\":0}", audit.getAfterSummary());
     }
 
+    /**
+     * 守护 {@code saveAuditShouldTakeOperatorFromLoginContext}：该场景行为改动即失败。
+     */
     @Test
     void saveAuditShouldTakeOperatorFromLoginContext() {
         authenticateAsOperator();
@@ -80,6 +86,9 @@ class WbAuditLogDbServiceImplTest {
         assertEquals(9L, audit.getUserId());
     }
 
+    /**
+     * 守护 {@code saveAuditShouldFallbackWithoutLoginContext}：该场景行为改动即失败。
+     */
     @Test
     void saveAuditShouldFallbackWithoutLoginContext() {
         doAnswer(inv -> {

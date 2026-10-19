@@ -43,6 +43,9 @@ class MilvusClientFactoryTest {
         return config.getDbName();
     }
 
+    /**
+     * 守护 {@code shouldCreateOnlyWhenTargetMissing}：该场景行为改动即失败。
+     */
     @Test
     void shouldCreateOnlyWhenTargetMissing() {
         assertTrue(MilvusClientFactory.shouldCreate(List.of("default"), "knowledge"));
@@ -52,6 +55,9 @@ class MilvusClientFactoryTest {
         assertFalse(MilvusClientFactory.shouldCreate(List.of("default"), null));
     }
 
+    /**
+     * 守护 {@code missingDatabaseShouldBeCreatedThroughDefaultConnection}：该场景行为改动即失败。
+     */
     @Test
     void missingDatabaseShouldBeCreatedThroughDefaultConnection() {
         List<String> connected = new ArrayList<>();
@@ -70,6 +76,9 @@ class MilvusClientFactoryTest {
         }
     }
 
+    /**
+     * 守护 {@code existingDatabaseShouldNotBeCreated}：该场景行为改动即失败。
+     */
     @Test
     void existingDatabaseShouldNotBeCreated() {
         List<String> connected = new ArrayList<>();
@@ -86,6 +95,9 @@ class MilvusClientFactoryTest {
         }
     }
 
+    /**
+     * 守护 {@code defaultDatabaseShouldSkipProbe}：该场景行为改动即失败。
+     */
     @Test
     void defaultDatabaseShouldSkipProbe() {
         List<String> connected = new ArrayList<>();
@@ -97,6 +109,9 @@ class MilvusClientFactoryTest {
         }
     }
 
+    /**
+     * 守护 {@code blankDatabaseShouldSkipProbe}：该场景行为改动即失败。
+     */
     @Test
     void blankDatabaseShouldSkipProbe() {
         List<String> connected = new ArrayList<>();
@@ -108,6 +123,9 @@ class MilvusClientFactoryTest {
         }
     }
 
+    /**
+     * 守护 {@code probeFailureShouldStillConnectWithConfiguredDatabase}：该场景行为改动即失败。
+     */
     @Test
     void probeFailureShouldStillConnectWithConfiguredDatabase() {
         List<String> connected = new ArrayList<>();

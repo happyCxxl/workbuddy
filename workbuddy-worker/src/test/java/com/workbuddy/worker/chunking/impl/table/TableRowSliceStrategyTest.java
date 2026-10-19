@@ -70,6 +70,9 @@ class TableRowSliceStrategyTest {
         return cell;
     }
 
+    /**
+     * 守护 {@code headerWithRowAndGroupingShouldKeepScoringItemTogether}：该场景行为改动即失败。
+     */
     @Test
     void headerWithRowAndGroupingShouldKeepScoringItemTogether() {
         UnifiedElement table = new UnifiedElement();
@@ -115,6 +118,9 @@ class TableRowSliceStrategyTest {
         assertTrue(first.getSourceElementIds().contains("c1"));
     }
 
+    /**
+     * 守护 {@code longRowShouldProduceSingleChunkPerRow}：该场景行为改动即失败。
+     */
     @Test
     void longRowShouldProduceSingleChunkPerRow() {
         UnifiedElement table = new UnifiedElement();
@@ -137,6 +143,9 @@ class TableRowSliceStrategyTest {
         assertTrue(chunks.getFirst().getContent().startsWith("| 评分标准 |"));
     }
 
+    /**
+     * 守护 {@code noHeaderShouldJoinCellTextsOnly}：该场景行为改动即失败。
+     */
     @Test
     void noHeaderShouldJoinCellTextsOnly() {
         UnifiedElement table = new UnifiedElement();
@@ -156,6 +165,9 @@ class TableRowSliceStrategyTest {
         assertEquals("| 无表头值一 | 无表头值二 |", chunks.getFirst().getContent());
     }
 
+    /**
+     * 守护 {@code blankHeaderCellsShouldBeTreatedAsNoHeader}：该场景行为改动即失败。
+     */
     @Test
     void blankHeaderCellsShouldBeTreatedAsNoHeader() {
         UnifiedElement table = new UnifiedElement();

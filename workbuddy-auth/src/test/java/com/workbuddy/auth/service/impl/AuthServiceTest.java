@@ -25,6 +25,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -75,6 +76,9 @@ class AuthServiceTest {
         RequestContextHolder.resetRequestAttributes();
     }
 
+    /**
+     * 守护 {@code loginShouldReturnTokenWhenCredentialsMatch}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldReturnTokenWhenCredentialsMatch() {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
@@ -89,6 +93,9 @@ class AuthServiceTest {
         verify(jwtUtil).sign(1L, "admin", UserRole.ADMIN, 0, STANDARD_TTL);
     }
 
+    /**
+     * 守护 {@code loginShouldFallbackToUserRoleWhenRoleMissing}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldFallbackToUserRoleWhenRoleMissing() {
         WbUser plain = adminUser();
@@ -97,12 +104,18 @@ class AuthServiceTest {
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
         when(jwtUtil.sign(1L, "admin", UserRole.USER, 0, STANDARD_TTL)).thenReturn("jwt-token");
 
-        authService.login(loginRequest("admin", "pass123456"));
+        LoginVO vo = authService.login(loginRequest("admin", "pass123456"));
 
         // 库中角色为空时回落普通用户，且回落后的角色进入令牌载荷
+        assertEquals("jwt-token", vo.getToken());
+        // 回落只影响令牌载荷，VO 仍如实反映库中角色为空
+        assertNull(vo.getRole());
         verify(jwtUtil).sign(1L, "admin", UserRole.USER, 0, STANDARD_TTL);
     }
 
+    /**
+     * 守护 {@code loginShouldCarryCurrentTokenVersion}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldCarryCurrentTokenVersion() {
         WbUser user = adminUser();
@@ -116,6 +129,9 @@ class AuthServiceTest {
         assertEquals("jwt-token", vo.getToken());
     }
 
+    /**
+     * 守护 {@code loginShouldThrowWhenUserNotFound}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldThrowWhenUserNotFound() {
         when(userDbService.findActiveByUsername("nobody")).thenReturn(null);
@@ -126,6 +142,9 @@ class AuthServiceTest {
         assertEquals(ErrorCode.LOGIN_FAILED, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code loginShouldThrowWhenPasswordMismatch}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldThrowWhenPasswordMismatch() {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
@@ -137,6 +156,9 @@ class AuthServiceTest {
         assertEquals(ErrorCode.LOGIN_FAILED, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code registerShouldThrowWhenUsernameExists}：该场景行为改动即失败。
+     */
     @Test
     void registerShouldThrowWhenUsernameExists() {
         when(userDbService.existsByUsername("admin")).thenReturn(true);
@@ -148,6 +170,9 @@ class AuthServiceTest {
         verify(userDbService, never()).save(any());
     }
 
+    /**
+     * 守护 {@code registerShouldEncodePasswordAndSave}：该场景行为改动即失败。
+     */
     @Test
     void registerShouldEncodePasswordAndSave() {
         when(userDbService.existsByUsername("admin")).thenReturn(false);
@@ -164,6 +189,9 @@ class AuthServiceTest {
         assertEquals("zhangsan@example.com", captor.getValue().getEmail());
     }
 
+    /**
+     * 守护 {@code loginShouldRejectWhenLockedWithoutTouchingDatabase}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldRejectWhenLockedWithoutTouchingDatabase() {
         when(loginAttemptGuard.isLocked("admin", "10.0.0.1")).thenReturn(true);
@@ -177,6 +205,9 @@ class AuthServiceTest {
         verify(passwordEncoder, never()).matches(any(), any());
     }
 
+    /**
+     * 守护 {@code loginShouldRecordFailureWhenPasswordMismatch}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldRecordFailureWhenPasswordMismatch() {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
@@ -190,18 +221,26 @@ class AuthServiceTest {
         verify(loginAttemptGuard, never()).clearAccount(any(), any());
     }
 
+    /**
+     * 守护 {@code loginShouldClearAccountCounterOnSuccess}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldClearAccountCounterOnSuccess() {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
         when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 0, STANDARD_TTL)).thenReturn("jwt-token");
 
-        authService.login(loginRequest("admin", "pass123456"));
+        LoginVO vo = authService.login(loginRequest("admin", "pass123456"));
 
+        assertEquals("jwt-token", vo.getToken());
+        assertEquals(UserRole.ADMIN.getCode(), vo.getRole());
         verify(loginAttemptGuard).clearAccount("admin", "10.0.0.1");
         verify(loginAttemptGuard, never()).recordFailure(any(), any());
     }
 
+    /**
+     * 守护 {@code loginShouldIssueLongLivedTokenWhenRememberMe}：该场景行为改动即失败。
+     */
     @Test
     void loginShouldIssueLongLivedTokenWhenRememberMe() {
         LoginDTO request = loginRequest("admin", "pass123456");

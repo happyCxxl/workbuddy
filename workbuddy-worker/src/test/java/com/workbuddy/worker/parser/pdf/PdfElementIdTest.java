@@ -33,7 +33,7 @@ class PdfElementIdTest {
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
-    /** 同页两张表：单元格行列范围重合，ID 必须靠表归属区分 */
+    /** 同页两张表：单元格行列范围重合，ID 必须靠表归属区分（{@code samePageTwoTablesShouldNotShareElementIds}）。 */
     @Test
     void samePageTwoTablesShouldNotShareElementIds() throws Exception {
         ParseSource source = parser.parse(context(buildTwoRuledTables()));
@@ -53,7 +53,7 @@ class PdfElementIdTest {
         assertEquals(cellIds.size(), new HashSet<>(cellIds).size(), () -> "cellIds=" + cellIds);
     }
 
-    /** ID = 前缀 + 页码（1）+ 页内序号（产出顺序）+ 位置（bbox 左上角整 pt） */
+    /** ID = 前缀 + 页码（1）+ 页内序号（产出顺序）+ 位置（bbox 左上角整 pt）（{@code elementIdShouldCarryPageSequenceAndPosition}）。 */
     @Test
     void elementIdShouldCarryPageSequenceAndPosition() throws Exception {
         ParseSource source = parser.parse(context(buildTwoRuledTables()));
@@ -72,7 +72,7 @@ class PdfElementIdTest {
         }
     }
 
-    /** 同一输入两次解析得到同一套 ID（可复算） */
+    /** 同一输入两次解析得到同一套 ID（可复算）（{@code elementIdsShouldBeRecomputable}）。 */
     @Test
     void elementIdsShouldBeRecomputable() throws Exception {
         byte[] data = buildTwoRuledTables();
@@ -80,7 +80,7 @@ class PdfElementIdTest {
         assertEquals(fingerprint(parser.parse(context(data))), fingerprint(parser.parse(context(data))));
     }
 
-    /** 多页：ID 带各自页码，页内序号按页重新起算，跨页不重号 */
+    /** 多页：ID 带各自页码，页内序号按页重新起算，跨页不重号（{@code elementIdShouldCarryPageNoAcrossPages}）。 */
     @Test
     void elementIdShouldCarryPageNoAcrossPages() throws Exception {
         ParseSource source = parser.parse(context(buildTwoTablePages()));

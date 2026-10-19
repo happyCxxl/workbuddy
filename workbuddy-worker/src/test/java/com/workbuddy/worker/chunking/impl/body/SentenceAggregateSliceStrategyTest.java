@@ -43,6 +43,9 @@ class SentenceAggregateSliceStrategyTest {
         return element;
     }
 
+    /**
+     * 守护 {@code sentencesShouldAggregateAcrossElements}：该场景行为改动即失败。
+     */
     @Test
     void sentencesShouldAggregateAcrossElements() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"sentence-aggregate\"}}}");
@@ -59,6 +62,9 @@ class SentenceAggregateSliceStrategyTest {
         assertEquals(List.of("n-1", "n-2"), chunk.getSourceElementIds());
     }
 
+    /**
+     * 守护 {@code bufferShouldSettleAtTargetMaxLen}：该场景行为改动即失败。
+     */
     @Test
     void bufferShouldSettleAtTargetMaxLen() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"sentence-aggregate\",\"params\":{\"targetMaxLen\":\"10\"}}}}");
@@ -71,6 +77,9 @@ class SentenceAggregateSliceStrategyTest {
         assertTrue(context.getBodyBuffer().isEmpty());
     }
 
+    /**
+     * 守护 {@code overlongSentenceShouldFallbackRecursively}：该场景行为改动即失败。
+     */
     @Test
     void overlongSentenceShouldFallbackRecursively() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"sentence-aggregate\",\"params\":{\"softMaxLen\":\"100\"}}}}");

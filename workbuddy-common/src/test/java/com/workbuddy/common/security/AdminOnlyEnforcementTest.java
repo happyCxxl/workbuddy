@@ -65,6 +65,9 @@ class AdminOnlyEnforcementTest {
         SecurityContextHolder.clearContext();
     }
 
+    /**
+     * 守护 {@code adminShouldPassAnnotationGuard}：该场景行为改动即失败。
+     */
     @Test
     void adminShouldPassAnnotationGuard() {
         authenticateAs(UserRole.ADMIN);
@@ -72,6 +75,9 @@ class AdminOnlyEnforcementTest {
         assertDoesNotThrow(() -> adminApi.listUsers(), "ROLE_ADMIN 调用 @AdminOnly 方法应放行");
     }
 
+    /**
+     * 守护 {@code plainUserShouldBeDeniedByAnnotationGuard}：该场景行为改动即失败。
+     */
     @Test
     void plainUserShouldBeDeniedByAnnotationGuard() {
         authenticateAs(UserRole.USER);
@@ -80,6 +86,9 @@ class AdminOnlyEnforcementTest {
                 "ROLE_USER 调用 @AdminOnly 方法应被拒绝");
     }
 
+    /**
+     * 守护 {@code anonymousShouldBeDeniedByAnnotationGuard}：该场景行为改动即失败。
+     */
     @Test
     void anonymousShouldBeDeniedByAnnotationGuard() {
         SecurityContextHolder.clearContext();

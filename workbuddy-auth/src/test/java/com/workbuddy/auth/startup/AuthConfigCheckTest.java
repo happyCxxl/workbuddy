@@ -25,6 +25,9 @@ class AuthConfigCheckTest {
 
     private final StartupCheckChain next = () -> proceeded.set(true);
 
+    /**
+     * 守护 {@code shouldPassWithValidConfig}：该场景行为改动即失败。
+     */
     @Test
     void shouldPassWithValidConfig() {
         new AuthConfigCheck(jwt(SECRET, 1, 30), new LoginGuardProperties()).check(next);
@@ -32,6 +35,9 @@ class AuthConfigCheckTest {
         assertTrue(proceeded.get(), "通过路径必须推进链");
     }
 
+    /**
+     * 守护 {@code shouldRejectBlankSecret}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectBlankSecret() {
         KnowledgeException error = assertThrows(KnowledgeException.class,
@@ -41,6 +47,9 @@ class AuthConfigCheckTest {
         assertFalse(proceeded.get(), "失败即止，不推进链");
     }
 
+    /**
+     * 守护 {@code shouldRejectNonPositiveTtl}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectNonPositiveTtl() {
         assertThrows(KnowledgeException.class,
@@ -49,6 +58,9 @@ class AuthConfigCheckTest {
                 () -> new AuthConfigCheck(jwt(SECRET, 1, -1), new LoginGuardProperties()).check(next));
     }
 
+    /**
+     * 守护 {@code shouldRejectNonPositiveGuardThreshold}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectNonPositiveGuardThreshold() {
         LoginGuardProperties guard = new LoginGuardProperties();
@@ -57,7 +69,7 @@ class AuthConfigCheckTest {
         assertThrows(KnowledgeException.class, () -> new AuthConfigCheck(jwt(SECRET, 1, 30), guard).check(next));
     }
 
-    /** 防护关闭时阈值不参与任何判断，非正也不拒 */
+    /** 防护关闭时阈值不参与任何判断，非正也不拒（{@code shouldSkipGuardCheckWhenDisabled}）。 */
     @Test
     void shouldSkipGuardCheckWhenDisabled() {
         LoginGuardProperties guard = new LoginGuardProperties();
@@ -70,7 +82,7 @@ class AuthConfigCheckTest {
         assertTrue(proceeded.get());
     }
 
-    /** 短密钥只告警，不阻断启动（本地开发用短密钥） */
+    /** 短密钥只告警，不阻断启动（本地开发用短密钥）（{@code shouldTolerateShortSecret}）。 */
     @Test
     void shouldTolerateShortSecret() {
         assertDoesNotThrow(() -> new AuthConfigCheck(jwt("short", 1, 30), new LoginGuardProperties()).check(next));

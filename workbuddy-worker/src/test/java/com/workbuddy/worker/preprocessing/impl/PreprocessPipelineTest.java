@@ -96,6 +96,9 @@ class PreprocessPipelineTest {
         return page;
     }
 
+    /**
+     * 守护 {@code wordTocRunWindowShouldFollowRunMinLength}：该场景行为改动即失败。
+     */
     @Test
     void wordTocRunWindowShouldFollowRunMinLength() {
         List<UnifiedElement> elements = new ArrayList<>();
@@ -121,6 +124,9 @@ class PreprocessPipelineTest {
         assertEquals(ViewElementStatus.MARKED_TOC.name(), defaultView.getElements().get(0).getStatus());
     }
 
+    /**
+     * 守护 {@code fullChainShouldProcessInFixedOrder}：该场景行为改动即失败。
+     */
     @Test
     void fullChainShouldProcessInFixedOrder() {
         List<UnifiedElement> elements = new ArrayList<>();
@@ -168,6 +174,9 @@ class PreprocessPipelineTest {
         assertEquals(ViewElementStatus.IMAGE_REF_ONLY.name(), view.getElements().get(6).getStatus());
     }
 
+    /**
+     * 守护 {@code tableCellShouldCarryPositionIntoView}：该场景行为改动即失败。
+     */
     @Test
     void tableCellShouldCarryPositionIntoView() {
         List<UnifiedElement> elements = new ArrayList<>();
@@ -204,6 +213,9 @@ class PreprocessPipelineTest {
         assertEquals(Boolean.FALSE, viewTable.getCells().get(1).getIsHeader());
     }
 
+    /**
+     * 守护 {@code strategySwitchesShouldExclude}：该场景行为改动即失败。
+     */
     @Test
     void strategySwitchesShouldExclude() {
         List<UnifiedElement> elements = new ArrayList<>();
@@ -234,6 +246,9 @@ class PreprocessPipelineTest {
         assertNull(view.getElements().get(4).getNormalizedText());
     }
 
+    /**
+     * 守护 {@code repeatedMarkShouldKeepOnlyFirstCopy}：该场景行为改动即失败。
+     */
     @Test
     void repeatedMarkShouldKeepOnlyFirstCopy() {
         List<UnifiedElement> elements = new ArrayList<>();
@@ -251,6 +266,9 @@ class PreprocessPipelineTest {
         assertNull(outcome.getView().getElements().get(1).getNormalizedText());
     }
 
+    /**
+     * 守护 {@code ruleExceptionShouldIsolateToPartialSuccess}：该场景行为改动即失败。
+     */
     @Test
     void ruleExceptionShouldIsolateToPartialSuccess() {
         List<CleanRule> rules = createRules();
@@ -303,6 +321,9 @@ class PreprocessPipelineTest {
         return rules;
     }
 
+    /**
+     * 守护 {@code emptyDocumentShouldFailWithPreprocessEmpty}：该场景行为改动即失败。
+     */
     @Test
     void emptyDocumentShouldFailWithPreprocessEmpty() {
         UnifiedDocument document = document(new ArrayList<>(), null);
@@ -313,6 +334,9 @@ class PreprocessPipelineTest {
         assertEquals(PipelineTaskErrorCode.PREPROCESS_EMPTY.name(), outcome.getErrorCode());
     }
 
+    /**
+     * 守护 {@code missingStrategyShouldFailWithPreprocessFailed}：该场景行为改动即失败。
+     */
     @Test
     void missingStrategyShouldFailWithPreprocessFailed() {
         // 上下文无策略（快照缺失或损坏由 Runner 拦截）：管线自身同样拒绝，不构造默认策略
@@ -328,6 +352,9 @@ class PreprocessPipelineTest {
         assertNull(outcome.getView());
     }
 
+    /**
+     * 守护 {@code sameInputSameStrategyShouldBeDeterministic}：该场景行为改动即失败。
+     */
     @Test
     void sameInputSameStrategyShouldBeDeterministic() {
         List<UnifiedElement> elements = new ArrayList<>();

@@ -32,7 +32,7 @@ class PdfProvenanceTest {
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
-    /** 同页两张表的表序号与单元格路径各自独立 */
+    /** 同页两张表的表序号与单元格路径各自独立（{@code tableAndCellProvenanceShouldCarryPageTableIndex}）。 */
     @Test
     void tableAndCellProvenanceShouldCarryPageTableIndex() throws Exception {
         ParseSource source = parser.parse(context(buildTwoRuledTables()));
@@ -52,7 +52,7 @@ class PdfProvenanceTest {
         assertEquals("F-1", tables.get(0).getProvenance().getFile());
     }
 
-    /** 段落区间：按页内阅读顺序累计行内字符数，行间不计分隔符 */
+    /** 段落区间：按页内阅读顺序累计行内字符数，行间不计分隔符（{@code paragraphProvenanceShouldCarryCharRange}）。 */
     @Test
     void paragraphProvenanceShouldCarryCharRange() throws Exception {
         ParseSource source = parser.parse(context(buildTwoParagraphPage()));

@@ -36,6 +36,9 @@ class PdfPageGeometryTest {
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
+    /**
+     * 守护 {@code viewportMappingShouldFollowRotation}：该场景行为改动即失败。
+     */
     @Test
     void viewportMappingShouldFollowRotation() {
         PdfPageGeometry none = new PdfPageGeometry(595, 842, 0);
@@ -70,6 +73,9 @@ class PdfPageGeometryTest {
         assertEquals(0, new PdfPageGeometry(595, 842, 45).rotation());
     }
 
+    /**
+     * 守护 {@code rotatedPageShouldReportViewportGeometry}：该场景行为改动即失败。
+     */
     @Test
     void rotatedPageShouldReportViewportGeometry() throws Exception {
         assertPage(0, 595, 842, 120.0, 141.9, 138.5, 8.1);
@@ -78,6 +84,9 @@ class PdfPageGeometryTest {
         assertPage(270, 842, 595, 141.9, 336.8, 8.1, 138.5);
     }
 
+    /**
+     * 守护 {@code cropBoxShouldDrivePageSizeAndKeepCoordinates}：该场景行为改动即失败。
+     */
     @Test
     void cropBoxShouldDrivePageSizeAndKeepCoordinates() throws Exception {
         byte[] data = pdf(0, new PDRectangle(72, 72, 468, 720));
@@ -91,6 +100,9 @@ class PdfPageGeometryTest {
         assertEquals("Quarterly Report 2024", paragraph(source).getText());
     }
 
+    /**
+     * 守护 {@code rotatedCropShouldMapBothAxes}：该场景行为改动即失败。
+     */
     @Test
     void rotatedCropShouldMapBothAxes() throws Exception {
         byte[] data = pdf(90, new PDRectangle(72, 72, 468, 720));
@@ -104,7 +116,7 @@ class PdfPageGeometryTest {
         assertEquals(8.1, bbox.getWidth(), DELTA);
     }
 
-    /** 旋转页文本不得被拆出词内空格（词边界来自几何，不依赖提取库在旋转页上失真的词回调） */
+    /** 旋转页文本不得被拆出词内空格（词边界来自几何，不依赖提取库在旋转页上失真的词回调）（{@code rotatedPageTextShouldKeepWordsWhole}）。 */
     @Test
     void rotatedPageTextShouldKeepWordsWhole() throws Exception {
         for (int rotation : new int[] {0, 90, 180, 270}) {

@@ -206,6 +206,9 @@ class ChunkTaskRunnerTest {
         return fileResult;
     }
 
+    /**
+     * 守护 {@code successPathShouldPersistChunkSetProductAndRows}：该场景行为改动即失败。
+     */
     @Test
     void successPathShouldPersistChunkSetProductAndRows() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
@@ -259,6 +262,9 @@ class ChunkTaskRunnerTest {
         verify(stepLogDbService, times(6)).save(any());
     }
 
+    /**
+     * 守护 {@code specifiedUpstreamProductShouldBePreferred}：该场景行为改动即失败。
+     */
     @Test
     void specifiedUpstreamProductShouldBePreferred() {
         WbPipelineTask task = queuedTask();
@@ -295,6 +301,9 @@ class ChunkTaskRunnerTest {
         assertEquals(88L, productCaptor.getValue().getUpstreamProductId());
     }
 
+    /**
+     * 守护 {@code missingUpstreamProductShouldFailTaskUpstreamMissing}：该场景行为改动即失败。
+     */
     @Test
     void missingUpstreamProductShouldFailTaskUpstreamMissing() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
@@ -306,8 +315,13 @@ class ChunkTaskRunnerTest {
         verify(pipelineTaskDbService).finish(eq(70L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name()), any());
         verify(fileStorage, never()).putObject(any(byte[].class));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+                .noneMatch(inv -> "putObject".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code failedUpstreamTaskShouldFailChunkFailed}：该场景行为改动即失败。
+     */
     @Test
     void failedUpstreamTaskShouldFailChunkFailed() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
@@ -328,6 +342,9 @@ class ChunkTaskRunnerTest {
         verify(chunker, never()).chunk(any());
     }
 
+    /**
+     * 守护 {@code corruptStrategySnapshotShouldFailChunkFailed}：该场景行为改动即失败。
+     */
     @Test
     void corruptStrategySnapshotShouldFailChunkFailed() {
         // 快照坏（"{oops"）：解析抛异常被显式接住，任务落 CHUNK_FAILED 且文案干净可辨识
@@ -346,8 +363,13 @@ class ChunkTaskRunnerTest {
         // 守卫在读取上游产物本体之前：坏快照不读对象、不进管线
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
         verify(chunker, never()).chunk(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunker).getInvocations().stream()
+                .noneMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code missingStrategySnapshotShouldFailChunkFailed}：该场景行为改动即失败。
+     */
     @Test
     void missingStrategySnapshotShouldFailChunkFailed() {
         // 空快照与坏快照同一口径：解析即抛异常，不再回退代码里的默认策略
@@ -364,8 +386,13 @@ class ChunkTaskRunnerTest {
                 eq(PipelineTaskErrorCode.CHUNK_FAILED.name()),
                 eq("任务未带切片策略快照或快照已损坏，无法切片"));
         verify(chunker, never()).chunk(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunker).getInvocations().stream()
+                .noneMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code failedOutcomeShouldFinishFailedWithoutProduct}：该场景行为改动即失败。
+     */
     @Test
     void failedOutcomeShouldFinishFailedWithoutProduct() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
@@ -390,6 +417,9 @@ class ChunkTaskRunnerTest {
         verifyNoInteractions(chunkSetDbService, chunkDbService);
     }
 
+    /**
+     * 守护 {@code missingStructureReferenceShouldNotBlock}：该场景行为改动即失败。
+     */
     @Test
     void missingStructureReferenceShouldNotBlock() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
@@ -422,6 +452,9 @@ class ChunkTaskRunnerTest {
         verify(pipelineTaskDbService).finish(70L, PipelineTaskStatus.SUCCESS, null, null);
     }
 
+    /**
+     * 守护 {@code structureReferenceShouldBeReadFromUpstreamProduct}：该场景行为改动即失败。
+     */
     @Test
     void structureReferenceShouldBeReadFromUpstreamProduct() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
@@ -465,6 +498,9 @@ class ChunkTaskRunnerTest {
 
     // ---------------- 页码范围格式化（无损压缩连续段，绝不截断） ----------------
 
+    /**
+     * 守护 {@code formatPageRangeShouldKeepSingleAndContiguous}：该场景行为改动即失败。
+     */
     @Test
     void formatPageRangeShouldKeepSingleAndContiguous() {
         assertNull(ChunkTaskRunner.formatPageRange(null));
@@ -473,6 +509,9 @@ class ChunkTaskRunnerTest {
         assertEquals("1-3", ChunkTaskRunner.formatPageRange(List.of(1, 2, 3)));
     }
 
+    /**
+     * 守护 {@code formatPageRangeShouldCompressContiguousRuns}：该场景行为改动即失败。
+     */
     @Test
     void formatPageRangeShouldCompressContiguousRuns() {
         // 无序+重复输入：先去重排序再压缩
@@ -481,6 +520,9 @@ class ChunkTaskRunnerTest {
         assertEquals("1,3,5", ChunkTaskRunner.formatPageRange(List.of(1, 3, 5)));
     }
 
+    /**
+     * 守护 {@code formatPageRangeShouldNotTruncateLongList}：该场景行为改动即失败。
+     */
     @Test
     void formatPageRangeShouldNotTruncateLongList() {
         // 100 个交替页（1,3,...,199）：压缩后仍全量保留（回归：旧列宽 32 放不下也不截断）

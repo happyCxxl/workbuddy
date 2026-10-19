@@ -43,6 +43,7 @@ class PipelineStageTest {
      * 建索引环节不属文件链（索引由发布动作触发，不随文件链排队）。
      *
      * <p>守护文件链与索引环节的边界：把 BUILD_INDEX 并入文件链即失败。
+     * <p>守护 {@code buildIndexShouldNotBelongToFileChain}：该场景行为改动即失败。
      */
     @Test
     void buildIndexShouldNotBelongToFileChain() {

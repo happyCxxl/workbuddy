@@ -27,6 +27,9 @@ class TaskQueuePropertiesTest {
         properties = new TaskQueueProperties();
     }
 
+    /**
+     * 守护 {@code timeoutOfShouldHitStageKeyPassedAsEnumName}：该场景行为改动即失败。
+     */
     @Test
     void timeoutOfShouldHitStageKeyPassedAsEnumName() {
         assertEquals(Duration.ofMinutes(5), properties.timeoutOf("PARSE"));
@@ -37,6 +40,9 @@ class TaskQueuePropertiesTest {
         assertEquals(Duration.ofMinutes(10), properties.timeoutOf("BUILD_INDEX"));
     }
 
+    /**
+     * 守护 {@code timeoutOfShouldHitStageKeyPassedAsConfigKey}：该场景行为改动即失败。
+     */
     @Test
     void timeoutOfShouldHitStageKeyPassedAsConfigKey() {
         assertEquals(Duration.ofMinutes(5), properties.timeoutOf("parse"));
@@ -44,12 +50,18 @@ class TaskQueuePropertiesTest {
         assertEquals(Duration.ofMinutes(10), properties.timeoutOf("build-index"));
     }
 
+    /**
+     * 守护 {@code timeoutOfShouldFallbackForUnknownOrNullStage}：该场景行为改动即失败。
+     */
     @Test
     void timeoutOfShouldFallbackForUnknownOrNullStage() {
         assertEquals(Duration.ofMinutes(5), properties.timeoutOf("UNKNOWN_STAGE"));
         assertEquals(Duration.ofMinutes(5), properties.timeoutOf(null));
     }
 
+    /**
+     * 守护 {@code timeoutOfShouldUseCustomStageOverride}：该场景行为改动即失败。
+     */
     @Test
     void timeoutOfShouldUseCustomStageOverride() {
         properties.getTimeout().put(PipelineStage.CHUNK, Duration.ofMinutes(2));
@@ -59,6 +71,9 @@ class TaskQueuePropertiesTest {
                 () -> assertEquals(Duration.ofMinutes(2), properties.timeoutOf("CHUNK")));
     }
 
+    /**
+     * 守护 {@code timeoutOfShouldUseCustomOverrideForNormalizedKey}：该场景行为改动即失败。
+     */
     @Test
     void timeoutOfShouldUseCustomOverrideForNormalizedKey() {
         // 索引构建环节的配置键是 build-index、枚举名是 BUILD_INDEX：归一化后互相命中
@@ -69,7 +84,7 @@ class TaskQueuePropertiesTest {
                 () -> assertEquals(Duration.ofMinutes(3), properties.timeoutOf("BUILD_INDEX")));
     }
 
-    /** 配置键写 kebab 形式（build-index）：宽松绑定认它，绑到 BUILD_INDEX */
+    /** 配置键写 kebab 形式（build-index）：宽松绑定认它，绑到 BUILD_INDEX（{@code bindingShouldAcceptKebabStageKey}）。 */
     @Test
     void bindingShouldAcceptKebabStageKey() {
         TaskQueueProperties bound = new Binder(new MapConfigurationPropertySource(
@@ -80,7 +95,7 @@ class TaskQueuePropertiesTest {
         assertEquals(Duration.ofMinutes(3), bound.timeoutOf("BUILD_INDEX"));
     }
 
-    /** 环节名写错（pars）：绑定期直接拒，不再静默回退默认值 */
+    /** 环节名写错（pars）：绑定期直接拒，不再静默回退默认值（{@code bindingShouldRejectUnknownStageKey}）。 */
     @Test
     void bindingShouldRejectUnknownStageKey() {
         MapConfigurationPropertySource source = new MapConfigurationPropertySource(

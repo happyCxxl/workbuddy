@@ -50,6 +50,9 @@ class NoiseRuleTest {
         return context;
     }
 
+    /**
+     * 守护 {@code markShouldSetNoiseStatus}：该场景行为改动即失败。
+     */
     @Test
     void markShouldSetNoiseStatus() {
         ViewElement element = element();
@@ -60,6 +63,9 @@ class NoiseRuleTest {
         assertEquals("噪声页内容", element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code excludeShouldNullNormalizedText}：该场景行为改动即失败。
+     */
     @Test
     void excludeShouldNullNormalizedText() {
         ViewElement element = element();
@@ -69,6 +75,9 @@ class NoiseRuleTest {
         assertNull(element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code keepShouldResetStatusToNormalAndKeepText}：该场景行为改动即失败。
+     */
     @Test
     void keepShouldResetStatusToNormalAndKeepText() {
         ViewElement element = element();
@@ -80,6 +89,9 @@ class NoiseRuleTest {
         assertEquals("噪声页内容", element.getNormalizedText());
     }
 
+    /**
+     * 守护 {@code nonNoisePageShouldNotMatch}：该场景行为改动即失败。
+     */
     @Test
     void nonNoisePageShouldNotMatch() {
         ViewElement element = element();

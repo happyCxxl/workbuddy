@@ -18,6 +18,9 @@ class ClientIpUtilTest {
         RequestContextHolder.resetRequestAttributes();
     }
 
+    /**
+     * 守护 {@code shouldReturnRemoteAddrWhenRequestPresent}：该场景行为改动即失败。
+     */
     @Test
     void shouldReturnRemoteAddrWhenRequestPresent() {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -27,6 +30,9 @@ class ClientIpUtilTest {
         assertEquals("10.0.0.1", ClientIpUtil.getClientIp());
     }
 
+    /**
+     * 守护 {@code shouldReturnUnknownWhenNoRequestContext}：该场景行为改动即失败。
+     */
     @Test
     void shouldReturnUnknownWhenNoRequestContext() {
         assertEquals("unknown", ClientIpUtil.getClientIp());

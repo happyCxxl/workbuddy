@@ -194,6 +194,5 @@ class JwtAuthFilterTest {
 
         verify(jwtUtil, never()).parse(org.mockito.ArgumentMatchers.any());
         assertNull(SecurityContextHolder.getContext().getAuthentication());
-        assertTrue(true);
     }
 }

@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class CapabilityFactsTest {
 
-    /** 补强事实：证据带模型名、版本与行列数 */
+    /** 补强事实：证据带模型名、版本与行列数（{@code enhancedFactShouldCarryModelAndGrid}）。 */
     @Test
     void enhancedFactShouldCarryModelAndGrid() {
         TableResult result = new TableResult();
@@ -30,7 +30,7 @@ class CapabilityFactsTest {
         assertTrue(fact.getEvidence().contains("3 行 × 4 列"), () -> "evidence=" + fact.getEvidence());
     }
 
-    /** 模型名/版本缺省：证据仍成句 */
+    /** 模型名/版本缺省：证据仍成句（{@code enhancedFactShouldTolerateMissingModel}）。 */
     @Test
     void enhancedFactShouldTolerateMissingModel() {
         ParseFact fact = CapabilityFacts.tableEnhanced("page 1", new TableResult());
@@ -39,7 +39,7 @@ class CapabilityFactsTest {
         assertTrue(fact.getEvidence().contains("0 行 × 0 列"), () -> "evidence=" + fact.getEvidence());
     }
 
-    /** 降级事实：证据带失败原因；原因缺省时给「未配置」 */
+    /** 降级事实：证据带失败原因；原因缺省时给「未配置」（{@code degradedFactShouldCarryReason}）。 */
     @Test
     void degradedFactShouldCarryReason() {
         ParseFact timeout = CapabilityFacts.tableDegraded("page 3", "读超时");

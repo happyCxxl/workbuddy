@@ -56,6 +56,9 @@ class TaskStartupCompensatorTest {
         when(redisLock.tryLock(eq(LOCK_KEY), eq(Duration.ofSeconds(30)))).thenReturn("token");
     }
 
+    /**
+     * 守护 {@code onStartupShouldReEnqueueStaleQueuedTasks}：该场景行为改动即失败。
+     */
     @Test
     void onStartupShouldReEnqueueStaleQueuedTasks() {
         stubLockAcquired();
@@ -73,8 +76,13 @@ class TaskStartupCompensatorTest {
         // 补投与孤儿恢复各抢锁释放一次
         verify(redisLock, times(2)).tryLock(eq(LOCK_KEY), eq(Duration.ofSeconds(30)));
         verify(redisLock, times(2)).unlock(eq(LOCK_KEY), eq("token"));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(redisLock).getInvocations().stream()
+                .anyMatch(inv -> "unlock".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code onStartupShouldRecoverStaleRunningOrphans}：该场景行为改动即失败。
+     */
     @Test
     void onStartupShouldRecoverStaleRunningOrphans() {
         stubLockAcquired();
@@ -91,8 +99,13 @@ class TaskStartupCompensatorTest {
 
         verify(pipelineTaskDbService).finish(eq(7L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.EXECUTOR_TIMEOUT.name()), anyString());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+                .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code orphanWithinStageTimeoutShouldNotBeRecovered}：该场景行为改动即失败。
+     */
     @Test
     void orphanWithinStageTimeoutShouldNotBeRecovered() {
         stubLockAcquired();
@@ -106,8 +119,13 @@ class TaskStartupCompensatorTest {
         compensator.onStartup();
 
         verify(pipelineTaskDbService, never()).finish(any(), any(), any(), any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+                .noneMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code onStartupShouldSkipWhenLockNotAcquired}：该场景行为改动即失败。
+     */
     @Test
     void onStartupShouldSkipWhenLockNotAcquired() {
         when(redisLock.tryLock(eq(LOCK_KEY), eq(Duration.ofSeconds(30)))).thenReturn(null);
@@ -118,8 +136,13 @@ class TaskStartupCompensatorTest {
         verify(pipelineTaskDbService, never()).listStaleRunning(any(LocalDateTime.class));
         verify(taskQueue, never()).enqueue(any());
         verify(redisLock, never()).unlock(anyString(), anyString());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(redisLock).getInvocations().stream()
+                .noneMatch(inv -> "unlock".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code scheduledSweepShouldNoopWhenDisabled}：该场景行为改动即失败。
+     */
     @Test
     void scheduledSweepShouldNoopWhenDisabled() {
         properties.setLowFreqSweepEnabled(false);
@@ -129,6 +152,9 @@ class TaskStartupCompensatorTest {
         verifyNoInteractions(redisLock, pipelineTaskDbService, taskQueue);
     }
 
+    /**
+     * 守护 {@code scheduledSweepShouldCompensateWhenEnabled}：该场景行为改动即失败。
+     */
     @Test
     void scheduledSweepShouldCompensateWhenEnabled() {
         properties.setLowFreqSweepEnabled(true);
@@ -140,5 +166,7 @@ class TaskStartupCompensatorTest {
 
         verify(pipelineTaskDbService).listStaleQueued(any(LocalDateTime.class));
         verify(redisLock, times(2)).tryLock(eq(LOCK_KEY), eq(Duration.ofSeconds(30)));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(redisLock).getInvocations().stream()
+                .anyMatch(inv -> "tryLock".equals(inv.getMethod().getName())));
     }
 }

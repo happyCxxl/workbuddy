@@ -31,11 +31,17 @@ class PipelineTaskStatusTest {
         return expected;
     }
 
+    /**
+     * 守护 {@code statusSetShouldBeTheFiveKnownStates}：该场景行为改动即失败。
+     */
     @Test
     void statusSetShouldBeTheFiveKnownStates() {
         assertEquals(5, PipelineTaskStatus.values().length);
     }
 
+    /**
+     * 守护 {@code allowedTargetsShouldEqualTheExactTruthTable}：该场景行为改动即失败。
+     */
     @Test
     void allowedTargetsShouldEqualTheExactTruthTable() {
         Map<PipelineTaskStatus, Set<PipelineTaskStatus>> expected = expectedTargets();
@@ -47,6 +53,9 @@ class PipelineTaskStatusTest {
         assertEquals(5, legal);
     }
 
+    /**
+     * 守护 {@code isTerminalShouldHoldForTheThreeFinalStatesOnly}：该场景行为改动即失败。
+     */
     @Test
     void isTerminalShouldHoldForTheThreeFinalStatesOnly() {
         assertTrue(PipelineTaskStatus.SUCCESS.isTerminal());
@@ -56,6 +65,9 @@ class PipelineTaskStatusTest {
         assertFalse(PipelineTaskStatus.RUNNING.isTerminal());
     }
 
+    /**
+     * 守护 {@code requireTransitionShouldAcceptAllLegalPairsAndRejectTheRest}：该场景行为改动即失败。
+     */
     @Test
     void requireTransitionShouldAcceptAllLegalPairsAndRejectTheRest() {
         Map<PipelineTaskStatus, Set<PipelineTaskStatus>> expected = expectedTargets();
@@ -77,6 +89,9 @@ class PipelineTaskStatusTest {
         assertEquals(5, legal);
     }
 
+    /**
+     * 守护 {@code requireTransitionShouldRejectTypicalIllegalPairs}：该场景行为改动即失败。
+     */
     @Test
     void requireTransitionShouldRejectTypicalIllegalPairs() {
         assertThrows(IllegalArgumentException.class,
@@ -89,6 +104,9 @@ class PipelineTaskStatusTest {
                 () -> PipelineTaskStatus.requireTransition(PipelineTaskStatus.QUEUED, PipelineTaskStatus.SUCCESS));
     }
 
+    /**
+     * 守护 {@code requireTransitionShouldRejectNullSource}：该场景行为改动即失败。
+     */
     @Test
     void requireTransitionShouldRejectNullSource() {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
@@ -96,6 +114,9 @@ class PipelineTaskStatusTest {
         assertTrue(e.getMessage().contains("不能为空"), e.getMessage());
     }
 
+    /**
+     * 守护 {@code requireTransitionShouldRejectNullTarget}：该场景行为改动即失败。
+     */
     @Test
     void requireTransitionShouldRejectNullTarget() {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,

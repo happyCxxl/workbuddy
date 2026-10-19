@@ -55,12 +55,18 @@ class StorageRouterTest {
         return new StorageSourceDef(id, "本地磁盘-" + id, StorageType.LOCAL, params);
     }
 
+    /**
+     * 守护 {@code shouldReuseSameProviderInstancePerSource}：该场景行为改动即失败。
+     */
     @Test
     void shouldReuseSameProviderInstancePerSource() {
         assertEquals(router.of(SOURCE_A), router.of(SOURCE_A));
         assertFalse(router.of(SOURCE_A) == router.of(SOURCE_B));
     }
 
+    /**
+     * 守护 {@code shouldCreateProviderBoundToRegisteredRoot}：该场景行为改动即失败。
+     */
     @Test
     void shouldCreateProviderBoundToRegisteredRoot() {
         byte[] content = "x".getBytes(StandardCharsets.UTF_8);
@@ -70,6 +76,9 @@ class StorageRouterTest {
         assertTrue(Files.isRegularFile(root.resolve("a").resolve("files").resolve("k")));
     }
 
+    /**
+     * 守护 {@code reregisterShouldRebuildProviderWithNewParams}：该场景行为改动即失败。
+     */
     @Test
     void reregisterShouldRebuildProviderWithNewParams() {
         byte[] content = "y".getBytes(StandardCharsets.UTF_8);
@@ -80,6 +89,9 @@ class StorageRouterTest {
         assertTrue(Files.isRegularFile(root.resolve("moved").resolve("files").resolve("k")));
     }
 
+    /**
+     * 守护 {@code shouldRejectUnregisteredSourceIdWith40455}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectUnregisteredSourceIdWith40455() {
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> router.of(99L));
@@ -88,6 +100,9 @@ class StorageRouterTest {
         assertTrue(e.getMessage().contains("99"), e.getMessage());
     }
 
+    /**
+     * 守护 {@code shouldRejectNullSourceIdWith40455}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectNullSourceIdWith40455() {
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> router.of((Long) null));
@@ -95,6 +110,9 @@ class StorageRouterTest {
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code shouldRouteByObjectRefSourceId}：该场景行为改动即失败。
+     */
     @Test
     void shouldRouteByObjectRefSourceId() {
         byte[] content = "z".getBytes(StandardCharsets.UTF_8);
@@ -105,6 +123,9 @@ class StorageRouterTest {
         assertTrue(Files.isRegularFile(root.resolve("b").resolve("files").resolve("k")));
     }
 
+    /**
+     * 守护 {@code writerShouldRouteToCurrentSource}：该场景行为改动即失败。
+     */
     @Test
     void writerShouldRouteToCurrentSource() {
         router.markCurrent(SOURCE_B);
@@ -115,6 +136,9 @@ class StorageRouterTest {
         assertEquals(router.of(SOURCE_B), router.writer());
     }
 
+    /**
+     * 守护 {@code currentNameShouldFollowCurrentSource}：该场景行为改动即失败。
+     */
     @Test
     void currentNameShouldFollowCurrentSource() {
         assertNull(router.currentName());
@@ -124,6 +148,9 @@ class StorageRouterTest {
         assertEquals("本地磁盘-2", router.currentName());
     }
 
+    /**
+     * 守护 {@code shouldRejectWriterWithoutCurrentSource}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectWriterWithoutCurrentSource() {
         assertNull(router.currentSourceId());
@@ -133,6 +160,9 @@ class StorageRouterTest {
         assertThrows(KnowledgeException.class, () -> router.currentFileBucket());
     }
 
+    /**
+     * 守护 {@code markCurrentShouldRejectUnregisteredId}：该场景行为改动即失败。
+     */
     @Test
     void markCurrentShouldRejectUnregisteredId() {
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> router.markCurrent(99L));
@@ -141,6 +171,9 @@ class StorageRouterTest {
         assertNull(router.currentSourceId());
     }
 
+    /**
+     * 守护 {@code unregisterShouldDropDefinitionAndClearCurrent}：该场景行为改动即失败。
+     */
     @Test
     void unregisterShouldDropDefinitionAndClearCurrent() {
         router.markCurrent(SOURCE_A);
@@ -152,6 +185,9 @@ class StorageRouterTest {
         assertThrows(KnowledgeException.class, () -> router.of(SOURCE_A));
     }
 
+    /**
+     * 守护 {@code unregisterShouldKeepCurrentWhenOtherSourceRemoved}：该场景行为改动即失败。
+     */
     @Test
     void unregisterShouldKeepCurrentWhenOtherSourceRemoved() {
         router.markCurrent(SOURCE_A);

@@ -123,6 +123,9 @@ class StageContentQueryServiceImplTest {
         return task;
     }
 
+    /**
+     * 守护 {@code illegalStageShouldReject40001}：该场景行为改动即失败。
+     */
     @Test
     void illegalStageShouldReject40001() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -132,6 +135,9 @@ class StageContentQueryServiceImplTest {
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code historyTaskShouldReturnOwnContent}：该场景行为改动即失败。
+     */
     @Test
     void historyTaskShouldReturnOwnContent() {
         // 历史任务按 task.productId 精确取自己的产物内容（不再仅最新任务可展示）
@@ -158,6 +164,9 @@ class StageContentQueryServiceImplTest {
         assertEquals("正文片", vo.getItems().get(0).getDisplay());
     }
 
+    /**
+     * 守护 {@code preprocessShouldMapDisplayNormalizedAndStatus}：该场景行为改动即失败。
+     */
     @Test
     void preprocessShouldMapDisplayNormalizedAndStatus() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -195,6 +204,9 @@ class StageContentQueryServiceImplTest {
         assertEquals("EXCLUDED_HEADER", vo.getItems().get(1).getStatus());
     }
 
+    /**
+     * 守护 {@code unconfiguredStorageShouldPropagate40455}：该场景行为改动即失败。
+     */
     @Test
     void unconfiguredStorageShouldPropagate40455() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -212,6 +224,9 @@ class StageContentQueryServiceImplTest {
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code nonStorageReadFailureShouldLeaveItemsEmpty}：该场景行为改动即失败。
+     */
     @Test
     void nonStorageReadFailureShouldLeaveItemsEmpty() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -230,6 +245,9 @@ class StageContentQueryServiceImplTest {
         assertEquals(0, vo.getTotal());
     }
 
+    /**
+     * 守护 {@code chunkShouldMapOrderAlignedItems}：该场景行为改动即失败。
+     */
     @Test
     void chunkShouldMapOrderAlignedItems() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -264,6 +282,9 @@ class StageContentQueryServiceImplTest {
         assertEquals("1-2", vo.getItems().get(0).getExtra().get("pageRange"));
     }
 
+    /**
+     * 守护 {@code embedShouldMapRecordsWithCacheHit}：该场景行为改动即失败。
+     */
     @Test
     void embedShouldMapRecordsWithCacheHit() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -291,6 +312,9 @@ class StageContentQueryServiceImplTest {
         assertEquals(Boolean.TRUE, vo.getItems().get(0).getExtra().get("cacheHit"));
     }
 
+    /**
+     * 守护 {@code stageContentWithoutTaskShouldReturnLatestFalse}：该场景行为改动即失败。
+     */
     @Test
     void stageContentWithoutTaskShouldReturnLatestFalse() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -304,6 +328,9 @@ class StageContentQueryServiceImplTest {
         assertNull(vo.getTaskId());
     }
 
+    /**
+     * 守护 {@code missingFileResultShouldReject40432}：该场景行为改动即失败。
+     */
     @Test
     void missingFileResultShouldReject40432() {
         when(fileResultDbService.getById(10L)).thenReturn(null);
@@ -313,6 +340,9 @@ class StageContentQueryServiceImplTest {
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code taskIdOfWrongStageShouldReject40001}：该场景行为改动即失败。
+     */
     @Test
     void taskIdOfWrongStageShouldReject40001() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -327,6 +357,9 @@ class StageContentQueryServiceImplTest {
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
 
+    /**
+     * 守护 {@code parseExtraShouldCarryTableCells}：该场景行为改动即失败。
+     */
     @Test
     void parseExtraShouldCarryTableCells() {
         stubParseArtifactWithTable();
@@ -420,6 +453,9 @@ class StageContentQueryServiceImplTest {
                 .thenReturn(Objects.requireNonNull(JsonUtil.toJsonStr(result)).getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 守护 {@code parseExtraShouldCarryBbox}：该场景行为改动即失败。
+     */
     @Test
     void parseExtraShouldCarryBbox() {
         stubParseArtifactWithBbox(2);
@@ -437,6 +473,9 @@ class StageContentQueryServiceImplTest {
         assertEquals(20.0, bbox.get("height"));
     }
 
+    /**
+     * 守护 {@code elementWithoutBboxShouldNotCarryTheField}：该场景行为改动即失败。
+     */
     @Test
     void elementWithoutBboxShouldNotCarryTheField() {
         stubParseArtifact(2);
@@ -446,6 +485,9 @@ class StageContentQueryServiceImplTest {
         assertFalse(vo.getItems().get(0).getExtra().containsKey("bbox"));
     }
 
+    /**
+     * 守护 {@code docPageShouldNarrowItemsAndTotal}：该场景行为改动即失败。
+     */
     @Test
     void docPageShouldNarrowItemsAndTotal() {
         stubParseArtifactWithBbox(5);
@@ -464,6 +506,9 @@ class StageContentQueryServiceImplTest {
         assertEquals(5, all.getTotal());
     }
 
+    /**
+     * 守护 {@code docPageWithoutMatchShouldReturnEmpty}：该场景行为改动即失败。
+     */
     @Test
     void docPageWithoutMatchShouldReturnEmpty() {
         stubParseArtifactWithBbox(2);
@@ -475,6 +520,9 @@ class StageContentQueryServiceImplTest {
         assertTrue(vo.getItems().isEmpty());
     }
 
+    /**
+     * 守护 {@code pageAndLimitShouldSliceItemsAndReportTotal}：该场景行为改动即失败。
+     */
     @Test
     void pageAndLimitShouldSliceItemsAndReportTotal() {
         stubParseArtifact(5);
@@ -494,6 +542,9 @@ class StageContentQueryServiceImplTest {
         assertFalse( last.getTruncated());
     }
 
+    /**
+     * 守护 {@code pagingDefaultsShouldReturnFirstPageWithinLimit}：该场景行为改动即失败。
+     */
     @Test
     void pagingDefaultsShouldReturnFirstPageWithinLimit() {
         stubParseArtifact(5);
@@ -508,6 +559,9 @@ class StageContentQueryServiceImplTest {
         assertFalse(vo.getTruncated());
     }
 
+    /**
+     * 守护 {@code limitAboveMaxShouldBeCappedAndOverflowPageShouldBeEmpty}：该场景行为改动即失败。
+     */
     @Test
     void limitAboveMaxShouldBeCappedAndOverflowPageShouldBeEmpty() {
         stubParseArtifact(5);
@@ -523,6 +577,9 @@ class StageContentQueryServiceImplTest {
         assertFalse(overflow.getTruncated());
     }
 
+    /**
+     * 守护 {@code lastPartialPageShouldNotBeReportedAsTruncated}：该场景行为改动即失败。
+     */
     @Test
     void lastPartialPageShouldNotBeReportedAsTruncated() {
         stubParseArtifact(5);
@@ -537,7 +594,14 @@ class StageContentQueryServiceImplTest {
         StageContentVO second = service.stageContent(10L, "PARSE", null, null, 2, 2);
         assertEquals(2, second.getItems().size());
         assertTrue(second.getTruncated());
-    }    @Test
+    }    
+
+    /**
+     * 他人文件结果按 40401 拒绝（越权与不存在同码）。
+     *
+     * <p>守护 {@code otherUserFileResultShouldReject40401}：归属校验被绕过即失败。
+     */
+    @Test
     void otherUserFileResultShouldReject40401() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401

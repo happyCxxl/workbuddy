@@ -46,6 +46,9 @@ class ModelRegistryLoaderTest {
         return row;
     }
 
+    /**
+     * 守护 {@code shouldLoadEnabledRowsWithParsedCapabilities}：该场景行为改动即失败。
+     */
     @Test
     void shouldLoadEnabledRowsWithParsedCapabilities() {
         when(wbModelDbService.listByCondition("ENABLED")).thenReturn(List.of(
@@ -62,7 +65,7 @@ class ModelRegistryLoaderTest {
         assertEquals(Set.of(ModelCapability.CHAT, ModelCapability.EMBEDDING), first.getCapabilities());
     }
 
-    /** 空表合法：装载零行，注册表为空 */
+    /** 空表合法：装载零行，注册表为空（{@code shouldTolerateEmptyCatalog}）。 */
     @Test
     void shouldTolerateEmptyCatalog() {
         when(wbModelDbService.listByCondition("ENABLED")).thenReturn(List.of());
@@ -71,7 +74,7 @@ class ModelRegistryLoaderTest {
         assertTrue(registry.all().isEmpty());
     }
 
-    /** 查库失败异常上抛：启动期终止启动，刷新期报给操作方 */
+    /** 查库失败异常上抛：启动期终止启动，刷新期报给操作方（{@code shouldPropagateDbFailure}）。 */
     @Test
     void shouldPropagateDbFailure() {
         when(wbModelDbService.listByCondition("ENABLED")).thenThrow(new IllegalStateException("db down"));

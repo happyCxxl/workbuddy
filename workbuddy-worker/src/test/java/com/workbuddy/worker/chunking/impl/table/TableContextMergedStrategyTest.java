@@ -86,6 +86,9 @@ class TableContextMergedStrategyTest {
         return table;
     }
 
+    /**
+     * 守护 {@code leadParagraphShouldPrefixEveryChunk}：该场景行为改动即失败。
+     */
     @Test
     void leadParagraphShouldPrefixEveryChunk() {
         UnifiedElement table = tableWithLongRows();
@@ -103,6 +106,9 @@ class TableContextMergedStrategyTest {
         assertTrue(chunks.getFirst().getContent().contains("| 评分项 | 分值 |"));
     }
 
+    /**
+     * 守护 {@code longLeadShouldTruncate}：该场景行为改动即失败。
+     */
     @Test
     void longLeadShouldTruncate() {
         UnifiedElement table = tableWithLongRows();
@@ -120,6 +126,9 @@ class TableContextMergedStrategyTest {
                 c.getContent().startsWith("引".repeat(10) + "…\n")));
     }
 
+    /**
+     * 守护 {@code noLeadShouldBehaveAsRowSlice}：该场景行为改动即失败。
+     */
     @Test
     void noLeadShouldBehaveAsRowSlice() {
         UnifiedElement table = tableWithLongRows();

@@ -43,6 +43,9 @@ class EmbedVoAssemblerTest {
         return record;
     }
 
+    /**
+     * 守护 {@code summaryShouldCountThreeStatusesAndIgnoreCached}：该场景行为改动即失败。
+     */
     @Test
     void summaryShouldCountThreeStatusesAndIgnoreCached() {
         List<WbEmbeddingRecord> records = List.of(
@@ -67,6 +70,9 @@ class EmbedVoAssemblerTest {
         assertEquals(1, summary.getSkippedCount());
     }
 
+    /**
+     * 守护 {@code summaryShouldCountFailedAndIgnoreUnknownStatus}：该场景行为改动即失败。
+     */
     @Test
     void summaryShouldCountFailedAndIgnoreUnknownStatus() {
         List<WbEmbeddingRecord> records = List.of(
@@ -81,6 +87,9 @@ class EmbedVoAssemblerTest {
         assertEquals(0, summary.getSkippedCount());
     }
 
+    /**
+     * 守护 {@code summaryShouldIgnoreUnknownStatus}：该场景行为改动即失败。
+     */
     @Test
     void summaryShouldIgnoreUnknownStatus() {
         var summary = assembler.toSummary(embeddingSet(), List.of(record("emb-0001", "PENDING")));
@@ -90,6 +99,9 @@ class EmbedVoAssemblerTest {
         assertEquals(0, summary.getSkippedCount());
     }
 
+    /**
+     * 守护 {@code recordItemShouldMapFields}：该场景行为改动即失败。
+     */
     @Test
     void recordItemShouldMapFields() {
         var items = assembler.toRecordItemVOs(List.of(record("emb-0001", "SUCCESS")));

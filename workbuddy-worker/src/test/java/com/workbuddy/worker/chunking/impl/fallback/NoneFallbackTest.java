@@ -15,11 +15,17 @@ class NoneFallbackTest {
 
     private final NoneFallback fallback = new NoneFallback();
 
+    /**
+     * 守护 {@code textShouldStaySinglePiece}：该场景行为改动即失败。
+     */
     @Test
     void textShouldStaySinglePiece() {
         assertEquals(List.of("超长文本不分片"), fallback.slice("超长文本不分片", new ChunkRouteConfig()));
     }
 
+    /**
+     * 守护 {@code blankShouldReturnEmpty}：该场景行为改动即失败。
+     */
     @Test
     void blankShouldReturnEmpty() {
         assertTrue(fallback.slice("  ", new ChunkRouteConfig()).isEmpty());

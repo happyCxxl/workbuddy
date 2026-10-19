@@ -25,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class AdminOnlyContractTest {
 
+    /**
+     * 守护 {@code adminOnlyShouldBeMetaAnnotatedWithPreAuthorize}：该场景行为改动即失败。
+     */
     @Test
     void adminOnlyShouldBeMetaAnnotatedWithPreAuthorize() {
         PreAuthorize preAuthorize = findPreAuthorize();
@@ -33,6 +36,9 @@ class AdminOnlyContractTest {
         assertEquals(RoleExpressions.ADMIN_ONLY, preAuthorize.value());
     }
 
+    /**
+     * 守护 {@code adminOnlyExpressionShouldReferenceAdminAuthority}：该场景行为改动即失败。
+     */
     @Test
     void adminOnlyExpressionShouldReferenceAdminAuthority() {
         // 表达式必须基于 ROLE_ 前缀的权限值，与 JwtAuthFilter 写入的权限保持一致
@@ -40,6 +46,9 @@ class AdminOnlyContractTest {
                 "@AdminOnly 表达式应引用 ROLE_ADMIN");
     }
 
+    /**
+     * 守护 {@code filterShouldGrantAuthorityMatchingExpression}：该场景行为改动即失败。
+     */
     @Test
     void filterShouldGrantAuthorityMatchingExpression() {
         // 过滤器写入的权限串必须能被 @AdminOnly 的表达式命中
@@ -49,6 +58,9 @@ class AdminOnlyContractTest {
                 "过滤器授权串与注解表达式不一致：granted=" + granted);
     }
 
+    /**
+     * 守护 {@code authorityManagerShouldGrantAdminAndRejectPlainUser}：该场景行为改动即失败。
+     */
     @Test
     void authorityManagerShouldGrantAdminAndRejectPlainUser() {
         AuthorityAuthorizationManager<Object> manager = AuthorityAuthorizationManager

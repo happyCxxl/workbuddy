@@ -40,6 +40,9 @@ class TextTidyRuleTest {
         return element;
     }
 
+    /**
+     * 守护 {@code hyphenationAndSoftHyphenShouldJoin}：该场景行为改动即失败。
+     */
     @Test
     void hyphenationAndSoftHyphenShouldJoin() {
         ViewElement element = paragraph("well- known tech\u00ADnology");
@@ -50,6 +53,9 @@ class TextTidyRuleTest {
         assertEquals("well-known technology", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code repeatedPunctuationAndBulletShouldTidy}：该场景行为改动即失败。
+     */
     @Test
     void repeatedPunctuationAndBulletShouldTidy() {
         ViewElement element = paragraph("好！！•要点");
@@ -60,6 +66,9 @@ class TextTidyRuleTest {
         assertEquals("好！• 要点", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code unchangedTableCellsShouldKeepTrace}：该场景行为改动即失败。
+     */
     @Test
     void unchangedTableCellsShouldKeepTrace() {
         ViewElement element = paragraph(null);
@@ -77,6 +86,9 @@ class TextTidyRuleTest {
                 .anyMatch(t -> TraceEntry.ACTION_KEEP.equals(t.getAction())));
     }
 
+    /**
+     * 守护 {@code brokenLinesInSameParagraphShouldJoin}：该场景行为改动即失败。
+     */
     @Test
     void brokenLinesInSameParagraphShouldJoin() {
         ViewElement element = paragraph("投标保证金为人民币\n叁佰万元整，\n请于开标前提交。");
@@ -87,6 +99,9 @@ class TextTidyRuleTest {
         assertEquals("投标保证金为人民币叁佰万元整，请于开标前提交。", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code blankLineShouldKeepParagraphBoundary}：该场景行为改动即失败。
+     */
     @Test
     void blankLineShouldKeepParagraphBoundary() {
         ViewElement element = paragraph("第一段内容\n\n第二段内容");
@@ -96,6 +111,9 @@ class TextTidyRuleTest {
         assertEquals("第一段内容\n第二段内容", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code listItemsShouldNotBeJoined}：该场景行为改动即失败。
+     */
     @Test
     void listItemsShouldNotBeJoined() {
         ViewElement element = paragraph("评分说明如下：\n1. 价格分\n2. 技术分");
@@ -105,6 +123,9 @@ class TextTidyRuleTest {
         assertEquals("评分说明如下：\n1. 价格分\n2. 技术分", element.getDisplayText());
     }
 
+    /**
+     * 守护 {@code unchangedParagraphShouldNotMatch}：该场景行为改动即失败。
+     */
     @Test
     void unchangedParagraphShouldNotMatch() {
         assertFalse(rule.apply(paragraph("正文段落无任何需要整理的内容"), context()).isMatched());

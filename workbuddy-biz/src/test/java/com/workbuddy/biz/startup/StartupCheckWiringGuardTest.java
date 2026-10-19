@@ -28,6 +28,9 @@ class StartupCheckWiringGuardTest {
     private static final Pattern RUNNER_IMPL =
             Pattern.compile("implements\\s+[^{;]*\\b(ApplicationRunner|CommandLineRunner)\\b");
 
+    /**
+     * 守护 {@code onlyChainRunnerShouldImplementApplicationRunner}：该场景行为改动即失败。
+     */
     @Test
     void onlyChainRunnerShouldImplementApplicationRunner() throws IOException {
         List<String> owners = new ArrayList<>();

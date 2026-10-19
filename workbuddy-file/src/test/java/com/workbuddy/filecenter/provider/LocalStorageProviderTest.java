@@ -52,11 +52,17 @@ class LocalStorageProviderTest {
         provider = null;
     }
 
+    /**
+     * 守护 {@code shouldReportLocalStorageType}：该场景行为改动即失败。
+     */
     @Test
     void shouldReportLocalStorageType() {
         assertEquals(StorageType.LOCAL, provider.type());
     }
 
+    /**
+     * 守护 {@code shouldStoreObjectUnderBucketDirectory}：该场景行为改动即失败。
+     */
     @Test
     void shouldStoreObjectUnderBucketDirectory() {
         byte[] content = "hello".getBytes(StandardCharsets.UTF_8);
@@ -68,6 +74,9 @@ class LocalStorageProviderTest {
         assertTrue(provider.exists("artifacts", "abc123"));
     }
 
+    /**
+     * 守护 {@code shouldCreateStorageRootOnInitialize}：该场景行为改动即失败。
+     */
     @Test
     void shouldCreateStorageRootOnInitialize() {
         Path nested = root.resolve("nested").resolve("store");
@@ -78,6 +87,9 @@ class LocalStorageProviderTest {
         assertTrue(Files.isDirectory(nested));
     }
 
+    /**
+     * 守护 {@code shouldReadBackExactBytes}：该场景行为改动即失败。
+     */
     @Test
     void shouldReadBackExactBytes() throws IOException {
         byte[] content = "内容含中文与换行\n".getBytes(StandardCharsets.UTF_8);
@@ -88,6 +100,9 @@ class LocalStorageProviderTest {
         }
     }
 
+    /**
+     * 守护 {@code shouldOverwriteExistingObject}：该场景行为改动即失败。
+     */
     @Test
     void shouldOverwriteExistingObject() {
         provider.put("artifacts", "same", stream("first"), 5, null);
@@ -98,11 +113,17 @@ class LocalStorageProviderTest {
         assertFalse(Files.exists(root.resolve("artifacts").resolve("same.part")));
     }
 
+    /**
+     * 守护 {@code shouldReportMissingObjectAsNotExisting}：该场景行为改动即失败。
+     */
     @Test
     void shouldReportMissingObjectAsNotExisting() {
         assertFalse(provider.exists("artifacts", "never-written"));
     }
 
+    /**
+     * 守护 {@code shouldRejectMissingBucketOrKey}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectMissingBucketOrKey() {
         assertThrows(IllegalArgumentException.class, () -> provider.exists("", "k"));
@@ -111,6 +132,9 @@ class LocalStorageProviderTest {
         assertThrows(IllegalArgumentException.class, () -> provider.exists("b", null));
     }
 
+    /**
+     * 守护 {@code shouldRejectPathEscapingRoot}：该场景行为改动即失败。
+     */
     @Test
     void shouldRejectPathEscapingRoot() {
         // key 里的 .. 会被规范化后检出越界；提供者按通用层处理，不假设 key 一定干净
@@ -118,11 +142,17 @@ class LocalStorageProviderTest {
         assertThrows(IllegalArgumentException.class, () -> provider.exists("artifacts", "a/../../../outside"));
     }
 
+    /**
+     * 守护 {@code shouldRaiseOnReadingMissingObject}：该场景行为改动即失败。
+     */
     @Test
     void shouldRaiseOnReadingMissingObject() {
         assertThrows(IllegalStateException.class, () -> provider.get("artifacts", "absent"));
     }
 
+    /**
+     * 守护 {@code shouldCreateBucketDirectoryOnDemand}：该场景行为改动即失败。
+     */
     @Test
     void shouldCreateBucketDirectoryOnDemand() {
         Path bucketDir = root.resolve("new-bucket");
@@ -133,6 +163,9 @@ class LocalStorageProviderTest {
         assertTrue(Files.isDirectory(bucketDir));
     }
 
+    /**
+     * 守护 {@code shouldIsolateObjectsAcrossBucketsWithSameKey}：该场景行为改动即失败。
+     */
     @Test
     void shouldIsolateObjectsAcrossBucketsWithSameKey() {
         // files 与 artifacts 里可以存在同名 key（fileId 与 sha256 空间不同），不能互相覆盖

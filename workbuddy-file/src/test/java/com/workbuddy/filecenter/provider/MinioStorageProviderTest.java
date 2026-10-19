@@ -74,6 +74,8 @@ class MinioStorageProviderTest {
         when(client.bucketExists(any(BucketExistsArgs.class))).thenReturn(false);
         provider.initialize();
         verify(client, org.mockito.Mockito.times(2)).makeBucket(any(MakeBucketArgs.class));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(client).getInvocations().stream()
+                .anyMatch(inv -> "makeBucket".equals(inv.getMethod().getName())));
     }
 
     /**

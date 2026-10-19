@@ -26,6 +26,9 @@ class ModuleDependencyGuardTest {
     /** 本模块自身，允许出现（parent 的 artifactId 是 workbuddy，不带短横线，不会命中上面的模式） */
     private static final String SELF = "workbuddy-common";
 
+    /**
+     * 守护 {@code commonShouldNotDependOnAnyModule}：该场景行为改动即失败。
+     */
     @Test
     void commonShouldNotDependOnAnyModule() throws IOException {
         // surefire 的工作目录是模块根目录，故这里读到的是 workbuddy-common/pom.xml
@@ -40,6 +43,9 @@ class ModuleDependencyGuardTest {
                 "common 是最底层模块，不得依赖任何 workbuddy-* 模块，实际发现：" + modules);
     }
 
+    /**
+     * 守护 {@code guardShouldSeeTheModuleItself}：该场景行为改动即失败。
+     */
     @Test
     void guardShouldSeeTheModuleItself() throws IOException {
         // 反向确认解析逻辑没写坏：pom 里必然出现自身 artifactId

@@ -124,7 +124,7 @@ class ParsePipelineTest {
         return new ParsePipeline(List.of(parser), signalDetector, fallbackHandlers(), properties, capabilityRegistry);
     }
 
-    /** OCR 路由：整页无文本且含图片的页交能力，识别结果进 ocr 路并回填快照的 ocr 项 */
+    /** OCR 路由：整页无文本且含图片的页交能力，识别结果进 ocr 路并回填快照的 ocr 项（{@code scannedPageShouldBeFilledIntoOcrSource}）。 */
     @Test
     void scannedPageShouldBeFilledIntoOcrSource() {
         PageMetric scanned = new PageMetric();
@@ -147,7 +147,7 @@ class ParsePipelineTest {
         assertEquals("stub-ocr", outcome.getParseResult().getCapabilitySnapshot().getOcr().getModel());
     }
 
-    /** 未接入 OCR：ocr 路保持预留占位（无元素、文案不变） */
+    /** 未接入 OCR：ocr 路保持预留占位（无元素、文案不变）（{@code withoutOcrCapabilityShouldKeepPlaceholderSource}）。 */
     @Test
     void withoutOcrCapabilityShouldKeepPlaceholderSource() {
         PageMetric scanned = new PageMetric();
@@ -263,6 +263,9 @@ class ParsePipelineTest {
         return metric;
     }
 
+    /**
+     * 守护 {@code allPagesOkShouldSuggestSuccess}：该场景行为改动即失败。
+     */
     @Test
     void allPagesOkShouldSuggestSuccess() {
         ParsePipeline pipeline = pipeline(fakeParser(
@@ -278,6 +281,9 @@ class ParsePipelineTest {
         assertEquals("ocr", outcome.getParseResult().getSources().get(1).getSource());
     }
 
+    /**
+     * 守护 {@code oneScannedPageOutOfTenShouldSuggestPartialSuccess}：该场景行为改动即失败。
+     */
     @Test
     void oneScannedPageOutOfTenShouldSuggestPartialSuccess() {
         List<PageMetric> metrics = new java.util.ArrayList<>();
@@ -295,6 +301,9 @@ class ParsePipelineTest {
         assertEquals(1, outcome.getParseResult().getQuality().getWarnings().size());
     }
 
+    /**
+     * 守护 {@code allScannedShouldFailScannedUnsupported}：该场景行为改动即失败。
+     */
     @Test
     void allScannedShouldFailScannedUnsupported() {
         ParsePipeline pipeline = pipeline(fakeParser(
@@ -306,6 +315,9 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskErrorCode.SCANNED_UNSUPPORTED.name(), outcome.getErrorCode());
     }
 
+    /**
+     * 守护 {@code ratioBelowThresholdShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void ratioBelowThresholdShouldFail() {
         List<PageMetric> metrics = new java.util.ArrayList<>();
@@ -323,7 +335,7 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskErrorCode.RATIO_BELOW_THRESHOLD.name(), outcome.getErrorCode());
     }
 
-    /** 短文档（≤3 单元）坏页 1 张：按坏页绝对数放行，不落 RATIO_BELOW_THRESHOLD */
+    /** 短文档（≤3 单元）坏页 1 张：按坏页绝对数放行，不落 RATIO_BELOW_THRESHOLD（{@code shortDocumentWithOneBadPageShouldBePartialSuccess}）。 */
     @Test
     void shortDocumentWithOneBadPageShouldBePartialSuccess() {
         ParsePipeline pipeline = pipeline(fakeParser(
@@ -336,7 +348,7 @@ class ParsePipelineTest {
         assertNull(outcome.getErrorCode(), () -> "errorCode=" + outcome.getErrorCode());
     }
 
-    /** 短文档坏页 2 张：超出绝对数门槛，仍按占比判失败 */
+    /** 短文档坏页 2 张：超出绝对数门槛，仍按占比判失败（{@code shortDocumentWithTwoBadPagesShouldFail}）。 */
     @Test
     void shortDocumentWithTwoBadPagesShouldFail() {
         PageMetric secondBad = garbledPage();
@@ -350,7 +362,7 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskErrorCode.RATIO_BELOW_THRESHOLD.name(), outcome.getErrorCode());
     }
 
-    /** 单单元且该单元坏：没有可读单元，仍判失败 */
+    /** 单单元且该单元坏：没有可读单元，仍判失败（{@code singleBadUnitDocumentShouldFail}）。 */
     @Test
     void singleBadUnitDocumentShouldFail() {
         ParsePipeline pipeline = pipeline(fakeParser(List.of(garbledPage()), List.of()));
@@ -360,7 +372,7 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
     }
 
-    /** 短文档规则可关：单元门槛置 0 后回到占比口径 */
+    /** 短文档规则可关：单元门槛置 0 后回到占比口径（{@code shortDocumentRuleShouldBeConfigurable}）。 */
     @Test
     void shortDocumentRuleShouldBeConfigurable() {
         properties.setShortDocumentMaxUnits(0);
@@ -372,7 +384,7 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
     }
 
-    /** 坏页比例达门槛：加一条维度汇总告警；干净文档不加 */
+    /** 坏页比例达门槛：加一条维度汇总告警；干净文档不加（{@code badPageRatioShouldAddDimensionSummaryWarning}）。 */
     @Test
     void badPageRatioShouldAddDimensionSummaryWarning() {
         List<PageMetric> metrics = new java.util.ArrayList<>();
@@ -396,6 +408,9 @@ class ParsePipelineTest {
         assertTrue(summary.contains("GARBLED_PAGE 4"), () -> "summary=" + summary);
     }
 
+    /**
+     * 守护 {@code cleanDocumentShouldNotAddDimensionSummaryWarning}：该场景行为改动即失败。
+     */
     @Test
     void cleanDocumentShouldNotAddDimensionSummaryWarning() {
         ParsePipeline pipeline = pipeline(fakeParser(
@@ -407,6 +422,9 @@ class ParsePipelineTest {
                 () -> "warnings=" + outcome.getParseResult().getQuality().getWarnings());
     }
 
+    /**
+     * 守护 {@code tableFactShouldWarnWithoutFailing}：该场景行为改动即失败。
+     */
     @Test
     void tableFactShouldWarnWithoutFailing() {
         ParseFact fact = new ParseFact();
@@ -423,6 +441,9 @@ class ParsePipelineTest {
         assertEquals("TABLE_RULE_FALLBACK", outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
+    /**
+     * 守护 {@code layoutFactShouldWarnWithoutFailing}：该场景行为改动即失败。
+     */
     @Test
     void layoutFactShouldWarnWithoutFailing() {
         ParseFact fact = new ParseFact();
@@ -438,6 +459,9 @@ class ParsePipelineTest {
         assertEquals("LAYOUT_RULE_FALLBACK", outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
+    /**
+     * 守护 {@code embeddedImageFactShouldWarnWithoutFailing}：该场景行为改动即失败。
+     */
     @Test
     void embeddedImageFactShouldWarnWithoutFailing() {
         ParseFact fact = new ParseFact();
@@ -453,6 +477,9 @@ class ParsePipelineTest {
         assertEquals("IMAGE_TEXT_UNRECOGNIZED", outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
+    /**
+     * 守护 {@code factWithoutTypeShouldBeIgnored}：该场景行为改动即失败。
+     */
     @Test
     void factWithoutTypeShouldBeIgnored() {
         ParseFact fact = new ParseFact();
@@ -466,6 +493,9 @@ class ParsePipelineTest {
         assertEquals(0, outcome.getParseResult().getQuality().getWarnings().size());
     }
 
+    /**
+     * 守护 {@code garbledPageShouldCountFailedUnit}：该场景行为改动即失败。
+     */
     @Test
     void garbledPageShouldCountFailedUnit() {
         List<PageMetric> metrics = new java.util.ArrayList<>();
@@ -483,7 +513,7 @@ class ParsePipelineTest {
         assertEquals("GARBLED_PAGE", outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
-    /** CID 映射失败页：按映射失败口径出告警，仍计失败单元 */
+    /** CID 映射失败页：按映射失败口径出告警，仍计失败单元（{@code cidMappingFailedPageShouldWarnWithOwnCode}）。 */
     @Test
     void cidMappingFailedPageShouldWarnWithOwnCode() {
         List<PageMetric> metrics = new java.util.ArrayList<>();
@@ -501,7 +531,7 @@ class ParsePipelineTest {
                 outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
-    /** 纯矢量页：无文本无图片但有矢量覆盖 → 单独告警、不计失败、与空白页同样从分母剔除 */
+    /** 纯矢量页：无文本无图片但有矢量覆盖 → 单独告警、不计失败、与空白页同样从分母剔除（{@code vectorOnlyPageShouldWarnWithoutFailing}）。 */
     @Test
     void vectorOnlyPageShouldWarnWithoutFailing() {
         PageMetric vectorPage = new PageMetric();
@@ -521,7 +551,7 @@ class ParsePipelineTest {
         assertEquals(1, outcome.getParseResult().getQuality().getBlankPages().size());
     }
 
-    /** 能力快照回填：本路用到的模型名与版本写进快照对应项，未用到的类别保持 null */
+    /** 能力快照回填：本路用到的模型名与版本写进快照对应项，未用到的类别保持 null（{@code capabilityUsageShouldBeFilledIntoSnapshot}）。 */
     @Test
     void capabilityUsageShouldBeFilledIntoSnapshot() {
         ParsePipeline pipeline = pipeline(fakeParser(List.of(normalPage(1)), List.of(),
@@ -537,6 +567,9 @@ class ParsePipelineTest {
         assertEquals("fake", snapshot.getParserName());
     }
 
+    /**
+     * 守护 {@code suspectedImagePageShouldWarnWithoutFailing}：该场景行为改动即失败。
+     */
     @Test
     void suspectedImagePageShouldWarnWithoutFailing() {
         // 有文字（chars 充足）但文字占比低：疑似图片页 → 仅告警，不计失败单元
@@ -555,6 +588,9 @@ class ParsePipelineTest {
         assertEquals("IMAGE_PAGE_SUSPECTED", outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
+    /**
+     * 守护 {@code blankPageShouldNotCountAsFailure}：该场景行为改动即失败。
+     */
     @Test
     void blankPageShouldNotCountAsFailure() {
         List<PageMetric> metrics = new java.util.ArrayList<>();
@@ -572,6 +608,9 @@ class ParsePipelineTest {
         assertEquals("BLANK_PAGE", outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
+    /**
+     * 守护 {@code allBlankShouldFailWithoutContent}：该场景行为改动即失败。
+     */
     @Test
     void allBlankShouldFailWithoutContent() {
         ParsePipeline pipeline = pipeline(fakeParser(
@@ -583,6 +622,9 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskErrorCode.PARSE_CORRUPTED.name(), outcome.getErrorCode());
     }
 
+    /**
+     * 守护 {@code blankPlusScannedShouldFailScannedUnsupported}：该场景行为改动即失败。
+     */
     @Test
     void blankPlusScannedShouldFailScannedUnsupported() {
         ParsePipeline pipeline = pipeline(fakeParser(
@@ -594,6 +636,9 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskErrorCode.SCANNED_UNSUPPORTED.name(), outcome.getErrorCode());
     }
 
+    /**
+     * 守护 {@code sparseTextPageShouldWarnWithoutFailing}：该场景行为改动即失败。
+     */
     @Test
     void sparseTextPageShouldWarnWithoutFailing() {
         // 有文本但极少：只告警，不再当扫描页计失败
@@ -606,6 +651,9 @@ class ParsePipelineTest {
         assertEquals("IMAGE_PAGE_SUSPECTED", outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
+    /**
+     * 守护 {@code officeImageOnlyUnitShouldFailScannedUnsupported}：该场景行为改动即失败。
+     */
     @Test
     void officeImageOnlyUnitShouldFailScannedUnsupported() {
         // Office 单元无文本但有图片：与扫描页同口径，计失败单元（OCR 未接入）
@@ -616,6 +664,9 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskErrorCode.SCANNED_UNSUPPORTED.name(), outcome.getErrorCode());
     }
 
+    /**
+     * 守护 {@code emptyUnitAmongSheetsShouldKeepGateEffective}：该场景行为改动即失败。
+     */
     @Test
     void emptyUnitAmongSheetsShouldKeepGateEffective() {
         // 3 个单元：1 个空 sheet + 2 个有内容 → 空白单元从分母剔除，其余正常判成功
@@ -628,6 +679,9 @@ class ParsePipelineTest {
         assertEquals(1, outcome.getParseResult().getQuality().getBlankPages().size());
     }
 
+    /**
+     * 守护 {@code noParserShouldFail}：该场景行为改动即失败。
+     */
     @Test
     void noParserShouldFail() {
         ParsePipeline pipeline = pipeline(fakeParser(List.of(), List.of()));

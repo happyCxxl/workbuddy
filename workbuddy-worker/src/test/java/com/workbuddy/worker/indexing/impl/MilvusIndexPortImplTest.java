@@ -73,6 +73,9 @@ class MilvusIndexPortImplTest {
         return row;
     }
 
+    /**
+     * 守护 {@code appendShouldUpsertMappedRows}：该场景行为改动即失败。
+     */
     @Test
     void appendShouldUpsertMappedRows() {
         port.append("kb_1_v1", List.of(row()));
@@ -88,6 +91,9 @@ class MilvusIndexPortImplTest {
         assertEquals(2, mapped.getVector().size());
     }
 
+    /**
+     * 守护 {@code searchVectorShouldMapHitsAndFilterBusinessOnly}：该场景行为改动即失败。
+     */
     @Test
     void searchVectorShouldMapHitsAndFilterBusinessOnly() {
         when(collectionPort.searchVector(eq("kb_1_v1"), anyList(), eq(5), any()))
@@ -111,6 +117,9 @@ class MilvusIndexPortImplTest {
         assertEquals("hello", hits.getFirst().getContent());
     }
 
+    /**
+     * 守护 {@code searchFullTextShouldPassKeywordAndLimit}：该场景行为改动即失败。
+     */
     @Test
     void searchFullTextShouldPassKeywordAndLimit() {
         when(collectionPort.searchFullText(eq("kb_1_v1"), eq("单引号"), eq(5L), any()))
@@ -125,6 +134,9 @@ class MilvusIndexPortImplTest {
         assertTrue(hits.isEmpty());
     }
 
+    /**
+     * 守护 {@code listChunkIdsShouldDelegateWithFilters}：该场景行为改动即失败。
+     */
     @Test
     void listChunkIdsShouldDelegateWithFilters() {
         when(collectionPort.listIds(eq("kb_1_v1"), any())).thenReturn(List.of("c1"));
@@ -136,6 +148,9 @@ class MilvusIndexPortImplTest {
         verify(collectionPort).listIds("kb_1_v1", "document_id == 10");
     }
 
+    /**
+     * 守护 {@code lifecycleShouldDelegate}：该场景行为改动即失败。
+     */
     @Test
     void lifecycleShouldDelegate() {
         port.ensureCollection("kb_1_v1", 1024);
@@ -144,13 +159,21 @@ class MilvusIndexPortImplTest {
         verify(collectionPort).load("kb_1_v1");
         port.drop("kb_1_v1");
         verify(collectionPort).drop("kb_1_v1");
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(collectionPort).getInvocations().stream()
+                .anyMatch(inv -> "drop".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code collectionNameShouldFollowConvention}：该场景行为改动即失败。
+     */
     @Test
     void collectionNameShouldFollowConvention() {
         assertEquals("kb_12_v3", MilvusIndexPort.collectionName(12L, "v3"));
     }
 
+    /**
+     * 守护 {@code queryChunkByIdsShouldMapRows}：该场景行为改动即失败。
+     */
     @Test
     void queryChunkByIdsShouldMapRows() {
         CollectionRow row = new CollectionRow();
@@ -166,12 +189,18 @@ class MilvusIndexPortImplTest {
         assertEquals("第三节 保证金全文", rows.getFirst().getContent());
     }
 
+    /**
+     * 守护 {@code queryChunkByIdsShouldReturnEmptyForEmptyInput}：该场景行为改动即失败。
+     */
     @Test
     void queryChunkByIdsShouldReturnEmptyForEmptyInput() {
         assertTrue(port.queryChunkByIds("kb_1_v1", List.of()).isEmpty());
         verify(collectionPort, never()).queryByIds(any(), any());
     }
 
+    /**
+     * 守护 {@code hitMappingShouldTolerateNulls}：该场景行为改动即失败。
+     */
     @Test
     void hitMappingShouldTolerateNulls() {
         ScoredRow sparse = new ScoredRow();

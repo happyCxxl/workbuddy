@@ -147,6 +147,9 @@ class StructureTaskRunnerTest {
         return sourceFile;
     }
 
+    /**
+     * 守护 {@code successPathShouldPersistStructureProductWithUpstreamChain}：该场景行为改动即失败。
+     */
     @Test
     void successPathShouldPersistStructureProductWithUpstreamChain() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -180,6 +183,9 @@ class StructureTaskRunnerTest {
         verify(pipelineTaskDbService).updateProductId(60L, 70L);
     }
 
+    /**
+     * 守护 {@code failedUpstreamTaskShouldFailStructureFailed}：该场景行为改动即失败。
+     */
     @Test
     void failedUpstreamTaskShouldFailStructureFailed() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -199,6 +205,9 @@ class StructureTaskRunnerTest {
         verify(documentAssembler, never()).assemble(any(), any());
     }
 
+    /**
+     * 守护 {@code partialSuccessUpstreamTaskShouldPass}：该场景行为改动即失败。
+     */
     @Test
     void partialSuccessUpstreamTaskShouldPass() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -222,8 +231,13 @@ class StructureTaskRunnerTest {
         // 部分成功在放行集内：产物照常落库、任务落成功终态
         verify(pipelineProductDbService).save(any(WbPipelineProduct.class));
         verify(pipelineTaskDbService).finish(60L, PipelineTaskStatus.SUCCESS, null, null);
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+                .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code mismatchedStorageShouldFailTaskWithoutWritingProduct}：该场景行为改动即失败。
+     */
     @Test
     void mismatchedStorageShouldFailTaskWithoutWritingProduct() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -245,8 +259,13 @@ class StructureTaskRunnerTest {
                 eq(PipelineTaskErrorCode.TASK_STORAGE_MISMATCH.name()), any());
         verify(fileStorage, never()).putObject(any(byte[].class));
         verify(pipelineProductDbService, never()).save(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineProductDbService).getInvocations().stream()
+                .noneMatch(inv -> "save".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code emptyTreeShouldFailWithoutProduct}：该场景行为改动即失败。
+     */
     @Test
     void emptyTreeShouldFailWithoutProduct() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -266,8 +285,13 @@ class StructureTaskRunnerTest {
                 eq(PipelineTaskErrorCode.STRUCTURE_EMPTY.name()), any());
         verify(pipelineProductDbService, never()).save(any());
         verify(fileStorage, never()).putObject(any(byte[].class));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+                .noneMatch(inv -> "putObject".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code missingUpstreamProductShouldFailTaskUpstreamMissing}：该场景行为改动即失败。
+     */
     @Test
     void missingUpstreamProductShouldFailTaskUpstreamMissing() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -280,8 +304,13 @@ class StructureTaskRunnerTest {
         verify(pipelineTaskDbService).finish(eq(60L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name()), any());
         verify(fileStorage, never()).getObject(any());
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+                .noneMatch(inv -> "getObject".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code unexpectedFailureShouldUseClassNameInsteadOfNull}：该场景行为改动即失败。
+     */
     @Test
     void unexpectedFailureShouldUseClassNameInsteadOfNull() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -301,6 +330,9 @@ class StructureTaskRunnerTest {
         assertEquals("IllegalStateException", errorMsg.getValue());
     }
 
+    /**
+     * 守护 {@code knowledgeExceptionOnAssembleShouldFailUpstreamUnreadable}：该场景行为改动即失败。
+     */
     @Test
     void knowledgeExceptionOnAssembleShouldFailUpstreamUnreadable() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
@@ -320,6 +352,9 @@ class StructureTaskRunnerTest {
         assertEquals(ErrorCode.FILE_NOT_FOUND.getMessage(), errorMsg.getValue());
     }
 
+    /**
+     * 守护 {@code unreadableUpstreamWithBlankMessageShouldStillNameTheCause}：该场景行为改动即失败。
+     */
     @Test
     void unreadableUpstreamWithBlankMessageShouldStillNameTheCause() {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());

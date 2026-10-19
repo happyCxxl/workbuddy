@@ -63,6 +63,9 @@ class BodyDegradeTest {
         return "甲".repeat(length);
     }
 
+    /**
+     * 守护 {@code sectionWithinLimitShouldYieldOneParagraphChunk}：该场景行为改动即失败。
+     */
     @Test
     void sectionWithinLimitShouldYieldOneParagraphChunk() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\"}}}");
@@ -78,6 +81,9 @@ class BodyDegradeTest {
         assertEquals(chunks.getFirst().getContent().length(), chunks.getFirst().getCharCount());
     }
 
+    /**
+     * 守护 {@code sectionOverLimitShouldFallBackWithReason}：该场景行为改动即失败。
+     */
     @Test
     void sectionOverLimitShouldFallBackWithReason() {
         SliceContext context = context(TITLE_BOUNDARY_CONFIG);
@@ -94,11 +100,17 @@ class BodyDegradeTest {
         }
     }
 
+    /**
+     * 守护 {@code emptyBufferShouldYieldNoChunks}：该场景行为改动即失败。
+     */
     @Test
     void emptyBufferShouldYieldNoChunks() {
         assertTrue(titleBoundary.flush(context(TITLE_BOUNDARY_CONFIG)).isEmpty());
     }
 
+    /**
+     * 守护 {@code paragraphOverSoftMaxShouldFallBackWithReason}：该场景行为改动即失败。
+     */
     @Test
     void paragraphOverSoftMaxShouldFallBackWithReason() {
         SliceContext context = context(PARAGRAPH_CONFIG);

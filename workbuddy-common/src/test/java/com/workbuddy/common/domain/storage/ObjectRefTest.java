@@ -32,6 +32,9 @@ class ObjectRefTest {
         return row;
     }
 
+    /**
+     * 守护 {@code shouldAssembleFromFileRow}：该场景行为改动即失败。
+     */
     @Test
     void shouldAssembleFromFileRow() {
         ObjectRef ref = ObjectRef.ofFile(fileRow());
@@ -43,6 +46,9 @@ class ObjectRefTest {
         assertEquals("minio/files/F-88", ref.path());
     }
 
+    /**
+     * 守护 {@code productRowShouldUseArtifactIdAsObjectKey}：该场景行为改动即失败。
+     */
     @Test
     void productRowShouldUseArtifactIdAsObjectKey() {
         WbPipelineProduct row = new WbPipelineProduct();
@@ -57,6 +63,9 @@ class ObjectRefTest {
         assertEquals(StorageType.LOCAL, ref.storageType());
     }
 
+    /**
+     * 守护 {@code chunkSetAndEmbeddingSetShouldUseArtifactId}：该场景行为改动即失败。
+     */
     @Test
     void chunkSetAndEmbeddingSetShouldUseArtifactId() {
         WbChunkSet chunkSet = new WbChunkSet();
@@ -74,6 +83,9 @@ class ObjectRefTest {
         assertEquals("embed-artifact", ObjectRef.ofEmbeddingSet(embeddingSet).objectKey());
     }
 
+    /**
+     * 守护 {@code avatarShouldCarrySourceIdAndBeNullWithoutKey}：该场景行为改动即失败。
+     */
     @Test
     void avatarShouldCarrySourceIdAndBeNullWithoutKey() {
         WbUser user = new WbUser();
@@ -90,6 +102,9 @@ class ObjectRefTest {
         assertNull(ObjectRef.ofAvatar(null));
     }
 
+    /**
+     * 守护 {@code missingSourceIdShouldReject40455}：该场景行为改动即失败。
+     */
     @Test
     void missingSourceIdShouldReject40455() {
         WbFileObject row = fileRow();
@@ -101,6 +116,9 @@ class ObjectRefTest {
         assertTrue(e.getMessage().contains("sourceId=null"), e.getMessage());
     }
 
+    /**
+     * 守护 {@code unknownTypeShouldReject40455}：该场景行为改动即失败。
+     */
     @Test
     void unknownTypeShouldReject40455() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -110,6 +128,9 @@ class ObjectRefTest {
         assertTrue(e.getMessage().contains("oss"), e.getMessage());
     }
 
+    /**
+     * 守护 {@code blankBucketOrObjectKeyShouldReject40455}：该场景行为改动即失败。
+     */
     @Test
     void blankBucketOrObjectKeyShouldReject40455() {
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED,

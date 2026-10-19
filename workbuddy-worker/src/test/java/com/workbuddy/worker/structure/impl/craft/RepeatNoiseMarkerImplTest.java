@@ -58,6 +58,9 @@ class RepeatNoiseMarkerImplTest {
         return pages;
     }
 
+    /**
+     * 守护 {@code identicalPageShouldMarkLaterPageRepeated}：该场景行为改动即失败。
+     */
     @Test
     void identicalPageShouldMarkLaterPageRepeated() {
         String text = "这是一段用于重复页判定测试的正文段落文本，其长度必须超过五十个字符的最小阈值要求，"
@@ -78,6 +81,9 @@ class RepeatNoiseMarkerImplTest {
         assertNull(elements.get(0).getMarks());
     }
 
+    /**
+     * 守护 {@code distinctPagesShouldNotMarkRepeated}：该场景行为改动即失败。
+     */
     @Test
     void distinctPagesShouldNotMarkRepeated() {
         List<UnifiedElement> elements = new ArrayList<>();
@@ -91,6 +97,9 @@ class RepeatNoiseMarkerImplTest {
         assertEquals(0, outcome.getRepeatSegmentCount());
     }
 
+    /**
+     * 守护 {@code wordParagraphRepeatShouldMarkSegmentOnly}：该场景行为改动即失败。
+     */
     @Test
     void wordParagraphRepeatShouldMarkSegmentOnly() {
         String text = "同一段落文本在两个位置重复出现用于重复段判定的测试，长度必须超过五十个字符的最小阈值要求，"
@@ -107,6 +116,9 @@ class RepeatNoiseMarkerImplTest {
         assertTrue(elements.get(1).getMarks().contains(ElementMark.REPEATED_SEGMENT.name()));
     }
 
+    /**
+     * 守护 {@code shortOrHeaderFooterShouldNotMarkSegment}：该场景行为改动即失败。
+     */
     @Test
     void shortOrHeaderFooterShouldNotMarkSegment() {
         String longText = "页眉页脚文本虽然每页重复，但有独立处置路径，不应进入重复段判定范围。";
@@ -125,6 +137,9 @@ class RepeatNoiseMarkerImplTest {
         assertNull(elements.get(2).getMarks());
     }
 
+    /**
+     * 守护 {@code blankAndImageOnlyAndGarbledPagesShouldMarkNoise}：该场景行为改动即失败。
+     */
     @Test
     void blankAndImageOnlyAndGarbledPagesShouldMarkNoise() {
         List<UnifiedElement> elements = new ArrayList<>();
@@ -143,6 +158,9 @@ class RepeatNoiseMarkerImplTest {
         assertNull(document.getPages().get(0).getMarks()); // 页1 不应为噪声
     }
 
+    /**
+     * 守护 {@code wordDocumentShouldSkipPageLevel}：该场景行为改动即失败。
+     */
     @Test
     void wordDocumentShouldSkipPageLevel() {
         List<UnifiedElement> elements = new ArrayList<>();
@@ -155,6 +173,9 @@ class RepeatNoiseMarkerImplTest {
         assertEquals(0, outcome.getNoisePageCount());
     }
 
+    /**
+     * 守护 {@code pageCoveredByContinuationPageRangeShouldNotMarkNoise}：该场景行为改动即失败。
+     */
     @Test
     void pageCoveredByContinuationPageRangeShouldNotMarkNoise() {
         List<UnifiedElement> elements = new ArrayList<>();

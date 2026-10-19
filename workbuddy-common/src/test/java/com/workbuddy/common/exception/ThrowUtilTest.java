@@ -19,6 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class ThrowUtilTest {
 
+    /**
+     * 守护 {@code throwIfShouldThrowSuppliedInternalException}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldThrowSuppliedInternalException() {
         IllegalStateException e = assertThrows(IllegalStateException.class,
@@ -27,6 +30,9 @@ class ThrowUtilTest {
         assertEquals("策略快照为空或已损坏", e.getMessage());
     }
 
+    /**
+     * 守护 {@code throwIfShouldSupportAnyInternalExceptionType}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldSupportAnyInternalExceptionType() {
         assertThrows(IllegalArgumentException.class,
@@ -35,6 +41,9 @@ class ThrowUtilTest {
                 () -> ThrowUtil.throwIf(true, () -> new UnsupportedOperationException("不支持的类型")));
     }
 
+    /**
+     * 守护 {@code throwIfShouldNotEvaluateSupplierWhenConditionFalse}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldNotEvaluateSupplierWhenConditionFalse() {
         AtomicBoolean built = new AtomicBoolean(false);
@@ -48,6 +57,9 @@ class ThrowUtilTest {
         assertFalse(built.get(), "条件不成立时异常工厂不应被调用");
     }
 
+    /**
+     * 守护 {@code throwIfShouldThrowWithDefaultMessage}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldThrowWithDefaultMessage() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -56,6 +68,9 @@ class ThrowUtilTest {
         assertEquals(ErrorCode.LOGIN_FAILED.getMessage(), e.getMessage());
     }
 
+    /**
+     * 守护 {@code throwIfShouldThrowWithDetailMessage}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldThrowWithDetailMessage() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -64,12 +79,18 @@ class ThrowUtilTest {
         assertEquals("用户名 admin 已存在", e.getMessage());
     }
 
+    /**
+     * 守护 {@code throwIfShouldPassWhenConditionFalse}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldPassWhenConditionFalse() {
         assertDoesNotThrow(() -> ThrowUtil.throwIf(false, ErrorCode.LOGIN_FAILED));
         assertDoesNotThrow(() -> ThrowUtil.throwIf(false, ErrorCode.LOGIN_FAILED, "不会抛"));
     }
 
+    /**
+     * 守护 {@code throwIfShouldRunActionBeforeThrowing}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldRunActionBeforeThrowing() {
         List<String> trace = new ArrayList<>();
@@ -81,6 +102,9 @@ class ThrowUtilTest {
         assertEquals(List.of("action"), trace);
     }
 
+    /**
+     * 守护 {@code throwIfShouldNotRunActionWhenConditionFalse}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldNotRunActionWhenConditionFalse() {
         AtomicBoolean ran = new AtomicBoolean(false);
@@ -90,6 +114,9 @@ class ThrowUtilTest {
         assertFalse(ran.get(), "条件不成立时补充动作不应执行");
     }
 
+    /**
+     * 守护 {@code throwIfShouldNotMaskBusinessErrorWhenActionFails}：该场景行为改动即失败。
+     */
     @Test
     void throwIfShouldNotMaskBusinessErrorWhenActionFails() {
         KnowledgeException e = assertThrows(KnowledgeException.class,

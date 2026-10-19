@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class LayoutComplexityTest {
 
-    /** 两行各含一处跨栏间隙（门槛 48pt）→ 两行跨栏即复杂页 */
+    /** 两行各含一处跨栏间隙（门槛 48pt）→ 两行跨栏即复杂页（{@code linesWithSpanningGapShouldBeComplex}）。 */
     @Test
     void linesWithSpanningGapShouldBeComplex() {
         List<PageLine> lines = List.of(spanningLine(100), spanningLine(80));
@@ -26,7 +26,7 @@ class LayoutComplexityTest {
         assertTrue(LayoutComplexity.isComplex(lines, new ParseProperties()));
     }
 
-    /** 普通词距（间隙远小于门槛）→ 不跨栏、不判复杂页 */
+    /** 普通词距（间隙远小于门槛）→ 不跨栏、不判复杂页（{@code normalWordGapsShouldNotBeComplex}）。 */
     @Test
     void normalWordGapsShouldNotBeComplex() {
         List<PageLine> lines = List.of(
@@ -37,7 +37,7 @@ class LayoutComplexityTest {
         assertFalse(LayoutComplexity.isComplex(lines, new ParseProperties()));
     }
 
-    /** 只有一行跨栏：未达门槛（默认 2 行） */
+    /** 只有一行跨栏：未达门槛（默认 2 行）（{@code singleSpanningLineShouldNotBeComplex}）。 */
     @Test
     void singleSpanningLineShouldNotBeComplex() {
         List<PageLine> lines = List.of(spanningLine(100),
@@ -47,7 +47,7 @@ class LayoutComplexityTest {
         assertFalse(LayoutComplexity.isComplex(lines, new ParseProperties()));
     }
 
-    /** 门槛与间隙系数都可配 */
+    /** 门槛与间隙系数都可配（{@code thresholdsShouldBeConfigurable}）。 */
     @Test
     void thresholdsShouldBeConfigurable() {
         List<PageLine> lines = List.of(spanningLine(100));

@@ -12,6 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PdfFontMappingTest {
 
+    /**
+     * 守护 {@code type0WithoutToUnicodeShouldLackMapping}：该场景行为改动即失败。
+     */
     @Test
     void type0WithoutToUnicodeShouldLackMapping() {
         COSDictionary font = new COSDictionary();
@@ -20,6 +23,9 @@ class PdfFontMappingTest {
         assertTrue(PdfFontMapping.lacksUnicodeMapping(font));
     }
 
+    /**
+     * 守护 {@code type0WithToUnicodeShouldHaveMapping}：该场景行为改动即失败。
+     */
     @Test
     void type0WithToUnicodeShouldHaveMapping() {
         COSDictionary font = new COSDictionary();
@@ -29,6 +35,9 @@ class PdfFontMappingTest {
         assertFalse(PdfFontMapping.lacksUnicodeMapping(font));
     }
 
+    /**
+     * 守护 {@code simpleFontOrMissingDictionaryShouldHaveMapping}：该场景行为改动即失败。
+     */
     @Test
     void simpleFontOrMissingDictionaryShouldHaveMapping() {
         COSDictionary font = new COSDictionary();

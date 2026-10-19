@@ -21,12 +21,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ComboSnapshotTest {
 
+    /**
+     * 守护 {@code hasCompleteStageStrategiesShouldBeTrueForFactoryCombo}：该场景行为改动即失败。
+     */
     @Test
     void hasCompleteStageStrategiesShouldBeTrueForFactoryCombo() {
         assertTrue(ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1")
                 .hasCompleteStageStrategies());
     }
 
+    /**
+     * 守护 {@code hasCompleteStageStrategiesShouldBeFalseForLegacyShapedSnapshot}：该场景行为改动即失败。
+     */
     @Test
     void hasCompleteStageStrategiesShouldBeFalseForLegacyShapedSnapshot() {
         assertFalse(new ComboSnapshot().hasCompleteStageStrategies());
@@ -36,6 +42,9 @@ class ComboSnapshotTest {
         assertFalse(nullMap.hasCompleteStageStrategies());
     }
 
+    /**
+     * 守护 {@code hasCompleteStageStrategiesShouldBeFalseWhenAnyStageMissing}：该场景行为改动即失败。
+     */
     @Test
     void hasCompleteStageStrategiesShouldBeFalseWhenAnyStageMissing() {
         assertFalse(ComboSnapshot.of(null, "chunk-hybrid-v1", "embed-default-v1").hasCompleteStageStrategies());
@@ -43,6 +52,9 @@ class ComboSnapshotTest {
         assertFalse(ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", null).hasCompleteStageStrategies());
     }
 
+    /**
+     * 守护 {@code requireStageStrategiesShouldThrowExplicitErrorForLegacySnapshot}：该场景行为改动即失败。
+     */
     @Test
     void requireStageStrategiesShouldThrowExplicitErrorForLegacySnapshot() {
         KnowledgeException ex = assertThrows(KnowledgeException.class,
@@ -51,12 +63,18 @@ class ComboSnapshotTest {
         assertEquals(ErrorCode.INDEX_COMBO_SNAPSHOT_LEGACY.getCode(), ex.getCode());
     }
 
+    /**
+     * 守护 {@code requireStageStrategiesShouldPassForCompleteCombo}：该场景行为改动即失败。
+     */
     @Test
     void requireStageStrategiesShouldPassForCompleteCombo() {
         assertDoesNotThrow(() -> ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1")
                 .requireStageStrategies());
     }
 
+    /**
+     * 守护 {@code isListScopeShouldReflectScopeMode}：该场景行为改动即失败。
+     */
     @Test
     void isListScopeShouldReflectScopeMode() {
         ComboSnapshot combo = new ComboSnapshot();
@@ -66,6 +84,9 @@ class ComboSnapshotTest {
         assertTrue(combo.isListScope());
     }
 
+    /**
+     * 守护 {@code shapeShouldRoundTripAsEnumName}：该场景行为改动即失败。
+     */
     @Test
     void shapeShouldRoundTripAsEnumName() {
         String json = Objects.requireNonNull(

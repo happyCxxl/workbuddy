@@ -31,6 +31,9 @@ class RedisLockTest {
     @Mock
     private ValueOperations<String, String> valueOperations;
 
+    /**
+     * 守护 {@code tryLockShouldReturnTokenWhenAcquired}：该场景行为改动即失败。
+     */
     @Test
     void tryLockShouldReturnTokenWhenAcquired() {
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -44,6 +47,9 @@ class RedisLockTest {
         assertEquals(token, captor.getValue());
     }
 
+    /**
+     * 守护 {@code tryLockShouldReturnNullWhenNotAcquired}：该场景行为改动即失败。
+     */
     @Test
     void tryLockShouldReturnNullWhenNotAcquired() {
         when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -54,6 +60,9 @@ class RedisLockTest {
         assertNull(token);
     }
 
+    /**
+     * 守护 {@code unlockShouldExecuteReleaseScriptWithKeyAndToken}：该场景行为改动即失败。
+     */
     @Test
     void unlockShouldExecuteReleaseScriptWithKeyAndToken() {
         RedisLock lock = new RedisLock(stringRedisTemplate);
@@ -62,5 +71,7 @@ class RedisLockTest {
         lock.unlock("lock", "token-1");
 
         verify(stringRedisTemplate).execute(ArgumentMatchers.<RedisScript<Long>>any(), eq(List.of("lock")), eq("token-1"));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(stringRedisTemplate).getInvocations().stream()
+                .anyMatch(inv -> "execute".equals(inv.getMethod().getName())));
     }
 }

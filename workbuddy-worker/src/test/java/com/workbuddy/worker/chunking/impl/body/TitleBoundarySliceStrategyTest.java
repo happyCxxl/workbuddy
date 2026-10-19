@@ -43,6 +43,9 @@ class TitleBoundarySliceStrategyTest {
         return element;
     }
 
+    /**
+     * 守护 {@code sectionShouldProduceSingleChunk}：该场景行为改动即失败。
+     */
     @Test
     void sectionShouldProduceSingleChunk() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\"}}}");
@@ -61,6 +64,9 @@ class TitleBoundarySliceStrategyTest {
         assertEquals("第一章 总则", chunk.getTitlePath());
     }
 
+    /**
+     * 守护 {@code overlongSectionShouldFallback}：该场景行为改动即失败。
+     */
     @Test
     void overlongSectionShouldFallback() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\",\"params\":{\"maxLen\":\"100\"}}}}");
@@ -77,6 +83,9 @@ class TitleBoundarySliceStrategyTest {
         assertTrue(chunks.stream().allMatch(c -> c.getCharCount() <= 500));
     }
 
+    /**
+     * 守护 {@code blankShouldNotBufferAndFlushEmpty}：该场景行为改动即失败。
+     */
     @Test
     void blankShouldNotBufferAndFlushEmpty() {
         SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\"}}}");

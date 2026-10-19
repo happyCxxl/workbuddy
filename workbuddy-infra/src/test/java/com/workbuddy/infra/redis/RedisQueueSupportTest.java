@@ -23,6 +23,9 @@ class RedisQueueSupportTest {
     @Mock
     private ListOperations<String, String> listOperations;
 
+    /**
+     * 守护 {@code leftPushShouldPushValueToKey}：该场景行为改动即失败。
+     */
     @Test
     void leftPushShouldPushValueToKey() {
         when(stringRedisTemplate.opsForList()).thenReturn(listOperations);
@@ -30,8 +33,13 @@ class RedisQueueSupportTest {
         new RedisQueueSupport(stringRedisTemplate).leftPush("q", "1");
 
         verify(listOperations).leftPush("q", "1");
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(listOperations).getInvocations().stream()
+                .anyMatch(inv -> "leftPush".equals(inv.getMethod().getName())));
     }
 
+    /**
+     * 守护 {@code rightPopShouldPopWithTimeout}：该场景行为改动即失败。
+     */
     @Test
     void rightPopShouldPopWithTimeout() {
         when(stringRedisTemplate.opsForList()).thenReturn(listOperations);
@@ -39,5 +47,7 @@ class RedisQueueSupportTest {
         new RedisQueueSupport(stringRedisTemplate).rightPop("q", Duration.ofSeconds(5));
 
         verify(listOperations).rightPop("q", Duration.ofSeconds(5));
+        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(listOperations).getInvocations().stream()
+                .anyMatch(inv -> "rightPop".equals(inv.getMethod().getName())));
     }
 }

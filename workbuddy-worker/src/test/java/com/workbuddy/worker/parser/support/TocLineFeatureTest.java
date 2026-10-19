@@ -9,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class TocLineFeatureTest {
 
+    /**
+     * 守护 {@code tocLinesShouldMatch}：该场景行为改动即失败。
+     */
     @Test
     void tocLinesShouldMatch() {
         assertTrue(TocLineFeature.isTocLine("第一章 总则 ...... 1"));
@@ -18,6 +21,9 @@ class TocLineFeatureTest {
         assertTrue(TocLineFeature.isTocLine("附件一 资质要求 …… 123"));
     }
 
+    /**
+     * 守护 {@code bodyLinesShouldNotMatch}：该场景行为改动即失败。
+     */
     @Test
     void bodyLinesShouldNotMatch() {
         assertFalse(TocLineFeature.isTocLine("第一章 总则（正文标题）"));
