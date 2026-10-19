@@ -69,11 +69,6 @@
         <artifactId>workbuddy-model</artifactId>
         <version>${project.version}</version>
       </dependency>
-      <dependency>
-        <groupId>com.workbuddy</groupId>
-        <artifactId>workbuddy-vector</artifactId>
-        <version>${project.version}</version>
-      </dependency>
 
       <!-- LangChain4j 官方 BOM（knowledge-model 的模型供应商调用，版本单点钉版）；
            只导官方线，不引 community 模块 -->
@@ -159,7 +154,7 @@
         <version>${druid.version}</version>
       </dependency>
 
-      <!-- Milvus 官方 SDK（worker 直接依赖 io.milvus.*，版本钉版） -->
+      <!-- Milvus 官方 SDK（infra 的向量库封装使用，版本钉版） -->
       <dependency>
         <groupId>io.milvus</groupId>
         <artifactId>milvus-sdk-java</artifactId>
@@ -402,7 +397,6 @@
     <module>workbuddy-file</module>
     <module>workbuddy-auth</module>
     <module>workbuddy-model</module>
-    <module>workbuddy-vector</module>
     <module>workbuddy-worker</module>
     <module>workbuddy-biz</module>
   </modules>

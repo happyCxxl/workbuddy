@@ -2,7 +2,7 @@ package com.workbuddy.filecenter.config;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.workbuddy.common.enums.storage.StorageType;
-import com.workbuddy.filecenter.provider.StorageSourceDef;
+import com.workbuddy.infra.storage.StorageSourceDef;
 
 import java.util.LinkedHashMap;
 import java.util.List;

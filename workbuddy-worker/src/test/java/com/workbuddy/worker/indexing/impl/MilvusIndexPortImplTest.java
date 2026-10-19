@@ -1,8 +1,8 @@
 package com.workbuddy.worker.indexing.impl;
 
-import com.workbuddy.vector.CollectionRow;
-import com.workbuddy.vector.KnowledgeCollectionPort;
-import com.workbuddy.vector.ScoredRow;
+import com.workbuddy.infra.vector.CollectionRow;
+import com.workbuddy.infra.vector.KnowledgeCollectionPort;
+import com.workbuddy.infra.vector.ScoredRow;
 import com.workbuddy.worker.indexing.IndexRow;
 import com.workbuddy.worker.indexing.MilvusIndexPort;
 import com.workbuddy.worker.indexing.search.FullTextHit;

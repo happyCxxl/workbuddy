@@ -1,4 +1,4 @@
-package com.workbuddy.vector;
+package com.workbuddy.infra.vector;
 
 import com.google.gson.JsonObject;
 import com.workbuddy.common.error.ErrorCode;

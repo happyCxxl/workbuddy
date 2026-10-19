@@ -1,4 +1,4 @@
-package com.workbuddy.vector;
+package com.workbuddy.infra.vector;
 
 import java.util.List;
 

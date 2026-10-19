@@ -42,12 +42,6 @@
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
 
-        <!-- MinIO 对象存储（版本由根 pom 钉版） -->
-        <dependency>
-            <groupId>io.minio</groupId>
-            <artifactId>minio</artifactId>
-        </dependency>
-
         <!-- 上传入口的 multipart 类型（MultipartFile）：接口层已收拢到 biz，
              本模块不再声明 Web 起步依赖，Servlet 容器与 servlet 实现由 biz 提供 -->
         <dependency>

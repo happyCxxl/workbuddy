@@ -1,4 +1,4 @@
-package com.workbuddy.filecenter.provider;
+package com.workbuddy.infra.storage;
 
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.utils.NullUtil;

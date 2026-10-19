@@ -36,6 +36,24 @@
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
 
+        <!-- Milvus 官方 SDK（向量库封装：客户端生命周期、集合管理与查询） -->
+        <dependency>
+            <groupId>io.milvus</groupId>
+            <artifactId>milvus-sdk-java</artifactId>
+        </dependency>
+
+        <!-- Gson（Milvus 侧 JSON 拼装） -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+
+        <!-- MinIO 对象存储适配（版本由根 pom 钉版） -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
+
         <!-- 自动配置类（@AutoConfiguration/@Bean） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,7 +1,7 @@
 package com.workbuddy.filecenter.config;
 
 import com.workbuddy.common.enums.storage.StorageType;
-import com.workbuddy.filecenter.provider.StorageSourceDef;
+import com.workbuddy.infra.storage.StorageSourceDef;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

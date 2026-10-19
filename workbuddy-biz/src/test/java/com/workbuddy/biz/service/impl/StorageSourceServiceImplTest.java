@@ -19,7 +19,7 @@ import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.config.FileCenterConfig;
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.filecenter.provider.StorageSourceDef;
+import com.workbuddy.infra.storage.StorageSourceDef;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

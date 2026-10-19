@@ -1,4 +1,4 @@
-package com.workbuddy.filecenter.provider;
+package com.workbuddy.infra.storage;
 
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;

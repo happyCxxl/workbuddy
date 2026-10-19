@@ -7,7 +7,7 @@ import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.filecenter.db.WbFileObjectDbService;
-import com.workbuddy.filecenter.provider.StorageProvider;
+import com.workbuddy.infra.storage.StorageProvider;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -6,6 +6,9 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.infra.storage.StorageProvider;
+import com.workbuddy.infra.storage.StorageProviderFactory;
+import com.workbuddy.infra.storage.StorageSourceDef;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

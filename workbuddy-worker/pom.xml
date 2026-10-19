@@ -40,10 +40,10 @@
             <artifactId>workbuddy-model</artifactId>
         </dependency>
 
-        <!-- 向量库模块（Milvus 封装：客户端/集合/查询/口径） -->
+        <!-- 基础设施模块（含 Milvus 客户端/集合/查询封装） -->
         <dependency>
             <groupId>com.workbuddy</groupId>
-            <artifactId>workbuddy-vector</artifactId>
+            <artifactId>workbuddy-infra</artifactId>
         </dependency>
 
         <!-- Spring 基础（注解 / 配置属性 / 条件装配） -->
@@ -56,18 +56,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-        </dependency>
-
-        <!-- Gson（Milvus 侧 JSON 拼装） -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
-
-        <!-- Milvus 官方 SDK（版本由根 pom 钉版） -->
-        <dependency>
-            <groupId>io.milvus</groupId>
-            <artifactId>milvus-sdk-java</artifactId>
         </dependency>
 
         <!-- Apache Tika 3.1.0（格式识别 + 损坏/加密探测；与解析环节共用同一套依赖） -->

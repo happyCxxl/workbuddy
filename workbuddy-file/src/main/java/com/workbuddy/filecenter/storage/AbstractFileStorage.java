@@ -8,7 +8,7 @@ import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.db.WbFileObjectDbService;
-import com.workbuddy.filecenter.provider.StorageProvider;
+import com.workbuddy.infra.storage.StorageProvider;
 import com.workbuddy.filecenter.provider.StorageRouter;
 
 import java.io.ByteArrayInputStream;

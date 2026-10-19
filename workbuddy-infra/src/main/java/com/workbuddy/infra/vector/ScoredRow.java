@@ -1,4 +1,4 @@
-package com.workbuddy.vector;
+package com.workbuddy.infra.vector;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

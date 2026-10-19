@@ -1,4 +1,4 @@
-package com.workbuddy.vector;
+package com.workbuddy.infra.vector;
 
 import com.workbuddy.common.utils.NullUtil;
 import io.milvus.v2.client.ConnectConfig;

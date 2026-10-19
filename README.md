@@ -20,16 +20,15 @@
 
 ## 模块与依赖方向
 
-| 模块               | 职责                                                                                                  | 依赖                                     |
-|--------------------|-------------------------------------------------------------------------------------------------------|------------------------------------------|
-| `workbuddy-common` | 最底层：领域模型与实体、枚举、错误码与异常、统一返回契约、用户模型与安全上下文、自定义注解、工具类    | —                                        |
-| `workbuddy-infra`  | 基础设施：MyBatis-Plus 统一配置与数据访问基类、Redis 队列 / 锁 / 计数器、限流切面与令牌桶（bucket4j） | common                                   |
-| `workbuddy-auth`   | 认证与用户：登录 / 注册、用户表、JWT、Spring Security 过滤链                                          | common、infra                            |
-| `workbuddy-file`   | 文件服务：上传 / 下载、文件档案表、内容寻址对象存取（存储提供者可替换）                               | common、infra                            |
-| `workbuddy-model`  | 模型能力：模型目录、网关端口、供应商实现（DashScope）                                                 | common                                   |
-| `workbuddy-vector` | 向量库封装：Milvus 客户端生命周期、集合管理、查询与口径钉版                                           | common                                   |
-| `workbuddy-worker` | 文档处理引擎：输入校验、解析、组装、预处理、切片、向量化、索引                                        | common、file、model、vector              |
-| `workbuddy-biz`    | 应用入口与业务接口层：控制器、服务编排、任务消费、索引与检索评测                                      | auth、common、file、infra、model、worker |
+| 模块               | 职责                                                                                                                                                       | 依赖                                     |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| `workbuddy-common` | 最底层：领域模型与实体、枚举、错误码与异常、统一返回契约、用户模型与安全上下文、自定义注解、工具类                                                         | —                                        |
+| `workbuddy-infra`  | 基础设施：MyBatis-Plus 统一配置与数据访问基类、Redis 队列 / 锁 / 计数器、限流切面与令牌桶（bucket4j）、Milvus 向量库封装、对象存储适配（MinIO / 本地磁盘） | common                                   |
+| `workbuddy-auth`   | 认证与用户：登录 / 注册、用户表、JWT、Spring Security 过滤链                                                                                               | common、infra                            |
+| `workbuddy-file`   | 文件服务：上传 / 下载、文件档案表、内容寻址、存储源路由（对象存储适配由 infra 提供）                                                                       | common、infra                            |
+| `workbuddy-model`  | 模型能力：模型目录、网关端口、供应商实现（DashScope）                                                                                                      | common                                   |
+| `workbuddy-worker` | 文档处理引擎：输入校验、解析、组装、预处理、切片、向量化、索引                                                                                             | common、file、infra、model               |
+| `workbuddy-biz`    | 应用入口与业务接口层：控制器、服务编排、任务消费、索引与检索评测                                                                                           | auth、common、file、infra、model、worker |
 
 依赖方向单一：`common` 不依赖任何模块（由 `ModuleDependencyGuardTest` 锁定），`infra` 只依赖 `common`；业务模块用谁就声明谁，不依赖传递引入。
 
