@@ -59,6 +59,11 @@ class ModelServiceImplTest {
         service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher);
     }
 
+    /**
+     * 目录分页：筛选条件透传与条目字段映射。
+     *
+     * <p>守护 {@code page}：条件或字段错位即失败。
+     */
     @Test
     void pageShouldPassFiltersAndMapDirectoryFields() {
         when(kbModelDbService.pageByCondition(1, 10, "ENABLED", "qwen", "OCR"))
@@ -78,7 +83,67 @@ class ModelServiceImplTest {
         assertEquals("ENABLED", item.getStatus());
     }
 
+    /**
+     * 目录条目：长度、价格、限额、思考标记与币种逐列映射。
+     *
+     * <p>守护 {@code toItem}：漏搬任一列都会让模型配置页显示空值。
+     */
+    @Test
+    void pageShouldMapNumericColumns() {
+        WbModel full = row(4L, "dashscope", "qwen-max", "CHAT", "ENABLED");
+        full.setThinkingEnabled(1);
+        full.setInputLimit(30720);
+        full.setOutputLimit(8192);
+        full.setThinkingInputLimit(32768);
+        full.setThinkingOutputLimit(65536);
+        full.setContextWindow(32768);
+        full.setPriceInPerM(new BigDecimal("20"));
+        full.setPriceInPerMCacheHit(new BigDecimal("2"));
+        full.setPriceOutPerM(new BigDecimal("60"));
+        full.setCurrency("CNY");
+        full.setRpmLimit(600);
+        full.setTpmLimit(120000);
+        when(kbModelDbService.pageByCondition(1, 10, null, null, null)).thenReturn(pageOf(full));
+
+        ModelItemVO item = service.page(query(null, null, null, null, null)).getRecords().getFirst();
+
+        assertEquals(1, item.getThinkingEnabled());
+        assertEquals(30720, item.getInputLimit());
+        assertEquals(8192, item.getOutputLimit());
+        assertEquals(32768, item.getThinkingInputLimit());
+        assertEquals(65536, item.getThinkingOutputLimit());
+        assertEquals(32768, item.getContextWindow());
+        assertEquals(new BigDecimal("20"), item.getPriceInPerM());
+        assertEquals(new BigDecimal("2"), item.getPriceInPerMCacheHit());
+        assertEquals(new BigDecimal("60"), item.getPriceOutPerM());
+        assertEquals("CNY", item.getCurrency());
+        assertEquals(600, item.getRpmLimit());
+        assertEquals(120000, item.getTpmLimit());
+    }
+
+    /**
+     * 厂商展示名：未配置的厂商回落厂商码，厂商码为空时留空。
+     *
+     * <p>守护 {@code vendorName}：回落成空串会让列表的厂商列变成空白。
+     */
+    @Test
+    void pageShouldFallBackToVendorCodeWhenUnconfigured() {
+        when(kbModelDbService.pageByCondition(1, 10, null, null, null))
+                .thenReturn(pageOf(row(5L, "unconfigured", "m-1", "CHAT", "ENABLED"),
+                        row(6L, null, "m-2", "CHAT", "ENABLED")));
+
+        List<ModelItemVO> items = service.page(query(null, null, null, null, null)).getRecords();
+
+        assertEquals("unconfigured", items.get(0).getVendorName());
+        assertNull(items.get(1).getVendorName());
+    }
+
     /** 页码与页长缺省按 1 / 10 兜底，筛选条件留空按不过滤下发 */
+    /**
+     * 目录分页：页码页长缺省、空关键字不过滤。
+     *
+     * <p>守护 {@code page}：缺省口径写错即失败。
+     */
     @Test
     void pageShouldDefaultPaginationWhenAbsent() {
         when(kbModelDbService.pageByCondition(1, 10, null, null, null)).thenReturn(pageOf());
@@ -89,6 +154,11 @@ class ModelServiceImplTest {
         verify(kbModelDbService).pageByCondition(1, 10, null, null, null);
     }
 
+    /**
+     * 新增模型：业务列逐列落库并写 CREATE 审计。
+     *
+     * <p>守护 {@code create}：漏搬任一列即失败。
+     */
     @Test
     void createShouldFillColumnsAndWriteAudit() {
         ModelSaveDTO dto = saveDto();
@@ -117,6 +187,11 @@ class ModelServiceImplTest {
                 isNull(), anyString());
     }
 
+    /**
+     * 新增模型：思考标记缺省按 0 落库。
+     *
+     * <p>守护 {@code create}：默认值写成 null 即失败。
+     */
     @Test
     void createShouldDefaultThinkingFlagToDisabled() {
         ModelSaveDTO dto = saveDto();
@@ -127,6 +202,11 @@ class ModelServiceImplTest {
         assertEquals(0, capturedSave().getThinkingEnabled());
     }
 
+    /**
+     * 新增模型：能力取值不在字典内按 40001 拒绝。
+     *
+     * <p>守护 {@code create}：未知能力落库即失败。
+     */
     @Test
     void createShouldRejectIllegalCapability() {
         ModelSaveDTO unknown = saveDto();
@@ -139,6 +219,11 @@ class ModelServiceImplTest {
         verify(kbModelDbService, never()).save(any());
     }
 
+    /**
+     * 新增模型：状态恒为启用。
+     *
+     * <p>守护 {@code create}：新增即停用即失败。
+     */
     @Test
     void createShouldAlwaysSaveEnabled() {
         service.create(saveDto());
@@ -146,6 +231,11 @@ class ModelServiceImplTest {
         assertEquals("ENABLED", capturedSave().getStatus());
     }
 
+    /**
+     * 编辑模型：业务列逐列覆盖、币种按收参、状态保持。
+     *
+     * <p>守护 {@code update}：漏搬任一列即失败。
+     */
     @Test
     void updateShouldOverwriteColumns() {
         when(kbModelDbService.getExistingById(5L))
@@ -158,12 +248,26 @@ class ModelServiceImplTest {
         assertEquals(5L, item.getId());
         WbModel updated = capturedUpdate();
         assertEquals(5L, updated.getId());
+        // 业务列逐列覆盖（漏搬任一列都会让编辑静默失效）
+        assertEquals("dashscope", updated.getVendorCode());
+        assertEquals("qwen-max", updated.getModelKey());
+        assertEquals("CHAT,EMBEDDING", updated.getCapabilities());
+        assertEquals(1, updated.getThinkingEnabled());
+        assertEquals(30720, updated.getInputLimit());
+        assertEquals(8192, updated.getOutputLimit());
+        assertEquals(32768, updated.getContextWindow());
+        assertEquals("CNY", updated.getCurrency());
         assertNull(updated.getPriceInPerM());
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_UPDATE), eq(AUDIT_OBJECT_TYPE), eq(5L),
                 anyString(), anyString());
     }
 
     /** 编辑不改状态：停用行编辑后保持停用（启停只走专用接口）；币种按收参原样覆盖 */
+    /**
+     * 编辑模型：状态不被编辑改写，停用行仍停用。
+     *
+     * <p>守护 {@code update}：编辑顺带改状态即失败。
+     */
     @Test
     void updateShouldKeepStatusWhenAbsent() {
         WbModel existing = row(7L, "dashscope", "qwen-max", "CHAT", "DISABLED");
@@ -178,6 +282,11 @@ class ModelServiceImplTest {
         assertEquals("CNY", updated.getCurrency());
     }
 
+    /**
+     * 编辑模型：行不存在按 40453 拒绝且不写库。
+     *
+     * <p>守护 {@code update}：空行可编辑即失败。
+     */
     @Test
     void updateShouldRejectMissingRow() {
         when(kbModelDbService.getExistingById(9L)).thenReturn(null);
@@ -188,6 +297,11 @@ class ModelServiceImplTest {
         verify(kbModelDbService, never()).updateModel(any());
     }
 
+    /**
+     * 启停：状态大写归一、写库并记 DISABLE 审计。
+     *
+     * <p>守护 {@code updateStatus}：动作或状态写错即失败。
+     */
     @Test
     void updateStatusShouldWriteStatusAndAudit() {
         when(kbModelDbService.getExistingById(3L)).thenReturn(row(3L, "dashscope", "qwen-max", "CHAT", "ENABLED"));
@@ -199,6 +313,28 @@ class ModelServiceImplTest {
         assertEquals("DISABLED", item.getStatus());
         verify(kbModelDbService).updateStatus(3L, "DISABLED");
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_DISABLE), eq(AUDIT_OBJECT_TYPE), eq(3L),
+                anyString(), anyString());
+    }
+
+    /**
+     * 启停：状态为空按 40001 拒绝；启用时审计动作是 ENABLE。
+     *
+     * <p>守护 {@code updateStatus} 的入参防线与动作判定：空状态当成功、启用记成停用都会误导审计。
+     */
+    @Test
+    void updateStatusShouldRejectBlankAndPublishEnable() {
+        when(kbModelDbService.getExistingById(3L)).thenReturn(row(3L, "dashscope", "qwen-max", "CHAT", "DISABLED"));
+        ModelStatusDTO blank = new ModelStatusDTO();
+        blank.setStatus("   ");
+        KnowledgeException error = assertThrows(KnowledgeException.class,
+                () -> service.updateStatus(3L, blank));
+        assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
+        verify(kbModelDbService, never()).updateStatus(any(), any());
+
+        ModelStatusDTO enable = new ModelStatusDTO();
+        enable.setStatus("enabled");
+        assertEquals("ENABLED", service.updateStatus(3L, enable).getStatus());
+        verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_ENABLE), eq(AUDIT_OBJECT_TYPE), eq(3L),
                 anyString(), anyString());
     }
 
