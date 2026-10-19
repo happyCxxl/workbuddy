@@ -2,6 +2,7 @@ package com.workbuddy.common.domain.model.catalog;
 
 import com.workbuddy.common.enums.embed.EmbedMetric;
 import com.workbuddy.common.enums.model.ModelCapability;
+import com.workbuddy.common.utils.NullUtil;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -66,7 +67,7 @@ public class ModelDescriptor {
      * @return 具备为 true
      */
     public boolean supports(ModelCapability capability) {
-        return capabilities != null && capabilities.contains(capability);
+        return NullUtil.isNotNull(capabilities) && capabilities.contains(capability);
     }
 
     /**

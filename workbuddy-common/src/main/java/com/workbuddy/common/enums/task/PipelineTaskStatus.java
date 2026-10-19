@@ -1,5 +1,7 @@
 package com.workbuddy.common.enums.task;
 
+import com.workbuddy.common.utils.NullUtil;
+
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -57,7 +59,7 @@ public enum PipelineTaskStatus {
      * @return 目标状态
      */
     public static PipelineTaskStatus requireTransition(PipelineTaskStatus from, PipelineTaskStatus to) {
-        if (from == null || to == null) {
+        if (NullUtil.isNull(from) || NullUtil.isNull(to)) {
             throw new IllegalArgumentException("任务状态迁移的源/目标不能为空");
         }
         if (!from.allowedTargets().contains(to)) {

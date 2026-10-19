@@ -4,6 +4,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.startup.StartupCheck;
 import com.workbuddy.common.startup.StartupCheckChain;
+import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.biz.config.TaskQueueProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import java.util.List;
 /**
  * 单任务超时值启动期校验：配置里每个环节的超时都必须为正。
  *
- * <p>环节名写错由绑定期拦下（{@link TaskQueueProperties#timeout} 的键是枚举），本项补的是值域：
+ * <p>环节名写错由绑定期拦下（{@link TaskQueueProperties} 的 timeout 键是枚举），本项补的是值域：
  * 超时给 0 或负数会让该环节任务一启动就被判超时，或在孤儿恢复里把正常任务误判成失败。
  */
 @Slf4j
@@ -54,6 +55,6 @@ public class TaskTimeoutCheck implements StartupCheck {
 
     /** 时长为正：空值按未配置处理（由默认值兜底），不算非法 */
     private boolean isPositive(Duration duration) {
-        return duration == null || (!duration.isZero() && !duration.isNegative());
+        return NullUtil.isNull(duration) || (!duration.isZero() && !duration.isNegative());
     }
 }

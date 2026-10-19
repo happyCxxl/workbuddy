@@ -129,7 +129,7 @@ public final class ParseStatsSupport {
             return List.of();
         }
         return ObjectUtil.defaultIfNull(quality.getFailedPages(), List.<Integer>of()).stream()
-                .filter(ObjectUtil::isNotNull)
+                .filter(NullUtil::isNotNull)
                 .distinct()
                 .sorted()
                 .toList();

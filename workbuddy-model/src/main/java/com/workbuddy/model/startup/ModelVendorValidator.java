@@ -86,7 +86,8 @@ public class ModelVendorValidator implements StartupCheck {
                 "厂商码不能为空（配置键 knowledge.model.vendors）");
         ThrowUtil.throwIf(NullUtil.isNull(vendor), ErrorCode.MODEL_VENDOR_UNKNOWN,
                 "厂商 " + vendorCode + " 缺配置体（配置键 " + configKey(vendorCode) + "）");
-        ThrowUtil.throwIf(vendor.getAuthType() == null || !SUPPORTED_AUTH_TYPES.contains(vendor.getAuthType()),
+        ThrowUtil.throwIf(NullUtil.isNull(vendor.getAuthType())
+                        || !SUPPORTED_AUTH_TYPES.contains(vendor.getAuthType()),
                 ErrorCode.PARAM_INVALID,
                 "厂商 " + vendorCode + " 的 auth-type 取值 " + vendor.getAuthType() + " 不在支持集 " + SUPPORTED_AUTH_TYPES
                         + "（配置键 " + configKey(vendorCode) + ".auth-type）");

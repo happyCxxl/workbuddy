@@ -162,7 +162,7 @@ public class StructureAssemblerImpl implements StructureAssembler {
         if (StrUtil.isNotBlank(result.getVersion())) {
             text.append('@').append(result.getVersion());
         }
-        if (ObjectUtil.isNotNull(result.getConfidence())) {
+        if (NullUtil.isNotNull(result.getConfidence())) {
             text.append(" conf=").append(result.getConfidence());
         }
         return text.toString();
@@ -172,7 +172,7 @@ public class StructureAssemblerImpl implements StructureAssembler {
         List<Double> sizes = elements.stream()
                 .filter(e -> UnifiedElementType.PARAGRAPH.name().equals(e.getType()))
                 .map(e -> NullUtil.isNull(e.getFont()) ? null : e.getFont().getSize())
-                .filter(ObjectUtil::isNotNull)
+                .filter(NullUtil::isNotNull)
                 .sorted()
                 .toList();
         if (sizes.isEmpty()) {

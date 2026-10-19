@@ -2,6 +2,8 @@ package com.workbuddy.common.enums.model;
 
 import cn.hutool.core.util.StrUtil;
 
+import com.workbuddy.common.utils.NullUtil;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -35,7 +37,7 @@ public enum ModelCapability {
         }
         for (String item : text.split(",")) {
             ModelCapability capability = of(item);
-            if (capability != null) {
+            if (NullUtil.isNotNull(capability)) {
                 capabilities.add(capability);
             }
         }
@@ -67,7 +69,7 @@ public enum ModelCapability {
      * @return 逗号分隔的清单；空集合返回空串
      */
     public static String join(Set<ModelCapability> capabilities) {
-        if (capabilities == null || capabilities.isEmpty()) {
+        if (NullUtil.isNull(capabilities) || capabilities.isEmpty()) {
             return "";
         }
         StringBuilder text = new StringBuilder();
