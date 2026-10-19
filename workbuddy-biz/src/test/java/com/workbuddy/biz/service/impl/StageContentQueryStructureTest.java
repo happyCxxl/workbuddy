@@ -164,6 +164,7 @@ class StageContentQueryStructureTest {
         assertEquals(24.0, bbox.get("height"));
         var second = vo.getItems().get(1);
         assertEquals("CONFLICT", second.getStatus());
+        assertEquals(2, second.getSeq());
         assertFalse(second.getExtra().containsKey("level"));
         assertFalse(second.getExtra().containsKey("bbox"));
     }
@@ -198,8 +199,14 @@ class StageContentQueryStructureTest {
         assertEquals(3, cellExtra.get("colSpan"));
         assertEquals(Boolean.TRUE, cellExtra.get("isHeader"));
         Map<String, Object> plainExtra = vo.getItems().get(1).getExtra();
+        // 无锚点字段的元素不下发任何 Office 定位键（空白值也不能塞进 extra）
+        assertFalse(plainExtra.containsKey("style"));
         assertFalse(plainExtra.containsKey("sheetName"));
         assertFalse(plainExtra.containsKey("row"));
+        assertFalse(plainExtra.containsKey("col"));
+        assertFalse(plainExtra.containsKey("rowSpan"));
+        assertFalse(plainExtra.containsKey("colSpan"));
+        assertFalse(plainExtra.containsKey("isHeader"));
     }
 
     /**

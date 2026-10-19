@@ -302,6 +302,30 @@ class StructureStatsSupportTest {
         assertNull(StructureStatsSupport.summary(null, exactlyThreshold, "RUNNING"));
     }
 
+    /**
+     * 单页接续：始末页为同一页时同样下发页码；疑似接续单独计数。
+     *
+     * <p>守护 {@code putContinuationRange} 的 {@code min <= max} 判定与 {@code isSuspectedContinuation}：
+     * 写成严格小于会漏掉单页接续，疑似标记判错会漏报。
+     */
+    @Test
+    void statsShouldKeepSinglePageContinuationAndSuspectedCount() {
+        UnifiedDocument document = new UnifiedDocument();
+        document.setElements(new ArrayList<>(List.of(element("e-1", UnifiedElementType.PARAGRAPH))));
+        document.setRelations(new ArrayList<>(List.of(
+                new DocumentRelation(RelationType.CONTINUATION_OF.name(), "e1#p5", "e2#p5",
+                        "疑似续表（放宽规则），表头继承"),
+                // 父子关系即使带 #p 页码也不进接续页码范围
+                relation(RelationType.PARENT_CHILD, "e3#p9", "e4#p9"))));
+
+        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+
+        assertEquals(1, stats.get(StructureStatsSupport.KEY_CONTINUATION_COUNT));
+        assertEquals(1, stats.get(StructureStatsSupport.KEY_SUSPECTED_CONTINUATION_COUNT));
+        assertEquals(5, stats.get(StructureStatsSupport.KEY_CONTINUATION_FROM_PAGE));
+        assertEquals(5, stats.get(StructureStatsSupport.KEY_CONTINUATION_TO_PAGE));
+    }
+
     /** 带层级的标题元素 */
     private UnifiedElement titled(String id, Integer level) {
         UnifiedElement element = element(id, UnifiedElementType.TITLE);

@@ -50,6 +50,11 @@ class WbModelDbServiceImplTest {
         ReflectionTestUtils.setField(dbService, "baseMapper", mapper);
     }
 
+    /**
+     * 清单：状态条件与排序进 SQL。
+     *
+     * <p>守护 {@code listByCondition}：条件或排序丢失即失败。
+     */
     @Test
     void listByConditionShouldFilterStatusInSql() {
         when(mapper.selectList(any())).thenReturn(List.of(row(1L)));
@@ -62,6 +67,11 @@ class WbModelDbServiceImplTest {
         assertTrue(sql.contains("ORDER BY"), sql);
     }
 
+    /**
+     * 清单：空过滤不下发 WHERE。
+     *
+     * <p>守护 {@code listByCondition}：空条件拼 WHERE 即失败。
+     */
     @Test
     void listByConditionShouldSkipBlankFilters() {
         when(mapper.selectList(any())).thenReturn(List.of());
@@ -74,6 +84,11 @@ class WbModelDbServiceImplTest {
         assertTrue(sql.contains("ORDER BY"), sql);
     }
 
+    /**
+     * 分页：状态/关键字/能力三条件进 SQL。
+     *
+     * <p>守护 {@code pageByCondition}：能力匹配语法写错即失败。
+     */
     @Test
     void pageByConditionShouldFilterStatusKeywordAndCapabilityInSql() {
         Page<WbModel> page = new Page<>(1, 10);
@@ -92,6 +107,11 @@ class WbModelDbServiceImplTest {
     }
 
     /** 能力留空时不拼 FIND_IN_SET，状态与关键字留空时不拼 WHERE */
+    /**
+     * 分页：条件缺失时不拼 WHERE 与 FIND_IN_SET。
+     *
+     * <p>守护 {@code pageByCondition}：缺条件仍拼 SQL 即失败。
+     */
     @Test
     void pageByConditionShouldSkipAbsentFilters() {
         Page<WbModel> page = new Page<>(1, 10);
@@ -105,6 +125,11 @@ class WbModelDbServiceImplTest {
         assertTrue(sql.contains("ORDER BY"), sql);
     }
 
+    /**
+     * 按 ID 取行：空 ID 不查库。
+     *
+     * <p>守护 {@code getExistingById}：空 ID 查库即失败。
+     */
     @Test
     void getExistingByIdShouldSkipQueryOnNullId() {
         assertNull(dbService.getExistingById(null));
@@ -112,6 +137,11 @@ class WbModelDbServiceImplTest {
         verify(mapper, never()).selectById(any());
     }
 
+    /**
+     * 按 ID 取行：命中返回该行。
+     *
+     * <p>守护 {@code getExistingById}：返回错行即失败。
+     */
     @Test
     void getExistingByIdShouldReturnRow() {
         when(mapper.selectById(1L)).thenReturn(row(1L));
@@ -119,6 +149,11 @@ class WbModelDbServiceImplTest {
         assertEquals(1L, dbService.getExistingById(1L).getId());
     }
 
+    /**
+     * 唯一键判定：厂商码与模型键双条件。
+     *
+     * <p>守护 {@code existsVendorAndModelKey}：少一条件即失败。
+     */
     @Test
     void existsVendorAndModelKeyShouldFilterBothKeys() {
         when(mapper.selectList(any())).thenReturn(List.of(row(1L)));
@@ -131,6 +166,11 @@ class WbModelDbServiceImplTest {
         assertFalse(sql.contains("id"), sql);
     }
 
+    /**
+     * 唯一键判定：编辑时排除自身。
+     *
+     * <p>守护 {@code existsVendorAndModelKey}：不排除自身即误判。
+     */
     @Test
     void existsVendorAndModelKeyShouldExcludeSelfWhenEditing() {
         when(mapper.selectList(any())).thenReturn(List.of());
@@ -142,6 +182,11 @@ class WbModelDbServiceImplTest {
         assertTrue(sql.contains("id"), sql);
     }
 
+    /**
+     * 启停：定点只更新状态列。
+     *
+     * <p>守护 {@code updateStatus}：状态列或主键条件错即失败。
+     */
     @Test
     void updateStatusShouldWriteStatusColumn() {
         dbService.updateStatus(4L, "DISABLED");
@@ -151,12 +196,24 @@ class WbModelDbServiceImplTest {
         assertTrue(wrapper.getSqlSegment().contains("id"), wrapper.getSqlSegment());
     }
 
+    /**
+     * 覆盖更新：空值列显式写 NULL，有值列走实体更新。
+     *
+     * <p>守护 {@code updateModel}：清空列漏写即旧值残留。
+     */
     @Test
     void updateAllShouldCarryValuesOnEntityAndClearNullColumns() {
         WbModel row = row(6L);
-        row.setPriceInPerM(null);
-        row.setRpmLimit(null);
+        // 十个数值列全部清空：实体更新策略跳过 null，必须逐列显式写 NULL
         row.setInputLimit(null);
+        row.setOutputLimit(null);
+        row.setThinkingInputLimit(null);
+        row.setThinkingOutputLimit(null);
+        row.setContextWindow(null);
+        row.setPriceInPerM(null);
+        row.setPriceInPerMCacheHit(null);
+        row.setRpmLimit(null);
+        row.setTpmLimit(null);
 
         dbService.updateModel(row);
 
@@ -169,9 +226,12 @@ class WbModelDbServiceImplTest {
         assertNull(entity.getPriceInPerM());
 
         String sqlSet = ((LambdaUpdateWrapper<WbModel>) wrapperCaptor.getValue()).getSqlSet();
-        assertTrue(sqlSet.contains("price_in_per_m"), sqlSet);
-        assertTrue(sqlSet.contains("rpm_limit"), sqlSet);
-        assertTrue(sqlSet.contains("input_limit"), sqlSet);
+        for (String column : List.of("input_limit", "output_limit", "thinking_input_limit",
+                "thinking_output_limit", "context_window", "price_in_per_m", "price_in_per_m_cache_hit",
+                "rpm_limit", "tpm_limit")) {
+            assertTrue(sqlSet.contains(column), column + " 未清空: " + sqlSet);
+        }
+        // 有值的列走实体更新，不重复写 SET；主键/业务列不进 SET
         assertFalse(sqlSet.contains("price_out_per_m"), sqlSet);
         assertFalse(sqlSet.contains("model_key"), sqlSet);
     }

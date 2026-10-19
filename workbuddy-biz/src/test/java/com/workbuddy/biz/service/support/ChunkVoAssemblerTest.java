@@ -28,6 +28,11 @@ class ChunkVoAssemblerTest {
         return chunk;
     }
 
+    /**
+     * 切片摘要：父子计数、类型分布与平均片长。
+     *
+     * <p>守护 {@code toSummary}：计数或均值口径错即失败。
+     */
     @Test
     void toSummaryShouldCountParentChildTypesAndAvgChars() {
         WbChunkSet chunkSet = new WbChunkSet();
@@ -50,6 +55,11 @@ class ChunkVoAssemblerTest {
         assertEquals(1, summary.getTypeCounts().get(ChunkContentType.TABLE.name()));
     }
 
+    /**
+     * 切片条目：DB 列与产物侧列逐列合并。
+     *
+     * <p>守护 {@code toChunkItemVOs}：漏搬任一列即失败。
+     */
     @Test
     void toChunkItemVOsShouldMapAllFields() {
         WbChunk chunk = chunk("chunk-0001", ChunkContentType.PARAGRAPH.name(), "chunk-0000", 42);
@@ -57,6 +67,7 @@ class ChunkVoAssemblerTest {
         chunk.setPageRange("1-2");
         chunk.setOrderNo(1);
         chunk.setTokenCount(28);
+        chunk.setTableRef("tbl-1");
         Chunk productChunk = new Chunk();
         productChunk.setChunkId("chunk-0001");
         productChunk.setSourceElementIds(List.of("el-1", "el-2"));
@@ -66,9 +77,14 @@ class ChunkVoAssemblerTest {
 
         assertEquals(1, vos.size());
         assertEquals("chunk-0001", vos.getFirst().getChunkId());
+        assertEquals("chunk-0000", vos.getFirst().getParentChunkId());
+        assertEquals("内容chunk-0001", vos.getFirst().getContent());
+        assertEquals(ChunkContentType.PARAGRAPH.name(), vos.getFirst().getContentType());
         assertEquals("第一章 > 第一节", vos.getFirst().getTitlePath());
         assertEquals("1-2", vos.getFirst().getPageRange());
+        assertEquals("tbl-1", vos.getFirst().getTableRef());
         assertEquals(1, vos.getFirst().getOrderNo());
+        assertEquals(42, vos.getFirst().getCharCount());
         assertEquals(28, vos.getFirst().getTokenCount());
         // 来源元素个数与兜底原因只在切片产物里，DB 无这两列
         assertEquals(2, vos.getFirst().getSourceElementCount());

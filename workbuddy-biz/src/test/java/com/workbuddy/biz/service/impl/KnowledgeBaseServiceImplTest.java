@@ -569,6 +569,7 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeException typeError = assertThrows(KnowledgeException.class,
                 () -> service.bindStrategy(2L, unknownType));
         assertEquals(ErrorCode.PARAM_INVALID, typeError.getErrorCode());
+        assertTrue(typeError.getMessage().contains("未知策略类型"), typeError.getMessage());
 
         StrategyBindingUpdateDTO missingVersion = new StrategyBindingUpdateDTO();
         missingVersion.setStrategyType("CHUNK");
@@ -577,6 +578,7 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeException missing = assertThrows(KnowledgeException.class,
                 () -> service.bindStrategy(2L, missingVersion));
         assertEquals(ErrorCode.PARAM_INVALID, missing.getErrorCode());
+        assertTrue(missing.getMessage().contains("策略版本不存在"), missing.getMessage());
 
         WbPipelineStrategyVersion embedVersion = new WbPipelineStrategyVersion();
         embedVersion.setId(88L);
@@ -589,6 +591,7 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeException mismatchError = assertThrows(KnowledgeException.class,
                 () -> service.bindStrategy(2L, mismatch));
         assertEquals(ErrorCode.PARAM_INVALID, mismatchError.getErrorCode());
+        assertTrue(mismatchError.getMessage().contains("策略类型与所选版本不匹配"), mismatchError.getMessage());
 
         verify(strategyBindingDbService, never()).save(any());
         verify(strategyBindingDbService, never()).updateById(any());
@@ -819,7 +822,8 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeException e =
                 assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, request));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
-        verify(strategyBindingDbService, never()).save(any());
+                assertTrue(e.getMessage().contains("需一次设置全部可绑定策略"), e.getMessage());
+verify(strategyBindingDbService, never()).save(any());
     }
 
     /**
@@ -838,7 +842,8 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeException e =
                 assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, request));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
-        verify(strategyBindingDbService, never()).save(any());
+                assertTrue(e.getMessage().contains("策略版本不能为空"), e.getMessage());
+verify(strategyBindingDbService, never()).save(any());
     }
 
     /**
@@ -858,7 +863,8 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeException e =
                 assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, request));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
-        verify(strategyBindingDbService, never()).save(any());
+                assertTrue(e.getMessage().contains("已关闭策略绑定"), e.getMessage());
+verify(strategyBindingDbService, never()).save(any());
     }
 
     /**
@@ -877,7 +883,8 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeException e =
                 assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, request));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
-        verify(strategyBindingDbService, never()).save(any());
+                assertTrue(e.getMessage().contains("未知策略类型"), e.getMessage());
+verify(strategyBindingDbService, never()).save(any());
     }
 
     /**
@@ -897,7 +904,8 @@ class KnowledgeBaseServiceImplTest {
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.bindStrategy(2L, dto));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
-        verify(strategyBindingDbService, never()).save(any());
+                assertTrue(e.getMessage().contains("已关闭策略绑定"), e.getMessage());
+verify(strategyBindingDbService, never()).save(any());
     }
 
     /**
@@ -914,12 +922,14 @@ class KnowledgeBaseServiceImplTest {
         KnowledgeException emptyError =
                 assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, empty));
         assertEquals(ErrorCode.PARAM_INVALID, emptyError.getErrorCode());
+        assertTrue(emptyError.getMessage().contains("绑定列表不能为空"), emptyError.getMessage());
 
         StrategyBindingsUpdateDTO duplicated = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("CHUNK", 33L));
         KnowledgeException dupError =
                 assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, duplicated));
         assertEquals(ErrorCode.PARAM_INVALID, dupError.getErrorCode());
+        assertTrue(dupError.getMessage().contains("策略类型重复"), dupError.getMessage());
 
         verify(strategyBindingDbService, never()).save(any());
     }

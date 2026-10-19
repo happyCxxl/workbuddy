@@ -81,11 +81,15 @@ class IndexRowAssemblerTest {
         assertEquals("c1", first.getChunkId());
         assertEquals(9L, first.getDocumentId());
         assertEquals("kb-1", first.getOwner());
+        assertEquals("PARAGRAPH", first.getContentType());
+        assertNull(first.getParentChunkId());
         assertEquals("正文一", first.getContent());
         assertEquals("第一章 > 第一节", first.getTitlePath());
         assertEquals("[\"e1\",\"e2\"]", first.getSourceElementIds());
+        assertEquals(List.of(0.1f), first.getVector());
         IndexRow second = rows.get(1);
         assertEquals("c2", second.getChunkId());
+        assertEquals(List.of(0.2f), second.getVector());
         assertNull(second.getTitlePath());
         // 无来源元素的切片序列化为空数组（源码字段默认空列表，非 null）
         assertEquals("[]", second.getSourceElementIds());

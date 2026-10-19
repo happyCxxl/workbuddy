@@ -155,19 +155,39 @@ class StageContentQueryPagingTest {
     }
 
     /**
-     * 分页归一：页码非正按第 1 页，每页条数超上限按上限截断。
+     * 分页归一：页码非正按第 1 页，每页条数超上限按上限截断、非正按默认值。
      *
-     * <p>守护 {@code resolvePage}/{@code resolveLimit} 的边界：上限不截断会让单页拉全库。
+     * <p>守护 {@code resolvePage}/{@code resolveLimit} 的边界：上限不截断会让单页拉全库，
+     * 而 1 条/页是合法取值（不能被当成「未传」）。
      */
     @Test
     void stageContentShouldNormalizePageAndLimit() {
         stubTask();
         stubArtifact(parseDoc(List.of(ParseElement.of("p-1", ElementType.PARAGRAPH))));
 
-        StageContentVO vo = service.stageContent(FILE_RESULT_ID, "PARSE", null, null, -3, 5000);
+        StageContentVO upper = service.stageContent(FILE_RESULT_ID, "PARSE", null, null, -3, 5000);
+        StageContentVO single = service.stageContent(FILE_RESULT_ID, "PARSE", null, null, 1, 1);
 
-        assertEquals(1, vo.getPage());
-        assertEquals(StageContentQueryService.MAX_LIMIT, vo.getLimit());
+        assertEquals(1, upper.getPage());
+        assertEquals(StageContentQueryService.MAX_LIMIT, upper.getLimit());
+        assertEquals(1, single.getLimit());
+    }
+
+    /**
+     * 空产物（0 元素）：total 为 0 且不标截断。
+     *
+     * <p>守护 {@code hasMore} 的空集合兜底：0 条还标截断会让页面一直「加载下一页」。
+     */
+    @Test
+    void stageContentWithoutItemsShouldNotMarkTruncation() {
+        stubTask();
+        stubArtifact(structureDoc(List.of()));
+
+        StageContentVO vo = service.stageContent(FILE_RESULT_ID, "STRUCTURE", null, null, null, null);
+
+        assertEquals(0, vo.getTotal());
+        assertTrue(vo.getItems().isEmpty());
+        assertFalse(vo.getTruncated());
     }
 
     /**
@@ -205,15 +225,19 @@ class StageContentQueryPagingTest {
     @Test
     void stageContentShouldFilterByDocPageAndStatus() {
         stubTask();
+        UnifiedElement page1 = element("e-0", "PARAGRAPH", "第一页");
+        page1.setPage(1);
         UnifiedElement page3 = element("e-1", "PARAGRAPH", "第三页");
         page3.setPage(3);
         page3.setConflictStatus("EXCLUDED_TOC");
         UnifiedElement page4 = element("e-2", "PARAGRAPH", "第四页");
         page4.setPage(4);
         page4.setConflictStatus("REPEATED");
-        stubArtifact(structureDoc(List.of(page3, page4)));
+        stubArtifact(structureDoc(List.of(page1, page3, page4)));
 
         StageContentVO byPage = service.stageContent(FILE_RESULT_ID, "STRUCTURE", null, 3L, null, null);
+        // 页码 1 是合法过滤值（不是「不过滤」）
+        StageContentVO firstPage = service.stageContent(FILE_RESULT_ID, "STRUCTURE", null, 1L, null, null);
         StageContentVO byStatus = service.stageContent(FILE_RESULT_ID, "STRUCTURE", null, null, null, null,
                 "REPEATED", null);
         StageContentVO blankStatus = service.stageContent(FILE_RESULT_ID, "STRUCTURE", null, null, null, null,
@@ -222,9 +246,11 @@ class StageContentQueryPagingTest {
         assertEquals(1, byPage.getItems().size());
         assertEquals("第三页", byPage.getItems().getFirst().getDisplay());
         assertEquals(1, byPage.getTotal());
+        assertEquals(1, firstPage.getItems().size());
+        assertEquals("第一页", firstPage.getItems().getFirst().getDisplay());
         assertEquals(1, byStatus.getItems().size());
         assertEquals("REPEATED", byStatus.getItems().getFirst().getStatus());
-        assertEquals(2, blankStatus.getItems().size());
+        assertEquals(3, blankStatus.getItems().size());
     }
 
     /**
