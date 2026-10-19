@@ -77,13 +77,13 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      * @param stage        环节名
      * @param taskId       任务 ID（可空）
      * @param docPage      文档页码（可空）
-     * @param page         内容分页页码（可空）
-     * @param limit        每页条数（可空）
+     * @param current      内容分页页码（可空）
+     * @param size         每页条数（可空）
      * @return 环节内容视图
      */
     public StageContentVO stageContent(Long fileResultId, String stage, Long taskId, Long docPage,
-                                       Integer page, Integer limit) {
-        return stageContent(fileResultId, stage, taskId, docPage, page, limit, null, null);
+                                       Integer current, Integer size) {
+        return stageContent(fileResultId, stage, taskId, docPage, current, size, null, null);
     }
 
     /**
@@ -95,22 +95,23 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      * @param stage        环节（FILE_CHAIN_STAGES 白名单）
      * @param taskId       任务 ID（可空，缺省取该环节最新任务）
      * @param docPage      文档页过滤（可空）
-     * @param page         页码（可空，缺省第 1 页）
-     * @param limit        每页条数（可空，缺省上限）
+     * @param current      页码（可空，缺省第 1 页）
+     * @param size         每页条数（可空，缺省上限）
      * @param status       处置状态过滤（可空）
      * @param chunkFilter  切片内容过滤（可空）
      * @return 产物内容分页
      */
     @Override
     public StageContentVO stageContent(Long fileResultId, String stage, Long taskId, Long docPage,
-                                       Integer page, Integer limit, String status, ChunkContentFilterDTO chunkFilter) {
+                                       Integer current, Integer size, String status,
+                                       ChunkContentFilterDTO chunkFilter) {
         accessGuard.requireExisting(fileResultId);
         ThrowUtil.throwIf(StrUtil.isBlank(stage) || !PipelineStage.FILE_CHAIN_STAGES.contains(stage),
                 ErrorCode.PARAM_INVALID, "未知环节: " + stage);
         WbPipelineTask task = detailSupport.resolveTask(fileResultId, stageOf(stage), taskId, stageLabel(stage));
 
-        int pageNo = resolvePage(page);
-        int pageSize = resolveLimit(limit);
+        int pageNo = resolveCurrent(current);
+        int pageSize = resolveSize(size);
         StageContentVO vo = new StageContentVO();
         vo.setFileResultId(fileResultId);
         vo.setStage(stage);
@@ -118,8 +119,8 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
         vo.setDocPage(NullUtil.isNull(docPage) || docPage < 1 ? null : docPage.intValue());
         vo.setItems(new ArrayList<>());
         vo.setTotal(0);
-        vo.setPage(pageNo);
-        vo.setLimit(pageSize);
+        vo.setCurrent(pageNo);
+        vo.setSize(pageSize);
         vo.setTruncated(false);
         if (NullUtil.isNull(task)) {
             return vo;
@@ -155,50 +156,50 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
             vo.setTotal(0);
         }
         // 截断 = 这一页之后还有内容（含页码越界）
-        vo.setTruncated(hasMore(vo.getPage(), vo.getLimit(), vo.getItems().size(), vo.getTotal()));
+        vo.setTruncated(hasMore(vo.getCurrent(), vo.getSize(), vo.getItems().size(), vo.getTotal()));
         return vo;
     }
 
     /** 页码归一：非正数或空按第 1 页 */
-    private int resolvePage(Integer page) {
-        return NullUtil.isNull(page) || page < 1 ? 1 : page;
+    private int resolveCurrent(Integer current) {
+        return NullUtil.isNull(current) || current < 1 ? 1 : current;
     }
 
     /** 每页条数归一：空/非正按默认上限，超过上限按上限截断 */
-    private int resolveLimit(Integer limit) {
-        if (NullUtil.isNull(limit) || limit < 1) {
-            return DEFAULT_LIMIT;
+    private int resolveSize(Integer size) {
+        if (NullUtil.isNull(size) || size < 1) {
+            return DEFAULT_SIZE;
         }
-        return Math.min(limit, MAX_LIMIT);
+        return Math.min(size, MAX_SIZE);
     }
 
     /**
      * 这一页之后是否还有内容。
      *
-     * <p>**不能写成 `page × limit < total`**：最后一页不满时（5 条按每页 2 条取第 3 页，
+     * <p>**不能写成 `current × size < total`**：最后一页不满时（5 条按每页 2 条取第 3 页，
      * 只回 1 条）`3 × 2 = 6` 不小于 5，会把"已到末页"报成还有内容。按"这一页取到的位移
      * 是否到达总数"判断才等价于"后面还有没有"。
      *
-     * @param page      当前页码
-     * @param limit     本页条数上限
+     * @param current   当前页码
+     * @param size      本页条数上限
      * @param pageCount 本页实际返回条数
      * @param total     总条数
      * @return 还有内容未返回则为 true（页码越界的空页后面没有内容，返回 false）
      */
-    private boolean hasMore(int page, int limit, int pageCount, int total) {
+    private boolean hasMore(int current, int size, int pageCount, int total) {
         if (total <= 0) {
             return false;
         }
-        return (page - 1) * limit + pageCount < total;
+        return (current - 1) * size + pageCount < total;
     }
 
     /** 取某一页：越界返回空列表（total 与 truncated 由调用处据实标明） */
-    private List<StageContentItemVO> slice(List<StageContentItemVO> all, int page, int limit) {
-        int from = (page - 1) * limit;
+    private List<StageContentItemVO> slice(List<StageContentItemVO> all, int current, int size) {
+        int from = (current - 1) * size;
         if (from >= all.size()) {
             return new ArrayList<>();
         }
-        return new ArrayList<>(all.subList(from, Math.min(from + limit, all.size())));
+        return new ArrayList<>(all.subList(from, Math.min(from + size, all.size())));
     }
 
     private List<StageContentItemVO> buildItems(String stage, WbPipelineProduct product) {

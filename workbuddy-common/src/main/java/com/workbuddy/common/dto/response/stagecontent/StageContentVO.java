@@ -38,10 +38,10 @@ public class StageContentVO {
     private Integer total;
 
     /** 当前页码（从 1 起） */
-    private Integer page;
+    private Integer current;
 
     /** 当前页请求的条数上限 */
-    private Integer limit;
+    private Integer size;
 
     /** 本次响应是否被截断（还有内容未返回） */
     private Boolean truncated;

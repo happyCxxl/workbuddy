@@ -1,21 +1,23 @@
 package com.workbuddy.common.dto.request.stage;
 
+import com.workbuddy.common.dto.request.page.PageQueryDTO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.io.Serializable;
 
 /**
  * 环节详情查询条件（解析 / 组装 / 预处理 / 切片 / 向量化 / 产物内容详情共用）。
  *
- * <p>taskId 可选：不传取该环节最新任务，传了则查该次运行。
- * page/limit 只在产物内容接口上生效，用于逐页取内容项（大文档不一次取回）；
+ * <p>分页参数 `current` / `size` 继承统一分页基类 `PageQueryDTO`，只在产物内容接口上生效，
+ * 用于逐页取内容项（大文档不一次取回）。
  * docPage 同样只在产物内容接口上生效，用于只取某个文档页的元素；
  * status 同样只在产物内容接口上生效，用于只取某些处置状态的元素（预处理环节核对剔除内容用）；
  * contentType/fallback/hasParent 同样只在产物内容接口上生效，用于收窄切片内容（切片环节按类型 / 兜底 / 父子查看用）。
  */
 @Data
-public class StageDetailQueryDTO implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class StageDetailQueryDTO extends PageQueryDTO {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -37,10 +39,4 @@ public class StageDetailQueryDTO implements Serializable {
 
     /** 是否有父片（可选；true 只要子片、false 只要父片与孤儿片，只对 CHUNK 生效） */
     private Boolean hasParent;
-
-    /** 页码（从 1 起；不传按 1） */
-    private Integer page;
-
-    /** 每页条数（不传按默认上限，超过上限按上限截断） */
-    private Integer limit;
 }

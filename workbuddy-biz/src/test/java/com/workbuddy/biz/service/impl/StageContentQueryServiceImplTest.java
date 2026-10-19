@@ -531,8 +531,8 @@ class StageContentQueryServiceImplTest {
         assertEquals(5, first.getTotal());
         assertEquals(2, first.getItems().size());
         assertEquals("el-1", first.getItems().get(0).getAlignKey());
-        assertEquals(1, first.getPage());
-        assertEquals(2, first.getLimit());
+        assertEquals(1, first.getCurrent());
+        assertEquals(2, first.getSize());
         assertTrue(first.getTruncated());
 
         StageContentVO last = service.stageContent(10L, "PARSE", null, null, 3, 2);
@@ -554,8 +554,8 @@ class StageContentQueryServiceImplTest {
 
         assertEquals(5, vo.getTotal());
         assertEquals(5, vo.getItems().size());
-        assertEquals(1, vo.getPage());
-        assertEquals(StageContentQueryService.DEFAULT_LIMIT, vo.getLimit());
+        assertEquals(1, vo.getCurrent());
+        assertEquals(StageContentQueryService.DEFAULT_SIZE, vo.getSize());
         assertFalse(vo.getTruncated());
     }
 
@@ -566,8 +566,8 @@ class StageContentQueryServiceImplTest {
     void limitAboveMaxShouldBeCappedAndOverflowPageShouldBeEmpty() {
         stubParseArtifact(5);
 
-        StageContentVO capped = service.stageContent(10L, "PARSE", null, null, 1, StageContentQueryService.MAX_LIMIT + 500);
-        assertEquals(StageContentQueryService.MAX_LIMIT, capped.getLimit());
+        StageContentVO capped = service.stageContent(10L, "PARSE", null, null, 1, StageContentQueryService.MAX_SIZE + 500);
+        assertEquals(StageContentQueryService.MAX_SIZE, capped.getSize());
         assertEquals(5, capped.getItems().size());
 
         // 页码越界：内容为空但 total 仍是真实总数；已取到总数之后，不再算"还有内容"

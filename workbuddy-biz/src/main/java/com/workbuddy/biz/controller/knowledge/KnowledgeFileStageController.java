@@ -35,7 +35,7 @@ public class KnowledgeFileStageController {
      * @param fileResultId 文件结果 ID（路径参数）
      * @param stage        环节（白名单 PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED）
      * @param query        查询条件：taskId 可选（缺省最新任务）；docPage 可选（只取该文档页）；
-     *                     status 可选（逗号分隔，只取这些处置状态）；page 从 1 起；limit 为每页条数；
+     *                     status 可选（逗号分隔，只取这些处置状态）；current 从 1 起；size 为每页条数；
      *                     contentType / fallback / hasParent 可选，只对 CHUNK 生效（按类型 / 兜底 / 父子收窄）
      * @return 产物内容（当前页）
      * @apiNote 文件结果不存在 40432；环节非法或任务不属于该文件该环节 40001
@@ -46,7 +46,13 @@ public class KnowledgeFileStageController {
             @RequestParam("stage") String stage,
             StageDetailQueryDTO query) {
         return R.ok(stageContentQueryService.stageContent(fileResultId, stage, query.getTaskId(),
-                docPageOf(query), query.getPage(), query.getLimit(), query.getStatus(), chunkFilterOf(query)));
+                docPageOf(query), intOrNull(query.getCurrent()), intOrNull(query.getSize()),
+                query.getStatus(), chunkFilterOf(query)));
+    }
+
+    /** 分页参数从基类的 Long 收敛为服务层的 Integer（空值原样保留，由服务层按默认值兜底） */
+    private Integer intOrNull(Long value) {
+        return NullUtil.isNull(value) ? null : value.intValue();
     }
 
     /** 切片内容过滤条件（三项都空时按不过滤） */

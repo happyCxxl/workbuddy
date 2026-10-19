@@ -128,8 +128,8 @@ class StageContentQueryPagingTest {
         assertNull(vo.getTaskId());
         // docPage 非正、page 非正、limit 非正都按缺省口径归一
         assertNull(vo.getDocPage());
-        assertEquals(1, vo.getPage());
-        assertEquals(StageContentQueryService.DEFAULT_LIMIT, vo.getLimit());
+        assertEquals(1, vo.getCurrent());
+        assertEquals(StageContentQueryService.DEFAULT_SIZE, vo.getSize());
         assertEquals(0, vo.getTotal());
         assertTrue(vo.getItems().isEmpty());
         assertFalse(vo.getTruncated());
@@ -168,9 +168,9 @@ class StageContentQueryPagingTest {
         StageContentVO upper = service.stageContent(FILE_RESULT_ID, "PARSE", null, null, -3, 5000);
         StageContentVO single = service.stageContent(FILE_RESULT_ID, "PARSE", null, null, 1, 1);
 
-        assertEquals(1, upper.getPage());
-        assertEquals(StageContentQueryService.MAX_LIMIT, upper.getLimit());
-        assertEquals(1, single.getLimit());
+        assertEquals(1, upper.getCurrent());
+        assertEquals(StageContentQueryService.MAX_SIZE, upper.getSize());
+        assertEquals(1, single.getSize());
     }
 
     /**

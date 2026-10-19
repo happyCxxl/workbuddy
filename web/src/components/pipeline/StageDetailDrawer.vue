@@ -1801,8 +1801,8 @@ function createChunkPane(filter: { fallback?: boolean; hasParent?: boolean }): C
       const data = await getStageContent(props.fileResultId, props.stage, {
         taskId: props.taskId,
         ...filter,
-        page: pane.page,
-        limit: PAGE_SIZE,
+        current: pane.page,
+        size: PAGE_SIZE,
       });
       pane.items = data.items ?? [];
       pane.total = data.total ?? 0;
@@ -2007,8 +2007,8 @@ async function loadExcluded(): Promise<void> {
     const data = await getStageContent(props.fileResultId, props.stage, {
       taskId: props.taskId,
       status: PREPROCESS_CHUNK_SKIP_STATUSES.join(','),
-      page: excludedPage.value,
-      limit: PAGE_SIZE,
+      current: excludedPage.value,
+      size: PAGE_SIZE,
     });
     excludedItems.value = data.items ?? [];
     excludedTotal.value = data.total ?? 0;
@@ -2418,8 +2418,8 @@ async function loadItems(): Promise<void> {
     const data = await getStageContent(props.fileResultId, props.stage, {
       taskId: props.taskId,
       docPage: followPreview.value && previewReady.value ? previewPage.value : undefined,
-      page: page.value,
-      limit: PAGE_SIZE,
+      current: page.value,
+      size: PAGE_SIZE,
     });
     rawItems.value = data.items ?? [];
     elementTotal.value = data.total ?? 0;

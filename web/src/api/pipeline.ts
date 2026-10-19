@@ -106,7 +106,7 @@ export async function getSourceFile(fileId: string): Promise<Blob> {
 /**
  * 分页查询某环节某次运行的产物内容。
  *
- * <p>`taskId` 同上，必须传被查看的那次运行；`page` 从 1 起，`limit` 由页面按行数档位给。
+ * <p>`taskId` 同上，必须传被查看的那次运行；`current` 从 1 起，`size` 由页面按行数档位给。
  * `docPage` 按文档页收窄（只回该页元素），原文预览与解析结果按页联动用；
  * `status` 按处置状态收窄（逗号分隔，只回这些状态的元素），预处理环节核对剔除内容用；
  * `contentType` / `fallback` / `hasParent` 收窄切片内容（只对 CHUNK 生效，过滤在 DB 侧做）。
@@ -121,8 +121,8 @@ export async function getStageContent(
     contentType?: string;
     fallback?: boolean;
     hasParent?: boolean;
-    page?: number;
-    limit?: number;
+    current?: number;
+    size?: number;
   } = {},
 ): Promise<StageContentPage> {
   const params: Record<string, string | number | boolean> = { stage };
@@ -144,11 +144,11 @@ export async function getStageContent(
   if (query.hasParent !== undefined) {
     params.hasParent = query.hasParent;
   }
-  if (query.page) {
-    params.page = query.page;
+  if (query.current) {
+    params.current = query.current;
   }
-  if (query.limit) {
-    params.limit = query.limit;
+  if (query.size) {
+    params.size = query.size;
   }
   const response = await http.get<StageContentPage>(`/file-results/${fileResultId}/stage-content`, {
     params,
