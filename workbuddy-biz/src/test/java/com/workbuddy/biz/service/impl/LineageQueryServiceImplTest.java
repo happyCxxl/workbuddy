@@ -123,6 +123,11 @@ class LineageQueryServiceImplTest {
         return product;
     }
 
+    /**
+     * 多分支链路：节点按环节顺序、能力快照解析、统计与血缘边齐全。
+     *
+     * <p>守护 {@code lineage}：顺序/统计/边任一项错即失败。
+     */
     @Test
     void shouldAssembleNodesEdgesAndStats() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -168,6 +173,7 @@ class LineageQueryServiceImplTest {
         LineageVO vo = service.lineage(10L);
 
         assertNotNull(vo.getNodes());
+        assertEquals(10L, vo.getFileResultId());
         assertEquals(7, vo.getNodes().size());
         // 环节顺序：PARSE, STRUCTURE, PREPROCESS×2, CHUNK×2, EMBED
         assertEquals("PARSE", vo.getNodes().get(0).getStage());
@@ -208,6 +214,11 @@ class LineageQueryServiceImplTest {
         assertEquals(51L, vo.getEdges().get(0).getToTaskId());
     }
 
+    /**
+     * 无任务文件：节点与边都为空。
+     *
+     * <p>守护 {@code lineage}：空文件仍造节点即失败。
+     */
     @Test
     void shouldReturnEmptyForFileWithoutTasks() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -222,6 +233,11 @@ class LineageQueryServiceImplTest {
         assertEquals(0, vo.getEdges().size());
     }
 
+    /**
+     * 上游产物不存在：节点可见但不建边。
+     *
+     * <p>守护 {@code lineage}：凭空建边即失败。
+     */
     @Test
     void missingUpstreamProductShouldNotCreateEdge() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -240,6 +256,11 @@ class LineageQueryServiceImplTest {
         assertEquals(0, vo.getEdges().size());
     }
 
+    /**
+     * 切片快照损坏：策略版本与策略类口径留空，其余统计照常。
+     *
+     * <p>守护 {@code lineage}：损坏快照让整节点空白即失败。
+     */
     @Test
     void chunkNodeWithCorruptStrategySnapshotShouldLeaveStrategyStatsEmpty() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
@@ -279,6 +300,11 @@ class LineageQueryServiceImplTest {
         assertFalse(corrupt.getStats().containsKey("minMergeLen"), String.valueOf(corrupt.getStats()));
     }
 
+    /**
+     * 文件结果不存在按 40432 拒绝。
+     *
+     * <p>守护 {@code lineage}：空文件可查即失败。
+     */
     @Test
     void missingFileResultShouldReject40432() {
         when(fileResultDbService.getById(10L)).thenReturn(null);
@@ -287,6 +313,11 @@ class LineageQueryServiceImplTest {
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 解析节点：页数/元素/正文/表格/图片/页眉页脚与失败页统计逐项下发。
+     *
+     * <p>守护 {@code lineage}：统计口径错即失败。
+     */
     @Test
     void parseNodeShouldCarryProductStats() {
         WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
@@ -332,6 +363,11 @@ class LineageQueryServiceImplTest {
         assertEquals("1 单元未解析出内容（第 2–2）", node.getParseSummary());
     }
 
+    /**
+     * 解析节点：无判定单元数时页数取文件引用，异常为空。
+     *
+     * <p>守护 {@code lineage}：回退口径错即失败。
+     */
     @Test
     void parseNodeWithoutArtifactShouldFallBackToPageCount() {
         WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
@@ -448,6 +484,217 @@ class LineageQueryServiceImplTest {
     private ParseElement element(ElementType type) {
         return ParseElement.of("e-" + type.name(), type);
     }
+
+    /**
+     * 五个环节齐备（任务号与环节顺序相反）：各节点统计、产物字段与摘要逐项下发。
+     *
+     * <p>守护 {@code toNode} 的产物统计与策略类口径：漏搬 artifactId/contentHash、
+     * 组装/预处理统计被通用 map 覆盖、切片节点的上游视图口径缺失都会让执行树失真。
+     */
+    @Test
+    void structurePreprocessAndChunkNodesShouldCarryArtifactStats() {
+        WbPipelineTask parseTask = task(90L, PipelineStage.PARSE.name(), null, 10L, null);
+        parseTask.setStatus(PipelineTaskStatus.FAILED.name());
+        parseTask.setErrorCode("PARSE_TIMEOUT");
+        parseTask.setErrorMsg("解析超时");
+        parseTask.setStartedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 0));
+        parseTask.setFinishedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 8));
+        WbPipelineTask structureTask = task(10L, PipelineStage.STRUCTURE.name(), 10L, 20L, null);
+        WbPipelineTask preprocessTask = task(50L, PipelineStage.PREPROCESS.name(), 20L, 30L,
+                "{\"name\":\"preproc-default\",\"version\":\"v1\"}");
+        WbPipelineTask chunkTask = task(40L, PipelineStage.CHUNK.name(), 30L, 40L,
+                "{\"name\":\"chunk-hybrid\",\"version\":\"v1\","
+                        + "\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
+                        + "\"params\":{\"targetMaxLen\":200,\"softMaxLen\":200}}}}");
+        WbPipelineTask embedTask = task(60L, PipelineStage.EMBED.name(), 40L, 50L,
+                "{\"name\":\"embed-default\",\"version\":\"v1\"}");
+        when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
+        when(pipelineTaskDbService.listByFileResultId(10L))
+                .thenReturn(List.of(parseTask, structureTask, preprocessTask, chunkTask, embedTask));
+        when(pipelineProductDbService.listByFileResultId(10L)).thenReturn(List.of(
+                product(10L, PipelineStage.PARSE.name(), "art-p",
+                        "{\"parserName\":\"pdfbox\",\"parserVersion\":\"3.0.4\","
+                                + "\"ocr\":{\"model\":\"ocr-v1\",\"version\":\"1\"},"
+                                + "\"layout\":{\"model\":\"layout-v2\",\"version\":\"2\"},"
+                                + "\"table\":{\"model\":\"table-v3\",\"version\":\"3\"}}"),
+                product(20L, PipelineStage.STRUCTURE.name(), "art-s", null),
+                product(30L, PipelineStage.PREPROCESS.name(), "art-p1", null),
+                product(40L, PipelineStage.CHUNK.name(), "art-c1", null),
+                product(50L, PipelineStage.EMBED.name(), "art-e1", null)));
+        WbChunkSet chunkSetRow = new WbChunkSet();
+        chunkSetRow.setArtifactId("art-c1");
+        chunkSetRow.setChunkCount(5);
+        when(chunkSetDbService.listByFileResultId(10L)).thenReturn(List.of(chunkSetRow));
+        WbEmbeddingSet embedSetRow = new WbEmbeddingSet();
+        embedSetRow.setArtifactId("art-e1");
+        embedSetRow.setRecordCount(7);
+        embedSetRow.setCachedCount(2);
+        when(embeddingSetDbService.listByFileResultId(10L)).thenReturn(List.of(embedSetRow));
+        WbPipelineStepLog stepLog = new WbPipelineStepLog();
+        stepLog.setTaskId(50L);
+        stepLog.setMatchedCount(9);
+        stepLog.setChangedCount(4);
+        when(stepLogDbService.listByTaskIds(List.of(50L))).thenReturn(List.of(stepLog));
+        stubBody("art-p", parseResultOfOneParagraph());
+        stubBody("art-s", documentOfOneElement());
+        stubBody("art-p1", viewOfKeptAndExcluded());
+        stubBody("art-c1", chunkSetOfOneChunk());
+
+        LineageVO vo = service.lineage(10L);
+
+        // 环节顺序优先于任务号：90 在 10 之前
+        assertEquals(List.of(90L, 10L, 50L, 40L, 60L),
+                vo.getNodes().stream().map(LineageNodeVO::getTaskId).toList());
+        LineageNodeVO parse = vo.getNodes().get(0);
+        assertEquals("PARSE_TIMEOUT", parse.getErrorCode());
+        assertEquals("解析超时", parse.getErrorMsg());
+        assertNotNull(parse.getStartedAt());
+        assertNotNull(parse.getFinishedAt());
+        assertEquals("art-p", parse.getArtifactId());
+        assertEquals("art-p", parse.getContentHash());
+        assertEquals("ocr-v1", parse.getCapability().getOcr().getModel());
+        assertEquals("1", parse.getCapability().getOcr().getVersion());
+        assertEquals("layout-v2", parse.getCapability().getLayout().getModel());
+        assertEquals("2", parse.getCapability().getLayout().getVersion());
+        assertEquals("table-v3", parse.getCapability().getTable().getModel());
+        assertEquals("3", parse.getCapability().getTable().getVersion());
+        assertNotNull(parse.getParseStats());
+        assertNotNull(parse.getParseSummary());
+        // 组装统计进通用 stats，摘要走 stageSummary
+        LineageNodeVO structure = vo.getNodes().get(1);
+        assertEquals("art-s", structure.getArtifactId());
+        assertEquals(1, structure.getStats().get("elementCount"));
+        assertNotNull(structure.getStageSummary());
+        // 预处理统计并入通用 stats：step_log 的 matched/changed 与视图口径同时保留
+        LineageNodeVO preprocess = vo.getNodes().get(2);
+        assertEquals(9L, preprocess.getStats().get("matched"));
+        assertEquals(4L, preprocess.getStats().get("changed"));
+        assertEquals(2, preprocess.getStats().get("elementCount"));
+        assertEquals(1, preprocess.getStats().get("retainedCount"));
+        assertNotNull(preprocess.getStageSummary());
+        // 切片统计：产物现算覆盖集合表口径，且上游预处理视图给出进入/跳过口径
+        LineageNodeVO chunk = vo.getNodes().get(3);
+        assertEquals(1, chunk.getStats().get("chunkCount"));
+        assertEquals(200, chunk.getStats().get("targetMaxLen"));
+        assertEquals(1, chunk.getStats().get("routedElementCount"));
+        assertEquals(1, chunk.getStats().get("skippedElementCount"));
+        assertNotNull(chunk.getStageSummary());
+        // 向量统计取集合表口径
+        LineageNodeVO embed = vo.getNodes().get(4);
+        assertEquals(7, embed.getStats().get("recordCount"));
+        assertEquals(2, embed.getStats().get("cachedCount"));
+        // 四条上游边
+        assertEquals(4, vo.getEdges().size());
+    }
+
+    /**
+     * 文件链条之外的环节不进血缘。
+     *
+     * <p>守护 {@code lineage} 的环节过滤：把 BUILD_INDEX 之类也算进文件链条会污染执行树。
+     */
+    @Test
+    void nonChainTaskShouldBeExcluded() {
+        when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
+        when(pipelineTaskDbService.listByFileResultId(10L)).thenReturn(List.of(
+                task(99L, PipelineStage.BUILD_INDEX.name(), null, null, null),
+                task(90L, PipelineStage.PARSE.name(), null, 10L, null)));
+        when(pipelineProductDbService.listByFileResultId(10L)).thenReturn(List.of());
+        when(chunkSetDbService.listByFileResultId(10L)).thenReturn(List.of());
+        when(embeddingSetDbService.listByFileResultId(10L)).thenReturn(List.of());
+
+        LineageVO vo = service.lineage(10L);
+
+        assertEquals(1, vo.getNodes().size());
+        assertEquals(PipelineStage.PARSE.name(), vo.getNodes().getFirst().getStage());
+    }
+
+    /**
+     * 策略快照：空串、缺 version、损坏一律不下发策略版本；完整快照拼 name-version。
+     *
+     * <p>守护 {@code resolveStrategyVersion} 的三处空值与解析兜底：拼出「name-」会误报策略。
+     */
+    @Test
+    void strategyVersionShouldBeNullForBlankOrIncompleteSnapshot() {
+        when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
+        when(pipelineTaskDbService.listByFileResultId(10L)).thenReturn(List.of(
+                task(71L, PipelineStage.CHUNK.name(), null, null, " "),
+                task(72L, PipelineStage.CHUNK.name(), null, null, "{\"name\":\"chunk-hybrid\"}"),
+                task(73L, PipelineStage.CHUNK.name(), null, null, "not-json"),
+                task(74L, PipelineStage.CHUNK.name(), null, null,
+                        "{\"name\":\"chunk-hybrid\",\"version\":\"v1\"}")));
+        when(pipelineProductDbService.listByFileResultId(10L)).thenReturn(List.of());
+        when(chunkSetDbService.listByFileResultId(10L)).thenReturn(List.of());
+        when(embeddingSetDbService.listByFileResultId(10L)).thenReturn(List.of());
+
+        LineageVO vo = service.lineage(10L);
+
+        assertNull(vo.getNodes().get(0).getStrategyVersion());
+        assertNull(vo.getNodes().get(1).getStrategyVersion());
+        assertNull(vo.getNodes().get(2).getStrategyVersion());
+        assertEquals("chunk-hybrid-v1", vo.getNodes().get(3).getStrategyVersion());
+    }
+
+    /** 产物本体夹具：按产物对象位置写 JSON 字节 */
+    private void stubBody(String artifactId, Object body) {
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", artifactId)))
+                .thenReturn(JsonUtil.toJsonStr(body).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** 解析产物夹具（1 段落） */
+    private ParseResult parseResultOfOneParagraph() {
+        ParseSource source = new ParseSource();
+        source.setElements(List.of(element(ElementType.PARAGRAPH)));
+        ParseResult result = new ParseResult();
+        result.setSources(List.of(source));
+        result.setQuality(new QualityInfo());
+        return result;
+    }
+
+    /** 统一文档夹具（1 元素） */
+    private com.workbuddy.common.domain.structure.UnifiedDocument documentOfOneElement() {
+        com.workbuddy.common.domain.structure.UnifiedElement element =
+                new com.workbuddy.common.domain.structure.UnifiedElement();
+        element.setId("e-1");
+        element.setType("PARAGRAPH");
+        element.setText("正文");
+        com.workbuddy.common.domain.structure.UnifiedDocument document =
+                new com.workbuddy.common.domain.structure.UnifiedDocument();
+        document.setElements(List.of(element));
+        return document;
+    }
+
+    /** 预处理视图夹具（1 保留 + 1 剔除） */
+    private com.workbuddy.common.domain.preprocess.PreprocessView viewOfKeptAndExcluded() {
+        com.workbuddy.common.domain.preprocess.ViewElement kept =
+                new com.workbuddy.common.domain.preprocess.ViewElement();
+        kept.setElementId("e-1");
+        kept.setStatus(com.workbuddy.common.enums.preprocess.ViewElementStatus.NORMAL.name());
+        com.workbuddy.common.domain.preprocess.ViewElement excluded =
+                new com.workbuddy.common.domain.preprocess.ViewElement();
+        excluded.setElementId("e-2");
+        excluded.setStatus(com.workbuddy.common.enums.preprocess.ViewElementStatus.EXCLUDED_HEADER.name());
+        com.workbuddy.common.domain.preprocess.PreprocessView view =
+                new com.workbuddy.common.domain.preprocess.PreprocessView();
+        view.setElements(List.of(kept, excluded));
+        return view;
+    }
+
+    /** 切片集合夹具（1 片） */
+    private ChunkSet chunkSetOfOneChunk() {
+        Chunk chunk = new Chunk();
+        chunk.setChunkId("c-1");
+        chunk.setContentType("PARAGRAPH");
+        chunk.setContent("正文");
+        chunk.setCharCount(10);
+        ChunkSet chunkSet = new ChunkSet();
+        chunkSet.setChunks(List.of(chunk));
+        return chunkSet;
+    }
+    /**
+     * 越权文件结果按 40401 拒绝。
+     *
+     * <p>守护 {@code lineage}：越权可读即失败。
+     */
     @Test
     void otherUserFileResultShouldReject40401() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
