@@ -725,4 +725,28 @@ class KnowledgeBaseFileSubmitTest {
         query.setStage(stage);
         return query;
     }
+
+    /**
+     * 回放 FAIL 记录：失败日志没有文件结果，解析任务号保持 null（不是 0）。
+     *
+     * <p>守护 {@code findParseTaskId} 的 null 入参分支：返回 0 会让前端去轮询 0 号任务。
+     */
+    @Test
+    void submitReplayOfFailLogShouldReturnNullTaskId() {
+        WbSubmitLog failed = new WbSubmitLog();
+        failed.setId(31L);
+        failed.setKnowledgeBaseId(2L);
+        failed.setRequestId("req-fail");
+        failed.setStatus("FAIL");
+        when(submitLogDbService.getByRequestId("req-fail")).thenReturn(failed);
+
+        FileSubmitDTO request = new FileSubmitDTO();
+        request.setRequestId("req-fail");
+        request.setFileId("file-1");
+
+        FileSubmitVO response = service.submit(2L, request);
+
+        assertNull(response.getPipelineTaskId());
+        verify(pipelineTaskDbService, never()).getByFileResultIdAndStage(any(), any());
+    }
 }

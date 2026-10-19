@@ -102,6 +102,14 @@ class WbModelDbServiceImplTest {
         assertTrue(sql.contains("status"), sql);
         assertTrue(sql.contains("model_key"), sql);
         assertTrue(sql.contains("FIND_IN_SET"), sql);
+        // 参数取的是入参能力项本身：取成空串会让 FIND_IN_SET 永远不命中
+        org.mockito.ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<com.workbuddy.common.domain.entity.WbModel>>
+                captor = org.mockito.ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+        verify(mapper).selectPage(any(), captor.capture());
+        com.baomidou.mybatisplus.core.conditions.AbstractWrapper<?, ?, ?> wrapper =
+                (com.baomidou.mybatisplus.core.conditions.AbstractWrapper<?, ?, ?>) captor.getValue();
+        wrapper.getSqlSegment();
+        assertTrue(wrapper.getParamNameValuePairs().containsValue("OCR"));
         assertTrue(sql.contains("capabilities"), sql);
         assertTrue(sql.contains("ORDER BY"), sql);
     }
@@ -229,11 +237,24 @@ class WbModelDbServiceImplTest {
         for (String column : List.of("input_limit", "output_limit", "thinking_input_limit",
                 "thinking_output_limit", "context_window", "price_in_per_m", "price_in_per_m_cache_hit",
                 "rpm_limit", "tpm_limit")) {
-            assertTrue(sqlSet.contains(column), column + " 未清空: " + sqlSet);
+            // 按 SET 片段精确匹配：thinking_input_limit 等列名互为前缀，纯 contains 会放过漏清列
+            assertTrue(java.util.Arrays.stream(sqlSet.split(","))
+                    .anyMatch(part -> part.startsWith(column + "=")), column + " 未清空: " + sqlSet);
         }
         // 有值的列走实体更新，不重复写 SET；主键/业务列不进 SET
-        assertFalse(sqlSet.contains("price_out_per_m"), sqlSet);
-        assertFalse(sqlSet.contains("model_key"), sqlSet);
+        // 有值列不进 SET；清空后必须显式写 NULL
+        assertFalse(java.util.Arrays.stream(sqlSet.split(","))
+                .anyMatch(part -> part.startsWith("price_out_per_m=")), sqlSet);
+
+        // 价格清空：这一列有值时无操作，清空时必须显式写 NULL 才能清掉旧值
+        row.setPriceOutPerM(null);
+        dbService.updateModel(row);
+        ArgumentCaptor<Wrapper<WbModel>> clearedWrapper = ArgumentCaptor.forClass(Wrapper.class);
+        verify(mapper, org.mockito.Mockito.times(2)).update(any(), clearedWrapper.capture());
+        String clearedSet = ((LambdaUpdateWrapper<WbModel>) clearedWrapper.getValue()).getSqlSet();
+        assertTrue(java.util.Arrays.stream(clearedSet.split(","))
+                .anyMatch(part -> part.startsWith("price_out_per_m=")), clearedSet);
+        assertFalse(sqlSet.contains("model_key="), sqlSet);
     }
 
     /** 取最近一次查询用的条件 */

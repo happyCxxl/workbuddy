@@ -526,4 +526,56 @@ class StageContentQueryPagingTest {
         element.setText(text);
         return element;
     }
+
+    /**
+     * 文档页 1 是合法过滤值：回显为 1，而不是被归一成空。
+     *
+     * <p>守护 {@code stageContent} 的 {@code docPage < 1} 边界：写成小于等于会把第 1 页当未过滤。
+     */
+    @Test
+    void stageContentWithDocPageOneShouldEchoDocPage() {
+        stubTask();
+        stubArtifact(parseDoc(List.of(ParseElement.of("p-1", ElementType.PARAGRAPH))));
+
+        StageContentVO vo = service.stageContent(FILE_RESULT_ID, "PARSE", null, 1L, null, null);
+
+        assertEquals(1, vo.getDocPage());
+    }
+
+    /**
+     * 产物对象缺失：PARSE / STRUCTURE / PREPROCESS 三个环节都返回空内容而不抛错。
+     *
+     * <p>守护 {@code parseItems}/{@code structureItems}/{@code preprocessItems} 的产物缺失兜底：
+     * 空集合换成异常或非空都会让页面在"产物被清理"时崩掉。
+     */
+    @Test
+    void stageContentWithMissingArtifactShouldReturnEmptyItems() {
+        stubTask();
+        when(fileStorage.getObject(any())).thenReturn(null);
+
+        for (String stage : List.of("PARSE", "STRUCTURE", "PREPROCESS")) {
+            StageContentVO vo = service.stageContent(FILE_RESULT_ID, stage, null, null, null, null);
+            assertTrue(vo.getItems().isEmpty(), stage);
+            assertEquals(0, vo.getTotal(), stage);
+            assertFalse(vo.getTruncated(), stage);
+        }
+    }
+
+    /**
+     * 向量化环节没有集合产物：返回空内容。
+     *
+     * <p>守护 {@code embedItemsBySet} 的空集合兜底：向量段未产出时页面应显示空而不是报错。
+     */
+    @Test
+    void stageContentEmbedWithoutSetShouldReturnEmptyItems() {
+        stubTask();
+        stubArtifact(parseDoc(List.of(ParseElement.of("p-1", ElementType.PARAGRAPH))));
+        when(embeddingSetDbService.getByArtifactId(any())).thenReturn(null);
+
+        StageContentVO vo = service.stageContent(FILE_RESULT_ID, "EMBED", null, null, null, null);
+
+        assertTrue(vo.getItems().isEmpty());
+        assertEquals(0, vo.getTotal());
+    }
+
 }

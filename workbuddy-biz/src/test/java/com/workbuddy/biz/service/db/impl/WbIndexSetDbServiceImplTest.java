@@ -14,6 +14,8 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -48,6 +50,9 @@ class WbIndexSetDbServiceImplTest {
         ReflectionTestUtils.setField(impl, "baseMapper", mapper);
     }
 
+    /**
+     * 校验点：{@code getByKbShouldQueryByKnowledgeBaseId}。
+     */
     @Test
     void getByKbShouldQueryByKnowledgeBaseId() {
         WbIndexSet row = new WbIndexSet();
@@ -65,6 +70,9 @@ class WbIndexSetDbServiceImplTest {
         assertTrue(captor.getValue().getSqlSegment().contains("knowledge_base_id"), captor.getValue().getSqlSegment());
     }
 
+    /**
+     * 校验点：{@code getOrCreateShouldReturnExisting}。
+     */
     @Test
     void getOrCreateShouldReturnExisting() {
         WbIndexSet existing = new WbIndexSet();
@@ -77,6 +85,9 @@ class WbIndexSetDbServiceImplTest {
         verify(mapper, times(0)).insert(any());
     }
 
+    /**
+     * 校验点：{@code getOrCreateShouldSaveWhenMissing}。
+     */
     @Test
     void getOrCreateShouldSaveWhenMissing() {
         when(mapper.selectOne(any(), anyBoolean())).thenReturn(null);
@@ -91,6 +102,9 @@ class WbIndexSetDbServiceImplTest {
         assertEquals(2L, captor.getValue().getKnowledgeBaseId());
     }
 
+    /**
+     * 校验点：{@code getOrCreateShouldFallbackOnDuplicateKey}。
+     */
     @Test
     void getOrCreateShouldFallbackOnDuplicateKey() {
         WbIndexSet existing = new WbIndexSet();
@@ -104,6 +118,9 @@ class WbIndexSetDbServiceImplTest {
         assertSame(existing, result);
     }
 
+    /**
+     * 校验点：{@code updatePublishedVersionShouldSetPointer}。
+     */
     @Test
     void updatePublishedVersionShouldSetPointer() {
         impl.updatePublishedVersion(10L, 99L);
@@ -115,5 +132,22 @@ class WbIndexSetDbServiceImplTest {
         LambdaUpdateWrapper<WbIndexSet> wrapper = (LambdaUpdateWrapper<WbIndexSet>) captor.getValue();
         assertTrue(wrapper.getSqlSet().contains("current_published_version_id"), wrapper.getSqlSet());
         assertTrue(wrapper.getSqlSegment().contains("id"), wrapper.getSqlSegment());
+    }
+
+    /**
+     * 按知识库批量取集合索引：空入参不查库，非空返回按库映射。
+     *
+     * <p>守护 {@code listByKbIds} 的空入参短路与映射口径。
+     */
+    @Test
+    void listByKbIdsShouldMapRowsAndShortCircuitEmpty() {
+        assertTrue(impl.listByKbIds(List.of()).isEmpty());
+
+        WbIndexSet row = new WbIndexSet();
+        row.setId(5L);
+        row.setKnowledgeBaseId(1L);
+        when(mapper.selectList(any())).thenReturn(List.of(row));
+
+        assertEquals(5L, impl.listByKbIds(List.of(1L)).get(1L).getId());
     }
 }

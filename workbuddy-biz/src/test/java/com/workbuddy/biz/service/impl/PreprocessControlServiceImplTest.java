@@ -679,4 +679,40 @@ class PreprocessControlServiceImplTest {
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);
     }
 
+
+    /**
+     * 上游产物三连校验：不存在、环节不符、归属不符都按 40404 拒绝且不建任务。
+     *
+     * <p>守护 {@code requireStructureProduct} 的三道门禁：任一漏判都会消费错产物。
+     */
+    @Test
+    void upstreamProductChecksShouldRejectMissingWrongStageAndForeign() {
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        stubBoundStrategy();
+
+        when(pipelineProductDbService.getById(999L)).thenReturn(null);
+        KnowledgeException missing = assertThrows(KnowledgeException.class,
+                () -> service.preprocess(10L, null, 999L));
+        assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, missing.getErrorCode());
+        assertTrue(missing.getMessage().contains("不存在"), missing.getMessage());
+
+        WbPipelineProduct wrongStage = structureProduct();
+        wrongStage.setStage(PipelineStage.CHUNK.name());
+        when(pipelineProductDbService.getById(50L)).thenReturn(wrongStage);
+        KnowledgeException stageMismatch = assertThrows(KnowledgeException.class,
+                () -> service.preprocess(10L, null, 50L));
+        assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, stageMismatch.getErrorCode());
+        assertTrue(stageMismatch.getMessage().contains("环节不匹配"), stageMismatch.getMessage());
+
+        WbPipelineProduct foreign = structureProduct();
+        foreign.setFileResultId(99L);
+        when(pipelineProductDbService.getById(50L)).thenReturn(foreign);
+        KnowledgeException foreignError = assertThrows(KnowledgeException.class,
+                () -> service.preprocess(10L, null, 50L));
+        assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, foreignError.getErrorCode());
+        assertTrue(foreignError.getMessage().contains("不属于该文件结果"), foreignError.getMessage());
+
+        verify(pipelineTaskDbService, never()).save(any());
+        verify(taskQueue, never()).enqueue(any());
+    }
 }

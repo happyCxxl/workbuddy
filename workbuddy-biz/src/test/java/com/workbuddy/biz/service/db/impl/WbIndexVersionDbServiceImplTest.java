@@ -51,6 +51,9 @@ class WbIndexVersionDbServiceImplTest {
         return v;
     }
 
+    /**
+     * 校验点：{@code listByIndexSetIdShouldOrderByIdDesc}。
+     */
     @Test
     void listByIndexSetIdShouldOrderByIdDesc() {
         when(mapper.selectList(any())).thenReturn(List.of(version(2L), version(1L)));
@@ -64,6 +67,9 @@ class WbIndexVersionDbServiceImplTest {
         assertTrue(captor.getValue().getSqlSegment().contains("ORDER BY id DESC"), captor.getValue().getSqlSegment());
     }
 
+    /**
+     * 校验点：{@code nextVersionNoShouldReturnMaxSuffixPlusOne}。
+     */
     @Test
     void nextVersionNoShouldReturnMaxSuffixPlusOne() {
         // 回收会物理删行：行数+1 在删行后会重号，必须按现有最大数字后缀 +1
@@ -77,10 +83,27 @@ class WbIndexVersionDbServiceImplTest {
                 captor.getValue().getSqlSelect());
     }
 
+    /**
+     * 校验点：{@code nextVersionNoShouldReturnV1WhenNoRows}。
+     */
     @Test
     void nextVersionNoShouldReturnV1WhenNoRows() {
         when(mapper.selectObjs(any())).thenReturn(List.of(0L));
 
         assertEquals("v1", impl.nextVersionNo(10L));
+    }
+
+    /**
+     * 按构建任务取版本：命中返回该行（不是恒 null）。
+     *
+     * <p>守护 {@code getByTaskId} 的返回口径：恒 null 会让构建回写找不到版本。
+     */
+    @Test
+    void getByTaskIdShouldReturnHitRow() {
+        WbIndexVersion row = new WbIndexVersion();
+        row.setId(6L);
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(row);
+
+        assertEquals(6L, impl.getByTaskId(3L).getId());
     }
 }

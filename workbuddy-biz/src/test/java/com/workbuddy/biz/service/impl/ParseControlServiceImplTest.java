@@ -103,6 +103,9 @@ class ParseControlServiceImplTest {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.PARSE.name(), 0L, 0L)).thenReturn(task);
     }
 
+    /**
+     * 校验点：{@code parseShouldCreateTaskAndEnqueue}。
+     */
     @Test
     void parseShouldCreateTaskAndEnqueue() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -125,6 +128,9 @@ class ParseControlServiceImplTest {
         verify(taskQueue).enqueue(21L);
     }
 
+    /**
+     * 校验点：{@code parseRunningShouldReject}。
+     */
     @Test
     void parseRunningShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -139,6 +145,9 @@ class ParseControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 校验点：{@code parseQueuedShouldReject40431}。
+     */
     @Test
     void parseQueuedShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -155,6 +164,9 @@ class ParseControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 校验点：{@code parseSuccessShouldReject40431}。
+     */
     @Test
     void parseSuccessShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -169,6 +181,9 @@ class ParseControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 校验点：{@code parsePartialSuccessShouldReject40431}。
+     */
     @Test
     void parsePartialSuccessShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -182,6 +197,9 @@ class ParseControlServiceImplTest {
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code parseFailedShouldReject40431}。
+     */
     @Test
     void parseFailedShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -198,6 +216,9 @@ class ParseControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 校验点：{@code parseMissingFileResultShouldReject}。
+     */
     @Test
     void parseMissingFileResultShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(null);
@@ -206,6 +227,9 @@ class ParseControlServiceImplTest {
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 校验点：{@code detailShouldAssembleTaskStepsAndWarnings}。
+     */
     @Test
     void detailShouldAssembleTaskStepsAndWarnings() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -241,6 +265,8 @@ class ParseControlServiceImplTest {
 
         assertEquals(20L, detail.getTaskId());
         assertEquals(PipelineTaskStatus.PARTIAL_SUCCESS.name(), detail.getStatus());
+        assertNotNull(detail.getParseStats());
+        assertNotNull(detail.getParseSummary());
         assertEquals(1, detail.getSteps().size());
         assertEquals(2, detail.getSteps().getFirst().getWarningCount());
         assertEquals(7, detail.getSteps().getFirst().getMatchedCount());
@@ -250,6 +276,9 @@ class ParseControlServiceImplTest {
         assertTrue(detail.getWarnings().getFirst().contains("SCANNED_PAGE"));
     }
 
+    /**
+     * 校验点：{@code detailWithIncompleteProductLocationShouldReject40455}。
+     */
     @Test
     void detailWithIncompleteProductLocationShouldReject40455() {
         WbPipelineTask task = new WbPipelineTask();
@@ -271,6 +300,9 @@ class ParseControlServiceImplTest {
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
     }
 
+    /**
+     * 校验点：{@code detailWithoutProductShouldReturnEmptyWarnings}。
+     */
     @Test
     void detailWithoutProductShouldReturnEmptyWarnings() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -282,6 +314,9 @@ class ParseControlServiceImplTest {
         assertTrue(detail.getWarnings().isEmpty());
     }
 
+    /**
+     * 校验点：{@code otherUserFileResultShouldReject40401}。
+     */
     @Test
     void otherUserFileResultShouldReject40401() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -292,6 +327,9 @@ class ParseControlServiceImplTest {
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 校验点：{@code parseDetailOfOtherUserFileResultShouldReject40401}。
+     */
     @Test
     void parseDetailOfOtherUserFileResultShouldReject40401() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());

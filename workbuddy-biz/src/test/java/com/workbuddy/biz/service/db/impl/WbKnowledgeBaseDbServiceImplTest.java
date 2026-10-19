@@ -45,6 +45,9 @@ class WbKnowledgeBaseDbServiceImplTest {
                 WbKnowledgeBase.class);
     }
 
+    /**
+     * 校验点：{@code getActiveByIdWhenExistsShouldReturn}。
+     */
     @Test
     void getActiveByIdWhenExistsShouldReturn() {
         WbKnowledgeBase kb = new WbKnowledgeBase();
@@ -55,6 +58,9 @@ class WbKnowledgeBaseDbServiceImplTest {
         assertSame(kb, impl.getActiveById(1L));
     }
 
+    /**
+     * 校验点：{@code getActiveByIdWhenAbsentShouldThrowNotFound}。
+     */
     @Test
     void getActiveByIdWhenAbsentShouldThrowNotFound() {
         when(mapper.selectById(2L)).thenReturn(null);
@@ -63,6 +69,9 @@ class WbKnowledgeBaseDbServiceImplTest {
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 校验点：{@code listIdsByOwnerShouldFilterByUserId}。
+     */
     @Test
     void listIdsByOwnerShouldFilterByUserId() {
         when(mapper.selectObjs(any())).thenReturn(List.of(1L, 2L));
@@ -77,6 +86,9 @@ class WbKnowledgeBaseDbServiceImplTest {
                 captor.getValue().getSqlSegment());
     }
 
+    /**
+     * 校验点：{@code listIdsByOwnerWithNullOwnerShouldNotFilter}。
+     */
     @Test
     void listIdsByOwnerWithNullOwnerShouldNotFilter() {
         // null = 管理员视角：不加归属条件（与"看不到自己的库"是两回事）
@@ -89,5 +101,22 @@ class WbKnowledgeBaseDbServiceImplTest {
         verify(mapper).selectObjs(captor.capture());
         assertFalse(captor.getValue().getSqlSegment().contains("user_id"),
                 captor.getValue().getSqlSegment());
+    }
+
+    /**
+     * 分页与计数返回真实口径。
+     *
+     * <p>守护 {@code pageByCondition}/{@code countByStatus} 的返回：恒空/恒 0 会让首页统计全为 0。
+     */
+    @Test
+    void pageAndCountShouldReturnRealValues() {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<WbKnowledgeBase> page =
+                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
+        page.setRecords(List.of(new WbKnowledgeBase()));
+        when(mapper.selectPage(any(), any())).thenReturn(page);
+        when(mapper.selectCount(any())).thenReturn(3L);
+
+        assertEquals(1, impl.pageByCondition(1, 10, null, null, null, 1L).getRecords().size());
+        assertEquals(3L, impl.countByStatus(null, 1L));
     }
 }

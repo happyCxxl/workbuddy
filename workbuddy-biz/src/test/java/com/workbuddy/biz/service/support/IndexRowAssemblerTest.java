@@ -54,9 +54,11 @@ class IndexRowAssemblerTest {
     @Test
     void assembleShouldFilterAndJoinWithChunks() {
         EmbeddingSet embedSet = new EmbeddingSet();
+        var secondRecord = record("c2", "CACHED", "PARAGRAPH", "正文二", 0.2f);
+        secondRecord.setParentChunkId("c1");
         embedSet.setRecords(List.of(
                 record("c1", "SUCCESS", "PARAGRAPH", "正文一", 0.1f),
-                record("c2", "CACHED", "PARAGRAPH", "正文二", 0.2f),
+                secondRecord,
                 record("c3", "FAILED", "PARAGRAPH", "正文三", 0.3f)));
         ChunkSet chunkSet = new ChunkSet();
         Chunk withMeta = new Chunk();
@@ -90,6 +92,8 @@ class IndexRowAssemblerTest {
         IndexRow second = rows.get(1);
         assertEquals("c2", second.getChunkId());
         assertEquals(List.of(0.2f), second.getVector());
+        assertEquals("c1", second.getParentChunkId());
+        assertEquals("c1", second.getParentChunkId());
         assertNull(second.getTitlePath());
         // 无来源元素的切片序列化为空数组（源码字段默认空列表，非 null）
         assertEquals("[]", second.getSourceElementIds());

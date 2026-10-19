@@ -86,6 +86,9 @@ class RetrievalRuleServiceImplTest {
         return dto;
     }
 
+    /**
+     * 校验点：{@code listRulesShouldDelegateToRetrievalType}。
+     */
     @Test
     void listRulesShouldDelegateToRetrievalType() {
         when(strategyVersionService.list("RETRIEVAL", false)).thenReturn(List.of());
@@ -94,8 +97,17 @@ class RetrievalRuleServiceImplTest {
 
         assertEquals(List.of(), rules);
         verify(strategyVersionService).list("RETRIEVAL", false);
+
+        // 有规则时原样下发：恒空列表会让规则下拉永远为空
+        StrategyVersionVO rule = new StrategyVersionVO();
+        rule.setId(9L);
+        when(strategyVersionService.list("RETRIEVAL", true)).thenReturn(List.of(rule));
+        assertEquals(1, service.listRules(true).size());
     }
 
+    /**
+     * 校验点：{@code publishShouldSwitchVersionDefaultRuleAndAudit}。
+     */
     @Test
     void publishShouldSwitchVersionDefaultRuleAndAudit() {
         WbIndexVersion version = versionRow();
@@ -111,8 +123,14 @@ class RetrievalRuleServiceImplTest {
                 "INDEX_VERSION", 20L, null, "500");
         assertEquals("hybrid-rrf-k60-top10-v1", vo.getRuleNameVersion());
         assertEquals("v2", vo.getVersionNo());
+        // 发布结果必须带规则与版本主键（漏搬会让前端无法回显）
+        assertEquals(500L, vo.getRuleId());
+        assertEquals(20L, vo.getVersionId());
     }
 
+    /**
+     * 校验点：{@code publishShouldRejectRuleNotFoundOrWrongType}。
+     */
     @Test
     void publishShouldRejectRuleNotFoundOrWrongType() {
         when(indexVersionDbService.getById(20L)).thenReturn(versionRow());
@@ -130,6 +148,9 @@ class RetrievalRuleServiceImplTest {
         verify(indexVersionDbService, never()).updateById(org.mockito.ArgumentMatchers.any());
     }
 
+    /**
+     * 校验点：{@code publishShouldRejectVersionNotBelongingToKb}。
+     */
     @Test
     void publishShouldRejectVersionNotBelongingToKb() {
         when(indexVersionDbService.getById(20L)).thenReturn(versionRow());
@@ -137,6 +158,20 @@ class RetrievalRuleServiceImplTest {
 
         KnowledgeException e = assertThrows(KnowledgeException.class,
                 () -> service.publishDefaultRule(1L, dto()));
+
+        assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND, e.getErrorCode());
+    }
+
+    /**
+     * 发布默认规则时版本不存在：按 40441 拒绝。
+     *
+     * <p>守护 {@code publishDefaultRule} 的版本校验：漏校验会在空版本上写默认规则。
+     */
+    @Test
+    void publishShouldRejectMissingVersion() {
+        when(indexVersionDbService.getById(20L)).thenReturn(null);
+
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.publishDefaultRule(1L, dto()));
 
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND, e.getErrorCode());
     }

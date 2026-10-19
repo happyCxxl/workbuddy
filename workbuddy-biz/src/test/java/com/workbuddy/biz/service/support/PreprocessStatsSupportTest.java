@@ -257,4 +257,37 @@ class PreprocessStatsSupportTest {
         entry.setRule(rule);
         return entry;
     }
+
+    /**
+     * 仅空白改写（原文空白、展示文不同）不算处置：changedCount 不增。
+     *
+     * <p>守护 {@code affected} 的空白判定：把空白当改写会虚增改写数与页码范围。
+     */
+    @Test
+    void statsShouldNotCountBlankRewriteAsAffected() {
+        ViewElement element = new ViewElement();
+        element.setElementId("e-1");
+        element.setStatus(ViewElementStatus.NORMAL.name());
+        element.setNormalizedText("  ");
+        element.setDisplayText("显示文本");
+        element.setPage(3);
+
+        Map<String, Object> stats = PreprocessStatsSupport.stats(null, null, view(element));
+
+        assertEquals(0, stats.get(PreprocessStatsSupport.KEY_CHANGED_COUNT));
+        assertFalse(stats.containsKey(PreprocessStatsSupport.KEY_PAGE_FROM));
+    }
+
+    /**
+     * 空集合的留存率为 0（不是除零后的负数）。
+     *
+     * <p>守护 {@code percent} 的 {@code total <= 0} 边界：写成严格小于会除零得到负数。
+     */
+    @Test
+    void statsShouldReportZeroPercentForEmptyView() {
+        Map<String, Object> stats = PreprocessStatsSupport.stats(null, null, view());
+
+        assertEquals(0, stats.get(PreprocessStatsSupport.KEY_RETENTION_PERCENT));
+        assertEquals(0, stats.get(PreprocessStatsSupport.KEY_ELEMENT_COUNT));
+    }
 }

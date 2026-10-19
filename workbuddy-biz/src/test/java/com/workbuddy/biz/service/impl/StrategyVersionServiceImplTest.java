@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -93,6 +94,9 @@ class StrategyVersionServiceImplTest {
         return dto;
     }
 
+    /**
+     * 校验点：{@code listEnabledShouldReturnMappedVersions}。
+     */
     @Test
     void listEnabledShouldReturnMappedVersions() {
         when(strategyVersionDbService.listEnabledByType("CHUNK"))
@@ -106,6 +110,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).listByType(any());
     }
 
+    /**
+     * 校验点：{@code listWithIncludeInactiveShouldReturnAll}。
+     */
     @Test
     void listWithIncludeInactiveShouldReturnAll() {
         when(strategyVersionDbService.listByType("CHUNK"))
@@ -118,6 +125,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).listEnabledByType(any());
     }
 
+    /**
+     * 校验点：{@code listWithUnknownTypeShouldReject}。
+     */
     @Test
     void listWithUnknownTypeShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.list("INDEX", false));
@@ -125,6 +135,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).listEnabledByType(any());
     }
 
+    /**
+     * 校验点：{@code listWithBlankTypeShouldReject}。
+     */
     @Test
     void listWithBlankTypeShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.list("  ", false));
@@ -132,6 +145,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).listEnabledByType(any());
     }
 
+    /**
+     * 校验点：{@code createShouldSaveAsActive}。
+     */
     @Test
     void createShouldSaveAsActive() {
         when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
@@ -145,6 +161,9 @@ class StrategyVersionServiceImplTest {
         assertEquals("ACTIVE", vo.getStatus());
     }
 
+    /**
+     * 校验点：{@code createWithUnknownTypeShouldReject}。
+     */
     @Test
     void createWithUnknownTypeShouldReject() {
         StrategyVersionCreateDTO dto = chunkDto("{\"routes\":{}}");
@@ -154,6 +173,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createDuplicateKeyShouldReject}。
+     */
     @Test
     void createDuplicateKeyShouldReject() {
         when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class)))
@@ -164,6 +186,9 @@ class StrategyVersionServiceImplTest {
         assertEquals("同环节同名版本已存在", e.getMessage());
     }
 
+    /**
+     * 校验点：{@code updateShouldCopyAsNewVersion}。
+     */
     @Test
     void updateShouldCopyAsNewVersion() {
         // 策略版本行不可变：编辑 = 复制新行（旧行原样保留，新行按 dto 注册且默认 ACTIVE）
@@ -186,6 +211,9 @@ class StrategyVersionServiceImplTest {
         assertEquals("INACTIVE", existing.getStatus());
     }
 
+    /**
+     * 校验点：{@code updateNotFoundShouldReject}。
+     */
     @Test
     void updateNotFoundShouldReject() {
         when(strategyVersionDbService.getById(9L)).thenReturn(null);
@@ -196,6 +224,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).updateById(any());
     }
 
+    /**
+     * 校验点：{@code enableShouldSetActive}。
+     */
     @Test
     void enableShouldSetActive() {
         when(strategyVersionDbService.getById(9L))
@@ -207,6 +238,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService).updateById(any(WbPipelineStrategyVersion.class));
     }
 
+    /**
+     * 校验点：{@code disableShouldSetInactive}。
+     */
     @Test
     void disableShouldSetInactive() {
         when(strategyVersionDbService.getById(9L))
@@ -218,6 +252,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService).updateById(any(WbPipelineStrategyVersion.class));
     }
 
+    /**
+     * 校验点：{@code enableNotFoundShouldReject}。
+     */
     @Test
     void enableNotFoundShouldReject() {
         when(strategyVersionDbService.getById(9L)).thenReturn(null);
@@ -227,6 +264,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).updateById(any());
     }
 
+    /**
+     * 校验点：{@code deleteShouldRemoveWhenNoBindingReference}。
+     */
     @Test
     void deleteShouldRemoveWhenNoBindingReference() {
         when(strategyVersionDbService.getById(9L))
@@ -236,8 +276,15 @@ class StrategyVersionServiceImplTest {
 
         assertTrue(service.delete(9L));
         verify(strategyVersionDbService).removeById(9L);
+
+        // 受影响 0 行（并发下已被别人删掉）不能报成功
+        when(strategyVersionDbService.removeById(9L)).thenReturn(false);
+        assertFalse(service.delete(9L));
     }
 
+    /**
+     * 校验点：{@code deleteShouldRejectWhenBoundByKnowledgeBase}。
+     */
     @Test
     void deleteShouldRejectWhenBoundByKnowledgeBase() {
         // 策略版本行不可变：有绑定引用禁物理删除（停用代替删除）
@@ -250,6 +297,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).removeById(any(Serializable.class));
     }
 
+    /**
+     * 校验点：{@code deleteNotFoundShouldReject}。
+     */
     @Test
     void deleteNotFoundShouldReject() {
         when(strategyVersionDbService.getById(9L)).thenReturn(null);
@@ -261,6 +311,9 @@ class StrategyVersionServiceImplTest {
 
     // ---------------- CHUNK 配置校验（结构 / 支持集 / 参数范围 / 不变量 / 互斥） ----------------
 
+    /**
+     * 校验点：{@code createChunkWithValidConfigShouldSave}。
+     */
     @Test
     void createChunkWithValidConfigShouldSave() {
         when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
@@ -277,6 +330,9 @@ class StrategyVersionServiceImplTest {
         assertEquals("chunk-hybrid", vo.getName());
     }
 
+    /**
+     * 校验点：{@code createChunkWithInvalidJsonShouldReject}。
+     */
     @Test
     void createChunkWithInvalidJsonShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -286,6 +342,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createChunkWithUnsupportedAlgorithmShouldReject}。
+     */
     @Test
     void createChunkWithUnsupportedAlgorithmShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -295,6 +354,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createChunkWithParamOutOfRangeShouldReject}。
+     */
     @Test
     void createChunkWithParamOutOfRangeShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -306,6 +368,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createChunkWithSoftBelowTargetShouldReject}。
+     */
     @Test
     void createChunkWithSoftBelowTargetShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -317,6 +382,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createChunkWithTableInBodyFlowAndContextMergedShouldReject}。
+     */
     @Test
     void createChunkWithTableInBodyFlowAndContextMergedShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -339,6 +407,9 @@ class StrategyVersionServiceImplTest {
         return dto;
     }
 
+    /**
+     * 校验点：{@code createPreprocWithValidConfigShouldSave}。
+     */
     @Test
     void createPreprocWithValidConfigShouldSave() {
         when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenAnswer(inv -> {
@@ -355,6 +426,9 @@ class StrategyVersionServiceImplTest {
         assertEquals("preproc-strict", vo.getName());
     }
 
+    /**
+     * 校验点：{@code createPreprocWithIllegalActionShouldReject}。
+     */
     @Test
     void createPreprocWithIllegalActionShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -364,6 +438,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createPreprocWithParamOutOfRangeShouldReject}。
+     */
     @Test
     void createPreprocWithParamOutOfRangeShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -374,6 +451,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createPreprocWithInvalidRegexShouldReject}。
+     */
     @Test
     void createPreprocWithInvalidRegexShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -384,6 +464,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createPreprocWithReplaceMissingReplacementShouldReject}。
+     */
     @Test
     void createPreprocWithReplaceMissingReplacementShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -405,6 +488,9 @@ class StrategyVersionServiceImplTest {
         return dto;
     }
 
+    /**
+     * 校验点：{@code createEmbedWithValidConfigShouldSaveSnapshotAsIs}。
+     */
     @Test
     void createEmbedWithValidConfigShouldSaveSnapshotAsIs() {
         ArgumentCaptor<WbPipelineStrategyVersion> captor = ArgumentCaptor.forClass(WbPipelineStrategyVersion.class);
@@ -426,7 +512,7 @@ class StrategyVersionServiceImplTest {
         assertNull(snapshot.get("dimension"), "快照原样落库，不再回填目录冗余");
     }
 
-    /** 目录校验已移除：未收录的模型名原样保存，存在性交给调用期判定 */
+    /** 目录校验已移除：未收录的模型名原样保存，存在性交给调用期判定（{@code createEmbedWithUncatalogedModelShouldSaveAsIs}）。 */
     @Test
     void createEmbedWithUncatalogedModelShouldSaveAsIs() {
         when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenReturn(true);
@@ -436,6 +522,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService).save(any(WbPipelineStrategyVersion.class));
     }
 
+    /**
+     * 校验点：{@code createEmbedWithTemplateMissingPlaceholderShouldReject}。
+     */
     @Test
     void createEmbedWithTemplateMissingPlaceholderShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -445,6 +534,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createEmbedWithRangeViolationShouldReject}。
+     */
     @Test
     void createEmbedWithRangeViolationShouldReject() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -465,6 +557,9 @@ class StrategyVersionServiceImplTest {
         return dto;
     }
 
+    /**
+     * 校验点：{@code createRetrievalWithValidConfigShouldSave}。
+     */
     @Test
     void createRetrievalWithValidConfigShouldSave() {
         when(retrievalRuleResolver.validate(anyString())).thenReturn(new RetrievalRuleSpec());
@@ -480,6 +575,9 @@ class StrategyVersionServiceImplTest {
         verify(retrievalRuleResolver).validate("{\"channel\":\"HYBRID\"}");
     }
 
+    /**
+     * 校验点：{@code createRetrievalWithUnknownFieldShouldReject}。
+     */
     @Test
     void createRetrievalWithUnknownFieldShouldReject() {
         when(retrievalRuleResolver.validate(anyString()))
@@ -492,6 +590,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code createRetrievalWithLockedCapabilityShouldReject}。
+     */
     @Test
     void createRetrievalWithLockedCapabilityShouldReject() {
         when(retrievalRuleResolver.validate(anyString()))
@@ -504,6 +605,9 @@ class StrategyVersionServiceImplTest {
         verify(strategyVersionDbService, never()).save(any());
     }
 
+    /**
+     * 校验点：{@code listRetrievalTypeShouldBeSupported}。
+     */
     @Test
     void listRetrievalTypeShouldBeSupported() {
         when(strategyVersionDbService.listEnabledByType("RETRIEVAL")).thenReturn(List.of());
@@ -511,5 +615,20 @@ class StrategyVersionServiceImplTest {
         service.list("RETRIEVAL", false);
 
         verify(strategyVersionDbService).listEnabledByType("RETRIEVAL");
+    }
+
+    /**
+     * 空配置快照：按 40001 拒绝并给出"配置不能为空"而不是"不是合法 JSON"。
+     *
+     * <p>守护 {@code validateConfig} 的空白校验：漏校验会落到 JSON 解析分支，文案误导。
+     */
+    @Test
+    void createWithBlankConfigShouldSayConfigRequired() {
+        StrategyVersionCreateDTO dto = preprocDto(" ");
+
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.create(dto));
+
+        assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
+        assertTrue(e.getMessage().contains("配置不能为空"), e.getMessage());
     }
 }

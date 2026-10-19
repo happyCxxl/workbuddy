@@ -125,4 +125,19 @@ class WbStrategyBindingDbServiceImplTest {
         assertTrue(wrapper.getTargetSql().contains("strategy_version_id"), () -> wrapper.getTargetSql());
         assertTrue(wrapper.getTargetSql().contains("LIMIT 1"), () -> wrapper.getTargetSql());
     }
+
+    /**
+     * 按库与类型命中时返回真实行（含含退役行的宽松查询）。
+     *
+     * <p>守护 {@code getByKbAndType}/{@code getAnyByKbAndType} 的返回口径：恒 null 会让绑定看起来永远缺失。
+     */
+    @Test
+    void bindingQueriesShouldReturnHitRow() {
+        WbStrategyBinding hit = new WbStrategyBinding();
+        hit.setId(9L);
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(hit);
+
+        assertEquals(9L, impl.getByKbAndType(1L, "CHUNK").getId());
+        assertEquals(9L, impl.getAnyByKbAndType(1L, "CHUNK").getId());
+    }
 }

@@ -103,4 +103,18 @@ class WbPipelineProductDbServiceImplTest {
             return segment.contains("file_result_id") && segment.contains("ASC") && !segment.contains("LIMIT");
         }));
     }
+
+    /**
+     * 按任务取最新产物：命中返回该行（不是恒 null）。
+     *
+     * <p>守护 {@code getByTaskId} 的返回口径：恒 null 会让任务详情永远看不到产物。
+     */
+    @Test
+    void getByTaskIdShouldReturnHitRow() {
+        WbPipelineProduct row = new WbPipelineProduct();
+        row.setId(7L);
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(row);
+
+        assertEquals(7L, impl.getByTaskId(3L).getId());
+    }
 }

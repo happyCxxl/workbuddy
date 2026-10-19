@@ -68,6 +68,9 @@ class ChainStorageSupportTest {
         when(sourceFileDbService.getById(5L)).thenReturn(sourceFile);
     }
 
+    /**
+     * 校验点：{@code chainSourceIdShouldBeReadFromArchive}。
+     */
     @Test
     void chainSourceIdShouldBeReadFromArchive() {
         stubChain();
@@ -76,6 +79,9 @@ class ChainStorageSupportTest {
         assertEquals(ARCHIVE_SOURCE, support.chainSourceIdOf(10L));
     }
 
+    /**
+     * 校验点：{@code chainSourceIdShouldBeNullWhenFileResultMissing}。
+     */
     @Test
     void chainSourceIdShouldBeNullWhenFileResultMissing() {
         when(fileResultDbService.getById(10L)).thenReturn(null);
@@ -83,6 +89,9 @@ class ChainStorageSupportTest {
         assertNull(support.chainSourceIdOf(10L));
     }
 
+    /**
+     * 校验点：{@code chainSourceIdShouldBeNullWhenSourceFileMissing}。
+     */
     @Test
     void chainSourceIdShouldBeNullWhenSourceFileMissing() {
         WbFileResult fileResult = new WbFileResult();
@@ -94,6 +103,9 @@ class ChainStorageSupportTest {
         assertNull(support.chainSourceIdOf(10L));
     }
 
+    /**
+     * 校验点：{@code archiveSourceShouldBeNullWhenArchiveMissing}。
+     */
     @Test
     void archiveSourceShouldBeNullWhenArchiveMissing() {
         when(fileStorage.refOf("F-88"))
@@ -102,6 +114,9 @@ class ChainStorageSupportTest {
         assertNull(support.storageSourceIdOfFile("F-88"));
     }
 
+    /**
+     * 校验点：{@code archiveSourceShouldBeNullWhenArchiveHasNoSourceId}。
+     */
     @Test
     void archiveSourceShouldBeNullWhenArchiveHasNoSourceId() {
         when(fileStorage.refOf("F-88")).thenReturn(new StorageRef(StorageType.MINIO.getCode(), null));
@@ -109,6 +124,9 @@ class ChainStorageSupportTest {
         assertNull(support.storageSourceIdOfFile("F-88"));
     }
 
+    /**
+     * 校验点：{@code archiveSourceShouldRethrowOtherFailure}。
+     */
     @Test
     void archiveSourceShouldRethrowOtherFailure() {
         when(fileStorage.refOf("F-88"))
@@ -119,12 +137,18 @@ class ChainStorageSupportTest {
         assertEquals(ErrorCode.SYSTEM_ERROR, e.getErrorCode());
     }
 
+    /**
+     * 校验点：{@code blankFileIdShouldHaveNoArchiveSource}。
+     */
     @Test
     void blankFileIdShouldHaveNoArchiveSource() {
         assertNull(support.storageSourceIdOfFile("  "));
         assertNull(support.storageSourceIdOfFile(null));
     }
 
+    /**
+     * 校验点：{@code batchChainSourceIdsShouldResolveEachResultFromArchive}。
+     */
     @Test
     void batchChainSourceIdsShouldResolveEachResultFromArchive() {
         WbFileResult fr10 = new WbFileResult();
@@ -154,11 +178,17 @@ class ChainStorageSupportTest {
         assertEquals(Map.of(10L, ARCHIVE_SOURCE), sourceIds);
     }
 
+    /**
+     * 校验点：{@code batchChainSourceIdsShouldBeEmptyWithoutIds}。
+     */
     @Test
     void batchChainSourceIdsShouldBeEmptyWithoutIds() {
         assertEquals(Map.of(), support.chainSourceIdsOf(List.of()));
     }
 
+    /**
+     * 校验点：{@code requireStorageMatchShouldRejectMismatchWith40453}。
+     */
     @Test
     void requireStorageMatchShouldRejectMismatchWith40453() {
         stubChain();
@@ -176,6 +206,9 @@ class ChainStorageSupportTest {
         assertTrue(e.getMessage().contains("无法继续执行"), e.getMessage());
     }
 
+    /**
+     * 校验点：{@code requireStorageMatchShouldPassWhenBothSidesMatch}。
+     */
     @Test
     void requireStorageMatchShouldPassWhenBothSidesMatch() {
         stubChain();
@@ -185,6 +218,9 @@ class ChainStorageSupportTest {
         assertDoesNotThrow(() -> support.requireStorageMatch(10L));
     }
 
+    /**
+     * 校验点：{@code requireStorageMatchShouldPassWhenNoCurrentSource}。
+     */
     @Test
     void requireStorageMatchShouldPassWhenNoCurrentSource() {
         stubChain();
@@ -195,6 +231,9 @@ class ChainStorageSupportTest {
         assertDoesNotThrow(() -> support.requireStorageMatch(10L));
     }
 
+    /**
+     * 校验点：{@code archiveSourceShouldBeNullWhenArchiveIsMissing}。
+     */
     @Test
     void archiveSourceShouldBeNullWhenArchiveIsMissing() {
         when(fileStorage.refOf("F-88")).thenReturn(null);
@@ -202,6 +241,9 @@ class ChainStorageSupportTest {
         assertNull(support.storageSourceIdOfFile("F-88"));
     }
 
+    /**
+     * 校验点：{@code requireStorageMatchShouldPassWhenChainSourceUnavailable}。
+     */
     @Test
     void requireStorageMatchShouldPassWhenChainSourceUnavailable() {
         when(fileResultDbService.getById(10L)).thenReturn(null);
@@ -210,6 +252,9 @@ class ChainStorageSupportTest {
         assertDoesNotThrow(() -> support.requireStorageMatch(10L));
     }
 
+    /**
+     * 校验点：{@code storageMismatchOfArchiveShouldJudgeAgainstCurrentSource}。
+     */
     @Test
     void storageMismatchOfArchiveShouldJudgeAgainstCurrentSource() {
         when(storageRouter.currentSourceId()).thenReturn(CURRENT_SOURCE);
@@ -219,6 +264,9 @@ class ChainStorageSupportTest {
         assertFalse(support.storageMismatchOfArchive(null));
     }
 
+    /**
+     * 校验点：{@code storageMismatchShouldJudgeChainAgainstCurrentSource}。
+     */
     @Test
     void storageMismatchShouldJudgeChainAgainstCurrentSource() {
         stubChain();
@@ -228,6 +276,9 @@ class ChainStorageSupportTest {
         assertTrue(support.storageMismatch(10L));
     }
 
+    /**
+     * 校验点：{@code sourceNameShouldUseRegisteredNameThenTypeThenId}。
+     */
     @Test
     void sourceNameShouldUseRegisteredNameThenTypeThenId() {
         when(storageRouter.nameOf(ARCHIVE_SOURCE)).thenReturn("演示 MinIO");
@@ -240,6 +291,9 @@ class ChainStorageSupportTest {
         assertEquals("未记录的数据源", support.sourceName(null));
     }
 
+    /**
+     * 校验点：{@code currentSourceNameShouldFollowRouter}。
+     */
     @Test
     void currentSourceNameShouldFollowRouter() {
         when(storageRouter.currentSourceId()).thenReturn(CURRENT_SOURCE);
@@ -247,5 +301,19 @@ class ChainStorageSupportTest {
 
         assertEquals(CURRENT_SOURCE, support.currentSourceId());
         assertEquals("本地磁盘", support.currentSourceName());
+    }
+
+    /**
+     * 链路与当前数据源一致时不算不一致。
+     *
+     * <p>守护 {@code storageMismatch} 的比较：恒 true 会把同源任务误拒为跨源。
+     */
+    @Test
+    void storageMismatchShouldBeFalseWhenSourcesEqual() {
+        stubChain();
+        when(fileStorage.refOf("F-88")).thenReturn(new StorageRef(StorageType.MINIO.getCode(), 5L));
+        when(storageRouter.currentSourceId()).thenReturn(5L);
+
+        assertFalse(support.storageMismatch(10L));
     }
 }

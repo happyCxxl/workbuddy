@@ -170,4 +170,21 @@ class WbChunkDbServiceImplTest {
         verify(mapper).selectPage(any(), captor.capture());
         return (LambdaQueryWrapper<WbChunk>) captor.getValue();
     }
+
+    /**
+     * 按切片集分页命中时返回真实分页对象。
+     *
+     * <p>守护 {@code pageByChunkSetId} 的返回口径：恒 null 会让切片详情页空指针。
+     */
+    @Test
+    void pageByChunkSetIdShouldReturnPage() {
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<WbChunk> page =
+                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 10);
+        page.setRecords(List.of(new WbChunk()));
+        when(mapper.selectPage(any(), any())).thenReturn(page);
+
+        var result = impl.pageByChunkSetId(5L, null, 1, 10);
+
+        assertEquals(1, result.getRecords().size());
+    }
 }

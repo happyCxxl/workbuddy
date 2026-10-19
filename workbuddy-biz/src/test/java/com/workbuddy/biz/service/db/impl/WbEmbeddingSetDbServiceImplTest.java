@@ -124,4 +124,34 @@ class WbEmbeddingSetDbServiceImplTest {
         assertTrue(impl.listByFileResultIds(List.of()).isEmpty());
         verify(mapper, org.mockito.Mockito.never()).selectList(any(Wrapper.class));
     }
+
+    /**
+     * 按产物键命中时返回该行；按文件批量取时返回真实列表。
+     *
+     * <p>守护 {@code getByArtifactId}/{@code listByFileResultIds} 的返回口径。
+     */
+    @Test
+    void artifactAndBatchQueriesShouldReturnRows() {
+        WbEmbeddingSet hit = new WbEmbeddingSet();
+        hit.setId(8L);
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(hit);
+        assertEquals(8L, impl.getByArtifactId("embed-artifact").getId());
+
+        when(mapper.selectList(any())).thenReturn(List.of(hit));
+        assertEquals(1, impl.listByFileResultIds(List.of(1L)).size());
+    }
+
+    /**
+     * 按文件取集合历史：命中返回真实列表（不是恒空）。
+     *
+     * <p>守护 {@code listByFileResultId} 的返回口径：恒空会让血缘丢向量段。
+     */
+    @Test
+    void listByFileResultIdShouldReturnRows() {
+        WbEmbeddingSet row = new WbEmbeddingSet();
+        row.setId(4L);
+        when(mapper.selectList(any())).thenReturn(List.of(row));
+
+        assertEquals(1, impl.listByFileResultId(10L).size());
+    }
 }

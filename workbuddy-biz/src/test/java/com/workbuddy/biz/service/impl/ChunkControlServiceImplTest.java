@@ -244,6 +244,8 @@ class ChunkControlServiceImplTest {
         assertEquals(66L, task.getStrategyVersionId());
         assertNotNull(task.getStrategySnapshot());
         assertTrue(task.getStrategySnapshot().contains("titleInContent"));
+        // 策略类型必须随快照下发（解析器按类型分派）
+        assertTrue(task.getStrategySnapshot().contains("\"type\":\"CHUNK\""), task.getStrategySnapshot());
         verify(taskQueue).enqueue(41L);
     }
 
@@ -814,4 +816,58 @@ class ChunkControlServiceImplTest {
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);
     }
 
+
+    /**
+     * 上游预处理产物三连校验：不存在、环节不符、归属不符都按 40404 拒绝且不建任务。
+     *
+     * <p>守护 {@code requirePreprocessProduct} 的三道门禁。
+     */
+    @Test
+    void upstreamProductChecksShouldRejectMissingWrongStageAndForeign() {
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        stubBoundStrategy();
+
+        when(pipelineProductDbService.getById(999L)).thenReturn(null);
+        KnowledgeException missing = assertThrows(KnowledgeException.class,
+                () -> service.chunk(10L, null, 999L));
+        assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, missing.getErrorCode());
+        assertTrue(missing.getMessage().contains("不存在"), missing.getMessage());
+
+        WbPipelineProduct wrongStage = preprocessProduct();
+        wrongStage.setStage(PipelineStage.PARSE.name());
+        when(pipelineProductDbService.getById(50L)).thenReturn(wrongStage);
+        KnowledgeException stageMismatch = assertThrows(KnowledgeException.class,
+                () -> service.chunk(10L, null, 50L));
+        assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, stageMismatch.getErrorCode());
+        assertTrue(stageMismatch.getMessage().contains("环节不匹配"), stageMismatch.getMessage());
+
+        WbPipelineProduct foreign = preprocessProduct();
+        foreign.setFileResultId(99L);
+        when(pipelineProductDbService.getById(50L)).thenReturn(foreign);
+        KnowledgeException foreignError = assertThrows(KnowledgeException.class,
+                () -> service.chunk(10L, null, 50L));
+        assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, foreignError.getErrorCode());
+        assertTrue(foreignError.getMessage().contains("不属于该文件结果"), foreignError.getMessage());
+
+        verify(pipelineTaskDbService, never()).save(any());
+        verify(taskQueue, never()).enqueue(any());
+    }
+
+    /**
+     * 显式策略版本类型与环节不符：按 40433 拒绝。
+     *
+     * <p>守护 {@code requireExplicit} 的类型校验：漏校验会把向量化策略当切片策略用。
+     */
+    @Test
+    void explicitStrategyWithWrongTypeShouldReject() {
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        WbPipelineStrategyVersion wrongType = chunkVersion(77L, "embed-default", "v1");
+        wrongType.setType("EMBED");
+        when(strategyVersionDbService.getById(77L)).thenReturn(wrongType);
+
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, 77L, null));
+
+        assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
+        assertTrue(e.getMessage().contains("类型不匹配"), e.getMessage());
+    }
 }

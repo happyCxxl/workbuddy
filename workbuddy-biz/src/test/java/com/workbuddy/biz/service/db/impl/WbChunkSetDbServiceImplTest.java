@@ -119,4 +119,18 @@ class WbChunkSetDbServiceImplTest {
         LambdaQueryWrapper<WbChunkSet> wrapper = (LambdaQueryWrapper<WbChunkSet>) captor.getValue();
         assertTrue(wrapper.getTargetSql().contains("IN"), () -> wrapper.getTargetSql());
     }
+
+    /**
+     * 按产物键命中时返回该行（不是恒 null）。
+     *
+     * <p>守护 {@code getByArtifactId} 的返回口径：恒 null 会让增量构建重新读全量产物。
+     */
+    @Test
+    void getByArtifactIdShouldReturnHitRow() {
+        WbChunkSet row = new WbChunkSet();
+        row.setId(7L);
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(row);
+
+        assertEquals(7L, impl.getByArtifactId("chunk-artifact").getId());
+    }
 }

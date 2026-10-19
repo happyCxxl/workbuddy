@@ -231,4 +231,48 @@ class ChunkStatsSupportTest {
         strategy.getPipeline().put(PipelineKey.MIN_MERGE_LEN.key(), "30");
         return strategy;
     }
+
+    /**
+     * 上限为 0（未配置）时超限片数记 0，且不参与欠长统计。
+     *
+     * <p>守护 {@code countOver}/{@code countUnder} 的 {@code limit <= 0} 短路：短路改小会把"未配置"当成 0
+     * 上限，所有非空切片都被算成超限。
+     */
+    @Test
+    void statsShouldTreatNonPositiveLimitsAsUnconfigured() {
+        ChunkStrategy zero = new ChunkStrategy();
+        ChunkRouteConfig body = new ChunkRouteConfig();
+        body.getParams().put("targetMaxLen", "0");
+        body.getParams().put("softMaxLen", "0");
+        zero.getRoutes().put(ChunkRoute.BODY.key(), body);
+        zero.getPipeline().put(PipelineKey.MIN_MERGE_LEN.key(), "0");
+        ChunkSet chunkSet = chunkSet(
+                chunk("chunk-0001", ChunkContentType.PARAGRAPH, 50, null, List.of("e1")),
+                chunk("chunk-0002", ChunkContentType.TABLE, 0, null, List.of("e1")));
+
+        Map<String, Object> stats = ChunkStatsSupport.stats(null, null, chunkSet, zero, null);
+
+        assertEquals(0, stats.get(ChunkStatsSupport.KEY_OVER_TARGET_MAX_COUNT));
+        assertEquals(0, stats.get(ChunkStatsSupport.KEY_OVER_SOFT_MAX_COUNT));
+    }
+
+    /**
+     * 欠长统计排除父片（整章聚合不算欠长）：只数非 SECTION 的短片。
+     *
+     * <p>守护 {@code countUnder} 的父片过滤：过滤条件写反会把父片算成欠长、把正文短片漏掉。
+     */
+    @Test
+    void statsShouldExcludeSectionFromUnderMinMerge() {
+        ChunkSet chunkSet = chunkSet(
+                chunk("s-1", ChunkContentType.SECTION, 5, null, List.of("e1")),
+                chunk("s-2", ChunkContentType.SECTION, 6, null, List.of("e2")),
+                chunk("p-1", ChunkContentType.PARAGRAPH, 10, "s-1", List.of("e1")),
+                chunk("p-2", ChunkContentType.PARAGRAPH, 20, "s-1", List.of("e2")),
+                chunk("p-3", ChunkContentType.PARAGRAPH, 25, "s-2", List.of("e3")));
+
+        Map<String, Object> stats = ChunkStatsSupport.stats(null, null, chunkSet, strategy(), null);
+
+        // 三个正文短片（10/20/25）都低于 minMergeLen=30；两个更短的父片不参与欠长统计
+        assertEquals(3, stats.get(ChunkStatsSupport.KEY_UNDER_MIN_MERGE_COUNT));
+    }
 }

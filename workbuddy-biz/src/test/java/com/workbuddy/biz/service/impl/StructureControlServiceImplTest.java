@@ -514,4 +514,25 @@ class StructureControlServiceImplTest {
         lenient().when(knowledgeBaseDbService.getActiveById(id)).thenReturn(kb);
     }
 
+
+    /**
+     * 指定上游产物属于别的文件结果：按 40404 拒绝。
+     *
+     * <p>守护 {@code requireParseProduct} 的归属校验：跨文件产物被消费会把 A 的结构写进 B。
+     */
+    @Test
+    void structureWithForeignParseProductShouldReject() {
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        WbPipelineProduct foreign = new WbPipelineProduct();
+        foreign.setId(88L);
+        foreign.setFileResultId(99L);
+        foreign.setStage(PipelineStage.PARSE.name());
+        when(pipelineProductDbService.getById(88L)).thenReturn(foreign);
+
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, 88L));
+
+        assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
+        assertTrue(e.getMessage().contains("不属于该文件结果"), e.getMessage());
+        verify(pipelineTaskDbService, never()).save(any());
+    }
 }

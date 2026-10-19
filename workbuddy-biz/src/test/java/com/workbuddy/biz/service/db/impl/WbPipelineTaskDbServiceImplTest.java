@@ -347,4 +347,21 @@ class WbPipelineTaskDbServiceImplTest {
                     && w.getSqlSegment().contains("ASC");
         }));
     }
+
+    /**
+     * 按环节取排队任务：非空入参返回真实列表（不是恒空）。
+     *
+     * <p>守护 {@code listQueuedByStages} 的返回口径：恒空会让队列补投永远认为无任务。
+     */
+    @Test
+    void listQueuedByStagesShouldReturnRowsForStages() {
+        WbPipelineTask row = new WbPipelineTask();
+        row.setId(9L);
+        when(mapper.selectList(any())).thenReturn(List.of(row));
+
+        var rows = impl.listQueuedByStages(List.of(com.workbuddy.common.enums.task.PipelineStage.CHUNK), 10);
+
+        assertEquals(1, rows.size());
+        assertEquals(9L, rows.getFirst().getId());
+    }
 }

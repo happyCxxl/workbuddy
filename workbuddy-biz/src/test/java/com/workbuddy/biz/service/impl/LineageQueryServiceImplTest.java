@@ -721,4 +721,28 @@ class LineageQueryServiceImplTest {
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;
     }
+
+    /**
+     * 节点排序：按环节固定顺序，而不是按入参顺序。
+     *
+     * <p>守护 {@code lineage} 的比较器：返回 0 会让节点顺序随查询结果漂移。
+     */
+    @Test
+    void lineageShouldOrderNodesByStageSequence() {
+        WbPipelineTask embedTask = task(22L, PipelineStage.EMBED.name(), null, 10L, null);
+        embedTask.setStatus(PipelineTaskStatus.SUCCESS.name());
+        WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
+        parseTask.setStatus(PipelineTaskStatus.SUCCESS.name());
+        // 入参故意倒序：EMBED 在前、PARSE 在后
+        when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
+        when(pipelineTaskDbService.listByFileResultId(10L)).thenReturn(List.of(embedTask, parseTask));
+        when(pipelineProductDbService.listByFileResultId(10L)).thenReturn(List.of());
+        when(chunkSetDbService.listByFileResultId(10L)).thenReturn(List.of());
+        when(embeddingSetDbService.listByFileResultId(10L)).thenReturn(List.of());
+
+        var nodes = service.lineage(10L).getNodes();
+
+        assertEquals(PipelineStage.PARSE.name(), nodes.getFirst().getStage());
+        assertEquals(20L, nodes.getFirst().getTaskId());
+    }
 }

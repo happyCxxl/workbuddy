@@ -78,6 +78,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -610,15 +611,23 @@ class IndexSetServiceImplTest {
         when(indexVersionDbService.getById(15L)).thenReturn(target);
         when(indexSetDbService.getById(5L)).thenReturn(set);
         when(indexVersionDbService.getById(10L)).thenReturn(current);
-        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of(current, target));
+        // 同组合的 READY 活跃版本：COMPENSATE 允许重开（只有 CREATED/BUILDING 才跳过）
+        WbIndexVersion readySameCombo = new WbIndexVersion();
+        readySameCombo.setId(30L);
+        readySameCombo.setStatus(IndexVersionStatus.READY.name());
+        readySameCombo.setComboSnapshot(JsonUtil.toJsonStr(comboAll()));
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of(current, target, readySameCombo));
         WbFileResult file = file(10L);
         stubCompleteCombo(file);
         when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
-        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v3");
-        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
-            inv.<WbIndexVersion>getArgument(0).setId(101L);
-            return true;
-        });
+        // 版本号并发冲突：第一次 v3 撞唯一键，重取后 v4
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v3", "v4");
+        when(indexVersionDbService.save(any(WbIndexVersion.class)))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("uk_set_version"))
+                .thenAnswer(inv -> {
+                    inv.<WbIndexVersion>getArgument(0).setId(101L);
+                    return true;
+                });
         when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
             inv.<WbPipelineTask>getArgument(0).setId(201L);
             return true;
@@ -631,6 +640,10 @@ class IndexSetServiceImplTest {
         assertNotNull(target.getPublishedAt());
         verify(indexSetDbService).updatePublishedVersion(5L, 15L);
         verify(kbAuditLogDbService).saveAudit(AuditActionType.ROLLBACK_INDEX, "INDEX_VERSION", 15L, "v2", "v1");
+        ArgumentCaptor<WbIndexVersion> versionCaptor = ArgumentCaptor.forClass(WbIndexVersion.class);
+        verify(indexVersionDbService, times(2)).save(versionCaptor.capture());
+        // 冲突重取后必须用新版本号再落一次（沿用旧号会二次撞键）
+        assertEquals("v4", versionCaptor.getValue().getVersionNo());
         ArgumentCaptor<WbPipelineTask> taskCaptor = ArgumentCaptor.forClass(WbPipelineTask.class);
         verify(pipelineTaskDbService).save(taskCaptor.capture());
         assertTrue(taskCaptor.getValue().getStrategySnapshot().contains("\"COMPENSATE\""),
@@ -760,6 +773,8 @@ class IndexSetServiceImplTest {
         WbIndexVersion target = new WbIndexVersion();
         target.setId(10L);
         target.setIndexSetId(5L);
+        target.setStatus(IndexVersionStatus.ONLINE.name());
+        target.setComboSnapshot(JsonUtil.toJsonStr(comboAll()));
         WbIndexSet set = indexSet();
         set.setCurrentPublishedVersionId(10L);
         when(indexVersionDbService.getById(10L)).thenReturn(target);
@@ -907,6 +922,10 @@ class IndexSetServiceImplTest {
                 .filter(c -> "chunk-hybrid-v1".equals(c.getChunkStrategy())
                         && "embed-default-v1".equals(c.getEmbedStrategy()))
                 .findFirst().orElseThrow();
+        assertEquals("ALL", a.getFileScopeMode());
+        assertEquals(com.workbuddy.common.enums.index.IndexShape.FULL_VECTOR, a.getShape());
+        assertEquals("preproc-default-v1", a.getStageStrategies().get("PREPROCESS"));
+        assertTrue(a.isComplete());
         assertEquals(List.of(10L, 20L), a.getFileResultIds());
         assertEquals(2, a.getFileCount());
         assertEquals(80, a.getVectorCount());
@@ -1011,6 +1030,9 @@ class IndexSetServiceImplTest {
         assertFalse(result.isPassed());
         assertFalse(result.getItems().getFirst().isPassed());
         assertTrue(result.getItems().getFirst().getDetail().contains("组合产物不完整"),
+                result.getItems().getFirst().getDetail());
+        // 必须陈述具体缺口（而不是把 dimError 的 null 拼进去）
+        assertTrue(result.getItems().getFirst().getDetail().contains("文件 10 切片血统与组合预处理策略不符"),
                 result.getItems().getFirst().getDetail());
         verify(milvusIndexPort, never()).searchVector(anyString(), any());
         verify(milvusIndexPort, never()).searchFullText(anyString(), any());
@@ -1527,6 +1549,8 @@ class IndexSetServiceImplTest {
     @Test
     void versionDetailShouldRequireSetAndVersion() {
         when(indexSetDbService.getByKb(1L)).thenReturn(null);
+        // 版本行存在但集合缺失：集合校验必须是唯一拒绝点（否则会空指针）
+        when(indexVersionDbService.getById(20L)).thenReturn(versionRow(20L, "v2", IndexVersionStatus.READY.name()));
         KnowledgeException noSet = assertThrows(KnowledgeException.class,
                 () -> service.versionDetail(1L, 20L));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noSet.getCode());
@@ -1971,6 +1995,136 @@ class IndexSetServiceImplTest {
         assertEquals("v2", versionCaptor.getValue().getVersionNo());
         assertEquals(IndexVersionStatus.READY.name(), versionCaptor.getValue().getStatus());
         verify(milvusIndexPort).ensureCollection("kb_1_v2", 1024);
+    }
+
+    /**
+     * 已有切片但血统不是目标预处理：按目标预处理投递补齐（不能因为"有切片"就跳过）。
+     *
+     * <p>守护 {@code backfillFile} 的预处理谓词：判定写成恒假会漏投，写成恒真会跳过必补环节。
+     */
+    @Test
+    void backfillShouldDispatchPreprocessWhenExistingChunkHasOtherLineage() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v2", "chunk-hybrid-v2", "embed-default-v2");
+        stubOnlineCombo("v0", comboAll());
+        WbChunkSet chunk = new WbChunkSet();
+        chunk.setId(1L);
+        chunk.setFileResultId(10L);
+        chunk.setChunkStrategyVersion("chunk-hybrid-v1");
+        chunk.setUpstreamProductId(100L);
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(chunk));
+        when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-legacy-v1");
+        WbPipelineStrategyVersion preprocessStrategy = new WbPipelineStrategyVersion();
+        preprocessStrategy.setId(77L);
+        lenient().when(strategyVersionDbService.getByTypeAndNameAndVersion("PREPROCESS", "preproc-default", "v1"))
+                .thenReturn(preprocessStrategy);
+        WbPipelineProduct preprocessProduct = new WbPipelineProduct();
+        preprocessProduct.setId(501L);
+        preprocessProduct.setStage(PipelineStage.PREPROCESS.name());
+        preprocessProduct.setCapabilitySnapshot("{\"name\":\"preproc-default\",\"version\":\"v1\"}");
+        lenient().when(productDbService.listByFileResultId(10L)).thenReturn(List.of(preprocessProduct));
+        stubAppendTarget();
+
+        service.onFileProductsReady(10L);
+
+        verify(preprocessControlService).preprocess(10L, 77L, null);
+        verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+    }
+
+    /**
+     * 回退补齐：切片策略不符而向量齐备 → 仍按缺口投递切片。
+     *
+     * <p>守护 {@code compensate} 的切片谓词：判定恒真会把该补的文件当成已齐、只做补偿构建。
+     */
+    @Test
+    void compensateShouldDispatchChunkWhenChunkStrategyMismatches() {
+        WbIndexVersion target = versionRow(15L, "v1", IndexVersionStatus.RETIRED.name());
+        WbIndexVersion current = versionRow(10L, "v2", IndexVersionStatus.ONLINE.name());
+        WbIndexSet set = indexSet();
+        set.setCurrentPublishedVersionId(10L);
+        when(indexVersionDbService.getById(15L)).thenReturn(target);
+        when(indexVersionDbService.getById(10L)).thenReturn(current);
+        when(indexSetDbService.getById(5L)).thenReturn(set);
+        when(fileResultDbService.listByKb(1L)).thenReturn(List.of(file(10L)));
+        WbChunkSet chunk = new WbChunkSet();
+        chunk.setId(1L);
+        chunk.setFileResultId(10L);
+        chunk.setChunkStrategyVersion("chunk-legacy-v1");
+        chunk.setUpstreamProductId(100L);
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(chunk));
+        when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
+        WbEmbeddingSet embed = new WbEmbeddingSet();
+        embed.setId(2L);
+        embed.setFileResultId(10L);
+        embed.setStrategyVersion("embed-default-v1");
+        when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(embed));
+        WbPipelineStrategyVersion chunkStrategy = new WbPipelineStrategyVersion();
+        chunkStrategy.setId(88L);
+        when(strategyVersionDbService.getByTypeAndNameAndVersion("CHUNK", "chunk-hybrid", "v1"))
+                .thenReturn(chunkStrategy);
+        WbPipelineProduct preprocessProduct = new WbPipelineProduct();
+        preprocessProduct.setId(501L);
+        preprocessProduct.setStage(PipelineStage.PREPROCESS.name());
+        preprocessProduct.setCapabilitySnapshot("{\"name\":\"preproc-default\",\"version\":\"v1\"}");
+        when(productDbService.listByFileResultId(10L)).thenReturn(List.of(preprocessProduct));
+        service.rollback(15L);
+
+        verify(chunkControlService).chunk(10L, 88L, 501L);
+    }
+
+    /**
+     * 有切片产物但取不到匹配的上游预处理产物：补齐中止，不投递指向 0 号产物的任务。
+     *
+     * <p>守护 {@code preprocessProductIdOf} 的无匹配返回：返回 0 会让下游拿 0 当上游。
+     */
+    @Test
+    void backfillShouldStopWhenNoMatchingPreprocessProduct() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v2", "chunk-hybrid-v2", "embed-default-v2");
+        stubOnlineCombo("v0", comboAll());
+        WbChunkSet existing = new WbChunkSet();
+        existing.setId(1L);
+        existing.setFileResultId(10L);
+        existing.setChunkStrategyVersion("chunk-hybrid-v2");
+        existing.setUpstreamProductId(100L);
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(existing));
+        when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
+        WbPipelineStrategyVersion chunkStrategy = new WbPipelineStrategyVersion();
+        chunkStrategy.setId(88L);
+        when(strategyVersionDbService.getByTypeAndNameAndVersion("CHUNK", "chunk-hybrid", "v1"))
+                .thenReturn(chunkStrategy);
+        // 产物行只有 CHUNK 环节，取不到匹配的预处理产物
+        WbPipelineProduct chunkProduct = new WbPipelineProduct();
+        chunkProduct.setId(600L);
+        chunkProduct.setStage(PipelineStage.CHUNK.name());
+        when(productDbService.listByFileResultId(10L)).thenReturn(List.of(chunkProduct));
+        stubAppendTarget();
+
+        service.onFileProductsReady(10L);
+
+        verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+    }
+
+    /**
+     * 版本行没有组合快照：发布按 40001 拒绝并给出文案。
+     *
+     * <p>守护 {@code requireVersionCombo} 的 null 校验：漏校验会在解析后空指针。
+     */
+    @Test
+    void publishShouldRejectVersionWithoutComboSnapshot() {
+        WbIndexVersion noCombo = versionRow(20L, "v2", IndexVersionStatus.READY.name());
+        noCombo.setComboSnapshot(null);
+        when(indexVersionDbService.getById(20L)).thenReturn(noCombo);
+        lenient().when(indexSetDbService.getById(5L)).thenReturn(indexSet());
+
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.publish(20L));
+
+        assertEquals(ErrorCode.PARAM_INVALID.getCode(), e.getCode());
+        assertTrue(e.getMessage().contains("版本组合快照缺失"), e.getMessage());
     }
 
     /** 知识库夹具（绑定开关开启） */

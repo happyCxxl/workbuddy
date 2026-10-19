@@ -344,4 +344,38 @@ class StructureStatsSupportTest {
         page.setMarks(mark == null ? null : new ArrayList<>(List.of(mark)));
         return page;
     }
+
+    /**
+     * 三级及更深标题单独计数：不能被算成二级。
+     *
+     * <p>守护 {@code stats} 的层级判定（{@code level == 2}）：判定写反会把三级标题计成二级。
+     */
+    @Test
+    void statsShouldCountLevelThreePlusSeparately() {
+        UnifiedDocument document = new UnifiedDocument();
+        document.setElements(new ArrayList<>(List.of(
+                titled("t-1", 1), titled("t-2", 2), titled("t-3", 3), titled("t-4", 4))));
+
+        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+
+        assertEquals(1, stats.get(StructureStatsSupport.KEY_LEVEL_1));
+        assertEquals(1, stats.get(StructureStatsSupport.KEY_LEVEL_2));
+        assertEquals(2, stats.get(StructureStatsSupport.KEY_LEVEL_3_PLUS));
+    }
+
+    /**
+     * 无标记的页不计入任何标记页数。
+     *
+     * <p>守护 {@code countPageMarks} 的标记判定：条件取反会把"没有标记"的页算成噪声页。
+     */
+    @Test
+    void statsShouldNotCountUnmarkedPages() {
+        UnifiedDocument document = new UnifiedDocument();
+        document.setElements(new ArrayList<>(List.of(element("e-1", UnifiedElementType.PARAGRAPH))));
+        document.setPages(new ArrayList<>(List.of(page("NOISE_PAGE"), page(null), page(null))));
+
+        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+
+        assertEquals(1, stats.get(StructureStatsSupport.KEY_NOISE_PAGE_COUNT));
+    }
 }

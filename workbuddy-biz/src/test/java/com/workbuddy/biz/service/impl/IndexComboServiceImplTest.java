@@ -105,6 +105,9 @@ class IndexComboServiceImplTest {
         return b;
     }
 
+    /**
+     * 校验点：{@code resolveBoundComboShouldBuildFromBindings}。
+     */
     @Test
     void resolveBoundComboShouldBuildFromBindings() {
         when(strategyBindingDbService.getByKbAndType(2L, "PREPROCESS")).thenReturn(binding("PREPROCESS", 55L));
@@ -124,6 +127,9 @@ class IndexComboServiceImplTest {
         assertEquals(IndexShape.FULL_VECTOR, combo.getShape());
     }
 
+    /**
+     * 校验点：{@code resolveBoundComboShouldReturnNullWhenAnyBindingMissing}。
+     */
     @Test
     void resolveBoundComboShouldReturnNullWhenAnyBindingMissing() {
         when(strategyBindingDbService.getByKbAndType(2L, "PREPROCESS")).thenReturn(binding("PREPROCESS", 55L));
@@ -133,6 +139,9 @@ class IndexComboServiceImplTest {
         assertNull(service.resolveBoundCombo(2L));
     }
 
+    /**
+     * 校验点：{@code enumerateCombosShouldExcludeIncompleteCombos}。
+     */
     @Test
     void enumerateCombosShouldExcludeIncompleteCombos() {
         when(fileResultDbService.listByKb(2L)).thenReturn(List.of(file(10L), file(11L)));
@@ -156,6 +165,9 @@ class IndexComboServiceImplTest {
         assertTrue(combos.stream().anyMatch(c -> "embed-e2-v1".equals(c.getEmbedStrategy())));
     }
 
+    /**
+     * 校验点：{@code enumerateCombosShouldExcludeLineageMissingStrategy}。
+     */
     @Test
     void enumerateCombosShouldExcludeLineageMissingStrategy() {
         when(fileResultDbService.listByKb(2L)).thenReturn(List.of(file(10L), file(11L)));
@@ -170,6 +182,9 @@ class IndexComboServiceImplTest {
         assertTrue(service.enumerateCombos(2L).isEmpty());
     }
 
+    /**
+     * 校验点：{@code enumerateCombosShouldReturnEmptyForNoFiles}。
+     */
     @Test
     void enumerateCombosShouldReturnEmptyForNoFiles() {
         when(fileResultDbService.listByKb(2L)).thenReturn(List.of());
@@ -177,6 +192,9 @@ class IndexComboServiceImplTest {
         assertTrue(service.enumerateCombos(2L).isEmpty());
     }
 
+    /**
+     * 校验点：{@code enumerateCombosScopedShouldOnlyConsiderGivenFiles}。
+     */
     @Test
     void enumerateCombosScopedShouldOnlyConsiderGivenFiles() {
         // 范围收窄：只枚举指定文件的组合（范围外文件缺失不影响完整性判定）
@@ -193,12 +211,68 @@ class IndexComboServiceImplTest {
         assertTrue(combos.stream().allMatch(c -> "preproc-default-v1".equals(c.getPreprocessStrategy())));
     }
 
+    /**
+     * 校验点：{@code enumerateCombosScopedShouldReturnEmptyForEmptyScope}。
+     */
     @Test
     void enumerateCombosScopedShouldReturnEmptyForEmptyScope() {
         assertTrue(service.enumerateCombos(List.of()).isEmpty());
         assertTrue(service.enumerateCombos((List<Long>) null).isEmpty());
     }
 
+    /**
+     * 绑定齐全时返回该组合本身（不能被空列表吞掉）。
+     *
+     * <p>守护 {@code combosFor} 的绑定分支：返回空列表会让"当前可用组合"永远为空。
+     */
+    @Test
+    void combosForShouldReturnBoundComboWhenBindingsComplete() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
+        kb.setId(4L);
+        kb.setStrategyBindingEnabled(1);
+        when(knowledgeBaseDbService.getById(4L)).thenReturn(kb);
+        when(strategyBindingDbService.getByKbAndType(4L, "PREPROCESS")).thenReturn(binding("PREPROCESS", 55L));
+        when(strategyBindingDbService.getByKbAndType(4L, "CHUNK")).thenReturn(binding("CHUNK", 66L));
+        when(strategyBindingDbService.getByKbAndType(4L, "EMBED")).thenReturn(binding("EMBED", 88L));
+        when(strategyVersionDbService.getById(55L)).thenReturn(version(55L, "preproc-default"));
+        when(strategyVersionDbService.getById(66L)).thenReturn(version(66L, "chunk-hybrid"));
+        when(strategyVersionDbService.getById(88L)).thenReturn(version(88L, "embed-default"));
+
+        List<ComboSnapshot> combos = service.combosFor(4L);
+
+        assertEquals(1, combos.size());
+        assertEquals("preproc-default-v1", combos.getFirst().getPreprocessStrategy());
+        assertEquals("chunk-hybrid-v1", combos.getFirst().getChunkStrategy());
+        assertEquals("embed-default-v1", combos.getFirst().getEmbedStrategy());
+    }
+
+    /**
+     * 绑定关闭时返回枚举结果（非空文件时不能返回空列表）。
+     *
+     * <p>守护 {@code combosFor} 的枚举分支：返回空列表会让候选组合页永远空白。
+     */
+    @Test
+    void combosForShouldReturnEnumeratedCombosWhenBindingOff() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
+        kb.setId(5L);
+        kb.setStrategyBindingEnabled(0);
+        when(knowledgeBaseDbService.getById(5L)).thenReturn(kb);
+        when(fileResultDbService.listByKb(5L)).thenReturn(List.of(file(10L)));
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(
+                chunkSet(1L, 10L, "chunk-a-v1", 100L)));
+        when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(
+                embedSet(1L, 10L, "embed-e1-v1")));
+        when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
+
+        List<ComboSnapshot> combos = service.combosFor(5L);
+
+        assertEquals(1, combos.size());
+        assertEquals("chunk-a-v1", combos.getFirst().getChunkStrategy());
+    }
+
+    /**
+     * 校验点：{@code combosForShouldDispatchByBindingSwitch}。
+     */
     @Test
     void combosForShouldDispatchByBindingSwitch() {
         WbKnowledgeBase kbOn = new WbKnowledgeBase();

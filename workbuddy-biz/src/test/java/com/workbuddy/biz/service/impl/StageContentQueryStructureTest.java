@@ -27,6 +27,8 @@ import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.filecenter.storage.FileStorage;
+import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +47,8 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -285,5 +289,21 @@ class StageContentQueryStructureTest {
         fileResult.setId(10L);
         fileResult.setKnowledgeBaseId(10L);
         return fileResult;
+    }
+
+    /**
+     * 显式任务号不属于该文件：按 40001 拒绝，且文案带该环节的中文名。
+     *
+     * <p>守护 {@code stageLabel} 的标签回填：标签为空会让用户看不懂是哪个环节的任务。
+     */
+    @Test
+    void stageContentWithForeignTaskIdShouldMentionStageLabel() {
+        when(pipelineTaskDbService.getById(999L)).thenReturn(null);
+
+        KnowledgeException e = assertThrows(KnowledgeException.class,
+                () -> service.stageContent(10L, "PARSE", 999L, null, null, null));
+
+        assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
+        assertTrue(e.getMessage().contains("解析"), e.getMessage());
     }
 }

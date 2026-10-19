@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -126,5 +127,19 @@ class WbSubmitLogDbServiceImplTest {
                     && w.getParamNameValuePairs().containsValue(42L)
                     && segment.contains("DESC");
         }));
+    }
+
+    /**
+     * 按请求号命中时返回真实行。
+     *
+     * <p>守护 {@code getByRequestId} 的返回口径：恒 null 会让幂等判定失效。
+     */
+    @Test
+    void getByRequestIdShouldReturnHitRow() {
+        WbSubmitLog hit = new WbSubmitLog();
+        hit.setId(11L);
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(hit);
+
+        assertEquals(11L, impl.getByRequestId("req-1").getId().longValue());
     }
 }
