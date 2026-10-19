@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.core.conditions.AbstractWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.workbuddy.biz.mapper.WbPipelineTaskMapper;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -131,5 +134,158 @@ class WbPipelineTaskDbServiceImplTest {
         when(mapper.update(isNull(), any())).thenReturn(0);
 
         assertEquals(0, impl.failQueued(9L, "TASK_ENQUEUE_FAILED", "入队失败"));
+    }
+
+    /**
+     * 执行键查询：四元组等值条件 + 最近一条。
+     *
+     * <p>守护 {@code getByExecKey} 的幂等键口径：少一个等值条件即失败（同键重复投递查错任务）。
+     */
+    @Test
+    void getByExecKeyShouldMatchAllFourKeysAndTakeLatest() {
+        WbPipelineTask task = new WbPipelineTask();
+        task.setId(1L);
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(task);
+
+        WbPipelineTask result = impl.getByExecKey(7L, "PARSE", 3L, 4L);
+
+        assertEquals(1L, result.getId());
+        verify(mapper).selectOne(argThat(wrapper -> {
+            AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
+            String segment = w.getSqlSegment();
+            return segment.contains("file_result_id") && segment.contains("stage")
+                    && segment.contains("upstream_product_id") && segment.contains("strategy_version_id")
+                    && segment.contains("LIMIT 1");
+        }), org.mockito.ArgumentMatchers.eq(false));
+    }
+
+    /**
+     * 按文件与环节取最近一条。
+     *
+     * <p>守护 {@code getByFileResultIdAndStage} 的等值条件与 LIMIT。
+     */
+    @Test
+    void getByFileResultIdAndStageShouldMatchPairAndTakeLatest() {
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(null);
+
+        assertNull(impl.getByFileResultIdAndStage(7L, "CHUNK"));
+        verify(mapper).selectOne(argThat(wrapper -> {
+            AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
+            String segment = w.getSqlSegment();
+            return segment.contains("file_result_id") && segment.contains("stage")
+                    && segment.contains("LIMIT 1");
+        }), org.mockito.ArgumentMatchers.eq(false));
+    }
+
+    /**
+     * 批量同环节查询：空入参短路不落 SQL，非空走 IN。
+     *
+     * <p>守护 {@code listByFileResultIdsAndStage} 的空入参兜底。
+     */
+    @Test
+    void listByFileResultIdsAndStageShouldShortCircuitOnEmpty() {
+        assertEquals(List.of(), impl.listByFileResultIdsAndStage(List.of(), "PARSE"));
+        assertEquals(List.of(), impl.listByFileResultIdsAndStage(null, "PARSE"));
+        verify(mapper, never()).selectList(any());
+    }
+
+    /**
+     * 按状态集合查询只带三个字段（轻量口径）。
+     *
+     * <p>守护 {@code listByStatuses} 的投影与 IN 条件。
+     */
+    @Test
+    void listByStatusesShouldSelectIdAndFileResultAndStatus() {
+        when(mapper.selectList(any())).thenReturn(List.of(new WbPipelineTask()));
+
+        List<WbPipelineTask> result = impl.listByStatuses(
+                List.of(PipelineTaskStatus.QUEUED, PipelineTaskStatus.RUNNING));
+
+        assertEquals(1, result.size());
+        verify(mapper).selectList(argThat(wrapper -> {
+            AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
+            String select = w.getSqlSelect();
+            return select.contains("id") && select.contains("file_result_id") && select.contains("status")
+                    && w.getSqlSegment().contains("IN");
+        }));
+    }
+
+    /**
+     * 按环节取排队任务：空环节短路，非空带 IN 与 LIMIT。
+     *
+     * <p>守护 {@code listQueuedByStages} 的空入参兜底与条数上限。
+     */
+    @Test
+    void listQueuedByStagesShouldShortCircuitAndLimit() {
+        assertEquals(List.of(), impl.listQueuedByStages(List.of(), 10));
+        assertEquals(List.of(), impl.listQueuedByStages(null, 10));
+        when(mapper.selectList(any())).thenReturn(List.of(new WbPipelineTask()));
+
+        impl.listQueuedByStages(List.of(PipelineStage.PARSE, PipelineStage.CHUNK), 10);
+
+        verify(mapper).selectList(argThat(wrapper -> {
+            AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
+            return w.getSqlSegment().contains("IN") && w.getSqlSegment().contains("LIMIT 10")
+                    && w.getParamNameValuePairs().containsValue("QUEUED");
+        }));
+    }
+
+    /**
+     * 抢占任务：条件更新 QUEUED→RUNNING 并写开始时间。
+     *
+     * <p>守护 {@code claim} 的迁移守卫与回写列。
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void claimShouldConditionallyMoveQueuedToRunning() {
+        when(mapper.update(isNull(), any())).thenReturn(1);
+        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<WbPipelineTask>> wrapperCaptor =
+                ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+
+        assertEquals(1, impl.claim(9L));
+
+        verify(mapper).update(isNull(), wrapperCaptor.capture());
+        AbstractWrapper<?, ?, ?> wrapper = (AbstractWrapper<?, ?, ?>) wrapperCaptor.getValue();
+        // MP 的 where 条件参数惰性求值：先取 SQL 片段让占位符物化，再断言参数值
+        String segment = wrapper.getSqlSegment();
+        assertTrue(segment.contains("id =") && segment.contains("status ="),
+                () -> "实际 WHERE: " + segment);
+        assertTrue(wrapper.getParamNameValuePairs().containsValue("QUEUED"));
+        assertTrue(wrapper.getParamNameValuePairs().containsValue("RUNNING"));
+        assertTrue(wrapper.getSqlSet().contains("started_at"));
+    }
+
+    /**
+     * 回写产物 ID。
+     *
+     * <p>守护 {@code updateProductId} 的回写列。
+     */
+    @Test
+    void updateProductIdShouldSetProductId() {
+        impl.updateProductId(9L, 77L);
+
+        verify(mapper).update(isNull(), argThat(wrapper -> {
+            AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
+            return w.getSqlSet().contains("product_id")
+                    && w.getParamNameValuePairs().containsValue(77L);
+        }));
+    }
+
+    /**
+     * 按文件取全部任务（时间线口径，升序）。
+     *
+     * <p>守护 {@code listByFileResultId} 的等值条件与升序。
+     */
+    @Test
+    void listByFileResultIdShouldFilterByFileAndOrderAsc() {
+        when(mapper.selectList(any())).thenReturn(List.of(new WbPipelineTask()));
+
+        impl.listByFileResultId(7L);
+
+        verify(mapper).selectList(argThat(wrapper -> {
+            AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
+            return w.getSqlSegment().contains("file_result_id")
+                    && w.getSqlSegment().contains("ASC");
+        }));
     }
 }
