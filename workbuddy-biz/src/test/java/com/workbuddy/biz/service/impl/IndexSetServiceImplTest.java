@@ -252,6 +252,8 @@ class IndexSetServiceImplTest {
         assertEquals(1, savedVersion.get().getChunkCount());
         assertEquals(1, savedVersion.get().getVectorCount());
         assertEquals(IndexVersionStatus.ONLINE.name(), savedVersion.get().getStatus());
+        // 追加后转 READY 时必须记下校验时间（前端「最近校验」依赖它）
+        assertNotNull(savedVersion.get().getValidatedAt());
         verify(indexSetDbService).updatePublishedVersion(5L, 100L);
         verify(kbAuditLogDbService).saveAudit(AuditActionType.PUBLISH_INDEX, "INDEX_VERSION", 100L, null, "v1");
     }
@@ -1709,7 +1711,67 @@ class IndexSetServiceImplTest {
 
         assertEquals(IndexVersionStatus.FAILED.name(), saved.get().getStatus());
         assertTrue(saved.get().getBuildError().contains("向量产物读取失败"), saved.get().getBuildError());
+        // 新版本账本从 0 起（不是 null）：前端按数字格式化
+        assertEquals(0, saved.get().getChunkCount());
+        assertEquals(0, saved.get().getVectorCount());
         verify(milvusIndexPort, never()).append(anyString(), anyList());
+    }
+
+    /**
+     * 组合注册撞版本号唯一键：重取版本号再存一次。
+     *
+     * <p>守护 {@code registerComboCollection} 的并发兜底：不重取版本号会第二次同样撞键、注册失败。
+     */
+    @Test
+    void registerShouldRetryVersionNoOnDuplicateKey() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of());
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v1", "v2");
+        // 第一次保存撞 uk_set_version，重取版本号后成功
+        when(indexVersionDbService.save(any(WbIndexVersion.class)))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("uk_set_version"))
+                .thenAnswer(inv -> {
+                    inv.<WbIndexVersion>getArgument(0).setId(100L);
+                    return true;
+                });
+        when(indexSetDbService.getByKb(1L)).thenReturn(null);
+
+        service.onFileProductsReady(10L);
+
+        ArgumentCaptor<WbIndexVersion> captor = ArgumentCaptor.forClass(WbIndexVersion.class);
+        verify(indexVersionDbService, org.mockito.Mockito.times(2)).save(captor.capture());
+        // 同一版本行对象：重试前被改写成新版本号，最终落库与建集合都用 v2
+        assertEquals("v2", captor.getValue().getVersionNo());
+        verify(milvusIndexPort).ensureCollection("kb_1_v2", 1024);
+    }
+
+    /**
+     * 无匹配切片的文件：按在线组合投递预处理补齐。
+     *
+     * <p>守护 {@code backfillFile} 的预处理投递分支：谓词写反会把该补的文件跳过。
+     */
+    @Test
+    void backfillShouldEnqueuePreprocessWhenNoMatchingChunk() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v2", "chunk-hybrid-v2", "embed-default-v2");
+        stubOnlineCombo("v0", comboAll());
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of());
+        WbPipelineStrategyVersion preprocessStrategy = new WbPipelineStrategyVersion();
+        preprocessStrategy.setId(77L);
+        when(strategyVersionDbService.getByTypeAndNameAndVersion("PREPROCESS", "preproc-default", "v1"))
+                .thenReturn(preprocessStrategy);
+        stubAppendTarget();
+
+        service.onFileProductsReady(10L);
+
+        verify(preprocessControlService).preprocess(10L, 77L, null);
+        verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
     }
 
     /**
@@ -1810,6 +1872,16 @@ class IndexSetServiceImplTest {
         matchedChunk.setUpstreamProductId(100L);
         when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(matchedChunk));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
+        // 对抗性夹具（宽松）：若「已齐」判定被写反，补齐分支会真的走到投递，用 verify 抓这段差异
+        WbPipelineStrategyVersion chunkStrategy = new WbPipelineStrategyVersion();
+        chunkStrategy.setId(88L);
+        lenient().when(strategyVersionDbService.getByTypeAndNameAndVersion("CHUNK", "chunk-hybrid", "v1"))
+                .thenReturn(chunkStrategy);
+        WbPipelineProduct preprocessProduct = new WbPipelineProduct();
+        preprocessProduct.setId(501L);
+        preprocessProduct.setStage(PipelineStage.PREPROCESS.name());
+        preprocessProduct.setCapabilitySnapshot("{\"name\":\"preproc-default\",\"version\":\"v1\"}");
+        lenient().when(productDbService.listByFileResultId(10L)).thenReturn(List.of(preprocessProduct));
         stubAppendTarget();
 
         service.onFileProductsReady(10L);
