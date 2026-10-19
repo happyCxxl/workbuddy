@@ -21,6 +21,9 @@ import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
+import com.workbuddy.common.domain.preprocess.PreprocessView;
+import com.workbuddy.common.domain.preprocess.ViewElement;
+import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.domain.entity.WbChunk;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbFileResult;
@@ -214,6 +217,11 @@ class ChunkControlServiceImplTest {
         return row;
     }
 
+    /**
+     * 绑定策略档：任务快照带策略、入队并回填任务号。
+     *
+     * <p>守护 {@code chunk}：快照缺策略或漏入队即失败。
+     */
     @Test
     void boundStrategyShouldDriveTaskSnapshotAndEnqueue() {
         stubCommon();
@@ -239,6 +247,11 @@ class ChunkControlServiceImplTest {
         verify(taskQueue).enqueue(41L);
     }
 
+    /**
+     * 未绑定策略按 40438 拒绝。
+     *
+     * <p>守护 {@code chunk}：无绑定仍建任务即失败。
+     */
     @Test
     void unboundStrategyShouldReject40438() {
         // 知识库未绑定：不再取"启用中最新"兜底，一律拒绝
@@ -252,6 +265,11 @@ class ChunkControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 绑定开关关闭（测评模式）按 40438 拒绝。
+     *
+     * <p>守护 {@code chunk}：测评库被隐式绑定即失败。
+     */
     @Test
     void bindingSwitchOffShouldReject40438() {
         // 绑定开关关闭：即使库内存在绑定行也不生效
@@ -265,6 +283,11 @@ class ChunkControlServiceImplTest {
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 未指定上游预处理产物按 40436 拒绝。
+     *
+     * <p>守护 {@code chunk}：缺上游仍建任务即失败。
+     */
     @Test
     void missingUpstreamProductShouldThrow40436() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -276,6 +299,11 @@ class ChunkControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 上游产出任务未成功按 40439 拒绝。
+     *
+     * <p>守护 {@code chunk}：失败上游的产物被消费即失败。
+     */
     @Test
     void failedUpstreamTaskShouldThrow40439() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -292,6 +320,11 @@ class ChunkControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 显式策略版本不存在按 40433 拒绝。
+     *
+     * <p>守护 {@code chunk}：未知版本被采用即失败。
+     */
     @Test
     void unknownStrategyVersionShouldThrow40433() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -302,6 +335,11 @@ class ChunkControlServiceImplTest {
         verify(pipelineProductDbService, never()).getByFileResultIdAndStage(any(), any());
     }
 
+    /**
+     * 显式策略版本优先于绑定。
+     *
+     * <p>守护 {@code chunk}：显式档被绑定覆盖即失败。
+     */
     @Test
     void explicitStrategyVersionShouldResolveFromDb() {
         stubCommon();
@@ -322,6 +360,11 @@ class ChunkControlServiceImplTest {
         assertEquals(77L, captor.getValue().getStrategyVersionId());
     }
 
+    /**
+     * 未指定版本时取知识库绑定策略。
+     *
+     * <p>守护 {@code chunk}：绑定档未生效即失败。
+     */
     @Test
     void boundStrategyShouldBeUsedWhenNoExplicitVersion() {
         stubCommon();
@@ -336,6 +379,11 @@ class ChunkControlServiceImplTest {
         assertEquals("chunk-bound-v3", response.getStrategyVersion());
     }
 
+    /**
+     * 显式版本覆盖绑定档。
+     *
+     * <p>守护 {@code chunk}：绑定覆盖显式即失败。
+     */
     @Test
     void explicitStrategyShouldOverrideBinding() {
         stubCommon();
@@ -353,6 +401,11 @@ class ChunkControlServiceImplTest {
         verify(strategyBindingDbService, never()).getByKbAndType(any(), any());
     }
 
+    /**
+     * 绑定行指向的版本已失效按 40438 拒绝。
+     *
+     * <p>守护 {@code chunk}：失效绑定被采用即失败。
+     */
     @Test
     void staleBindingShouldReject40438() {
         // 绑定行指向的策略版本行缺失：不再回退"启用中最新"，一律拒绝
@@ -367,6 +420,11 @@ class ChunkControlServiceImplTest {
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 策略类型不是 CHUNK 按 40433 拒绝。
+     *
+     * <p>守护 {@code chunk}：错类型策略被执行即失败。
+     */
     @Test
     void mismatchedStrategyTypeShouldReject() {
         // 显式策略按行 id 引用，类型不匹配拒绝
@@ -379,6 +437,11 @@ class ChunkControlServiceImplTest {
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 执行键命中 RUNNING 任务按 40431 拒绝。
+     *
+     * <p>守护 {@code chunk}：重复建任务即失败。
+     */
     @Test
     void runningShouldReject40431() {
         stubCommon();
@@ -397,6 +460,11 @@ class ChunkControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 执行键命中 QUEUED 任务按 40431 拒绝。
+     *
+     * <p>守护 {@code chunk}：重复建任务即失败。
+     */
     @Test
     void existingQueuedTaskShouldReject40431() {
         stubCommon();
@@ -413,6 +481,11 @@ class ChunkControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 切片详情：集合摘要与片列表按集合行装配。
+     *
+     * <p>守护 {@code chunkDetail}：摘要或片列表漏字段即失败。
+     */
     @Test
     void detailShouldAssembleChunkSetSummaryAndChunks() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -470,6 +543,111 @@ class ChunkControlServiceImplTest {
         assertEquals("c-1", detail.getChunks().get(1).getParentChunkId());
     }
 
+    /**
+     * 详情：产物侧的来源元素个数与兜底原因按 chunkId 对齐下发，阶段统计与结论现算。
+     *
+     * <p>守护 {@code productChunks}/{@code readUpstreamView}/{@code setStageSummary}：
+     * 产物片索引丢了会让详情的来源信息整片空白；上游视图没读到会让"进入切片/跳过"口径缺失。
+     */
+    @Test
+    void detailShouldExposeProductSideFieldsAndStageSummary() {
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        WbPipelineTask task = new WbPipelineTask();
+        task.setId(41L);
+        task.setStage(PipelineStage.CHUNK.name());
+        task.setStatus(PipelineTaskStatus.SUCCESS.name());
+        task.setProductId(50L);
+        task.setUpstreamProductId(60L);
+        when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.CHUNK.name())).thenReturn(task);
+        WbPipelineProduct product = productOf("art-chunk");
+        when(pipelineProductDbService.getById(50L)).thenReturn(product);
+        WbPipelineProduct upstream = productOf("art-view");
+        when(pipelineProductDbService.getById(60L)).thenReturn(upstream);
+        // 产物里的片：c-1 两条（归并取第一条）+ 空 ID 一条（索引时被过滤）
+        stubArtifact(product, chunkSetOf(chunk("c-1", List.of("e1", "e2"), "FIXED_LEN"),
+                chunk("c-1", List.of(), "OTHER"), chunk("", List.of("e9"), null)));
+        PreprocessView view = new PreprocessView();
+        ViewElement kept = new ViewElement();
+        kept.setStatus(ViewElementStatus.NORMAL.name());
+        ViewElement skipped = new ViewElement();
+        skipped.setStatus(ViewElementStatus.EXCLUDED_HEADER.name());
+        view.setElements(new java.util.ArrayList<>(List.of(kept, skipped)));
+        stubArtifact(upstream, view);
+        WbChunkSet chunkSet = new WbChunkSet();
+        chunkSet.setId(70L);
+        chunkSet.setArtifactId("art-chunk");
+        chunkSet.setChunkCount(3);
+        chunkSet.setTotalChars(30);
+        when(chunkSetDbService.getByArtifactId("art-chunk")).thenReturn(chunkSet);
+        WbChunk first = new WbChunk();
+        first.setChunkId("c-1");
+        first.setContentType("PARAGRAPH");
+        first.setContent("正文");
+        first.setOrderNo(1);
+        first.setCharCount(10);
+        WbChunk blankId = new WbChunk();
+        blankId.setChunkId("");
+        blankId.setContentType("PARAGRAPH");
+        blankId.setContent("正文二");
+        blankId.setOrderNo(2);
+        blankId.setCharCount(10);
+        when(chunkDbService.listByChunkSetId(70L)).thenReturn(List.of(first, blankId));
+
+        ChunkDetailVO detail = service.chunkDetail(10L, null);
+
+        assertEquals(2, detail.getChunks().size());
+        // c-1 取产物里第一条：来源 2 个、兜底原因 FIXED_LEN
+        assertEquals(2, detail.getChunks().get(0).getSourceElementCount());
+        assertEquals("FIXED_LEN", detail.getChunks().get(0).getFallbackReason());
+        // 空 chunkId 不在产物索引里：来源信息留空
+        org.junit.jupiter.api.Assertions.assertNull(detail.getChunks().get(1).getSourceElementCount());
+        // 阶段统计与结论：3 片、上游 2 个元素其中 1 个被剔除
+        assertNotNull(detail.getStageSummary());
+        assertTrue(detail.getStageSummary().contains("无同节邻居"), detail.getStageSummary());
+        assertEquals(1, detail.getStageStats().get("routedElementCount"));
+        assertEquals(1, detail.getStageStats().get("skippedElementCount"));
+    }
+
+    /** 产物行夹具（只填对象位置） */
+    private WbPipelineProduct productOf(String artifactId) {
+        WbPipelineProduct product = new WbPipelineProduct();
+        product.setArtifactId(artifactId);
+        product.setStorageType(StorageType.MINIO.getCode());
+        product.setStorageSourceId(SOURCE_ID);
+        product.setBucket("artifacts");
+        return product;
+    }
+
+    /** 产物内容夹具：按产物行的对象位置写 JSON 字节 */
+    private void stubArtifact(WbPipelineProduct product, Object value) {
+        when(fileStorage.getObject(Objects.requireNonNull(ObjectRef.ofProduct(product))))
+                .thenReturn(JsonUtil.toJsonStr(value).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** 切片集合产物夹具 */
+    private ChunkSet chunkSetOf(Chunk... chunks) {
+        ChunkSet chunkSet = new ChunkSet();
+        chunkSet.setChunks(new java.util.ArrayList<>(List.of(chunks)));
+        return chunkSet;
+    }
+
+    /** 产物里的片夹具（来源元素与兜底原因） */
+    private Chunk chunk(String chunkId, List<String> sources, String fallbackReason) {
+        Chunk chunk = new Chunk();
+        chunk.setChunkId(chunkId);
+        chunk.setContentType("PARAGRAPH");
+        chunk.setContent("正文");
+        chunk.setCharCount(10);
+        chunk.setSourceElementIds(new java.util.ArrayList<>(sources));
+        chunk.setFallbackReason(fallbackReason);
+        return chunk;
+    }
+
+    /**
+     * 切片详情：策略快照可解析时下发片长上限等口径。
+     *
+     * <p>守护 {@code chunkDetail}：策略类口径缺失即失败。
+     */
     @Test
     void detailWithValidStrategySnapshotShouldExposeStrategyStats() {
         stubDetail(taskWithStrategySnapshot("{\"name\":\"chunk-hybrid\",\"version\":\"v1\"}"));
@@ -485,6 +663,11 @@ class ChunkControlServiceImplTest {
         assertTrue(stats.containsKey("fallbackLen"), String.valueOf(stats));
     }
 
+    /**
+     * 切片详情：策略快照损坏时策略类口径留空且不炸。
+     *
+     * <p>守护 {@code chunkDetail}：抛异常给用户即失败。
+     */
     @Test
     void detailWithCorruptStrategySnapshotShouldLeaveStrategyStatsEmpty() {
         stubDetail(taskWithStrategySnapshot("{oops"));
@@ -549,6 +732,11 @@ class ChunkControlServiceImplTest {
         return task;
     }
 
+    /**
+     * 切片详情：无任务时片列表为空、不读产物。
+     *
+     * <p>守护 {@code chunkDetail}：无任务仍读产物即失败。
+     */
     @Test
     void detailWithoutTaskShouldReturnEmptyChunks() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -560,6 +748,11 @@ class ChunkControlServiceImplTest {
         assertTrue(detail.getChunks().isEmpty());
     }
 
+    /**
+     * 切片详情：指定任务环节不符按 40001 拒绝。
+     *
+     * <p>守护 {@code chunkDetail}：错环节任务被展示即失败。
+     */
     @Test
     void detailWithWrongStageTaskShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -573,6 +766,11 @@ class ChunkControlServiceImplTest {
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
 
+    /**
+     * 切片详情：产物对象位置不全按 40455 拒绝。
+     *
+     * <p>守护 {@code chunkDetail}：半截位置去读对象即失败。
+     */
     @Test
     void detailWithIncompleteProductLocationShouldReject40455() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -593,6 +791,11 @@ class ChunkControlServiceImplTest {
         verify(chunkSetDbService, never()).getByArtifactId(any());
     }
 
+    /**
+     * 越权文件结果按 40401 拒绝。
+     *
+     * <p>守护 {@code chunkDetail}：越权可读即失败。
+     */
     @Test
     void otherUserFileResultShouldReject40401() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
