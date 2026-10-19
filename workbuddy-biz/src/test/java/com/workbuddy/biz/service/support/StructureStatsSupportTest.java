@@ -378,4 +378,44 @@ class StructureStatsSupportTest {
 
         assertEquals(1, stats.get(StructureStatsSupport.KEY_NOISE_PAGE_COUNT));
     }
+
+    /**
+     * 产物为空：统计返回 null（不是空 Map）。
+     *
+     * <p>守护 {@code stats} 的空产物兜底：返回空 Map 会让详情显示"空树"而不是"不可读"。
+     */
+    @Test
+    void statsShouldReturnNullWhenDocumentMissing() {
+        assertNull(StructureStatsSupport.stats(null, null, null));
+    }
+
+    /**
+     * 统计缺失（产物不可读）：结论文案为 null（不是空串）。
+     *
+     * <p>守护 {@code structureSummaryBody} 的空统计短路：空串会被界面当成"已陈述但无内容"。
+     */
+    @Test
+    void summaryShouldBeNullWhenStatsMissing() {
+        assertNull(StructureStatsSupport.summary(null, null, "SUCCESS"));
+    }
+
+    /**
+     * 接续关系的页码引用无效（空白 / 缺页码 / 非数字）：不下发页码键。
+     *
+     * <p>守护 {@code pageOfRelationRef} 的无效引用返回：返回 0 会让页码区间被 0 污染。
+     */
+    @Test
+    void statsShouldOmitRangeWhenContinuationRefsInvalid() {
+        UnifiedDocument document = new UnifiedDocument();
+        document.setElements(new ArrayList<>(List.of(element("e-1", UnifiedElementType.PARAGRAPH))));
+        document.setRelations(new ArrayList<>(List.of(
+                relation(RelationType.CONTINUATION_OF, " ", "e2#p"),
+                relation(RelationType.CONTINUATION_OF, "e3#px", "e4"))));
+
+        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+
+        assertEquals(2, stats.get(StructureStatsSupport.KEY_CONTINUATION_COUNT));
+        assertFalse(stats.containsKey(StructureStatsSupport.KEY_CONTINUATION_FROM_PAGE));
+        assertFalse(stats.containsKey(StructureStatsSupport.KEY_CONTINUATION_TO_PAGE));
+    }
 }

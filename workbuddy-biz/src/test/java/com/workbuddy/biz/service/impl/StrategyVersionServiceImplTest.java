@@ -63,6 +63,7 @@ class StrategyVersionServiceImplTest {
         row.setName("chunk-hybrid");
         row.setVersion(version);
         row.setConfigSnapshot("{\"routes\":{}}");
+        row.setCreateTime(java.time.LocalDateTime.of(2026, 10, 9, 10, 0));
         row.setStatus(status);
         return row;
     }
@@ -103,6 +104,8 @@ class StrategyVersionServiceImplTest {
                 .thenReturn(List.of(row(9L, "v2", "ACTIVE")));
 
         List<StrategyVersionVO> vos = service.list("CHUNK", false);
+
+        assertEquals(java.time.LocalDateTime.of(2026, 10, 9, 10, 0), vos.getFirst().getCreateTime());
 
         assertEquals(1, vos.size());
         assertEquals(9L, vos.getFirst().getId());

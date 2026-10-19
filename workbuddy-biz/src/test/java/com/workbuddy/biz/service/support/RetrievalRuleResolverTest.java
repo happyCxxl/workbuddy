@@ -260,4 +260,18 @@ class RetrievalRuleResolverTest {
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(body), body);
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode(), body);
     }
+
+    /**
+     * 嵌套字段不是对象：按 40001 拒绝并提示"必须为对象"。
+     *
+     * <p>守护 {@code checkNested} 的类型校验：漏校验会在强转处抛类型转换异常。
+     */
+    @Test
+    void validateShouldRejectNestedNonObject() {
+        KnowledgeException e = assertThrows(KnowledgeException.class,
+                () -> resolver.validate("{\"fusion\":[]}"));
+
+        assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
+        assertTrue(e.getMessage().contains("必须为对象"), e.getMessage());
+    }
 }

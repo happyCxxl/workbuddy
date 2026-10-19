@@ -364,4 +364,21 @@ class WbPipelineTaskDbServiceImplTest {
         assertEquals(1, rows.size());
         assertEquals(9L, rows.getFirst().getId());
     }
+
+    /**
+     * 按文件集合与环节取任务：非空入参返回真实列表。
+     *
+     * <p>守护 {@code listByFileResultIdsAndStage} 的返回口径：恒空会让批量详情丢任务。
+     */
+    @Test
+    void listByFileResultIdsAndStageShouldReturnRows() {
+        WbPipelineTask row = new WbPipelineTask();
+        row.setId(12L);
+        when(mapper.selectList(any())).thenReturn(List.of(row));
+
+        var rows = impl.listByFileResultIdsAndStage(List.of(10L, 11L), "CHUNK");
+
+        assertEquals(1, rows.size());
+        assertEquals(12L, rows.getFirst().getId());
+    }
 }

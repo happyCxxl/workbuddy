@@ -420,6 +420,37 @@ class IndexSetServiceImplTest {
      *
      * <p>守护 {@code buildCandidate}：要求产物齐会挡住切策略。
      */
+    /**
+     * COMPENSATE 遇到同组合 READY 活跃版本允许重开（不跳过），NEW 与显式档才跳过。
+     *
+     * <p>守护 {@code tryBuild} 的触发类型判定：把 COMPENSATE 判成 NEW 会让回退复活后的补齐闭环断掉。
+     */
+    @Test
+    void tryBuildCompensateShouldReopenReadyVersion() {
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        WbIndexVersion ready = versionRow(30L, "v9", IndexVersionStatus.READY.name());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of(ready));
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v10");
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            inv.<WbIndexVersion>getArgument(0).setId(101L);
+            return true;
+        });
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.<WbPipelineTask>getArgument(0).setId(201L);
+            return true;
+        });
+
+        var result = (com.workbuddy.common.dto.response.index.IndexBuildTriggerVO) org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                service, "tryBuild", 1L, comboAll(), "COMPENSATE", false);
+
+        assertNotNull(result);
+        assertEquals("v10", result.getVersionNo());
+        verify(taskQueue).enqueue(201L);
+    }
+
+    /**
+     * 校验点：{@code buildCandidateShouldRegisterComboWithoutRequiringProducts}。
+     */
     @Test
     void buildCandidateShouldRegisterComboWithoutRequiringProducts() {
         // 注册组合不要求产物齐（切策略场景：注册先行、文件重跑累积；缺口由对账任务 FAILED 呈现）
@@ -615,7 +646,9 @@ class IndexSetServiceImplTest {
         WbIndexVersion readySameCombo = new WbIndexVersion();
         readySameCombo.setId(30L);
         readySameCombo.setStatus(IndexVersionStatus.READY.name());
-        readySameCombo.setComboSnapshot(JsonUtil.toJsonStr(comboAll()));
+        // 与运行时同一变换（快照 → 对象 → 字符串），否则字符串比较永远不相等、走不到"同组合活跃版本"分支
+        readySameCombo.setComboSnapshot(JsonUtil.toJsonStr(
+                JsonUtil.toObject(target.getComboSnapshot(), ComboSnapshot.class)));
         when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of(current, target, readySameCombo));
         WbFileResult file = file(10L);
         stubCompleteCombo(file);

@@ -870,4 +870,22 @@ class ChunkControlServiceImplTest {
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
         assertTrue(e.getMessage().contains("类型不匹配"), e.getMessage());
     }
+
+    /**
+     * 显式策略版本已停用：按 40433 拒绝并提示启用。
+     *
+     * <p>守护 {@code requireExplicit} 的启用校验：停用策略被采用即失败。
+     */
+    @Test
+    void explicitStrategyInactiveShouldReject() {
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        WbPipelineStrategyVersion inactive = chunkVersion(77L, "chunk-strict", "v1");
+        inactive.setStatus(RowStatus.INACTIVE.name());
+        when(strategyVersionDbService.getById(77L)).thenReturn(inactive);
+
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, 77L, null));
+
+        assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
+        assertTrue(e.getMessage().contains("已停用"), e.getMessage());
+    }
 }
