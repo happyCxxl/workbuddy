@@ -116,3 +116,35 @@ export function walkVueFiles(dir) {
 export function lineOf(content, index) {
   return content.slice(0, index).split('\n').length;
 }
+
+const CMD_PREFIX = /^(sh|node|cd|mvn|pnpm|npx|java|git|docker)\s+/;
+const PATH_EXT = /\.(md|mjs|js|cjs|ts|vue|xml|yml|yaml|json|sh|ps1|bat|java|properties|sql|html|css)$/;
+
+/**
+ * 抽取文本中反引号串里的「仓库路径候选」，判定存在性由调用方完成。
+ * 只看像路径的串：剥掉命令前缀后不含空白与 shell 字符、不以 `-` 或 `~` 开头。
+ * @param {string} text 待扫描文本
+ * @param {object} [options]
+ * @param {boolean} [options.requireSlash] 只认含 `/` 的串（正文里的裸文件名不算指针）
+ * @param {boolean} [options.requireExtension] 只认末段带已知文件扩展名的串（正文里的包路径片段不算指针）
+ * @param {boolean} [options.skipElision] 跳过 `a/.../b` 这类省略写法
+ * @param {boolean} [options.stripLinks] 先抹掉 Markdown 链接，避免把外链标签当仓库路径
+ * @returns {string[]} 去重后的候选路径
+ */
+export function backtickPaths(
+  text,
+  { requireSlash = false, requireExtension = false, skipElision = false, stripLinks = false } = {},
+) {
+  const source = stripLinks ? text.replace(/\[[^\]]*\]\([^)]*\)/g, ' ') : text;
+  const out = new Set();
+  for (const m of source.matchAll(/`([^`\n]+)`/g)) {
+    const s = m[1].trim().replace(CMD_PREFIX, '');
+    if (!s || /[\s(){}<>*=$"'|&;,:^\\]/.test(s) || s.startsWith('-') || s.startsWith('~')) continue;
+    if (skipElision && s.includes('...')) continue;
+    if (requireSlash && !s.includes('/')) continue;
+    if (requireExtension && !PATH_EXT.test(s)) continue;
+    if (s.includes('/') || PATH_EXT.test(s)) out.add(s);
+  }
+  return [...out];
+}
+

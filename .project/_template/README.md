@@ -42,7 +42,7 @@
 | 配置（项目数据） | 每份档案的 `watch` 路径与 `checks` 声明                                                 | `.project/archive/config.json`          |
 
 - 模板默认配置为空（`{"docs": {}}`）：只保留提交触发的路径配对能力，不做事实比对。
-- 导入项目时：运行 `node .project/tools/sync.mjs --suggest` 取得候选 → 按 `.project/prompts/sync.md` 与用户确认 → 写入 `archive/config.json`；结构示例见 `config.example.json`。
+- 导入项目时：运行 `node .project/tools/sync.mjs --suggest` 取得候选 → 按 `.project/prompts/sync.md` 与用户确认 → 写入 `.project/archive/config.json`；结构示例见 `config.example.json`。
 - 注册到项目入口：按 `.project/prompts/sync.md` 的注册规则，在 `AGENTS.md` 追加一行指针（只追加，不改写既有内容）。
 - 入口统一为 `node .project/tools/sync.mjs`（无参看状态，`--gate` 提交门禁）；引擎内不得出现任何具体项目的路径、前缀或技术栈词汇——那些只能进配置。
 

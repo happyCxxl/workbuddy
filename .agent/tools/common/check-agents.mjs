@@ -5,27 +5,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
-import { ROOT, trackedFiles } from '../lib.mjs';
+import { ROOT, backtickPaths, trackedFiles } from '../lib.mjs';
 
 // 通用约定：仓库内任意层级的 AGENTS.md 都是入口文件；行数预算取通用默认值。
 const DEFAULT_BUDGET = 200;
 const ENTRIES = trackedFiles()
   .filter((f) => f === 'AGENTS.md' || f.endsWith('/AGENTS.md'))
   .map((rel) => ({ rel, budget: DEFAULT_BUDGET }));
-
-// 只认「像仓库路径」的反引号串：剥掉命令前缀后不含空白/特殊字符，且含 / 或以已知扩展名结尾
-const CMD_PREFIX = /^(sh|node|cd|mvn|pnpm|npx|java|git|docker)\s+/;
-const PATH_EXT = /\.(md|mjs|js|cjs|ts|vue|xml|yml|yaml|json|sh|ps1|bat|java|properties|sql|html|css)$/;
-
-function pathCandidates(text) {
-  const out = new Set();
-  for (const m of text.matchAll(/`([^`\n]+)`/g)) {
-    const s = m[1].trim().replace(CMD_PREFIX, '');
-    if (!s || /[\s(){}<>*=$"'|&;,:^\\]/.test(s) || s.startsWith('-')) continue;
-    if (s.includes('/') || PATH_EXT.test(s)) out.add(s);
-  }
-  return [...out];
-}
 
 const errors = [];
 const warns = [];
@@ -42,7 +28,7 @@ for (const entry of ENTRIES) {
     warns.push(`${entry.rel}：${lines} 行，超预算 ${entry.budget}（把细节下沉到正典文档，此处留指针）`);
   }
   const base = dirname(file);
-  for (const p of pathCandidates(text)) {
+  for (const p of backtickPaths(text)) {
     // 双基准解析：先按入口文件所在目录，再回退仓库根（嵌套入口常引用根级目录，如 web/AGENTS.md 提到 `docker/`）
     const local = join(base, ...p.split('/'));
     const fromRoot = join(ROOT, ...p.split('/'));

@@ -18,7 +18,7 @@ export interface UserVO {
   email: string | null;
   /** 手机号 */
   phone: string | null;
-  /** 头像地址（/user/avatar/{id}?v={版本段}）；未设置头像时为 null */
+  /** 头像公开 URL（对象存储直连，前端 `<img src>` 渲染）；未设置头像时为 null */
   avatar: string | null;
   /** 状态码值：1 启用 / 0 停用 */
   status: number;

@@ -8,9 +8,9 @@
     },
     "11": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": "覆盖率随 vector/对象存储适配迁移更新；23 条 @Mock 债务已登记"
+      "reviewed": "2026-10-20",
+      "baseline": "529b517d",
+      "note": "check-docs 增加文档引用路径校验（JAVA-DOC-010）；覆盖率与 @Mock 债务随上一轮数据"
     },
     "01": {
       "status": "已复核",
@@ -32,9 +32,9 @@
     },
     "04": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "8a36c41d",
-      "note": "vector 并入后补齐系统上下文、分层与存储路由表述"
+      "reviewed": "2026-10-20",
+      "baseline": "529b517d",
+      "note": "对象存储适配与头像公开 URL 口径复核；设计文档内的失效链接已修正"
     },
     "05": {
       "status": "已复核",

@@ -438,7 +438,7 @@ function toggleGroup(item: NavGroup): void {
 /**
  * 返回目标的集中定义：key 为当前路由名，value 为上一层。
  *
- * <p>层级：处理链页 → 知识库列表 → 首页；模型清单与用量成本 → 首页；用户管理 → 首页；
+ * <p>层级：处理链页 → 知识库列表 → 首页；模型清单 → 首页；用户管理 → 首页；
  * 系统设置 → 首页；首页无上层。用表而不是逐页写按钮，保证全局只有一处逻辑。
  */
 const BACK_TARGETS: Record<string, { path: string; label: string }> = {
