@@ -79,27 +79,26 @@
 
 ## 全局约定
 
-跨所有页面的同一份口径。页面文件只引用本章，不复述其中的内容。
+> 本章只记**本项目实际采用的实现、参数与码表**；规则正文在 `.agent/standards/`（响应与契约 `java/04`、错误码 `java/05`、启动校验 `java/01`、鉴权与限流 `common/05`、判空反模式 `common/03`、前端请求层与路由 `vue/01`、`vue/03`）。页面文件只引用本章，不复述。
 
 ### 一、响应体与 HTTP 状态码
 
 后端统一响应体 `R<T>`（`../workbuddy-common/src/main/java/com/workbuddy/common/dto/response/R.java`）：
 
-| 字段        | 含义                                 |
-|-------------|--------------------------------------|
-| `code`      | 0 表示成功；**错误语义全部由它表达** |
-| `msg`       | 提示语，成功的默认值是「操作成功」   |
-| `data`      | 业务数据，失败时为 `null`            |
-| `timestamp` | 毫秒时间戳                           |
+| 字段        | 含义                               |
+|-------------|------------------------------------|
+| `code`      | 0 表示成功；错误语义全部由它表达   |
+| `msg`       | 提示语，成功的默认值是「操作成功」 |
+| `data`      | 业务数据，失败时为 `null`          |
+| `timestamp` | 毫秒时间戳                         |
 
-- **HTTP 状态码恒为 200**（网络层故障除外）。业务错误、参数错误、未认证、无权限一律走 200 + `R.code`。浏览器会把裸 4xx 响应渲染成 `HTTP ERROR 403` 页面，前端也拿不到可判断的 code。
-- 三处出口共同保证这个口径：`GlobalExceptionHandler`（Controller 抛出的异常）、`RestAuthenticationEntryPoint`（未登录）、`RestAccessDeniedHandler`（已登录但无权限）。后两者位于 `workbuddy-auth` 的 `config` 包，发生在 Controller 之前，不经过全局异常处理器。
+- 本项目业务接口的 HTTP 状态码恒为 200（规则见 `JAVA-DTO-007`）；三处出口分别是 `GlobalExceptionHandler`、`RestAuthenticationEntryPoint`、`RestAccessDeniedHandler`，后两者在 `workbuddy-auth` 的 `config` 包。
 - 前端对应类型是 `../web/src/types/response.ts` 的 `R<T>`，分页数据对应 `PageResult<T>`。
-- `R.failed(msg)`（`code=1`）是通用失败码，**现有代码无人调用**；业务失败一律抛 `KnowledgeException`。
+- `R.failed(msg)`（`code=1`）是通用失败码，现有代码无人调用；业务失败一律抛 `KnowledgeException`。
 
 ### 二、错误码
 
-登记在 `../workbuddy-common/src/main/java/com/workbuddy/common/error/ErrorCode.java`，**新错误码必须在此登记**。分段：`40001` 参数、`401xx` 认证、`402xx` 限流、`404xx` 业务、`40500` 系统兜底。下表「默认提示语」列为源码中的原文，前端未给自定义消息时展示它。
+登记在 `../workbuddy-common/src/main/java/com/workbuddy/common/error/ErrorCode.java`；本项目分段：`40001` 参数、`401xx` 认证、`402xx` 限流、`404xx` 业务、`40500` 系统兜底（规则见 `JAVA-ERR-005`）。下表「默认提示语」为源码原文，前端未给自定义消息时展示它。
 
 | code  | 常量                                   | 默认提示语                                           |
 |-------|----------------------------------------|------------------------------------------------------|
@@ -147,7 +146,7 @@
 | 40459 | `STORAGE_SOURCE_PROBE_FAILED`          | 存储数据源连接失败                                   |
 | 40500 | `SYSTEM_ERROR`                         | 系统异常，请稍后重试                                 |
 
-**任务级错误码**（落在 `wb_knowledge_pipeline_task.error_code`，与上表的接口码不是同一列）：各环节自己的码见各环节文档；跨环节的公共码有三条——
+**任务级错误码**（落在 `wb_knowledge_pipeline_task.error_code`，与上表的接口码不是同一列，规则见 `JAVA-ERR-006`）：各环节自己的码见各环节文档；跨环节的公共码有三条——
 
 | 码                      | 含义                                                                 |
 |-------------------------|----------------------------------------------------------------------|
@@ -155,17 +154,17 @@
 | `EXECUTOR_TIMEOUT`      | 看门狗判死：执行超时或进程中断留下的孤儿任务                         |
 | `TASK_STORAGE_MISMATCH` | 链的数据源与当前启用的数据源不一致，产物写入被拒（五个环节都会出现） |
 
-**环节触发与执行键**（五个环节共用，逐环节的校验顺序见各环节 `03-接口逻辑.md`）：`wb_knowledge_pipeline_task` 的**执行键**是「文件结果 + 环节 + 上游产物 + 策略版本」，落库时由唯一键 `uk_exec` 约束；`upstream_product_id` 与 `strategy_version_id` 都是 `NOT NULL DEFAULT 0`，0 分别表示"没有上游"（解析）与"该环节无策略"（解析 / 组装）。`TaskTriggerSupport.trigger` 先校验存储一致性（不一致 → `40453`），再按执行键查任务：**查到就拒 `40431`**（任何状态，含执行中，且不返回既有结果），查不到才新建 `QUEUED` 任务并入队。**QUEUED 补投完全归 `TaskStartupCompensator`**（启动补偿一次 + 低频周期扫描，默认开启、间隔 1 分钟），触发入口不做唤醒；失败即终局，再次发起要落在**新的执行键**上 —— 解析是重新提交文件，下游四个环节是换上游产物或换策略版本。
+**环节触发与执行键**（五个环节共用，逐环节的校验顺序见各环节 `03-接口逻辑.md`）：`wb_knowledge_pipeline_task` 的执行键是「文件结果 + 环节 + 上游产物 + 策略版本」，落库时由唯一键 `uk_exec` 约束；`upstream_product_id` 与 `strategy_version_id` 都是 `NOT NULL DEFAULT 0`，0 分别表示"没有上游"（解析）与"该环节无策略"（解析 / 组装）。`TaskTriggerSupport.trigger` 先校验存储一致性（不一致 → `40453`），再按执行键查任务：查到就拒 `40431`（任何状态，含执行中，且不返回既有结果），查不到才新建 `QUEUED` 任务并入队。QUEUED 补投完全归 `TaskStartupCompensator`（启动补偿一次 + 低频周期扫描，默认开启、间隔 1 分钟），触发入口不做唤醒；失败即终局，再次发起要落在新的执行键上 —— 解析是重新提交文件，下游四个环节是换上游产物或换策略版本。
 
 **策略来源**（只有预处理 / 切片 / 向量化三个环节有策略）：显式指定的策略版本行 → 知识库绑定的策略版本行；两档都不命中（绑定开关关闭、未绑定、绑定行缺失或已停用）一律拒 `40438`，没有「取库内启用中最新」与代码内置默认策略这两类兜底。
 
 ### 三、前端请求层
 
-`../web/src/api/http.ts` 是全站唯一的 axios 实例；页面不直接用它，而是经 `web/src/api/*.ts` 里按领域分的薄封装调用。
+`../web/src/api/http.ts` 是全站唯一的 axios 实例；页面不直接用它，而是经 `web/src/api/*.ts` 里按领域分的薄封装调用（规则见 `VUE-API-008`、`VUE-API-009`）。
 
 - `baseURL: ''`（同源，开发期靠 Vite 代理转发）、`timeout: 15000`。
 - 令牌键 `knowledge-token`，读取顺序 `localStorage ?? sessionStorage`；取到就加 `Authorization: Bearer <token>`。
-- 响应拦截器统一解包与提示：
+- 响应拦截器统一解包与提示（本项目当前行为）：
 
 | 情况             | 拦截器行为                                                                     |
 |------------------|--------------------------------------------------------------------------------|
@@ -176,73 +175,70 @@
 | HTTP 401 / 403   | 兜底按未认证处理，同样回登录页                                                 |
 | 其他 HTTP 错误   | 提示「网络异常，请检查服务是否可用」                                           |
 
-- **页面里 `catch {}` 留空是正常写法**：失败提示由拦截器统一负责，页面只处理成功分支。
+- 页面里 `catch {}` 留空是正常写法：失败提示由拦截器统一负责，页面只处理成功分支（`VUE-ASYNC-002`）。
 
 ### 四、登录态与鉴权
 
-- 令牌是 JWT（Hutool 签发，HS256），载荷为 `sub`（用户 ID）、`username`、`role`、`tv`（令牌版本）、`exp`。**有效期分两档**，登录请求用 `remember` 选档：不勾选「记住我」按 `knowledge.auth.jwt.ttl-days`（当前 1 天），勾选按 `ttl-days-remember`（当前 30 天）。密钥来自 `knowledge.auth.jwt.secret`（当前是占位值 `knowledge-jwt-secret-change-me-in-production`，**上生产必须替换**）。
-- 令牌是**无状态**的，签发后服务端无法提前作废单张令牌（只能靠 `token_version` 全量失效）；短期档到期即需重新登录，不随"还在用"自动续期。
-- 前端把令牌存进 localStorage（勾「记住我」）或 sessionStorage，**并把登录响应里的用户字段存成同一档的「用户快照」**（键 `knowledge-user`：`id` / `username` / `displayName` / `email` / `phone` / `status` / `role`）。界面展示与菜单渲染只读快照，**令牌载荷仅用于判断过期**（刷新后除令牌外没有别的凭据，`exp` 只能从令牌取），**真正的鉴权始终在后端**。store 初始化时会直接丢弃过期令牌。
-- 后端 `JwtAuthFilter`（`workbuddy-auth` 的 `config` 包）每个请求都过一遍：验签 → 查过期 → **比对令牌版本**（库中当前值 vs 载荷 `tv`）。改密码、改角色、停用、删除都会让该账号已签发的令牌立即失效，代价是每个带令牌请求多一次主键查询。
-- **登出没有接口**：客户端丢弃令牌即可（`AppLayout.handleLogout`）。
-- 路由守卫（`../web/src/router/index.ts`）：未登录访问受保护页 → 跳 `/login?redirect=<原路径>`；已登录访问 `/login` → 回 `/home`；非管理员访问标了 `meta.adminOnly` 的页 → 回 `/home`。
-- `redirect` 参数是登录后跳回原页面的唯一来源（守卫与接口层的 40101 硬跳转都写它），登录页只接受以 `/` 开头且不以 `//` 开头的站内路径，其余一律回落 `/home`——不校验会变成开放重定向。
+- 令牌是 JWT（Hutool 签发，HS256），载荷为 `sub`（用户 ID）、`username`、`role`、`tv`（令牌版本）、`exp`。有效期分两档，登录请求用 `remember` 选档：不勾选「记住我」按 `knowledge.auth.jwt.ttl-days`（当前 1 天），勾选按 `ttl-days-remember`（当前 30 天）。密钥来自 `knowledge.auth.jwt.secret`（当前是占位值 `knowledge-jwt-secret-change-me-in-production`，上生产必须替换）。
+- 令牌是无状态的，签发后服务端无法提前作废单张令牌（只能靠 `token_version` 全量失效）；短期档到期即需重新登录，不随"还在用"自动续期（规则见 `COMMON-SEC-20`）。
+- 前端把令牌存进 localStorage（勾「记住我」）或 sessionStorage，并把登录响应里的用户字段存成同一档的「用户快照」（键 `knowledge-user`：`id` / `username` / `displayName` / `email` / `phone` / `status` / `role`）。界面展示与菜单渲染只读快照，令牌载荷仅用于判断过期，真正的鉴权始终在后端。store 初始化时会直接丢弃过期令牌。
+- 后端 `JwtAuthFilter`（`workbuddy-auth` 的 `config` 包）每个请求都过一遍：验签 → 查过期 → 比对令牌版本（库中当前值 vs 载荷 `tv`）。改密码、改角色、停用、删除都会让该账号已签发的令牌立即失效，代价是每个带令牌请求多一次主键查询。
+- 登出没有接口：客户端丢弃令牌即可（`AppLayout.handleLogout`）。
+- 路由守卫（`../web/src/router/index.ts`）：未登录访问受保护页 → 跳 `/login?redirect=<原路径>`；已登录访问 `/login` → 回 `/home`；非管理员访问标了 `meta.adminOnly` 的页 → 回 `/home`（规则见 `VUE-ROUTE-006`）。
+- `redirect` 参数是登录后跳回原页面的唯一来源（守卫与接口层的 40101 硬跳转都写它），登录页只接受以 `/` 开头且不以 `//` 开头的站内路径，其余一律回落 `/home`。
 
 ### 五、权限控制
 
-- `SecurityConfig`（`workbuddy-auth` 的 `config` 包）：无状态（STATELESS）、关 CSRF；放行 `/auth/login`、`/auth/register`，**其余请求一律需要认证**。
-- 角色控制走方法注解，由 `@EnableMethodSecurity` 开启。`@AdminOnly`（`../workbuddy-common/src/main/java/com/workbuddy/common/annotation/AdminOnly.java`）以 `@PreAuthorize` 为元注解判 `ROLE_ADMIN`，**逐个标在管理类接口的方法上**（`UserController` 的查询/新增/编辑/删除四个方法即此写法，同控制器下的个人信息接口对本人开放）。新增管理方法必须一并标注，漏标即对普通用户开放。
-- **模型管理不是管理员专项**：`ModelController` 与 `ModelUsageController` 的八个方法对所有登录用户开放，方法上不标 `@AdminOnly`（口径见 `design/模型能力平台-方案设计.md` §8.1 与 `pages/模型管理/01-页面功能.md`）。
-- 过滤器写入安全上下文的权限串是 `ROLE_<role>`，必须与注解表达式对得上。
+- `SecurityConfig`（`workbuddy-auth` 的 `config` 包）：无状态（STATELESS）、关 CSRF；放行 `/auth/login`、`/auth/register`，其余请求一律需要认证。
+- 角色控制走方法注解，由 `@EnableMethodSecurity` 开启。`@AdminOnly`（`../workbuddy-common/src/main/java/com/workbuddy/common/annotation/AdminOnly.java`）以 `@PreAuthorize` 为元注解判 `ROLE_ADMIN`，逐个标在管理类接口的方法上（`UserController` 的查询/新增/编辑/删除四个方法即此写法，同控制器下的个人信息接口对本人开放）。管理方法的标注口径见 `COMMON-SEC-21`。
+- 模型管理不是管理员专项：`ModelController` 与 `ModelUsageController` 的八个方法对所有登录用户开放，方法上不标 `@AdminOnly`（口径见 `design/模型能力平台-方案设计.md` §8.1 与 `pages/模型管理/01-页面功能.md`）。
+- 过滤器写入安全上下文的权限串是 `ROLE_<role>`，与注解表达式一致（规则见 `COMMON-SEC-22`）。
 
 ### 六、限流与登录防护
 
-两套机制独立且互补，都落在 Redis 上：
+两套机制独立且互补，都落在 Redis 上（规则见 `COMMON-SEC-23`、`COMMON-SEC-24`）：
 
 | 机制             | 数什么                   | 维度                    | 触发结果                   |
 |------------------|--------------------------|-------------------------|----------------------------|
 | **接口级限流**   | 请求次数（不分成败）     | 客户端 IP + 接口名      | `40201 RATE_LIMITED`       |
 | **登录失败防护** | 连续失败次数（成功清零） | 账号 + IP 为主，IP 为辅 | `40111 LOGIN_TOO_FREQUENT` |
 
-- 接口级限流：方法上标 `@RateLimit(capacity, periodSeconds, message)`。注解在 `../workbuddy-common/annotation`（契约），切面与令牌桶实现在 `../workbuddy-infra/ratelimit`（基础设施，bucket4j，桶存 Redis、跨实例共享，并带 1 小时过期，窗口过后自动回收）。用法示例见 `AuthController.login`。
+- 接口级限流：方法上标 `@RateLimit(capacity, periodSeconds, message)`。注解在 `../workbuddy-common/annotation`（契约），切面与令牌桶实现在 `../workbuddy-infra` 的 `ratelimit` 包（bucket4j，桶存 Redis、跨实例共享，并带 1 小时过期，窗口过后自动回收）。用法示例见 `AuthController.login`。
 - 登录失败防护：阈值与窗口由 `knowledge.auth.guard.*` 配置（默认账号+IP 维度 5 次、IP 维度 20 次、窗口 15 分钟）。实现见 `LoginAttemptGuard`。
-- **计数对不存在的用户名同样生效**。
-- **成功登录只清账号维度，不清 IP 维度**。
-- **锁定/限流期间不查库、不比对密码**。
-- **客户端 IP 只取 `getRemoteAddr()`，不读 `X-Forwarded-For`**：该请求头由客户端自行伪造，无条件信任等于把限流维度交给攻击者。将来前面加了反向代理，需按可信代理白名单解析。
+- 计数对不存在的用户名同样生效；成功登录只清账号维度，不清 IP 维度；锁定/限流期间不查库、不比对密码。
+- 客户端 IP 只取 `getRemoteAddr()`，不读 `X-Forwarded-For`（本项目当前未接反向代理）。
 
-### 七、前后端契约的硬口径
+### 七、契约硬口径
 
-| 口径                  | 说明                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Long 按阈值序列化** | `LongIdJsonConfig`：超过 JS 安全整数上界 `2^53-1` 的整数输出字符串，其余保持数字。雪花 ID 以字符串下发，计数 / 字节数 / 耗时 / 分页号仍是数字。前端把 ID 当字符串回传即可，Jackson 反序列化到 `Long` 能正确转换。                                                                                                                                                                                                                                                                                                                                                                                   |
-| **逻辑删除**          | `BaseInfo.delFlag` 带 `@TableLogic(value = DelFlag.Code.NORMAL, delval = DelFlag.Code.DELETED)`，MyBatis-Plus 自动为查询补 `del_flag = '0'`；删除是 UPDATE，不是 DELETE。码值只在 `DelFlag` 里定义一处（`NORMAL` / `DELETED`，写入取 `getCode()`、判定走 `isDeleted(...)`），业务代码统一走枚举。                                                                                                                                                                                                                                                                                                   |
-| **公共字段自动填充**  | `KnowledgeMetaObjectHandler` 填 `del_flag`、`create_by`、`create_time`、`update_by`、`update_time`；`create_by` / `update_by` 取当前认证用户名，**无认证上下文时（如注册）为 null**。                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **主键**              | 雪花算法，`@TableId(type = IdType.ASSIGN_ID)`，由应用生成后显式插入。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **分页**              | 请求参数 `current`（默认 1）、`size`（默认 10）；响应是 MyBatis-Plus 的 `IPage<T>`，前端对应 `PageResult<T>`（`records` / `total` / `size` / `current` / `pages`）。                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **密码规则**          | 新密码长度统一 **8-10 位**：注册、管理员新增、管理员重置、本人改密四处同一口径。登录不做长度校验，存量短密码仍可登录。                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **码值走枚举**        | 业务代码不写码值字面量：用户状态用 `UserStatus`（1 启用 / 0 停用，前端 `USER_STATUS`）、用户角色用 `UserRole`（ADMIN / USER）、知识库状态用 `KnowledgeBaseStatus`。`of()` 解析空值或未知码值时，**写路径抛业务错误码、读路径按最保守语义处理**。                                                                                                                                                                                                                                                                                                                                                    |
-| **启动校验**          | 校验项统一实现 `common/startup/StartupCheck`（`order()` 定序，`check(next)` 校验通过后调 `next.proceed()` 交棒），由 `biz/config/StartupCheckChainRunner` 按 `order()` 排序驱动，首个不通过即终止启动。新增一项校验只加一个 `@Component`，链与既有校验项都不改；不在链内的启动期校验（配置绑定、存储探活、Milvus 建连）见该驱动方注释。                                                                                                                                                                                                                                                             |
-| **接口契约**          | 以后端 Controller 源码为准：路径与出入参由 `@RequestMapping` 与方法签名、`common/dto` 下的请求/响应类型给出；查询参数成组时收进共享查询对象（`PageQueryDTO` / `StageTriggerQueryDTO` / `StageDetailQueryDTO`），DTO 字段按同名的独立查询参数绑定。                                                                                                                                                                                                                                                                                                                                                  |
-| **幂等键**            | 提交类写接口用 `requestId` 做幂等：**一次提交一个**（提交端生成，通常 UUID），**同一次提交的重试沿用同一个值、换一次提交换新值**；服务端靠 `wb_submit_log.request_id` 唯一约束 + 查重回放实现（同键重复到达返回首次记录，不重复落库；并发撞唯一键也转回放而不是报错）。它**不是按业务对象去重的手段**：同一份文件重新上传会拿到新的 fileId（`DefaultFileStorage.putFile` 每次 `IdWorker.getIdStr()`），对系统而言就是两份文件、应当各建一条档案 —— 把键写成"文件名 + 大小 + 修改时间"之类的文件指纹，会让再导入静默变成幂等回放（界面显示成功、实际未建档）。为空报 `REQUEST_ID_MISSING`（40420）。 |
+| 口径                  | 本项目实现与参数                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Long 按阈值序列化** | `LongIdJsonConfig`：超过 JS 安全整数上界 `2^53-1` 的整数输出字符串，其余保持数字（规则见 `JAVA-DTO-008`）。雪花 ID 以字符串下发，计数 / 字节数 / 耗时 / 分页号仍是数字。前端把 ID 当字符串回传即可，Jackson 反序列化到 `Long` 能正确转换。                                                                                                                                                                                                                                                           |
+| **逻辑删除**          | `BaseInfo.delFlag` 带 `@TableLogic(value = DelFlag.Code.NORMAL, delval = DelFlag.Code.DELETED)`，MyBatis-Plus 自动为查询补 `del_flag = '0'`；删除是 UPDATE（规则见 `JAVA-DTO-010`）。码值只在 `DelFlag` 里定义一处（`NORMAL` / `DELETED`，写入取 `getCode()`、判定走 `isDeleted(...)`），业务代码统一走枚举。                                                                                                                                                                                        |
+| **公共字段自动填充**  | `KnowledgeMetaObjectHandler` 填 `del_flag`、`create_by`、`create_time`、`update_by`、`update_time`；`create_by` / `update_by` 取当前认证用户名，无认证上下文时（如注册）为 null。                                                                                                                                                                                                                                                                                                                    |
+| **主键**              | 雪花算法，`@TableId(type = IdType.ASSIGN_ID)`，由应用生成后显式插入。                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **分页**              | 请求参数 `current`（默认 1）、`size`（默认 10）；响应是 MyBatis-Plus 的 `IPage<T>`，前端对应 `PageResult<T>`（`records` / `total` / `size` / `current` / `pages`）（规则见 `JAVA-DTO-003`、`VUE-API-006`）。                                                                                                                                                                                                                                                                                         |
+| **密码规则**          | 新密码长度统一 8-10 位：注册、管理员新增、管理员重置、本人改密四处同一口径。登录不做长度校验，存量短密码仍可登录。                                                                                                                                                                                                                                                                                                                                                                                   |
+| **码值走枚举**        | 业务代码统一用枚举取码值与判定：用户状态用 `UserStatus`（1 启用 / 0 停用，前端 `USER_STATUS`）、用户角色用 `UserRole`（ADMIN / USER）、知识库状态用 `KnowledgeBaseStatus`（规则见 `JAVA-DTO-011`）。`of()` 解析空值或未知码值时，写路径抛业务错误码、读路径按最保守语义处理。                                                                                                                                                                                                                        |
+| **启动校验**          | 校验项统一实现 `common/startup/StartupCheck`（`order()` 定序，`check(next)` 校验通过后调 `next.proceed()` 交棒），由 `biz/config/StartupCheckChainRunner` 按 `order()` 排序驱动，首个不通过即终止启动（规则见 `JAVA-LAYER-008`）。不在链内的启动期校验（配置绑定、存储探活、Milvus 建连）见该驱动方注释。                                                                                                                                                                                            |
+| **接口契约**          | 以后端 Controller 源码为准：路径与出入参由 `@RequestMapping` 与方法签名、`common/dto` 下的请求/响应类型给出；查询参数成组时收进共享查询对象（`PageQueryDTO` / `StageTriggerQueryDTO` / `StageDetailQueryDTO`），DTO 字段按同名的独立查询参数绑定。                                                                                                                                                                                                                                                   |
+| **幂等键**            | 提交类写接口用 `requestId` 做幂等（规则见 `JAVA-DTO-009`）：一次提交一个（提交端生成，通常 UUID），同一次提交的重试沿用同一个值、换一次提交换新值；服务端靠 `wb_submit_log.request_id` 唯一约束 + 查重回放实现。它不是按业务对象去重的手段：同一份文件重新上传会拿到新的 fileId（`DefaultFileStorage.putFile` 每次 `IdWorker.getIdStr()`），对系统而言就是两份文件、应当各建一条档案 —— 用"文件名 + 大小 + 修改时间"之类的文件指纹会让再导入静默变成幂等回放。为空报 `REQUEST_ID_MISSING`（40420）。 |
 
 ### 八、开发期联调
 
 - 前端 dev server：`127.0.0.1:5173`（Vite）；后端：`localhost:4388`。
 - 跨域靠 Vite 代理（`../web/vite.config.ts`），已配置前缀：`/auth`、`/files`、`/file-results`、`/knowledge-base`、`/strategy-versions`、`/system`、`^/user/`、`^/home/`、`^/model/`。
-- **`/home`、`/user`、`/model` 既是 SPA 路由又是接口前缀**，靠 `bypass` 按 `Accept` 头区分：含 `text/html` 的导航请求交回 SPA 回退，接口请求才转发后端。`/knowledge` 只作 SPA 路由前缀（接口前缀是 `/knowledge-base`），无需代理。
-- 新增接口前缀必须同时加代理。漏加时代理不生效：请求落到 SPA 回退，前端拿到 HTML、页面数据全空，**控制台不报错**。
+- `/home`、`/user`、`/model` 既是 SPA 路由又是接口前缀，靠 `bypass` 按 `Accept` 头区分：含 `text/html` 的导航请求交回 SPA 回退，接口请求才转发后端。`/knowledge` 只作 SPA 路由前缀（接口前缀是 `/knowledge-base`），无需代理。
+- 新增接口前缀时同步更新代理配置（规则见 `VUE-ENG-007`）；漏加时代理不生效，请求落到 SPA 回退，控制台不报错。
 
 ### 九、空值判定口径
 
 - 后端判空统一走 `NullUtil.isNull/isNotNull`（`../workbuddy-common/src/main/java/com/workbuddy/common/utils/NullUtil.java`）：参数标注可空、内部转发 Hutool `ObjectUtil`，语义与 Hutool 完全一致。
-- **不写裸 `== null` / `!= null`，也不直接调 `ObjectUtil.isNull/isNotNull`**：Hutool 判空方法的参数没有可空注解，SpotBugs 把"被静态证明为 null"的判空误报为空指针类告警（`NP_NONNULL_PARAM_VIOLATION` / `NP_LOAD_OF_KNOWN_NULL_VALUE`）；走 `NullUtil` 后这类告警不再出现。
-- **`.agent/tools/java/spotbugs-exclude.xml` 不接受新增 `NP_*` 豁免**：撞上这类告警就改判空写法，别往豁免清单加条目。
+- 判空写法与 SpotBugs 豁免口径见 `COMMON-ANTI-05`；本项目 `spotbugs-exclude.xml` 中没有为判空告警添加的 `NP_*` 条目。
 - 其它判空语义（`ObjectUtil.isEmpty` / `isNotEmpty` / `defaultIfNull` 等）不属于本口径，按原样使用。
 
 ### 十、前端信息架构
 
-侧栏是**两级菜单**（`../web/src/layouts/AppLayout.vue` 的 `navItems`）：没有二级项的是一级叶子项，带二级项的是一级分组（自身不下钻，点标题开合）。当前结构：
+侧栏是两级菜单（`../web/src/layouts/AppLayout.vue` 的 `navItems`）：没有二级项的是一级叶子项，带二级项的是一级分组（自身不下钻，点标题开合）（规则见 `VUE-ROUTE-008`）。当前结构：
 
 | 层级 | 菜单       | 路由                  | 可见性                     |
 |------|------------|-----------------------|----------------------------|
@@ -257,9 +253,8 @@
 | 一级 | 系统设置   | `/settings`           | 全部（页内卡片按权限显示） |
 | 一级 | 个人中心   | `/profile`            | 全部                       |
 
-- 下钻页（`/knowledge/:id/stages`、`.../index`、`.../retrieval`）**不单独占菜单项**，归到二级「知识库管理」下点亮。
-- **新增一级模块**（提示词版本管理、Agent 对话等）在 `navItems` 里加一项：内容多就照「知识库」的样子加一个分组，只有一个页面就用叶子项。
-- **菜单可见性有两处声明**（菜单项的 `adminOnly` 与路由的 `meta.adminOnly`），新增管理类页面要同步改两处（见 `pages/布局壳/README.md` 的待定项）。
+- 下钻页（`/knowledge/:id/stages`、`.../index`、`.../retrieval`）不单独占菜单项，归到二级「知识库管理」下点亮。
+- 菜单可见性有两处声明（菜单项的 `adminOnly` 与路由的 `meta.adminOnly`），新增管理类页面要同步改两处（规则见 `VUE-ROUTE-007`；页面细节见 `pages/布局壳/README.md`）。
 - 菜单开合、选中态级联与折叠态浮出面板的交互口径见 `pages/布局壳/01-页面功能.md`。
 
 ### 十一、待补
