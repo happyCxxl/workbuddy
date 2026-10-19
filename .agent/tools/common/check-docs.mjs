@@ -10,7 +10,7 @@ import process from 'node:process';
 import { ROOT, backtickPaths, trackedFiles } from '../lib.mjs';
 
 const FORBIDDEN = /^#{1,6}\s*(变更记录|决策记录)\s*$/;
-const LINK = /\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
+const LINK = /\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
 const errors = [];
 const files = trackedFiles().filter((f) => f.endsWith('.md'));

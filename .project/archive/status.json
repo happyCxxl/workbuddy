@@ -9,7 +9,7 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "8be9e318",
+      "baseline": "9500044f",
       "note": "check-docs 增加文档引用路径校验（JAVA-DOC-010）；门禁的改动文件清单改为分批传参"
     },
     "01": {

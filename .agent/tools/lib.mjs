@@ -135,7 +135,7 @@ export function backtickPaths(
   text,
   { requireSlash = false, requireExtension = false, skipElision = false, stripLinks = false } = {},
 ) {
-  const source = stripLinks ? text.replace(/\[[^\]]*\]\([^)]*\)/g, ' ') : text;
+  const source = stripLinks ? text.replace(/\[[^\]]*]\([^)]*\)/g, ' ') : text;
   const out = new Set();
   for (const m of source.matchAll(/`([^`\n]+)`/g)) {
     const s = m[1].trim().replace(CMD_PREFIX, '');
