@@ -39,6 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -340,5 +341,116 @@ class SearchServiceImplTest {
                 () -> service.compareRuns(1L, List.of(1L)));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
+    }
+
+    /**
+     * 运行记录列表按 VO 映射。
+     *
+     * <p>守护 {@code listRuns}/{@code toRunVO}：字段错位即失败（对比回放读错快照）。
+     */
+    @Test
+    void listRunsShouldMapToVo() {
+        WbRetrievalRun run = new WbRetrievalRun();
+        run.setId(5L);
+        run.setVersionId(30L);
+        run.setVersionNo("v9");
+        run.setRuleId(500L);
+        run.setRuleNameVersion("hybrid-rrf-k60-top10-v1");
+        run.setQuery("保证金");
+        run.setElapsedMs(88);
+        when(retrievalRunDbService.listByKb(9L, 5)).thenReturn(List.of(run));
+
+        List<com.workbuddy.common.dto.response.retrieval.RetrievalRunVO> runs = service.listRuns(9L, 5);
+
+        assertEquals(1, runs.size());
+        assertEquals(5L, runs.get(0).getId());
+        assertEquals(30L, runs.get(0).getVersionId());
+        assertEquals("v9", runs.get(0).getVersionNo());
+        assertEquals(500L, runs.get(0).getRuleId());
+        assertEquals("hybrid-rrf-k60-top10-v1", runs.get(0).getRuleNameVersion());
+        assertEquals("保证金", runs.get(0).getQuery());
+        assertEquals(88L, runs.get(0).getElapsedMs().longValue());
+    }
+
+    /**
+     * 生产检索（混合通道 + 父片展开）：RRF 融合、同父片去重取最高分、父片全文替换并标 isParent。
+     *
+     * <p>守护 {@code orderHits} 的融合分支与 {@code expandParent} 的主路径：
+     * 同父片双子片未去重、父片全文未替换、isParent 未标即失败。
+     */
+    @Test
+    void productionSearchShouldFuseHybridAndExpandParents() {
+        WbIndexSet set = new WbIndexSet();
+        set.setCurrentPublishedVersionId(30L);
+        when(indexSetDbService.getByKb(9L)).thenReturn(set);
+        WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.ONLINE.name(), comboAll());
+        version.setDefaultRuleId(500L);
+        when(indexVersionDbService.getById(30L)).thenReturn(version);
+        when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow());
+        RetrievalRuleSpec spec = new RetrievalRuleSpec();
+        spec.setChannel(RetrievalRuleSpec.CHANNEL_HYBRID);
+        spec.getPostprocess().setMode(RetrievalRuleSpec.MODE_PARENT_EXPAND);
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(spec);
+        FullTextHit child1 = FullTextHit.builder().chunkId("c1").content("子片一").documentId(9L)
+                .titlePath("旧路径").parentChunkId("p1").build();
+        FullTextHit child2 = FullTextHit.builder().chunkId("c2").content("子片二").documentId(9L)
+                .titlePath("旧路径").parentChunkId("p1").build();
+        FullTextHit standalone = FullTextHit.builder().chunkId("c3").content("独立片").documentId(9L)
+                .titlePath(null).parentChunkId(null).build();
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(child1, child2, standalone));
+        IndexRow parent = new IndexRow();
+        parent.setChunkId("p1");
+        parent.setContent("整段全文");
+        parent.setTitlePath("第一章");
+        parent.setDocumentId(9L);
+        parent.setParentChunkId(null);
+        parent.setSourceElementIds("[\"e1\"]");
+        when(milvusIndexPort.queryChunkByIds("kb_9_v9", List.of("p1"))).thenReturn(List.of(parent));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals(2, vo.getHits().size());
+        SearchHitVO expanded = vo.getHits().get(0);
+        assertTrue(expanded.getIsParent());
+        assertEquals("p1", expanded.getChunkId());
+        assertEquals("整段全文", expanded.getContent());
+        assertEquals("第一章", expanded.getTitlePath());
+        assertEquals("[\"e1\"]", expanded.getSourceElementIds());
+        SearchHitVO plain = vo.getHits().get(1);
+        assertEquals("c3", plain.getChunkId());
+        assertFalse(plain.getIsParent());
+        // 生产检索默认不留痕（开关关闭）
+        verify(retrievalRunDbService, never()).save(any(WbRetrievalRun.class));
+    }
+
+    /**
+     * 纯全文通道：不走向量化（EMBED 策略行不被查询），命中按原顺序直通。
+     *
+     * <p>守护 {@code search} 的单通道路径与 {@code embedQuery} 的跳过逻辑：
+     * 纯全文还查 EMBED 策略行即失败（多余的模型依赖）。
+     */
+    @Test
+    void fullTextOnlyChannelShouldSkipEmbeddingAndPassThrough() {
+        WbIndexSet set = new WbIndexSet();
+        set.setCurrentPublishedVersionId(30L);
+        when(indexSetDbService.getByKb(9L)).thenReturn(set);
+        WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.ONLINE.name(), comboAll());
+        when(indexVersionDbService.getById(30L)).thenReturn(version);
+        RetrievalRuleSpec spec = new RetrievalRuleSpec();
+        spec.setChannel(RetrievalRuleSpec.CHANNEL_FULLTEXT);
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(spec);
+        FullTextHit hit = FullTextHit.builder().chunkId("c1").content("全文-c1").documentId(9L)
+                .parentChunkId(null).build();
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(hit));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals(1, vo.getHits().size());
+        assertEquals("全文-c1", vo.getHits().get(0).getContent());
+        assertNull(vo.getHits().get(0).getScore());
+        verify(strategyVersionDbService, never()).getByTypeAndNameAndVersion(anyString(), anyString(), anyString());
+        verify(milvusIndexPort, never()).searchVector(anyString(), any(VectorQuery.class));
     }
 }
