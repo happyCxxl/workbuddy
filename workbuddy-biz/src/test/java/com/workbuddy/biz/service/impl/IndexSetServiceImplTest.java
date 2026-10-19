@@ -23,14 +23,18 @@ import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.dto.response.index.IndexComboVO;
+import com.workbuddy.common.dto.response.index.IndexVersionVO;
 import com.workbuddy.common.enums.index.IndexBuildTrigger;
+import com.workbuddy.common.enums.index.IndexShape;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.task.PipelineStage;
+import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
@@ -50,6 +54,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -69,6 +74,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -182,6 +188,11 @@ class IndexSetServiceImplTest {
         return row;
     }
 
+    /**
+     * 产物就绪（绑定开）：登记组合、追加、对账并自动发布。
+     *
+     * <p>守护 {@code onFileProductsReady}：漏追加或漏发布即失败。
+     */
     @Test
     void onFileProductsReadyWhenBindingOnShouldAppendAndAutoPublish() {
         WbFileResult file = file(10L);
@@ -245,6 +256,11 @@ class IndexSetServiceImplTest {
         verify(kbAuditLogDbService).saveAudit(AuditActionType.PUBLISH_INDEX, "INDEX_VERSION", 100L, null, "v1");
     }
 
+    /**
+     * 产物就绪（绑定关）：评测模式不自动登记组合。
+     *
+     * <p>守护 {@code onFileProductsReady}：测评库被自动建集合即失败。
+     */
     @Test
     void onFileProductsReadyWhenBindingOffShouldSkipAutoRegister() {
         WbFileResult file = file(10L);
@@ -283,6 +299,11 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort, never()).append(anyString(), anyList());
     }
 
+    /**
+     * 产物就绪（绑定关）：已有活跃版本时照常追加。
+     *
+     * <p>守护 {@code onFileProductsReady}：有集合不追加即失败。
+     */
     @Test
     void onFileProductsReadyWhenBindingOffShouldAppendToExistingActiveVersion() {
         WbFileResult file = file(10L);
@@ -326,6 +347,11 @@ class IndexSetServiceImplTest {
         assertEquals(1, ready.getChunkCount());
     }
 
+    /**
+     * 产物组合 ≠ 在线组合：按在线组合拓扑补齐。
+     *
+     * <p>守护 {@code onFileProductsReady}：文件被丢下即失败。
+     */
     @Test
     void onFileProductsReadyWhenProductComboDiffersFromOnlineShouldBackfillByTopology() {
         // 竞态：切到 v2 后，文件按旧组合（v2 组合）完成 → 规则一追加进 v2 集合，规则三按在线组合（v1）补齐
@@ -386,6 +412,11 @@ class IndexSetServiceImplTest {
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
     }
 
+    /**
+     * 手动构建：注册组合不要求产物齐，任务入队。
+     *
+     * <p>守护 {@code buildCandidate}：要求产物齐会挡住切策略。
+     */
     @Test
     void buildCandidateShouldRegisterComboWithoutRequiringProducts() {
         // 注册组合不要求产物齐（切策略场景：注册先行、文件重跑累积；缺口由对账任务 FAILED 呈现）
@@ -412,6 +443,11 @@ class IndexSetServiceImplTest {
         verify(taskQueue).enqueue(200L);
     }
 
+    /**
+     * 手动构建：策略不全时用知识库绑定组合补齐。
+     *
+     * <p>守护 {@code buildCandidate}：空策略组合被构建即失败。
+     */
     @Test
     void buildCandidateWithBlankStrategiesShouldResolveBoundCombo() {
         when(knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
@@ -443,6 +479,11 @@ class IndexSetServiceImplTest {
                 taskCaptor.getValue().getStrategySnapshot());
     }
 
+    /**
+     * 手动构建：未知环节策略按 40001 拒绝。
+     *
+     * <p>守护 {@code buildCandidate}：坏数据被携带即失败。
+     */
     @Test
     void buildCandidateWithUnknownStageShouldReject40001() {
         // 环节白名单防线：stageStrategies 只允许预处理/切片/向量三环节，未知键=坏数据直接拒绝
@@ -460,6 +501,11 @@ class IndexSetServiceImplTest {
         verify(indexSetDbService, never()).getOrCreateByKb(anyLong());
     }
 
+    /**
+     * 手动构建：同组合活跃版本冲突 40443。
+     *
+     * <p>守护 {@code buildCandidate}：重复建版本即失败。
+     */
     @Test
     void buildCandidateWhenActiveVersionExistsShouldThrow40443() {
         when(knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
@@ -479,6 +525,11 @@ class IndexSetServiceImplTest {
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 发布：旧版退役、指针切换、知识库回填、PUBLISH 审计。
+     *
+     * <p>守护 {@code publish}：漏退役或漏审计即失败。
+     */
     @Test
     void publishShouldSwitchPointersAndAudit() {
         WbIndexVersion version = new WbIndexVersion();
@@ -513,6 +564,11 @@ class IndexSetServiceImplTest {
         verify(kbAuditLogDbService).saveAudit(AuditActionType.PUBLISH_INDEX, "INDEX_VERSION", 20L, "v1", "v2");
     }
 
+    /**
+     * 发布：非就绪版本拒绝（40443）。
+     *
+     * <p>守护 {@code publish}：未就绪上线即失败。
+     */
     @Test
     void publishWhenNotReadyShouldThrow40443() {
         WbIndexVersion version = new WbIndexVersion();
@@ -529,6 +585,11 @@ class IndexSetServiceImplTest {
         assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), ex.getCode());
     }
 
+    /**
+     * 回退（无差异）：指针切回并投递 COMPENSATE 构建。
+     *
+     * <p>守护 {@code rollback}：漏补偿构建即失败。
+     */
     @Test
     void rollbackWhenNoDiffShouldSwitchBackAndCompensateBuild() {
         WbIndexVersion target = new WbIndexVersion();
@@ -576,6 +637,11 @@ class IndexSetServiceImplTest {
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
     }
 
+    /**
+     * 回退（有差异）：从缺失的最上游环节重跑。
+     *
+     * <p>守护 {@code rollback}：差异文件不补即失败。
+     */
     @Test
     void rollbackWhenDiffShouldEnqueueChunkRerun() {
         WbIndexVersion target = new WbIndexVersion();
@@ -610,6 +676,11 @@ class IndexSetServiceImplTest {
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 当前在线版本：无指针返回 null。
+     *
+     * <p>守护 {@code currentPublished}：空指针即失败。
+     */
     @Test
     void currentPublishedShouldReturnNullWhenNoPointer() {
         WbIndexSet set = indexSet();
@@ -617,6 +688,11 @@ class IndexSetServiceImplTest {
         assertNull(service.currentPublished(1L));
     }
 
+    /**
+     * 当前在线版本：按指针取版本行。
+     *
+     * <p>守护 {@code currentPublished}：取错行即失败。
+     */
     @Test
     void currentPublishedShouldReturnVersion() {
         WbIndexSet set = indexSet();
@@ -628,6 +704,11 @@ class IndexSetServiceImplTest {
         assertEquals(version, service.currentPublished(1L));
     }
 
+    /**
+     * 回收：在线版本禁止删除（40446）。
+     *
+     * <p>守护 {@code recycle}：在线集合被删即失败。
+     */
     @Test
     void recycleShouldForbidOnlineVersion() {
         WbIndexVersion version = new WbIndexVersion();
@@ -643,6 +724,11 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort, never()).drop(anyString());
     }
 
+    /**
+     * 回收：先删集合再删版本行并写 RECYCLE 审计。
+     *
+     * <p>守护 {@code recycle}：删行不删集合即失败。
+     */
     @Test
     void recycleShouldDeleteMilvusRowsAndAudit() {
         WbIndexVersion version = new WbIndexVersion();
@@ -662,6 +748,11 @@ class IndexSetServiceImplTest {
         verify(indexVersionDbService).removeById(30L);
     }
 
+    /**
+     * 回退：目标即当前在线版本按 40001 拒绝。
+     *
+     * <p>守护 {@code rollback}：原地回退即失败。
+     */
     @Test
     void rollbackShouldForbidWhenTargetIsCurrent() {
         WbIndexVersion target = new WbIndexVersion();
@@ -688,6 +779,11 @@ class IndexSetServiceImplTest {
         return version;
     }
 
+    /**
+     * 版本列表：在线标记与组合快照展开。
+     *
+     * <p>守护 {@code listVersions}：在线标记或组合字段错即失败。
+     */
     @Test
     void listVersionsShouldMarkOnlineAndOrder() {
         WbIndexSet set = indexSet();
@@ -708,12 +804,22 @@ class IndexSetServiceImplTest {
         assertEquals(7, versions.getFirst().getChunkCount());
     }
 
+    /**
+     * 版本列表：无集合返回空列表。
+     *
+     * <p>守护 {@code listVersions}：空集合查库即失败。
+     */
     @Test
     void listVersionsShouldReturnEmptyWhenNoSet() {
         when(indexSetDbService.getByKb(1L)).thenReturn(null);
         assertTrue(service.listVersions(1L).isEmpty());
     }
 
+    /**
+     * 版本详情：版本不属于该库按 40441。
+     *
+     * <p>守护 {@code versionDetail}：跨库可读即失败。
+     */
     @Test
     void versionDetailShouldThrow40441WhenNotBelongsToKb() {
         when(indexSetDbService.getByKb(1L)).thenReturn(indexSet());
@@ -764,6 +870,11 @@ class IndexSetServiceImplTest {
         return row;
     }
 
+    /**
+     * 组合列表：按成员子集返回组合与文件/向量数预览。
+     *
+     * <p>守护 {@code listCombos}：按全库交集返回即失败。
+     */
     @Test
     void listCombosShouldReturnCombosWithMemberFiles() {
         // 文件 10 仅组合 A；文件 20 有 A/B 两套策略历史 → 组合按成员子集返回（非全库交集）
@@ -800,6 +911,11 @@ class IndexSetServiceImplTest {
         assertTrue(combos.stream().noneMatch(c -> c.getFileResultIds().isEmpty()));
     }
 
+    /**
+     * 组合列表：范围收窄到指定文件。
+     *
+     * <p>守护 {@code listCombos}：范围外的文件混入即失败。
+     */
     @Test
     void listCombosShouldScopeMembersToGivenFiles() {
         // 范围收窄：仅文件 10 参与成员判定
@@ -824,6 +940,11 @@ class IndexSetServiceImplTest {
         assertEquals(50, combos.getFirst().getVectorCount());
     }
 
+    /**
+     * 校验：对账一致且冒烟命中时通过三项。
+     *
+     * <p>守护 {@code validate}：对账或冒烟判错即失败。
+     */
     @Test
     void validateShouldPassAllChecks() {
         WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.READY.name());
@@ -845,6 +966,11 @@ class IndexSetServiceImplTest {
         assertTrue(result.getItems().getFirst().isPassed());
     }
 
+    /**
+     * 校验：冒烟未命中判失败。
+     *
+     * <p>守护 {@code validate}：空命中判通过即失败。
+     */
     @Test
     void validateShouldFailWhenSmokeMisses() {
         WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.READY.name());
@@ -864,6 +990,11 @@ class IndexSetServiceImplTest {
         assertFalse(result.getItems().get(2).isPassed());
     }
 
+    /**
+     * 校验：组合产物不完整时陈述缺口且不做冒烟。
+     *
+     * <p>守护 {@code validate}：缺产物仍冒烟即失败。
+     */
     @Test
     void validateShouldReportIncompleteCombo() {
         WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.READY.name());
@@ -883,6 +1014,11 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort, never()).searchFullText(anyString(), any());
     }
 
+    /**
+     * 校验：构建中版本拒绝（40443）。
+     *
+     * <p>守护 {@code validate}：构建中可校验即失败。
+     */
     @Test
     void validateShouldForbidNotReadyVersion() {
         WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.BUILDING.name());
@@ -893,6 +1029,11 @@ class IndexSetServiceImplTest {
         assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), ex.getCode());
     }
 
+    /**
+     * 产物就绪：在线版本快照缺环节维度按 40448 拒绝。
+     *
+     * <p>守护 {@code onFileProductsReady}：静默跳过或空指针即失败。
+     */
     @Test
     void onFileProductsReadyWhenOnlineComboIsLegacyShouldFailWithExplicitError() {
         // 在线版本为缺少 stageStrategies 的快照 → 快照边界断言拒绝（40448），不 NPE、不静默跳过
@@ -947,6 +1088,11 @@ class IndexSetServiceImplTest {
         verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
     }
 
+    /**
+     * 回退：目标版本快照缺环节维度按 40448 拒绝。
+     *
+     * <p>守护 {@code rollback}：静默降级即失败。
+     */
     @Test
     void rollbackWhenTargetComboIsLegacyShouldFailWithExplicitError() {
         WbIndexVersion target = new WbIndexVersion();
@@ -984,6 +1130,11 @@ class IndexSetServiceImplTest {
         return version;
     }
 
+    /**
+     * 产物就绪：只追加到范围包含该文件的冻结集版本。
+     *
+     * <p>守护 {@code onFileProductsReady}：范围外文件混进冻结集即失败。
+     */
     @Test
     void onFileProductsReadyShouldAppendToMatchingFrozenScopesOnly() {
         // 评测模式（绑定关）不自动注册 ALL 组合；范围内三元组匹配的 LIST 版本照常追加
@@ -1029,6 +1180,11 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort, never()).append(eq("kb_1_v7"), anyList());
     }
 
+    /**
+     * 发布：冻结集版本禁止发布（40449）。
+     *
+     * <p>守护 {@code publish}：评测集合上线即失败。
+     */
     @Test
     void publishShouldRejectFrozenScopeVersion() {
         WbIndexVersion version = new WbIndexVersion();
@@ -1043,6 +1199,11 @@ class IndexSetServiceImplTest {
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
     }
 
+    /**
+     * 回退：冻结集版本禁止回退（40449）。
+     *
+     * <p>守护 {@code rollback}：评测集合切回即失败。
+     */
     @Test
     void rollbackShouldRejectFrozenScopeTarget() {
         WbIndexVersion target = new WbIndexVersion();
@@ -1061,6 +1222,11 @@ class IndexSetServiceImplTest {
         verify(kbAuditLogDbService, never()).saveAudit(any(), any(), anyLong(), any(), any());
     }
 
+    /**
+     * 手动构建：LIST 范围缺文件列表按 40001 拒绝。
+     *
+     * <p>守护 {@code buildCandidate}：空列表被放行即失败。
+     */
     @Test
     void buildCandidateShouldRejectListScopeWithoutFiles() {
         when(knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
@@ -1075,6 +1241,11 @@ class IndexSetServiceImplTest {
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), ex.getCode());
     }
 
+    /**
+     * 手动构建：文件列表含外库文件按 40001 拒绝。
+     *
+     * <p>守护 {@code buildCandidate}：外库文件混入即失败。
+     */
     @Test
     void buildCandidateShouldRejectForeignFilesInListScope() {
         when(knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
@@ -1092,6 +1263,11 @@ class IndexSetServiceImplTest {
         assertTrue(ex.getMessage().contains("非本知识库"), ex.getMessage());
     }
 
+    /**
+     * 手动构建：ALL 范围归一化，残留文件列表置空。
+     *
+     * <p>守护 {@code buildCandidate}：脏范围写进快照即失败。
+     */
     @Test
     void buildCandidateShouldNormalizeAllScopeRange() {
         // ALL 范围归一化——残留 fileResultIds 置空，落库快照干净
@@ -1122,5 +1298,659 @@ class IndexSetServiceImplTest {
         assertNotNull(savedCombo);
         assertEquals("ALL", savedCombo.getFileScopeMode());
         assertNull(savedCombo.getFileResultIds());
+    }
+
+    /**
+     * ALL 范围且范围字段为 null 时也归一化成 ALL。
+     *
+     * <p>守护 {@code buildCandidate} 的范围归一：残留 null 会写进组合快照，影响组合判等。
+     */
+    @Test
+    void buildCandidateShouldFillNullScopeMode() {
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of());
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v1");
+        AtomicReference<WbIndexVersion> saved = new AtomicReference<>();
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            WbIndexVersion v = inv.getArgument(0);
+            saved.set(v);
+            return true;
+        });
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.<WbPipelineTask>getArgument(0).setId(200L);
+            return true;
+        });
+        BuildOrder order = new BuildOrder();
+        order.setKnowledgeBaseId(1L);
+        ComboSnapshot combo = comboAll();
+        combo.setFileScopeMode(null);
+        combo.setFileResultIds(List.of(10L));
+        order.setComboSnapshot(combo);
+
+        service.buildCandidate(order);
+
+        ComboSnapshot savedCombo = JsonUtil.toObject(saved.get().getComboSnapshot(), ComboSnapshot.class);
+        assertEquals("ALL", savedCombo.getFileScopeMode());
+        assertNull(savedCombo.getFileResultIds());
+    }
+
+    /**
+     * 构建命令缺知识库或组合快照一律 40001；知识库不存在按 40401。
+     *
+     * <p>守护 {@code buildCandidate} 的入参防线：放行空命令会在下游 NPE。
+     */
+    @Test
+    void buildCandidateShouldRejectIncompleteCommand() {
+        KnowledgeException nullOrder = assertThrows(KnowledgeException.class,
+                () -> service.buildCandidate(null));
+        assertEquals(ErrorCode.PARAM_INVALID.getCode(), nullOrder.getCode());
+
+        KnowledgeException noKb = assertThrows(KnowledgeException.class,
+                () -> service.buildCandidate(new BuildOrder()));
+        assertEquals(ErrorCode.PARAM_INVALID.getCode(), noKb.getCode());
+
+        BuildOrder noCombo = new BuildOrder();
+        noCombo.setKnowledgeBaseId(1L);
+        KnowledgeException comboMissing = assertThrows(KnowledgeException.class,
+                () -> service.buildCandidate(noCombo));
+        assertEquals(ErrorCode.PARAM_INVALID.getCode(), comboMissing.getCode());
+
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(null);
+        BuildOrder unknownKb = new BuildOrder();
+        unknownKb.setKnowledgeBaseId(1L);
+        unknownKb.setComboSnapshot(comboAll());
+        KnowledgeException notFound = assertThrows(KnowledgeException.class,
+                () -> service.buildCandidate(unknownKb));
+        assertEquals(ErrorCode.KB_NOT_FOUND.getCode(), notFound.getCode());
+        verify(pipelineTaskDbService, never()).save(any());
+    }
+
+    /**
+     * 环节策略不全且知识库没有绑定组合时按 40445 拒绝。
+     *
+     * <p>守护 {@code buildCandidate} 的绑定兜底：拿不到绑定组合还能继续会构建出空策略组合。
+     */
+    @Test
+    void buildCandidateWithoutStrategiesOrBindingShouldReject() {
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
+        when(indexComboService.resolveBoundCombo(1L)).thenReturn(null);
+        BuildOrder order = new BuildOrder();
+        order.setKnowledgeBaseId(1L);
+        ComboSnapshot blank = new ComboSnapshot();
+        order.setComboSnapshot(blank);
+
+        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.buildCandidate(order));
+
+        assertEquals(ErrorCode.INDEX_COMBO_INCOMPLETE.getCode(), ex.getCode());
+        verify(pipelineTaskDbService, never()).save(any());
+    }
+
+    /**
+     * LIST 范围且文件全属本库：不触发「非本库文件」拒绝。
+     *
+     * <p>守护 {@code buildCandidate} 的归属过滤：过滤条件写反会把本库文件当外库。
+     */
+    @Test
+    void buildCandidateWithOwnFilesInListScopeShouldAccept() {
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
+        when(fileResultDbService.listByKb(1L)).thenReturn(List.of(file(10L), file(20L)));
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of());
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v1");
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            inv.<WbIndexVersion>getArgument(0).setId(100L);
+            return true;
+        });
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.<WbPipelineTask>getArgument(0).setId(200L);
+            return true;
+        });
+        BuildOrder order = new BuildOrder();
+        order.setKnowledgeBaseId(1L);
+        ComboSnapshot combo = comboAll();
+        combo.setFileScopeMode("LIST");
+        combo.setFileResultIds(List.of(10L, 20L));
+        order.setComboSnapshot(combo);
+
+        var result = service.buildCandidate(order);
+
+        assertEquals("v1", result.getVersionNo());
+        verify(taskQueue).enqueue(200L);
+    }
+
+    /**
+     * 建版本行与 BUILD_INDEX 任务：两行的关键列逐列落库，命令快照可回读。
+     *
+     * <p>守护 {@code createVersionAndTask} 的字段搬运：任务缺 stage/status 就永远不会被消费。
+     */
+    @Test
+    void createVersionAndTaskShouldPersistVersionAndTaskFields() {
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of());
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v4");
+        AtomicReference<WbIndexVersion> saved = new AtomicReference<>();
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            WbIndexVersion v = inv.getArgument(0);
+            v.setId(104L);
+            saved.set(v);
+            return true;
+        });
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.<WbPipelineTask>getArgument(0).setId(204L);
+            return true;
+        });
+        BuildOrder order = new BuildOrder();
+        order.setKnowledgeBaseId(1L);
+        order.setComboSnapshot(comboAll());
+
+        var result = service.buildCandidate(order);
+
+        ArgumentCaptor<WbPipelineTask> taskCaptor = ArgumentCaptor.forClass(WbPipelineTask.class);
+        verify(pipelineTaskDbService).save(taskCaptor.capture());
+        WbPipelineTask task = taskCaptor.getValue();
+        assertEquals(PipelineStage.BUILD_INDEX.name(), task.getStage());
+        assertEquals(PipelineTaskStatus.QUEUED.name(), task.getStatus());
+        BuildOrder snapshot = JsonUtil.toObject(task.getStrategySnapshot(), BuildOrder.class);
+        assertEquals(1L, snapshot.getKnowledgeBaseId());
+        assertEquals(IndexBuildTrigger.REBUILD.name(), snapshot.getTrigger());
+
+        WbIndexVersion version = saved.get();
+        assertEquals(5L, version.getIndexSetId());
+        assertEquals("v4", version.getVersionNo());
+        assertEquals(IndexVersionStatus.CREATED.name(), version.getStatus());
+        assertEquals(204L, version.getTaskId());
+        assertEquals(104L, result.getVersionId());
+        assertEquals("v4", result.getVersionNo());
+        assertEquals(204L, result.getPipelineTaskId());
+        verify(taskQueue).enqueue(204L);
+    }
+
+    /**
+     * 版本详情把版本行的每个字段都带到 VO（含组合快照展开与在线标记）。
+     *
+     * <p>守护 {@code toVersionVO}：漏搬 buildError/taskId/时间戳等任何一列都会让前端看到空白。
+     */
+    @Test
+    void versionDetailShouldMapEveryVersionField() {
+        WbIndexSet set = indexSet();
+        set.setCurrentPublishedVersionId(20L);
+        when(indexSetDbService.getByKb(1L)).thenReturn(set);
+        WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.ONLINE.name());
+        ComboSnapshot combo = comboAll();
+        combo.setFileScopeMode("LIST");
+        combo.setFileResultIds(List.of(10L, 20L));
+        version.setComboSnapshot(JsonUtil.toJsonStr(combo));
+        version.setBuildError("历史失败原因");
+        version.setTaskId(200L);
+        LocalDateTime at = LocalDateTime.of(2024, 5, 1, 10, 0);
+        version.setValidatedAt(at);
+        version.setPublishedAt(at.plusHours(1));
+        version.setPublishedBy("admin");
+        version.setRetiredAt(at.plusHours(2));
+        version.setRetiredBy("ops");
+        version.setCreateTime(at.minusDays(1));
+        when(indexVersionDbService.getById(20L)).thenReturn(version);
+
+        IndexVersionVO vo = service.versionDetail(1L, 20L);
+
+        assertEquals(20L, vo.getId());
+        assertEquals("v2", vo.getVersionNo());
+        assertEquals("LIST", vo.getFileScopeMode());
+        assertEquals(List.of(10L, 20L), vo.getFileResultIds());
+        assertEquals(IndexShape.FULL_VECTOR, vo.getShape());
+        assertEquals("chunk-hybrid-v1", vo.getChunkStrategy());
+        assertEquals("embed-default-v1", vo.getEmbedStrategy());
+        assertEquals("preproc-default-v1", vo.getStageStrategies().get(PipelineStage.PREPROCESS.name()));
+        assertEquals(7, vo.getChunkCount());
+        assertEquals(9, vo.getVectorCount());
+        assertEquals(IndexVersionStatus.ONLINE.name(), vo.getStatus());
+        assertEquals("历史失败原因", vo.getBuildError());
+        assertEquals(200L, vo.getTaskId());
+        assertEquals(at, vo.getValidatedAt());
+        assertEquals(at.plusHours(1), vo.getPublishedAt());
+        assertEquals("admin", vo.getPublishedBy());
+        assertEquals(at.plusHours(2), vo.getRetiredAt());
+        assertEquals("ops", vo.getRetiredBy());
+        assertEquals(at.minusDays(1), vo.getCreateTime());
+        assertTrue(vo.isOnline());
+    }
+
+    /**
+     * 版本详情：集合不存在、版本不存在都按 40441 处理。
+     *
+     * <p>守护 {@code versionDetail} 的两段存在性校验：缺任一段都会 NPE 或泄漏半截数据。
+     */
+    @Test
+    void versionDetailShouldRequireSetAndVersion() {
+        when(indexSetDbService.getByKb(1L)).thenReturn(null);
+        KnowledgeException noSet = assertThrows(KnowledgeException.class,
+                () -> service.versionDetail(1L, 20L));
+        assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noSet.getCode());
+
+        when(indexSetDbService.getByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.getById(20L)).thenReturn(null);
+        KnowledgeException noVersion = assertThrows(KnowledgeException.class,
+                () -> service.versionDetail(1L, 20L));
+        assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noVersion.getCode());
+    }
+
+    /**
+     * 发布：版本不存在与集合不存在都按 40441 拒绝，且不切换指针。
+     *
+     * <p>守护 {@code requireVersion}/{@code requireSetOf} 的两道兜底。
+     */
+    @Test
+    void publishShouldRequireVersionAndSet() {
+        when(indexVersionDbService.getById(20L)).thenReturn(null);
+        KnowledgeException noVersion = assertThrows(KnowledgeException.class, () -> service.publish(20L));
+        assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noVersion.getCode());
+
+        WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.READY.name());
+        when(indexVersionDbService.getById(20L)).thenReturn(version);
+        when(indexSetDbService.getById(5L)).thenReturn(null);
+        KnowledgeException noSet = assertThrows(KnowledgeException.class, () -> service.publish(20L));
+        assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noSet.getCode());
+        verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
+    }
+
+    /**
+     * 回退：目标/集合缺失 40441、当前无在线版本 40443、目标构建中 40443。
+     *
+     * <p>守护 {@code rollback} 的四道前置校验：任何一道放行都会切到不可用版本。
+     */
+    @Test
+    void rollbackShouldGuardTargetSetPointerAndBuildingStatus() {
+        when(indexVersionDbService.getById(15L)).thenReturn(null);
+        KnowledgeException noTarget = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noTarget.getCode());
+
+        WbIndexVersion target = versionRow(15L, "v1", IndexVersionStatus.RETIRED.name());
+        when(indexVersionDbService.getById(15L)).thenReturn(target);
+        when(indexSetDbService.getById(5L)).thenReturn(null);
+        KnowledgeException noSet = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noSet.getCode());
+
+        WbIndexSet noPointer = indexSet();
+        when(indexSetDbService.getById(5L)).thenReturn(noPointer);
+        KnowledgeException notPublished = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        assertEquals(ErrorCode.INDEX_NOT_PUBLISHED.getCode(), notPublished.getCode());
+
+        WbIndexSet set = indexSet();
+        set.setCurrentPublishedVersionId(10L);
+        when(indexSetDbService.getById(5L)).thenReturn(set);
+        WbIndexVersion building = versionRow(15L, "v1", IndexVersionStatus.BUILDING.name());
+        when(indexVersionDbService.getById(15L)).thenReturn(building);
+        KnowledgeException conflict = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), conflict.getCode());
+        verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
+    }
+
+    /**
+     * 回退复活目标版本时要清掉退役留痕。
+     *
+     * <p>守护 {@code rollback} 的复活清场：留着 retiredAt/retiredBy 等于版本既在线又已退役。
+     */
+    @Test
+    void rollbackShouldClearRetiredTraceOnTarget() {
+        WbIndexVersion target = versionRow(15L, "v1", IndexVersionStatus.RETIRED.name());
+        target.setRetiredAt(LocalDateTime.of(2024, 1, 1, 0, 0));
+        target.setRetiredBy("ops");
+        WbIndexSet set = indexSet();
+        set.setCurrentPublishedVersionId(10L);
+        WbIndexVersion current = versionRow(10L, "v2", IndexVersionStatus.ONLINE.name());
+        when(indexVersionDbService.getById(15L)).thenReturn(target);
+        when(indexVersionDbService.getById(10L)).thenReturn(current);
+        when(indexSetDbService.getById(5L)).thenReturn(set);
+        when(fileResultDbService.listByKb(1L)).thenReturn(List.of(file(10L)));
+        stubCompleteCombo(file(10L));
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of(current, target));
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v3");
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            inv.<WbIndexVersion>getArgument(0).setId(101L);
+            return true;
+        });
+        when(pipelineTaskDbService.save(any(WbPipelineTask.class))).thenAnswer(inv -> {
+            inv.<WbPipelineTask>getArgument(0).setId(201L);
+            return true;
+        });
+
+        service.rollback(15L);
+
+        assertNull(target.getRetiredAt());
+        assertNull(target.getRetiredBy());
+        assertEquals(IndexVersionStatus.ONLINE.name(), target.getStatus());
+    }
+
+    /**
+     * 回收：构建中版本与已退役版本都不允许回收。
+     *
+     * <p>守护 {@code recycle} 的两道状态护栏：退役版本是回退目标，删了就回不去。
+     */
+    @Test
+    void recycleShouldRejectBuildingAndRetiredVersions() {
+        WbIndexVersion building = versionRow(30L, "v3", IndexVersionStatus.BUILDING.name());
+        when(indexVersionDbService.getById(30L)).thenReturn(building);
+        when(indexSetDbService.getById(5L)).thenReturn(indexSet());
+        KnowledgeException buildingError = assertThrows(KnowledgeException.class,
+                () -> service.recycle(30L));
+        assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), buildingError.getCode());
+
+        WbIndexVersion retired = versionRow(31L, "v2", IndexVersionStatus.RETIRED.name());
+        when(indexVersionDbService.getById(31L)).thenReturn(retired);
+        KnowledgeException retiredError = assertThrows(KnowledgeException.class,
+                () -> service.recycle(31L));
+        assertEquals(ErrorCode.PARAM_INVALID.getCode(), retiredError.getCode());
+        verify(milvusIndexPort, never()).drop(anyString());
+        verify(indexVersionDbService, never()).removeById(anyLong());
+    }
+
+    /**
+     * 集合初始化失败：版本行落 FAILED 并带上截断后的错误原因。
+     *
+     * <p>守护 {@code markFailed}：不置 FAILED 会让版本永远停在 CREATED、对账也看不出原因。
+     */
+    @Test
+    void registerCollectionFailureShouldMarkVersionFailed() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of());
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v1");
+        AtomicReference<WbIndexVersion> saved = new AtomicReference<>();
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            WbIndexVersion v = inv.getArgument(0);
+            v.setId(100L);
+            saved.set(v);
+            return true;
+        });
+        doThrow(new IllegalStateException("milvus 不可用"))
+                .when(milvusIndexPort).ensureCollection("kb_1_v1", 1024);
+        when(indexSetDbService.getByKb(1L)).thenReturn(null);
+
+        service.onFileProductsReady(10L);
+
+        assertEquals(IndexVersionStatus.FAILED.name(), saved.get().getStatus());
+        assertTrue(saved.get().getBuildError().contains("集合初始化失败"), saved.get().getBuildError());
+        verify(indexVersionDbService).updateById(saved.get());
+        verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
+    }
+
+    /**
+     * 向量产物读取失败（装配返回 null）：版本行落 FAILED，不再追加。
+     *
+     * <p>守护 {@code onFileProductsReady} 的空产物兜底：静默跳过会让版本永远缺这批文件。
+     */
+    @Test
+    void onFileProductsReadyWhenRowsUnavailableShouldMarkFailed() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
+        when(indexRowAssembler.assemble(eq(10L), anyString(), any(), any())).thenReturn(null);
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        AtomicReference<WbIndexVersion> saved = new AtomicReference<>();
+        when(indexVersionDbService.listByIndexSetId(5L)).thenAnswer(inv -> saved.get() == null
+                ? List.of() : List.of(saved.get()));
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v1");
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            WbIndexVersion v = inv.getArgument(0);
+            v.setId(100L);
+            v.setStatus(IndexVersionStatus.CREATED.name());
+            saved.set(v);
+            return true;
+        });
+
+        service.onFileProductsReady(10L);
+
+        assertEquals(IndexVersionStatus.FAILED.name(), saved.get().getStatus());
+        assertTrue(saved.get().getBuildError().contains("向量产物读取失败"), saved.get().getBuildError());
+        verify(milvusIndexPort, never()).append(anyString(), anyList());
+    }
+
+    /**
+     * 追加只统计带向量的行，并清掉历史失败原因。
+     *
+     * <p>守护 {@code updateLedger}：把无向量行也计入向量数会虚报；留着旧 buildError 会一直显示失败。
+     */
+    @Test
+    void appendShouldCountOnlyVectorRowsAndClearBuildError() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
+        WbIndexVersion active = versionRow(100L, "v1", IndexVersionStatus.READY.name());
+        active.setComboSnapshot(JsonUtil.toJsonStr(comboAll()));
+        active.setChunkCount(4);
+        active.setVectorCount(3);
+        active.setBuildError("上次失败");
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of(active));
+        IndexRow withVector = indexRow();
+        IndexRow withoutVector = indexRow();
+        withoutVector.setChunkId("chunk-2");
+        withoutVector.setVector(null);
+        when(indexRowAssembler.assemble(eq(10L), anyString(), any(), any()))
+                .thenReturn(List.of(withVector, withoutVector));
+        when(milvusIndexPort.listChunkIds("kb_1_v1", 10L)).thenReturn(List.of("chunk-1", "chunk-2"));
+        when(indexComboService.resolveBoundCombo(1L)).thenReturn(comboAll());
+        // 追加后 READY 无变化，自动发布交给 self 代理（桩返回实例即可）
+        when(indexSetDbService.getByKb(1L)).thenReturn(null);
+
+        service.onFileProductsReady(10L);
+
+        assertEquals(6, active.getChunkCount());
+        assertEquals(4, active.getVectorCount());
+        assertNull(active.getBuildError());
+        verify(indexVersionDbService).updateById(active);
+    }
+
+    /**
+     * 拓扑补齐：已有目标预处理链但缺目标切片 → 投递切片并显式绑定上游预处理产物。
+     *
+     * <p>守护 {@code backfillFile} 的切片补齐分支：漏带 upstreamProductId 会混用新旧预处理口径。
+     */
+    @Test
+    void backfillShouldEnqueueChunkWithMatchedUpstreamProduct() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v2", "chunk-hybrid-v2", "embed-default-v2");
+        stubOnlineCombo("v0", comboAll());
+        // 已有一条目标预处理口径的切片（策略不同） → 缺目标切片
+        WbChunkSet existing = new WbChunkSet();
+        existing.setId(1L);
+        existing.setFileResultId(10L);
+        existing.setChunkStrategyVersion("chunk-hybrid-v2");
+        existing.setUpstreamProductId(100L);
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(existing));
+        when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
+        WbPipelineStrategyVersion chunkStrategy = new WbPipelineStrategyVersion();
+        chunkStrategy.setId(88L);
+        when(strategyVersionDbService.getByTypeAndNameAndVersion("CHUNK", "chunk-hybrid", "v1"))
+                .thenReturn(chunkStrategy);
+        // 预处理产物快照：一条坏快照 + 一条匹配快照（坏快照只告警不中断）
+        WbPipelineProduct broken = new WbPipelineProduct();
+        broken.setId(500L);
+        broken.setStage(PipelineStage.PREPROCESS.name());
+        broken.setCapabilitySnapshot("not-json");
+        WbPipelineProduct matched = new WbPipelineProduct();
+        matched.setId(501L);
+        matched.setStage(PipelineStage.PREPROCESS.name());
+        matched.setCapabilitySnapshot("{\"type\":\"PREPROCESS\",\"name\":\"preproc-default\",\"version\":\"v1\"}");
+        when(productDbService.listByFileResultId(10L)).thenReturn(List.of(broken, matched));
+        stubAppendTarget();
+
+        service.onFileProductsReady(10L);
+
+        verify(chunkControlService).chunk(10L, 88L, 501L);
+        verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
+    }
+
+    /**
+     * 拓扑补齐：切片产物已齐（目标策略 + 命中血缘）→ 不再投递，等手动向量化。
+     *
+     * <p>守护 {@code backfillFile} 的「已齐」分支：重复投递会撞执行键、白跑任务。
+     */
+    @Test
+    void backfillShouldSkipWhenTargetChunkAlreadyExists() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v2", "chunk-hybrid-v2", "embed-default-v2");
+        stubOnlineCombo("v0", comboAll());
+        WbChunkSet matchedChunk = new WbChunkSet();
+        matchedChunk.setId(1L);
+        matchedChunk.setFileResultId(10L);
+        matchedChunk.setChunkStrategyVersion("chunk-hybrid-v1");
+        matchedChunk.setUpstreamProductId(100L);
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(matchedChunk));
+        when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
+        stubAppendTarget();
+
+        service.onFileProductsReady(10L);
+
+        verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
+        verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+    }
+
+    /**
+     * 拓扑补齐中止：目标预处理策略行不存在 / 目标切片策略行不存在 / 上游预处理产物缺失。
+     *
+     * <p>守护 {@code backfillFile} 的三处中止：策略行或上游产物缺失时投递出去的任务必然失败。
+     */
+    @Test
+    void backfillShouldStopWhenStrategyOrUpstreamMissing() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v2", "chunk-hybrid-v2", "embed-default-v2");
+        stubOnlineCombo("v0", comboAll());
+        stubAppendTarget();
+        // ① 无任何切片 → 走预处理投递；目标策略行不存在 → 中止
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of());
+        when(strategyVersionDbService.getByTypeAndNameAndVersion("PREPROCESS", "preproc-default", "v1"))
+                .thenReturn(null);
+
+        service.onFileProductsReady(10L);
+
+        verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
+        verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+    }
+
+    /**
+     * 拓扑补齐中止：预处理口径已命中但目标切片策略行不存在。
+     *
+     * <p>守护 {@code backfillFile} 的切片策略缺失分支：投出去的切片任务会因策略不存在失败。
+     */
+    @Test
+    void backfillShouldStopWhenChunkStrategyMissing() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v2", "chunk-hybrid-v2", "embed-default-v2");
+        stubOnlineCombo("v0", comboAll());
+        WbChunkSet existing = new WbChunkSet();
+        existing.setId(1L);
+        existing.setFileResultId(10L);
+        existing.setChunkStrategyVersion("chunk-hybrid-v2");
+        existing.setUpstreamProductId(100L);
+        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(existing));
+        when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
+        when(strategyVersionDbService.getByTypeAndNameAndVersion("CHUNK", "chunk-hybrid", "v1")).thenReturn(null);
+        stubAppendTarget();
+
+        service.onFileProductsReady(10L);
+
+        verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
+        verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
+    }
+
+    /**
+     * 活跃版本只认未终结状态：同组合的已退役版本不算活跃，绑定开启时照常登记新组合版本。
+     *
+     * <p>守护 {@code findActiveVersion} 的状态过滤：把退役版本当活跃会让新组合永远登记不上。
+     */
+    @Test
+    void registerShouldIgnoreRetiredVersionWithSameCombo() {
+        WbFileResult file = file(10L);
+        when(fileResultDbService.getById(10L)).thenReturn(file);
+        when(knowledgeBaseDbService.getById(1L)).thenReturn(stubKb());
+        stubProductCombo(file, "preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
+        WbIndexVersion retired = versionRow(90L, "v1", IndexVersionStatus.RETIRED.name());
+        retired.setComboSnapshot(JsonUtil.toJsonStr(comboAll()));
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of(retired));
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v2");
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            inv.<WbIndexVersion>getArgument(0).setId(102L);
+            return true;
+        });
+        when(indexSetDbService.getByKb(1L)).thenReturn(null);
+
+        service.onFileProductsReady(10L);
+
+        ArgumentCaptor<WbIndexVersion> versionCaptor = ArgumentCaptor.forClass(WbIndexVersion.class);
+        verify(indexVersionDbService).save(versionCaptor.capture());
+        assertEquals("v2", versionCaptor.getValue().getVersionNo());
+        assertEquals(IndexVersionStatus.READY.name(), versionCaptor.getValue().getStatus());
+        verify(milvusIndexPort).ensureCollection("kb_1_v2", 1024);
+    }
+
+    /** 知识库夹具（绑定开关开启） */
+    private WbKnowledgeBase stubKb() {
+        WbKnowledgeBase kb = new WbKnowledgeBase();
+        kb.setId(1L);
+        kb.setStrategyBindingEnabled(1);
+        return kb;
+    }
+
+    /** 追加目标夹具：无活跃版本时新建组合版本（绑定开启的自动注册路径） */
+    private void stubAppendTarget() {
+        when(indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
+        when(indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of());
+        when(indexVersionDbService.nextVersionNo(5L)).thenReturn("v1");
+        when(indexVersionDbService.save(any(WbIndexVersion.class))).thenAnswer(inv -> {
+            inv.<WbIndexVersion>getArgument(0).setId(100L);
+            return true;
+        });
+    }
+
+    /** 产物链夹具：EMBED 行 → 切片行 → 预处理血缘 */
+    private void stubProductCombo(WbFileResult file, String preprocess, String chunk, String embed) {
+        WbEmbeddingSet embedRow = new WbEmbeddingSet();
+        embedRow.setId(2L);
+        embedRow.setFileResultId(file.getId());
+        embedRow.setChunkSetRef(1L);
+        embedRow.setStrategyVersion(embed);
+        embedRow.setDimension(1024);
+        when(embeddingSetDbService.listByFileResultIds(List.of(file.getId()))).thenReturn(List.of(embedRow));
+        WbChunkSet chunkRow = new WbChunkSet();
+        chunkRow.setId(1L);
+        chunkRow.setFileResultId(file.getId());
+        chunkRow.setChunkStrategyVersion(chunk);
+        chunkRow.setUpstreamProductId(100L);
+        when(chunkSetDbService.getById(1L)).thenReturn(chunkRow);
+        lenient().when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn(preprocess);
+        lenient().when(indexRowAssembler.assemble(eq(file.getId()), eq("userA"), eq(chunkRow), eq(embedRow)))
+                .thenReturn(List.of(indexRow()));
+    }
+
+    /** 在线版本夹具：集合指针 + 版本行（组合由入参指定） */
+    private void stubOnlineCombo(String versionNo, ComboSnapshot combo) {
+        WbIndexSet set = indexSet();
+        set.setCurrentPublishedVersionId(50L);
+        when(indexSetDbService.getByKb(1L)).thenReturn(set);
+        WbIndexVersion online = new WbIndexVersion();
+        online.setId(50L);
+        online.setIndexSetId(5L);
+        online.setVersionNo(versionNo);
+        online.setStatus(IndexVersionStatus.ONLINE.name());
+        online.setComboSnapshot(JsonUtil.toJsonStr(combo));
+        when(indexVersionDbService.getById(50L)).thenReturn(online);
     }
 }

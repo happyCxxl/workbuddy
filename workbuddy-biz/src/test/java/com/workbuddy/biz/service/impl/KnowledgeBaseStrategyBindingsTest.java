@@ -147,7 +147,10 @@ class KnowledgeBaseStrategyBindingsTest {
 
         assertEquals(1, result.size());
         assertEquals(2L, result.get(0).getKnowledgeBaseId());
+        assertEquals("CHUNK", result.get(0).getStrategyType());
+        assertEquals(500L, result.get(0).getStrategyVersionId());
         assertEquals("chunk-hybrid", result.get(0).getStrategyName());
+        assertEquals("v1", result.get(0).getStrategyVersion());
     }
 
     /**

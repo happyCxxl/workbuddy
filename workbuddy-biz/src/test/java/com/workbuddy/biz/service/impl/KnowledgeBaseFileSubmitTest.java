@@ -179,6 +179,11 @@ class KnowledgeBaseFileSubmitTest {
         });
     }
 
+    /**
+     * 提交成功：建档三写逐列落库，不登记任务。
+     *
+     * <p>守护 {@code submit}：漏写任一列或顺手建任务即失败。
+     */
     @Test
     void submitSuccessShouldWriteThreeWithoutTask() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
@@ -193,10 +198,137 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals(SubmitStatus.PASS.name(), response.getSubmitLog().getStatus());
         // 手动逐环节口径：提交只建档三写，不登记任务（解析由页面触发）
         assertNull(response.getPipelineTaskId());
-        verify(kbFileResultDbService).save(any(WbFileResult.class));
         verify(pipelineTaskDbService, never()).save(any(WbPipelineTask.class));
+
+        // 来源文件：校验结果与元数据逐列落库
+        ArgumentCaptor<WbSourceFile> sourceCaptor = ArgumentCaptor.forClass(WbSourceFile.class);
+        verify(sourceFileDbService).save(sourceCaptor.capture());
+        WbSourceFile savedSource = sourceCaptor.getValue();
+        assertEquals("88", savedSource.getFileId());
+        assertEquals("sha256-abc", savedSource.getSha256());
+        assertEquals("招标文件.pdf", savedSource.getFileName());
+        assertEquals("application/pdf", savedSource.getMimeType());
+        assertEquals(100L, savedSource.getFileSize());
+        assertEquals(Long.valueOf(ME), savedSource.getUserId());
+        assertNotNull(savedSource.getInputSnapshot());
+
+        // 文件结果：知识库、来源文件、归属缺一不可
+        ArgumentCaptor<WbFileResult> resultCaptor = ArgumentCaptor.forClass(WbFileResult.class);
+        verify(kbFileResultDbService).save(resultCaptor.capture());
+        WbFileResult savedResult = resultCaptor.getValue();
+        assertEquals(1L, savedResult.getKnowledgeBaseId());
+        assertEquals(1L, savedResult.getSourceFileId());
+        assertEquals(Long.valueOf(ME), savedResult.getUserId());
+        assertNotNull(savedResult.getOwner());
+
+        // 提交记录：请求与校验结果逐列落库
+        ArgumentCaptor<WbSubmitLog> logCaptor = ArgumentCaptor.forClass(WbSubmitLog.class);
+        verify(submitLogDbService).save(logCaptor.capture());
+        WbSubmitLog savedLog = logCaptor.getValue();
+        assertEquals(1L, savedLog.getKnowledgeBaseId());
+        assertEquals("req-1", savedLog.getRequestId());
+        assertEquals("88", savedLog.getFileId());
+        assertEquals("sha256-abc", savedLog.getSha256());
+        assertEquals("招标文件.pdf", savedLog.getFileName());
+        assertEquals(10L, savedLog.getFileResultId());
+        assertEquals(SubmitStatus.PASS.name(), savedLog.getStatus());
+        assertEquals(Long.valueOf(ME), savedLog.getUserId());
     }
 
+    /**
+     * 来源文件已存在时直接复用，不再新建。
+     *
+     * <p>守护 {@code findOrCreateSourceFile} 的复用分支：新建会造成同一 fileId 两行档案。
+     */
+    @Test
+    void submitShouldReuseExistingSourceFile() {
+        when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
+        when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
+        when(fileValidator.validate("88")).thenReturn(passResult());
+        when(fileStorage.metadata("88")).thenReturn(metadata());
+        WbSourceFile existing = new WbSourceFile();
+        existing.setId(7L);
+        existing.setFileId("88");
+        when(sourceFileDbService.findByFileId("88")).thenReturn(existing);
+        when(kbFileResultDbService.save(any(WbFileResult.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbFileResult.class).setId(10L);
+            return true;
+        });
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSubmitLog.class).setId(30L);
+            return true;
+        });
+
+        service.submit(1L, request());
+
+        ArgumentCaptor<WbFileResult> captor = ArgumentCaptor.forClass(WbFileResult.class);
+        verify(kbFileResultDbService).save(captor.capture());
+        assertEquals(7L, captor.getValue().getSourceFileId());
+        verify(sourceFileDbService, never()).save(any(WbSourceFile.class));
+    }
+
+    /**
+     * 校验失败时的 FAIL 记录：文件名校验阶段能取到就落库。
+     *
+     * <p>守护 {@code recordFailAndReturn} 的字段搬运：缺 fileId / requestId / 空 sha256 占位即失败。
+     */
+    @Test
+    void submitFailLogShouldCarryAllFields() {
+        when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
+        when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
+        when(fileValidator.validate("88"))
+                .thenReturn(FileValidationResult.fail(FileValidationFailReason.FILE_ENCRYPTED));
+        when(fileStorage.metadata("88")).thenReturn(metadata());
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSubmitLog.class).setId(30L);
+            return true;
+        });
+
+        service.submit(1L, request());
+
+        ArgumentCaptor<WbSubmitLog> captor = ArgumentCaptor.forClass(WbSubmitLog.class);
+        verify(submitLogDbService).save(captor.capture());
+        WbSubmitLog saved = captor.getValue();
+        assertEquals(1L, saved.getKnowledgeBaseId());
+        assertEquals("req-1", saved.getRequestId());
+        assertEquals("88", saved.getFileId());
+        assertEquals("招标文件.pdf", saved.getFileName());
+        assertEquals("", saved.getSha256());
+        assertEquals(SubmitStatus.FAIL.name(), saved.getStatus());
+        assertEquals(FileValidationFailReason.FILE_ENCRYPTED.name(), saved.getFailReason());
+        assertEquals(Long.valueOf(ME), saved.getUserId());
+    }
+
+    /**
+     * 校验失败且元数据不可得：文件名存空串占位，不因取不到元数据再次失败。
+     *
+     * <p>守护 {@code recordFailAndReturn} 的兜底分支：抛异常会让"文件不存在"连失败日志都留不下。
+     */
+    @Test
+    void submitFailLogShouldTolerateMissingMetadata() {
+        when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
+        when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
+        when(fileValidator.validate("88"))
+                .thenReturn(FileValidationResult.fail(FileValidationFailReason.FILE_NOT_FOUND));
+        when(fileStorage.metadata("88")).thenThrow(new IllegalStateException("对象不存在"));
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSubmitLog.class).setId(30L);
+            return true;
+        });
+
+        service.submit(1L, request());
+
+        ArgumentCaptor<WbSubmitLog> captor = ArgumentCaptor.forClass(WbSubmitLog.class);
+        verify(submitLogDbService).save(captor.capture());
+        assertEquals("", captor.getValue().getFileName());
+        assertEquals(SubmitStatus.FAIL.name(), captor.getValue().getStatus());
+    }
+
+    /**
+     * 校验失败：只写 FAIL 日志，不建结果。
+     *
+     * <p>守护 {@code submit}：失败也建结果即失败。
+     */
     @Test
     void submitValidationFailShouldOnlyWriteFailLog() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
@@ -217,6 +349,11 @@ class KnowledgeBaseFileSubmitTest {
         verify(pipelineTaskDbService, never()).save(any(WbPipelineTask.class));
     }
 
+    /**
+     * 文件不存在：同样留一条 FAIL 日志。
+     *
+     * <p>守护 {@code submit}：异常吞掉不留痕即失败。
+     */
     @Test
     void submitFileNotFoundShouldRecordFailLog() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
@@ -235,6 +372,11 @@ class KnowledgeBaseFileSubmitTest {
         verify(kbFileResultDbService, never()).save(any(WbFileResult.class));
     }
 
+    /**
+     * 幂等：同 requestId 回放已有记录并回填解析任务。
+     *
+     * <p>守护 {@code submit}：重复建档即失败。
+     */
     @Test
     void submitIdempotentReplayShouldReturnExisting() {
         WbSubmitLog existing = new WbSubmitLog();
@@ -255,6 +397,11 @@ class KnowledgeBaseFileSubmitTest {
         verify(knowledgeBaseDbService, never()).getActiveById(any());
     }
 
+    /**
+     * 并发：提交日志撞唯一键时回放对方记录。
+     *
+     * <p>守护 {@code submit}：冲突抛给用户即失败。
+     */
     @Test
     void submitLogDuplicateKeyShouldReplayExisting() {
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
@@ -287,6 +434,11 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals(20L, response.getPipelineTaskId());
     }
 
+    /**
+     * 并发：来源文件撞唯一键时复用已有行。
+     *
+     * <p>守护 {@code submit}：重复建档即失败。
+     */
     @Test
     void sourceFileDuplicateKeyShouldReuseExistingRow() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
@@ -316,6 +468,11 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals(7L, captor.getValue().getSourceFileId());
     }
 
+    /**
+     * 提交：停用库拒绝（40402）。
+     *
+     * <p>守护 {@code submit}：停用库可提交即失败。
+     */
     @Test
     void submitToDisabledKbShouldThrow() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
@@ -329,6 +486,11 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals(ErrorCode.KB_NOT_ACTIVE, e.getErrorCode());
     }
 
+    /**
+     * 提交：别人的库按不存在处理。
+     *
+     * <p>守护 {@code submit}：越权可提交即失败。
+     */
     @Test
     void submitToOthersKbShouldBehaveAsNotFound() {
         // 看不到的库也不能往里塞文档
@@ -343,6 +505,11 @@ class KnowledgeBaseFileSubmitTest {
         verify(sourceFileDbService, never()).save(any(WbSourceFile.class));
     }
 
+    /**
+     * 提交：缺幂等键拒绝（400xx）。
+     *
+     * <p>守护 {@code submit}：缺键放行即失败。
+     */
     @Test
     void submitMissingRequestIdShouldThrow() {
         FileSubmitDTO request = request();
@@ -352,6 +519,11 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals(ErrorCode.REQUEST_ID_MISSING, e.getErrorCode());
     }
 
+    /**
+     * 文件结果分页：五环节最新状态按管线顺序附着。
+     *
+     * <p>守护 {@code pageFileResults}：取旧任务或乱序即失败。
+     */
     @Test
     void pageFileResultsShouldAttachLatestStageStatuses() {
         WbFileResult fr10 = new WbFileResult();
@@ -482,6 +654,11 @@ class KnowledgeBaseFileSubmitTest {
         }
     }
 
+    /**
+     * 文件结果分页：两个数据源的显示名分别下发。
+     *
+     * <p>守护 {@code pageFileResults}：同类型数据源无法区分即失败。
+     */
     @Test
     void pageFileResultsShouldAttachSourceNames() {
         stubStorageNames("MinIO-A", "MinIO-B");
@@ -493,6 +670,11 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals("MinIO-B", record.getCurrentStorageSourceName());
     }
 
+    /**
+     * 文件结果分页：数据源未注册时显示名留空。
+     *
+     * <p>守护 {@code pageFileResults}：空指针或错名即失败。
+     */
     @Test
     void pageFileResultsShouldLeaveSourceNameEmptyWhenSourceUnregistered() {
         // 数据源已删：档案仍记着 ID，注册表给不出显示名
@@ -505,6 +687,11 @@ class KnowledgeBaseFileSubmitTest {
         assertNull(record.getCurrentStorageSourceName());
     }
 
+    /**
+     * 文件结果分页：合法环节只做校验不额外过滤。
+     *
+     * <p>守护 {@code pageFileResults}：误过滤或多次查询即失败。
+     */
     @Test
     void pageFileResultsShouldValidateStageOnly() {
         when(kbFileResultDbService.pageByKb(1L, 10L, 1L))
@@ -519,6 +706,11 @@ class KnowledgeBaseFileSubmitTest {
         verify(kbFileResultDbService, times(4)).pageByKb(1L, 10L, 1L);
     }
 
+    /**
+     * 文件结果分页：未知环节按 40001 拒绝。
+     *
+     * <p>守护 {@code pageFileResults}：未知环节被放行即失败。
+     */
     @Test
     void pageFileResultsShouldRejectUnknownStage() {
         KnowledgeException e = assertThrows(KnowledgeException.class,
