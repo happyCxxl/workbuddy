@@ -50,6 +50,11 @@ class WbPipelineTaskDbServiceImplTest {
                 WbPipelineTask.class);
     }
 
+    /**
+     * 补投候选：排队态 + 创建时间早于阈值。
+     *
+     * <p>守护 {@code listStaleQueued}：条件写错即补错任务。
+     */
     @Test
     void listStaleQueuedShouldFilterQueuedBeforeThreshold() {
         WbPipelineTask task = new WbPipelineTask();
@@ -69,6 +74,11 @@ class WbPipelineTaskDbServiceImplTest {
         }));
     }
 
+    /**
+     * 孤儿运行：运行态 + 开始时间早于阈值。
+     *
+     * <p>守护 {@code listStaleRunning}：条件写错即误判孤儿。
+     */
     @Test
     void listStaleRunningShouldFilterRunningBeforeThreshold() {
         WbPipelineTask task = new WbPipelineTask();
@@ -88,6 +98,11 @@ class WbPipelineTaskDbServiceImplTest {
         }));
     }
 
+    /**
+     * 终态回写：RUNNING 条件更新 + 结束时间与错误列。
+     *
+     * <p>守护 {@code finish}：条件或 SET 列缺失即并发写错。
+     */
     @Test
     void finishShouldConditionallyUpdateRunningToTerminal() {
         when(mapper.update(isNull(), any())).thenReturn(1);
@@ -111,6 +126,11 @@ class WbPipelineTaskDbServiceImplTest {
         }));
     }
 
+    /**
+     * 终态回写：非法目标状态在 SQL 前拒绝。
+     *
+     * <p>守护 {@code finish}：非法迁移落库即失败。
+     */
     @Test
     void finishShouldRejectTargetOutsideRunningAllowedSetBeforeAnySql() {
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
@@ -120,6 +140,11 @@ class WbPipelineTaskDbServiceImplTest {
         verify(mapper, never()).update(any(), any());
     }
 
+    /**
+     * 终态回写：条件未命中返回 0。
+     *
+     * <p>守护 {@code finish}：未命中也报成功即失败。
+     */
     @Test
     void finishShouldReturnZeroWhenConditionalUpdateMatchesNoRow() {
         when(mapper.update(isNull(), any())).thenReturn(0);
@@ -129,11 +154,39 @@ class WbPipelineTaskDbServiceImplTest {
         verify(mapper).update(isNull(), any());
     }
 
+    /**
+     * 排队置失败：已被抢走时返回 0。
+     *
+     * <p>守护 {@code failQueued}：未命中报成功即失败。
+     */
     @Test
     void failQueuedShouldReturnZeroWhenClaimWon() {
         when(mapper.update(isNull(), any())).thenReturn(0);
 
         assertEquals(0, impl.failQueued(9L, "TASK_ENQUEUE_FAILED", "入队失败"));
+    }
+
+    /**
+     * 排队态置失败：命中排队行时返回真实影响行数（不是恒 0）。
+     *
+     * <p>守护 {@code failQueued}/{@code finishFrom} 的返回值：恒 0 会让调用方误判"状态已被别人改过"。
+     */
+    @Test
+    void failQueuedShouldReturnAffectedRows() {
+        when(mapper.update(isNull(), any())).thenReturn(1);
+
+        assertEquals(1, impl.failQueued(9L, "TASK_ENQUEUE_FAILED", "入队失败"));
+
+        verify(mapper).update(isNull(), argThat(wrapper -> {
+            AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
+            // WHERE 参数惰性物化：先取 SQL 片段再断言参数集合
+            w.getSqlSegment();
+            String set = w.getSqlSet();
+            return set.contains("status") && set.contains("error_code") && set.contains("error_msg")
+                    && set.contains("finished_at")
+                    && w.getParamNameValuePairs().containsValue("QUEUED")
+                    && w.getParamNameValuePairs().containsValue("FAILED");
+        }));
     }
 
     /**
@@ -150,7 +203,7 @@ class WbPipelineTaskDbServiceImplTest {
         WbPipelineTask result = impl.getByExecKey(7L, "PARSE", 3L, 4L);
 
         assertEquals(1L, result.getId());
-        verify(mapper).selectOne(argThat(wrapper -> {
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).selectOne(argThat(wrapper -> {
             AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
             String segment = w.getSqlSegment();
             return segment.contains("file_result_id") && segment.contains("stage")
@@ -169,7 +222,13 @@ class WbPipelineTaskDbServiceImplTest {
         when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(null);
 
         assertNull(impl.getByFileResultIdAndStage(7L, "CHUNK"));
-        verify(mapper).selectOne(argThat(wrapper -> {
+        // 命中时必须返回该行（恒返回 null 会让"最新任务"永远查不到）
+        WbPipelineTask hit = new WbPipelineTask();
+        hit.setId(5L);
+        when(mapper.selectOne(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(hit);
+        assertEquals(5L, impl.getByFileResultIdAndStage(7L, "CHUNK").getId());
+        // 同一查询执行两次（先空后有）：按至少一次验证条件
+        verify(mapper, org.mockito.Mockito.atLeastOnce()).selectOne(argThat(wrapper -> {
             AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;
             String segment = w.getSqlSegment();
             return segment.contains("file_result_id") && segment.contains("stage")
@@ -278,9 +337,9 @@ class WbPipelineTaskDbServiceImplTest {
      */
     @Test
     void listByFileResultIdShouldFilterByFileAndOrderAsc() {
-        when(mapper.selectList(any())).thenReturn(List.of(new WbPipelineTask()));
+        when(mapper.selectList(any())).thenReturn(List.of(new WbPipelineTask(), new WbPipelineTask()));
 
-        impl.listByFileResultId(7L);
+        assertEquals(2, impl.listByFileResultId(7L).size());
 
         verify(mapper).selectList(argThat(wrapper -> {
             AbstractWrapper<?, ?, ?> w = (AbstractWrapper<?, ?, ?>) wrapper;

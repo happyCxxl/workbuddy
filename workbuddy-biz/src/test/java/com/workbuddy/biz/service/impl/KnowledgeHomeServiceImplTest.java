@@ -180,7 +180,7 @@ class KnowledgeHomeServiceImplTest {
     void recentSubmitsShouldAssembleRowsWithLookups() {
         WbSubmitLog hit = submitRow(11L, "招标文件.pdf", 1L, "file-1", "SUCCESS", null);
         WbSubmitLog failed = submitRow(12L, "损坏文件.docx", 99L, "file-2", "FAIL", "FILE_TOO_LARGE");
-        WbSubmitLog noKb = submitRow(13L, "遗留记录.txt", null, null, "FAIL", null);
+        WbSubmitLog noKb = submitRow(13L, "遗留记录.txt", null, "  ", "FAIL", null);
         Page<WbSubmitLog> page = new Page<>(1, 10, 3);
         page.setRecords(List.of(hit, failed, noKb));
         when(submitLogDbService.pageRecentByUser(1L, 10L, 9L)).thenReturn(page);
@@ -197,11 +197,29 @@ class KnowledgeHomeServiceImplTest {
         IPage<com.workbuddy.common.dto.response.home.HomeRecentSubmitVO> result =
                 service.recentSubmits(query(1L, 10L));
 
+        // 空知识库 ID 与空白文件 ID 不进批量反查（否则会拿 null/空白去查库）
+        @SuppressWarnings("unchecked")
+        org.mockito.ArgumentCaptor<java.util.Collection<Long>> kbIds =
+                org.mockito.ArgumentCaptor.forClass(java.util.Collection.class);
+        org.mockito.Mockito.verify(knowledgeBaseDbService).listByIds(kbIds.capture());
+        assertEquals(java.util.Set.of(1L, 99L), new java.util.HashSet<>(kbIds.getValue()));
+        @SuppressWarnings("unchecked")
+        org.mockito.ArgumentCaptor<java.util.Collection<String>> fileIds =
+                org.mockito.ArgumentCaptor.forClass(java.util.Collection.class);
+        org.mockito.Mockito.verify(sourceFileDbService).listByFileIds(fileIds.capture());
+        assertEquals(java.util.Set.of("file-1", "file-2"), new java.util.HashSet<>(fileIds.getValue()));
+
         assertEquals(3, result.getRecords().size());
+        assertEquals(11L, result.getRecords().get(0).getId());
+        assertEquals("招标文件.pdf", result.getRecords().get(0).getFileName());
+        assertEquals(1L, result.getRecords().get(0).getKnowledgeBaseId());
+        assertEquals("SUCCESS", result.getRecords().get(0).getStatus());
+        assertEquals(java.time.LocalDateTime.of(2026, 10, 9, 10, 0), result.getRecords().get(0).getCreateTime());
         assertEquals("标书库", result.getRecords().get(0).getKnowledgeBaseName());
         assertEquals("PDF", result.getRecords().get(0).getFileType());
         // 库已删（反查不到）回落占位，不让列表行空白
         assertEquals("知识库 99", result.getRecords().get(1).getKnowledgeBaseName());
+        assertEquals("FILE_TOO_LARGE", result.getRecords().get(1).getFailReason());
         assertEquals("文件超过大小上限", result.getRecords().get(1).getFailReasonLabel());
         // 校验失败的行没有来源文件，类型留空
         assertNull(result.getRecords().get(2).getFileType());
@@ -294,6 +312,7 @@ class KnowledgeHomeServiceImplTest {
         row.setFileId(fileId);
         row.setStatus(status);
         row.setFailReason(failReason);
+        row.setCreateTime(java.time.LocalDateTime.of(2026, 10, 9, 10, 0));
         return row;
     }
 }

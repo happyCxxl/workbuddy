@@ -408,6 +408,7 @@ class SearchServiceImplTest {
         run.setRuleNameVersion("hybrid-rrf-k60-top10-v1");
         run.setQuery("保证金");
         run.setElapsedMs(88);
+        run.setCreateTime(java.time.LocalDateTime.of(2026, 10, 9, 10, 0));
         when(retrievalRunDbService.listByKb(9L, 5)).thenReturn(List.of(run));
 
         List<com.workbuddy.common.dto.response.retrieval.RetrievalRunVO> runs = service.listRuns(9L, 5);
@@ -420,6 +421,7 @@ class SearchServiceImplTest {
         assertEquals("hybrid-rrf-k60-top10-v1", runs.get(0).getRuleNameVersion());
         assertEquals("保证金", runs.get(0).getQuery());
         assertEquals(88L, runs.get(0).getElapsedMs().longValue());
+        assertEquals(java.time.LocalDateTime.of(2026, 10, 9, 10, 0), runs.get(0).getCreateTime());
     }
 
     /**
@@ -806,6 +808,46 @@ class SearchServiceImplTest {
         assertEquals("p1", vo.getHits().getFirst().getChunkId());
         assertEquals("父片全文", vo.getHits().getFirst().getContent());
         assertTrue(vo.getHits().getFirst().getIsParent());
+    }
+
+    /**
+     * 版本行带默认规则时：运行记录要写规则 ID 与 name-version。
+     *
+     * <p>守护 {@code recordRun} 的规则列：漏写 ruleId 会让对比回放找不到规则来源。
+     */
+    @Test
+    void productionSearchWithVersionDefaultRuleShouldRecordRuleId() {
+        stubProduction(9L, comboAll(), 500L);
+        when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow());
+        when(runSettings.recordProduction()).thenReturn(true);
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(fullTextSpec());
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(fullTextHit("c1")));
+        when(retrievalRunDbService.save(any(WbRetrievalRun.class))).thenAnswer(inv -> true);
+
+        service.search(9L, request());
+
+        ArgumentCaptor<WbRetrievalRun> captor = ArgumentCaptor.forClass(WbRetrievalRun.class);
+        verify(retrievalRunDbService).save(captor.capture());
+        assertEquals(500L, captor.getValue().getRuleId());
+        assertEquals("hybrid-rrf-k60-top10-v1", captor.getValue().getRuleNameVersion());
+    }
+
+    /**
+     * 集合指针存在但版本行已不存在：按 40446 拒绝。
+     *
+     * <p>守护 {@code resolveVersion} 的产线兜底：指针悬空时不能拿 null 版本继续检索。
+     */
+    @Test
+    void productionSearchWhenPublishedVersionRowMissingShouldReject() {
+        WbIndexSet set = new WbIndexSet();
+        set.setCurrentPublishedVersionId(30L);
+        when(indexSetDbService.getByKb(9L)).thenReturn(set);
+        when(indexVersionDbService.getById(30L)).thenReturn(null);
+
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.search(9L, request()));
+
+        assertEquals(ErrorCode.INDEX_NOT_PUBLISHED, e.getErrorCode());
     }
 
     /** 生产版本夹具：在线版本 + 集合指针（版本号 v9、版本行 ID 30） */

@@ -30,6 +30,7 @@ import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -303,6 +304,83 @@ class AvatarServiceImplTest {
         when(userDbService.getById(2L)).thenReturn(user);
 
         assertNull(service.load(2L));
+    }
+
+    /**
+     * 恰好 8 字节的 PNG 头也能判型（签名本身就是 8 字节）。
+     *
+     * <p>守护 {@code resolveExtension} 的 {@code head.length >= 8} 边界：写成大于会拒掉合法 PNG。
+     */
+    @Test
+    void uploadShouldAcceptExactEightBytePngHead() {
+        stubLoginUserArchive();
+        stubPutRawEcho();
+        byte[] exactHead = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
+
+        service.upload(file(exactHead, "image/png"));
+
+        ArgumentCaptor<String> contentType = ArgumentCaptor.forClass(String.class);
+        verify(fileStorage).putRaw(anyString(), any(InputStream.class), anyLong(), contentType.capture());
+        assertEquals("image/png", contentType.getValue());
+    }
+
+    /**
+     * 恰好 2MB 放行，超 1 字节才拒绝。
+     *
+     * <p>守护 {@code upload} 的 {@code size > MAX_BYTES} 边界：写成大于等于会误拒临界文件。
+     */
+    @Test
+    void uploadShouldAcceptExactlyMaxSize() {
+        stubLoginUserArchive();
+        stubPutRawEcho();
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getSize()).thenReturn(2L * 1024 * 1024);
+        when(file.isEmpty()).thenReturn(false);
+        try {
+            when(file.getInputStream()).thenReturn(new ByteArrayInputStream(PNG_HEAD));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        assertNotNull(service.upload(file));
+    }
+
+    /**
+     * 匿名上传按 40101 拒绝；登录用户档案缺失按 404xx 拒绝。
+     *
+     * <p>守护 {@code currentUser} 的两道校验：漏一道会拿 null 用户继续写库。
+     */
+    @Test
+    void currentUserShouldRejectAnonymousAndMissingArchive() {
+        security.when(SecurityUtil::getUser).thenReturn(null);
+        KnowledgeException anonymous = assertThrows(KnowledgeException.class, () -> service.remove());
+        assertEquals(ErrorCode.UNAUTHORIZED.getCode(), anonymous.getCode());
+
+        KnowledgeUser principal = new KnowledgeUser();
+        principal.setId(1L);
+        security.when(SecurityUtil::getUser).thenReturn(principal);
+        when(userDbService.getById(1L)).thenReturn(null);
+        KnowledgeException missing = assertThrows(KnowledgeException.class, () -> service.remove());
+        assertEquals(ErrorCode.USER_NOT_FOUND.getCode(), missing.getCode());
+    }
+
+    /**
+     * 每次上传的对象键都带一组随机十六进制段（不是空串、也不是全零）。
+     *
+     * <p>守护 {@code randomSegment}：不取随机字节会让同一用户的头像键永远相同、长缓存失效。
+     */
+    @Test
+    void uploadShouldGenerateRandomSegment() {
+        stubLoginUserArchive();
+        stubPutRawEcho();
+
+        service.upload(file(PNG_HEAD, "image/png"));
+
+        ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(fileStorage).putRaw(keyCaptor.capture(), any(InputStream.class), anyLong(), anyString());
+        String key = keyCaptor.getValue();
+        assertTrue(key.matches("avatar/1/[0-9a-f]{8}\\.png"), key);
+        assertFalse(key.contains("/00000000."), key);
     }
 
     /**

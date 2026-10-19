@@ -120,6 +120,11 @@ class StructureControlServiceImplTest {
                 .thenReturn(task);
     }
 
+    /**
+     * 组装：以上游解析产物建任务并入队。
+     *
+     * <p>守护 {@code structure}：上游产物或任务字段错即失败。
+     */
     @Test
     void structureShouldCreateTaskWithUpstream() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -148,6 +153,11 @@ class StructureControlServiceImplTest {
         verify(taskQueue).enqueue(51L);
     }
 
+    /**
+     * 组装：显式指定上游产物优先。
+     *
+     * <p>守护 {@code structure}：显式档被覆盖即失败。
+     */
     @Test
     void structureShouldUseSpecifiedUpstreamProduct() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -172,6 +182,11 @@ class StructureControlServiceImplTest {
         assertEquals(88L, captor.getValue().getUpstreamProductId());
     }
 
+    /**
+     * 组装：上游产物环节不符按 40404 拒绝。
+     *
+     * <p>守护 {@code structure}：错环节产物被消费即失败。
+     */
     @Test
     void structureWithMismatchedProductShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -183,9 +198,15 @@ class StructureControlServiceImplTest {
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, 88L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
+        assertTrue(e.getMessage().contains("指定产物环节不匹配"), e.getMessage());
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 组装：上游任务未成功按 40439 拒绝。
+     *
+     * <p>守护 {@code structure}：失败上游的产物被消费即失败。
+     */
     @Test
     void structureWithFailedUpstreamTaskShouldThrow40439() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -207,6 +228,11 @@ class StructureControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 组装：上游部分成功在放行集内。
+     *
+     * <p>守护 {@code structure}：部分成功被拦即失败。
+     */
     @Test
     void structureWithPartialSuccessUpstreamTaskShouldPass() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -231,15 +257,26 @@ class StructureControlServiceImplTest {
         verify(taskQueue).enqueue(52L);
     }
 
+    /**
+     * 组装：未指定上游解析产物按 40436 拒绝。
+     *
+     * <p>守护 {@code structure}：缺上游仍建任务即失败。
+     */
     @Test
     void structureWithoutParseProductShouldThrow40436() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, null));
         assertEquals(ErrorCode.TASK_UPSTREAM_MISSING, e.getErrorCode());
+        assertTrue(e.getMessage().contains("未指定上游解析产物"), e.getMessage());
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 组装：执行键命中运行中任务按 40431 拒绝。
+     *
+     * <p>守护 {@code structure}：重复建任务即失败。
+     */
     @Test
     void structureRunningShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -264,6 +301,11 @@ class StructureControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 组装：执行键命中排队任务按 40431 拒绝。
+     *
+     * <p>守护 {@code structure}：重复建任务即失败。
+     */
     @Test
     void structureExistingQueuedTaskShouldReject40431() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -286,6 +328,11 @@ class StructureControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 详情：任务态、子步骤、摘要、大纲与告警冲突逐项下发。
+     *
+     * <p>守护 {@code structureDetail}：漏任一列即失败。
+     */
     @Test
     void detailShouldAssembleTaskStepsSummaryAndOutline() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -345,8 +392,17 @@ class StructureControlServiceImplTest {
         assertEquals("PRIMARY", detail.getOutline().get(1).getConflictStatus());
         assertEquals(2, detail.getOutline().get(2).getCells().size());
         assertTrue(detail.getOutline().get(2).getCells().getFirst().getIsHeader());
+        // 阶段统计与摘要由产物现算：漏下发会让详情页缺「结构可用」结论
+        assertNotNull(detail.getStageStats());
+        assertEquals(3, detail.getStageStats().get("elementCount"));
+        assertNotNull(detail.getStageSummary());
     }
 
+    /**
+     * 详情：无任务时各集合为空。
+     *
+     * <p>守护 {@code structureDetail}：无任务仍读产物即失败。
+     */
     @Test
     void detailWithoutTaskShouldReturnEmptyCollections() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -360,6 +416,11 @@ class StructureControlServiceImplTest {
         assertNotNull(detail.getOutline());
     }
 
+    /**
+     * 详情：指定任务环节不符按 40001 拒绝。
+     *
+     * <p>守护 {@code structureDetail}：错环节任务被展示即失败。
+     */
     @Test
     void detailWithWrongStageTaskShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -373,6 +434,11 @@ class StructureControlServiceImplTest {
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
 
+    /**
+     * 详情：本人文件结果通过归属校验。
+     *
+     * <p>守护 {@code structureDetail}：本人也被拦即失败。
+     */
     @Test
     void ownerFileResultShouldPassOwnershipCheck() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -382,6 +448,11 @@ class StructureControlServiceImplTest {
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
     }
 
+    /**
+     * 详情：产物对象位置不全按 40455 拒绝。
+     *
+     * <p>守护 {@code structureDetail}：半截位置去读对象即失败。
+     */
     @Test
     void detailWithIncompleteProductLocationShouldReject40455() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -402,6 +473,11 @@ class StructureControlServiceImplTest {
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
     }
 
+    /**
+     * 详情：产物不可读时大纲留空、不阻断。
+     *
+     * <p>守护 {@code structureDetail}：读失败抛给用户即失败。
+     */
     @Test
     void detailWithUnreadableProductShouldKeepOutlineEmpty() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());

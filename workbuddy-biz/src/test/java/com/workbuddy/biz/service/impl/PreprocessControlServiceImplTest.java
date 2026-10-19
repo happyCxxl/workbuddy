@@ -198,6 +198,11 @@ class PreprocessControlServiceImplTest {
         return row;
     }
 
+    /**
+     * 绑定策略档：任务快照、入队与响应字段。
+     *
+     * <p>守护 {@code preprocess}：快照缺策略或漏入队即失败。
+     */
     @Test
     void boundStrategyShouldDriveTaskSnapshotAndEnqueue() {
         stubCommon();
@@ -224,6 +229,11 @@ class PreprocessControlServiceImplTest {
         verify(taskQueue).enqueue(31L);
     }
 
+    /**
+     * 未绑定策略按 40438 拒绝。
+     *
+     * <p>守护 {@code preprocess}：无绑定仍建任务即失败。
+     */
     @Test
     void unboundStrategyShouldReject40438() {
         // 知识库未绑定：不再取"启用中最新"兜底，一律拒绝
@@ -237,6 +247,11 @@ class PreprocessControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 绑定开关关闭时按 40438 拒绝。
+     *
+     * <p>守护 {@code preprocess}：测评库被隐式绑定即失败。
+     */
     @Test
     void bindingSwitchOffShouldReject40438() {
         // 绑定开关关闭：即使库内存在绑定行也不生效
@@ -250,6 +265,11 @@ class PreprocessControlServiceImplTest {
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 显式策略版本解析与启用校验。
+     *
+     * <p>守护 {@code preprocess}：未知/停用版本被采用即失败。
+     */
     @Test
     void explicitStrategyVersionShouldResolveAndValidate() {
         stubCommon();
@@ -273,6 +293,11 @@ class PreprocessControlServiceImplTest {
         verify(strategyVersionDbService).getById(eq(77L));
     }
 
+    /**
+     * 未指定版本时取知识库绑定策略。
+     *
+     * <p>守护 {@code preprocess}：绑定档未生效即失败。
+     */
     @Test
     void boundStrategyShouldBeUsedWhenNoExplicitVersion() {
         stubCommon();
@@ -287,6 +312,11 @@ class PreprocessControlServiceImplTest {
         assertEquals("preproc-bound-v3", response.getStrategyVersion());
     }
 
+    /**
+     * 显式版本覆盖绑定档。
+     *
+     * <p>守护 {@code preprocess}：绑定覆盖显式即失败。
+     */
     @Test
     void explicitStrategyShouldOverrideBinding() {
         stubCommon();
@@ -311,6 +341,11 @@ class PreprocessControlServiceImplTest {
         verify(strategyBindingDbService, never()).getByKbAndType(any(), any());
     }
 
+    /**
+     * 绑定行指向的版本已失效按 40438 拒绝。
+     *
+     * <p>守护 {@code preprocess}：失效绑定被采用即失败。
+     */
     @Test
     void staleBindingShouldReject40438() {
         // 绑定行指向的策略版本行缺失：不再回退"启用中最新"，一律拒绝
@@ -325,6 +360,11 @@ class PreprocessControlServiceImplTest {
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 绑定的策略版本已停用按 40438 拒绝。
+     *
+     * <p>守护 {@code preprocess}：停用版本被采用即失败。
+     */
     @Test
     void inactiveBoundVersionShouldReject40438() {
         // 绑定行指向的策略版本行已停用：与缺失同样拒绝
@@ -341,6 +381,11 @@ class PreprocessControlServiceImplTest {
         verify(pipelineTaskDbService, never()).save(any());
     }
 
+    /**
+     * 显式版本不存在按 40433 拒绝。
+     *
+     * <p>守护 {@code preprocess}：未知版本被采用即失败。
+     */
     @Test
     void unknownStrategyVersionShouldThrow40433() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -352,6 +397,11 @@ class PreprocessControlServiceImplTest {
         verify(pipelineProductDbService, never()).getByFileResultIdAndStage(any(), any());
     }
 
+    /**
+     * 未指定上游统一结构产物按 40436 拒绝。
+     *
+     * <p>守护 {@code preprocess}：缺上游仍建任务即失败。
+     */
     @Test
     void missingUpstreamProductShouldThrow40436() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -359,10 +409,16 @@ class PreprocessControlServiceImplTest {
 
         KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, null));
         assertEquals(ErrorCode.TASK_UPSTREAM_MISSING, e.getErrorCode());
+        assertTrue(e.getMessage().contains("未指定上游统一结构产物"), e.getMessage());
         verify(pipelineTaskDbService, never()).save(any());
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 上游产出任务未成功按 40439 拒绝。
+     *
+     * <p>守护 {@code preprocess}：失败上游的产物被消费即失败。
+     */
     @Test
     void failedUpstreamTaskShouldThrow40439() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -380,6 +436,11 @@ class PreprocessControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 执行键命中 RUNNING 任务按 40431 拒绝。
+     *
+     * <p>守护 {@code preprocess}：重复建任务即失败。
+     */
     @Test
     void runningShouldReject40431() {
         stubCommon();
@@ -398,6 +459,11 @@ class PreprocessControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 执行键命中 QUEUED 任务按 40431 拒绝。
+     *
+     * <p>守护 {@code preprocess}：重复建任务即失败。
+     */
     @Test
     void existingQueuedTaskShouldReject40431() {
         stubCommon();
@@ -414,6 +480,11 @@ class PreprocessControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 执行键命中 SUCCESS 任务按 40431 拒绝。
+     *
+     * <p>守护 {@code preprocess}：已完成任务可重投即失败。
+     */
     @Test
     void succeededTaskShouldReject40431() {
         stubCommon();
@@ -430,6 +501,11 @@ class PreprocessControlServiceImplTest {
         verify(taskQueue, never()).enqueue(any());
     }
 
+    /**
+     * 显式上游产物写进任务快照。
+     *
+     * <p>守护 {@code preprocess}：上游产物丢失即失败。
+     */
     @Test
     void specifiedUpstreamProductShouldBeStoredInTask() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -454,6 +530,11 @@ class PreprocessControlServiceImplTest {
         assertEquals(34L, response.getPipelineTaskId());
     }
 
+    /**
+     * 详情：任务态、子步骤、策略与元素逐列映射。
+     *
+     * <p>守护 {@code preprocessDetail}：漏搬任一列即失败。
+     */
     @Test
     void detailShouldAssembleTaskStepsStrategyAndElements() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -510,8 +591,17 @@ class PreprocessControlServiceImplTest {
         assertEquals("amount-cn-v1", detail.getElements().get(1).getTrace().getFirst().getRule());
         assertEquals("EXCLUDE", detail.getElements().get(2).getTrace().getFirst().getAction());
         assertEquals("多页重复页眉", detail.getElements().get(2).getTrace().getFirst().getEvidence());
+        // 阶段统计与摘要由视图现算：漏下发会让详情页缺「剔除/仅标记」结论
+        assertNotNull(detail.getStageStats());
+        assertEquals(3, detail.getStageStats().get("elementCount"));
+        assertNotNull(detail.getStageSummary());
     }
 
+    /**
+     * 详情：无任务时元素为空。
+     *
+     * <p>守护 {@code preprocessDetail}：无任务仍读产物即失败。
+     */
     @Test
     void detailWithoutTaskShouldReturnEmptyElements() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -523,6 +613,11 @@ class PreprocessControlServiceImplTest {
         assertTrue(detail.getElements().isEmpty());
     }
 
+    /**
+     * 详情：指定任务环节不符按 40001 拒绝。
+     *
+     * <p>守护 {@code preprocessDetail}：错环节任务被展示即失败。
+     */
     @Test
     void detailWithWrongStageTaskShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -536,6 +631,11 @@ class PreprocessControlServiceImplTest {
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
 
+    /**
+     * 详情：产物对象位置不全按 40455 拒绝。
+     *
+     * <p>守护 {@code preprocessDetail}：半截位置去读对象即失败。
+     */
     @Test
     void detailWithIncompleteProductLocationShouldReject40455() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
@@ -556,6 +656,11 @@ class PreprocessControlServiceImplTest {
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
     }
 
+    /**
+     * 越权文件结果按 40401 拒绝。
+     *
+     * <p>守护 {@code preprocessDetail}：越权可读即失败。
+     */
     @Test
     void otherUserFileResultShouldReject40401() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
