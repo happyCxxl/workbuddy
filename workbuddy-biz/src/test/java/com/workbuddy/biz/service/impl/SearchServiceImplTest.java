@@ -33,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -40,6 +41,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -125,6 +127,11 @@ class SearchServiceImplTest {
                 .documentId(10L).parentChunkId(parentChunkId).score(0.9F).build();
     }
 
+    /**
+     * 生产检索回退链第三级：版本无默认规则、知识库无默认规则 → 引擎基线；纯全文规则不查向量。
+     *
+     * <p>守护 {@code search}：回退链断在中间或纯全文仍查 EMBED 策略行即失败。
+     */
     @Test
     void productionSearchShouldFallbackToBaselineWhenNoRuleBound() {
         // 回退链第三级：版本行无规则、kb 无默认 → 引擎基线；纯全文规则跳过向量化
@@ -155,6 +162,11 @@ class SearchServiceImplTest {
         verify(retrievalRunDbService, never()).save(any());
     }
 
+    /**
+     * 测试台：显式版本 + 显式规则，HYBRID 按 RRF 融合并落运行记录（模型接入后恢复）。
+     *
+     * <p>守护 {@code search}：融合序或记录字段错即失败。
+     */
     @Test
     // TODO 模型调用层待接入：向量通道当前恒降级，本用例待恢复
     @Disabled("模型调用层待接入：向量通道恒降级")
@@ -199,6 +211,11 @@ class SearchServiceImplTest {
         verify(retrievalRunDbService).save(any(WbRetrievalRun.class));
     }
 
+    /**
+     * 父片展开：子片命中 → 取集合内父片全文替换并标 isParent（模型接入后恢复）。
+     *
+     * <p>守护 {@code expandParent}：未替换父片全文即失败。
+     */
     @Test
     // TODO 模型调用层待接入：向量通道当前恒降级，本用例待恢复
     @Disabled("模型调用层待接入：向量通道恒降级")
@@ -238,6 +255,11 @@ class SearchServiceImplTest {
         assertTrue(vo.getHits().getFirst().getIsParent());
     }
 
+    /**
+     * EMBED 策略行快照损坏：查询向量化中止、向量通道降级为空，全文照跑且不造默认策略。
+     *
+     * <p>守护 {@code embedQuery}：抛异常给用户或伪造默认策略即失败。
+     */
     @Test
     void corruptEmbedStrategyRowShouldDegradeVectorChannel() {
         // EMBED 策略版本行配置快照坏：查询向量化中止（向量通道降级为空），全文通道照跑，不炸不造默认
@@ -268,6 +290,11 @@ class SearchServiceImplTest {
         verify(milvusIndexPort, never()).searchVector(anyString(), any());
     }
 
+    /**
+     * 引擎防御：预留能力被规则选中时拒绝执行（注册侧已拦，双保险防历史数据）。
+     *
+     * <p>守护 {@code search}：预留能力被执行即失败。
+     */
     @Test
     void lockedCapabilityRuleShouldBeRejectedAtEngine() {
         SearchDTO request = request();
@@ -287,6 +314,11 @@ class SearchServiceImplTest {
         verify(milvusIndexPort, never()).searchFullText(anyString(), any());
     }
 
+    /**
+     * 测试台入参：只给版本或只给规则按 40001 拒绝（两者必须成对）。
+     *
+     * <p>守护 {@code search}：半套参数放行即失败。
+     */
     @Test
     void benchWithPartialIdsShouldReject() {
         SearchDTO request = request();
@@ -297,6 +329,11 @@ class SearchServiceImplTest {
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
 
+    /**
+     * 生产检索：知识库没有在线版本按 40446 拒绝。
+     *
+     * <p>守护 {@code search}：无在线版本仍执行即失败。
+     */
     @Test
     void productionWithoutPublishedShouldThrow40446() {
         when(indexSetDbService.getByKb(1L)).thenReturn(null);
@@ -306,6 +343,11 @@ class SearchServiceImplTest {
         assertEquals(ErrorCode.INDEX_NOT_PUBLISHED, e.getErrorCode());
     }
 
+    /**
+     * 对比回放：直接读快照 JSON，不再执行检索。
+     *
+     * <p>守护 {@code compareRuns}：回放时重跑检索或快照字段错即失败。
+     */
     @Test
     void compareRunsShouldReplaySnapshotsWithoutReExecuting() {
         WbRetrievalRun run = new WbRetrievalRun();
@@ -322,6 +364,9 @@ class SearchServiceImplTest {
 
         assertEquals(1, vos.size());
         assertEquals("保证金", vos.getFirst().getQuery());
+        assertEquals("hybrid-rrf-k60-top10-v1", vos.getFirst().getRuleNameVersion());
+        assertEquals("v2", vos.getFirst().getVersionNo());
+        assertEquals(12L, vos.getFirst().getElapsedMs());
         assertEquals("c1", vos.getFirst().getHits().getFirst().getChunkId());
         assertEquals("快照内容", vos.getFirst().getHits().getFirst().getContent());
         assertEquals(1L, vos.getFirst().getRunId());
@@ -329,6 +374,11 @@ class SearchServiceImplTest {
         verify(milvusIndexPort, never()).searchFullText(anyString(), any());
     }
 
+    /**
+     * 对比回放：运行记录不属于该知识库按 40001 拒绝。
+     *
+     * <p>守护 {@code compareRuns}：跨库记录被回放即失败。
+     */
     @Test
     void compareRunsShouldRejectForeignRun() {
         WbRetrievalRun run = new WbRetrievalRun();
@@ -403,7 +453,7 @@ class SearchServiceImplTest {
         parent.setChunkId("p1");
         parent.setContent("整段全文");
         parent.setTitlePath("第一章");
-        parent.setDocumentId(9L);
+        parent.setDocumentId(99L);
         parent.setParentChunkId(null);
         parent.setSourceElementIds("[\"e1\"]");
         when(milvusIndexPort.queryChunkByIds("kb_9_v9", List.of("p1"))).thenReturn(List.of(parent));
@@ -417,6 +467,9 @@ class SearchServiceImplTest {
         assertEquals("整段全文", expanded.getContent());
         assertEquals("第一章", expanded.getTitlePath());
         assertEquals("[\"e1\"]", expanded.getSourceElementIds());
+        // 父片行自身的文档与父片指向随替换一起更新（文档取父片的 99，父片为空）
+        assertEquals(99L, expanded.getDocumentId());
+        assertNull(expanded.getParentChunkId());
         SearchHitVO plain = vo.getHits().get(1);
         assertEquals("c3", plain.getChunkId());
         assertFalse(plain.getIsParent());
@@ -452,5 +505,332 @@ class SearchServiceImplTest {
         assertNull(vo.getHits().get(0).getScore());
         verify(strategyVersionDbService, never()).getByTypeAndNameAndVersion(anyString(), anyString(), anyString());
         verify(milvusIndexPort, never()).searchVector(anyString(), any(VectorQuery.class));
+    }
+
+    /**
+     * 生产检索的响应外壳与命中字段逐列搬运。
+     *
+     * <p>守护 {@code search}/{@code toVO}：查询回显、耗时、命中定位字段漏搬都会让测试台对不上标注。
+     */
+    @Test
+    void productionSearchShouldFillResponseEnvelope() {
+        stubProduction(9L, comboAll(), null);
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(fullTextSpec());
+        FullTextHit hit = FullTextHit.builder().chunkId("c1").content("正文").documentId(9L)
+                .titlePath("第一章").contentType("PARAGRAPH").parentChunkId("p1")
+                .sourceElementIds("[\"e1\"]").build();
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class))).thenReturn(List.of(hit));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals("保证金", vo.getQuery());
+        assertEquals("baseline-v0", vo.getRuleNameVersion());
+        assertEquals("v9", vo.getVersionNo());
+        assertNotNull(vo.getElapsedMs());
+        assertTrue(vo.getElapsedMs() >= 0 && vo.getElapsedMs() < 60_000L, String.valueOf(vo.getElapsedMs()));
+        SearchHitVO hitVo = vo.getHits().getFirst();
+        assertEquals("c1", hitVo.getChunkId());
+        assertEquals("正文", hitVo.getContent());
+        assertEquals("第一章", hitVo.getTitlePath());
+        assertEquals("[\"e1\"]", hitVo.getSourceElementIds());
+        assertEquals(9L, hitVo.getDocumentId());
+        assertEquals("PARAGRAPH", hitVo.getContentType());
+        assertEquals("p1", hitVo.getParentChunkId());
+        assertNull(hitVo.getScore());
+        assertFalse(hitVo.getIsParent());
+    }
+
+    /**
+     * 生产检索开关打开时落运行记录：快照与定位字段逐列写入。
+     *
+     * <p>守护 {@code recordRun}：漏写任一列都会让对比回放读不到快照。
+     */
+    @Test
+    void productionSearchShouldRecordRunWhenSwitchOn() {
+        stubProduction(9L, comboAll(), null);
+        when(runSettings.recordProduction()).thenReturn(true);
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(fullTextSpec());
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(fullTextHit("c1")));
+        when(retrievalRunDbService.save(any(WbRetrievalRun.class))).thenAnswer(inv -> {
+            inv.<WbRetrievalRun>getArgument(0).setId(900L);
+            return true;
+        });
+
+        SearchVO vo = service.search(9L, request());
+
+        ArgumentCaptor<WbRetrievalRun> captor = ArgumentCaptor.forClass(WbRetrievalRun.class);
+        verify(retrievalRunDbService).save(captor.capture());
+        WbRetrievalRun run = captor.getValue();
+        assertEquals(9L, run.getKbId());
+        assertEquals(30L, run.getVersionId());
+        assertEquals("v9", run.getVersionNo());
+        assertNull(run.getRuleId());
+        assertEquals("baseline-v0", run.getRuleNameVersion());
+        assertEquals("保证金", run.getQuery());
+        assertTrue(run.getResultSnapshot().contains("\"c1\""), run.getResultSnapshot());
+        assertEquals(vo.getElapsedMs().intValue(), run.getElapsedMs());
+        assertEquals(900L, vo.getRunId());
+    }
+
+    /**
+     * 对比回放：runIds 为空或缺失按 40001 拒绝。
+     *
+     * <p>守护 {@code compareRuns} 的入参防线：空列表放行会返回空结果、掩盖调用错误。
+     */
+    @Test
+    void compareRunsShouldRejectEmptyIds() {
+        KnowledgeException empty = assertThrows(KnowledgeException.class,
+                () -> service.compareRuns(1L, List.of()));
+        assertEquals(ErrorCode.PARAM_INVALID, empty.getErrorCode());
+
+        KnowledgeException nullIds = assertThrows(KnowledgeException.class,
+                () -> service.compareRuns(1L, null));
+        assertEquals(ErrorCode.PARAM_INVALID, nullIds.getErrorCode());
+    }
+
+    /**
+     * 对比回放：耗时缺失按 0 下发，规则与版本号照搬。
+     *
+     * <p>守护 {@code compareRuns} 的空耗时兜底：直接取 intValue 会空指针。
+     */
+    @Test
+    void compareRunsShouldMapNullElapsedAsZero() {
+        WbRetrievalRun run = new WbRetrievalRun();
+        run.setId(2L);
+        run.setKbId(1L);
+        run.setVersionNo("v2");
+        run.setRuleNameVersion("baseline-v0");
+        run.setQuery("保证金");
+        run.setElapsedMs(null);
+        run.setResultSnapshot("[]");
+        when(retrievalRunDbService.listByIdsOrdered(List.of(2L))).thenReturn(List.of(run));
+
+        SearchVO vo = service.compareRuns(1L, List.of(2L)).getFirst();
+
+        assertEquals("baseline-v0", vo.getRuleNameVersion());
+        assertEquals("v2", vo.getVersionNo());
+        assertEquals(0L, vo.getElapsedMs());
+        assertEquals(2L, vo.getRunId());
+    }
+
+    /**
+     * 测试台：版本不存在按 40441、非就绪/在线按 40443。
+     *
+     * <p>守护 {@code resolveVersion} 的测试台分支：构建中的候选被检索即读到半成品。
+     */
+    @Test
+    void benchSearchShouldRequireExistingReadyVersion() {
+        SearchDTO missingRequest = request();
+        missingRequest.setVersionId(99L);
+        missingRequest.setRuleId(500L);
+        when(indexVersionDbService.getById(99L)).thenReturn(null);
+        KnowledgeException missing = assertThrows(KnowledgeException.class,
+                () -> service.search(1L, missingRequest));
+        assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND, missing.getErrorCode());
+
+        SearchDTO buildingRequest = request();
+        buildingRequest.setVersionId(98L);
+        buildingRequest.setRuleId(500L);
+        when(indexVersionDbService.getById(98L))
+                .thenReturn(versionRow(98L, "v8", IndexVersionStatus.BUILDING.name(), comboAll()));
+        KnowledgeException notReady = assertThrows(KnowledgeException.class,
+                () -> service.search(1L, buildingRequest));
+        assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT, notReady.getErrorCode());
+    }
+
+    /**
+     * 规则解析：显式规则不存在或类型不是 RETRIEVAL 都按 40442 拒绝。
+     *
+     * <p>守护 {@code resolveRuleRow} 的显式分支：拿切片策略当检索规则会跑出无意义结果。
+     */
+    @Test
+    void resolveRuleRowShouldRejectUnknownOrWrongTypeRule() {
+        SearchDTO request = request();
+        request.setVersionId(30L);
+        request.setRuleId(500L);
+        when(indexVersionDbService.getById(30L))
+                .thenReturn(versionRow(30L, "v9", IndexVersionStatus.READY.name(), comboAll()));
+        when(strategyVersionDbService.getById(500L)).thenReturn(null);
+        KnowledgeException missing = assertThrows(KnowledgeException.class,
+                () -> service.search(1L, request));
+        assertEquals(ErrorCode.RETRIEVAL_RULE_NOT_FOUND, missing.getErrorCode());
+
+        WbPipelineStrategyVersion wrongType = ruleRow();
+        wrongType.setType("CHUNK");
+        when(strategyVersionDbService.getById(500L)).thenReturn(wrongType);
+        KnowledgeException mismatch = assertThrows(KnowledgeException.class,
+                () -> service.search(1L, request));
+        assertEquals(ErrorCode.RETRIEVAL_RULE_NOT_FOUND, mismatch.getErrorCode());
+    }
+
+    /**
+     * 组合快照缺环节策略维度：查询向量化中止，向量通道降级为空、全文照跑。
+     *
+     * <p>守护 {@code embedQuery} 的快照不全分支：拿空维度去查 EMBED 策略会拼出错误策略名。
+     */
+    @Test
+    void hybridShouldDegradeVectorWhenComboIncomplete() {
+        stubProduction(9L, new ComboSnapshot(), 500L);
+        when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow());
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(hybridSpec());
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(fullTextHit("c1")));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals(1, vo.getHits().size());
+        assertEquals("c1", vo.getHits().getFirst().getChunkId());
+        verify(milvusIndexPort, never()).searchVector(anyString(), any());
+    }
+
+    /**
+     * EMBED 策略版本行不存在：查询向量化中止、向量通道降级。
+     *
+     * <p>守护 {@code embedQuery} 的策略行缺失分支。
+     */
+    @Test
+    void hybridShouldDegradeVectorWhenEmbedRowMissing() {
+        stubProduction(9L, comboAll(), 500L);
+        when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow());
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(hybridSpec());
+        when(strategyVersionDbService.getByTypeAndNameAndVersion("EMBED", "embed-default", "v1")).thenReturn(null);
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(fullTextHit("c1")));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals(1, vo.getHits().size());
+        verify(milvusIndexPort, never()).searchVector(anyString(), any());
+    }
+
+    /**
+     * 策略可解析但模型调用层未接入：输入拼好后中止，不得用空向量去检索。
+     *
+     * <p>守护 {@code embedQuery} 的模型缺口分支：返回空表而非 null 会触发一次空向量检索。
+     */
+    @Test
+    void hybridShouldStopAtModelGapAfterBuildingInput() {
+        stubProduction(9L, comboAll(), 500L);
+        when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow());
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(hybridSpec());
+        WbPipelineStrategyVersion embedRow = new WbPipelineStrategyVersion();
+        embedRow.setConfigSnapshot("{\"model\":\"text-embedding-v4\"}");
+        when(strategyVersionDbService.getByTypeAndNameAndVersion("EMBED", "embed-default", "v1")).thenReturn(embedRow);
+        EmbedStrategy strategy = new EmbedStrategy();
+        strategy.setModel("text-embedding-v4");
+        strategy.setQueryTemplate(" ");
+        when(embedStrategyParser.parse(embedRow.getConfigSnapshot())).thenReturn(strategy);
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(fullTextHit("c1")));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals(1, vo.getHits().size());
+        verify(milvusIndexPort, never()).searchVector(anyString(), any());
+    }
+
+    /**
+     * 混合通道：同 chunk 的重复全文命中按一条返回（按 chunkId 归并）。
+     *
+     * <p>守护 {@code orderHits} 的两处归并：归并写错会返回重复命中。
+     */
+    @Test
+    void hybridShouldDedupeDuplicateFullTextHits() {
+        stubProduction(9L, comboAll(), 500L);
+        when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow());
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(hybridSpec());
+        FullTextHit dup1 = FullTextHit.builder().chunkId("c1").content("一").documentId(9L).build();
+        FullTextHit dup2 = FullTextHit.builder().chunkId("c1").content("二").documentId(9L).build();
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(dup1, dup2));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals(1, vo.getHits().size());
+        assertEquals("一", vo.getHits().getFirst().getContent());
+        verify(milvusIndexPort, never()).searchVector(anyString(), any());
+    }
+
+    /**
+     * 父片展开：命中都没有父片时原样返回；父片行重复时按一条归并。
+     *
+     * <p>守护 {@code expandParent} 的空父片短路与父片行归并：短路写错会把命中清空。
+     */
+    @Test
+    void expandParentShouldShortCircuitWithoutParents() {
+        stubProduction(9L, comboAll(), 500L);
+        when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow());
+        RetrievalRuleSpec spec = fullTextSpec();
+        spec.getPostprocess().setMode(RetrievalRuleSpec.MODE_PARENT_EXPAND);
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(spec);
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(FullTextHit.builder().chunkId("c1").content("无父片").documentId(9L).build()));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals(1, vo.getHits().size());
+        assertEquals("无父片", vo.getHits().getFirst().getContent());
+        verify(milvusIndexPort, never()).queryChunkByIds(anyString(), any());
+    }
+
+    /**
+     * 父片展开：父片行重复（同 chunkId）时按一条归并，命中仍替换为父片全文。
+     *
+     * <p>守护 {@code expandParent} 的父片行归并：归并写错会取到空父片、展开失效。
+     */
+    @Test
+    void expandParentShouldMergeDuplicateParentRows() {
+        stubProduction(9L, comboAll(), 500L);
+        when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow());
+        RetrievalRuleSpec spec = fullTextSpec();
+        spec.getPostprocess().setMode(RetrievalRuleSpec.MODE_PARENT_EXPAND);
+        when(retrievalRuleResolver.validate(anyString())).thenReturn(spec);
+        when(milvusIndexPort.searchFullText(eq("kb_9_v9"), any(FullTextQuery.class)))
+                .thenReturn(List.of(FullTextHit.builder().chunkId("c1").content("子片").documentId(9L)
+                        .parentChunkId("p1").build()));
+        IndexRow parent = new IndexRow();
+        parent.setChunkId("p1");
+        parent.setContent("父片全文");
+        parent.setDocumentId(9L);
+        IndexRow duplicate = new IndexRow();
+        duplicate.setChunkId("p1");
+        duplicate.setContent("父片全文副本");
+        duplicate.setDocumentId(9L);
+        when(milvusIndexPort.queryChunkByIds("kb_9_v9", List.of("p1")))
+                .thenReturn(List.of(parent, duplicate));
+
+        SearchVO vo = service.search(9L, request());
+
+        assertEquals(1, vo.getHits().size());
+        assertEquals("p1", vo.getHits().getFirst().getChunkId());
+        assertEquals("父片全文", vo.getHits().getFirst().getContent());
+        assertTrue(vo.getHits().getFirst().getIsParent());
+    }
+
+    /** 生产版本夹具：在线版本 + 集合指针（版本号 v9、版本行 ID 30） */
+    private WbIndexVersion stubProduction(Long kbId, ComboSnapshot combo, Long defaultRuleId) {
+        WbIndexSet set = new WbIndexSet();
+        set.setId(5L);
+        set.setCurrentPublishedVersionId(30L);
+        when(indexSetDbService.getByKb(kbId)).thenReturn(set);
+        WbIndexVersion version = versionRow(30L, "v9", IndexVersionStatus.ONLINE.name(), combo);
+        version.setDefaultRuleId(defaultRuleId);
+        when(indexVersionDbService.getById(30L)).thenReturn(version);
+        return version;
+    }
+
+    /** 纯全文规则 */
+    private RetrievalRuleSpec fullTextSpec() {
+        RetrievalRuleSpec spec = new RetrievalRuleSpec();
+        spec.setChannel(RetrievalRuleSpec.CHANNEL_FULLTEXT);
+        return spec;
+    }
+
+    /** 混合通道规则 */
+    private RetrievalRuleSpec hybridSpec() {
+        RetrievalRuleSpec spec = new RetrievalRuleSpec();
+        spec.setChannel(RetrievalRuleSpec.CHANNEL_HYBRID);
+        return spec;
     }
 }

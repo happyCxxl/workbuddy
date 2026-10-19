@@ -183,7 +183,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      * @param limit     本页条数上限
      * @param pageCount 本页实际返回条数
      * @param total     总条数
-     * @return 还有内容未返回则为 true（页码越界为空页时同样为 true）
+     * @return 还有内容未返回则为 true（页码越界的空页后面没有内容，返回 false）
      */
     private boolean hasMore(int page, int limit, int pageCount, int total) {
         if (total <= 0) {
