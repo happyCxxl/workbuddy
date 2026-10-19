@@ -202,6 +202,7 @@
 | **登录失败防护** | 连续失败次数（成功清零） | 账号 + IP 为主，IP 为辅 | `40111 LOGIN_TOO_FREQUENT` |
 
 - 接口级限流：方法上标 `@RateLimit(capacity, periodSeconds, message)`。注解在 `../workbuddy-common/annotation`（契约），切面与令牌桶实现在 `../workbuddy-infra` 的 `ratelimit` 包（bucket4j，桶存 Redis、跨实例共享，并带 1 小时过期，窗口过后自动回收）。用法示例见 `AuthController.login`。
+- 当前只有登录接口限流；其余接口是否限流按 `COMMON-SEC-06` 的边界（有成本或可被滥用）评估，加不加、配额多少由用户决定（见 `COMMON-SEC-25`）。
 - 登录失败防护：阈值与窗口由 `knowledge.auth.guard.*` 配置（默认账号+IP 维度 5 次、IP 维度 20 次、窗口 15 分钟）。实现见 `LoginAttemptGuard`。
 - 计数对不存在的用户名同样生效；成功登录只清账号维度，不清 IP 维度；锁定/限流期间不查库、不比对密码。
 - 客户端 IP 只取 `getRemoteAddr()`，不读 `X-Forwarded-For`（本项目当前未接反向代理）。
