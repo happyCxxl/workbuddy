@@ -1,0 +1,87 @@
+{
+  "docs": {
+    "01": {
+      "watch": [],
+      "checks": [
+        { "type": "git-timeline" }
+      ]
+    },
+    "02": {
+      "watch": [],
+      "checks": []
+    },
+    "03": {
+      "watch": [],
+      "checks": []
+    },
+    "04": {
+      "watch": ["docs/design/**"],
+      "checks": []
+    },
+    "05": {
+      "watch": ["pom.xml", "*/pom.xml"],
+      "checks": [
+        { "type": "modules", "target": "模块", "pom": "pom.xml", "stripPrefix": "workbuddy-" },
+        { "type": "edges", "target": "依赖边", "pom": "pom.xml", "modulePrefix": "workbuddy-" },
+        {
+          "type": "dirs",
+          "target": "目录地图",
+          "ignore": [".git", "node_modules", "target", "dist", "build", "out", "coverage", ".idea", ".gradle"]
+        }
+      ]
+    },
+    "06": {
+      "watch": ["*/src/main/java/**/*Mapper.java"],
+      "checks": [
+        {
+          "type": "files",
+          "target": "数据模型概览",
+          "glob": "*/src/main/java/**/*Mapper.java",
+          "suffix": "Mapper",
+          "ignore": []
+        }
+      ]
+    },
+    "07": {
+      "watch": ["*/src/main/java/**/*Controller.java"],
+      "checks": [
+        {
+          "type": "annotations",
+          "target": "对外接口",
+          "glob": "*/src/main/java/**/*Controller.java",
+          "pattern": "@RequestMapping\\(\"([^\"]+)\"\\)",
+          "stripSuffix": "/*"
+        }
+      ]
+    },
+    "08": {
+      "watch": ["docker/**"],
+      "checks": [
+        { "type": "services", "file": "docker/docker-compose.yml" }
+      ]
+    },
+    "09": {
+      "watch": [
+        "*/src/main/java/**/security/**",
+        "*/src/main/java/**/config/**",
+        "*/src/main/java/**/exception/**",
+        "*/src/main/java/**/support/**"
+      ],
+      "checks": []
+    },
+    "10": {
+      "watch": [],
+      "checks": []
+    },
+    "11": {
+      "watch": [".agent/tools/**", "pom.xml"],
+      "checks": [
+        {
+          "type": "count",
+          "glob": "**/src/test/java/**/*.java",
+          "pattern": "(\\d+)\\s*个测试类"
+        }
+      ]
+    }
+  }
+}

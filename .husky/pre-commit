@@ -30,3 +30,8 @@ if echo "$staged" | grep -qE '^(web|\.agent/tools/vue)/'; then
     pnpm exec lint-staged --concurrent false
   )
 fi
+
+# 档案同步：代码变动必须同提交更新对应档案（配对见 .project/archive/config.json）
+if [ -d .project ]; then
+  node .project/tools/sync.mjs --gate || exit 1
+fi

@@ -1,0 +1,27 @@
+{
+  "docs": {
+    "05": {
+      "watch": ["<构建文件路径，如 pom.xml / package.json>"],
+      "checks": [
+        {
+          "type": "modules",
+          "target": "模块",
+          "pom": "<构建文件路径>",
+          "stripPrefix": "<模块名前缀，无则删掉此行>"
+        }
+      ]
+    },
+    "07": {
+      "watch": ["<对外接口入口文件的 glob，如 **/*Controller.java>"],
+      "checks": [
+        {
+          "type": "annotations",
+          "target": "对外接口",
+          "glob": "<同上的 glob>",
+          "pattern": "<从注解捕获路径的正则，含一个捕获组>",
+          "stripSuffix": "/*"
+        }
+      ]
+    }
+  }
+}
