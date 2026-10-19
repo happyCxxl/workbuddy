@@ -154,6 +154,23 @@ class EmbedConsistencyCheckerTest {
     }
 
     /**
+     * 维度声明为 0 时同样跳过维度校验（0 视同未声明）。
+     *
+     * <p>守护 {@code check} 的第 ② 关边界：把「大于 0 才比对」改成「不小于 0 就比对」即失败。
+     */
+    @Test
+    void skipsDimensionCheckWhenDimensionZero() {
+        strategy.setDimension(0);
+
+        ConsistencyResult result = checker.check(
+                List.of("a"),
+                List.of(vector(0.1f, 0.2f, 0.3f)),
+                strategy);
+
+        assertTrue(result.passed());
+    }
+
+    /**
      * COSINE 要求归一化：声明为否即冲突，且不可重试。
      *
      * <p>守护 {@code check} 的第 ④ 关：COSINE 要求归一化，声明冲突即拒绝。

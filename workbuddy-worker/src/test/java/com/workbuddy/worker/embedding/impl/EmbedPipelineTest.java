@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -186,8 +187,8 @@ class EmbedPipelineTest {
     /**
      * 全部命中复用账本时零模型调用，直接组装并标记成功。
      *
-     * <p>守护 {@code resolveReuse} 的哈希命中与 {@code assemble} 的计数口径：
-     * 让哈希匹配失败或多算复用数即失败。ID 拼接格式属实现细节，不断言。
+     * <p>守护 {@code resolveReuse} 的哈希命中与 {@code assemble} 的字段写入：
+     * 让哈希匹配失败、漏写任一字段或多算复用数即失败。ID 拼接格式属实现细节，只断言非空。
      */
     @Test
     void succeedsWhenAllRecordsReused() {
@@ -204,6 +205,18 @@ class EmbedPipelineTest {
         assertEquals(1, set.getRecordCount());
         assertEquals(DIMENSION, set.getDimension());
         assertEquals(EmbedRecordStatus.CACHED.name(), set.getRecords().getFirst().getStatus());
+        // 记录与切片的归属链（漏写即失去回链）
+        assertEquals("c1", set.getRecords().getFirst().getChunkId());
+        assertEquals(ChunkContentType.PARAGRAPH.name(), set.getRecords().getFirst().getContentType());
+        // 组装字段与输入一一对应（漏写即失败）
+        assertEquals(7L, set.getFileResultId());
+        assertEquals(9L, set.getChunkSetRef());
+        assertEquals("cs-1", set.getChunkSetId());
+        assertEquals("embed-test", set.getStrategyVersion());
+        assertEquals("text-embedding-v4", set.getModel());
+        assertEquals(EmbedMetric.COSINE.key(), set.getMetric());
+        assertTrue(set.isNormalized());
+        assertFalse(set.getEmbeddingSetId().isBlank());
     }
 
     /**
@@ -224,9 +237,10 @@ class EmbedPipelineTest {
     }
 
     /**
-     * 模型调用全部失败时按向量化失败收口，每批留一条告警。
+     * 模型调用全部失败时按向量化失败收口，每批留一条告警，成功批数计 0。
      *
-     * <p>守护 {@code invokeBatches} 的批次隔离：3 条记录按批大小 2 分两批，失败不互相掩盖。
+     * <p>守护 {@code invokeBatches} 的批次隔离与 {@code buildStepLogs} 的成功批计数：
+     * 3 条记录按批大小 2 分两批全失败，失败不互相掩盖，模型调用步骤的成功数为 0。
      */
     @Test
     void failsWhenAllBatchesFail() {
@@ -238,6 +252,12 @@ class EmbedPipelineTest {
 
         assertEquals(PipelineTaskErrorCode.EMBED_FAILED.name(), outcome.getErrorCode());
         assertEquals(2, outcome.getWarnings().size());
+        StepLogInfo modelCall = outcome.getStepLogs().stream()
+                .filter(log -> strategy.getModel().equals(log.getCapabilityVersion()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(1, modelCall.getMatchedCount());
+        assertEquals(2, modelCall.getWarningCount());
     }
 
     /**
