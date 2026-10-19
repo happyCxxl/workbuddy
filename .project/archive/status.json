@@ -1,70 +1,15 @@
 {
   "docs": {
-    "10": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": "已记录 vector 并入、对象存储适配下沉、file 保持独立的取舍"
-    },
-    "11": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": "覆盖率随 vector/对象存储适配迁移更新；23 条 @Mock 债务已登记"
-    },
-    "01": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
-    },
-    "02": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
-    },
-    "03": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
-    },
-    "04": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
-    },
-    "05": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": "vector 并入、对象存储适配下沉 infra 后复核：7 模块、依赖边同步"
-    },
-    "06": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
-    },
-    "07": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
-    },
-    "08": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
-    },
-    "09": {
-      "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
-    }
+    "01": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
+    "02": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
+    "03": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
+    "04": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "8a36c41d", "note": "vector 并入后补齐系统上下文、分层与存储路由表述" },
+    "05": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "vector 并入、对象存储适配下沉 infra 后复核：7 模块、依赖边同步" },
+    "06": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "8a36c41d", "note": "存储布局改为 infra 的 StorageProvider 与 Milvus 适配" },
+    "07": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
+    "08": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
+    "09": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
+    "10": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "已记录 vector 并入、对象存储适配下沉、file 保持独立的取舍" },
+    "11": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "覆盖率随 vector/对象存储适配迁移更新；23 条 @Mock 债务已登记" }
   }
 }
