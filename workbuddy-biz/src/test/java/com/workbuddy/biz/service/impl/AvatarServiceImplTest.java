@@ -167,7 +167,7 @@ class AvatarServiceImplTest {
     /**
      * 空文件拒绝上传。
      *
-     * <p>守护空入参分支。
+     * <p>守护空入参分支：返回 {@code PARAM_INVALID}（40001），不做任何写入。
      */
     @Test
     void uploadShouldRejectEmptyFile() {

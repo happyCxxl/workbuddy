@@ -29,7 +29,7 @@ class AvatarUrlUtilTest {
     /**
      * 空值与历史对象 key 归一为 null。
      *
-     * <p>守护存量数据降级：旧 key 不再能通过应用层接口读取。
+     * <p>守护存量数据降级（JAVA-DTO-012：应用层只下发对象 URL）：旧 key 不再能通过应用层接口读取。
      */
     @Test
     void urlOrNullShouldRejectBlankAndLegacyKey() {
