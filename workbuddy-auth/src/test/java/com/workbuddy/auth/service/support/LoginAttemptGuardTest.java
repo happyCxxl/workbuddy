@@ -12,19 +12,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Duration;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * 登录失败防护：两维度阈值判定、计数写入与成功清零。
+ *
+ * <p>守护 {@link LoginAttemptGuard#isLocked} 的阈值口径与 {@link LoginAttemptGuard#recordFailure}
+ * 的双维度计数；失败类别按 {@code knowledge.auth.guard} 配置项区分。
  */
 @ExtendWith(MockitoExtension.class)
 class LoginAttemptGuardTest {
@@ -50,7 +45,9 @@ class LoginAttemptGuardTest {
     }
 
     /**
-     * 防护开关关闭时恒不锁定，且不查询 Redis。
+     * 防护开关关闭时恒不锁定。
+     *
+     * <p>改坏 {@code isLocked} 的开关判断（去掉提前返回）即失败。
      */
     @Test
     void isLockedReturnsFalseWhenGuardDisabled() {
@@ -61,7 +58,9 @@ class LoginAttemptGuardTest {
     }
 
     /**
-     * 账号维度计数达到阈值即锁定（账号先命中，IP 维度短路不再查询）。
+     * 账号维度计数达到阈值即锁定。
+     *
+     * <p>守护 {@code isLocked} 的账号阈值：把 {@code >=} 改成 {@code >} 即失败。
      */
     @Test
     void isLockedReturnsTrueWhenAccountReachesThreshold() {
@@ -71,7 +70,9 @@ class LoginAttemptGuardTest {
     }
 
     /**
-     * 账号维度差一次未达阈值时不锁定（阈值边界）。
+     * 账号维度差一次未达阈值时不锁定。
+     *
+     * <p>守护 {@code isLocked} 的阈值边界：放宽成 {@code >} 或把比较方向写反即失败。
      */
     @Test
     void isLockedReturnsFalseWhenAccountBelowThreshold() {
@@ -83,6 +84,8 @@ class LoginAttemptGuardTest {
 
     /**
      * IP 维度跨账号累计达到阈值即锁定。
+     *
+     * <p>删掉 {@code isLocked} 里的 IP 维度判断即失败。
      */
     @Test
     void isLockedReturnsTrueWhenIpReachesThreshold() {
@@ -93,20 +96,27 @@ class LoginAttemptGuardTest {
     }
 
     /**
-     * 记一次失败：账号与 IP 两个维度都按锁定窗口计数。
+     * 记一次失败：账号与 IP 两个维度都按锁定窗口计数，键格式与 TTL 均按约定。
+     *
+     * <p>守护 {@code recordFailure}：少计一个维度、或把 TTL 换成其它时长即失败。
      */
     @Test
-    void recordFailureCountsBothDimensions() {
+    void recordFailureCountsBothDimensionsWithLockWindow() {
         properties.setLockMinutes(15);
+        ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Duration> ttl = ArgumentCaptor.forClass(Duration.class);
 
         guard.recordFailure("alice", "10.0.0.1");
 
-        verify(redisCounter).increment(ACCOUNT_KEY, Duration.ofMinutes(15));
-        verify(redisCounter).increment(IP_KEY, Duration.ofMinutes(15));
+        verify(redisCounter, times(2)).increment(keys.capture(), ttl.capture());
+        assertEquals(List.of(ACCOUNT_KEY, IP_KEY), keys.getAllValues());
+        assertEquals(Duration.ofMinutes(15), ttl.getValue());
     }
 
     /**
      * 防护关闭时不计任何失败。
+     *
+     * <p>去掉 {@code recordFailure} 的开关判断、或漏写提前返回即失败。
      */
     @Test
     void recordFailureDoesNothingWhenGuardDisabled() {
@@ -114,22 +124,29 @@ class LoginAttemptGuardTest {
 
         guard.recordFailure("alice", "10.0.0.1");
 
-        verify(redisCounter, never()).increment(anyString(), any(Duration.class));
+        verifyNoInteractions(redisCounter);
     }
 
     /**
      * 登录成功只清零账号维度，IP 维度保留（防止换账号继续撞库）。
+     *
+     * <p>把 {@code clearAccount} 改成同时清 IP 维度即失败。
      */
     @Test
     void clearAccountResetsAccountKeyOnly() {
+        ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
+
         guard.clearAccount("alice", "10.0.0.1");
 
-        verify(redisCounter).reset(ACCOUNT_KEY);
+        verify(redisCounter).reset(keys.capture());
+        assertEquals(List.of(ACCOUNT_KEY), keys.getAllValues());
         verify(redisCounter, never()).reset(IP_KEY);
     }
 
     /**
      * 防护关闭时不清零。
+     *
+     * <p>去掉 {@code clearAccount} 的开关判断即失败。
      */
     @Test
     void clearAccountDoesNothingWhenGuardDisabled() {
@@ -137,19 +154,6 @@ class LoginAttemptGuardTest {
 
         guard.clearAccount("alice", "10.0.0.1");
 
-        verify(redisCounter, never()).reset(anyString());
-    }
-
-    /**
-     * 计数键格式固定：账号维度带账号与 IP，IP 维度只带 IP。
-     */
-    @Test
-    void recordFailureUsesExpectedKeyFormat() {
-        ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
-
-        guard.recordFailure("alice", "10.0.0.1");
-
-        verify(redisCounter, times(2)).increment(keys.capture(), any(Duration.class));
-        assertEquals(List.of(ACCOUNT_KEY, IP_KEY), keys.getAllValues());
+        verifyNoInteractions(redisCounter);
     }
 }

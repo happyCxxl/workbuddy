@@ -39,6 +39,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * 数量与输入一致且各关通过时返回通过。
+     *
+     * <p>守护 {@code check} 的第 ②③ 关通过分支：维度与取值都合法时返回通过。
      */
     @Test
     void passesWhenAllGatesSatisfied() {
@@ -53,6 +55,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * 返回向量为 null 时按数量不一致失败，且可重试。
+     *
+     * <p>守护 {@code check} 的第 ① 关：返回向量为 null，按数量不一致失败且可重试。
      */
     @Test
     void failsWhenVectorsNull() {
@@ -65,6 +69,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * 返回向量数少于输入文本数时按数量不一致失败，且可重试。
+     *
+     * <p>守护 {@code check} 的第 ① 关：返回条数与输入不一致时失败且可重试。
      */
     @Test
     void failsWhenCountMismatch() {
@@ -80,6 +86,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * 空向量计入坏值，可重试；多条坏值一并汇报。
+     *
+     * <p>守护 {@code check} 的第 ③ 关：空向量计入坏值，可重试。
      */
     @Test
     void failsWhenVectorEmpty() {
@@ -96,6 +104,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * 维度与目录声明不符时不可重试（重试也只会得到同样维度）。
+     *
+     * <p>守护 {@code check} 的第 ② 关：维度与目录声明不符，标记不可重试。
      */
     @Test
     void failsWithoutRetryWhenDimensionMismatch() {
@@ -111,6 +121,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * NaN 与 Infinity 计入坏值，可重试。
+     *
+     * <p>守护 {@code check} 的第 ③ 关：NaN/Infinity 计入坏值，可重试。
      */
     @Test
     void failsWhenVectorContainsNonFinite() {
@@ -126,6 +138,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * 维度未声明时跳过维度校验（不因任意长度误判）。
+     *
+     * <p>守护 {@code check} 的第 ② 关：维度未声明时跳过比对。
      */
     @Test
     void skipsDimensionCheckWhenNotDeclared() {
@@ -141,6 +155,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * COSINE 要求归一化：声明为否即冲突，且不可重试。
+     *
+     * <p>守护 {@code check} 的第 ④ 关：COSINE 要求归一化，声明冲突即拒绝。
      */
     @Test
     void failsWhenCosineNotNormalized() {
@@ -158,6 +174,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * L2 要求非归一化：声明为是即冲突，且不可重试。
+     *
+     * <p>守护 {@code check} 的第 ④ 关：L2 要求非归一化，声明冲突即拒绝。
      */
     @Test
     void failsWhenL2Normalized() {
@@ -176,6 +194,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * L2 且非归一化时通过（度量与声明一致）。
+     *
+     * <p>守护 {@code check} 的第 ④ 关：L2 与非归一化的合法组合。
      */
     @Test
     void passesWhenL2NotNormalized() {
@@ -192,6 +212,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * 度量未声明时跳过归一化校验（缺失即不判冲突）。
+     *
+     * <p>守护 {@code check} 的第 ④ 关：度量未声明时跳过。
      */
     @Test
     void skipsMetricCheckWhenMetricMissing() {
@@ -207,6 +229,8 @@ class EmbedConsistencyCheckerTest {
 
     /**
      * 归一化未声明时同样跳过（两条件必须同时具备才判冲突）。
+     *
+     * <p>守护 {@code check} 的第 ④ 关：归一化未声明时跳过。
      */
     @Test
     void skipsMetricCheckWhenNormalizedMissing() {

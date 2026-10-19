@@ -179,4 +179,46 @@
         </plugins>
     </build>
 
+    <profiles>
+        <!--
+            变异测试（COMMON-TEST-12、JAVA-TEST-011）：默认不激活，按需执行
+            mvn -pl workbuddy-biz -Pmutation pitest:mutationCoverage
+            存活变异逐条评估：补用例，或说明该变异不改变行为。
+        -->
+        <profile>
+            <id>mutation</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>1.15.8</version>
+                        <configuration>
+                            <targetClasses>
+                                <param>com.workbuddy.biz.service.*</param>
+                            </targetClasses>
+                            <targetTests>
+                                <param>com.workbuddy.biz.*</param>
+                            </targetTests>
+                            <outputFormats>
+                                <param>XML</param>
+                                <param>HTML</param>
+                            </outputFormats>
+                            <timestampedReports>false</timestampedReports>
+                            <failWhenNoMutations>false</failWhenNoMutations>
+                            <junit5PluginVersion>1.2.1</junit5PluginVersion>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>1.2.1</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>

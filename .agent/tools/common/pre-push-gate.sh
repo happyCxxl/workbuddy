@@ -35,11 +35,13 @@ has_md=$(printf '%s\n' "$changed" | grep -cE '\.md$' || true)
 has_agents=$(printf '%s\n' "$changed" | grep -cE 'AGENTS\.md$' || true)
 has_pom=$(printf '%s\n' "$changed" | grep -cE '(^|/)pom\.xml$' || true)
 has_web=$(printf '%s\n' "$changed" | grep -cE '^(web|frontend|ui)/' || true)
+has_test=$(printf '%s\n' "$changed" | grep -cE '/src/test/.*\.java$' || true)
 
 [ "$has_text" -gt 0 ] && total=$((total + 1))
 [ "$has_md" -gt 0 ] && total=$((total + 1))
 [ "$has_agents" -gt 0 ] && total=$((total + 1))
 [ "$has_java" -gt 0 ] && total=$((total + 2))
+[ "$has_test" -gt 0 ] && total=$((total + 1))
 [ "$has_pom" -gt 0 ] && total=$((total + 1))
 if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
   [ -f "$root/pom.xml" ] && total=$((total + 1))
@@ -101,6 +103,14 @@ if [ "$has_java" -gt 0 ]; then
   run_step "Javadoc：check-javadoc（本次改动）"
   if node "$root/.agent/tools/java/check-javadoc.mjs" $java_files; then :; else
     report_fail "$step" "Javadoc 不合规" "node .agent/tools/java/check-javadoc.mjs <文件>"
+  fi
+fi
+
+if [ "$has_test" -gt 0 ]; then
+  run_step "用例质量：check-test-quality（本次改动）"
+  test_files=$(printf '%s\n' "$changed" | grep -E '/src/test/.*\.java$' || true)
+  if node "$root/.agent/tools/java/check-test-quality.mjs" $test_files; then :; else
+    report_fail "$step" "用例质量不达标" "node .agent/tools/java/check-test-quality.mjs <文件>"
   fi
 fi
 

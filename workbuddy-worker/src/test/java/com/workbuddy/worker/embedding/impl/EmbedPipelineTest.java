@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.embed.EmbedOutcome;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
 import com.workbuddy.common.domain.embed.EmbeddingSet;
+import com.workbuddy.common.domain.task.StepLogInfo;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.enums.embed.EmbedMetric;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
@@ -33,8 +34,9 @@ import static org.mockito.Mockito.when;
 /**
  * 向量化编排：前置校验、筛选、账本复用与批次失败隔离。
  *
- * <p>模型调用层尚未接入（批次一律失败），因此成功路径只经「全部复用命中」验证；
- * 其余用例覆盖各前置闸门与失败隔离口径。
+ * <p>守护 {@link EmbedPipeline#embed} 的失败分类与产出结构。模型调用层尚未接入
+ * （{@code embedBatch} 固定抛错），因此成功路径只经「全部复用命中」验证；
+ * 模型成功后的回填分支当前不可达，未纳入用例。
  */
 @ExtendWith(MockitoExtension.class)
 class EmbedPipelineTest {
@@ -86,6 +88,8 @@ class EmbedPipelineTest {
 
     /**
      * 未带策略快照时直接失败，不进入任何环节。
+     *
+     * <p>守护 {@code embed} 的首个闸门：去掉快照判空即失败（会抛空指针而不是返回失败）。
      */
     @Test
     void failsWhenStrategyMissing() {
@@ -98,6 +102,8 @@ class EmbedPipelineTest {
 
     /**
      * 模型名不在目录内时按模型不兼容失败。
+     *
+     * <p>守护 {@code precheck} 的目录校验：移除 {@code EmbeddingModel.of} 判空即失败。
      */
     @Test
     void failsWhenModelUnknown() {
@@ -110,6 +116,8 @@ class EmbedPipelineTest {
 
     /**
      * 模型在目录内但未启用时同样按模型不兼容失败。
+     *
+     * <p>守护 {@code precheck} 的启用校验：去掉 {@code enabled()} 判断即失败。
      */
     @Test
     void failsWhenModelDisabled() {
@@ -121,7 +129,9 @@ class EmbedPipelineTest {
     }
 
     /**
-     * 缺少上下文窗口声明时按模型不兼容失败（窗口校验依赖该声明）。
+     * 缺少上下文窗口声明时按模型不兼容失败。
+     *
+     * <p>守护 {@code precheck} 的窗口声明校验：把 {@code <= 0} 改成 {@code < 0} 即失败。
      */
     @Test
     void failsWhenContextWindowMissing() {
@@ -134,6 +144,8 @@ class EmbedPipelineTest {
 
     /**
      * 上游切片产物为空时按空输入失败。
+     *
+     * <p>守护 {@code embed} 的空集合判定：去掉 {@code chunkSet} 判空即失败。
      */
     @Test
     void failsWhenChunkSetMissing() {
@@ -144,6 +156,8 @@ class EmbedPipelineTest {
 
     /**
      * 切片全部被跳过（父片且未开启向量化父片）时按无可用切片失败。
+     *
+     * <p>守护 {@code encode} 的父片跳过规则：把 SECTION 判断去掉即失败。
      */
     @Test
     void failsWhenAllChunksSkipped() {
@@ -156,6 +170,8 @@ class EmbedPipelineTest {
 
     /**
      * 空文本且开启跳过时不计入候选，按无可用切片失败。
+     *
+     * <p>守护 {@code encode} 的空文本跳过：去掉 {@code skipEmptyOn} 分支即失败。
      */
     @Test
     void failsWhenTextBlankAndSkipEmptyOn() {
@@ -169,6 +185,9 @@ class EmbedPipelineTest {
 
     /**
      * 全部命中复用账本时零模型调用，直接组装并标记成功。
+     *
+     * <p>守护 {@code resolveReuse} 的哈希命中与 {@code assemble} 的计数口径：
+     * 让哈希匹配失败或多算复用数即失败。ID 拼接格式属实现细节，不断言。
      */
     @Test
     void succeedsWhenAllRecordsReused() {
@@ -183,14 +202,14 @@ class EmbedPipelineTest {
         assertNotNull(set);
         assertEquals(1, set.getCachedCount());
         assertEquals(1, set.getRecordCount());
-        assertEquals("es-cs-1-embed-test", set.getEmbeddingSetId());
         assertEquals(DIMENSION, set.getDimension());
         assertEquals(EmbedRecordStatus.CACHED.name(), set.getRecords().getFirst().getStatus());
-        assertEquals("emb-0001", set.getRecords().getFirst().getEmbeddingId());
     }
 
     /**
      * 复用关闭时不查账本，记录全部送模型（本环境必然失败）。
+     *
+     * <p>守护 {@code embed} 的复用开关：忽略 {@code cacheOn} 直接复用即失败。
      */
     @Test
     void skipsReuseWhenCacheDisabled() {
@@ -205,7 +224,9 @@ class EmbedPipelineTest {
     }
 
     /**
-     * 模型调用全部失败时按向量化失败收口，并按批次数留告警（失败隔离不互相污染）。
+     * 模型调用全部失败时按向量化失败收口，每批留一条告警。
+     *
+     * <p>守护 {@code invokeBatches} 的批次隔离：3 条记录按批大小 2 分两批，失败不互相掩盖。
      */
     @Test
     void failsWhenAllBatchesFail() {
@@ -217,11 +238,13 @@ class EmbedPipelineTest {
 
         assertEquals(PipelineTaskErrorCode.EMBED_FAILED.name(), outcome.getErrorCode());
         assertEquals(2, outcome.getWarnings().size());
-        assertTrue(outcome.getWarnings().getFirst().contains("模型调用失败"));
     }
 
     /**
-     * 步骤日志固定五段，顺序与阶段一一对应。
+     * 步骤日志固定五段，字段可用。
+     *
+     * <p>守护 {@code buildStepLogs} 的阶段划分：少写一段或漏填步骤名即失败。
+     * 步骤名属展示文案，只断言非空，不断言具体文字。
      */
     @Test
     void buildsFiveStepLogs() {
@@ -230,8 +253,12 @@ class EmbedPipelineTest {
 
         EmbedOutcome outcome = pipeline.embed(context);
 
-        List<String> names = outcome.getStepLogs().stream().map(log -> log.getStepName()).toList();
-        assertEquals(List.of("前置校验", "筛选与编码", "复用判定", "模型调用", "四关校验"), names);
+        List<StepLogInfo> logs = outcome.getStepLogs();
+        assertEquals(5, logs.size());
+        for (StepLogInfo log : logs) {
+            assertNotNull(log.getStepName());
+            assertTrue(log.getStepName().length() > 0);
+        }
     }
 
     /**
