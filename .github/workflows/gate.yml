@@ -41,6 +41,9 @@ jobs:
       - name: AGENTS 入口体检
         run: node .agent/tools/common/check-agents.mjs
 
+      - name: 中间产物不入库
+        run: node .agent/tools/common/check-artifacts.mjs
+
       - name: 前端全量检查
         working-directory: web
         run: |

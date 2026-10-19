@@ -63,6 +63,13 @@ run_step() {
   echo ">>>> [$step/$total] $1"
 }
 
+# 中间产物：与改动范围无关，每次推送都查（仓库卫生）
+total=$((total + 1))
+run_step "中间产物：node .agent/tools/common/check-artifacts.mjs"
+if node "$root/.agent/tools/common/check-artifacts.mjs"; then :; else
+  report_fail "$step" "版本库混入中间产物" "node .agent/tools/common/check-artifacts.mjs"
+fi
+
 if [ "$has_text" -gt 0 ]; then
   run_step "编码完整性：node .agent/tools/common/check-encoding.mjs"
   if node "$root/.agent/tools/common/check-encoding.mjs"; then :; else
