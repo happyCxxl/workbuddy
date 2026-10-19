@@ -344,7 +344,9 @@
         </executions>
       </plugin>
       <!--
-        覆盖率：全库语句 ≥70%、核心模块语句与分支 100%（COMMON-TEST-07、JAVA-TEST-009）。
+        覆盖率：分母只算可执行行为——排除纯数据载体包（dto、domain）与 Lombok 生成的方法
+        （lombok.config 打开 @Generated），门槛全库 70%；核心链路所在模块在各自 pom 提到 90%。
+        规则见 COMMON-TEST-07 与 JAVA-TEST-009；排除的前提是这些包满足 JAVA-LAYER-007。
         报告与阈值检查挂在 verify，阈值**阻断**构建；规则配在插件级，供 CLI 的 jacoco:check 复用。
       -->
       <plugin>
@@ -352,6 +354,9 @@
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>0.8.12</version>
         <configuration>
+          <excludes>
+            <exclude>**/dto/**</exclude>
+          </excludes>
           <rules>
             <rule>
               <element>BUNDLE</element>

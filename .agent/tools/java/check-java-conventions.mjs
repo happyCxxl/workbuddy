@@ -139,6 +139,17 @@ function checkFile(file) {
     }
   }
 
+  // 请求/响应模型只放数据载体（JAVA-LAYER-007）：禁止处置逻辑；
+  // 访问器内的空值默认与等值比较属固有契约，允许。
+  if (/\/dto\//.test(`/${file}`)) {
+    const DISPOSAL = /\b(throw|try|catch|for|while|switch)\b/;
+    code.forEach((l, i) => {
+      if (DISPOSAL.test(l)) {
+        error(file, i + 1, 'JAVA-LAYER-007', '请求/响应模型只放数据载体：不得含抛错、异常处理、循环与 switch');
+      }
+    });
+  }
+
   if (name.endsWith('ServiceImpl')) {
     const iface = name.replace(/Impl$/, '');
     if (!siblingClassNames(file).has(iface)) {
