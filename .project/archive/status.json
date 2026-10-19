@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "529b517d",
-      "note": "check-docs 增加文档引用路径校验（JAVA-DOC-010）；覆盖率与 @Mock 债务随上一轮数据"
+      "baseline": "8be9e318",
+      "note": "check-docs 增加文档引用路径校验（JAVA-DOC-010）；门禁的改动文件清单改为分批传参"
     },
     "01": {
       "status": "已复核",

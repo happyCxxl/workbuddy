@@ -59,6 +59,12 @@ report_fail() {
   exit 1
 }
 
+# 改动文件清单经标准输入分批交给检查器：积压数十个提交时改动文件可达上千个，
+# 一次性当参数传入会超过 Windows 进程参数表上限（约 32 KB）。分批不改变检查范围与判定。
+run_checker_on_list() {
+  printf '%s\n' "$2" | xargs -d '\n' -r -n 40 node "$1"
+}
+
 run_step() {
   step=$((step + 1))
   echo ""
@@ -96,12 +102,12 @@ fi
 if [ "$has_java" -gt 0 ]; then
   run_step "Java 形态：check-java-conventions（本次改动）"
   java_files=$(printf '%s\n' "$changed" | grep -E '\.java$' || true)
-  if node "$root/.agent/tools/java/check-java-conventions.mjs" $java_files; then :; else
+  if run_checker_on_list "$root/.agent/tools/java/check-java-conventions.mjs" "$java_files"; then :; else
     report_fail "$step" "Java 形态不合规" "node .agent/tools/java/check-java-conventions.mjs <文件>"
   fi
 
   run_step "Javadoc：check-javadoc（本次改动）"
-  if node "$root/.agent/tools/java/check-javadoc.mjs" $java_files; then :; else
+  if run_checker_on_list "$root/.agent/tools/java/check-javadoc.mjs" "$java_files"; then :; else
     report_fail "$step" "Javadoc 不合规" "node .agent/tools/java/check-javadoc.mjs <文件>"
   fi
 fi
@@ -109,7 +115,7 @@ fi
 if [ "$has_test" -gt 0 ]; then
   run_step "用例质量：check-test-quality（本次改动）"
   test_files=$(printf '%s\n' "$changed" | grep -E '/src/test/.*\.java$' || true)
-  if node "$root/.agent/tools/java/check-test-quality.mjs" $test_files; then :; else
+  if run_checker_on_list "$root/.agent/tools/java/check-test-quality.mjs" "$test_files"; then :; else
     report_fail "$step" "用例质量不达标" "node .agent/tools/java/check-test-quality.mjs <文件>"
   fi
 fi
