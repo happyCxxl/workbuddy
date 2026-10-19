@@ -670,6 +670,70 @@ export interface ElementBBox {
   height: number;
 }
 
+/** 产物内容项的环节专属附加信息（后端 StageContentExtraVO）；未使用的字段不出现 */
+export interface StageContentExtra {
+  /** 解析：元素来源（native / ocr 等） */
+  source?: string | null;
+  /** 解析：解析器标识 */
+  provider?: string | null;
+  /** 文档页码（解析 / 组装 / 预处理） */
+  page?: number | null;
+  /** 表格区域行数（解析 / 组装） */
+  rows?: number | null;
+  /** 表格区域列数（解析 / 组装） */
+  cols?: number | null;
+  /** 元素边界框（原文预览高亮用） */
+  bbox?: ElementBBox | null;
+  /** 解析：Word 段落样式名 */
+  style?: string | null;
+  /** 解析：Excel 工作表名 */
+  sheetName?: string | null;
+  /** 解析：Excel 单元格行下标（0 基） */
+  row?: number | null;
+  /** 解析：Excel 单元格列下标（0 基） */
+  col?: number | null;
+  /** 解析：合并单元格行跨度 */
+  rowSpan?: number | null;
+  /** 解析：合并单元格列跨度 */
+  colSpan?: number | null;
+  /** 解析：是否表头单元格 */
+  isHeader?: boolean | null;
+  /** 解析 / 预处理：表格单元格明细（二维数组的 JSON 文本） */
+  cells?: string | null;
+  /** 组装：标题层级 */
+  level?: number | null;
+  /** 预处理：元素原文 */
+  rawText?: string | null;
+  /** 预处理：结构标记（页眉页脚 / 目录 / 重复段等） */
+  marks?: string[] | null;
+  /** 预处理：抽取出的规范化字段（JSON 文本） */
+  normalizedFields?: string | null;
+  /** 预处理：非 KEEP 的处置轨迹（JSON 文本） */
+  trace?: string | null;
+  /** 切片 / 向量化：切片 ID */
+  chunkId?: string | null;
+  /** 切片：内容类型 */
+  contentType?: string | null;
+  /** 切片：标题路径 */
+  titlePath?: string | null;
+  /** 切片 / 向量化：字符数 */
+  charCount?: number | null;
+  /** 切片 / 向量化：估算 token 数 */
+  tokenCount?: number | null;
+  /** 切片：集合内顺序号 */
+  orderNo?: number | null;
+  /** 切片：父片 ID */
+  parentChunkId?: string | null;
+  /** 切片：覆盖的页码区间 */
+  pageRange?: string | null;
+  /** 切片：表格来源引用 */
+  tableRef?: string | null;
+  /** 向量化：是否命中缓存 */
+  cacheHit?: boolean | null;
+  /** 向量化：模型调用请求 ID */
+  requestId?: string | null;
+}
+
 /** 产物内容项（后端 StageContentItemVO） */
 export interface StageContentItem {
   /** 对齐键（解析 / 组装 / 预处理 = 产物元素 ID，切片 = 片 ID） */
@@ -682,20 +746,19 @@ export interface StageContentItem {
   display: string | null;
   normalized: string | null;
   /** 环节专属字段：解析=source/page/rows/cols/bbox、切片=chunkId/titlePath/orderNo/pageRange 等 */
-  extra: Record<string, unknown> | null;
+  extra: StageContentExtra | null;
 }
 
 /** 从 extra 里取边界框：字段缺失或数值非法时返回 null（不画高亮） */
-export function bboxOf(extra: Record<string, unknown> | null): ElementBBox | null {
+export function bboxOf(extra: StageContentExtra | null): ElementBBox | null {
   const raw = extra?.bbox;
-  if (typeof raw !== 'object' || raw === null) {
+  if (raw === null || raw === undefined) {
     return null;
   }
-  const box = raw as Record<string, unknown>;
-  const x = statNumber(box.x as number);
-  const y = statNumber(box.y as number);
-  const width = statNumber(box.width as number);
-  const height = statNumber(box.height as number);
+  const x = statNumber(raw.x);
+  const y = statNumber(raw.y);
+  const width = statNumber(raw.width);
+  const height = statNumber(raw.height);
   if (x === null || y === null || width === null || height === null || width <= 0 || height <= 0) {
     return null;
   }
@@ -703,8 +766,8 @@ export function bboxOf(extra: Record<string, unknown> | null): ElementBBox | nul
 }
 
 /** 从 extra 里取文档页码：缺失或非正数返回 null */
-export function pageOf(extra: Record<string, unknown> | null): number | null {
-  const page = statNumber(extra?.page as number);
+export function pageOf(extra: StageContentExtra | null): number | null {
+  const page = statNumber(extra?.page ?? null);
   return page === null || page < 1 ? null : Math.trunc(page);
 }
 

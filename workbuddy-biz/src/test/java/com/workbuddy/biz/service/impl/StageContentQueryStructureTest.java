@@ -1,35 +1,27 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.WbChunkDbService;
-import com.workbuddy.biz.service.db.WbChunkSetDbService;
-import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
-import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.WbFileResultDbService;
-import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
-import com.workbuddy.biz.service.db.WbPipelineProductDbService;
-import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
-import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
+import com.workbuddy.biz.service.db.*;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
-import com.workbuddy.common.domain.parse.BBox;
-import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseResult;
-import com.workbuddy.common.domain.structure.UnifiedDocument;
-import com.workbuddy.common.domain.structure.UnifiedElement;
-import com.workbuddy.common.domain.storage.ObjectRef;
-import com.workbuddy.common.enums.parse.ElementType;
-import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
-import com.workbuddy.common.enums.task.PipelineStage;
-import com.workbuddy.common.enums.task.PipelineTaskStatus;
-import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
-import com.workbuddy.filecenter.storage.FileStorage;
+import com.workbuddy.common.domain.parse.BBox;
+import com.workbuddy.common.domain.parse.ParseElement;
+import com.workbuddy.common.domain.parse.ParseResult;
+import com.workbuddy.common.domain.storage.ObjectRef;
+import com.workbuddy.common.domain.structure.UnifiedDocument;
+import com.workbuddy.common.domain.structure.UnifiedElement;
+import com.workbuddy.common.dto.response.stagecontent.BBoxVO;
+import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
+import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.common.enums.storage.StorageType;
+import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
+import com.workbuddy.filecenter.storage.FileStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,18 +30,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 /**
@@ -157,20 +143,19 @@ class StageContentQueryStructureTest {
         assertEquals("TITLE", first.getType());
         assertEquals("第一章 总则", first.getDisplay());
         assertEquals(1, first.getSeq());
-        Map<String, Object> extra = first.getExtra();
-        assertEquals(1, extra.get("level"));
-        assertEquals(3, extra.get("page"));
-        assertEquals(1, extra.get("rows"));
-        assertEquals(40, extra.get("cols"));
-        @SuppressWarnings("unchecked")
-        Map<String, Object> bbox = (Map<String, Object>) extra.get("bbox");
-        assertEquals(10.0, bbox.get("x"));
-        assertEquals(24.0, bbox.get("height"));
+        StageContentExtraVO extra = first.getExtra();
+        assertEquals(1, extra.getLevel().intValue());
+        assertEquals(3, extra.getPage().intValue());
+        assertEquals(1, extra.getRows().intValue());
+        assertEquals(40, extra.getCols().intValue());
+        BBoxVO bbox = extra.getBbox();
+        assertEquals(10.0, bbox.getX());
+        assertEquals(24.0, bbox.getHeight());
         var second = vo.getItems().get(1);
         assertEquals("CONFLICT", second.getStatus());
         assertEquals(2, second.getSeq());
-        assertFalse(second.getExtra().containsKey("level"));
-        assertFalse(second.getExtra().containsKey("bbox"));
+        assertNull(second.getExtra().getLevel());
+        assertNull(second.getExtra().getBbox());
     }
 
     /**
@@ -195,22 +180,22 @@ class StageContentQueryStructureTest {
 
         var vo = service.stageContent(10L, "PARSE", null, null, null, null);
 
-        Map<String, Object> cellExtra = vo.getItems().get(0).getExtra();
-        assertEquals("报价表", cellExtra.get("sheetName"));
-        assertEquals(1, cellExtra.get("row"));
-        assertEquals(2, cellExtra.get("col"));
-        assertEquals(2, cellExtra.get("rowSpan"));
-        assertEquals(3, cellExtra.get("colSpan"));
-        assertEquals(Boolean.TRUE, cellExtra.get("isHeader"));
-        Map<String, Object> plainExtra = vo.getItems().get(1).getExtra();
+        StageContentExtraVO cellExtra = vo.getItems().get(0).getExtra();
+        assertEquals("报价表", cellExtra.getSheetName());
+        assertEquals(1, cellExtra.getRow().intValue());
+        assertEquals(2, cellExtra.getCol().intValue());
+        assertEquals(2, cellExtra.getRowSpan().intValue());
+        assertEquals(3, cellExtra.getColSpan().intValue());
+        assertEquals(Boolean.TRUE, cellExtra.getIsHeader());
+        StageContentExtraVO plainExtra = vo.getItems().get(1).getExtra();
         // 无锚点字段的元素不下发任何 Office 定位键（空白值也不能塞进 extra）
-        assertFalse(plainExtra.containsKey("style"));
-        assertFalse(plainExtra.containsKey("sheetName"));
-        assertFalse(plainExtra.containsKey("row"));
-        assertFalse(plainExtra.containsKey("col"));
-        assertFalse(plainExtra.containsKey("rowSpan"));
-        assertFalse(plainExtra.containsKey("colSpan"));
-        assertFalse(plainExtra.containsKey("isHeader"));
+        assertNull(plainExtra.getStyle());
+        assertNull(plainExtra.getSheetName());
+        assertNull(plainExtra.getRow());
+        assertNull(plainExtra.getCol());
+        assertNull(plainExtra.getRowSpan());
+        assertNull(plainExtra.getColSpan());
+        assertNull(plainExtra.getIsHeader());
     }
 
     /**

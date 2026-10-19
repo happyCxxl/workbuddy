@@ -2,31 +2,18 @@ package com.workbuddy.biz.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.StageContentQueryService;
-import com.workbuddy.biz.service.db.WbChunkDbService;
-import com.workbuddy.biz.service.db.WbChunkSetDbService;
-import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
-import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
-import com.workbuddy.biz.service.db.WbPipelineProductDbService;
+import com.workbuddy.biz.service.db.*;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
-import com.workbuddy.common.domain.entity.WbChunk;
-import com.workbuddy.common.domain.entity.WbChunkSet;
-import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
-import com.workbuddy.common.domain.entity.WbEmbeddingSet;
-import com.workbuddy.common.domain.entity.WbPipelineProduct;
-import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.entity.*;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.ParseSource;
-import com.workbuddy.common.domain.preprocess.NormalizedField;
-import com.workbuddy.common.domain.preprocess.PreprocessView;
-import com.workbuddy.common.domain.preprocess.TraceEntry;
-import com.workbuddy.common.domain.preprocess.ViewCell;
-import com.workbuddy.common.domain.preprocess.ViewElement;
+import com.workbuddy.common.domain.preprocess.*;
+import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.domain.structure.UnifiedElement;
-import com.workbuddy.common.domain.storage.ObjectRef;
-import com.workbuddy.common.dto.request.stage.ChunkContentFilterDTO;
+import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -45,16 +32,9 @@ import org.mockito.quality.Strictness;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -323,18 +303,21 @@ class StageContentQueryPagingTest {
         assertEquals("EXCLUDED_TOC", item.getStatus());
         assertEquals("展示", item.getDisplay());
         assertEquals("检索", item.getNormalized());
-        Map<String, Object> extra = item.getExtra();
-        assertEquals("原文", extra.get("rawText"));
-        assertEquals(List.of("REPEATED_PAGE"), extra.get("marks"));
-        assertTrue(String.valueOf(extra.get("normalizedFields")).contains("金额"));
-        assertTrue(String.valueOf(extra.get("cells")).contains("单元格"));
-        assertEquals(7, extra.get("page"));
-        String trace = String.valueOf(extra.get("trace"));
+        StageContentExtraVO extra = item.getExtra();
+        assertEquals("原文", extra.getRawText());
+        assertEquals(List.of("REPEATED_PAGE"), extra.getMarks());
+        assertTrue(extra.getNormalizedFields().contains("金额"));
+        assertTrue(extra.getCells().contains("单元格"));
+        assertEquals(7, extra.getPage().intValue());
+        String trace = extra.getTrace();
         assertTrue(trace.contains("text-tidy-space"), trace);
         assertFalse(trace.contains("encoding-utf8"), trace);
-        // 第二项没有任何可选字段：extra 为空且不下发轨迹
+        // 第二项没有任何可选字段：extra 各字段均为空且不下发轨迹
         assertEquals(2, vo.getItems().get(1).getSeq());
-        assertTrue(vo.getItems().get(1).getExtra().isEmpty());
+        StageContentExtraVO plainExtra = vo.getItems().get(1).getExtra();
+        assertNull(plainExtra.getRawText());
+        assertNull(plainExtra.getMarks());
+        assertNull(plainExtra.getTrace());
     }
 
     /**
@@ -377,8 +360,8 @@ class StageContentQueryPagingTest {
         assertEquals("chunk-0007", item.getAlignKey());
         assertEquals("PARAGRAPH", item.getType());
         assertEquals("正文", item.getDisplay());
-        assertEquals(7, item.getExtra().get("orderNo"));
-        assertEquals("chunk-0001", item.getExtra().get("parentChunkId"));
+        assertEquals(7, item.getExtra().getOrderNo().intValue());
+        assertEquals("chunk-0001", item.getExtra().getParentChunkId());
         // 缺 chunkId 时对齐键回落为顺序号
         assertEquals(8, vo.getItems().get(1).getSeq());
         assertEquals("8", vo.getItems().get(1).getAlignKey());
@@ -436,10 +419,10 @@ class StageContentQueryPagingTest {
         assertEquals("PARAGRAPH", item.getType());
         assertEquals("SUCCESS", item.getStatus());
         assertEquals("输入一", item.getDisplay());
-        assertEquals("chunk-1", item.getExtra().get("chunkId"));
-        assertEquals(9, item.getExtra().get("tokenCount"));
-        assertEquals(Boolean.TRUE, item.getExtra().get("cacheHit"));
-        assertEquals("req-1", item.getExtra().get("requestId"));
+        assertEquals("chunk-1", item.getExtra().getChunkId());
+        assertEquals(9, item.getExtra().getTokenCount().intValue());
+        assertEquals(Boolean.TRUE, item.getExtra().getCacheHit());
+        assertEquals("req-1", item.getExtra().getRequestId());
         assertEquals(2, vo.getItems().get(1).getSeq());
     }
 

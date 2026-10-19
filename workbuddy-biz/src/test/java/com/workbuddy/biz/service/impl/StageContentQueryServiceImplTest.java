@@ -28,6 +28,8 @@ import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.domain.storage.ObjectRef;
+import com.workbuddy.common.dto.response.stagecontent.BBoxVO;
+import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -278,8 +280,8 @@ class StageContentQueryServiceImplTest {
         assertEquals(1, vo.getItems().size());
         assertEquals("chunk-0001", vo.getItems().get(0).getAlignKey());
         assertEquals("正文片", vo.getItems().get(0).getDisplay());
-        assertEquals("第一章", vo.getItems().get(0).getExtra().get("titlePath"));
-        assertEquals("1-2", vo.getItems().get(0).getExtra().get("pageRange"));
+        assertEquals("第一章", vo.getItems().get(0).getExtra().getTitlePath());
+        assertEquals("1-2", vo.getItems().get(0).getExtra().getPageRange());
     }
 
     /**
@@ -309,7 +311,7 @@ class StageContentQueryServiceImplTest {
 
         assertEquals(1, vo.getItems().size());
         assertEquals("CACHED", vo.getItems().get(0).getStatus());
-        assertEquals(Boolean.TRUE, vo.getItems().get(0).getExtra().get("cacheHit"));
+        assertEquals(Boolean.TRUE, vo.getItems().get(0).getExtra().getCacheHit());
     }
 
     /**
@@ -366,9 +368,9 @@ class StageContentQueryServiceImplTest {
 
         StageContentVO vo = service.stageContent(10L, "PARSE", null, null, null, null);
 
-        Map<String, Object> extra = vo.getItems().get(0).getExtra();
-        assertTrue(extra.containsKey("cells"));
-        String cells = String.valueOf(extra.get("cells"));
+        StageContentExtraVO extra = vo.getItems().get(0).getExtra();
+        String cells = extra.getCells();
+        assertNotNull(cells);
         assertTrue(cells.contains("Contract No."), () -> "cells=" + cells);
         assertTrue(cells.contains("ABC-1234"), () -> "cells=" + cells);
     }
@@ -462,15 +464,14 @@ class StageContentQueryServiceImplTest {
 
         StageContentVO vo = service.stageContent(10L, "PARSE", null, null, null, null);
 
-        Map<String, Object> first = vo.getItems().get(0).getExtra();
-        assertEquals(1, first.get("page"));
-        @SuppressWarnings("unchecked")
-        Map<String, Object> bbox = (Map<String, Object>) first.get("bbox");
+        StageContentExtraVO first = vo.getItems().get(0).getExtra();
+        assertEquals(1, first.getPage().intValue());
+        BBoxVO bbox = first.getBbox();
         assertNotNull(bbox);
-        assertEquals(72.0, bbox.get("x"));
-        assertEquals(100.0, bbox.get("y"));
-        assertEquals(400.0, bbox.get("width"));
-        assertEquals(20.0, bbox.get("height"));
+        assertEquals(72.0, bbox.getX());
+        assertEquals(100.0, bbox.getY());
+        assertEquals(400.0, bbox.getWidth());
+        assertEquals(20.0, bbox.getHeight());
     }
 
     /**
@@ -482,7 +483,7 @@ class StageContentQueryServiceImplTest {
 
         StageContentVO vo = service.stageContent(10L, "PARSE", null, null, null, null);
 
-        assertFalse(vo.getItems().get(0).getExtra().containsKey("bbox"));
+        assertNull(vo.getItems().get(0).getExtra().getBbox());
     }
 
     /**

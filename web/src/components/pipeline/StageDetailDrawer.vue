@@ -769,6 +769,7 @@ import type {
   PreprocessDetail,
   PreprocessElement,
   PreprocessField,
+  StageContentExtra,
   StageContentItem,
   StructureCellItem,
   StructureDetail,
@@ -1136,8 +1137,8 @@ function docxAnchorOf(item: StageContentItem, key: string): DocxAnchor | null {
 function xlsxAnchorOf(item: StageContentItem, key: string): XlsxAnchor | null {
   const extra = item.extra ?? {};
   const sheetName = typeof extra.sheetName === 'string' ? extra.sheetName : '';
-  const row = statNumber(extra.row as number | null);
-  const col = statNumber(extra.col as number | null);
+  const row = statNumber(extra.row);
+  const col = statNumber(extra.col);
   // 表格元素只有工作表名、没有行列：用它定位整表
   if (sheetName !== '' && row === null && col === null) {
     return { key, type: item.type ?? '', sheetName, row: 0, col: 0, rowSpan: 0, colSpan: 0 };
@@ -1151,8 +1152,8 @@ function xlsxAnchorOf(item: StageContentItem, key: string): XlsxAnchor | null {
     sheetName,
     row,
     col,
-    rowSpan: statNumber(extra.rowSpan as number | null) ?? 1,
-    colSpan: statNumber(extra.colSpan as number | null) ?? 1,
+    rowSpan: statNumber(extra.rowSpan) ?? 1,
+    colSpan: statNumber(extra.colSpan) ?? 1,
   };
 }
 
@@ -1176,9 +1177,8 @@ function rowTypeLabel(item: StageContentItem): string {
 }
 
 /** 列表行的来源列：切片给标题路径，其余环节给产物来源 */
-function rowSourceText(extra: Record<string, unknown> | null | undefined): string {
-  const key = props.stage === 'CHUNK' ? 'titlePath' : 'source';
-  const value = extra?.[key];
+function rowSourceText(extra: StageContentExtra | null | undefined): string {
+  const value = props.stage === 'CHUNK' ? extra?.titlePath : extra?.source;
   return typeof value === 'string' ? value : '';
 }
 
@@ -1188,8 +1188,8 @@ const visibleItems = computed(() => {
   return rawItems.value
     .map((item, index) => {
       const extra = item.extra ?? {};
-      const rows = statNumber(extra.rows as number | null);
-      const cols = statNumber(extra.cols as number | null);
+      const rows = statNumber(extra.rows);
+      const cols = statNumber(extra.cols);
       return {
         key: item.alignKey ?? `seq-${item.seq ?? index}`,
         seq: item.seq ?? index + 1,
@@ -1494,7 +1494,7 @@ function maxCellIndex(
  * **不设格数上限**：解析详情要如实展示表格内容，大表也整表渲染。
  */
 function elementTableGrid(
-  extra: Record<string, unknown> | null | undefined,
+  extra: StageContentExtra | null | undefined,
   rows: number | null,
   cols: number | null,
 ): (DocCell | null)[][] {
@@ -1910,7 +1910,7 @@ function chunkRowsOf(items: StageContentItem[]): ChunkRow[] {
     const key = itemKeyOf(item, index);
     const chunk = chunkByKey.value.get(key);
     const extra = item.extra ?? {};
-    const order = statNumber(extra.orderNo as number | null);
+    const order = statNumber(extra.orderNo);
     if (chunk === undefined) {
       return {
         key,
@@ -2156,14 +2156,14 @@ const treeRows = computed<TreeRow[]>(() => {
   return rawItems.value.map((item, index) => {
     const isTitle = item.type === 'TITLE';
     const extra = item.extra ?? {};
-    const level = statNumber(extra.level as number | null);
+    const level = statNumber(extra.level);
     if (isTitle) {
       currentLevel = level ?? 1;
     }
     // 层级 1 顶格；层级 N 缩进 (N-1) 档；正文比所属标题再进一档
     const depth = isTitle ? Math.max(currentLevel - 1, 0) : currentLevel;
-    const rows = statNumber(extra.rows as number | null);
-    const cols = statNumber(extra.cols as number | null);
+    const rows = statNumber(extra.rows);
+    const cols = statNumber(extra.cols);
     const display = (item.display ?? '').trim();
     return {
       key: itemKeyOf(item, index),
@@ -2186,8 +2186,8 @@ function rowTextOf(item: StageContentItem, display: string): string {
   }
   const extra = item.extra ?? {};
   if (item.type === 'TABLE') {
-    const rows = statNumber(extra.rows as number | null);
-    const cols = statNumber(extra.cols as number | null);
+    const rows = statNumber(extra.rows);
+    const cols = statNumber(extra.cols);
     return `表格 ${rows ?? '—'} 行 × ${cols ?? '—'} 列`;
   }
   if (item.type === 'IMAGE') {

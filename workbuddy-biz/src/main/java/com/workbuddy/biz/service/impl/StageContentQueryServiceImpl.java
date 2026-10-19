@@ -29,6 +29,8 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.domain.structure.UnifiedElement;
 import com.workbuddy.common.dto.request.stage.ChunkContentFilterDTO;
+import com.workbuddy.common.dto.response.stagecontent.BBoxVO;
+import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.enums.task.PipelineStage;
@@ -45,9 +47,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -237,16 +237,16 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     }
 
     /** 解析环节专属字段 + 公共页网格字段 + 原文定位锚点 + 表格单元格明细 */
-    private Map<String, Object> parseExtra(ParseSource source, ParseElement element) {
-        Map<String, Object> extra = new LinkedHashMap<>();
-        extra.put("source", source.getSource());
-        extra.put("provider", source.getProvider());
+    private StageContentExtraVO parseExtra(ParseSource source, ParseElement element) {
+        StageContentExtraVO extra = new StageContentExtraVO();
+        extra.setSource(source.getSource());
+        extra.setProvider(source.getProvider());
         putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
         putBbox(extra, element.getBbox());
         putOfficeAnchor(extra, element);
         // 表格单元格明细（TABLE 元素内嵌）：解析详情按行列渲染网格，单元格与文本原样下发、不做截断
         if (NullUtil.isNotNull(element.getCells()) && !element.getCells().isEmpty()) {
-            extra.put("cells", JsonUtil.toJsonStr(element.getCells()));
+            extra.setCells(JsonUtil.toJsonStr(element.getCells()));
         }
         return extra;
     }
@@ -257,27 +257,27 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      * <p>Word 段落给样式名（渲染器把样式名写在段落 DOM 上）；Excel 给工作表名与单元格行列
      * （行列是解析产物里的 0 基下标，与表格区域高亮同一口径）。
      */
-    private void putOfficeAnchor(Map<String, Object> extra, ParseElement element) {
+    private void putOfficeAnchor(StageContentExtraVO extra, ParseElement element) {
         if (StrUtil.isNotBlank(element.getStyle())) {
-            extra.put("style", element.getStyle());
+            extra.setStyle(element.getStyle());
         }
         if (StrUtil.isNotBlank(element.getSheetName())) {
-            extra.put("sheetName", element.getSheetName());
+            extra.setSheetName(element.getSheetName());
         }
         if (NullUtil.isNotNull(element.getRow())) {
-            extra.put("row", element.getRow());
+            extra.setRow(element.getRow());
         }
         if (NullUtil.isNotNull(element.getCol())) {
-            extra.put("col", element.getCol());
+            extra.setCol(element.getCol());
         }
         if (NullUtil.isNotNull(element.getRowSpan())) {
-            extra.put("rowSpan", element.getRowSpan());
+            extra.setRowSpan(element.getRowSpan());
         }
         if (NullUtil.isNotNull(element.getColSpan())) {
-            extra.put("colSpan", element.getColSpan());
+            extra.setColSpan(element.getColSpan());
         }
         if (NullUtil.isNotNull(element.getIsHeader())) {
-            extra.put("isHeader", element.getIsHeader());
+            extra.setIsHeader(element.getIsHeader());
         }
     }
 
@@ -304,10 +304,10 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     }
 
     /** 组装环节专属字段 + 公共页网格字段 */
-    private Map<String, Object> structureExtra(UnifiedElement element) {
-        Map<String, Object> extra = new LinkedHashMap<>();
+    private StageContentExtraVO structureExtra(UnifiedElement element) {
+        StageContentExtraVO extra = new StageContentExtraVO();
         if (NullUtil.isNotNull(element.getLevel())) {
-            extra.put("level", element.getLevel());
+            extra.setLevel(element.getLevel());
         }
         putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
         putBbox(extra, element.getBbox());
@@ -315,15 +315,15 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     }
 
     /** 页/行/列公共字段按非空并入 extra（解析/组装共用口径） */
-    private void putPageGrid(Map<String, Object> extra, Integer page, Integer rows, Integer cols) {
+    private void putPageGrid(StageContentExtraVO extra, Integer page, Integer rows, Integer cols) {
         if (NullUtil.isNotNull(page)) {
-            extra.put("page", page);
+            extra.setPage(page);
         }
         if (NullUtil.isNotNull(rows)) {
-            extra.put("rows", rows);
+            extra.setRows(rows);
         }
         if (NullUtil.isNotNull(cols)) {
-            extra.put("cols", cols);
+            extra.setCols(cols);
         }
     }
 
@@ -332,22 +332,25 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      *
      * <p>单位点（pt）、左上角原点，与解析产物里的 bbox 同口径；元素无坐标时不下发该字段。
      */
-    private void putBbox(Map<String, Object> extra, BBox bbox) {
+    private void putBbox(StageContentExtraVO extra, BBox bbox) {
         if (NullUtil.isNull(bbox)) {
             return;
         }
-        Map<String, Object> box = new LinkedHashMap<>();
-        box.put("x", bbox.getX());
-        box.put("y", bbox.getY());
-        box.put("width", bbox.getWidth());
-        box.put("height", bbox.getHeight());
-        extra.put("bbox", box);
+        BBoxVO box = new BBoxVO();
+        box.setX(bbox.getX());
+        box.setY(bbox.getY());
+        box.setWidth(bbox.getWidth());
+        box.setHeight(bbox.getHeight());
+        extra.setBbox(box);
     }
 
     /** 元素的文档页码：解析/组装走 extra.page，其余环节无页概念返回 null */
     private Long docPageOf(StageContentItemVO item) {
-        Object value = NullUtil.isNull(item.getExtra()) ? null : item.getExtra().get("page");
-        return value instanceof Number number ? number.longValue() : null;
+        StageContentExtraVO extra = item.getExtra();
+        if (NullUtil.isNull(extra) || NullUtil.isNull(extra.getPage())) {
+            return null;
+        }
+        return extra.getPage().longValue();
     }
 
     /**
@@ -404,26 +407,26 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
             item.setStatus(element.getStatus());
             item.setDisplay(element.getDisplayText());
             item.setNormalized(element.getNormalizedText());
-            Map<String, Object> extra = new LinkedHashMap<>();
+            StageContentExtraVO extra = new StageContentExtraVO();
             if (StrUtil.isNotBlank(element.getRawText())) {
-                extra.put("rawText", element.getRawText());
+                extra.setRawText(element.getRawText());
             }
             if (NullUtil.isNotNull(element.getMarks()) && !element.getMarks().isEmpty()) {
-                extra.put("marks", element.getMarks());
+                extra.setMarks(element.getMarks());
             }
             if (NullUtil.isNotNull(element.getNormalizedFields()) && !element.getNormalizedFields().isEmpty()) {
-                extra.put("normalizedFields", JsonUtil.toJsonStr(element.getNormalizedFields()));
+                extra.setNormalizedFields(JsonUtil.toJsonStr(element.getNormalizedFields()));
             }
             if (NullUtil.isNotNull(element.getCells()) && !element.getCells().isEmpty()) {
-                extra.put("cells", JsonUtil.toJsonStr(element.getCells()));
+                extra.setCells(JsonUtil.toJsonStr(element.getCells()));
             }
             if (NullUtil.isNotNull(element.getPage())) {
-                extra.put("page", element.getPage());
+                extra.setPage(element.getPage());
             }
             // 处理轨迹只对被处理过的元素下发（非 KEEP 条目），避免响应体膨胀
             List<TraceEntry> trace = nonKeepTrace(element);
             if (!trace.isEmpty()) {
-                extra.put("trace", JsonUtil.toJsonStr(trace));
+                extra.setTrace(JsonUtil.toJsonStr(trace));
             }
             item.setExtra(extra);
             items.add(item);
@@ -487,7 +490,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
 
     /** 切片/向量化共用条目组装：对齐键取顺序号 */
     private StageContentItemVO itemOf(int seq, String type, String status, String display,
-                                      Map<String, Object> extra) {
+                                      StageContentExtraVO extra) {
         StageContentItemVO item = new StageContentItemVO();
         item.setAlignKey(String.valueOf(seq));
         item.setSeq(seq);
@@ -499,27 +502,27 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     }
 
     /** 切片环节专属字段（来源元素个数与兜底原因只在切片产物里，不进这里） */
-    private Map<String, Object> chunkExtra(WbChunk chunk) {
-        Map<String, Object> extra = new LinkedHashMap<>();
-        extra.put("chunkId", chunk.getChunkId());
-        extra.put("contentType", chunk.getContentType());
-        extra.put("titlePath", chunk.getTitlePath());
-        extra.put("charCount", chunk.getCharCount());
-        extra.put("tokenCount", chunk.getTokenCount());
-        extra.put("orderNo", chunk.getOrderNo());
-        extra.put("parentChunkId", chunk.getParentChunkId());
-        extra.put("pageRange", chunk.getPageRange());
-        extra.put("tableRef", chunk.getTableRef());
+    private StageContentExtraVO chunkExtra(WbChunk chunk) {
+        StageContentExtraVO extra = new StageContentExtraVO();
+        extra.setChunkId(chunk.getChunkId());
+        extra.setContentType(chunk.getContentType());
+        extra.setTitlePath(chunk.getTitlePath());
+        extra.setCharCount(chunk.getCharCount());
+        extra.setTokenCount(chunk.getTokenCount());
+        extra.setOrderNo(chunk.getOrderNo());
+        extra.setParentChunkId(chunk.getParentChunkId());
+        extra.setPageRange(chunk.getPageRange());
+        extra.setTableRef(chunk.getTableRef());
         return extra;
     }
 
     /** 向量化环节专属字段 */
-    private Map<String, Object> embedExtra(WbEmbeddingRecord record) {
-        Map<String, Object> extra = new LinkedHashMap<>();
-        extra.put("chunkId", record.getChunkId());
-        extra.put("tokenCount", record.getTokenCount());
-        extra.put("cacheHit", record.getCacheHit());
-        extra.put("requestId", record.getRequestId());
+    private StageContentExtraVO embedExtra(WbEmbeddingRecord record) {
+        StageContentExtraVO extra = new StageContentExtraVO();
+        extra.setChunkId(record.getChunkId());
+        extra.setTokenCount(record.getTokenCount());
+        extra.setCacheHit(record.getCacheHit());
+        extra.setRequestId(record.getRequestId());
         return extra;
     }
 
