@@ -27,4 +27,15 @@ public interface StorageProvider {
     /** 首次使用前的准备：建桶或建存储根目录，不可用时抛异常 */
     default void initialize() {
     }
+
+    /**
+     * 对象的公开读取地址；后端没有公开读能力（如本地磁盘）时返回 null。
+     *
+     * @param bucket 桶名
+     * @param key    对象键
+     * @return 可直接交给浏览器读取的地址；不支持时返回 null
+     */
+    default String publicUrl(String bucket, String key) {
+        return null;
+    }
 }

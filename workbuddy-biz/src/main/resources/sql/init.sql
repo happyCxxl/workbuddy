@@ -396,7 +396,7 @@ CREATE TABLE wb_user
     display_name  VARCHAR(64)  NOT NULL DEFAULT ''     COMMENT '真实姓名',
     email         VARCHAR(128)          DEFAULT NULL   COMMENT '邮箱',
     phone         VARCHAR(32)           DEFAULT NULL   COMMENT '手机号',
-    avatar        VARCHAR(255)          DEFAULT NULL   COMMENT '头像对象 key：avatar/{userId}/{随机段}.{扩展名}',
+    avatar        VARCHAR(255)          DEFAULT NULL   COMMENT '头像对象存储的公开 URL；未设置头像为空',
     avatar_storage_type      VARCHAR(32)      DEFAULT NULL   COMMENT '头像存储类型（StorageType 枚举码：minio / local）；未设置头像为空',
     avatar_storage_source_id BIGINT           DEFAULT NULL   COMMENT '头像数据源实例 ID（wb_storage_source.id）；未设置头像为空',
     avatar_bucket            VARCHAR(64)      DEFAULT NULL   COMMENT '头像桶名（local 下为一级子目录）；未设置头像为空',

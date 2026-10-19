@@ -320,8 +320,8 @@ public class UserServiceImpl implements UserService {
     private static UserVO toUserVO(WbUser user) {
         UserVO vo = new UserVO();
         BeanUtil.copyProperties(user, vo);
-        // 库里存的是对象 key，对外一律换成可直接渲染的接口地址
-        vo.setAvatar(AvatarUrlUtil.readUrl(user.getId(), user.getAvatar()));
+        // 库里存的是对象存储的公开 URL，原样下发；历史对象 key 由 urlOrNull 归一为 null
+        vo.setAvatar(AvatarUrlUtil.urlOrNull(user.getAvatar()));
         return vo;
     }
 }

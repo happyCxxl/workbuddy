@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
         vo.setDisplayName(user.getDisplayName());
         vo.setEmail(user.getEmail());
         vo.setPhone(user.getPhone());
-        vo.setAvatar(AvatarUrlUtil.readUrl(user.getId(), user.getAvatar()));
+        vo.setAvatar(AvatarUrlUtil.urlOrNull(user.getAvatar()));
         vo.setStatus(user.getStatus());
         vo.setRole(user.getRole());
         vo.setTokenVersion(user.getTokenVersion());

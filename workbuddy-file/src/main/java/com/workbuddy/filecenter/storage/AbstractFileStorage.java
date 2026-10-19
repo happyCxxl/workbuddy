@@ -117,6 +117,17 @@ public abstract class AbstractFileStorage implements FileStorage {
     }
 
     /**
+     * 对象的公开读取地址；后端不支持公开读时返回 null。
+     *
+     * @param ref 对象位置
+     * @return 读取地址；本地后端返回 null
+     */
+    @Override
+    public String publicUrl(ObjectRef ref) {
+        return router.publicUrl(ref);
+    }
+
+    /**
      * 取文件档案的存储口径。
      *
      * @param fileId 文件 ID

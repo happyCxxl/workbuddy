@@ -12,6 +12,8 @@ import com.workbuddy.infra.storage.StorageSourceDef;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -204,6 +206,17 @@ public class StorageRouter {
      */
     public StorageProvider of(ObjectRef ref) {
         return of(ref.sourceId());
+    }
+
+    /**
+     * 对象的公开读取地址；后端不支持公开读（本地磁盘）时返回 null。
+     *
+     * @param ref 对象位置
+     * @return 可直接交给浏览器读取的地址；本地后端返回 null
+     * @throws KnowledgeException 位置里的数据源为空或未注册（40455）
+     */
+    public String publicUrl(ObjectRef ref) {
+        return of(ref).publicUrl(ref.bucket(), ref.objectKey());
     }
 
     /** 当前启用的数据源定义；未启用时抛 40455 */

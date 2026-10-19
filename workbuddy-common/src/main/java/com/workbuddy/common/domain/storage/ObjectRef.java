@@ -4,7 +4,6 @@ import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
-import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
@@ -67,20 +66,6 @@ public record ObjectRef(Long sourceId, StorageType storageType, String bucket, S
      */
     public static ObjectRef ofEmbeddingSet(WbEmbeddingSet row) {
         return of(row.getStorageSourceId(), row.getStorageType(), row.getBucket(), row.getArtifactId());
-    }
-
-    /**
-     * 头像位置（wb_user 行）。
-     *
-     * @param row 用户行
-     * @return 对象位置；未设置头像时为 null
-     */
-    public static ObjectRef ofAvatar(WbUser row) {
-        if (NullUtil.isNull(row) || NullUtil.isNull(row.getAvatar())) {
-            return null;
-        }
-        return of(row.getAvatarStorageSourceId(), row.getAvatarStorageType(), row.getAvatarBucket(),
-                row.getAvatar());
     }
 
     /**

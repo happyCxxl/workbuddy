@@ -93,6 +93,7 @@
 | `timestamp` | 毫秒时间戳                         |
 
 - 本项目业务接口的 HTTP 状态码恒为 200（规则见 `JAVA-DTO-007`）；三处出口分别是 `GlobalExceptionHandler`、`RestAuthenticationEntryPoint`、`RestAccessDeniedHandler`，后两者在 `workbuddy-auth` 的 `config` 包。
+- 二进制资源（头像等）存对象存储，公开读只放开头像前缀（`avatar/*`）；上传响应与用户资料直接下发对象 URL，浏览器 `<img src>` 直连存储，应用层不提供读接口、不代理字节（规则见 `JAVA-DTO-012`）。本地磁盘后端没有公开读能力，上传时拒绝并提示切换对象存储。
 - 前端对应类型是 `../web/src/types/response.ts` 的 `R<T>`，分页数据对应 `PageResult<T>`。
 - `R.failed(msg)`（`code=1`）是通用失败码，现有代码无人调用；业务失败一律抛 `KnowledgeException`。
 

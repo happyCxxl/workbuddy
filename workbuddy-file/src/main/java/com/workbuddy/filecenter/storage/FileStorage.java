@@ -50,4 +50,12 @@ public interface FileStorage {
 
     /** 按对象位置判断存在 */
     boolean objectExists(ObjectRef ref);
+
+    /**
+     * 对象的公开读取地址；后端不支持公开读（本地磁盘）时返回 null。
+     *
+     * @param ref 对象位置
+     * @return 可直接交给浏览器读取的地址；不支持时返回 null
+     */
+    String publicUrl(ObjectRef ref);
 }

@@ -7,7 +7,6 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
-import com.workbuddy.common.utils.AvatarUrlUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.common.utils.SecurityUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -22,8 +21,8 @@ import java.security.SecureRandom;
 import java.util.HexFormat;
 
 /**
- * 头像服务实现：写路径按文件头判定类型（Content-Type 由客户端提供、可以伪造），
- * 读路径把不可用的对象统一降级为「没有头像」，让调用方不必区分失败原因。
+ * 头像服务实现：对象写入对象存储，公开读前缀由存储适配器初始化时放开，
+ * 用户记录里直接保存可渲染的对象 URL，应用层不再代理图片字节。
  */
 @Slf4j
 @Service
@@ -33,6 +32,9 @@ public class AvatarServiceImpl implements AvatarService {
     /** 头像大小上限 */
     private static final long MAX_BYTES = 2L * 1024 * 1024;
 
+    /** 头像对象 key 前缀；与文档/产物同桶，靠前缀区隔并单独放开匿名读 */
+    private static final String KEY_PREFIX = "avatar/";
+
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final WbUserDbService userDbService;
@@ -40,10 +42,10 @@ public class AvatarServiceImpl implements AvatarService {
     private final FileStorage fileStorage;
 
     /**
-     * 上传头像：按文件头判定类型，写入存储并把对象位置写回用户记录。
+     * 上传头像：按文件头判定类型，写入对象存储并把公开 URL 写回用户记录。
      *
      * @param file 头像文件（PNG / JPG / WebP，不超过 2MB）
-     * @return 可直接渲染的新地址
+     * @return 可直接渲染的对象 URL
      */
     @Override
     public String upload(MultipartFile file) {
@@ -51,24 +53,26 @@ public class AvatarServiceImpl implements AvatarService {
         ThrowUtil.throwIf(file.getSize() > MAX_BYTES, ErrorCode.PARAM_INVALID, "头像不能超过 2MB");
         String extension = resolveExtension(file);
         WbUser user = currentUser();
-        // 每次上传换一个新 key：路径不可变，浏览器可长缓存，也天然解决"换了头像还在用旧图"
-        String key = AvatarUrlUtil.KEY_PREFIX + user.getId() + "/" + randomSegment() + "." + extension;
+        // 每次上传换一个新 key：URL 随之变化，浏览器缓存不会命中旧图
+        String key = KEY_PREFIX + user.getId() + "/" + randomSegment() + "." + extension;
         ObjectRef ref;
         try (InputStream in = file.getInputStream()) {
             ref = fileStorage.putRaw(key, in, file.getSize(), contentTypeOf(extension));
         } catch (IOException e) {
             throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "头像写入失败");
         }
-        // key 与所属存储位置一并落库，读取时按记录选后端
-        user.setAvatar(ref.objectKey());
+        String url = fileStorage.publicUrl(ref);
+        ThrowUtil.throwIf(NullUtil.isNull(url), ErrorCode.PARAM_INVALID,
+                "当前存储后端不支持头像直出，请切换对象存储数据源");
+        user.setAvatar(url);
         user.setAvatarStorageType(ref.storageType().getCode());
         user.setAvatarStorageSourceId(ref.sourceId());
         user.setAvatarBucket(ref.bucket());
         userDbService.updateById(user);
-        return AvatarUrlUtil.readUrl(user.getId(), key);
+        return url;
     }
 
-    /** 移除头像：对象键与三列存储位置一并清空，已上传的对象留待清理。 */
+    /** 移除头像：URL 与三列存储位置一并清空，已上传的对象留待清理。 */
     @Override
     public void remove() {
         WbUser user = currentUser();
@@ -77,28 +81,6 @@ public class AvatarServiceImpl implements AvatarService {
         user.setAvatarStorageSourceId(null);
         user.setAvatarBucket(null);
         userDbService.updateById(user);
-    }
-
-    /**
-     * 读取头像内容。
-     *
-     * @param userId 用户 ID
-     * @return 头像内容；没有头像、记录不完整或对象不可用时为 null
-     */
-    @Override
-    public AvatarContent load(Long userId) {
-        WbUser user = userDbService.getById(userId);
-        try {
-            ObjectRef ref = ObjectRef.ofAvatar(user);
-            if (NullUtil.isNull(ref)) {
-                return null;
-            }
-            return new AvatarContent(ref.objectKey(), fileStorage.getObject(ref));
-        } catch (RuntimeException e) {
-            // 记录不完整、对象被清掉或存储不可用：按"没有头像"处理，前端回落到姓名首字
-            log.debug("头像对象不可用，按没有头像处理, userId={}", userId, e);
-            return null;
-        }
     }
 
     private WbUser currentUser() {

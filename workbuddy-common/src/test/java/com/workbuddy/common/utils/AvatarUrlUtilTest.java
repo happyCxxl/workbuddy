@@ -6,48 +6,37 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * 头像地址口径单测。
+ * 头像地址归一单测。
  *
- * <p>守护 {@code readUrl}/{@code version} 的两条契约：未设置头像返回 null（前端回落姓名首字）、
- * 版本段只取文件名去扩展名（路径每次上传都变，用于让浏览器认出是新图）。
+ * <p>守护 {@code urlOrNull}：只放行对象存储的绝对 URL；空值与历史对象 key 一律按“没有头像”处理，
+ * 避免前端把相对 key 当图片地址渲染成破图。
  */
 class AvatarUrlUtilTest {
 
     /**
-     * 未设置头像（用户或对象键缺失）返回 null。
+     * 绝对 URL 原样下发。
      *
-     * <p>守护 {@code readUrl} 的空值兜底：返回半截地址会让前端一直请求 404。
+     * <p>守护 {@code urlOrNull} 的放行分支。
      */
     @Test
-    void readUrlShouldReturnNullWhenUserOrKeyMissing() {
-        assertNull(AvatarUrlUtil.readUrl(null, "avatar/1/a.png"));
-        assertNull(AvatarUrlUtil.readUrl(1L, null));
-        assertNull(AvatarUrlUtil.readUrl(1L, " "));
+    void urlOrNullShouldPassAbsoluteUrl() {
+        String url = "http://127.0.0.1:9000/files/avatar/1/a.png";
+        assertEquals(url, AvatarUrlUtil.urlOrNull(url));
+        assertEquals("https://cdn.example.com/a.png",
+                AvatarUrlUtil.urlOrNull("https://cdn.example.com/a.png"));
     }
 
     /**
-     * 正常地址形如 {@code /user/avatar/{id}?v={版本段}}。
+     * 空值与历史对象 key 归一为 null。
      *
-     * <p>守护 {@code readUrl} 的拼接：路径前缀或版本参数错位会让浏览器缓存失效。
+     * <p>守护存量数据降级：旧 key 不再能通过应用层接口读取。
      */
     @Test
-    void readUrlShouldCarryUserAndVersion() {
-        assertEquals("/user/avatar/123?v=a3f9c2d1",
-                AvatarUrlUtil.readUrl(123L, "avatar/123/a3f9c2d1.png"));
-    }
-
-    /**
-     * 版本段：取最后一段文件名去扩展名；无扩展名时原样返回。
-     *
-     * <p>守护 {@code version} 的边界：点号在首位或无点号时不能截出空串。
-     */
-    @Test
-    void versionShouldStripExtensionFromFileName() {
-        assertEquals("", AvatarUrlUtil.version(null));
-        assertEquals("", AvatarUrlUtil.version(" "));
-        assertEquals("a3f9c2d1", AvatarUrlUtil.version("avatar/123/a3f9c2d1.png"));
-        assertEquals("noext", AvatarUrlUtil.version("avatar/123/noext"));
-        assertEquals(".hidden", AvatarUrlUtil.version("avatar/123/.hidden"));
-        assertEquals("", AvatarUrlUtil.version("avatar/123/"));
+    void urlOrNullShouldRejectBlankAndLegacyKey() {
+        assertNull(AvatarUrlUtil.urlOrNull(null));
+        assertNull(AvatarUrlUtil.urlOrNull(""));
+        assertNull(AvatarUrlUtil.urlOrNull("   "));
+        assertNull(AvatarUrlUtil.urlOrNull("avatar/1/a.png"));
+        assertNull(AvatarUrlUtil.urlOrNull("/user/avatar/1?v=abc"));
     }
 }

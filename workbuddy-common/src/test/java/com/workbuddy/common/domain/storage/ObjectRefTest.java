@@ -4,14 +4,12 @@ import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
-import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -81,25 +79,6 @@ class ObjectRefTest {
 
         assertEquals("chunk-artifact", ObjectRef.ofChunkSet(chunkSet).objectKey());
         assertEquals("embed-artifact", ObjectRef.ofEmbeddingSet(embeddingSet).objectKey());
-    }
-
-    /**
-     * 守护 {@code avatarShouldCarrySourceIdAndBeNullWithoutKey}：该场景行为改动即失败。
-     */
-    @Test
-    void avatarShouldCarrySourceIdAndBeNullWithoutKey() {
-        WbUser user = new WbUser();
-        user.setAvatar("avatar/1/ab.png");
-        user.setAvatarStorageType(StorageType.LOCAL.getCode());
-        user.setAvatarStorageSourceId(SOURCE_ID);
-        user.setAvatarBucket("files");
-
-        ObjectRef ref = ObjectRef.ofAvatar(user);
-
-        assertEquals(SOURCE_ID, ref.sourceId());
-        assertEquals("avatar/1/ab.png", ref.objectKey());
-        assertNull(ObjectRef.ofAvatar(new WbUser()));
-        assertNull(ObjectRef.ofAvatar(null));
     }
 
     /**

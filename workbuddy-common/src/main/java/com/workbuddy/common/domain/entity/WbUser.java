@@ -36,7 +36,7 @@ public class WbUser extends BaseInfo {
     /** 手机号 */
     private String phone;
 
-    /** 头像对象 key（avatar/{userId}/{随机段}.{扩展名}）；null = 未设置，界面回落姓名首字 */
+    /** 头像对象存储的公开 URL；null = 未设置，界面回落姓名首字 */
     private String avatar;
 
     /** 头像存储类型（StorageType 枚举码）；未设置头像为空 */

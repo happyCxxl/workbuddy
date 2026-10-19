@@ -3,7 +3,6 @@ package com.workbuddy.auth.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -45,8 +44,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
-                // 头像读取免登录：<img src> 不会带 Authorization 头，写接口仍要求登录
-                .requestMatchers(HttpMethod.GET, "/user/avatar/**").permitAll()
                         // 健康探针与指标端点免认证（本地排查用；对外暴露前请自行收紧）
                         .requestMatchers("/actuator/health", "/actuator/metrics").permitAll()
                         .anyRequest().authenticated())

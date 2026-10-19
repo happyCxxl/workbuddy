@@ -1,15 +1,70 @@
 {
   "docs": {
-    "01": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
-    "02": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
-    "03": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
-    "04": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "8a36c41d", "note": "vector 并入后补齐系统上下文、分层与存储路由表述" },
-    "05": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "vector 并入、对象存储适配下沉 infra 后复核：7 模块、依赖边同步" },
-    "06": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "8a36c41d", "note": "存储布局改为 infra 的 StorageProvider 与 Milvus 适配" },
-    "07": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "2e17cd1a", "note": "stage-content 分页参数统一为 current/size，查询 DTO 继承 PageQueryDTO" },
-    "08": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "" },
-    "09": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "34c992a3", "note": "判空实现统一走 NullUtil，横切事实未变" },
-    "10": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "已记录 vector 并入、对象存储适配下沉、file 保持独立的取舍" },
-    "11": { "status": "已复核", "reviewed": "2026-10-19", "baseline": "b5cf0348", "note": "覆盖率随 vector/对象存储适配迁移更新；23 条 @Mock 债务已登记" }
+    "10": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "b5cf0348",
+      "note": "已记录 vector 并入、对象存储适配下沉、file 保持独立的取舍"
+    },
+    "11": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "b5cf0348",
+      "note": "覆盖率随 vector/对象存储适配迁移更新；23 条 @Mock 债务已登记"
+    },
+    "01": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "b5cf0348",
+      "note": ""
+    },
+    "02": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "b5cf0348",
+      "note": ""
+    },
+    "03": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "b5cf0348",
+      "note": ""
+    },
+    "04": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "8a36c41d",
+      "note": "vector 并入后补齐系统上下文、分层与存储路由表述"
+    },
+    "05": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "b5cf0348",
+      "note": "vector 并入、对象存储适配下沉 infra 后复核：7 模块、依赖边同步"
+    },
+    "06": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "8a36c41d",
+      "note": "存储布局改为 infra 的 StorageProvider 与 Milvus 适配"
+    },
+    "07": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "3e7a1c26",
+      "note": "头像改为对象存储公开 URL，移除读取接口；接口档案同步"
+    },
+    "08": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "b5cf0348",
+      "note": ""
+    },
+    "09": {
+      "status": "已复核",
+      "reviewed": "2026-10-19",
+      "baseline": "3e7a1c26",
+      "note": "头像读接口移除、公开读策略由存储适配器维护，安全放行同步"
+    }
   }
 }

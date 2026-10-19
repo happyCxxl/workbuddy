@@ -140,6 +140,17 @@ class MinioStorageProviderTest {
         assertFalse(provider.exists("files", "k"));
     }
 
+    /**
+     * 公开 URL：端点 + 桶 + 对象键，供浏览器直连；不把凭据带进 URL。
+     *
+     * <p>守护 {@code publicUrl}：头像列表直接用它渲染。
+     */
+    @Test
+    void publicUrlShouldComposeEndpointBucketAndKey() {
+        assertEquals("http://127.0.0.1:9000/files/avatar/1/a.png",
+                provider.publicUrl("files", "avatar/1/a.png"));
+    }
+
     /** 数据源定义夹具（不连网，仅提供构造参数） */
     private StorageSourceDef def() {
         Map<String, String> params = new LinkedHashMap<>();
