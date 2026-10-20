@@ -1,4 +1,4 @@
-package com.workbuddy.biz.config;
+package com.workbuddy.infra.persistence.mybatis;
 
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
@@ -31,13 +31,13 @@ import static org.mockito.Mockito.mockStatic;
  * <p>用真实实体（{@link BaseInfo}）承载元对象，守护填充口径：插入走严格填充（删除标记与留痕字段），
  * 更新走覆盖式（更新时间必须动、无认证上下文时 updateBy 保持原值）。
  */
-class KnowledgeMetaObjectHandlerTest {
+class CommonFieldMetaObjectHandlerTest {
 
     private static final LocalDateTime OLD_TIME = LocalDateTime.of(2020, 1, 1, 0, 0);
 
     private MockedStatic<SecurityUtil> security;
 
-    private KnowledgeMetaObjectHandler handler;
+    private CommonFieldMetaObjectHandler handler;
 
     /**
      * 注册实体的表信息，让严格填充能定位到带 fill 注解的字段。
@@ -54,7 +54,7 @@ class KnowledgeMetaObjectHandlerTest {
     @BeforeEach
     void setUp() {
         security = mockStatic(SecurityUtil.class);
-        handler = new KnowledgeMetaObjectHandler();
+        handler = new CommonFieldMetaObjectHandler();
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.workbuddy.auth.config;
+package com.workbuddy.auth.security;
 
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.support.JwtTokenSupport;

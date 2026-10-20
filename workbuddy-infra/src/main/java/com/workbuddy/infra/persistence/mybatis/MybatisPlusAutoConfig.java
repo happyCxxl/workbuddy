@@ -1,4 +1,4 @@
-package com.workbuddy.infra.config;
+package com.workbuddy.infra.persistence.mybatis;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
  * MyBatis-Plus 自动配置：注册分页插件（MySQL 方言）。
  */
 @AutoConfiguration
-public class MybatisPlusAutoConfiguration {
+public class MybatisPlusAutoConfig {
 
     /**
      * 分页插件（MySQL 方言）。

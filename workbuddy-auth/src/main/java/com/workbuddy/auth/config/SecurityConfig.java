@@ -1,5 +1,8 @@
 package com.workbuddy.auth.config;
 
+import com.workbuddy.auth.security.JwtAuthFilter;
+import com.workbuddy.auth.security.RestAccessDeniedHandler;
+import com.workbuddy.auth.security.RestAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

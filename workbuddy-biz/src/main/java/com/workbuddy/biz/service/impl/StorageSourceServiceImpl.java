@@ -20,8 +20,6 @@ import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.filecenter.config.FileCenterConfig;
-import com.workbuddy.filecenter.config.FileCenterDefaults;
 import com.workbuddy.infra.storage.StorageProviderFactory;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.infra.storage.StorageSourceDef;
@@ -32,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +37,8 @@ import java.util.Map;
 /**
  * 存储数据源服务实现：数据源清单与当前启用切换。
  *
- * <p>启动初始化在本类：表为空按 config/workbuddy-file.yml 的 file-center 段 seed 两行，未停用的行注册进存储路由，
- * is_current 那一行标记为当前启用（探活与启动日志都在 StorageRouter）。
+ * <p>启动初始化在本类：数据源表必须已由初始化脚本建好，未停用的行注册进存储路由，
+ * is_current 那一行标记为当前启用（探活与启动日志都在 StorageRouter）；空表或没有可用当前行都直接失败。
  *
  * <p>设为当前启用按「连接测试 → 先清后置 is_current → 回写探测结论 → 落审计 → 替换运行时当前启用」
  * 推进，连接测试不通过就抛出，库与运行时都不留半截状态。连接探测的结论落在数据源行的
@@ -65,15 +62,13 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     private final StorageRouter storageRouter;
     private final TransactionTemplate transactionTemplate;
     private final ChainStorageSupport chainStorageSupport;
-    private final FileCenterConfig fileCenterConfig;
 
-    /** 启动初始化：表为空按配置 seed 两行，注册未停用的行，标记当前启用的那一行。 */
+    /** 启动初始化：数据源表必须已初始化；注册未停用的行，标记当前启用的那一行。 */
     @PostConstruct
     public void initialize() {
         List<WbStorageSource> rows = storageSourceDbService.listAll();
-        if (rows.isEmpty()) {
-            rows = seedRows();
-        }
+        ThrowUtil.throwIf(rows.isEmpty(), ErrorCode.STORAGE_BACKEND_UNCONFIGURED,
+                "wb_storage_source 为空，请先配置数据源");
         List<WbStorageSource> enabled = rows.stream().filter(this::isEnabled).toList();
         enabled.forEach(this::registerRow);
         WbStorageSource current = enabled.stream()
@@ -81,10 +76,8 @@ public class StorageSourceServiceImpl implements StorageSourceService {
                 .filter(row -> NullUtil.isNotNull(StorageType.of(row.getStorageType())))
                 .findFirst()
                 .orElse(null);
-        if (NullUtil.isNull(current)) {
-            registerFallback();
-            return;
-        }
+        ThrowUtil.throwIf(NullUtil.isNull(current), ErrorCode.STORAGE_BACKEND_UNCONFIGURED,
+                "没有可用的当前启用存储数据源，请先在系统设置启用一个数据源");
         markCurrentWithProbe(current.getId());
         log.info("===> StorageSourceServiceImpl initialize 启动初始化当前启用数据源, id={}, name={}, type={}",
                 current.getId(), current.getName(), current.getStorageType());
@@ -297,38 +290,6 @@ public class StorageSourceServiceImpl implements StorageSourceService {
             return;
         }
         storageRouter.register(new StorageSourceDef(row.getId(), row.getName(), type, paramsOf(row)));
-    }
-
-    /** 表为空时的首次初始化：按 config/workbuddy-file.yml 的 file-center 段落两行，配置指明的类型置为当前启用 */
-    private List<WbStorageSource> seedRows() {
-        StorageType seedType = fileCenterConfig.defaultType();
-        List<StorageSourceDef> defs = FileCenterDefaults.seedDefs(fileCenterConfig);
-        List<WbStorageSource> rows = new ArrayList<>(defs.size());
-        for (StorageSourceDef def : defs) {
-            WbStorageSource row = new WbStorageSource();
-            row.setId(def.id());
-            row.setName(def.name());
-            row.setStorageType(def.type().getCode());
-            row.setConfigJson(JsonUtil.toJsonStr(def.params()));
-            row.setIsCurrent(def.type() == seedType
-                    ? WbStorageSourceDbService.CURRENT_YES : WbStorageSourceDbService.CURRENT_NO);
-            row.setStatus(StorageSourceStatus.ENABLED.getCode());
-            storageSourceDbService.save(row);
-            rows.add(row);
-        }
-        log.info("===> StorageSourceServiceImpl seedRows 数据源表为空，已按 file-center 配置初始化 {} 行, 当前启用 = {}",
-                rows.size(), seedType.getCode());
-        return rows;
-    }
-
-    /** 表里没有启用的数据源：按 file-center.storage-type 回落注册一条内置定义，保证应用可启动（内置定义不落库，探测结论无处可写） */
-    private void registerFallback() {
-        StorageType type = fileCenterConfig.defaultType();
-        StorageSourceDef def = FileCenterDefaults.defOfType(fileCenterConfig, type);
-        storageRouter.register(def);
-        storageRouter.markCurrent(def.id());
-        log.warn("===> StorageSourceServiceImpl registerFallback 表里没有启用的数据源，已按 file-center.storage-type "
-                + "回落注册内置定义, id={}, type={}", def.id(), type.getCode());
     }
 
     // ---------------- 校验与留痕 ----------------

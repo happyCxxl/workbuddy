@@ -1,4 +1,4 @@
-package com.workbuddy.infra.config;
+package com.workbuddy.infra.persistence.mybatis;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * <p>守护 {@code mybatisPlusInterceptor}：必须注册且只注册一个分页拦截器（MySQL 方言），
  * 漏注册会让分页查询退化成全量查询。
  */
-class MybatisPlusAutoConfigurationTest {
+class MybatisPlusAutoConfigTest {
 
     /**
      * 分页拦截器：非空且只含一个内部拦截器。
@@ -21,7 +21,7 @@ class MybatisPlusAutoConfigurationTest {
      */
     @Test
     void mybatisPlusInterceptorShouldCarryPagination() {
-        MybatisPlusInterceptor interceptor = new MybatisPlusAutoConfiguration().mybatisPlusInterceptor();
+        MybatisPlusInterceptor interceptor = new MybatisPlusAutoConfig().mybatisPlusInterceptor();
 
         assertNotNull(interceptor);
         assertEquals(1, interceptor.getInterceptors().size());

@@ -6,8 +6,6 @@ import com.workbuddy.auth.startup.AuthConfigCheck;
 import com.workbuddy.biz.config.RetrievalCapabilityProperties;
 import com.workbuddy.biz.config.TaskQueueProperties;
 import com.workbuddy.common.startup.StartupCheck;
-import com.workbuddy.filecenter.config.FileCenterConfig;
-import com.workbuddy.filecenter.startup.StorageTypeCheck;
 import com.workbuddy.model.config.ModelVendorProperties;
 import com.workbuddy.model.startup.ModelVendorValidator;
 import com.workbuddy.worker.input.FileValidationProperties;
@@ -43,7 +41,6 @@ class StartupCheckContractTest {
         assertProceeds(new ParserWhitelistChecker(realParsers(), new FileValidationProperties()));
         assertProceeds(new RetrievalCapabilityCheck(new RetrievalCapabilityProperties()));
         assertProceeds(new TaskTimeoutCheck(new TaskQueueProperties()));
-        assertProceeds(new StorageTypeCheck(new FileCenterConfig()));
         assertProceeds(new AuthConfigCheck(jwtProperties(), new LoginGuardProperties()));
     }
 
@@ -58,7 +55,6 @@ class StartupCheckContractTest {
         assertEquals(StartupCheck.ORDER_PARAMETERS,
                 new RetrievalCapabilityCheck(new RetrievalCapabilityProperties()).order());
         assertEquals(StartupCheck.ORDER_PARAMETERS, new TaskTimeoutCheck(new TaskQueueProperties()).order());
-        assertEquals(StartupCheck.ORDER_PARAMETERS, new StorageTypeCheck(new FileCenterConfig()).order());
         assertEquals(StartupCheck.ORDER_CREDENTIALS,
                 new AuthConfigCheck(jwtProperties(), new LoginGuardProperties()).order());
     }

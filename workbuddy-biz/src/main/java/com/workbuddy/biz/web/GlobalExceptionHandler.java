@@ -1,4 +1,4 @@
-package com.workbuddy.biz.config;
+package com.workbuddy.biz.web;
 
 import com.workbuddy.common.web.R;
 import com.workbuddy.common.error.ErrorCode;

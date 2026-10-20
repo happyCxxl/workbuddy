@@ -11,7 +11,6 @@ import com.workbuddy.common.enums.storage.StorageSourceStatus;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.JsonUtil;
-import com.workbuddy.filecenter.config.FileCenterConfig;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.infra.storage.StorageSourceDef;
 
@@ -52,12 +51,9 @@ final class StorageSourceTestFixture {
 
     StorageSourceTestFixture(Path root) {
         this.root = root;
-        FileCenterConfig fileCenterConfig = new FileCenterConfig();
-        fileCenterConfig.setStorageType("local");
-        fileCenterConfig.getLocal().setRootDir(root.resolve("seeded-local").toString());
         service = new StorageSourceServiceImpl(storageSourceDbService, pipelineTaskDbService,
                 kbAuditLogDbService, storageRouter, TransactionTestSupport.template(),
-                chainStorageSupport, fileCenterConfig);
+                chainStorageSupport);
         lenient().when(chainStorageSupport.sourceName(any())).thenAnswer(inv -> {
             Object sourceId = inv.getArgument(0);
             return sourceId == null ? "未记录的数据源" : "数据源" + sourceId;

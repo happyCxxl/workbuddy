@@ -1,6 +1,5 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.WbStorageSourceDbService;
 import com.workbuddy.common.domain.entity.WbStorageSource;
 import com.workbuddy.common.dto.response.setting.StorageSourceVO;
 import com.workbuddy.common.enums.storage.StorageSourceStatus;
@@ -24,7 +23,6 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,12 +30,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * 存储数据源生命周期用例：空表 seed / 未停用行注册与当前启用标记 / 回落注册 /
+ * 存储数据源生命周期用例：空表与无当前行 fail-fast / 未停用行注册与当前启用标记 /
  * 清单的连接参数与探测结论。
  *
  * <p>切换预览与切换用例在 {@link StorageSwitchServiceTest}；装配与夹具数据见
@@ -60,36 +57,19 @@ class StorageSourceLifecycleTest {
     }
 
     /**
-     * 启动初始化：空表按配置 seed 两行并注册、标记当前行。
+     * 启动初始化：空表说明初始化脚本未执行或数据被误删，必须失败。
      *
-     * <p>守护 {@code initialize}：seed 行缺主键或当前标记错即失败。
+     * <p>守护 {@code initialize}：空表被静默 seed 而非失败即失败。
      */
     @Test
-    void initializeShouldSeedTwoRowsWhenTableEmpty() {
+    void initializeShouldFailWhenTableEmpty() {
         when(fixture.storageSourceDbService.listAll()).thenReturn(List.of());
 
-        service.initialize();
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.initialize());
 
-        ArgumentCaptor<WbStorageSource> rows = ArgumentCaptor.forClass(WbStorageSource.class);
-        verify(fixture.storageSourceDbService, times(2)).save(rows.capture());
-        List<WbStorageSource> seeded = rows.getAllValues();
-        Map<String, WbStorageSource> byName = new LinkedHashMap<>();
-        seeded.forEach(item -> byName.put(item.getName(), item));
-        assertEquals(2, byName.size());
-        assertTrue(byName.containsKey("MinIO"), byName.keySet().toString());
-        assertTrue(byName.containsKey("本地磁盘"), byName.keySet().toString());
-        // 配置里的 storage-type = local：本地磁盘那一行置为当前启用
-        assertEquals(WbStorageSourceDbService.CURRENT_YES, byName.get("本地磁盘").getIsCurrent());
-        assertEquals(WbStorageSourceDbService.CURRENT_NO, byName.get("MinIO").getIsCurrent());
-        assertEquals(StorageSourceStatus.ENABLED.getCode(), byName.get("MinIO").getStatus());
-        assertNotNull(byName.get("本地磁盘").getConfigJson());
-        // seed 行必须带主键：注册、当前标记与探活结论都按它定位
-        assertNotNull(byName.get("MinIO").getId(), "seed 行缺主键");
-        assertEquals(StorageType.LOCAL.getCode(), byName.get("本地磁盘").getStorageType());
-        // seed 出来的两行都注册进路由，当前启用那一行做标记并回写这次探活的结论
-        verify(fixture.storageRouter).markCurrent(byName.get("本地磁盘").getId());
-        verify(fixture.storageRouter, times(2)).register(any(StorageSourceDef.class));
-        verify(fixture.storageSourceDbService).recordProbe(eq(byName.get("本地磁盘").getId()), eq(true), any());
+        assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
+        verify(fixture.storageSourceDbService, never()).save(any());
+        verify(fixture.storageRouter, never()).register(any(StorageSourceDef.class));
     }
 
     /**
@@ -133,46 +113,40 @@ class StorageSourceLifecycleTest {
     }
 
     /**
-     * 启动初始化：没有启用的行时按配置类型回落注册。
+     * 启动初始化：没有启用的行时必须失败，不能用配置伪造当前数据源。
      *
-     * <p>守护 {@code initialize}：无启用水源即失败。
+     * <p>守护 {@code initialize}：无启用水源仍继续启动即失败。
      */
     @Test
-    void initializeShouldFallBackToConfiguredTypeWithoutEnabledRow() {
+    void initializeShouldFailWhenNoEnabledSource() {
         WbStorageSource disabled = fixture.row(StorageSourceTestFixture.OTHER_ID, "本地磁盘", StorageType.LOCAL,
                 fixture.localParams(root.resolve("disabled").toString()), StorageSourceStatus.DISABLED, 0);
         when(fixture.storageSourceDbService.listAll()).thenReturn(List.of(disabled));
 
-        service.initialize();
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.initialize());
 
-        ArgumentCaptor<StorageSourceDef> defs = ArgumentCaptor.forClass(StorageSourceDef.class);
-        verify(fixture.storageRouter).register(defs.capture());
-        assertEquals(StorageType.LOCAL, defs.getValue().type());
-        assertEquals("本地磁盘", defs.getValue().name());
-        verify(fixture.storageRouter).markCurrent(defs.getValue().id());
+        assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
+        verify(fixture.storageRouter, never()).register(any(StorageSourceDef.class));
+        verify(fixture.storageRouter, never()).markCurrent(any());
     }
 
     /**
-     * 启动初始化：类型码值无法识别的行跳过且不当作当前启用。
+     * 启动初始化：当前行的类型码值无法识别时必须失败，不能回落到配置默认类型。
      *
-     * <p>守护 {@code initialize}：坏行被当作当前启用即失败。
+     * <p>守护 {@code initialize}：坏行被跳过却继续启动即失败。
      */
     @Test
-    void initializeShouldSkipRowsWithUnrecognizedType() {
+    void initializeShouldFailWhenCurrentRowTypeUnrecognized() {
         WbStorageSource broken = fixture.row(StorageSourceTestFixture.OTHER_ID, "未知源", StorageType.LOCAL,
-                fixture.localParams(root.resolve("broken").toString()), StorageSourceStatus.ENABLED, 0);
+                fixture.localParams(root.resolve("broken").toString()), StorageSourceStatus.ENABLED, 1);
         broken.setStorageType("oss");
         when(fixture.storageSourceDbService.listAll()).thenReturn(List.of(broken));
 
-        service.initialize();
+        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.initialize());
 
-        // 类型码值认不出来：该行不注册，也没有可用的当前启用，按配置回落
-        ArgumentCaptor<StorageSourceDef> defs = ArgumentCaptor.forClass(StorageSourceDef.class);
-        verify(fixture.storageRouter).register(defs.capture());
-        assertEquals(StorageType.LOCAL, defs.getValue().type());
-        verify(fixture.storageRouter).markCurrent(defs.getValue().id());
-        // 认不出类型的那一行不能被当作当前启用
-        verify(fixture.storageRouter, never()).markCurrent(StorageSourceTestFixture.OTHER_ID);
+        assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
+        verify(fixture.storageRouter, never()).register(any(StorageSourceDef.class));
+        verify(fixture.storageRouter, never()).markCurrent(any());
     }
 
     /**

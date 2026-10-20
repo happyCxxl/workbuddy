@@ -521,9 +521,9 @@ VALUES ('RETRIEVAL', 'hybrid-rrf-k60-top10-parent', 'v1',
         '{"channel":"HYBRID","fusion":{"mode":"RRF","rrfK":60,"perChannelLimit":50},"preprocess":{"mode":"NONE"},"rerank":{"mode":"NONE"},"postprocess":{"mode":"PARENT_EXPAND"},"topK":10,"scoreThreshold":0}',
         'ACTIVE');
 
--- 存储数据源：MinIO 与本地磁盘两行，参数与 application.yml 的 file-center.minio.* / file-center.local.* 同值
--- 当前启用写在 is_current 上（全表至多一行为 1）；两列探测结论留空表示尚未探测，应用启动时探活当前启用那行并回写
--- 表被清空时应用启动会按上述配置重新播种这两行，此处写入后应用只按 is_current 决定当前启用
+-- 存储数据源：MinIO 与本地磁盘两行；当前启用写在 is_current 上（全表至多一行为 1）
+-- 两列探测结论留空表示尚未探测，应用启动时探活当前启用那行并回写
+-- 表为空或没有可用当前行时应用启动失败，不在运行期按配置补行
 INSERT INTO wb_storage_source (id, name, storage_type, config_json, is_current, status, del_flag)
 VALUES (1, 'MinIO', 'minio',
         '{"endpoint":"http://localhost:9000","accessKey":"minioadmin","secretKey":"minioadmin","fileBucket":"files","artifactBucket":"artifacts"}',

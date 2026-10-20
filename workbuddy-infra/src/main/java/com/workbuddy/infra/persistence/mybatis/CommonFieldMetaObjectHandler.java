@@ -1,4 +1,4 @@
-package com.workbuddy.biz.config;
+package com.workbuddy.infra.persistence.mybatis;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.workbuddy.common.enums.base.DelFlag;
@@ -6,15 +6,15 @@ import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.common.utils.SecurityUtil;
 import org.apache.ibatis.reflection.MetaObject;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
 /**
  * 公共字段自动填充：插入/更新时填充逻辑删除标记与创建/更新留痕字段。
  */
-@Configuration
-public class KnowledgeMetaObjectHandler implements MetaObjectHandler {
+@Component
+public class CommonFieldMetaObjectHandler implements MetaObjectHandler {
 
     /**
      * 插入填充：删除标记、创建人/时间与更新人/时间。

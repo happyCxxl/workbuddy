@@ -1,4 +1,4 @@
-package com.workbuddy.auth.config;
+package com.workbuddy.auth.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workbuddy.common.error.ErrorCode;

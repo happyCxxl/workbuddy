@@ -1,24 +1,8 @@
-# 文件环节配置：上传校验口径与文件服务数据源的首次初始化来源。
-# 键的来源：knowledge-worker 的 FileValidationProperties（前缀 knowledge.file）与 knowledge-file-center 的 FileCenterConfig（前缀 file-center）。
+# 文件环节配置：上传校验口径。
+# 键的来源：knowledge-worker 的 FileValidationProperties（前缀 knowledge.file）。
 # 本环节配置的默认值在此处维护。
 knowledge:
   file:
     max-size: 104857600
     enabled-formats: PDF,DOC,DOCX,XLS,XLSX,PPT,PPTX
     temp-file-threshold: 10485760
-
-# 文件服务：数据源首次初始化的缺省来源
-# 数据源表为空时按本段参数 seed 两行（MinIO / 本地磁盘），storage-type 指的那种类型置为当前启用；
-# 表里没有启用的数据源时按 storage-type 回落注册一条内置定义。连接参数的实际来源是 wb_storage_source.config_json。
-file-center:
-  storage-type: minio
-  minio:
-    endpoint: http://localhost:9000
-    access-key: minioadmin
-    secret-key: minioadmin
-    file-bucket: files
-    artifact-bucket: artifacts
-  local:
-    root-dir: ./data/file-center
-    file-dir: files
-    artifact-dir: artifacts
