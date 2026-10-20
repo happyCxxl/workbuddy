@@ -3,7 +3,7 @@ package com.workbuddy.biz.service.impl;
 import cn.hutool.core.util.ObjectUtil;
 import com.workbuddy.biz.service.IndexComboQueryService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
-import com.workbuddy.biz.service.support.IndexComboReconciler;
+import com.workbuddy.biz.service.support.index.IndexComboReconciler;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.dto.response.index.IndexComboVO;
 import com.workbuddy.common.utils.NullUtil;

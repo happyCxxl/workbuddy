@@ -1,7 +1,7 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.IndexSetService;
-import com.workbuddy.biz.service.support.BuildOrderAssembler;
+import com.workbuddy.biz.service.support.assemble.BuildOrderAssembler;
 import com.workbuddy.common.dto.request.index.BuildOrderDTO;
 import com.workbuddy.common.dto.response.index.IndexBuildTriggerVO;
 import com.workbuddy.common.dto.response.index.IndexComboVO;

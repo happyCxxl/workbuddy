@@ -2,12 +2,12 @@ package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.StructureControlService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
-import com.workbuddy.biz.service.support.FileResultAccessGuard;
-import com.workbuddy.biz.service.support.StageStatsAssembler;
-import com.workbuddy.biz.service.support.StatsSupport;
-import com.workbuddy.biz.service.support.StructureStatsSupport;
-import com.workbuddy.biz.service.support.StructureVoAssembler;
-import com.workbuddy.biz.service.support.TaskDetailSupport;
+import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
+import com.workbuddy.biz.service.support.assemble.StageStatsAssembler;
+import com.workbuddy.biz.service.support.stats.StatsSupport;
+import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
+import com.workbuddy.biz.service.support.assemble.StructureVoAssembler;
+import com.workbuddy.biz.service.support.common.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;

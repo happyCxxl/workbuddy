@@ -4,6 +4,8 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.worker.retrieval.RetrievalCapability;
 import com.workbuddy.worker.retrieval.RetrievalRuleSpec;
+import com.workbuddy.biz.service.support.retrieval.RetrievalRuleResolver;
+import com.workbuddy.biz.service.support.retrieval.RetrievalCapabilityRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,6 +1,7 @@
 package com.workbuddy.biz.service.support;
 
 import com.workbuddy.biz.config.RetrievalRunProperties;
+import com.workbuddy.biz.service.support.retrieval.RetrievalRunSettings;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

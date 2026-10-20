@@ -2,6 +2,7 @@ package com.workbuddy.biz.service.support;
 
 import com.workbuddy.biz.config.RetrievalCapabilityProperties;
 import com.workbuddy.worker.retrieval.RetrievalCapability;
+import com.workbuddy.biz.service.support.retrieval.RetrievalCapabilityRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;

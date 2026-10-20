@@ -7,6 +7,7 @@ import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.RowStatus;
+import com.workbuddy.biz.service.support.common.EmbedRowSupport;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

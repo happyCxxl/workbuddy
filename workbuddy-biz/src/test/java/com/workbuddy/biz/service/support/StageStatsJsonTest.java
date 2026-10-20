@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import com.workbuddy.common.dto.response.chunk.ChunkDetailVO;
 import com.workbuddy.common.dto.response.lineage.LineageNodeVO;
+import com.workbuddy.biz.service.support.assemble.StageStatsAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;

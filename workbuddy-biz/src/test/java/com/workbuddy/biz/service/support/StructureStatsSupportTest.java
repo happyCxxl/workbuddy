@@ -14,6 +14,7 @@ import com.workbuddy.common.enums.structure.RelationType;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.filecenter.storage.FileStorage;
+import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

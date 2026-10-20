@@ -2,7 +2,7 @@ package com.workbuddy.biz.task.runner.persistence;
 
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
-import com.workbuddy.biz.service.support.ChainStorageSupport;
+import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;

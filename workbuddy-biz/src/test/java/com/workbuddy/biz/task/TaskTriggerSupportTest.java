@@ -3,7 +3,7 @@ package com.workbuddy.biz.task;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
-import com.workbuddy.biz.service.support.ChainStorageSupport;
+import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.common.domain.entity.WbFileResult;

@@ -2,6 +2,7 @@ package com.workbuddy.biz.service.support;
 
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.biz.service.support.index.IndexLineageResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

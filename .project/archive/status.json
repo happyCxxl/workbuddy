@@ -50,9 +50,9 @@
     },
     "07": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "d7f50074",
-      "note": "头像改为对象存储公开 URL，移除读取接口；接口档案同步"
+      "reviewed": "2026-10-20",
+      "baseline": "4f64e287",
+      "note": "仅控制器内的助手类 import 随助手包拆分调整，对外接口未变"
     },
     "08": {
       "status": "已复核",
@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "5c58f55c",
-      "note": "技术职责分包：Security 适配器移入 security；JWT/Tx 语义未变"
+      "baseline": "4f64e287",
+      "note": "助手包按关注点拆为 8 个子包；横切机制所在类与语义未变"
     }
   }
 }

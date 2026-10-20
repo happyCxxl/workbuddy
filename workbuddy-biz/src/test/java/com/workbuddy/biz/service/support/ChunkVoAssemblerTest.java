@@ -4,6 +4,7 @@ import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.entity.WbChunk;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
+import com.workbuddy.biz.service.support.assemble.ChunkVoAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -3,6 +3,7 @@ package com.workbuddy.biz.service.support;
 import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
+import com.workbuddy.biz.service.support.assemble.EmbedVoAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

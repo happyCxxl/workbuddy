@@ -3,7 +3,7 @@ package com.workbuddy.biz.service.impl;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbStorageSourceDbService;
-import com.workbuddy.biz.service.support.ChainStorageSupport;
+import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.biz.testkit.TransactionTestSupport;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.entity.WbStorageSource;

@@ -2,7 +2,7 @@ package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
-import com.workbuddy.biz.service.support.RetrievalRuleResolver;
+import com.workbuddy.biz.service.support.retrieval.RetrievalRuleResolver;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDTO;
 import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDTO;

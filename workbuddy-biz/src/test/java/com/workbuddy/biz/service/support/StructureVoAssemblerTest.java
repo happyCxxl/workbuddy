@@ -9,6 +9,7 @@ import com.workbuddy.common.domain.parse.QualityWarning;
 import com.workbuddy.common.enums.parse.QualityWarningCode;
 import com.workbuddy.common.enums.structure.RelationType;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
+import com.workbuddy.biz.service.support.assemble.StructureVoAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

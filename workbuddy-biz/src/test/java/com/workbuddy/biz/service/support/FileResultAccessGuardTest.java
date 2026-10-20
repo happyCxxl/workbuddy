@@ -8,6 +8,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.SecurityUtil;
+import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -30,25 +30,25 @@
 
 ## 代码索引
 
-| 位置                                        | 职责                                                                                                                       |
-|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
-| `structure/impl/AssemblerPipeline`          | 环节编排：标准化 → 去重与阅读顺序 → 结构组装 → 跨页接续 → 关系重建 → 溯源校验 → 重复与噪声 → 质量判定                      |
-| `structure/DocumentAssemblerPort`           | 组装契约：`assemble(parseResult, context)` 返回 `AssembleOutcome`                                                          |
-| `structure/AssembleContext`                 | 组装输入：`taskId`、`fileResultId`、源文件类型、`StructureProperties`                                                      |
-| `structure/StructureProperties`             | 全部组装阈值（`knowledge.structure` 前缀）                                                                                 |
-| `structure/craft/ElementNormalizer`         | 工艺① 元素标准化（实现 `impl/craft/NormalizerImpl`，产出 `NormalizeOutcome`）                                              |
-| `structure/craft/DedupMerger`               | 工艺② 跨来源去重合并（实现 `impl/craft/DedupMergerImpl`，产出 `MergeOutcome`）                                             |
-| `structure/craft/ReadingOrderResolver`      | 工艺③ 阅读顺序 XY-cut（实现 `impl/craft/ReadingOrderResolverImpl`）                                                        |
-| `structure/craft/StructureAssembler`        | 工艺④ 标题推定与章节插入 + 关系重建 `buildRelations`（实现 `impl/craft/StructureAssemblerImpl`）                           |
-| `structure/title/`                          | 标题规则链契约（`TitleRule` / `TitleDecision` / `TitleRuleContext` / `TitleEvidence`）                                     |
-| `structure/impl/title/`                     | 七条标题规则：Style / Chapter / SingleNumber / Number / CnParen / CnDot / FontSignal                                       |
-| `structure/judge/`                          | 模型判定能力契约：`StructureJudgeProvider`（标题与续表两路，当前零实现）                                                   |
-| `structure/craft/TableContinuationResolver` | 工艺⑤ 跨页续表接续（实现 `impl/craft/TableContinuationResolverImpl`，产出 `ContinuationOutcome`）                          |
-| `structure/craft/RepeatNoiseMarker`         | 工艺⑦ 重复与噪声识别（实现 `impl/craft/RepeatNoiseMarkerImpl`，产出 `MarkOutcome`）                                        |
-| `structure/craft/`（其余）                  | 产出载体：`TreeOutcome` / `NormalizeOutcome` / `MergeOutcome` / `ContinuationOutcome` / `MarkOutcome`                      |
-| `common/enums/structure/`                   | 枚举口径：`UnifiedElementType` / `RelationType` / `ElementMark` / `PageMark` / `ElementExtensionKey` / `StructureStepName` |
-| `biz/task/runner/StructureTaskRunner`       | 领任务 → 读上游产物 → 调管线 → 写产物行与子步骤 → 回写终态（原子条件更新）                                                 |
-| `biz/service/support/StructureStatsSupport` | 详情页统计与结论文案（按产物现算，不落库）                                                                                 |
+| 位置                                              | 职责                                                                                                                       |
+|---------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| `structure/impl/AssemblerPipeline`                | 环节编排：标准化 → 去重与阅读顺序 → 结构组装 → 跨页接续 → 关系重建 → 溯源校验 → 重复与噪声 → 质量判定                      |
+| `structure/DocumentAssemblerPort`                 | 组装契约：`assemble(parseResult, context)` 返回 `AssembleOutcome`                                                          |
+| `structure/AssembleContext`                       | 组装输入：`taskId`、`fileResultId`、源文件类型、`StructureProperties`                                                      |
+| `structure/StructureProperties`                   | 全部组装阈值（`knowledge.structure` 前缀）                                                                                 |
+| `structure/craft/ElementNormalizer`               | 工艺① 元素标准化（实现 `impl/craft/NormalizerImpl`，产出 `NormalizeOutcome`）                                              |
+| `structure/craft/DedupMerger`                     | 工艺② 跨来源去重合并（实现 `impl/craft/DedupMergerImpl`，产出 `MergeOutcome`）                                             |
+| `structure/craft/ReadingOrderResolver`            | 工艺③ 阅读顺序 XY-cut（实现 `impl/craft/ReadingOrderResolverImpl`）                                                        |
+| `structure/craft/StructureAssembler`              | 工艺④ 标题推定与章节插入 + 关系重建 `buildRelations`（实现 `impl/craft/StructureAssemblerImpl`）                           |
+| `structure/title/`                                | 标题规则链契约（`TitleRule` / `TitleDecision` / `TitleRuleContext` / `TitleEvidence`）                                     |
+| `structure/impl/title/`                           | 七条标题规则：Style / Chapter / SingleNumber / Number / CnParen / CnDot / FontSignal                                       |
+| `structure/judge/`                                | 模型判定能力契约：`StructureJudgeProvider`（标题与续表两路，当前零实现）                                                   |
+| `structure/craft/TableContinuationResolver`       | 工艺⑤ 跨页续表接续（实现 `impl/craft/TableContinuationResolverImpl`，产出 `ContinuationOutcome`）                          |
+| `structure/craft/RepeatNoiseMarker`               | 工艺⑦ 重复与噪声识别（实现 `impl/craft/RepeatNoiseMarkerImpl`，产出 `MarkOutcome`）                                        |
+| `structure/craft/`（其余）                        | 产出载体：`TreeOutcome` / `NormalizeOutcome` / `MergeOutcome` / `ContinuationOutcome` / `MarkOutcome`                      |
+| `common/enums/structure/`                         | 枚举口径：`UnifiedElementType` / `RelationType` / `ElementMark` / `PageMark` / `ElementExtensionKey` / `StructureStepName` |
+| `biz/task/runner/StructureTaskRunner`             | 领任务 → 读上游产物 → 调管线 → 写产物行与子步骤 → 回写终态（原子条件更新）                                                 |
+| `biz/service/support/stats/StructureStatsSupport` | 详情页统计与结论文案（按产物现算，不落库）                                                                                 |
 
 ## 待定项
 

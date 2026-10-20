@@ -1,8 +1,8 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.db.WbFileResultDbService;
-import com.workbuddy.biz.service.support.IndexComboReconciler;
-import com.workbuddy.biz.service.support.IndexLineageResolver;
+import com.workbuddy.biz.service.support.index.IndexComboReconciler;
+import com.workbuddy.biz.service.support.index.IndexLineageResolver;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.dto.response.index.IndexComboVO;

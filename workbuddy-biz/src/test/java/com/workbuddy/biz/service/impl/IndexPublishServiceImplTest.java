@@ -4,7 +4,7 @@ import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
-import com.workbuddy.biz.service.support.IndexVersionStateSupport;
+import com.workbuddy.biz.service.support.index.IndexVersionStateSupport;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;

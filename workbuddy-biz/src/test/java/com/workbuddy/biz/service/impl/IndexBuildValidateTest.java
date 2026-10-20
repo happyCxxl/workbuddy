@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
-import com.workbuddy.biz.service.support.IndexComboReconciler;
+import com.workbuddy.biz.service.support.index.IndexComboReconciler;
 import com.workbuddy.worker.indexing.search.FullTextHit;
 import com.workbuddy.worker.indexing.search.FullTextQuery;
 import com.workbuddy.worker.indexing.search.VectorHit;

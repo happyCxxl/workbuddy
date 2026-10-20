@@ -5,6 +5,10 @@ import com.workbuddy.common.dto.response.embed.EmbedStatsVO;
 import com.workbuddy.common.dto.response.preprocess.PreprocessStatsVO;
 import com.workbuddy.common.dto.response.structure.StructureStatsVO;
 import com.workbuddy.common.dto.response.task.StageStatsVO;
+import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
+import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
+import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
+import com.workbuddy.biz.service.support.assemble.StageStatsAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;

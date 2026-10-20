@@ -11,6 +11,7 @@ import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.worker.chunking.strategy.ChunkRouteConfig;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
+import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

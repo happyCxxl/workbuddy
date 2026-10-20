@@ -5,6 +5,7 @@ import com.workbuddy.common.dto.request.index.ComboSnapshotDTO;
 import com.workbuddy.common.enums.index.IndexShape;
 import com.workbuddy.worker.indexing.BuildOrder;
 import com.workbuddy.worker.indexing.ComboSnapshot;
+import com.workbuddy.biz.service.support.assemble.BuildOrderAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;

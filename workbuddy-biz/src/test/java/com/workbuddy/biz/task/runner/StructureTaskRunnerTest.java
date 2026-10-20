@@ -5,7 +5,7 @@ import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
-import com.workbuddy.biz.service.support.ChainStorageSupport;
+import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
 import com.workbuddy.biz.task.UpstreamProductGate;

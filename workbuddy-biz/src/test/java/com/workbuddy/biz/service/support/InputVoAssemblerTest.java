@@ -6,6 +6,7 @@ import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
+import com.workbuddy.biz.service.support.assemble.InputVoAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

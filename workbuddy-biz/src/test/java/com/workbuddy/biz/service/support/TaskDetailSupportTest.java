@@ -8,6 +8,7 @@ import com.workbuddy.common.domain.entity.WbPipelineStepLog;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.dto.response.task.StageDetailVO;
 import com.workbuddy.common.dto.response.task.StageStatsVO;
+import com.workbuddy.biz.service.support.common.TaskDetailSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

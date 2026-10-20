@@ -9,6 +9,7 @@ import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.indexing.IndexRow;
+import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

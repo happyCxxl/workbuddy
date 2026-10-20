@@ -9,7 +9,7 @@ import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
-import com.workbuddy.biz.service.support.TaskDetailSupport;
+import com.workbuddy.biz.service.support.common.TaskDetailSupport;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
@@ -105,7 +105,7 @@ class StageContentQueryStructureTest {
         kb.setUserId(1L);
         when(knowledgeBaseDbService.getActiveById(10L)).thenReturn(kb);
         when(fileResultDbService.getById(10L)).thenReturn(fileResultOfKb10());
-        var accessGuard = new com.workbuddy.biz.service.support.FileResultAccessGuard(
+        var accessGuard = new com.workbuddy.biz.service.support.access.FileResultAccessGuard(
                 fileResultDbService, knowledgeBaseDbService);
         service = new StageContentQueryServiceImpl(pipelineProductDbService,
                 chunkSetDbService, chunkDbService, embeddingSetDbService, embeddingRecordDbService,

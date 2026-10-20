@@ -6,6 +6,7 @@ import com.workbuddy.common.domain.preprocess.TraceEntry;
 import com.workbuddy.common.domain.preprocess.ViewCell;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.enums.preprocess.ViewElementStatus;
+import com.workbuddy.biz.service.support.assemble.PreprocessVoAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

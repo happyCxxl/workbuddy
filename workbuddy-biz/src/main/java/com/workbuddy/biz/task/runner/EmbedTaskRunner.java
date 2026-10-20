@@ -5,7 +5,7 @@ import com.workbuddy.biz.service.IndexSetService;
 import com.workbuddy.biz.service.db.WbChunkSetDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
-import com.workbuddy.biz.service.support.EmbedRowSupport;
+import com.workbuddy.biz.service.support.common.EmbedRowSupport;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;

@@ -7,7 +7,7 @@ import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
-import com.workbuddy.biz.service.support.FileResultAccessGuard;
+import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbPipelineTask;

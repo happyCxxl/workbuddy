@@ -1,7 +1,7 @@
 package com.workbuddy.biz.task.support;
 
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
-import com.workbuddy.biz.service.support.ChainStorageSupport;
+import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import com.workbuddy.common.enums.task.PipelineStage;

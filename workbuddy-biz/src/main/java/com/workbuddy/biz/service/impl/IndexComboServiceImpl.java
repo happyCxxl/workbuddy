@@ -7,7 +7,7 @@ import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
-import com.workbuddy.biz.service.support.IndexComboReconciler;
+import com.workbuddy.biz.service.support.index.IndexComboReconciler;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.domain.entity.WbStrategyBinding;

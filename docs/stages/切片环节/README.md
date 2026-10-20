@@ -73,7 +73,7 @@
 | `common/domain/rules/PreprocessViewRules`                                          | 跳过名单：`CHUNK_SKIP_STATUSES`（与预处理同一份口径）                                                                       |
 | `biz/task/runner/ChunkTaskRunner`                                                  | 领任务 → 读上游视图 → 调管线 → 落产物（产物 JSON + `wb_knowledge_chunk_set` / `wb_knowledge_chunk`）与六条子步骤 → 回写终态 |
 | `biz/service/impl/ChunkControlServiceImpl`                                         | 控制面：策略快照读取、详情与统计读取                                                                                        |
-| `biz/service/support/ChunkStatsSupport`                                            | 详情统计与结论文案（按产物现算，24 个键）                                                                                   |
+| `biz/service/support/stats/ChunkStatsSupport`                                      | 详情统计与结论文案（按产物现算，24 个键）                                                                                   |
 
 ## 待定项
 
