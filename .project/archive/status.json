@@ -9,14 +9,14 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "f58293c0",
-      "note": "Checkstyle 纳管测试源码；CI 与 pre-push 统一 mvn verify；TODO 检查覆盖测试源码；债务台账补 26–30"
+      "baseline": "81dbf324",
+      "note": "Checkstyle 纳管测试源码；CI 与 pre-push 统一 mvn verify；TODO 检查覆盖测试源码；覆盖率与债务台账同步"
     },
     "01": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": ""
+      "reviewed": "2026-10-20",
+      "baseline": "81dbf324",
+      "note": "本机路径更正；规范化后的档案事实同步"
     },
     "02": {
       "status": "已复核",
