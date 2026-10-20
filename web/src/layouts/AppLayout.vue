@@ -93,31 +93,33 @@
             </svg>
           </button>
           <div class="layout-nav-sub">
-            <router-link
-              v-for="child in item.children"
-              :key="child.path"
-              class="layout-nav-item layout-nav-item-sub"
-              :class="{ 'layout-nav-item-active': isNavActive(child.path) }"
-              :to="child.path"
-            >
-              <svg
-                class="layout-nav-icon"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.4"
+            <div class="layout-nav-sub-body">
+              <router-link
+                v-for="child in item.children"
+                :key="child.path"
+                class="layout-nav-item layout-nav-item-sub"
+                :class="{ 'layout-nav-item-active': isNavActive(child.path) }"
+                :to="child.path"
               >
-                <path
-                  v-for="(d, index) in child.iconPaths"
-                  :key="index"
-                  :d="d"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <span class="layout-nav-label">{{ child.label }}</span>
-            </router-link>
+                <svg
+                  class="layout-nav-icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                >
+                  <path
+                    v-for="(d, index) in child.iconPaths"
+                    :key="index"
+                    :d="d"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span class="layout-nav-label">{{ child.label }}</span>
+              </router-link>
+            </div>
           </div>
           <!-- 收起态的浮出面板：悬停组标题或键盘聚焦时出现，压在内容区上 -->
           <div v-if="sideCollapsed" class="layout-nav-flyout">
@@ -191,7 +193,6 @@
             <div v-else class="layout-avatar">{{ avatarText }}</div>
             <div class="layout-user">
               <div class="layout-user-name">{{ displayNameLabel }}</div>
-              <div class="layout-user-role">{{ roleLabel }}</div>
             </div>
           </div>
           <template #dropdown>
@@ -473,13 +474,6 @@ function onAvatarError(): void {
   avatarFailed.value = true;
 }
 
-const roleLabels: Record<string, string> = {
-  ADMIN: '管理员',
-  USER: '普通用户',
-};
-
-const roleLabel = computed(() => roleLabels[authStore.role] ?? '普通用户');
-
 // 退出登录：项目口径为客户端丢弃令牌（无登出接口），随后回到登录页
 function handleLogout(): void {
   authStore.clearToken();
@@ -691,19 +685,63 @@ function handleLogout(): void {
   text-overflow: ellipsis;
 }
 
-/* 二级列表：缩进 + 一条竖向导轨，标明它们从属于上面的组标题 */
+/*
+ * 二级列表：缩进 + 一条竖向导轨，标明它们从属于上面的组标题。
+ *
+ * <p>**开合走高度动画，不用 display 切换**：display 是离散属性，一切换下方菜单就瞬移，
+ * 这里用 `grid-template-rows: 0fr → 1fr` 过渡真实高度，外层 `overflow: hidden` 裁掉溢出，
+ * 下方菜单随高度变化被顺次推下去 / 收回来。
+ *
+ * <p>**二级项必须包在 `.layout-nav-sub-body` 里**：fr 行只作用于该行的直接子项，
+ * 多个链接各自成行时行高不会归零。
+ *
+ * <p>**横向让出 14px 内边距**：裁剪边界是 padding box，而选中项的渐变竖条画在
+ * `left: -14px`（贴侧栏左边缘，与一级项对齐）。给容器负外边距 + 等量左内边距后，
+ * 竖条正落在 padding box 内，不会被 `overflow: hidden` 裁掉。
+ */
 .layout-nav-sub {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  overflow: hidden;
+  margin-left: -14px;
+  padding-left: 14px;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
 }
 
-/* 导轨对齐一级图标的竖中线（14 + 12 + 8 = 34），读作从组图标垂下来的分支 */
+/*
+ * 二级项容器：透明度 + 上移 6px 作入场位移。
+ *
+ * <p>`min-width: 0` 是必需的：作为栅格项，默认 `min-width: auto` 会让它按二级项的最小内容宽
+ * （定宽文字块 200px + 图标与内边距）撑到侧栏之外，悬停 / 选中底色就多出一截。
+ *
+ * <p>收起后补 `visibility: hidden`（延迟到高度动画结束）：裁掉的链接否则仍能被 Tab 聚焦。
+ */
+.layout-nav-sub-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(-6px);
+  visibility: hidden;
+  transition:
+    opacity 0.24s ease,
+    transform 0.3s ease,
+    visibility 0s linear 0.3s;
+}
+
+/*
+ * 导轨对齐一级图标的竖中线，读作从组图标垂下来的分支。
+ *
+ * 34 = 侧栏内边距 14 + 菜单项内边距 12 + 图标半宽 8；容器因上面那组负外边距，
+ * 其 padding box 左缘就是侧栏左边缘，故这里的值直接按侧栏坐标算。
+ */
 .layout-nav-sub::before {
   position: absolute;
   top: 4px;
   bottom: 4px;
-  left: 20px;
+  left: 34px;
   width: 1px;
   background: var(--kb-line-2);
   content: '';
@@ -717,6 +755,24 @@ function handleLogout(): void {
 /* 折叠态改用浮出面板，二级列表让位 */
 .layout-side-collapsed .layout-nav-sub {
   display: none;
+}
+
+/*
+ * 展开态：行高由 0fr 撑到 1fr，二级项从上方滑入。
+ * 放在收起态规则之后：选择器特异性从这里往后递增，避免重复声明时被前面的规则压住。
+ */
+.layout-nav-group.is-open > .layout-nav-sub {
+  grid-template-rows: 1fr;
+}
+
+.layout-nav-group.is-open .layout-nav-sub-body {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition:
+    opacity 0.24s ease,
+    transform 0.3s ease,
+    visibility 0s linear;
 }
 
 /*
@@ -844,11 +900,6 @@ function handleLogout(): void {
   overflow: hidden;
   font-size: 13px;
   text-overflow: ellipsis;
-}
-
-.layout-user-role {
-  color: var(--kb-text-3);
-  font-size: 11px;
 }
 
 .layout-main {
@@ -1106,5 +1157,13 @@ function handleLogout(): void {
 .layout-side-collapsed .layout-nav-flyout .layout-nav-label {
   width: 132px;
   opacity: 1;
+}
+
+/* 降低动效偏好：二级列表开合直接切换，不做高度过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .layout-nav-sub,
+  .layout-nav-sub-body {
+    transition: none;
+  }
 }
 </style>

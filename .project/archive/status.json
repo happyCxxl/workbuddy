@@ -56,9 +56,9 @@
     },
     "08": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "7d5231e8",
-      "note": ""
+      "reviewed": "2026-10-20",
+      "baseline": "b989b87b",
+      "note": "docker compose 给 MySQL 容器补 LANG=C.utf8（entrypoint 的客户端字符集跟随 locale）；服务、端口与部署方式未变"
     },
     "09": {
       "status": "已复核",

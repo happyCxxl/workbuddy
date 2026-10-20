@@ -254,8 +254,7 @@ function sourceLabel(source: StorageSourceVO): string {
 async function loadSources(): Promise<void> {
   loading.value = true;
   try {
-    const list = await getStorageSourceList();
-    sources.value = list;
+    sources.value = await getStorageSourceList();
     const candidates = enabledSources.value;
     const kept = candidates.find((item) => item.id === pickedId.value);
     const current = candidates.find((item) => item.current);
@@ -327,11 +326,11 @@ onMounted(() => {
 
 /*
  * 设置卡的统一尺寸：所有设置卡片共用这一组固定宽高，新增卡片复用同一组变量，不各自设宽高。
- * .setting-card 取这两个变量设 width / height 并自带 box-sizing: border-box，描边盒即 275×305。
+ * .setting-card 取这两个变量设 width / height 并自带 box-sizing: border-box，描边盒即 300×310。
  */
 .setting-cards {
-  --setting-card-w: 275px;
-  --setting-card-h: 305px;
+  --setting-card-w: 300px;
+  --setting-card-h: 310px;
 
   display: flex;
   flex-wrap: wrap;
