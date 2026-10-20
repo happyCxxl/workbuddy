@@ -74,8 +74,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,6 +82,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -137,6 +137,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     private final FileStorage fileStorage;
 
     private final StorageRouter storageRouter;
+
+    private final TransactionTemplate transactionTemplate;
 
     private final InputVoAssembler inputVoAssembler;
 
@@ -552,7 +554,6 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      *         幂等回放时回填该文件结果已有的解析任务 ID（可能为 null）
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public FileSubmitVO submit(Long knowledgeBaseId, FileSubmitDTO request) {
         ThrowUtil.throwIf(StrUtil.isBlank(request.getRequestId()), ErrorCode.REQUEST_ID_MISSING);
 
@@ -568,11 +569,12 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         WbKnowledgeBase kb = getAccessibleById(knowledgeBaseId);
         KnowledgeBaseRules.checkCanSubmit(kb);
 
-        // ③ 文件校验：失败只记 FAIL 日志，不建结果、不建任务
+        // ③ 文件校验：读对象存储，必须在事务外；失败只记 FAIL 日志，不建结果、不建任务
         long validationStart = System.currentTimeMillis();
         FileValidationResult validationResult = fileValidator.validate(request.getFileId());
         if (!validationResult.isPassed()) {
-            return recordFailAndReturn(knowledgeBaseId, request, validationResult.getFailReason().name());
+            return recordFailAndReturn(knowledgeBaseId, request, validationResult.getFailReason().name(),
+                    metadataFileName(request.getFileId()));
         }
         log.info("===> KnowledgeBaseServiceImpl submit 文件校验通过, kbId={}, fileId={}, format={}, size={}B,"
                         + " sha256={}, 校验耗时={}ms",
@@ -580,34 +582,17 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
                 validationResult.getSize(), validationResult.getSha256(),
                 System.currentTimeMillis() - validationStart);
 
-        // ④ 建档三写（同一事务；不登记任务——手动逐环节口径：解析由页面触发）
+        // ④ 元数据读取也在事务外；⑤ 建档三写放进短事务（不登记任务——解析由页面触发）
         long buildStart = System.currentTimeMillis();
         FileMetadata metadata = fileStorage.metadata(request.getFileId());
         Long userId = currentUserId();
 
-        WbSourceFile sourceFile = findOrCreateSourceFile(request, validationResult, metadata, userId);
-
-        WbFileResult fileResult = new WbFileResult();
-        fileResult.setKnowledgeBaseId(kb.getId());
-        fileResult.setOwner(DEFAULT_OWNER);
-        fileResult.setSourceFileId(sourceFile.getId());
-        fileResult.setUserId(userId);
-        kbFileResultDbService.save(fileResult);
-
-        WbSubmitLog submitLog = new WbSubmitLog();
-        submitLog.setKnowledgeBaseId(kb.getId());
-        submitLog.setRequestId(request.getRequestId());
-        submitLog.setFileId(request.getFileId());
-        submitLog.setSha256(validationResult.getSha256());
-        submitLog.setFileName(metadata.getFileName());
-        submitLog.setFileResultId(fileResult.getId());
-        submitLog.setStatus(SubmitStatus.PASS.name());
-        submitLog.setUserId(userId);
+        WbSubmitLog submitLog;
         try {
-            submitLogDbService.save(submitLog);
+            submitLog = Objects.requireNonNull(transactionTemplate.execute(
+                    status -> writeSubmission(kb, request, validationResult, metadata, userId)));
         } catch (DuplicateKeyException e) {
-            // 并发下同一 requestId 已被处理：回滚本事务，回放已有记录
-            markRollbackOnly();
+            // 并发下同一 requestId 已被处理：事务已回滚，回放已有记录
             WbSubmitLog raced = submitLogDbService.getByRequestId(request.getRequestId());
             if (NullUtil.isNull(raced)) {
                 log.warn("===> KnowledgeBaseServiceImpl submit 幂等冲突重查为空, requestId={}（唯一键冲突但未查到已有记录）",
@@ -619,7 +604,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         }
 
         log.info("===> KnowledgeBaseServiceImpl submit 建档完成（待手动解析）, kbId={}, fileId={}, fileResultId={}, 建档耗时={}ms",
-                kb.getId(), request.getFileId(), fileResult.getId(), System.currentTimeMillis() - buildStart);
+                kb.getId(), request.getFileId(), submitLog.getFileResultId(), System.currentTimeMillis() - buildStart);
         return inputVoAssembler.toSubmitResponse(submitLog, null);
     }
 
@@ -725,6 +710,43 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return NullUtil.isNull(sourceId) ? null : storageRouter.nameOf(sourceId);
     }
 
+    /**
+     * 建档三写（同一事务内）：来源文件复用/新建 → 文件结果 → 提交日志。
+     *
+     * <p>调用方用 {@link TransactionTemplate} 包住本方法；提交日志撞 uk_request_id 时异常向上抛，
+     * 由事务模板回滚整组写入。
+     *
+     * @param kb               知识库
+     * @param request          提交请求
+     * @param validationResult 文件校验结果
+     * @param metadata         文件元数据（事务外读取）
+     * @param userId           当前用户 ID（可空）
+     * @return 已落库的提交日志
+     */
+    private WbSubmitLog writeSubmission(WbKnowledgeBase kb, FileSubmitDTO request,
+                                        FileValidationResult validationResult, FileMetadata metadata, Long userId) {
+        WbSourceFile sourceFile = findOrCreateSourceFile(request, validationResult, metadata, userId);
+
+        WbFileResult fileResult = new WbFileResult();
+        fileResult.setKnowledgeBaseId(kb.getId());
+        fileResult.setOwner(DEFAULT_OWNER);
+        fileResult.setSourceFileId(sourceFile.getId());
+        fileResult.setUserId(userId);
+        kbFileResultDbService.save(fileResult);
+
+        WbSubmitLog submitLog = new WbSubmitLog();
+        submitLog.setKnowledgeBaseId(kb.getId());
+        submitLog.setRequestId(request.getRequestId());
+        submitLog.setFileId(request.getFileId());
+        submitLog.setSha256(validationResult.getSha256());
+        submitLog.setFileName(metadata.getFileName());
+        submitLog.setFileResultId(fileResult.getId());
+        submitLog.setStatus(SubmitStatus.PASS.name());
+        submitLog.setUserId(userId);
+        submitLogDbService.save(submitLog);
+        return submitLog;
+    }
+
     /** 按 fileId 复用来源文件；并发撞 uk_file_id 时重查复用（同文件不重复建档）。 */
     private WbSourceFile findOrCreateSourceFile(FileSubmitDTO request, FileValidationResult validationResult,
                                                 FileMetadata metadata, Long userId) {
@@ -756,16 +778,17 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         return sourceFile;
     }
 
-    /** 校验失败：只记 FAIL 日志一条，不建结果；文件名尽力取，取不到存空串（列 NOT NULL）。 */
-    private FileSubmitVO recordFailAndReturn(Long knowledgeBaseId, FileSubmitDTO request, String failReason) {
-        String fileName = "";
-        try {
-            FileMetadata metadata = fileStorage.metadata(request.getFileId());
-            fileName = StrUtil.blankToDefault(metadata.getFileName(), "");
-        } catch (Exception e) {
-            // 文件不存在等场景元数据不可得，fileName 留空
-            log.debug("元数据不可得, 文件名留空, fileId={}", request.getFileId());
-        }
+    /**
+     * 校验失败：只记 FAIL 日志一条，不建结果；文件名由调用方在事务外尽力取，取不到存空串（列 NOT NULL）。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param request         提交请求
+     * @param failReason      校验失败原因
+     * @param fileName        文件名（可空）
+     * @return 失败提交响应
+     */
+    private FileSubmitVO recordFailAndReturn(Long knowledgeBaseId, FileSubmitDTO request, String failReason,
+                                             String fileName) {
         WbSubmitLog failLog = new WbSubmitLog();
         failLog.setKnowledgeBaseId(knowledgeBaseId);
         failLog.setRequestId(request.getRequestId());
@@ -780,6 +803,17 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         log.info("===> KnowledgeBaseServiceImpl submit 校验失败, kbId={}, fileId={}, fileName={}, failReason={}",
                 knowledgeBaseId, request.getFileId(), fileName, failReason);
         return inputVoAssembler.toSubmitResponse(failLog, null);
+    }
+
+    /** 校验失败时尽力取文件名；文件不存在等场景返回空串。 */
+    private String metadataFileName(String fileId) {
+        try {
+            FileMetadata metadata = fileStorage.metadata(fileId);
+            return StrUtil.blankToDefault(metadata.getFileName(), "");
+        } catch (Exception e) {
+            log.debug("元数据不可得, 文件名留空, fileId={}", fileId);
+            return "";
+        }
     }
 
     /** 绑定摘要（审计用；null/已删 → 无） */
@@ -919,13 +953,6 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     private Long currentUserId() {
         KnowledgeUser user = SecurityUtil.getUser();
         return NullUtil.isNull(user) ? null : user.getId();
-    }
-
-    /** 事务内捕获异常后返回：显式标记回滚，避免孤儿三写提交。 */
-    private void markRollbackOnly() {
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-        }
     }
 
     /** 查文件结果已有的 PARSE 任务 ID（幂等回放响应用；fileResultId 为空或尚无任务返回 null）。 */

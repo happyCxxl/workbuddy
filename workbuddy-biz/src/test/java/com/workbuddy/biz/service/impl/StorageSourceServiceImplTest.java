@@ -1,5 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
+import com.workbuddy.biz.testkit.TransactionTestSupport;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbStorageSourceDbService;
@@ -94,7 +95,8 @@ class StorageSourceServiceImplTest {
         fileCenterConfig.setStorageType("local");
         fileCenterConfig.getLocal().setRootDir(root.resolve("seeded-local").toString());
         service = new StorageSourceServiceImpl(storageSourceDbService, pipelineTaskDbService,
-                kbAuditLogDbService, storageRouter, chainStorageSupport, fileCenterConfig);
+                kbAuditLogDbService, storageRouter, TransactionTestSupport.template(),
+                chainStorageSupport, fileCenterConfig);
         lenient().when(chainStorageSupport.sourceName(any())).thenAnswer(inv -> {
             Object sourceId = inv.getArgument(0);
             return sourceId == null ? "未记录的数据源" : "数据源" + sourceId;
@@ -543,6 +545,11 @@ class StorageSourceServiceImplTest {
         InOrder order = inOrder(storageSourceDbService);
         order.verify(storageSourceDbService).clearCurrent();
         order.verify(storageSourceDbService).markCurrent(LOCAL_ID);
+        // 注册与探活先于 DB 事务；进程内 markCurrent 在 DB 提交后
+        InOrder externalFirst = inOrder(storageRouter, storageSourceDbService);
+        externalFirst.verify(storageRouter).register(any(StorageSourceDef.class));
+        externalFirst.verify(storageSourceDbService).clearCurrent();
+        externalFirst.verify(storageRouter).markCurrent(LOCAL_ID);
         verify(storageSourceDbService).recordProbe(eq(LOCAL_ID), eq(true), any());
         verify(storageRouter).markCurrent(LOCAL_ID);
         ArgumentCaptor<String> after = ArgumentCaptor.forClass(String.class);

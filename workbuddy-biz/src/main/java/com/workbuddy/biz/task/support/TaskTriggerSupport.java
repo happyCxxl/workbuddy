@@ -69,7 +69,8 @@ public class TaskTriggerSupport {
     }
 
     /**
-     * 新任务入队：写不进队列时把任务落 FAILED（库里不留"永远排不上队"的 QUEUED），随后仍抛出（触发未成功）
+     * 新任务入队：无事务时写不进队列把任务落 FAILED（库里不留"永远排不上队"的 QUEUED），随后仍抛出；
+     * 有事务时入队延迟到提交后，失败由启动补偿器补投（任务保持 QUEUED）。
      */
     private void enqueueNewTask(WbPipelineTask task, String stageLabel, Long fileResultId) {
         try {

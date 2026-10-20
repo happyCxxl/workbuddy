@@ -3,6 +3,7 @@ package com.workbuddy.biz.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.common.dto.request.knowledge.FileResultQueryDTO;
+import com.workbuddy.biz.testkit.TransactionTestSupport;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DuplicateKeyException;
@@ -62,6 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
@@ -125,7 +128,7 @@ class KnowledgeBaseFileSubmitTest {
                 strategyBindingDbService, strategyVersionDbService, kbFileResultDbService,
                 indexSetDbService, indexVersionDbService, sourceFileDbService, submitLogDbService,
                 pipelineTaskDbService, fileValidator, fileStorage, storageRouter,
-                new InputVoAssembler(), new TaskVoAssembler());
+                TransactionTestSupport.template(), new InputVoAssembler(), new TaskVoAssembler());
         // 提交链路会做知识库归属校验，用例必须有登录上下文
         KnowledgeUser user = new KnowledgeUser();
         user.setId(ME);
@@ -235,6 +238,12 @@ class KnowledgeBaseFileSubmitTest {
         assertEquals(10L, savedLog.getFileResultId());
         assertEquals(SubmitStatus.PASS.name(), savedLog.getStatus());
         assertEquals(Long.valueOf(ME), savedLog.getUserId());
+
+        // 文件校验与元数据是外部 IO，必须先于事务内的三写
+        InOrder externalFirst = inOrder(fileValidator, fileStorage, sourceFileDbService);
+        externalFirst.verify(fileValidator).validate("88");
+        externalFirst.verify(fileStorage).metadata("88");
+        externalFirst.verify(sourceFileDbService).save(any(WbSourceFile.class));
     }
 
     /**

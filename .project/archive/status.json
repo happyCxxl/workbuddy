@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "0d8a4eec",
-      "note": "环节统计改为具体 VO；check-java-conventions 接入 DTO-005；测试规模与覆盖率同步"
+      "baseline": "28267991",
+      "note": "事务边界收口，JAVA-TX-002 债务关闭；TransactionTemplate 与任务提交后入队；测试规模/覆盖率同步"
     },
     "01": {
       "status": "已复核",
@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "0d8a4eec",
-      "note": "环节统计改为按环节具体 VO；support 新增 StageStatsAssembler，安全与限流机制未变"
+      "baseline": "28267991",
+      "note": "事务边界收口：submit/switchCurrent/recycle 外部 IO 移出事务；TaskQueueSupport 改为提交后入队"
     }
   }
 }

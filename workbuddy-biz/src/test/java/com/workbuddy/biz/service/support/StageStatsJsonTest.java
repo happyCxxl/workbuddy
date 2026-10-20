@@ -22,6 +22,8 @@ class StageStatsJsonTest {
 
     /**
      * 执行树节点声明的是基类，实际放切片统计：JSON 必须带切片字段。
+     *
+     * <p>守护 JAVA-DTO-005：基类字段退化成 Object/空对象即失败。
      */
     @Test
     void lineageStatsShouldSerializeRuntimeChunkFields() {
@@ -37,6 +39,8 @@ class StageStatsJsonTest {
 
     /**
      * 详情用泛型绑定具体统计：stageStats 不能退化成空对象。
+     *
+     * <p>守护 JAVA-DTO-005：详情统计类型丢失即失败。
      */
     @Test
     void detailStatsShouldSerializeConcreteFields() {
@@ -50,6 +54,8 @@ class StageStatsJsonTest {
 
     /**
      * 原 map 中值为 null 的键：具体 VO 序列化时不出现。
+     *
+     * <p>守护 JAVA-DTO-005：null 字段不应退回通用 Map 形状。
      */
     @Test
     void nullValuedFieldShouldBeOmitted() {
@@ -66,6 +72,8 @@ class StageStatsJsonTest {
     /**
      * 解析等无统计环节：空基类序列化为空对象。
      *
+     * <p>守护 JAVA-DTO-005：无统计时不能序列化失败或退回 Map。
+     *
      * @throws Exception JSON 序列化失败
      */
     @Test
@@ -75,6 +83,8 @@ class StageStatsJsonTest {
 
     /**
      * 非 null 值：旧 map 与新 VO 的 JSON 树完全一致。
+     *
+     * <p>守护 JAVA-DTO-005：类型化不能改变 JSON 形状。
      */
     @Test
     void nonNullMapAndVoShouldHaveSameJson() {

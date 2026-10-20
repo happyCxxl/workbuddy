@@ -23,6 +23,8 @@ class StageStatsAssemblerTest {
     /**
      * 切片：支撑类的全部 KEY_* 键逐项映射，类型不丢。
      *
+     * <p>守护 JAVA-DTO-005：漏映射或退回 Object 即失败。
+     *
      * @throws Exception 反射读取字段失败
      */
     @Test
@@ -36,6 +38,8 @@ class StageStatsAssemblerTest {
 
     /**
      * 预处理：支撑键加上 step_log 聚合的 matched/changed 都必须映射。
+     *
+     * <p>守护 JAVA-DTO-005：漏映射或退回 Object 即失败。
      *
      * @throws Exception 反射读取字段失败
      */
@@ -53,6 +57,8 @@ class StageStatsAssemblerTest {
     /**
      * 组装：支撑类的全部 KEY_* 键逐项映射。
      *
+     * <p>守护 JAVA-DTO-005：漏映射或退回 Object 即失败。
+     *
      * @throws Exception 反射读取字段失败
      */
     @Test
@@ -66,6 +72,8 @@ class StageStatsAssemblerTest {
 
     /**
      * 向量化：集合表聚合的 recordCount/cachedCount 映射。
+     *
+     * <p>守护 JAVA-DTO-005：EmbedStatsVO 字段漏映射即失败。
      */
     @Test
     void embedShouldMapCollectionCounts() {
@@ -77,6 +85,8 @@ class StageStatsAssemblerTest {
 
     /**
      * 分派：按环节返回具体子类；解析返回空基类；缺 map 保持 null。
+     *
+     * <p>守护 JAVA-DTO-005：分派到 Object/错误子类即失败。
      */
     @Test
     void fromShouldDispatchByStageAndHandleMissingStats() {

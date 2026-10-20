@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseQueryDTO;
+import com.workbuddy.biz.testkit.TransactionTestSupport;
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
@@ -131,7 +132,7 @@ class KnowledgeBaseServiceImplTest {
                 strategyBindingDbService, strategyVersionDbService, kbFileResultDbService,
                 indexSetDbService, indexVersionDbService, sourceFileDbService, submitLogDbService,
                 pipelineTaskDbService, fileValidator, fileStorage, storageRouter,
-                new InputVoAssembler(), new TaskVoAssembler());
+                TransactionTestSupport.template(), new InputVoAssembler(), new TaskVoAssembler());
         // 默认以普通用户登录：可见范围 = 自己的库。管理员视角的用例单独 login(ADMIN)
         login(ME, UserRole.USER);
     }

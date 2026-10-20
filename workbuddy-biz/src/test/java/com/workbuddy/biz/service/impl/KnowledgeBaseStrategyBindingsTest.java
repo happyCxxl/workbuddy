@@ -10,6 +10,7 @@ import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.InputVoAssembler;
 import com.workbuddy.biz.service.support.TaskVoAssembler;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
+import com.workbuddy.biz.testkit.TransactionTestSupport;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.domain.entity.WbStrategyBinding;
 import com.workbuddy.common.dto.response.knowledge.StrategyBindingVO;
@@ -89,7 +90,7 @@ class KnowledgeBaseStrategyBindingsTest {
                 mock(com.workbuddy.worker.input.FileValidatorPort.class),
                 fileStorage,
                 mock(com.workbuddy.filecenter.provider.StorageRouter.class),
-                new InputVoAssembler(), new TaskVoAssembler());
+                TransactionTestSupport.template(), new InputVoAssembler(), new TaskVoAssembler());
     }
 
     /**

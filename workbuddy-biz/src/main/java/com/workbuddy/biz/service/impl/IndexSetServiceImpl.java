@@ -60,6 +60,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -101,6 +102,7 @@ public class IndexSetServiceImpl implements IndexSetService {
     private final IndexComboReconciler indexComboReconciler;
     private final MilvusIndexPort milvusIndexPort;
     private final TaskQueueSupport taskQueue;
+    private final TransactionTemplate transactionTemplate;
     /** 自身引用提供者（发布经代理调用保证事务生效；ObjectProvider 惰性解析，解除 Bean 自引用循环） */
     private final ObjectProvider<IndexSetService> self;
 
@@ -590,7 +592,6 @@ public class IndexSetServiceImpl implements IndexSetService {
      * @param versionId 版本 ID
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void recycle(Long versionId) {
         WbIndexVersion version = requireVersion(versionId);
         WbIndexSet set = requireSetOf(version);
@@ -601,11 +602,14 @@ public class IndexSetServiceImpl implements IndexSetService {
         ThrowUtil.throwIf(IndexVersionStatus.RETIRED.name().equals(version.getStatus()),
                 ErrorCode.PARAM_INVALID, "已退役版本保留用于回退，探索期不回收");
 
-        // 先回收 Milvus 集合再删版本行：回收失败中断事务，版本行保留可重试
+        // 先回收 Milvus 集合（外部 IO，事务外）：回收失败版本行保留可重试；
+        // 回收成功后再用短事务删版本行并写审计，DB 失败时版本行仍在。
         milvusIndexPort.drop(MilvusIndexPort.collectionName(set.getKnowledgeBaseId(), version.getVersionNo()));
-        kbAuditLogDbService.saveAudit(AuditActionType.RECYCLE_INDEX, AUDIT_OBJECT_TYPE, versionId,
-                version.getVersionNo(), null);
-        indexVersionDbService.removeById(versionId);
+        transactionTemplate.executeWithoutResult(status -> {
+            kbAuditLogDbService.saveAudit(AuditActionType.RECYCLE_INDEX, AUDIT_OBJECT_TYPE, versionId,
+                    version.getVersionNo(), null);
+            indexVersionDbService.removeById(versionId);
+        });
         log.info("===> IndexSetServiceImpl 索引候选回收完成, kbId={}, versionId={}, versionNo={}",
                 set.getKnowledgeBaseId(), versionId, version.getVersionNo());
     }
@@ -897,7 +901,7 @@ public class IndexSetServiceImpl implements IndexSetService {
     }
 
     /**
-     * 回退补齐（事务内投递，随指针切回一起落库）：
+     * 回退补齐（事务内建任务，随指针切回一起落库；Redis 入队由 TaskQueueSupport 延迟到提交后）：
      * 差异文件（缺目标组合最新成功切片/向量产物）→ 按目标切片策略重跑 CHUNK
      * （EMBED 仍手动逐环节，完成后 onFileProductsReady 自动构建+自动发布闭环）；
      * 无差异文件 → 直接投递 COMPENSATE 构建（自动发布）。

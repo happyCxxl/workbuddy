@@ -1,5 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
+import com.workbuddy.biz.testkit.TransactionTestSupport;
 import com.workbuddy.biz.service.ChunkControlService;
 import com.workbuddy.biz.service.IndexComboService;
 import com.workbuddy.biz.service.IndexSetService;
@@ -50,6 +51,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
@@ -75,6 +77,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
@@ -140,7 +143,8 @@ class IndexSetServiceImplTest {
                 pipelineTaskDbService, fileResultDbService, chunkSetDbService, embeddingSetDbService,
                 strategyVersionDbService, kbAuditLogDbService, indexComboService, chunkControlService,
                 preprocessControlService, productDbService, lineageResolver, indexRowAssembler,
-                indexComboReconciler, milvusIndexPort, taskQueue, selfProvider);
+                indexComboReconciler, milvusIndexPort, taskQueue,
+                TransactionTestSupport.template(), selfProvider);
         lenient().when(selfProvider.getObject()).thenReturn(service);
     }
 
@@ -817,6 +821,12 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort).drop("kb_1_v3");
         verify(kbAuditLogDbService).saveAudit(AuditActionType.RECYCLE_INDEX, "INDEX_VERSION", 30L, "v3", null);
         verify(indexVersionDbService).removeById(30L);
+        // 外部 drop 先于 DB 审计/删行
+        InOrder externalFirst = inOrder(milvusIndexPort, kbAuditLogDbService, indexVersionDbService);
+        externalFirst.verify(milvusIndexPort).drop("kb_1_v3");
+        externalFirst.verify(kbAuditLogDbService)
+                .saveAudit(AuditActionType.RECYCLE_INDEX, "INDEX_VERSION", 30L, "v3", null);
+        externalFirst.verify(indexVersionDbService).removeById(30L);
 
         org.mockito.ArgumentCaptor<java.io.Serializable> idCaptor =
                 org.mockito.ArgumentCaptor.forClass(java.io.Serializable.class);

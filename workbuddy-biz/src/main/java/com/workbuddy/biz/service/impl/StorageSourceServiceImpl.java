@@ -29,7 +29,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -63,6 +63,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     private final WbPipelineTaskDbService pipelineTaskDbService;
     private final WbAuditLogDbService kbAuditLogDbService;
     private final StorageRouter storageRouter;
+    private final TransactionTemplate transactionTemplate;
     private final ChainStorageSupport chainStorageSupport;
     private final FileCenterConfig fileCenterConfig;
 
@@ -136,7 +137,6 @@ public class StorageSourceServiceImpl implements StorageSourceService {
      * @return 切换结果
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public StorageSwitchResultVO switchCurrent(Long id, String operator) {
         WbStorageSource target = requireSwitchable(id);
         Long beforeId = storageRouter.currentSourceId();
@@ -145,20 +145,28 @@ public class StorageSourceServiceImpl implements StorageSourceService {
         }
         long[] impact = countImpact(id);
         StorageSourceDef def = defOf(target);
+        // 注册与探活是外部 IO：先于 DB 事务执行，探活失败时库与运行时都不动
         storageRouter.register(def);
         probe(def);
-        // 审计与库值先落：审计写失败时事务回滚库值，此时还没替换内存里的当前启用，切换等于整体没发生
-        storageSourceDbService.clearCurrent();
-        storageSourceDbService.markCurrent(id);
-        // 探活已通过：结论随这次切换一起落库
-        storageSourceDbService.recordProbe(id, true, LocalDateTime.now());
-        audit(id, "当前启用 " + sourceName(beforeId),
-                "当前启用 " + target.getName() + "；不可继续执行的任务：排队中 " + impact[0]
-                        + " 个、执行中 " + impact[1] + " 个");
+
+        String beforeName = sourceName(beforeId);
+        String targetName = target.getName();
+        LocalDateTime now = LocalDateTime.now();
+        // 只把库值与审计放进事务：任一步失败整体回滚，不留半截状态
+        transactionTemplate.executeWithoutResult(status -> {
+            storageSourceDbService.clearCurrent();
+            storageSourceDbService.markCurrent(id);
+            // 探活已通过：结论随这次切换一起落库
+            storageSourceDbService.recordProbe(id, true, now);
+            audit(id, "当前启用 " + beforeName,
+                    "当前启用 " + targetName + "；不可继续执行的任务：排队中 " + impact[0]
+                            + " 个、执行中 " + impact[1] + " 个");
+        });
+        // DB 是事实源；提交后再换进程内当前启用（markCurrent 可能懒建后端，不能放进事务）
         storageRouter.markCurrent(id);
         log.info("===> StorageSourceServiceImpl switchCurrent 切换当前启用数据源, before={}, after={}, "
                         + "queued={}, running={}, operator={}",
-                sourceName(beforeId), target.getName(), impact[0], impact[1], operator);
+                beforeName, targetName, impact[0], impact[1], operator);
         return toResult(target, beforeId, impact);
     }
 
