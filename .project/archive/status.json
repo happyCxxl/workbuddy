@@ -3,67 +3,67 @@
     "10": {
       "status": "已复核",
       "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
+      "baseline": "7d5231e8",
       "note": "已记录 vector 并入、对象存储适配下沉、file 保持独立的取舍"
     },
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "81dbf324",
+      "baseline": "896142e7",
       "note": "Checkstyle 纳管测试源码；CI 与 pre-push 统一 mvn verify；TODO 检查覆盖测试源码；覆盖率与债务台账同步"
     },
     "01": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "81dbf324",
+      "baseline": "896142e7",
       "note": "本机路径更正；规范化后的档案事实同步"
     },
     "02": {
       "status": "已复核",
       "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
+      "baseline": "7d5231e8",
       "note": ""
     },
     "03": {
       "status": "已复核",
       "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
+      "baseline": "7d5231e8",
       "note": ""
     },
     "04": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "529b517d",
+      "baseline": "a9183ff1",
       "note": "对象存储适配与头像公开 URL 口径复核；设计文档内的失效链接已修正"
     },
     "05": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "ba499abf",
+      "baseline": "aad71107",
       "note": "构建配置把测试源码纳入 Checkstyle；模块结构未变"
     },
     "06": {
       "status": "已复核",
       "reviewed": "2026-10-19",
-      "baseline": "8a36c41d",
+      "baseline": "d11aac77",
       "note": "存储布局改为 infra 的 StorageProvider 与 Milvus 适配"
     },
     "07": {
       "status": "已复核",
       "reviewed": "2026-10-19",
-      "baseline": "3e7a1c26",
+      "baseline": "d7f50074",
       "note": "头像改为对象存储公开 URL，移除读取接口；接口档案同步"
     },
     "08": {
       "status": "已复核",
       "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
+      "baseline": "7d5231e8",
       "note": ""
     },
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "7c2b49d7",
+      "baseline": "025148c2",
       "note": "JwtAuthFilter 异常分支补日志（ERR-004）；限流与安全机制未变"
     }
   }
