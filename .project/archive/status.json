@@ -62,9 +62,9 @@
     },
     "09": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "3e7a1c26",
-      "note": "头像读接口移除、公开读策略由存储适配器维护，安全放行同步"
+      "reviewed": "2026-10-20",
+      "baseline": "7c2b49d7",
+      "note": "JwtAuthFilter 异常分支补日志（ERR-004）；限流与安全机制未变"
     }
   }
 }

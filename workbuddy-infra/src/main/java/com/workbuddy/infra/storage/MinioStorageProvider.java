@@ -119,6 +119,7 @@ public class MinioStorageProvider implements StorageProvider {
                     .build());
             return true;
         } catch (Exception e) {
+            log.debug("===> MinioStorageProvider 对象探测失败，按不存在处理, bucket={}, key={}", bucket, key, e);
             return false;
         }
     }

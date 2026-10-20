@@ -2,6 +2,7 @@ package com.workbuddy.auth.config;
 
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.util.JwtUtil;
+import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
 import jakarta.servlet.FilterChain;
@@ -9,6 +10,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,6 +26,7 @@ import java.util.Objects;
 /**
  * JWT 认证过滤器：解析请求令牌并写入安全上下文。
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -67,8 +70,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 } else {
                     SecurityContextHolder.clearContext();
                 }
-            } catch (Exception e) {
+            } catch (KnowledgeException e) {
                 SecurityContextHolder.clearContext();
+                log.debug("===> JwtAuthFilter 令牌无效，按未认证处理, uri={}", request.getRequestURI());
+            } catch (RuntimeException e) {
+                SecurityContextHolder.clearContext();
+                log.error("===> JwtAuthFilter 认证处理异常，按未认证处理, uri={}", request.getRequestURI(), e);
             }
         }
         filterChain.doFilter(request, response);
