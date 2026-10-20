@@ -8,7 +8,7 @@ import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.worker.parser.ParseProperties;
-import com.workbuddy.worker.parser.pdf.detect.RuleLines;
+import com.workbuddy.worker.parser.pdf.detect.RuleSegments;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.Region;
 
@@ -43,14 +43,14 @@ public final class PdfImageEmitter {
             return;
         }
         List<Region> boxes = page.imageBoxes().stream()
-                .filter(box -> RuleLines.imageArea(box, page.pageWidth(), page.pageHeight())
+                .filter(box -> RuleSegments.imageArea(box, page.pageWidth(), page.pageHeight())
                         >= pageArea * properties.getImageMinAreaRatio())
                 .sorted(Comparator.comparingDouble(Region::top))
                 .toList();
         int index = 0;
         double totalRatio = 0;
         for (Region box : boxes) {
-            double ratio = RuleLines.imageArea(box, page.pageWidth(), page.pageHeight()) / pageArea;
+            double ratio = RuleSegments.imageArea(box, page.pageWidth(), page.pageHeight()) / pageArea;
             ParseElement image = ParseElement.of(ElementType.IMAGE);
             image.setPage(page.pageNo());
             image.setAssetRef("page" + page.pageNo() + "-image" + index);

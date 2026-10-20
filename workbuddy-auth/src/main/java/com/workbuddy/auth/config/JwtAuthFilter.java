@@ -1,7 +1,7 @@
 package com.workbuddy.auth.config;
 
 import com.workbuddy.auth.db.WbUserDbService;
-import com.workbuddy.auth.util.JwtUtil;
+import com.workbuddy.auth.support.JwtTokenSupport;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
@@ -37,7 +37,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     /** Spring Security 角色权限前缀 */
     private static final String ROLE_PREFIX = "ROLE_";
 
-    private final JwtUtil jwtUtil;
+    private final JwtTokenSupport jwtUtil;
 
     private final WbUserDbService userDbService;
 

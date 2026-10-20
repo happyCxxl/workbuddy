@@ -3,7 +3,7 @@ package com.workbuddy.auth.service.impl;
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.AuthService;
 import com.workbuddy.auth.service.support.LoginAttemptGuard;
-import com.workbuddy.auth.util.JwtUtil;
+import com.workbuddy.auth.support.JwtTokenSupport;
 import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.request.auth.LoginDTO;
 import com.workbuddy.common.dto.request.auth.RegisterDTO;
@@ -33,7 +33,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final JwtUtil jwtUtil;
+    private final JwtTokenSupport jwtUtil;
 
     private final LoginAttemptGuard loginAttemptGuard;
 

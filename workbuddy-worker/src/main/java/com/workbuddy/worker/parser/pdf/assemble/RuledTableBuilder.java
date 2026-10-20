@@ -7,7 +7,7 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
-import com.workbuddy.worker.parser.pdf.detect.RuleLines;
+import com.workbuddy.worker.parser.pdf.detect.RuleGrid;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
 import com.workbuddy.worker.parser.pdf.extract.PdfGeometry;
 import com.workbuddy.worker.parser.pdf.model.Grid;
@@ -33,7 +33,7 @@ public final class RuledTableBuilder {
     static void flush(List<PageLine> run, Region region, PageContent page, List<ParseElement> elements,
                       ParseSource source, String fileId, ParseProperties properties,
                       CapabilityRegistry capabilityRegistry) {
-        Grid grid = RuleLines.fit(page.segments(), region, properties.getTableLineCoverRatio());
+        Grid grid = RuleGrid.fit(page.segments(), region, properties.getTableLineCoverRatio());
         if (NullUtil.isNull(grid)) {
             PdfBodyAssembler.flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry);
             return;

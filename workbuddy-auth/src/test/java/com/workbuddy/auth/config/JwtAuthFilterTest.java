@@ -1,7 +1,7 @@
 package com.workbuddy.auth.config;
 
 import com.workbuddy.auth.db.WbUserDbService;
-import com.workbuddy.auth.util.JwtUtil;
+import com.workbuddy.auth.support.JwtTokenSupport;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.security.KnowledgeUser;
 import jakarta.servlet.FilterChain;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 class JwtAuthFilterTest {
 
     @Mock
-    private JwtUtil jwtUtil;
+    private JwtTokenSupport jwtUtil;
 
     @Mock
     private WbUserDbService userDbService;

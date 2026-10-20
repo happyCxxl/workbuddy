@@ -2,7 +2,7 @@ package com.workbuddy.auth.service.impl;
 
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.support.LoginAttemptGuard;
-import com.workbuddy.auth.util.JwtUtil;
+import com.workbuddy.auth.support.JwtTokenSupport;
 import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.request.auth.LoginDTO;
 import com.workbuddy.common.dto.request.auth.RegisterDTO;
@@ -50,7 +50,7 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private JwtUtil jwtUtil;
+    private JwtTokenSupport jwtUtil;
 
     @Mock
     private LoginAttemptGuard loginAttemptGuard;

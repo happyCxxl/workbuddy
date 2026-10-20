@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "28267991",
-      "note": "事务边界收口，JAVA-TX-002 债务关闭；TransactionTemplate 与任务提交后入队；测试规模/覆盖率同步"
+      "baseline": "c63d5ce1",
+      "note": "R4 结构拆分：8 个 main、21 个 test 均 ≤400；包结构单能力例外；JwtTokenSupport；测试规模/覆盖率同步"
     },
     "01": {
       "status": "已复核",
@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "28267991",
-      "note": "事务边界收口：submit/switchCurrent/recycle 外部 IO 移出事务；TaskQueueSupport 改为提交后入队"
+      "baseline": "c63d5ce1",
+      "note": "R4 结构拆分新增 support/服务组件；JWT 改名 JwtTokenSupport；事务边界未变"
     }
   }
 }

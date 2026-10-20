@@ -9,7 +9,7 @@
 | 前端视图   | `../../../web/src/views/knowledge-base/KnowledgeBaseView.vue`（页面）与 `../../../web/src/components/knowledge-base/KnowledgeBaseCard.vue`（单卡）                                                                                                                                                                                                                                          |
 | 前端类型   | `../../../web/src/types/knowledge-base.ts`                                                                                                                                                                                                                                                                                                                                                  |
 | 前端接口层 | `../../../web/src/api/knowledge-base.ts`、`../../../web/src/api/strategy.ts`（策略绑定）、`../../../web/src/api/file.ts`（导入）                                                                                                                                                                                                                                                            |
-| 后端       | `workbuddy-biz` 模块的 `KnowledgeBaseController` / `KnowledgeBaseServiceImpl` / `WbKnowledgeBaseDbServiceImpl`（文档提交与文件结果的业务编排同在 `KnowledgeBaseServiceImpl`）                                                                                                                                                                                                               |
+| 后端       | `workbuddy-biz` 模块的 `KnowledgeBaseController` / `KnowledgeBaseService`（门面） / `KnowledgeBaseCrudServiceImpl` / `KnowledgeBaseBindingServiceImpl` / `KnowledgeBaseFileServiceImpl` / `WbKnowledgeBaseDbServiceImpl`（文档提交与文件结果的业务编排在 `KnowledgeBaseFileServiceImpl`）                                                                                                   |
 | 涉及接口   | `GET /knowledge-base/page`、`GET /knowledge-base/stats`、`GET /knowledge-base/{id}`、`POST /knowledge-base`、`PUT /knowledge-base/{id}`、`POST /knowledge-base/{id}/disable`、`POST /knowledge-base/{id}/enable`、`DELETE /knowledge-base/{id}`、`PUT /knowledge-base/{id}/strategy-bindings`、`GET /strategy-versions`，以及导入弹窗的 `POST /files` 与 `POST /knowledge-base/{id}/submit` |
 | 涉及的表   | `wb_knowledge_base`、`wb_knowledge_strategy_binding`、`wb_file_result`、`wb_knowledge_index_set`、`wb_knowledge_index_version`、`wb_audit_log`（写审计）                                                                                                                                                                                                                                    |
 
@@ -28,7 +28,7 @@
 - **越权按「不存在」处理**：访问别人的库报 `40401 知识库不存在`，不是 `40104 权限不足`。后者等于确认"这个库存在，只是不是你的"，会把别人的库 ID 变成可枚举、可探测的信息。
 - **知识库必须带归属**：`create` 在当前用户为空时直接拒绝（`40101`），不静默落 `user_id = NULL`。存量 `user_id` 为空的早期数据**不视为公共库**，普通用户看不到（管理员可见）。
 
-「看不到」也包含**不能往里写**：`KnowledgeBaseServiceImpl.submit` 在建档前校验归属，拿着别人的 ID 也提交不进文档。
+「看不到」也包含**不能往里写**：`KnowledgeBaseFileServiceImpl.submit` 在建档前校验归属，拿着别人的 ID 也提交不进文档。
 
 ## 本页读接口的范围
 

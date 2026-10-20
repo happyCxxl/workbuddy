@@ -11,7 +11,7 @@ import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.capability.LayoutCapabilityAttempt;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
-import com.workbuddy.worker.parser.pdf.detect.RuleLines;
+import com.workbuddy.worker.parser.pdf.detect.RuleRegions;
 import com.workbuddy.worker.parser.pdf.detect.TableCandidateDetector;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
@@ -116,7 +116,7 @@ public final class PdfBodyAssembler {
                 .toList();
 
         // 线框区域：区域内行归线网格表格，其余行按段落与文本表格候选推进
-        List<Region> regions = RuleLines.regions(page.segments(), properties.getTableLineCoverRatio());
+        List<Region> regions = RuleRegions.regions(page.segments(), properties.getTableLineCoverRatio());
         List<PageLine> run = new ArrayList<>();
         Region runRegion = null;
         for (PageLine line : applyLayoutCapability(bodyLines, page, source, properties, capabilityRegistry)) {

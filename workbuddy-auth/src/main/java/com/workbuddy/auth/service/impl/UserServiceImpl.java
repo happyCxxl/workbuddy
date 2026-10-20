@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.common.dto.request.user.UserQueryDTO;
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.service.UserService;
-import com.workbuddy.auth.util.JwtUtil;
+import com.workbuddy.auth.support.JwtTokenSupport;
 import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.request.user.PasswordUpdateDTO;
 import com.workbuddy.common.dto.request.user.ProfileUpdateDTO;
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
 
     private final AuditEventPublisher auditEventPublisher;
 
-    private final JwtUtil jwtUtil;
+    private final JwtTokenSupport jwtUtil;
 
     /**
      * 分页查用户。
