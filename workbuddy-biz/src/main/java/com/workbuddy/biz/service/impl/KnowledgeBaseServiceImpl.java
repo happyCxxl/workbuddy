@@ -424,15 +424,35 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean bindStrategy(Long id, StrategyBindingUpdateDTO dto) {
+        requireBindable(id);
+        doBind(id, dto.getStrategyType(), dto.getStrategyVersionId());
+        return true;
+    }
+
+    /**
+     * 绑定前置：可访问 + 绑定开关未关闭。
+     *
+     * @param id 知识库 ID
+     */
+    private void requireBindable(Long id) {
         WbKnowledgeBase kb = getAccessibleById(id);
         ThrowUtil.throwIf(isBindingDisabled(kb),
                 ErrorCode.PARAM_INVALID, "该知识库已关闭策略绑定（评测模式），禁止绑定策略");
-        String type = dto.getStrategyType();
+    }
+
+    /**
+     * 单类型绑定的公共实现：类型白名单、解绑 / 版本校验 / upsert / 审计 / 日志。
+     *
+     * @param id        知识库 ID
+     * @param type      策略类型
+     * @param versionId 策略版本 ID；为 null 表示解绑
+     */
+    private void doBind(Long id, String type, Long versionId) {
         ThrowUtil.throwIf(!StrategyVersionService.BINDABLE_TYPES.contains(type),
                 ErrorCode.PARAM_INVALID, "未知策略类型: " + type);
 
         // 解绑：绑定行逻辑删除（无绑定行时幂等成功）
-        if (NullUtil.isNull(dto.getStrategyVersionId())) {
+        if (NullUtil.isNull(versionId)) {
             WbStrategyBinding existing = strategyBindingDbService.getByKbAndType(id, type);
             String before = bindingSummary(existing);
             if (NullUtil.isNotNull(existing)) {
@@ -442,10 +462,10 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
             kbAuditLogDbService.saveAudit(AuditActionType.BIND, AUDIT_OBJECT_TYPE, id,
                     type + "=" + before, null);
             log.info("===> KnowledgeBaseServiceImpl bindStrategy 解绑知识库策略, id={}, type={}", id, type);
-            return true;
+            return;
         }
 
-        WbPipelineStrategyVersion version = strategyVersionDbService.getById(dto.getStrategyVersionId());
+        WbPipelineStrategyVersion version = strategyVersionDbService.getById(versionId);
         ThrowUtil.throwIf(NullUtil.isNull(version), ErrorCode.PARAM_INVALID, "策略版本不存在");
         ThrowUtil.throwIf(!type.equals(version.getType()), ErrorCode.PARAM_INVALID, "策略类型与所选版本不匹配");
         ThrowUtil.throwIf(!RowStatus.ACTIVE.name().equals(version.getStatus()),
@@ -458,19 +478,18 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
             WbStrategyBinding binding = new WbStrategyBinding();
             binding.setKnowledgeBaseId(id);
             binding.setStrategyType(type);
-            binding.setStrategyVersionId(dto.getStrategyVersionId());
+            binding.setStrategyVersionId(versionId);
             strategyBindingDbService.save(binding);
         } else {
             existing.setDelFlag(DelFlag.NORMAL.getCode());
-            existing.setStrategyVersionId(dto.getStrategyVersionId());
+            existing.setStrategyVersionId(versionId);
             strategyBindingDbService.updateById(existing);
         }
         String after = version.getName() + "-" + version.getVersion();
         kbAuditLogDbService.saveAudit(AuditActionType.BIND, AUDIT_OBJECT_TYPE, id,
                 type + "=" + before, type + "=" + after);
         log.info("===> KnowledgeBaseServiceImpl bindStrategy 绑定知识库策略, id={}, type={}, versionId={}",
-                id, type, dto.getStrategyVersionId());
-        return true;
+                id, type, versionId);
     }
 
     /**
@@ -483,9 +502,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean bindStrategies(Long id, StrategyBindingsUpdateDTO request) {
-        WbKnowledgeBase kb = getAccessibleById(id);
-        ThrowUtil.throwIf(isBindingDisabled(kb),
-                ErrorCode.PARAM_INVALID, "该知识库已关闭策略绑定（评测模式），禁止绑定策略");
+        requireBindable(id);
         List<StrategyBindingsUpdateDTO.StrategyBindItem> bindings = request.getBindings();
         ThrowUtil.throwIf(NullUtil.isNull(bindings) || bindings.isEmpty(),
                 ErrorCode.PARAM_INVALID, "绑定列表不能为空");
@@ -507,10 +524,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         }
         // 局部更新：逐类型复用单类型绑定逻辑（校验/upsert/审计）；外层事务覆盖，任一项失败整体回滚
         for (StrategyBindingsUpdateDTO.StrategyBindItem item : bindings) {
-            StrategyBindingUpdateDTO dto = new StrategyBindingUpdateDTO();
-            dto.setStrategyType(item.getStrategyType());
-            dto.setStrategyVersionId(item.getStrategyVersionId());
-            bindStrategy(id, dto);
+            requireBindable(id);
+            doBind(id, item.getStrategyType(), item.getStrategyVersionId());
         }
         log.info("===> KnowledgeBaseServiceImpl bindStrategies 批量绑定知识库策略集合, id={}, count={}",
                 id, bindings.size());
