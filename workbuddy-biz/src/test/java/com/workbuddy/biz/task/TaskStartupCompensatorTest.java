@@ -18,9 +18,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -76,7 +78,7 @@ class TaskStartupCompensatorTest {
         // 补投与孤儿恢复各抢锁释放一次
         verify(redisLock, times(2)).tryLock(eq(LOCK_KEY), eq(Duration.ofSeconds(30)));
         verify(redisLock, times(2)).unlock(eq(LOCK_KEY), eq("token"));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(redisLock).getInvocations().stream()
+        assertTrue(mockingDetails(redisLock).getInvocations().stream()
                 .anyMatch(inv -> "unlock".equals(inv.getMethod().getName())));
     }
 
@@ -99,7 +101,7 @@ class TaskStartupCompensatorTest {
 
         verify(pipelineTaskDbService).finish(eq(7L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.EXECUTOR_TIMEOUT.name()), anyString());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 
@@ -119,7 +121,7 @@ class TaskStartupCompensatorTest {
         compensator.onStartup();
 
         verify(pipelineTaskDbService, never()).finish(any(), any(), any(), any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .noneMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 
@@ -136,7 +138,7 @@ class TaskStartupCompensatorTest {
         verify(pipelineTaskDbService, never()).listStaleRunning(any(LocalDateTime.class));
         verify(taskQueue, never()).enqueue(any());
         verify(redisLock, never()).unlock(anyString(), anyString());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(redisLock).getInvocations().stream()
+        assertTrue(mockingDetails(redisLock).getInvocations().stream()
                 .noneMatch(inv -> "unlock".equals(inv.getMethod().getName())));
     }
 
@@ -166,7 +168,7 @@ class TaskStartupCompensatorTest {
 
         verify(pipelineTaskDbService).listStaleQueued(any(LocalDateTime.class));
         verify(redisLock, times(2)).tryLock(eq(LOCK_KEY), eq(Duration.ofSeconds(30)));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(redisLock).getInvocations().stream()
+        assertTrue(mockingDetails(redisLock).getInvocations().stream()
                 .anyMatch(inv -> "tryLock".equals(inv.getMethod().getName())));
     }
 }

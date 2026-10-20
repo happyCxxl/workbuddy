@@ -44,7 +44,8 @@ class ChunkAlgorithmSpecTest {
     @Test
     void paramOutOfRangeShouldBeRejected() {
         String error = ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\",\"params\":{\"targetMaxLen\":\"99999\"}}}}"));
+                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
+                        + "\"params\":{\"targetMaxLen\":\"99999\"}}}}"));
 
         assertNotNull(error);
         assertTrue(error.contains("参数越界"));
@@ -56,7 +57,8 @@ class ChunkAlgorithmSpecTest {
     @Test
     void softBelowTargetShouldBeRejected() {
         String error = ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\",\"params\":{\"targetMaxLen\":\"800\",\"softMaxLen\":\"500\"}}}}"));
+                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
+                        + "\"params\":{\"targetMaxLen\":\"800\",\"softMaxLen\":\"500\"}}}}"));
 
         assertNotNull(error);
         assertTrue(error.contains("softMaxLen"));
@@ -68,7 +70,8 @@ class ChunkAlgorithmSpecTest {
     @Test
     void contextMergedWithTableInBodyFlowShouldBeRejected() {
         String error = ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\"}},\"pipeline\":{\"tableInBodyFlow\":\"ON\"}}"));
+                "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\"}},"
+                        + "\"pipeline\":{\"tableInBodyFlow\":\"ON\"}}"));
 
         assertNotNull(error);
         assertTrue(error.contains("同时启用"));
@@ -91,7 +94,9 @@ class ChunkAlgorithmSpecTest {
     @Test
     void validConfigShouldPass() {
         String error = ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\",\"params\":{\"maxLen\":\"3000\"}}},\"pipeline\":{\"titleInContent\":\"ON\"}}"));
+                "{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\","
+                        + "\"params\":{\"maxLen\":\"3000\"}}},"
+                        + "\"pipeline\":{\"titleInContent\":\"ON\"}}"));
 
         assertNull(error);
     }
@@ -157,15 +162,19 @@ class ChunkAlgorithmSpecTest {
     @Test
     void rangeBoundaryShouldBeAcceptedAtCatalogueEdges() {
         assertNull(ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\",\"params\":{\"targetMaxLen\":\"100\",\"softMaxLen\":\"100\"}}}}")));
+                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
+                        + "\"params\":{\"targetMaxLen\":\"100\",\"softMaxLen\":\"100\"}}}}")));
         assertNull(ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\",\"params\":{\"targetMaxLen\":\"5000\",\"softMaxLen\":\"8000\"}}}}")));
+                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
+                        + "\"params\":{\"targetMaxLen\":\"5000\",\"softMaxLen\":\"8000\"}}}}")));
         assertNotNull(ChunkAlgorithmSpec.validate(config(
                 "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\",\"params\":{\"softMaxLen\":\"99\"}}}}")));
         assertNull(ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"fallback\":{\"algorithm\":\"recursive-length\",\"params\":{\"len\":\"5000\",\"overlap\":\"1000\"}}}}")));
+                "{\"routes\":{\"fallback\":{\"algorithm\":\"recursive-length\","
+                        + "\"params\":{\"len\":\"5000\",\"overlap\":\"1000\"}}}}")));
         assertNotNull(ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"fallback\":{\"algorithm\":\"recursive-length\",\"params\":{\"len\":\"5000\",\"overlap\":\"1001\"}}}}")));
+                "{\"routes\":{\"fallback\":{\"algorithm\":\"recursive-length\","
+                        + "\"params\":{\"len\":\"5000\",\"overlap\":\"1001\"}}}}")));
     }
 
     /**
@@ -174,6 +183,7 @@ class ChunkAlgorithmSpecTest {
     @Test
     void unknownParamKeyShouldPassThrough() {
         assertNull(ChunkAlgorithmSpec.validate(config(
-                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\",\"params\":{\"someFutureKey\":\"abc\"}}}}")));
+                "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
+                        + "\"params\":{\"someFutureKey\":\"abc\"}}}}")));
     }
 }

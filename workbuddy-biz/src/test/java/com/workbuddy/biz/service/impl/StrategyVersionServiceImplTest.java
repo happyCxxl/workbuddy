@@ -24,12 +24,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -423,7 +423,8 @@ class StrategyVersionServiceImplTest {
         StrategyVersionVO vo = service.create(preprocDto(
                 "{\"rules\":{\"headerFooter\":{\"action\":\"EXCLUDE\"},"
                         + "\"toc\":{\"action\":\"MARK\",\"params\":{\"minLinesPerPage\":\"5\"}}},"
-                        + "\"custom\":{\"enabled\":\"ON\",\"rules\":[{\"pattern\":\"版权所有\\\\s*©.*\",\"action\":\"REMOVE\"}]}}"));
+                        + "\"custom\":{\"enabled\":\"ON\","
+                        + "\"rules\":[{\"pattern\":\"版权所有\\\\s*©.*\",\"action\":\"REMOVE\"}]}}"));
 
         assertEquals(13L, vo.getId());
         assertEquals("preproc-strict", vo.getName());
@@ -520,10 +521,11 @@ class StrategyVersionServiceImplTest {
     void createEmbedWithUncatalogedModelShouldSaveAsIs() {
         when(strategyVersionDbService.save(any(WbPipelineStrategyVersion.class))).thenReturn(true);
 
-        service.create(embedDto("{\"model\":\"no-such-model\",\"docTemplate\":\"{content}\",\"queryTemplate\":\"{query}\"}"));
+        service.create(embedDto(
+                "{\"model\":\"no-such-model\",\"docTemplate\":\"{content}\",\"queryTemplate\":\"{query}\"}"));
 
         verify(strategyVersionDbService).save(any(WbPipelineStrategyVersion.class));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(strategyVersionDbService).getInvocations().stream()
+        assertTrue(mockingDetails(strategyVersionDbService).getInvocations().stream()
                 .anyMatch(inv -> "save".equals(inv.getMethod().getName())));
     }
 
@@ -620,7 +622,7 @@ class StrategyVersionServiceImplTest {
         service.list("RETRIEVAL", false);
 
         verify(strategyVersionDbService).listEnabledByType("RETRIEVAL");
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(strategyVersionDbService).getInvocations().stream()
+        assertTrue(mockingDetails(strategyVersionDbService).getInvocations().stream()
                 .anyMatch(inv -> "listEnabledByType".equals(inv.getMethod().getName())));
     }
 

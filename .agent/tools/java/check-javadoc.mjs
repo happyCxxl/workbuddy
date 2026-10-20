@@ -189,9 +189,19 @@ function checkFile(file) {
   if (!existsSync(abs)) return;
   const name = basename(file, '.java');
   if (name === 'package-info' || name === 'module-info') return;
-  if (!file.includes('/src/main/java/')) return;
 
   const lines = readFileSync(abs, 'utf8').split(/\r?\n/);
+
+  // TODO/FIXME 格式：所有 Java 源码（含测试）都适用（JAVA-DOC-008）
+  for (let i = 0; i < lines.length; i += 1) {
+    const t = lines[i].trim();
+    const isComment = t.startsWith('//') || t.startsWith('*') || t.startsWith('/*');
+    if (isComment && /\b(TODO|FIXME)\b/.test(t) && !TODO_OK.test(t)) {
+      push(file, i + 1, 'JAVA-DOC-008', 'TODO/FIXME 必须写成 TODO(负责人): 触发条件');
+    }
+  }
+
+  if (!file.includes('/src/main/java/')) return;
 
   // 先标出所有 Javadoc 块（含单行），块内行不参与声明解析，但仍参与逐行检查
   const inBlock = new Array(lines.length).fill(false);
@@ -235,11 +245,6 @@ function checkFile(file) {
         const isUrl = /:\s*$/.test(before) || /https?:$/.test(before);
         if (!isUrl) push(file, i + 1, 'JAVA-DOC-007', '禁止行尾注释，注释应独立成行');
       }
-    }
-
-    // TODO 格式
-    if (/\b(TODO|FIXME)\b/.test(t) && !TODO_OK.test(t)) {
-      push(file, i + 1, 'JAVA-DOC-008', 'TODO/FIXME 必须写成 TODO(负责人): 触发条件');
     }
 
     if (inBlock[i]) continue;

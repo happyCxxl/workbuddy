@@ -97,7 +97,8 @@ class TableContextMergedStrategyTest {
             viewCells.add(viewCell(cell.getId(), cell.getText()));
         }
         List<Chunk> chunks = strategy.slice(tableElement(viewCells),
-                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\",\"params\":{\"leadMaxLen\":\"50\",\"groupThreshold\":\"5\"}}}}",
+                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\","
+                        + "\"params\":{\"leadMaxLen\":\"50\",\"groupThreshold\":\"5\"}}}}",
                         "引出本表的说明段落"));
 
         assertEquals(2, chunks.size());
@@ -118,7 +119,8 @@ class TableContextMergedStrategyTest {
         }
         String longLead = "引".repeat(100);
         List<Chunk> chunks = strategy.slice(tableElement(viewCells),
-                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\",\"params\":{\"leadMaxLen\":\"10\",\"groupThreshold\":\"5\"}}}}",
+                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\","
+                        + "\"params\":{\"leadMaxLen\":\"10\",\"groupThreshold\":\"5\"}}}}",
                         longLead));
 
         assertEquals(2, chunks.size());
@@ -137,7 +139,8 @@ class TableContextMergedStrategyTest {
             viewCells.add(viewCell(cell.getId(), cell.getText()));
         }
         List<Chunk> chunks = strategy.slice(tableElement(viewCells),
-                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\",\"params\":{\"groupThreshold\":\"5\"}}}}", null));
+                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\","
+                        + "\"params\":{\"groupThreshold\":\"5\"}}}}", null));
 
         assertEquals(2, chunks.size());
         assertTrue(chunks.stream().allMatch(c -> c.getContent().startsWith("| 评分项 | 分值 |")));

@@ -163,10 +163,14 @@ class ChunkPipelineTest {
     @Test
     void fullChainShouldProduceMixedChunksWithParentChildAndTitlePath() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("t1", UnifiedElementType.TITLE.name(), 1, "第一章 投标人须知", ViewElementStatus.NORMAL.name()));
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "投标保证金为人民币叁佰万元整。", ViewElementStatus.NORMAL.name()));
-        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 1, "本须知适用于参与本次采购活动的所有供应商。", ViewElementStatus.NORMAL.name()));
-        elements.add(viewElement("t2", UnifiedElementType.TITLE.name(), 2, "1.3 评分标准", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("t1", UnifiedElementType.TITLE.name(), 1,
+                "第一章 投标人须知", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
+                "投标保证金为人民币叁佰万元整。", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 1,
+                "本须知适用于参与本次采购活动的所有供应商。", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("t2", UnifiedElementType.TITLE.name(), 2,
+                "1.3 评分标准", ViewElementStatus.NORMAL.name()));
         elements.add(tableElement());
         elements.add(viewElement("i-1", UnifiedElementType.IMAGE.name(), 2, null, ViewElementStatus.NORMAL.name()));
 
@@ -232,7 +236,8 @@ class ChunkPipelineTest {
 
     /** 表元素（2 列表格：表头 + 1 行数据） */
     private ViewElement tableElement() {
-        ViewElement table = viewElement("t-1", UnifiedElementType.TABLE.name(), 2, null, ViewElementStatus.NORMAL.name());
+        ViewElement table = viewElement("t-1", UnifiedElementType.TABLE.name(), 2, null,
+                ViewElementStatus.NORMAL.name());
         ViewCell h1 = new ViewCell();
         h1.setCellId("tc-h1");
         h1.setText("评分项");
@@ -271,9 +276,11 @@ class ChunkPipelineTest {
     @Test
     void tableShouldBreakBodyGroupAndKeepDocumentOrder() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "表格前段落", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
+                "表格前段落", ViewElementStatus.NORMAL.name()));
         elements.add(tableElement());
-        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 3, "表格后段落", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 3,
+                "表格后段落", ViewElementStatus.NORMAL.name()));
         List<UnifiedElement> structures = new ArrayList<>(List.of(tableStruct()));
 
         ChunkOutcome outcome = pipeline().chunk(context(view(elements), document(structures)));
@@ -297,9 +304,12 @@ class ChunkPipelineTest {
     @Test
     void excludedAndRepeatedShouldBeSkipped() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("h-1", UnifiedElementType.HEADER.name(), 1, "页眉文本", ViewElementStatus.EXCLUDED_HEADER.name()));
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "重复段落", ViewElementStatus.REPEATED.name()));
-        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 1, "正常段落内容", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("h-1", UnifiedElementType.HEADER.name(), 1,
+                "页眉文本", ViewElementStatus.EXCLUDED_HEADER.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
+                "重复段落", ViewElementStatus.REPEATED.name()));
+        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 1,
+                "正常段落内容", ViewElementStatus.NORMAL.name()));
 
         ChunkOutcome outcome = pipeline().chunk(context(view(elements), document(new ArrayList<>())));
 
@@ -333,9 +343,11 @@ class ChunkPipelineTest {
         List<ViewElement> elements = new ArrayList<>();
         List<UnifiedElement> structures = new ArrayList<>();
         for (int i = 1; i <= 4; i++) {
-            elements.add(viewElement("t" + i, UnifiedElementType.TITLE.name(), 1, "标题" + i, ViewElementStatus.NORMAL.name()));
+            elements.add(viewElement("t" + i, UnifiedElementType.TITLE.name(), 1,
+                    "标题" + i, ViewElementStatus.NORMAL.name()));
             structures.add(unifiedElement("t" + i, UnifiedElementType.TITLE.name(), i, null));
-            elements.add(viewElement("p" + i, UnifiedElementType.PARAGRAPH.name(), 1, "段落" + i, ViewElementStatus.NORMAL.name()));
+            elements.add(viewElement("p" + i, UnifiedElementType.PARAGRAPH.name(), 1,
+                    "段落" + i, ViewElementStatus.NORMAL.name()));
             structures.add(unifiedElement("p" + i, UnifiedElementType.PARAGRAPH.name(), null, null));
         }
 
@@ -362,7 +374,8 @@ class ChunkPipelineTest {
     @Test
     void allExcludedShouldFailWithChunkEmpty() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("h-1", UnifiedElementType.HEADER.name(), 1, "页眉", ViewElementStatus.EXCLUDED_HEADER.name()));
+        elements.add(viewElement("h-1", UnifiedElementType.HEADER.name(), 1,
+                "页眉", ViewElementStatus.EXCLUDED_HEADER.name()));
 
         ChunkOutcome outcome = pipeline().chunk(context(view(elements), document(new ArrayList<>())));
 
@@ -378,7 +391,8 @@ class ChunkPipelineTest {
         ChunkPipeline pipeline = pipelineWith(new BrokenTableStrategy());
         List<ViewElement> elements = new ArrayList<>();
         elements.add(viewElement("t-1", UnifiedElementType.TABLE.name(), 1, null, ViewElementStatus.NORMAL.name()));
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "正文照常切片", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
+                "正文照常切片", ViewElementStatus.NORMAL.name()));
 
         ChunkOutcome outcome = pipeline.chunk(context(view(elements), document(new ArrayList<>())));
 
@@ -396,7 +410,8 @@ class ChunkPipelineTest {
     void sameInputSameStrategyShouldBeDeterministic() {
         List<ViewElement> elements = new ArrayList<>();
         elements.add(viewElement("t1", UnifiedElementType.TITLE.name(), 1, "第一章", ViewElementStatus.NORMAL.name()));
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "正文内容", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
+                "正文内容", ViewElementStatus.NORMAL.name()));
         List<UnifiedElement> structures = new ArrayList<>();
         structures.add(unifiedElement("t1", UnifiedElementType.TITLE.name(), 1, null));
         structures.add(unifiedElement("n-1", UnifiedElementType.PARAGRAPH.name(), null, null));
@@ -406,7 +421,8 @@ class ChunkPipelineTest {
 
         assertEquals(first.getChunkSet().getChunkSetId(), second.getChunkSet().getChunkSetId());
         assertEquals(first.getChunkSet().getChunkCount(), second.getChunkSet().getChunkCount());
-        assertEquals(first.getChunkSet().getChunks().getFirst().getContent(), second.getChunkSet().getChunks().getFirst().getContent());
+        assertEquals(first.getChunkSet().getChunks().getFirst().getContent(),
+                second.getChunkSet().getChunks().getFirst().getContent());
     }
 
     // ---------------- 扩展用例 ----------------
@@ -417,9 +433,11 @@ class ChunkPipelineTest {
     @Test
     void tableInBodyFlowShouldMergeTableIntoBodyChunk() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "表格前段落", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
+                "表格前段落", ViewElementStatus.NORMAL.name()));
         elements.add(tableElement());
-        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 3, "表格后段落", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 3,
+                "表格后段落", ViewElementStatus.NORMAL.name()));
         List<UnifiedElement> structures = new ArrayList<>(List.of(tableStruct()));
 
         ChunkOutcome outcome = pipeline().chunk(context(view(elements), document(structures),
@@ -440,7 +458,8 @@ class ChunkPipelineTest {
     @Test
     void contextMergedTableShouldCarryLeadParagraph() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "引出表格的说明段落", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
+                "引出表格的说明段落", ViewElementStatus.NORMAL.name()));
         elements.add(tableElement());
         List<UnifiedElement> structures = new ArrayList<>(List.of(tableStruct()));
 
@@ -459,7 +478,8 @@ class ChunkPipelineTest {
     @Test
     void titleInContentOffShouldKeepContentClean() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("t1", UnifiedElementType.TITLE.name(), 1, "第一章 投标人须知", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("t1", UnifiedElementType.TITLE.name(), 1,
+                "第一章 投标人须知", ViewElementStatus.NORMAL.name()));
         elements.add(tableElement());
         List<UnifiedElement> structures = new ArrayList<>();
         structures.add(unifiedElement("t1", UnifiedElementType.TITLE.name(), 1, null));
@@ -482,8 +502,10 @@ class ChunkPipelineTest {
     void structureOverlapShouldPrefixAdjacentChunks() {
         String longText = "a".repeat(900);
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, longText, ViewElementStatus.NORMAL.name()));
-        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 1, "b".repeat(500), ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, longText,
+                ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 1, "b".repeat(500),
+                ViewElementStatus.NORMAL.name()));
 
         ChunkOutcome outcome = pipeline().chunk(context(view(elements), document(new ArrayList<>()),
                 "{\"pipeline\":{\"structureOverlap\":\"50\",\"titleInContent\":\"OFF\"}}"));
@@ -500,7 +522,8 @@ class ChunkPipelineTest {
     @Test
     void minMergeShouldMergeAdjacentBodyFragment() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "a".repeat(900), ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "a".repeat(900),
+                ViewElementStatus.NORMAL.name()));
         elements.add(viewElement("n-2", UnifiedElementType.PARAGRAPH.name(), 2, "碎片", ViewElementStatus.NORMAL.name()));
 
         ChunkOutcome outcome = pipeline().chunk(context(view(elements), document(new ArrayList<>()),
@@ -518,7 +541,8 @@ class ChunkPipelineTest {
     @Test
     void noneFallbackShouldKeepOverlongSingleChunk() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "a".repeat(1200), ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "a".repeat(1200),
+                ViewElementStatus.NORMAL.name()));
 
         ChunkOutcome outcome = pipeline().chunk(context(view(elements), document(new ArrayList<>()),
                 "{\"routes\":{\"fallback\":{\"algorithm\":\"none\"}}}"));
@@ -535,7 +559,8 @@ class ChunkPipelineTest {
     @Test
     void unsupportedAlgorithmShouldFailClearly() {
         List<ViewElement> elements = new ArrayList<>();
-        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1, "正文内容", ViewElementStatus.NORMAL.name()));
+        elements.add(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
+                "正文内容", ViewElementStatus.NORMAL.name()));
 
         assertThrows(KnowledgeException.class, () -> pipeline().chunk(
                 context(view(elements), document(new ArrayList<>()),

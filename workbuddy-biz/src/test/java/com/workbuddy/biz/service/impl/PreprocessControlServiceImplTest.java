@@ -111,7 +111,8 @@ class PreprocessControlServiceImplTest {
                 new PreprocessStrategyParser(new PreprocessProperties()),
                 new PreprocessVoAssembler(), accessGuard, new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
-        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID)).thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
+        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
+                .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
     }
 
     /** 上游产物的产出任务（环节 STRUCTURE、归属文件结果 10） */
@@ -560,13 +561,20 @@ class PreprocessControlServiceImplTest {
         String json = "{\"strategyVersion\":\"preproc-default-v1\","
                 + "\"options\":{\"pageHeaderFooter\":\"MARK\"},"
                 + "\"elements\":["
-                + "{\"elementId\":\"h-1\",\"type\":\"TITLE\",\"status\":\"NORMAL\",\"displayText\":\"第一章\",\"normalizedText\":\"第一章\"},"
+                + "{\"elementId\":\"h-1\",\"type\":\"TITLE\",\"status\":\"NORMAL\","
+                + "\"displayText\":\"第一章\",\"normalizedText\":\"第一章\"},"
                 + "{\"elementId\":\"n-1\",\"type\":\"PARAGRAPH\",\"status\":\"NORMAL\",\"rawText\":\"金额 叁佰万 元整\","
                 + "\"displayText\":\"金额 叁佰万 元整\","
-                + "\"normalizedText\":\"金额 3000000 元整\",\"normalizedFields\":[{\"field\":\"AMOUNT\",\"value\":\"3000000.00\",\"unit\":\"元\",\"rule\":\"amount-cn-v1\"}],"
-                + "\"preprocessTrace\":[{\"rule\":\"amount-cn-v1\",\"field\":\"AMOUNT\",\"action\":\"EXTRACT\",\"before\":\"叁佰万\",\"after\":\"3000000.00\",\"evidence\":\"中文金额命中\"}]},"
-                + "{\"elementId\":\"hdr-1\",\"type\":\"HEADER\",\"status\":\"EXCLUDED_HEADER\",\"rawText\":\"页眉文本\",\"displayText\":\"页眉文本\","
-                + "\"preprocessTrace\":[{\"rule\":\"header-footer-detect-v1\",\"action\":\"EXCLUDE\",\"before\":\"页眉文本\",\"evidence\":\"多页重复页眉\"}]}]}";
+                + "\"normalizedText\":\"金额 3000000 元整\","
+                + "\"normalizedFields\":[{\"field\":\"AMOUNT\",\"value\":\"3000000.00\","
+                + "\"unit\":\"元\",\"rule\":\"amount-cn-v1\"}],"
+                + "\"preprocessTrace\":[{\"rule\":\"amount-cn-v1\",\"field\":\"AMOUNT\","
+                + "\"action\":\"EXTRACT\",\"before\":\"叁佰万\",\"after\":\"3000000.00\","
+                + "\"evidence\":\"中文金额命中\"}]},"
+                + "{\"elementId\":\"hdr-1\",\"type\":\"HEADER\",\"status\":\"EXCLUDED_HEADER\","
+                + "\"rawText\":\"页眉文本\",\"displayText\":\"页眉文本\","
+                + "\"preprocessTrace\":[{\"rule\":\"header-footer-detect-v1\","
+                + "\"action\":\"EXCLUDE\",\"before\":\"页眉文本\",\"evidence\":\"多页重复页眉\"}]}]}";
         when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "abc".repeat(16))))
                 .thenReturn(json.getBytes(StandardCharsets.UTF_8));
 

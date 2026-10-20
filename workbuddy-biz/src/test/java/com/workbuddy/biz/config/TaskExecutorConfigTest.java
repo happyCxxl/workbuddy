@@ -57,8 +57,10 @@ class TaskExecutorConfigTest {
                         assertEquals(3, runnerPool.getMaximumPoolSize());
                         // 有界队列容量取自 claimBatchSize（Spring 用 LinkedBlockingQueue）；拒绝策略为显式 AbortPolicy
                         assertEquals(7, watchdogPool.getQueue().remainingCapacity());
-                        assertInstanceOf(ThreadPoolExecutor.AbortPolicy.class, watchdogPool.getRejectedExecutionHandler());
-                        assertInstanceOf(ThreadPoolExecutor.AbortPolicy.class, runnerPool.getRejectedExecutionHandler());
+                        assertInstanceOf(ThreadPoolExecutor.AbortPolicy.class,
+                                watchdogPool.getRejectedExecutionHandler());
+                        assertInstanceOf(ThreadPoolExecutor.AbortPolicy.class,
+                                runnerPool.getRejectedExecutionHandler());
                         Map<?, ?> probe = context.getBean("executorProbe", Map.class);
                         assertEquals(2, probe.size());
                     } finally {

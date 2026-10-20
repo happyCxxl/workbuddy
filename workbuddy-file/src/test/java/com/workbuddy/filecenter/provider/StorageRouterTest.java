@@ -4,7 +4,6 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
-import com.workbuddy.infra.storage.StorageProvider;
 import com.workbuddy.infra.storage.StorageSourceDef;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +18,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,7 +63,7 @@ class StorageRouterTest {
     @Test
     void shouldReuseSameProviderInstancePerSource() {
         assertEquals(router.of(SOURCE_A), router.of(SOURCE_A));
-        assertFalse(router.of(SOURCE_A) == router.of(SOURCE_B));
+        assertNotSame(router.of(SOURCE_A), router.of(SOURCE_B));
     }
 
     /**

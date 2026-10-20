@@ -63,6 +63,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -428,7 +429,8 @@ class KnowledgeBaseServiceImplTest {
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(2);
         page.setRecords(List.of(withIndex, withoutIndex));
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null,
+                KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of());
 
@@ -461,7 +463,8 @@ class KnowledgeBaseServiceImplTest {
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null,
+                KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of());
 
@@ -470,7 +473,7 @@ class KnowledgeBaseServiceImplTest {
         // 没有任何库发布过索引时不应产生多余的查询
         verify(indexSetDbService, never()).listByKbIds(any());
         verify(indexVersionDbService, never()).listByIds(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(indexVersionDbService).getInvocations().stream()
+        assertTrue(mockingDetails(indexVersionDbService).getInvocations().stream()
                 .noneMatch(inv -> "listByIds".equals(inv.getMethod().getName())));
     }
 
@@ -485,7 +488,8 @@ class KnowledgeBaseServiceImplTest {
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, "库7", null, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, "库7", null,
+                KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of(7L, 3L));
 
@@ -646,7 +650,7 @@ class KnowledgeBaseServiceImplTest {
 
         verify(kbAuditLogDbService, times(2)).saveAudit(eq(AuditActionType.BIND), eq("KNOWLEDGE_BASE"),
                 eq(2L), eq("CHUNK=无"), eq("CHUNK=chunk-hybrid-v1"));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(kbAuditLogDbService).getInvocations().stream()
+        assertTrue(mockingDetails(kbAuditLogDbService).getInvocations().stream()
                 .anyMatch(inv -> "saveAudit".equals(inv.getMethod().getName())));
     }
 
@@ -670,7 +674,7 @@ class KnowledgeBaseServiceImplTest {
 
         verify(kbAuditLogDbService).saveAudit(eq(AuditActionType.BIND), eq("KNOWLEDGE_BASE"), eq(2L),
                 eq("CHUNK=失效"), eq("CHUNK=chunk-hybrid-v1"));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(kbAuditLogDbService).getInvocations().stream()
+        assertTrue(mockingDetails(kbAuditLogDbService).getInvocations().stream()
                 .anyMatch(inv -> "saveAudit".equals(inv.getMethod().getName())));
     }
 
@@ -1326,7 +1330,8 @@ verify(strategyBindingDbService, never()).save(any());
         page.setTotal(1);
         page.setRecords(List.of(kb(7L, 1)));
         // 管理员：归属条件为 null（不加 user_id 过滤）
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, null)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null,
+                KnowledgeBaseSort.DEFAULT, null)).thenReturn(page);
         when(strategyBindingDbService.listActiveByTypeAndKbIds(any(), any())).thenReturn(List.of());
         when(kbFileResultDbService.countGroupByKb(any())).thenReturn(Map.of());
 
@@ -1347,7 +1352,8 @@ verify(strategyBindingDbService, never()).save(any());
         Page<WbKnowledgeBase> page = new Page<>(1, 10);
         page.setTotal(0);
         page.setRecords(List.of());
-        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null, KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
+        when(knowledgeBaseDbService.pageByCondition(1L, 10L, null, null,
+                KnowledgeBaseSort.DEFAULT, ME)).thenReturn(page);
         when(knowledgeBaseDbService.countByStatus(null, ME)).thenReturn(2L);
         when(knowledgeBaseDbService.countByStatus(1, ME)).thenReturn(1L);
         when(knowledgeBaseDbService.listIdsByOwner(ME)).thenReturn(List.of(7L, 8L));

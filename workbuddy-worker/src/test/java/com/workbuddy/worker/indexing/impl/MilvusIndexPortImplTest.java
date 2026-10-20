@@ -159,8 +159,9 @@ class MilvusIndexPortImplTest {
         verify(collectionPort).load("kb_1_v1");
         port.drop("kb_1_v1");
         verify(collectionPort).drop("kb_1_v1");
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(collectionPort).getInvocations().stream()
-                .anyMatch(inv -> "drop".equals(inv.getMethod().getName())));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                org.mockito.Mockito.mockingDetails(collectionPort).getInvocations().stream()
+                        .anyMatch(inv -> "drop".equals(inv.getMethod().getName())));
     }
 
     /**

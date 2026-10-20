@@ -69,7 +69,8 @@ class TitleBoundarySliceStrategyTest {
      */
     @Test
     void overlongSectionShouldFallback() {
-        SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\",\"params\":{\"maxLen\":\"100\"}}}}");
+        SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"title-boundary\","
+                + "\"params\":{\"maxLen\":\"100\"}}}}");
 
         strategy.slice(element("n-1", 1, "a".repeat(1200)), context);
 

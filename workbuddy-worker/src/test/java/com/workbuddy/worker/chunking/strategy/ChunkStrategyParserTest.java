@@ -49,7 +49,8 @@ class ChunkStrategyParserTest {
     void seedSnapshotWithAllRoutesShouldApplyEveryRoute() {
         String seed = "{\"routes\":{"
                 + "\"body\":{\"algorithm\":\"fixed-window\",\"params\":{\"len\":\"500\",\"overlap\":\"100\"}},"
-                + "\"table\":{\"algorithm\":\"context-merged\",\"params\":{\"leadMaxLen\":\"200\",\"groupThreshold\":\"30\",\"groupSize\":\"3\"}},"
+                + "\"table\":{\"algorithm\":\"context-merged\","
+                + "\"params\":{\"leadMaxLen\":\"200\",\"groupThreshold\":\"30\",\"groupSize\":\"3\"}},"
                 + "\"image\":{\"algorithm\":\"caption-placeholder\"},"
                 + "\"fallback\":{\"algorithm\":\"fixed-window\",\"params\":{\"len\":\"500\",\"overlap\":\"100\"}}"
                 + "},"

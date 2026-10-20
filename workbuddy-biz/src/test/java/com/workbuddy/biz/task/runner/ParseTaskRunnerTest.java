@@ -39,8 +39,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -144,7 +146,7 @@ class ParseTaskRunnerTest {
         runner.run(20L);
 
         verify(pipelineTaskDbService, never()).claim(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .noneMatch(inv -> "claim".equals(inv.getMethod().getName())));
     }
 
@@ -159,7 +161,7 @@ class ParseTaskRunnerTest {
         runner.run(20L);
 
         verify(fileResultDbService, never()).getById(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileResultDbService).getInvocations().stream()
+        assertTrue(mockingDetails(fileResultDbService).getInvocations().stream()
                 .noneMatch(inv -> "getById".equals(inv.getMethod().getName())));
     }
 
@@ -217,7 +219,7 @@ class ParseTaskRunnerTest {
         verify(pipelineTaskDbService).finish(20L, PipelineTaskStatus.FAILED,
                 PipelineTaskErrorCode.SCANNED_UNSUPPORTED.name(), "扫描件暂不支持（OCR 预留）");
         verify(pipelineProductDbService, never()).save(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineProductDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineProductDbService).getInvocations().stream()
                 .noneMatch(inv -> "save".equals(inv.getMethod().getName())));
     }
 
@@ -234,7 +236,7 @@ class ParseTaskRunnerTest {
 
         verify(pipelineTaskDbService).finish(eq(20L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.PARSE_FAILED.name()), any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 
@@ -253,7 +255,7 @@ class ParseTaskRunnerTest {
 
         verify(pipelineTaskDbService).finish(eq(20L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.PARSE_FAILED.name()), any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 }

@@ -67,7 +67,8 @@ class SentenceAggregateSliceStrategyTest {
      */
     @Test
     void bufferShouldSettleAtTargetMaxLen() {
-        SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"sentence-aggregate\",\"params\":{\"targetMaxLen\":\"10\"}}}}");
+        SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"sentence-aggregate\","
+                + "\"params\":{\"targetMaxLen\":\"10\"}}}}");
 
         List<Chunk> chunks = strategy.slice(element("n-1", 1, "第一句。第二句。第三句。"), context);
 
@@ -82,7 +83,8 @@ class SentenceAggregateSliceStrategyTest {
      */
     @Test
     void overlongSentenceShouldFallbackRecursively() {
-        SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"sentence-aggregate\",\"params\":{\"softMaxLen\":\"100\"}}}}");
+        SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"sentence-aggregate\","
+                + "\"params\":{\"softMaxLen\":\"100\"}}}}");
 
         List<Chunk> chunks = strategy.slice(element("n-1", 2, "a".repeat(1200) + "。"), context);
 

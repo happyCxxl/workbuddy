@@ -1,7 +1,6 @@
 package com.workbuddy.worker.parser.capability;
 
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.capability.ProviderContext;
 import com.workbuddy.common.domain.parse.capability.TableCell;
 import com.workbuddy.common.domain.parse.capability.TableRegion;
 import com.workbuddy.common.domain.parse.capability.TableResult;
@@ -12,7 +11,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

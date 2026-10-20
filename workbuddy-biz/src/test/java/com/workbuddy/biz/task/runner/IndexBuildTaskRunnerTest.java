@@ -46,6 +46,7 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -335,7 +336,7 @@ class IndexBuildTaskRunnerTest {
         runner.run(1L);
 
         verify(indexSetService).publish(100L);
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(indexSetService).getInvocations().stream()
+        assertTrue(mockingDetails(indexSetService).getInvocations().stream()
                 .anyMatch(inv -> "publish".equals(inv.getMethod().getName())));
     }
 

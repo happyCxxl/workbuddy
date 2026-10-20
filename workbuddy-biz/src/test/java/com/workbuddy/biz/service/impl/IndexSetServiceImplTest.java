@@ -77,6 +77,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -301,9 +302,9 @@ class IndexSetServiceImplTest {
         verify(milvusIndexPort, never()).load(anyString());
         verify(milvusIndexPort, never()).append(anyString(), anyList());
 
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(indexVersionDbService).getInvocations().stream()
+        assertTrue(mockingDetails(indexVersionDbService).getInvocations().stream()
                 .noneMatch(inv -> "save".equals(inv.getMethod().getName())));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(milvusIndexPort).getInvocations().stream()
+        assertTrue(mockingDetails(milvusIndexPort).getInvocations().stream()
                 .noneMatch(inv -> "append".equals(inv.getMethod().getName())));
     }
 
@@ -455,8 +456,9 @@ class IndexSetServiceImplTest {
             return true;
         });
 
-        var result = (com.workbuddy.common.dto.response.index.IndexBuildTriggerVO) org.springframework.test.util.ReflectionTestUtils.invokeMethod(
-                service, "tryBuild", 1L, comboAll(), "COMPENSATE", false);
+        var result = (com.workbuddy.common.dto.response.index.IndexBuildTriggerVO)
+                org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+                        service, "tryBuild", 1L, comboAll(), "COMPENSATE", false);
 
         assertNotNull(result);
         assertEquals("v10", result.getVersionNo());
@@ -1992,8 +1994,8 @@ class IndexSetServiceImplTest {
         verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
 
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(preprocessControlService).getInvocations().isEmpty());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().isEmpty());
+        assertTrue(mockingDetails(preprocessControlService).getInvocations().isEmpty());
+        assertTrue(mockingDetails(chunkControlService).getInvocations().isEmpty());
     }
 
     /**
@@ -2019,8 +2021,8 @@ class IndexSetServiceImplTest {
         verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
 
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(preprocessControlService).getInvocations().isEmpty());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().isEmpty());
+        assertTrue(mockingDetails(preprocessControlService).getInvocations().isEmpty());
+        assertTrue(mockingDetails(chunkControlService).getInvocations().isEmpty());
     }
 
     /**
@@ -2049,7 +2051,7 @@ class IndexSetServiceImplTest {
 
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
         verify(preprocessControlService, never()).preprocess(anyLong(), anyLong(), any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(preprocessControlService).getInvocations().stream()
+        assertTrue(mockingDetails(preprocessControlService).getInvocations().stream()
                 .noneMatch(inv -> "preprocess".equals(inv.getMethod().getName())));
     }
 
@@ -2118,7 +2120,7 @@ class IndexSetServiceImplTest {
 
         verify(preprocessControlService).preprocess(10L, 77L, null);
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().stream()
+        assertTrue(mockingDetails(chunkControlService).getInvocations().stream()
                 .noneMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
@@ -2161,7 +2163,7 @@ class IndexSetServiceImplTest {
         service.rollback(15L);
 
         verify(chunkControlService).chunk(10L, 88L, 501L);
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().stream()
+        assertTrue(mockingDetails(chunkControlService).getInvocations().stream()
                 .anyMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
@@ -2198,7 +2200,7 @@ class IndexSetServiceImplTest {
         service.onFileProductsReady(10L);
 
         verify(chunkControlService, never()).chunk(anyLong(), anyLong(), any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunkControlService).getInvocations().stream()
+        assertTrue(mockingDetails(chunkControlService).getInvocations().stream()
                 .noneMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 

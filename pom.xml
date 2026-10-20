@@ -273,7 +273,8 @@
         <configuration>
           <configLocation>${maven.multiModuleProjectDirectory}/.agent/tools/java/checkstyle.xml</configLocation>
           <failOnViolation>true</failOnViolation>
-          <includeTestSourceDirectory>false</includeTestSourceDirectory>
+          <!-- 测试代码同样是源码：风格门禁与主源码同一口径（JAVA-META-003） -->
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
         </configuration>
         <executions>
           <execution>

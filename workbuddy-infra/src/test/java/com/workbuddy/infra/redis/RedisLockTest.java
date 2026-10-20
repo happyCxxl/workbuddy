@@ -15,8 +15,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -70,8 +72,9 @@ class RedisLockTest {
 
         lock.unlock("lock", "token-1");
 
-        verify(stringRedisTemplate).execute(ArgumentMatchers.<RedisScript<Long>>any(), eq(List.of("lock")), eq("token-1"));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(stringRedisTemplate).getInvocations().stream()
+        verify(stringRedisTemplate).execute(
+                ArgumentMatchers.<RedisScript<Long>>any(), eq(List.of("lock")), eq("token-1"));
+        assertTrue(mockingDetails(stringRedisTemplate).getInvocations().stream()
                 .anyMatch(inv -> "execute".equals(inv.getMethod().getName())));
     }
 }

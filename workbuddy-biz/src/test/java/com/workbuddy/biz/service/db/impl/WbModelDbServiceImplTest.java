@@ -103,8 +103,10 @@ class WbModelDbServiceImplTest {
         assertTrue(sql.contains("model_key"), sql);
         assertTrue(sql.contains("FIND_IN_SET"), sql);
         // 参数取的是入参能力项本身：取成空串会让 FIND_IN_SET 永远不命中
-        org.mockito.ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<com.workbuddy.common.domain.entity.WbModel>>
-                captor = org.mockito.ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+        org.mockito.ArgumentCaptor<
+                com.baomidou.mybatisplus.core.conditions.Wrapper<com.workbuddy.common.domain.entity.WbModel>>
+                captor = org.mockito.ArgumentCaptor.forClass(
+                        com.baomidou.mybatisplus.core.conditions.Wrapper.class);
         verify(mapper).selectPage(any(), captor.capture());
         com.baomidou.mybatisplus.core.conditions.AbstractWrapper<?, ?, ?> wrapper =
                 (com.baomidou.mybatisplus.core.conditions.AbstractWrapper<?, ?, ?>) captor.getValue();

@@ -58,10 +58,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -704,7 +706,7 @@ class KnowledgeBaseFileSubmitTest {
         service.pageFileResults(1L, fileResultQuery(""));
 
         verify(kbFileResultDbService, times(4)).pageByKb(1L, 10L, 1L);
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(kbFileResultDbService).getInvocations().stream()
+        assertTrue(mockingDetails(kbFileResultDbService).getInvocations().stream()
                 .anyMatch(inv -> "pageByKb".equals(inv.getMethod().getName())));
     }
 

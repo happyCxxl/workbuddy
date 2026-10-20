@@ -48,7 +48,8 @@ class FixedWindowSliceStrategyTest {
      */
     @Test
     void flushShouldWindowSliceWithOverlap() {
-        SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"fixed-window\",\"params\":{\"len\":\"100\",\"overlap\":\"20\"}}}}");
+        SliceContext context = context("{\"routes\":{\"body\":{\"algorithm\":\"fixed-window\","
+                + "\"params\":{\"len\":\"100\",\"overlap\":\"20\"}}}}");
 
         assertTrue(strategy.slice(element("x".repeat(250)), context).isEmpty());
 

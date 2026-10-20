@@ -2,14 +2,27 @@ package com.workbuddy.biz.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.StageContentQueryService;
-import com.workbuddy.biz.service.db.*;
+import com.workbuddy.biz.service.db.WbChunkDbService;
+import com.workbuddy.biz.service.db.WbChunkSetDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
+import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
+import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.TaskDetailSupport;
-import com.workbuddy.common.domain.entity.*;
+import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.domain.entity.WbChunkSet;
+import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
+import com.workbuddy.common.domain.entity.WbEmbeddingSet;
+import com.workbuddy.common.domain.entity.WbPipelineProduct;
+import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.ParseSource;
-import com.workbuddy.common.domain.preprocess.*;
+import com.workbuddy.common.domain.preprocess.NormalizedField;
+import com.workbuddy.common.domain.preprocess.PreprocessView;
+import com.workbuddy.common.domain.preprocess.TraceEntry;
+import com.workbuddy.common.domain.preprocess.ViewCell;
+import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.domain.structure.UnifiedElement;
@@ -33,8 +46,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -438,7 +456,8 @@ class StageContentQueryPagingTest {
         service.stageContent(FILE_RESULT_ID, "PARSE", TASK_ID, null, null, null);
 
         ArgumentCaptor<String> labelCaptor = ArgumentCaptor.forClass(String.class);
-        verify(detailSupport).resolveTask(eq(FILE_RESULT_ID), eq(PipelineStage.PARSE), eq(TASK_ID), labelCaptor.capture());
+        verify(detailSupport).resolveTask(eq(FILE_RESULT_ID), eq(PipelineStage.PARSE), eq(TASK_ID),
+                labelCaptor.capture());
         assertEquals(PipelineStage.PARSE.getLabel(), labelCaptor.getValue());
     }
 

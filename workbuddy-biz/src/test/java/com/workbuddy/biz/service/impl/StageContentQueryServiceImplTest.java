@@ -49,7 +49,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -102,7 +101,8 @@ class StageContentQueryServiceImplTest {
         FileResultAccessGuard accessGuard = new FileResultAccessGuard(fileResultDbService, knowledgeBaseDbService);
         service = new StageContentQueryServiceImpl(pipelineProductDbService,
                 chunkSetDbService, chunkDbService, embeddingSetDbService, embeddingRecordDbService,
-                fileStorage, new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService), accessGuard);
+                fileStorage, new TaskDetailSupport(pipelineTaskDbService, stepLogDbService,
+                        pipelineProductDbService), accessGuard);
     }
 
     /** 产物行夹具：读取按记录里的数据源与桶名定位，行对象必须带上这两段 */
@@ -567,7 +567,8 @@ class StageContentQueryServiceImplTest {
     void limitAboveMaxShouldBeCappedAndOverflowPageShouldBeEmpty() {
         stubParseArtifact(5);
 
-        StageContentVO capped = service.stageContent(10L, "PARSE", null, null, 1, StageContentQueryService.MAX_SIZE + 500);
+        StageContentVO capped = service.stageContent(10L, "PARSE", null, null, 1,
+                StageContentQueryService.MAX_SIZE + 500);
         assertEquals(StageContentQueryService.MAX_SIZE, capped.getSize());
         assertEquals(5, capped.getItems().size());
 
@@ -608,7 +609,8 @@ class StageContentQueryServiceImplTest {
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401
         SecurityTestSupport.loginOtherUser();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.stageContent(10L, "PARSE", null, null, null, null));
+        KnowledgeException e = assertThrows(KnowledgeException.class,
+                () -> service.stageContent(10L, "PARSE", null, null, null, null));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 

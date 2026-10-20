@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.workbuddy.biz.mapper.WbFileResultMapper;
 import com.workbuddy.common.domain.entity.WbFileResult;
-import com.workbuddy.common.domain.entity.WbFileResult;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

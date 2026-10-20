@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -86,7 +85,7 @@ class UserServiceImplGuardTest {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
         when(passwordEncoder.encode("secret123")).thenReturn("encoded");
 
-        userService.addUser(createRequest("newbie", "secret123", null, null));
+        userService.addUser(createRequest("newbie", null, null));
 
         ArgumentCaptor<WbUser> captor = ArgumentCaptor.forClass(WbUser.class);
         verify(userDbService).save(captor.capture());
@@ -104,7 +103,7 @@ class UserServiceImplGuardTest {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser(1L));
 
         KnowledgeException e = assertThrows(KnowledgeException.class,
-                () -> userService.addUser(createRequest("admin", "secret123", null, null)));
+                () -> userService.addUser(createRequest("admin", null, null)));
 
         assertEquals(ErrorCode.USERNAME_EXISTS, e.getErrorCode());
         verify(userDbService, never()).save(any());
@@ -118,7 +117,7 @@ class UserServiceImplGuardTest {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
 
         KnowledgeException e = assertThrows(KnowledgeException.class,
-                () -> userService.addUser(createRequest("newbie", "secret123", "SUPERMAN", null)));
+                () -> userService.addUser(createRequest("newbie", "SUPERMAN", null)));
 
         assertEquals(ErrorCode.ROLE_INVALID, e.getErrorCode());
         verify(userDbService, never()).save(any());
@@ -201,7 +200,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateUserShouldRejectInvalidStatus() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         authenticateAs(99L);
 
         UserUpdateDTO request = new UserUpdateDTO();
@@ -221,7 +220,7 @@ class UserServiceImplGuardTest {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
 
         KnowledgeException e = assertThrows(KnowledgeException.class,
-                () -> userService.addUser(createRequest("newbie", "secret123", null, 7)));
+                () -> userService.addUser(createRequest("newbie", null, 7)));
 
         assertEquals(ErrorCode.USER_STATUS_INVALID, e.getErrorCode());
         verify(userDbService, never()).save(any());
@@ -232,7 +231,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateUserShouldBumpTokenVersionWhenPasswordChanges() {
-        WbUser target = plainUser(2L);
+        WbUser target = plainUser();
         target.setTokenVersion(4);
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
@@ -254,7 +253,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateUserShouldBumpTokenVersionWhenRoleChanges() {
-        WbUser target = plainUser(2L);
+        WbUser target = plainUser();
         target.setTokenVersion(0);
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
@@ -274,7 +273,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateUserShouldKeepTokenVersionWhenNothingSensitiveChanges() {
-        WbUser target = plainUser(2L);
+        WbUser target = plainUser();
         target.setTokenVersion(4);
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
@@ -332,7 +331,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateUserShouldEncodePasswordWhenProvided() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         authenticateAs(99L);
         when(passwordEncoder.encode("newpass123")).thenReturn("encoded-new");
 
@@ -351,7 +350,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateUserShouldKeepPasswordWhenNotProvided() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         authenticateAs(99L);
 
         UserUpdateDTO request = new UserUpdateDTO();
@@ -413,7 +412,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void deleteUserShouldRemovePlainUser() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         authenticateAs(99L);
 
         userService.deleteUser(2L);
@@ -432,7 +431,7 @@ class UserServiceImplGuardTest {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
         when(passwordEncoder.encode("secret123")).thenReturn("encoded");
 
-        userService.addUser(createRequest("newbie", "secret123", UserRole.ADMIN.getCode(), null));
+        userService.addUser(createRequest("newbie", UserRole.ADMIN.getCode(), null));
 
         AuditEvent event = captureAudit();
         assertEquals(AuditActionType.USER_CREATE, event.getAction());
@@ -449,7 +448,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateUserShouldPublishUpdateAuditWithBeforeAndAfter() {
-        WbUser target = plainUser(2L);
+        WbUser target = plainUser();
         target.setTokenVersion(3);
         when(userDbService.getById(2L)).thenReturn(target);
         authenticateAs(99L);
@@ -471,7 +470,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateUserShouldPublishDisableAuditWhenOnlyStatusChanges() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         authenticateAs(99L);
 
         UserUpdateDTO request = new UserUpdateDTO();
@@ -487,7 +486,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void deleteUserShouldPublishDeleteAudit() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         authenticateAs(99L);
 
         userService.deleteUser(2L);
@@ -505,7 +504,7 @@ class UserServiceImplGuardTest {
     void addUserShouldCarryProfileFields() {
         when(userDbService.findActiveByUsername("newbie")).thenReturn(null);
         when(passwordEncoder.encode("secret123")).thenReturn("encoded");
-        UserCreateDTO request = createRequest("newbie", "secret123", null, null);
+        UserCreateDTO request = createRequest("newbie", null, null);
         request.setDisplayName("张三");
         request.setEmail("zhangsan@example.com");
         request.setPhone("13800000000");
@@ -538,7 +537,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void getUserProfileShouldMapProfileFields() {
-        WbUser user = plainUser(2L);
+        WbUser user = plainUser();
         user.setDisplayName("李四");
         user.setEmail("lisi@example.com");
         when(userDbService.getById(2L)).thenReturn(user);
@@ -555,7 +554,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateProfileShouldUpdateProfileFieldsAndAudit() {
-        WbUser user = plainUser(2L);
+        WbUser user = plainUser();
         user.setDisplayName("旧名");
         when(userDbService.getById(2L)).thenReturn(user);
         ProfileUpdateDTO request = profileRequest("新名", "new@example.com", "13900000000");
@@ -582,7 +581,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void updateProfileShouldNormalizeBlankContactToNull() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         ProfileUpdateDTO request = profileRequest("张三", "   ", "");
 
         userService.updateProfile(2L, request);
@@ -598,7 +597,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void changePasswordShouldRejectWrongOldPassword() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         when(passwordEncoder.matches("wrong-old", "bcrypt-hash")).thenReturn(false);
 
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -613,7 +612,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void changePasswordShouldRejectSamePassword() {
-        when(userDbService.getById(2L)).thenReturn(plainUser(2L));
+        when(userDbService.getById(2L)).thenReturn(plainUser());
         when(passwordEncoder.matches("samepass123", "bcrypt-hash")).thenReturn(true);
 
         KnowledgeException e = assertThrows(KnowledgeException.class,
@@ -628,7 +627,7 @@ class UserServiceImplGuardTest {
      */
     @Test
     void changePasswordShouldEncodeBumpVersionAndResign() {
-        WbUser user = plainUser(2L);
+        WbUser user = plainUser();
         user.setTokenVersion(3);
         when(userDbService.getById(2L)).thenReturn(user);
         when(passwordEncoder.matches("oldpass123", "bcrypt-hash")).thenReturn(true);
@@ -694,10 +693,10 @@ class UserServiceImplGuardTest {
         return request;
     }
 
-    private UserCreateDTO createRequest(String username, String password, String role, Integer status) {
+    private UserCreateDTO createRequest(String username, String role, Integer status) {
         UserCreateDTO request = new UserCreateDTO();
         request.setUsername(username);
-        request.setPassword(password);
+        request.setPassword("secret123");
         request.setRole(role);
         request.setStatus(status);
         return request;
@@ -713,10 +712,10 @@ class UserServiceImplGuardTest {
         return user;
     }
 
-    private WbUser plainUser(Long id) {
+    private WbUser plainUser() {
         WbUser user = new WbUser();
-        user.setId(id);
-        user.setUsername("user" + id);
+        user.setId(2L);
+        user.setUsername("user" + (Long) 2L);
         user.setPassword("bcrypt-hash");
         user.setRole(UserRole.USER.getCode());
         user.setStatus(1);

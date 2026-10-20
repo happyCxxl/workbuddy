@@ -16,9 +16,6 @@ import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.enums.parse.SignalType;
-import com.workbuddy.worker.parser.DocumentParserPort;
-import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.signal.impl.SignalDetectorImpl;
 import com.workbuddy.worker.parser.signal.SignalFallbackHandler;
 import com.workbuddy.worker.parser.signal.fallback.BlankFallbackHandler;
@@ -335,7 +332,10 @@ class ParsePipelineTest {
         assertEquals(PipelineTaskErrorCode.RATIO_BELOW_THRESHOLD.name(), outcome.getErrorCode());
     }
 
-    /** 短文档（≤3 单元）坏页 1 张：按坏页绝对数放行，不落 RATIO_BELOW_THRESHOLD（{@code shortDocumentWithOneBadPageShouldBePartialSuccess}）。 */
+    /**
+     * 短文档（≤3 单元）坏页 1 张：按坏页绝对数放行，不落 RATIO_BELOW_THRESHOLD
+     * （{@code shortDocumentWithOneBadPageShouldBePartialSuccess}）。
+     */
     @Test
     void shortDocumentWithOneBadPageShouldBePartialSuccess() {
         ParsePipeline pipeline = pipeline(fakeParser(
@@ -474,7 +474,8 @@ class ParsePipelineTest {
 
         assertEquals(PipelineTaskStatus.SUCCESS, outcome.getSuggestedStatus());
         assertEquals(0, outcome.getFailedUnits());
-        assertEquals("IMAGE_TEXT_UNRECOGNIZED", outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
+        assertEquals("IMAGE_TEXT_UNRECOGNIZED",
+                outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
     }
 
     /**

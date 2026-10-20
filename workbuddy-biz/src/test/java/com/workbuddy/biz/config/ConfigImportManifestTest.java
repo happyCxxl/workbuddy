@@ -214,7 +214,8 @@ class ConfigImportManifestTest {
     private List<EnumerablePropertySource<?>> sources(Path yml) throws IOException {
         assertTrue(Files.exists(yml), () -> "找不到配置文件: " + yml.toAbsolutePath());
         List<EnumerablePropertySource<?>> sources = new ArrayList<>();
-        for (PropertySource<?> loaded : new YamlPropertySourceLoader().load(yml.getFileName().toString(), resource(yml))) {
+        for (PropertySource<?> loaded :
+                new YamlPropertySourceLoader().load(yml.getFileName().toString(), resource(yml))) {
             assertTrue(loaded instanceof EnumerablePropertySource, () -> "加载器返回的属性源不可枚举: " + yml);
             sources.add((EnumerablePropertySource<?>) loaded);
         }

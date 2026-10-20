@@ -22,7 +22,8 @@ class EmbedStrategyParserTest {
      */
     @Test
     void configShouldFillDefaults() {
-        EmbedStrategy strategy = parser.parse("{\"model\":\"text-embedding-v4\",\"batchSize\":64,\"cacheEnabled\":\"OFF\"}");
+        EmbedStrategy strategy = parser.parse(
+                "{\"model\":\"text-embedding-v4\",\"batchSize\":64,\"cacheEnabled\":\"OFF\"}");
 
         assertEquals("text-embedding-v4", strategy.getModel());
         assertEquals("{content}", strategy.getDocTemplate());

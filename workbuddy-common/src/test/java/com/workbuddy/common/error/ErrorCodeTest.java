@@ -27,8 +27,8 @@ class ErrorCodeTest {
 
     /** 模型调用分区：未支持模态、未知厂商、鉴权失败、参数或内容被拒、模型不存在、限流、超时、服务端错误、网络不可达、输出结构校验失败 */
     private static final List<ErrorCode> MODEL_CODES = List.of(MODEL_MODALITY_UNSUPPORTED, MODEL_VENDOR_UNKNOWN,
-            MODEL_AUTH_FAILED, MODEL_BAD_REQUEST, MODEL_NOT_FOUND, MODEL_RATE_LIMITED, MODEL_TIMEOUT, MODEL_SERVER_ERROR,
-            MODEL_UNREACHABLE, MODEL_OUTPUT_INVALID);
+            MODEL_AUTH_FAILED, MODEL_BAD_REQUEST, MODEL_NOT_FOUND, MODEL_RATE_LIMITED, MODEL_TIMEOUT,
+            MODEL_SERVER_ERROR, MODEL_UNREACHABLE, MODEL_OUTPUT_INVALID);
 
     /** 与 MODEL_CODES 顺序一一对应的文案 */
     private static final List<String> MODEL_MESSAGES = List.of("模型未支持该模态", "模型厂商未配置", "模型鉴权失败",

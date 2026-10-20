@@ -14,7 +14,6 @@ import com.workbuddy.worker.parser.pdf.model.CharInfo;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
 import com.workbuddy.worker.parser.pdf.model.Grid;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
-import com.workbuddy.worker.parser.pdf.detect.RuleLines;
 import com.workbuddy.worker.parser.pdf.detect.TableCandidateDetector;
 import com.workbuddy.worker.parser.pdf.model.Token;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
@@ -152,7 +151,10 @@ class PdfBoxDocumentParserTest {
             try (PDPageContentStream cs = new PDPageContentStream(doc, pdfPage)) {
                 cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 10);
                 // 三行、三列，列距 > 20pt（宽列距信号）
-                String[][] rows = {{"Score", "Standard", "Points"}, {"A1", "Bidding price", "30"}, {"A2", "Tech plan", "40"}};
+                String[][] rows = {
+                        {"Score", "Standard", "Points"},
+                        {"A1", "Bidding price", "30"},
+                        {"A2", "Tech plan", "40"}};
                 float y = 700;
                 for (String[] row : rows) {
                     cs.beginText();

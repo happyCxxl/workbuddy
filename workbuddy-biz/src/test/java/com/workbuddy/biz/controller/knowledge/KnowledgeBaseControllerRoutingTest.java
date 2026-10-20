@@ -187,7 +187,8 @@ class KnowledgeBaseControllerRoutingTest {
     /**
      * 策略绑定：单库查询按 query 参数、批量查询按类型、单库更新与批量更新各走各端点。
      *
-     * <p>守护 {@code strategyBinding}/{@code strategyBindings}/{@code bindStrategy}/{@code bindStrategies} 的映射与参数传递：strategyType 缺失应被校验拒绝（400）。
+     * <p>守护 {@code strategyBinding}/{@code strategyBindings}/{@code bindStrategy}/{@code bindStrategies}
+     * 的映射与参数传递：strategyType 缺失应被校验拒绝（400）。
      */
     @Test
     void strategyBindingEndpointsShouldRouteToService() throws Exception {

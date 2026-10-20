@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "9500044f",
-      "note": "check-docs 增加文档引用路径校验（JAVA-DOC-010）；门禁的改动文件清单改为分批传参"
+      "baseline": "ba499abf",
+      "note": "Checkstyle 纳管测试源码；CI 与 pre-push 统一 mvn verify；TODO 检查覆盖测试源码；债务台账补 26–30"
     },
     "01": {
       "status": "已复核",
@@ -38,9 +38,9 @@
     },
     "05": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "b5cf0348",
-      "note": "vector 并入、对象存储适配下沉 infra 后复核：7 模块、依赖边同步"
+      "reviewed": "2026-10-20",
+      "baseline": "ba499abf",
+      "note": "构建配置把测试源码纳入 Checkstyle；模块结构未变"
     },
     "06": {
       "status": "已复核",

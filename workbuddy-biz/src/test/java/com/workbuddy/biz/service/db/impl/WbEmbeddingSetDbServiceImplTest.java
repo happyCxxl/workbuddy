@@ -110,7 +110,8 @@ class WbEmbeddingSetDbServiceImplTest {
                 () -> segment);
         // ACTIVE 走占位符，从参数对断言
         wrapper.getParamNameValuePairs();
-        assertTrue(wrapper.getParamNameValuePairs().containsValue("ACTIVE"), () -> wrapper.getParamNameValuePairs().toString());
+        assertTrue(wrapper.getParamNameValuePairs().containsValue("ACTIVE"),
+                () -> wrapper.getParamNameValuePairs().toString());
         assertTrue(segment.contains("LIMIT 5"), () -> segment);
     }
 

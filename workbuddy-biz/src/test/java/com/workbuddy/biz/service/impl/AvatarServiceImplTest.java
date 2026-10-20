@@ -1,7 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.auth.db.WbUserDbService;
-import com.workbuddy.biz.service.AvatarService;
 import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -34,7 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -133,7 +131,8 @@ class AvatarServiceImplTest {
         assertEquals("image/jpeg", contentType.getValue());
 
         service.upload(file(WEBP_HEAD, "application/octet-stream"));
-        verify(fileStorage, Mockito.times(2)).putRaw(anyString(), any(InputStream.class), anyLong(), contentType.capture());
+        verify(fileStorage, Mockito.times(2)).putRaw(anyString(), any(InputStream.class),
+                anyLong(), contentType.capture());
         assertTrue(contentType.getAllValues().contains("image/webp"));
     }
 

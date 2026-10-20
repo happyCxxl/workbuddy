@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -103,7 +102,8 @@ class ModelControllerRoutingTest {
 
         mockMvc.perform(put("/model/update/5")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"vendorCode\":\"deepseek\",\"modelKey\":\"qwen-plus\",\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\"}"))
+                .content("{\"vendorCode\":\"deepseek\",\"modelKey\":\"qwen-plus\","
+                        + "\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\"}"))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);

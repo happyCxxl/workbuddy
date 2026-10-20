@@ -26,7 +26,12 @@ import java.math.BigInteger;
 import java.util.List;
 import javax.imageio.ImageIO;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * DOCX 原生解析器单测：段落/表格/合并、页眉页脚部件、目录行特征、supports 与能力标识。

@@ -9,6 +9,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,7 +35,7 @@ class RedisQueueSupportTest {
         new RedisQueueSupport(stringRedisTemplate).leftPush("q", "1");
 
         verify(listOperations).leftPush("q", "1");
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(listOperations).getInvocations().stream()
+        assertTrue(mockingDetails(listOperations).getInvocations().stream()
                 .anyMatch(inv -> "leftPush".equals(inv.getMethod().getName())));
     }
 
@@ -47,7 +49,7 @@ class RedisQueueSupportTest {
         new RedisQueueSupport(stringRedisTemplate).rightPop("q", Duration.ofSeconds(5));
 
         verify(listOperations).rightPop("q", Duration.ofSeconds(5));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(listOperations).getInvocations().stream()
+        assertTrue(mockingDetails(listOperations).getInvocations().stream()
                 .anyMatch(inv -> "rightPop".equals(inv.getMethod().getName())));
     }
 }

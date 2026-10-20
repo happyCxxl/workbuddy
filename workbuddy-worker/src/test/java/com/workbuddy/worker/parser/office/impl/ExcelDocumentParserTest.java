@@ -24,7 +24,11 @@ import java.util.Base64;
 import java.util.List;
 import javax.imageio.ImageIO;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Excel 原生解析器单测：XLSX 合并区域、XLS 同路径、supports 与能力标识。
@@ -118,7 +122,8 @@ class ExcelDocumentParserTest {
                 .filter(e -> ElementType.IMAGE.name().equals(e.getType())).toList();
         assertEquals(1, images.size(), () -> "elements=" + source.getElements());
         assertEquals(Boolean.TRUE, images.getFirst().getNeedsOcr());
-        assertTrue(images.getFirst().getAssetRef().startsWith("image-0"), () -> "asset=" + images.getFirst().getAssetRef());
+        assertTrue(images.getFirst().getAssetRef().startsWith("image-0"),
+                () -> "asset=" + images.getFirst().getAssetRef());
         assertEquals("office#sheet[图表]/picture[0]", images.getFirst().getProvenance().getPath());
         assertTrue(source.getFacts().stream()
                         .anyMatch(fact -> fact.getEvidence().contains("本表 1 张")),

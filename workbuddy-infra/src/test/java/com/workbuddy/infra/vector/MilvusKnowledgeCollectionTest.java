@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -100,7 +101,7 @@ class MilvusKnowledgeCollectionTest {
     void upsertShouldSkipWhenEmpty() {
         collection.upsert("kb_1_v1", List.of());
         verify(milvusClientV2, never()).upsert(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(milvusClientV2).getInvocations().stream()
+        assertTrue(mockingDetails(milvusClientV2).getInvocations().stream()
                 .noneMatch(inv -> "upsert".equals(inv.getMethod().getName())));
     }
 
@@ -275,7 +276,7 @@ class MilvusKnowledgeCollectionTest {
 
         verify(milvusClientV2, never()).createCollection(any());
         verify(milvusClientV2, never()).createIndex(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(milvusClientV2).getInvocations().stream()
+        assertTrue(mockingDetails(milvusClientV2).getInvocations().stream()
                 .noneMatch(inv -> "createIndex".equals(inv.getMethod().getName())));
     }
 

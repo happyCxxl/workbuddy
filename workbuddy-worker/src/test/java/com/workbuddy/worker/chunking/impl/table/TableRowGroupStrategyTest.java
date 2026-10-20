@@ -97,7 +97,8 @@ class TableRowGroupStrategyTest {
             viewCells.add(viewCell(cell.getId(), cell.getText()));
         }
         List<Chunk> chunks = strategy.slice(tableElement(viewCells),
-                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"row-group\",\"params\":{\"groupSize\":\"2\",\"maxLen\":\"1000\"}}}}"));
+                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"row-group\","
+                        + "\"params\":{\"groupSize\":\"2\",\"maxLen\":\"1000\"}}}}"));
 
         assertEquals(3, chunks.size());
         assertTrue(chunks.stream().allMatch(c -> ChunkContentType.TABLE.name().equals(c.getContentType())));
@@ -121,7 +122,8 @@ class TableRowGroupStrategyTest {
         }
         // 每行约 10 字符，maxLen=25：两行一组（20 ≤ 25），第三行会使组超限 → 结算 → 3 组（2/2/1）
         List<Chunk> chunks = strategy.slice(tableElement(viewCells),
-                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"row-group\",\"params\":{\"groupSize\":\"10\",\"maxLen\":\"25\"}}}}"));
+                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"row-group\","
+                        + "\"params\":{\"groupSize\":\"10\",\"maxLen\":\"25\"}}}}"));
 
         assertEquals(3, chunks.size());
         assertTrue(chunks.getFirst().getContent().contains("内容较长的一行1"));

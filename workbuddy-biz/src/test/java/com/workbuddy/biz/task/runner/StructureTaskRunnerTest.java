@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -90,7 +91,8 @@ class StructureTaskRunnerTest {
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage),
                 new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
-        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID)).thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
+        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
+                .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
     }
 
     /** 上游产物的产出任务（环节 PARSE） */
@@ -231,7 +233,7 @@ class StructureTaskRunnerTest {
         // 部分成功在放行集内：产物照常落库、任务落成功终态
         verify(pipelineProductDbService).save(any(WbPipelineProduct.class));
         verify(pipelineTaskDbService).finish(60L, PipelineTaskStatus.SUCCESS, null, null);
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineTaskDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
 
@@ -259,7 +261,7 @@ class StructureTaskRunnerTest {
                 eq(PipelineTaskErrorCode.TASK_STORAGE_MISMATCH.name()), any());
         verify(fileStorage, never()).putObject(any(byte[].class));
         verify(pipelineProductDbService, never()).save(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineProductDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineProductDbService).getInvocations().stream()
                 .noneMatch(inv -> "save".equals(inv.getMethod().getName())));
     }
 
@@ -285,7 +287,7 @@ class StructureTaskRunnerTest {
                 eq(PipelineTaskErrorCode.STRUCTURE_EMPTY.name()), any());
         verify(pipelineProductDbService, never()).save(any());
         verify(fileStorage, never()).putObject(any(byte[].class));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+        assertTrue(mockingDetails(fileStorage).getInvocations().stream()
                 .noneMatch(inv -> "putObject".equals(inv.getMethod().getName())));
     }
 
@@ -304,7 +306,7 @@ class StructureTaskRunnerTest {
         verify(pipelineTaskDbService).finish(eq(60L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name()), any());
         verify(fileStorage, never()).getObject(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+        assertTrue(mockingDetails(fileStorage).getInvocations().stream()
                 .noneMatch(inv -> "getObject".equals(inv.getMethod().getName())));
     }
 
@@ -360,7 +362,8 @@ class StructureTaskRunnerTest {
         when(pipelineTaskDbService.getById(60L)).thenReturn(queuedTask());
         when(pipelineTaskDbService.claim(60L)).thenReturn(1);
         when(pipelineProductDbService.getById(50L)).thenReturn(parseProduct());
-        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "abc".repeat(22)))).thenThrow(new IllegalStateException());
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "abc".repeat(22)))).thenThrow(new IllegalStateException());
 
         runner.run(60L);
 

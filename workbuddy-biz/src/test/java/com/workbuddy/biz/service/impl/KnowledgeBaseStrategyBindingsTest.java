@@ -1,10 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.db.WbAuditLogDbService;
-import com.workbuddy.biz.service.db.WbChunkDbService;
-import com.workbuddy.biz.service.db.WbChunkSetDbService;
-import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
-import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;

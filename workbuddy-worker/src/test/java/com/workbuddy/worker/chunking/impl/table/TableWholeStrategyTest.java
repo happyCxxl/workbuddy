@@ -120,7 +120,8 @@ class TableWholeStrategyTest {
             viewCells.add(viewCell(cell.getId(), cell.getText()));
         }
         List<Chunk> chunks = strategy.slice(tableElement(viewCells),
-                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"whole-table\",\"params\":{\"maxLen\":\"50\"}}}}"));
+                context(table, "{\"routes\":{\"table\":{\"algorithm\":\"whole-table\","
+                        + "\"params\":{\"maxLen\":\"50\"}}}}"));
 
         assertEquals(3, chunks.size());
         assertTrue(chunks.stream().allMatch(c -> ChunkContentType.TABLE.name().equals(c.getContentType())));

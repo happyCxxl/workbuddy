@@ -55,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -109,7 +110,8 @@ class ChunkTaskRunnerTest {
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage),
                 new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
-        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID)).thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
+        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
+                .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
     }
 
     /** 上游产物的产出任务（环节 PREPROCESS） */
@@ -278,8 +280,8 @@ class ChunkTaskRunnerTest {
         // 该用例只验证"优先取指定上游产物"，不涉结构参照：置空避免 readStructureDocument 内部产生严格桩参数不匹配告警
         specified.setUpstreamProductId(null);
         when(pipelineProductDbService.getById(88L)).thenReturn(specified);
-        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "spec".repeat(16))))
-                .thenReturn(json(view()));
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "spec".repeat(16)))).thenReturn(json(view()));
         when(chunker.chunk(any(ChunkContext.class))).thenReturn(successOutcome());
         when(fileStorage.putObject(any(byte[].class)))
                 .thenReturn(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "out".repeat(16)));
@@ -294,7 +296,8 @@ class ChunkTaskRunnerTest {
 
         runner.run(70L);
 
-        verify(fileStorage).getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "spec".repeat(16)));
+        verify(fileStorage).getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "spec".repeat(16)));
         verify(pipelineProductDbService, never()).getByFileResultIdAndStage(any(), any());
         ArgumentCaptor<WbPipelineProduct> productCaptor = ArgumentCaptor.forClass(WbPipelineProduct.class);
         verify(pipelineProductDbService).save(productCaptor.capture());
@@ -315,7 +318,7 @@ class ChunkTaskRunnerTest {
         verify(pipelineTaskDbService).finish(eq(70L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name()), any());
         verify(fileStorage, never()).putObject(any(byte[].class));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+        assertTrue(mockingDetails(fileStorage).getInvocations().stream()
                 .noneMatch(inv -> "putObject".equals(inv.getMethod().getName())));
     }
 
@@ -363,7 +366,7 @@ class ChunkTaskRunnerTest {
         // 守卫在读取上游产物本体之前：坏快照不读对象、不进管线
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
         verify(chunker, never()).chunk(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunker).getInvocations().stream()
+        assertTrue(mockingDetails(chunker).getInvocations().stream()
                 .noneMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
@@ -386,7 +389,7 @@ class ChunkTaskRunnerTest {
                 eq(PipelineTaskErrorCode.CHUNK_FAILED.name()),
                 eq("任务未带切片策略快照或快照已损坏，无法切片"));
         verify(chunker, never()).chunk(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(chunker).getInvocations().stream()
+        assertTrue(mockingDetails(chunker).getInvocations().stream()
                 .noneMatch(inv -> "chunk".equals(inv.getMethod().getName())));
     }
 
@@ -475,8 +478,8 @@ class ChunkTaskRunnerTest {
         DocumentInfo info = new DocumentInfo();
         info.setDocumentId("doc-10");
         document.setDocumentInfo(info);
-        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "ghi".repeat(21) + "0")))
-                .thenReturn(json(document));
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "ghi".repeat(21) + "0"))).thenReturn(json(document));
         when(chunker.chunk(any(ChunkContext.class))).thenReturn(successOutcome());
         when(fileStorage.putObject(any(byte[].class)))
                 .thenReturn(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "def".repeat(21) + "0"));

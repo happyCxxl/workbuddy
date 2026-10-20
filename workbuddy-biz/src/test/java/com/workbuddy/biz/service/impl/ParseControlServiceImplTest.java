@@ -258,8 +258,8 @@ class ParseControlServiceImplTest {
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
         String json = "{\"quality\":{\"warnings\":[{\"code\":\"SCANNED_PAGE\",\"level\":\"WARN\","
                 + "\"message\":\"第 page 2 无文本层（扫描页），OCR 暂未支持\"}]}}";
-        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "9f2c".repeat(16))))
-                .thenReturn(json.getBytes(StandardCharsets.UTF_8));
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "9f2c".repeat(16)))).thenReturn(json.getBytes(StandardCharsets.UTF_8));
 
         ParseDetailVO detail = service.parseDetail(10L, null);
 

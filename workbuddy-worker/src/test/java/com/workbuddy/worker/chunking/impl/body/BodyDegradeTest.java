@@ -31,7 +31,8 @@ class BodyDegradeTest {
 
     /** 段落聚合：目标 100 / 软上限 50，兜底 30 字符一片、不重叠 */
     private static final String PARAGRAPH_CONFIG = "{\"routes\":{"
-            + "\"body\":{\"algorithm\":\"paragraph-aggregate\",\"params\":{\"targetMaxLen\":\"100\",\"softMaxLen\":\"50\"}},"
+            + "\"body\":{\"algorithm\":\"paragraph-aggregate\",\"params\":"
+            + "{\"targetMaxLen\":\"100\",\"softMaxLen\":\"50\"}},"
             + "\"fallback\":{\"algorithm\":\"recursive-length\",\"params\":{\"len\":\"30\",\"overlap\":\"0\"}}}}";
 
     private final TitleBoundarySliceStrategy titleBoundary = new TitleBoundarySliceStrategy();

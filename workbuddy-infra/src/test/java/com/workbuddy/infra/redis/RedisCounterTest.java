@@ -13,9 +13,11 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -123,7 +125,7 @@ class RedisCounterTest {
         counter.reset("k");
 
         verify(template).delete("k");
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(template).getInvocations().stream()
+        assertTrue(mockingDetails(template).getInvocations().stream()
                 .anyMatch(inv -> "delete".equals(inv.getMethod().getName())));
     }
 }

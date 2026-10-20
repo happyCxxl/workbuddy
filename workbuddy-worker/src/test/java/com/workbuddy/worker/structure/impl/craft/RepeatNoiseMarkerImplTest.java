@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 重复/噪声识别单测：重复页（首份不标）/重复段（长度门槛、排除页眉页脚）/噪声页（空白/纯图片/乱码）。
@@ -146,7 +148,8 @@ class RepeatNoiseMarkerImplTest {
         elements.add(element("t1", UnifiedElementType.PARAGRAPH.name(), 1, "正常页正文内容用于排除噪声判定，文本长度足够且全部为常用字符。"));
         elements.add(element("i3", UnifiedElementType.IMAGE.name(), 3, null));
         // 页 4：乱码页（不可读的替换字符占比 > 0.4）
-        elements.add(element("g4", UnifiedElementType.PARAGRAPH.name(), 4, "\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD"));
+        elements.add(element("g4", UnifiedElementType.PARAGRAPH.name(), 4,
+                "\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD"));
         UnifiedDocument document = document(elements, pages(1, 2, 3, 4));
 
         var outcome = marker.mark(document);

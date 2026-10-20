@@ -168,7 +168,6 @@ class SearchServiceImplTest {
      * <p>守护 {@code search}：融合序或记录字段错即失败。
      */
     @Test
-    // TODO 模型调用层待接入：向量通道当前恒降级，本用例待恢复
     @Disabled("模型调用层待接入：向量通道恒降级")
     void benchSearchShouldUseExplicitVersionAndRuleAndRecordRun() {
         SearchDTO request = request();
@@ -217,7 +216,6 @@ class SearchServiceImplTest {
      * <p>守护 {@code expandParent}：未替换父片全文即失败。
      */
     @Test
-    // TODO 模型调用层待接入：向量通道当前恒降级，本用例待恢复
     @Disabled("模型调用层待接入：向量通道恒降级")
     void parentExpandShouldFetchParentFromCollection() {
         SearchDTO request = request();

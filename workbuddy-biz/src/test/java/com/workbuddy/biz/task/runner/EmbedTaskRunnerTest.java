@@ -60,6 +60,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -120,7 +121,8 @@ class EmbedTaskRunnerTest {
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage),
                 new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
-        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID)).thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
+        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
+                .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
     }
 
     /** 上游产物的产出任务（环节 CHUNK） */
@@ -291,7 +293,7 @@ class EmbedTaskRunnerTest {
                 PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name(), "任务未指定上游切片产物");
         verify(fileStorage, never()).putObject(any(byte[].class));
         verify(embedder, never()).embed(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(embedder).getInvocations().stream()
+        assertTrue(mockingDetails(embedder).getInvocations().stream()
                 .noneMatch(inv -> "embed".equals(inv.getMethod().getName())));
     }
 
@@ -342,7 +344,7 @@ class EmbedTaskRunnerTest {
         // 守卫在读取上游产物本体之前：坏快照不读对象、不进管线
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
         verify(embedder, never()).embed(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(embedder).getInvocations().stream()
+        assertTrue(mockingDetails(embedder).getInvocations().stream()
                 .noneMatch(inv -> "embed".equals(inv.getMethod().getName())));
     }
 
@@ -391,7 +393,7 @@ class EmbedTaskRunnerTest {
         verify(pipelineTaskDbService).finish(70L, PipelineTaskStatus.FAILED,
                 PipelineTaskErrorCode.EMBED_CONSISTENCY_FAILED.name(), "维度不一致");
         verify(fileStorage, never()).putObject(any(byte[].class));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+        assertTrue(mockingDetails(fileStorage).getInvocations().stream()
                 .noneMatch(inv -> "putObject".equals(inv.getMethod().getName())));
     }
 
@@ -412,7 +414,8 @@ class EmbedTaskRunnerTest {
                 .thenReturn(List.of(historyRow));
         EmbeddingSet historySet = new EmbeddingSet();
         historySet.setEmbeddingSetId("es-old");
-        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "hist".repeat(21))))
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "hist".repeat(21))))
                 .thenReturn(Objects.requireNonNull(JsonUtil.toJsonStr(historySet)).getBytes(StandardCharsets.UTF_8));
         when(embedder.embed(any(EmbedContext.class))).thenReturn(successOutcome());
 
@@ -444,7 +447,8 @@ class EmbedTaskRunnerTest {
 
         runner.run(70L);
 
-        verify(embeddingSetDbService, never()).listHistoryByFileResultIdAndStrategyVersion(anyLong(), anyString(), eq(10));
+        verify(embeddingSetDbService, never())
+                .listHistoryByFileResultIdAndStrategyVersion(anyLong(), anyString(), eq(10));
         ArgumentCaptor<EmbedContext> contextCaptor = ArgumentCaptor.forClass(EmbedContext.class);
         verify(embedder).embed(contextCaptor.capture());
         assertTrue(contextCaptor.getValue().getReuseCandidates().isEmpty());
@@ -489,7 +493,7 @@ class EmbedTaskRunnerTest {
 
         verify(pipelineTaskDbService, never()).claim(anyLong());
         verify(embedder, never()).embed(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(embedder).getInvocations().stream()
+        assertTrue(mockingDetails(embedder).getInvocations().stream()
                 .noneMatch(inv -> "embed".equals(inv.getMethod().getName())));
     }
 }

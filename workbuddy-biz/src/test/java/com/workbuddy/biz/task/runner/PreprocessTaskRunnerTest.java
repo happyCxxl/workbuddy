@@ -49,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -97,7 +98,8 @@ class PreprocessTaskRunnerTest {
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage),
                 new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
-        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID)).thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
+        lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
+                .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
     }
 
     /** 上游产物的产出任务（环节 STRUCTURE） */
@@ -231,7 +233,8 @@ class PreprocessTaskRunnerTest {
         specified.setId(88L);
         specified.setArtifactId("spec".repeat(16));
         when(pipelineProductDbService.getById(88L)).thenReturn(specified);
-        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "spec".repeat(16))))
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "spec".repeat(16))))
                 .thenReturn(Objects.requireNonNull(JsonUtil.toJsonStr(document())).getBytes(StandardCharsets.UTF_8));
         when(preprocessor.preprocess(any(PreprocessContext.class))).thenReturn(successOutcome());
         when(fileStorage.putObject(any(byte[].class)))
@@ -243,7 +246,8 @@ class PreprocessTaskRunnerTest {
 
         runner.run(60L);
 
-        verify(fileStorage).getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "spec".repeat(16)));
+        verify(fileStorage).getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "spec".repeat(16)));
         verify(pipelineProductDbService, never()).getByFileResultIdAndStage(any(), any());
         ArgumentCaptor<WbPipelineProduct> productCaptor = ArgumentCaptor.forClass(WbPipelineProduct.class);
         verify(pipelineProductDbService).save(productCaptor.capture());
@@ -265,7 +269,7 @@ class PreprocessTaskRunnerTest {
         verify(pipelineTaskDbService).finish(eq(60L), eq(PipelineTaskStatus.FAILED),
                 eq(PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name()), any());
         verify(fileStorage, never()).putObject(any(byte[].class));
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(fileStorage).getInvocations().stream()
+        assertTrue(mockingDetails(fileStorage).getInvocations().stream()
                 .noneMatch(inv -> "putObject".equals(inv.getMethod().getName())));
     }
 
@@ -313,7 +317,7 @@ class PreprocessTaskRunnerTest {
         // 守卫在读取上游产物本体之前：坏快照不读对象、不进管线
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
         verify(preprocessor, never()).preprocess(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(preprocessor).getInvocations().stream()
+        assertTrue(mockingDetails(preprocessor).getInvocations().stream()
                 .noneMatch(inv -> "preprocess".equals(inv.getMethod().getName())));
     }
 
@@ -340,7 +344,7 @@ class PreprocessTaskRunnerTest {
                 eq(PipelineTaskErrorCode.PREPROCESS_EMPTY.name()), any());
         verify(fileStorage, never()).putObject(any(byte[].class));
         verify(pipelineProductDbService, never()).save(any());
-        org.junit.jupiter.api.Assertions.assertTrue(org.mockito.Mockito.mockingDetails(pipelineProductDbService).getInvocations().stream()
+        assertTrue(mockingDetails(pipelineProductDbService).getInvocations().stream()
                 .noneMatch(inv -> "save".equals(inv.getMethod().getName())));
     }
 }
