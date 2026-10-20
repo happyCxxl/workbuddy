@@ -12,7 +12,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ChunkDetailVO extends StageDetailVO {
+public class ChunkDetailVO extends StageDetailVO<ChunkStatsVO> {
 
     /** 切片统计（最新切片集合推导；无集合时为空） */
     private ChunkSummaryVO summary;

@@ -395,7 +395,7 @@ class StructureControlServiceImplTest {
         assertTrue(detail.getOutline().get(2).getCells().getFirst().getIsHeader());
         // 阶段统计与摘要由产物现算：漏下发会让详情页缺「结构可用」结论
         assertNotNull(detail.getStageStats());
-        assertEquals(3, detail.getStageStats().get("elementCount"));
+        assertEquals(3, detail.getStageStats().getElementCount());
         assertNotNull(detail.getStageSummary());
     }
 

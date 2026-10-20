@@ -150,6 +150,21 @@ function checkFile(file) {
     });
   }
 
+  // 响应字段必须是具体类型（JAVA-DTO-005）：Object 与无约束/以 Object 为值的 Map 都不允许。
+  if (/\/dto\/response\//.test(`/${file}`)) {
+    const FORBIDDEN = [
+      /^\s*private\s+(?:final\s+)?Object\s+\w+\s*;/,
+      /^\s*private\s+(?:final\s+)?Map\s+\w+\s*;/,
+      /^\s*private\s+(?:final\s+)?Map\s*<[^>]*\bObject\b[^>]*>\s+\w+\s*;/,
+      /^\s*private\s+(?:final\s+)?(?:List|Set|Collection)\s*<[^>]*\bObject\b[^>]*>\s+\w+\s*;/,
+    ];
+    code.forEach((l, i) => {
+      if (FORBIDDEN.some((pattern) => pattern.test(l))) {
+        error(file, i + 1, 'JAVA-DTO-005', '响应 VO 字段用具体类型，禁止 Object 与无约束的 Map');
+      }
+    });
+  }
+
   if (name.endsWith('ServiceImpl')) {
     const iface = name.replace(/Impl$/, '');
     if (!siblingClassNames(file).has(iface)) {

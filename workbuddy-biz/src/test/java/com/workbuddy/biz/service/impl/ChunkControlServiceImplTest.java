@@ -34,6 +34,7 @@ import com.workbuddy.common.domain.entity.WbStrategyBinding;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.chunk.ChunkDetailVO;
+import com.workbuddy.common.dto.response.chunk.ChunkStatsVO;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
@@ -55,12 +56,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -607,8 +607,8 @@ class ChunkControlServiceImplTest {
         // 阶段统计与结论：3 片、上游 2 个元素其中 1 个被剔除
         assertNotNull(detail.getStageSummary());
         assertTrue(detail.getStageSummary().contains("无同节邻居"), detail.getStageSummary());
-        assertEquals(1, detail.getStageStats().get("routedElementCount"));
-        assertEquals(1, detail.getStageStats().get("skippedElementCount"));
+        assertEquals(1, detail.getStageStats().getRoutedElementCount());
+        assertEquals(1, detail.getStageStats().getSkippedElementCount());
     }
 
     /** 产物行夹具（只填对象位置） */
@@ -657,13 +657,13 @@ class ChunkControlServiceImplTest {
 
         ChunkDetailVO detail = service.chunkDetail(10L, null);
 
-        Map<String, Object> stats = detail.getStageStats();
+        ChunkStatsVO stats = detail.getStageStats();
         assertNotNull(stats);
-        assertEquals(1, stats.get("chunkCount"));
+        assertEquals(1, stats.getChunkCount());
         // 策略可解析：片长上限与兜底参数照常下发
-        assertTrue(stats.containsKey("targetMaxLen"), String.valueOf(stats));
-        assertTrue(stats.containsKey("softMaxLen"), String.valueOf(stats));
-        assertTrue(stats.containsKey("fallbackLen"), String.valueOf(stats));
+        assertNotNull(stats.getTargetMaxLen());
+        assertNotNull(stats.getSoftMaxLen());
+        assertNotNull(stats.getFallbackLen());
     }
 
     /**
@@ -677,14 +677,14 @@ class ChunkControlServiceImplTest {
 
         ChunkDetailVO detail = service.chunkDetail(10L, null);
 
-        Map<String, Object> stats = detail.getStageStats();
+        ChunkStatsVO stats = detail.getStageStats();
         assertNotNull(stats);
-        assertEquals(1, stats.get("chunkCount"));
+        assertEquals(1, stats.getChunkCount());
         // 策略快照损坏：策略类口径整组留空（页面上如实表现为无策略快照），不炸也不造默认
-        assertFalse(stats.containsKey("targetMaxLen"), String.valueOf(stats));
-        assertFalse(stats.containsKey("softMaxLen"), String.valueOf(stats));
-        assertFalse(stats.containsKey("fallbackLen"), String.valueOf(stats));
-        assertFalse(stats.containsKey("minMergeLen"), String.valueOf(stats));
+        assertNull(stats.getTargetMaxLen());
+        assertNull(stats.getSoftMaxLen());
+        assertNull(stats.getFallbackLen());
+        assertNull(stats.getMinMergeLen());
     }
 
     /** 详情用例共用桩：任务行 + 产物行 + 产物本体 + 集合行 + 一条切片；strategySnapshot 由用例指定 */

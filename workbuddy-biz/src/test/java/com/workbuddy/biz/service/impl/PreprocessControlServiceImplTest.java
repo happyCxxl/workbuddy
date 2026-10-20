@@ -601,7 +601,7 @@ class PreprocessControlServiceImplTest {
         assertEquals("多页重复页眉", detail.getElements().get(2).getTrace().getFirst().getEvidence());
         // 阶段统计与摘要由视图现算：漏下发会让详情页缺「剔除/仅标记」结论
         assertNotNull(detail.getStageStats());
-        assertEquals(3, detail.getStageStats().get("elementCount"));
+        assertEquals(3, detail.getStageStats().getElementCount());
         assertNotNull(detail.getStageSummary());
     }
 

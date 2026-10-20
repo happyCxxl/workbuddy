@@ -301,6 +301,104 @@ export interface LineageParseStats {
   durationMs: number | null;
 }
 
+/** 切片环节统计（后端 ChunkStatsVO）：片数、分布、片长与策略参数 */
+export interface ChunkStats {
+  chunkCount?: number | null;
+  sectionCount?: number | null;
+  paragraphCount?: number | null;
+  tableCount?: number | null;
+  imageCount?: number | null;
+  fallbackCount?: number | null;
+  parentCount?: number | null;
+  orphanCount?: number | null;
+  totalChars?: number | null;
+  avgChars?: number | null;
+  maxChars?: number | null;
+  overTargetMaxCount?: number | null;
+  overSoftMaxCount?: number | null;
+  minMergeLen?: number | null;
+  underMinMergeCount?: number | null;
+  routedElementCount?: number | null;
+  skippedElementCount?: number | null;
+  multiSourceChunkCount?: number | null;
+  avgSourceElementCount?: number | null;
+  targetMaxLen?: number | null;
+  softMaxLen?: number | null;
+  fallbackLen?: number | null;
+  fallbackOverlap?: number | null;
+  durationMs?: number | null;
+}
+
+/** 预处理环节统计（后端 PreprocessStatsVO）：处置分布、字段规范化与耗时 */
+export interface PreprocessStats {
+  matched?: number | null;
+  changed?: number | null;
+  elementCount?: number | null;
+  retainedCount?: number | null;
+  retentionPercent?: number | null;
+  excludedCount?: number | null;
+  repeatedCount?: number | null;
+  chunkSkippedCount?: number | null;
+  markedCount?: number | null;
+  fieldCount?: number | null;
+  changedCount?: number | null;
+  encodingCount?: number | null;
+  tidyCount?: number | null;
+  statusCounts?: Record<string, number> | null;
+  fieldTypeCounts?: Record<string, number> | null;
+  pageFrom?: number | null;
+  pageTo?: number | null;
+  durationMs?: number | null;
+}
+
+/** 组装环节统计（后端 StructureStatsVO）：元素构成、层级、溯源与续表 */
+export interface StructureStats {
+  elementCount?: number | null;
+  titleCount?: number | null;
+  chapterCount?: number | null;
+  level1Count?: number | null;
+  level2Count?: number | null;
+  level3PlusCount?: number | null;
+  parentChildCount?: number | null;
+  continuationCount?: number | null;
+  suspectedContinuationCount?: number | null;
+  tracedCount?: number | null;
+  provenanceCoverage?: number | null;
+  withoutBboxCount?: number | null;
+  repeatedSegmentCount?: number | null;
+  repeatedPageCount?: number | null;
+  noisePageCount?: number | null;
+  pageCount?: number | null;
+  continuationFromPage?: number | null;
+  continuationToPage?: number | null;
+  schemaVersion?: string | null;
+  durationMs?: number | null;
+}
+
+/** 向量化环节统计（后端 EmbedStatsVO）：集合表聚合的记录数与缓存命中数 */
+export interface EmbedStats {
+  recordCount?: number | null;
+  cachedCount?: number | null;
+}
+
+/** 环节统计：执行树节点与详情按环节取具体子类型 */
+export type StageStats = ChunkStats | PreprocessStats | StructureStats | EmbedStats;
+
+/** 是否切片统计（chunkCount 为切片独有键） */
+export function isChunkStats(stats: StageStats | null | undefined): stats is ChunkStats {
+  return stats !== null && stats !== undefined && 'chunkCount' in stats;
+}
+
+/** 是否预处理统计（retainedCount 为预处理独有键） */
+export function isPreprocessStats(stats: StageStats | null | undefined): stats is PreprocessStats {
+  return stats !== null && stats !== undefined && 'retainedCount' in stats;
+}
+
+/** 是否组装统计（chapterCount 为组装独有键） */
+export function isStructureStats(stats: StageStats | null | undefined): stats is StructureStats {
+  return stats !== null && stats !== undefined && 'chapterCount' in stats;
+}
+
 /** 执行链节点（后端 LineageNodeVO）：一个环节的一次任务运行 */
 export interface LineageNode {
   taskId: string;
@@ -317,8 +415,8 @@ export interface LineageNode {
   productId: string | null;
   artifactId: string | null;
   contentHash: string | null;
-  /** 统计摘要（原样透传展示）：CHUNK=chunkCount、EMBED=recordCount/cachedCount、STRUCTURE=元素构成等 */
-  stats: Record<string, string | number | null> | null;
+  /** 环节统计：CHUNK=ChunkStats、EMBED=EmbedStats、PREPROCESS=PreprocessStats、STRUCTURE=StructureStats */
+  stats: StageStats | null;
   /** 解析环节运行统计（仅 PARSE 且该次运行有产物时非空） */
   parseStats: LineageParseStats | null;
   /** 解析环节摘要行文案（后端按状态与问题单元生成；解析进行中为空） */
@@ -428,7 +526,7 @@ export interface StageStep {
  * <p>两个环节的详情接口各自的专属字段不同（解析给 `parseStats`，组装给 `summary`/`outline` 等），
  * 公共部分在这里只声明一次。
  */
-export interface StageDetailCommon {
+export interface StageDetailCommon<TStats extends StageStats = StageStats> {
   fileResultId: string;
   taskId: string | null;
   stage: string;
@@ -444,11 +542,11 @@ export interface StageDetailCommon {
   /** 子步骤列表 */
   steps: StageStep[] | null;
   /**
-   * 环节统计（读产物现算，键名各环节自定义）：与执行树节点的 `stats` 同一份口径。
+   * 环节统计（读产物现算）：与执行树节点的 `stats` 同一份口径。
    *
-   * <p>值是数字或字符串；计数走 {@link statNumber} 兜底。产物不可读时为 null。
+   * <p>具体类型由各环节详情接口绑定；计数走 {@link statNumber} 兜底。产物不可读时为 null。
    */
-  stageStats: Record<string, unknown> | null;
+  stageStats: TStats | null;
   /** 环节摘要行文案（产物不可读导致统计缺失时为空，不陈述结论） */
   stageSummary: string | null;
 }
@@ -514,7 +612,7 @@ export interface StructureCellItem {
 }
 
 /** 组装详情（后端 StructureDetailVO） */
-export interface StructureDetail extends StageDetailCommon {
+export interface StructureDetail extends StageDetailCommon<StructureStats> {
   /** 组装统计（产物不可读时为 null） */
   summary: StructureSummary | null;
   warnings: string[] | null;
@@ -599,7 +697,7 @@ export interface PreprocessCell {
 }
 
 /** 预处理详情（后端 PreprocessDetailVO） */
-export interface PreprocessDetail extends StageDetailCommon {
+export interface PreprocessDetail extends StageDetailCommon<PreprocessStats> {
   /** 预处理统计（产物不可读时为 null） */
   summary: PreprocessSummary | null;
   /** 视图元素（按阅读顺序全量） */
@@ -651,7 +749,7 @@ export interface ChunkItem {
 }
 
 /** 切片详情（后端 ChunkDetailVO） */
-export interface ChunkDetail extends StageDetailCommon {
+export interface ChunkDetail extends StageDetailCommon<ChunkStats> {
   /** 切片统计（无集合时为 null） */
   summary: ChunkSummary | null;
   /** 切片列表（集合内顺序；无集合时为空列表） */

@@ -55,7 +55,7 @@ public class TaskDetailSupport {
      * @param task         该次运行任务（可为空）
      * @return 传入的 vo（状态与子步骤已回填）
      */
-    public <T extends StageDetailVO> T withTask(T vo, Long fileResultId, WbPipelineTask task) {
+    public <T extends StageDetailVO<?>> T withTask(T vo, Long fileResultId, WbPipelineTask task) {
         vo.setFileResultId(fileResultId);
         if (NullUtil.isNotNull(task)) {
             vo.applyFrom(task);
@@ -82,7 +82,7 @@ public class TaskDetailSupport {
      * @param product 该次运行的产物（非空）
      * @return 传入的 vo（产物三字段已回填）
      */
-    public <T extends StageDetailVO> T withProductRef(T vo, WbPipelineProduct product) {
+    public <T extends StageDetailVO<?>> T withProductRef(T vo, WbPipelineProduct product) {
         vo.setArtifactId(product.getArtifactId());
         vo.setContentHash(product.getContentHash());
         vo.setCapabilitySnapshot(product.getCapabilitySnapshot());

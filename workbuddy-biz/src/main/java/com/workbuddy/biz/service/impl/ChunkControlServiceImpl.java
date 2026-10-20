@@ -7,6 +7,7 @@ import com.workbuddy.biz.service.db.WbChunkSetDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.ChunkStatsSupport;
 import com.workbuddy.biz.service.support.ChunkVoAssembler;
+import com.workbuddy.biz.service.support.StageStatsAssembler;
 import com.workbuddy.biz.service.support.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.StageStrategySupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
@@ -123,7 +124,7 @@ public class ChunkControlServiceImpl implements ChunkControlService {
         // 统计与摘要读产物现算：与执行树切片节点同一份口径，不落产物；产物读不到时不陈述结论
         Map<String, Object> stageStats = ChunkStatsSupport.stats(vo.getStartedAt(), vo.getFinishedAt(), chunkSet,
                 strategyOf(task), readUpstreamView(task));
-        vo.setStageStats(stageStats);
+        vo.setStageStats(StageStatsAssembler.fromChunk(stageStats));
         vo.setStageSummary(ChunkStatsSupport.summary(vo.getErrorMsg(), stageStats, vo.getStatus()));
         return vo;
     }

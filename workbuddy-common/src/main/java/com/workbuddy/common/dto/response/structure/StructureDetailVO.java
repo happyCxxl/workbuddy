@@ -11,7 +11,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class StructureDetailVO extends StageDetailVO {
+public class StructureDetailVO extends StageDetailVO<StructureStatsVO> {
 
     /** 组装统计（从统一文档产物推导；无产物时为空） */
     private StructureSummaryVO summary;

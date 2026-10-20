@@ -765,6 +765,7 @@ import type { StageTab, StageTabKey } from '@/types/pipeline-stage-view';
 import type {
   ChunkDetail,
   ChunkItem,
+  ChunkStats,
   ParseDetail,
   PreprocessDetail,
   PreprocessElement,
@@ -1841,10 +1842,13 @@ const fallbackPane = createChunkPane({ fallback: true });
 const parentPane = createChunkPane({ hasParent: false });
 
 /** 页签角标数：优先用详情统计（不必先请求列表） */
-function chunkStatCount(key: string): number | null {
-  const stats = detail.value?.stageStats ?? null;
-  const value = stats?.[key];
-  return typeof value === 'number' ? value : null;
+function chunkStatCount(key: keyof ChunkStats): number | null {
+  const value = detail.value;
+  if (value === null || !('chunks' in value)) {
+    return null;
+  }
+  const raw = value.stageStats?.[key];
+  return typeof raw === 'number' ? raw : null;
 }
 
 /** 当前选中的片（左栏点选或右栏点行都会更新；「来源对照」页签按它展示） */

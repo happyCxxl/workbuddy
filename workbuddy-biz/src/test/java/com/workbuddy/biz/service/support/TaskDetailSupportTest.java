@@ -7,6 +7,7 @@ import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineStepLog;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.dto.response.task.StageDetailVO;
+import com.workbuddy.common.dto.response.task.StageStatsVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,9 +69,9 @@ class TaskDetailSupportTest {
         stepLog.setStepName("切分");
         stepLog.setStatus("SUCCESS");
         when(stepLogDbService.listByTaskId(41L)).thenReturn(List.of(stepLog));
-        StageDetailVO vo = new StageDetailVO();
+        StageDetailVO<StageStatsVO> vo = new StageDetailVO<>();
 
-        StageDetailVO result = support.withTask(vo, 10L, task);
+        StageDetailVO<StageStatsVO> result = support.withTask(vo, 10L, task);
 
         assertSame(vo, result);
         assertEquals(10L, vo.getFileResultId());
@@ -88,7 +89,7 @@ class TaskDetailSupportTest {
      */
     @Test
     void withTaskWithoutTaskShouldOnlyFillFileResultId() {
-        StageDetailVO vo = new StageDetailVO();
+        StageDetailVO<StageStatsVO> vo = new StageDetailVO<>();
 
         support.withTask(vo, 10L, null);
 
@@ -109,9 +110,9 @@ class TaskDetailSupportTest {
         product.setArtifactId("art-1");
         product.setContentHash("sha-1");
         product.setCapabilitySnapshot("{\"parserName\":\"pdfbox\"}");
-        StageDetailVO vo = new StageDetailVO();
+        StageDetailVO<StageStatsVO> vo = new StageDetailVO<>();
 
-        StageDetailVO result = support.withProductRef(vo, product);
+        StageDetailVO<StageStatsVO> result = support.withProductRef(vo, product);
 
         assertSame(vo, result);
         assertEquals("art-1", vo.getArtifactId());

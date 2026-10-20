@@ -1,11 +1,22 @@
 import type {
   ChunkDetail,
+  ChunkStats,
   LineageNode,
   ParseDetail,
   PreprocessDetail,
+  PreprocessStats,
   StructureDetail,
+  StructureStats,
+  StageStats,
 } from '@/types/pipeline';
-import { formatCount, formatDuration, statNumber } from '@/types/pipeline';
+import {
+  formatCount,
+  formatDuration,
+  isChunkStats,
+  isPreprocessStats,
+  isStructureStats,
+  statNumber,
+} from '@/types/pipeline';
 
 /**
  * 环节展示配置：每个环节一份"怎么显示"的口径，卡片与详情抽屉都从这里取。
@@ -128,9 +139,9 @@ function countText(value: number | null | undefined): string {
   return formatCount(value);
 }
 
-/** 从节点通用统计里取一个计数（后端按数字下发） */
-function statOf(node: LineageNode, key: string): number | null {
-  const raw = node.stats?.[key];
+/** 从组装统计里取一个计数（后端按数字下发） */
+function statOf(stats: StructureStats | null, key: keyof StructureStats): number | null {
+  const raw = stats?.[key];
   return statNumber(typeof raw === 'number' ? raw : null);
 }
 
@@ -258,9 +269,8 @@ const STRUCTURE_VIEW: StageViewConfig = {
     const structure = detail !== null && 'outline' in detail ? detail : null;
     const summary = structure?.summary ?? null;
     const outline = structure?.outline ?? [];
-    const stats = detail?.stageStats ?? null;
-    const statNum = (key: string): number | null =>
-      statNumber(typeof stats?.[key] === 'number' ? stats[key] : null);
+    const stats = structure?.stageStats ?? null;
+    const statNum = (key: keyof StructureStats): number | null => statOf(stats, key);
     const titles = outline.filter((item) => item.type === 'TITLE');
     const level1 = titles.filter((item) => (item.level ?? 1) <= 1).length;
     const level2 = titles.filter((item) => item.level === 2).length;
@@ -367,22 +377,24 @@ export const PREPROCESS_FIELD_LABELS: Record<string, string> = {
 };
 
 /** 从节点统计里取一个数值（缺失给 null） */
-function statValue(stats: Record<string, unknown> | null | undefined, key: string): number | null {
-  const raw = stats === null || stats === undefined ? null : stats[key];
+function statValue<TStats extends StageStats>(
+  stats: TStats | null | undefined,
+  key: keyof TStats,
+): number | null {
+  const raw = stats?.[key];
   return statNumber(typeof raw === 'number' ? raw : null);
 }
 
-/** 从节点统计里取一个分布（缺失给空对象） */
+/** 从预处理统计里取一个分布（缺失给空对象） */
 function statCounts(
-  stats: Record<string, unknown> | null | undefined,
-  key: string,
-): Record<string, unknown> {
-  const raw = stats === null || stats === undefined ? null : stats[key];
-  return typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+  stats: PreprocessStats | null | undefined,
+  key: 'statusCounts' | 'fieldTypeCounts',
+): Record<string, number> {
+  return stats?.[key] ?? {};
 }
 
 /** 分布 → 说明文案（`标签 数量`，零值项不出现；顺序按给定标签表） */
-function distributionText(counts: Record<string, unknown>, labels: Record<string, string>): string {
+function distributionText(counts: Record<string, number>, labels: Record<string, string>): string {
   const parts: string[] = [];
   for (const [key, label] of Object.entries(labels)) {
     const raw = counts[key];
@@ -400,7 +412,7 @@ function distributionText(counts: Record<string, unknown>, labels: Record<string
  * <p>取值一律走 {@link statValue} 的数字兜底：产物不可读时统计为 null，各行落到"灰 + `—`"。
  */
 function preprocessChecklist(node: LineageNode): StageCheckItem[] {
-  const stats = node.stats;
+  const stats = isPreprocessStats(node.stats) ? node.stats : null;
   const elements = statValue(stats, 'elementCount');
   const excluded = statValue(stats, 'excludedCount');
   const repeated = statValue(stats, 'repeatedCount');
@@ -481,7 +493,7 @@ function excludedNote(repeated: number | null, excluded: number | null): string 
 function preprocessStatItems(
   detail: ParseDetail | StructureDetail | PreprocessDetail | ChunkDetail | null,
 ): StageStatItem[] {
-  const stats = detail?.stageStats ?? null;
+  const stats = detail !== null && 'elements' in detail ? detail.stageStats : null;
   return [
     { key: 'elements', label: '元素', value: countText(statValue(stats, 'elementCount')) },
     { key: 'retained', label: '保留', value: countText(statValue(stats, 'retainedCount')) },
@@ -525,18 +537,19 @@ const MIN_REASONABLE_DEPTH = 2;
  * 不冒充真实值。
  */
 function structureChecklist(node: LineageNode): StageCheckItem[] {
-  const depth = statOf(node, 'chapterCount');
-  const titles = statOf(node, 'titleCount');
-  const total = statOf(node, 'elementCount');
-  const coverage = statOf(node, 'provenanceCoverage');
-  const traced = statOf(node, 'tracedCount');
-  const continuation = statOf(node, 'continuationCount');
-  const suspected = statOf(node, 'suspectedContinuationCount');
-  const fromPage = statOf(node, 'continuationFromPage');
-  const toPage = statOf(node, 'continuationToPage');
-  const repeated = statOf(node, 'repeatedSegmentCount');
-  const noise = statOf(node, 'noisePageCount');
-  const withoutBbox = statOf(node, 'withoutBboxCount');
+  const stats = isStructureStats(node.stats) ? node.stats : null;
+  const depth = statOf(stats, 'chapterCount');
+  const titles = statOf(stats, 'titleCount');
+  const total = statOf(stats, 'elementCount');
+  const coverage = statOf(stats, 'provenanceCoverage');
+  const traced = statOf(stats, 'tracedCount');
+  const continuation = statOf(stats, 'continuationCount');
+  const suspected = statOf(stats, 'suspectedContinuationCount');
+  const fromPage = statOf(stats, 'continuationFromPage');
+  const toPage = statOf(stats, 'continuationToPage');
+  const repeated = statOf(stats, 'repeatedSegmentCount');
+  const noise = statOf(stats, 'noisePageCount');
+  const withoutBbox = statOf(stats, 'withoutBboxCount');
 
   const depthTone: CheckTone =
     depth === null || titles === null
@@ -672,7 +685,7 @@ const CHUNK_VIEW: StageViewConfig = {
  * <p>取值一律走 {@link statValue} 的数字兜底：产物不可读时统计为 null，各行落到"灰 + `—`"。
  */
 function chunkChecklist(node: LineageNode): StageCheckItem[] {
-  const stats = node.stats;
+  const stats = isChunkStats(node.stats) ? node.stats : null;
   const chunks = statValue(stats, 'chunkCount');
   const parents = statValue(stats, 'parentCount');
   const orphans = statValue(stats, 'orphanCount');
@@ -727,7 +740,7 @@ function chunkChecklist(node: LineageNode): StageCheckItem[] {
 }
 
 /** 切片条数的说明列：按内容类型报数（缺统计的类型不出现） */
-function chunkTypeNote(stats: Record<string, unknown> | null | undefined): string {
+function chunkTypeNote(stats: ChunkStats | null | undefined): string {
   const parts = [
     { label: '正文', value: statValue(stats, 'paragraphCount') },
     { label: '表格', value: statValue(stats, 'tableCount') },
@@ -760,7 +773,7 @@ function overLimitNote(
 function chunkStatItems(
   detail: ParseDetail | StructureDetail | PreprocessDetail | ChunkDetail | null,
 ): StageStatItem[] {
-  const stats = detail?.stageStats ?? null;
+  const stats = detail !== null && 'chunks' in detail ? detail.stageStats : null;
   const routed = statValue(stats, 'routedElementCount');
   const skipped = statValue(stats, 'skippedElementCount');
   return [

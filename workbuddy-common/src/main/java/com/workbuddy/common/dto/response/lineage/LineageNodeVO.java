@@ -1,9 +1,9 @@
 package com.workbuddy.common.dto.response.lineage;
 
+import com.workbuddy.common.dto.response.task.StageStatsVO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 /**
  * 执行树节点 = 一次运行（节点是运行不是策略，同策略多跑 = 多个节点）。
@@ -47,13 +47,13 @@ public class LineageNodeVO {
     private String contentHash;
 
     /**
-     * 环节统计（展示用，键名各环节自定义）：CHUNK=chunkCount；EMBED=recordCount/cachedCount；
-     * PREPROCESS=matched/changed（step_log 聚合）；STRUCTURE=元素/标题/章节层数/层级分布/疑似续表/溯源覆盖率/耗时。
+     * 环节统计（展示用）：运行时按环节放具体子类——CHUNK=ChunkStatsVO；
+     * EMBED=EmbedStatsVO；PREPROCESS=PreprocessStatsVO；STRUCTURE=StructureStatsVO。
      *
-     * <p>值是 {@code Object}：计数按数字下发，前端按数字格式化千分位，不在这里转成字符串。
+     * <p>计数按数字下发，前端按数字格式化千分位，不在这里转成字符串。
      * 解析环节的统计结构固定，走 {@link #parseStats}，不重复放这里。
      */
-    private Map<String, Object> stats;
+    private StageStatsVO stats;
 
     /**
      * 环节摘要行文案：组装=「N 元素 · M 标题 · 疑似续表 X 处 · 溯源覆盖率 Y%」，空树给原因，失败取失败原因。

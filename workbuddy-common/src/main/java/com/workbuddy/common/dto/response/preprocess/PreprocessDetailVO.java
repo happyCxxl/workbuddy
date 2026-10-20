@@ -12,7 +12,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class PreprocessDetailVO extends StageDetailVO {
+public class PreprocessDetailVO extends StageDetailVO<PreprocessStatsVO> {
 
     /** 预处理统计（从派生视图推导；无产物时为空） */
     private PreprocessSummaryVO summary;

@@ -2,6 +2,7 @@ package com.workbuddy.common.dto.response.parse;
 
 import com.workbuddy.common.dto.response.lineage.LineageParseStatsVO;
 import com.workbuddy.common.dto.response.task.StageDetailVO;
+import com.workbuddy.common.dto.response.task.StageStatsVO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,7 +13,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ParseDetailVO extends StageDetailVO {
+public class ParseDetailVO extends StageDetailVO<StageStatsVO> {
 
     /** 质量告警（从产物 JSON 提取；无产物时为空列表） */
     private List<String> warnings;

@@ -2,7 +2,6 @@ package com.workbuddy.biz.service.support;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.storage.ObjectRef;
-import com.workbuddy.common.dto.response.lineage.LineageNodeVO;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
@@ -14,8 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -110,24 +107,4 @@ public final class StatsSupport {
         return Duration.between(startedAt, finishedAt).toMillis();
     }
 
-    /**
-     * 环节统计与摘要并入执行树节点：摘要写 {@code stageSummary}，统计并入通用 {@code stats}。
-     *
-     * <p>通用 stats 里可能已有该环节由库表聚合出来的键（切片 chunkCount、预处理 matched/changed），
-     * 这里是"并入"而不是整份替换 —— 替换会把先落的通用键覆盖掉。
-     *
-     * @param node    执行树节点
-     * @param stats   本环节统计（**可空**：产物不可读时不并入）
-     * @param summary 本环节摘要（可空）
-     */
-    public static void mergeNodeStats(LineageNodeVO node, Map<String, Object> stats, String summary) {
-        node.setStageSummary(summary);
-        if (NullUtil.isNull(stats)) {
-            return;
-        }
-        Map<String, Object> merged = NullUtil.isNull(node.getStats())
-                ? new LinkedHashMap<>() : new LinkedHashMap<>(node.getStats());
-        merged.putAll(stats);
-        node.setStats(merged);
-    }
 }

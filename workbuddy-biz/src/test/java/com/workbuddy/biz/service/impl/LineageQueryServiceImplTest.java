@@ -23,8 +23,12 @@ import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.QualityInfo;
 import com.workbuddy.common.domain.storage.ObjectRef;
+import com.workbuddy.common.dto.response.chunk.ChunkStatsVO;
+import com.workbuddy.common.dto.response.embed.EmbedStatsVO;
 import com.workbuddy.common.dto.response.lineage.LineageNodeVO;
 import com.workbuddy.common.dto.response.lineage.LineageVO;
+import com.workbuddy.common.dto.response.preprocess.PreprocessStatsVO;
+import com.workbuddy.common.dto.response.structure.StructureStatsVO;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
@@ -50,11 +54,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -203,11 +205,11 @@ class LineageQueryServiceImplTest {
         // 有策略环节不填能力快照
         assertNull(vo.getNodes().get(2).getCapability());
         // 统计摘要：计数按数字下发（前端要按数字格式化千分位）
-        assertEquals(156, vo.getNodes().get(4).getStats().get("chunkCount"));
-        assertEquals(782, vo.getNodes().get(6).getStats().get("recordCount"));
-        assertEquals(12, vo.getNodes().get(6).getStats().get("cachedCount"));
-        assertEquals(1200L, vo.getNodes().get(2).getStats().get("matched"));
-        assertEquals(64L, vo.getNodes().get(2).getStats().get("changed"));
+        assertEquals(156, ((ChunkStatsVO) vo.getNodes().get(4).getStats()).getChunkCount());
+        assertEquals(782, ((EmbedStatsVO) vo.getNodes().get(6).getStats()).getRecordCount());
+        assertEquals(12, ((EmbedStatsVO) vo.getNodes().get(6).getStats()).getCachedCount());
+        assertEquals(1200L, ((PreprocessStatsVO) vo.getNodes().get(2).getStats()).getMatched());
+        assertEquals(64L, ((PreprocessStatsVO) vo.getNodes().get(2).getStats()).getChanged());
         // 血缘边：p→s, s→pr1, s→pr2, pr1→c1, pr2→c2, c1→e1 = 6 条
         assertEquals(6, vo.getEdges().size());
         assertEquals(20L, vo.getEdges().get(0).getFromTaskId());
@@ -292,12 +294,12 @@ class LineageQueryServiceImplTest {
         LineageNodeVO corrupt = vo.getNodes().get(1);
         // 快照可解析：策略版本与片长口径照常下发
         assertEquals("chunk-hybrid-v1", good.getStrategyVersion());
-        assertTrue(good.getStats().containsKey("targetMaxLen"), String.valueOf(good.getStats()));
+        assertNotNull(((ChunkStatsVO) good.getStats()).getTargetMaxLen());
         // 快照损坏：策略版本留空、策略类口径整组留空，其余统计照常（如实展示无策略快照）
         assertNull(corrupt.getStrategyVersion());
-        assertEquals(1, corrupt.getStats().get("chunkCount"));
-        assertFalse(corrupt.getStats().containsKey("targetMaxLen"), String.valueOf(corrupt.getStats()));
-        assertFalse(corrupt.getStats().containsKey("minMergeLen"), String.valueOf(corrupt.getStats()));
+        assertEquals(1, ((ChunkStatsVO) corrupt.getStats()).getChunkCount());
+        assertNull(((ChunkStatsVO) corrupt.getStats()).getTargetMaxLen());
+        assertNull(((ChunkStatsVO) corrupt.getStats()).getMinMergeLen());
     }
 
     /**
@@ -563,26 +565,26 @@ class LineageQueryServiceImplTest {
         // 组装统计进通用 stats，摘要走 stageSummary
         LineageNodeVO structure = vo.getNodes().get(1);
         assertEquals("art-s", structure.getArtifactId());
-        assertEquals(1, structure.getStats().get("elementCount"));
+        assertEquals(1, ((StructureStatsVO) structure.getStats()).getElementCount());
         assertNotNull(structure.getStageSummary());
         // 预处理统计并入通用 stats：step_log 的 matched/changed 与视图口径同时保留
         LineageNodeVO preprocess = vo.getNodes().get(2);
-        assertEquals(9L, preprocess.getStats().get("matched"));
-        assertEquals(4L, preprocess.getStats().get("changed"));
-        assertEquals(2, preprocess.getStats().get("elementCount"));
-        assertEquals(1, preprocess.getStats().get("retainedCount"));
+        assertEquals(9L, ((PreprocessStatsVO) preprocess.getStats()).getMatched());
+        assertEquals(4L, ((PreprocessStatsVO) preprocess.getStats()).getChanged());
+        assertEquals(2, ((PreprocessStatsVO) preprocess.getStats()).getElementCount());
+        assertEquals(1, ((PreprocessStatsVO) preprocess.getStats()).getRetainedCount());
         assertNotNull(preprocess.getStageSummary());
         // 切片统计：产物现算覆盖集合表口径，且上游预处理视图给出进入/跳过口径
         LineageNodeVO chunk = vo.getNodes().get(3);
-        assertEquals(1, chunk.getStats().get("chunkCount"));
-        assertEquals(200, chunk.getStats().get("targetMaxLen"));
-        assertEquals(1, chunk.getStats().get("routedElementCount"));
-        assertEquals(1, chunk.getStats().get("skippedElementCount"));
+        assertEquals(1, ((ChunkStatsVO) chunk.getStats()).getChunkCount());
+        assertEquals(200, ((ChunkStatsVO) chunk.getStats()).getTargetMaxLen());
+        assertEquals(1, ((ChunkStatsVO) chunk.getStats()).getRoutedElementCount());
+        assertEquals(1, ((ChunkStatsVO) chunk.getStats()).getSkippedElementCount());
         assertNotNull(chunk.getStageSummary());
         // 向量统计取集合表口径
         LineageNodeVO embed = vo.getNodes().get(4);
-        assertEquals(7, embed.getStats().get("recordCount"));
-        assertEquals(2, embed.getStats().get("cachedCount"));
+        assertEquals(7, ((EmbedStatsVO) embed.getStats()).getRecordCount());
+        assertEquals(2, ((EmbedStatsVO) embed.getStats()).getCachedCount());
         // 四条上游边
         assertEquals(4, vo.getEdges().size());
     }

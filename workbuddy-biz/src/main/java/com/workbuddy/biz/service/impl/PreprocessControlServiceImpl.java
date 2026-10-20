@@ -4,6 +4,7 @@ import com.workbuddy.biz.service.PreprocessControlService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.PreprocessVoAssembler;
+import com.workbuddy.biz.service.support.StageStatsAssembler;
 import com.workbuddy.biz.service.support.StageStrategySupport;
 import com.workbuddy.biz.service.support.StatsSupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
@@ -106,7 +107,7 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
         }
         // 统计与摘要读产物现算：与执行树预处理节点同一份口径，不落产物；产物读不到时不陈述结论
         Map<String, Object> stageStats = PreprocessStatsSupport.stats(vo.getStartedAt(), vo.getFinishedAt(), view);
-        vo.setStageStats(stageStats);
+        vo.setStageStats(StageStatsAssembler.fromPreprocess(stageStats));
         vo.setStageSummary(PreprocessStatsSupport.summary(vo.getErrorMsg(), stageStats, vo.getStatus()));
         return vo;
     }

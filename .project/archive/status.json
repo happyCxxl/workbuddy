@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "896142e7",
-      "note": "Checkstyle 纳管测试源码；CI 与 pre-push 统一 mvn verify；TODO 检查覆盖测试源码；覆盖率与债务台账同步"
+      "baseline": "0d8a4eec",
+      "note": "环节统计改为具体 VO；check-java-conventions 接入 DTO-005；测试规模与覆盖率同步"
     },
     "01": {
       "status": "已复核",
@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "025148c2",
-      "note": "JwtAuthFilter 异常分支补日志（ERR-004）；限流与安全机制未变"
+      "baseline": "0d8a4eec",
+      "note": "环节统计改为按环节具体 VO；support 新增 StageStatsAssembler，安全与限流机制未变"
     }
   }
 }

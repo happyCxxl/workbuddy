@@ -4,14 +4,15 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 环节详情视图公共字段：文件结果与任务状态摘要、产物引用、子步骤列表。
  * 各环节详情 VO 继承本类并追加环节专属统计/列表字段。
+ *
+ * @param <T> 环节专属统计 VO 类型
  */
 @Data
-public class StageDetailVO implements TaskStatusVO {
+public class StageDetailVO<T extends StageStatsVO> implements TaskStatusVO {
 
     /** 文件结果 ID */
     private Long fileResultId;
@@ -50,12 +51,11 @@ public class StageDetailVO implements TaskStatusVO {
     private List<StepLogVO> steps;
 
     /**
-     * 环节统计（读产物现算，键名各环节自定义）：与执行树节点的 {@code stats} 同一份口径。
+     * 环节统计（读产物现算）：与执行树节点的 {@code stats} 同一份口径。
      *
-     * <p>值是 {@code Object}：计数按数字下发，展示侧要按数字格式化千分位。
-     * 产物不可读时为 null（此时不陈述结论）。
+     * <p>具体类型由各环节详情 VO 绑定；值为 null 的字段不出现。产物不可读时为 null（此时不陈述结论）。
      */
-    private Map<String, Object> stageStats;
+    private T stageStats;
 
     /**
      * 环节摘要行文案：与执行树节点的 {@code stageSummary} 同一份口径。

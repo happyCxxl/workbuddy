@@ -12,7 +12,7 @@ import com.workbuddy.biz.service.support.ChunkStatsSupport;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.ParseStatsSupport;
 import com.workbuddy.biz.service.support.PreprocessStatsSupport;
-import com.workbuddy.biz.service.support.StatsSupport;
+import com.workbuddy.biz.service.support.StageStatsAssembler;
 import com.workbuddy.biz.service.support.StructureStatsSupport;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
@@ -204,20 +204,20 @@ public class LineageQueryServiceImpl implements LineageQueryService {
             }
             fillStats(stats, task, product, chunkSetByArtifact, embedSetByArtifact, stepAgg);
         }
-        node.setStats(stats);
         // 组装统计在通用统计之后落位：通用 map 只覆盖切片与向量化等环节，而组装统计由本环节独占，
         // 放在它之前会被随后的空 map 覆盖掉。
         if (structureStage) {
-            fillStructureStats(node, task, artifacts.documents().get(task.getId()));
+            fillStructureStats(stats, node, task, artifacts.documents().get(task.getId()));
         }
         // 预处理统计在通用统计之后并入：通用 map 里的 matched/changed 由 step_log 聚合而来，必须保留
         if (preprocessStage) {
-            fillPreprocessStats(node, task, artifacts.views().get(task.getId()));
+            fillPreprocessStats(stats, node, task, artifacts.views().get(task.getId()));
         }
         // 切片统计同样在通用统计之后并入：通用 map 里的 chunkCount 由集合表聚合而来，必须保留
         if (chunkStage) {
-            fillChunkStats(node, task, artifacts);
+            fillChunkStats(stats, node, task, artifacts);
         }
+        node.setStats(StageStatsAssembler.from(task.getStage(), stats));
         return node;
     }
 
@@ -282,39 +282,49 @@ public class LineageQueryServiceImpl implements LineageQueryService {
         node.setParseSummary(ParseStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
     }
 
-    /** 组装节点统计与摘要行一并回填：统计进通用 stats，摘要走通用 stageSummary */
-    private void fillStructureStats(LineageNodeVO node, WbPipelineTask task, UnifiedDocument document) {
-        Map<String, Object> stats =
+    /** 组装节点统计与摘要行一并回填：本环节统计整份替换本地 map，摘要走通用 stageSummary */
+    private void fillStructureStats(Map<String, Object> stats, LineageNodeVO node, WbPipelineTask task,
+                                    UnifiedDocument document) {
+        Map<String, Object> structureStats =
                 StructureStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(), document);
-        node.setStageSummary(StructureStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
-        if (NullUtil.isNotNull(stats)) {
-            node.setStats(stats);
+        node.setStageSummary(
+                StructureStatsSupport.summary(node.getErrorMsg(), structureStats, task.getStatus()));
+        if (NullUtil.isNotNull(structureStats)) {
+            stats.clear();
+            stats.putAll(structureStats);
         }
     }
 
     /**
-     * 预处理节点统计与摘要行一并回填：统计并入通用 stats（保留 step_log 聚合来的 matched/changed），
+     * 预处理节点统计与摘要行一并回填：统计并入本地 map（保留 step_log 聚合来的 matched/changed），
      * 摘要走通用 stageSummary。
      */
-    private void fillPreprocessStats(LineageNodeVO node, WbPipelineTask task, PreprocessView view) {
-        Map<String, Object> stats =
+    private void fillPreprocessStats(Map<String, Object> stats, LineageNodeVO node, WbPipelineTask task,
+                                     PreprocessView view) {
+        Map<String, Object> preprocessStats =
                 PreprocessStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(), view);
-        StatsSupport.mergeNodeStats(node, stats,
-                PreprocessStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
+        node.setStageSummary(
+                PreprocessStatsSupport.summary(node.getErrorMsg(), preprocessStats, task.getStatus()));
+        if (NullUtil.isNotNull(preprocessStats)) {
+            stats.putAll(preprocessStats);
+        }
     }
 
     /**
-     * 切片节点统计与摘要行一并回填：统计并入通用 stats（保留集合表聚合来的 chunkCount），
+     * 切片节点统计与摘要行一并回填：统计并入本地 map（保留集合表聚合来的 chunkCount），
      * 摘要走通用 stageSummary；片长上限与兜底参数取该次运行的策略快照。
      *
      * <p>快照缺失或损坏时策略取 null（不构造默认策略）：策略类口径整组留空，其余统计照常下发。
      */
-    private void fillChunkStats(LineageNodeVO node, WbPipelineTask task, NodeArtifacts artifacts) {
-        Map<String, Object> stats = ChunkStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(),
+    private void fillChunkStats(Map<String, Object> stats, LineageNodeVO node, WbPipelineTask task,
+                                NodeArtifacts artifacts) {
+        Map<String, Object> chunkStats = ChunkStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(),
                 artifacts.chunkSets().get(task.getId()), chunkStrategyOf(task),
                 artifacts.upstreamViews().get(task.getId()));
-        StatsSupport.mergeNodeStats(node, stats,
-                ChunkStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
+        node.setStageSummary(ChunkStatsSupport.summary(node.getErrorMsg(), chunkStats, task.getStatus()));
+        if (NullUtil.isNotNull(chunkStats)) {
+            stats.putAll(chunkStats);
+        }
     }
 
     /**

@@ -3,6 +3,7 @@ package com.workbuddy.biz.service.impl;
 import com.workbuddy.biz.service.StructureControlService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.FileResultAccessGuard;
+import com.workbuddy.biz.service.support.StageStatsAssembler;
 import com.workbuddy.biz.service.support.StatsSupport;
 import com.workbuddy.biz.service.support.StructureStatsSupport;
 import com.workbuddy.biz.service.support.StructureVoAssembler;
@@ -94,7 +95,7 @@ public class StructureControlServiceImpl implements StructureControlService {
         // 统计与摘要读产物现算：与执行树组装节点同一份口径，不落产物；产物读不到时不陈述结论
         Map<String, Object> stageStats =
                 StructureStatsSupport.stats(vo.getStartedAt(), vo.getFinishedAt(), document);
-        vo.setStageStats(stageStats);
+        vo.setStageStats(StageStatsAssembler.fromStructure(stageStats));
         vo.setStageSummary(StructureStatsSupport.summary(vo.getErrorMsg(), stageStats, vo.getStatus()));
         return vo;
     }

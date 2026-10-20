@@ -185,7 +185,7 @@ const statusText = computed(() => {
 const identText = computed(() => {
   const node = props.data.node;
   if (node.stage === 'STRUCTURE') {
-    return statText(node, 'schemaVersion') ?? '';
+    return statText(node) ?? '';
   }
   const parts = [capabilityText(node.capability), node.strategyVersion].filter(
     (part): part is string => typeof part === 'string' && part !== '',
@@ -193,9 +193,13 @@ const identText = computed(() => {
   return parts.join(' · ');
 });
 
-/** 从节点通用统计里取一个字符串值 */
-function statText(node: LineageNode, key: string): string | null {
-  const raw = node.stats?.[key];
+/** 从组装统计里取产物 schema 版本 */
+function statText(node: LineageNode): string | null {
+  const stats = node.stats;
+  if (stats === null || !('schemaVersion' in stats)) {
+    return null;
+  }
+  const raw = stats.schemaVersion;
   return typeof raw === 'string' && raw !== '' ? raw : null;
 }
 
@@ -203,7 +207,7 @@ function statText(node: LineageNode, key: string): string | null {
 const detailIsFallback = computed(() => {
   const node = props.data.node;
   if (node.stage === 'STRUCTURE') {
-    return statText(node, 'schemaVersion') === null;
+    return statText(node) === null;
   }
   return !node.strategyVersion && capabilityText(node.capability) === null;
 });
