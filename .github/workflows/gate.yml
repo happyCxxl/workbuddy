@@ -44,17 +44,23 @@ jobs:
       - name: 中间产物不入库
         run: node .agent/tools/common/check-artifacts.mjs
 
+      - name: Java 形态检查
+        run: node .agent/tools/java/check-java-conventions.mjs
+
+      - name: Javadoc 检查
+        run: node .agent/tools/java/check-javadoc.mjs
+
+      - name: 用例质量检查
+        run: node .agent/tools/java/check-test-quality.mjs
+
+      - name: 模块结构检查
+        run: node .agent/tools/common/check-modules.mjs
+
       - name: 前端全量检查
         working-directory: web
         run: |
           pnpm install --frozen-lockfile
           pnpm lint
 
-      - name: 后端源码级门禁（checkstyle + pmd + cpd）
-        run: mvn -B checkstyle:check pmd:check pmd:cpd-check
-
-      - name: Javadoc 检查
-        run: node .agent/tools/java/check-javadoc.mjs
-
-      - name: 后端字节码门禁（compile + spotbugs）
-        run: mvn -B compile spotbugs:check
+      - name: 后端全量门禁（Checkstyle + PMD + CPD + SpotBugs + 单测 + JaCoCo）
+        run: mvn -B verify

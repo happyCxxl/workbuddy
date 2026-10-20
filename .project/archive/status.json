@@ -9,7 +9,7 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-20",
-      "baseline": "ba499abf",
+      "baseline": "f58293c0",
       "note": "Checkstyle 纳管测试源码；CI 与 pre-push 统一 mvn verify；TODO 检查覆盖测试源码；债务台账补 26–30"
     },
     "01": {

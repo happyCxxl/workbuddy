@@ -129,9 +129,9 @@ fi
 
 if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
   if [ -f "$root/pom.xml" ]; then
-    run_step "后端测试：mvn -o test"
-    if (cd "$root" && mvn -o -q test); then :; else
-      report_fail "$step" "后端测试失败" "mvn -o test"
+    run_step "后端全量门禁：mvn -o verify"
+    if (cd "$root" && mvn -o -q verify); then :; else
+      report_fail "$step" "后端门禁失败" "mvn -o verify"
     fi
   fi
 fi
