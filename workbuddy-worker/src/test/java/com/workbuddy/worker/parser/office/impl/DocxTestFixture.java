@@ -3,7 +3,6 @@ package com.workbuddy.worker.parser.office.impl;
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;

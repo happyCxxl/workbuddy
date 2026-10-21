@@ -3,7 +3,6 @@ package com.workbuddy.worker.chunking.strategy;
 import com.workbuddy.common.enums.chunk.ChunkAlgorithm;
 import com.workbuddy.common.enums.chunk.ChunkRoute;
 import com.workbuddy.common.enums.chunk.PipelineKey;
-import com.workbuddy.worker.chunking.ChunkProperties;
 
 import org.junit.jupiter.api.Test;
 

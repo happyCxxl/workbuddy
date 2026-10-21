@@ -7,7 +7,6 @@ import com.workbuddy.common.domain.parse.capability.CapabilityUsage;
 import com.workbuddy.common.domain.parse.capability.LayoutRegion;
 import com.workbuddy.common.domain.parse.capability.LayoutResult;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.capability.LayoutProvider;
 import com.workbuddy.worker.parser.capability.StructuredOcrProvider;

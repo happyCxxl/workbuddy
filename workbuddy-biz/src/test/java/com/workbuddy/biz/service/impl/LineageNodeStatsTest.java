@@ -29,7 +29,6 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

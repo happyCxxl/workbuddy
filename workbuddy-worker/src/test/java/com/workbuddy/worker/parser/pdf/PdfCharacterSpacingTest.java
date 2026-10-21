@@ -4,7 +4,6 @@ import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
 import com.workbuddy.worker.parser.pdf.model.CharInfo;

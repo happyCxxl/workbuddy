@@ -26,7 +26,6 @@ import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.ChunkerPort;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import com.workbuddy.common.convert.KnowledgeConverterImpl;

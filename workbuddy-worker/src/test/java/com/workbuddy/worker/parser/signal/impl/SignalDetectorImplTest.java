@@ -5,7 +5,6 @@ import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.parse.signal.Signal;
 import com.workbuddy.common.enums.parse.SignalSubtype;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

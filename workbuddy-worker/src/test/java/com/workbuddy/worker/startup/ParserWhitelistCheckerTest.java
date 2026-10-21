@@ -1,6 +1,5 @@
 package com.workbuddy.worker.startup;
 
-import com.workbuddy.worker.input.FileValidationProperties;
 import com.workbuddy.worker.parser.office.impl.DocDocumentParser;
 import com.workbuddy.worker.parser.office.impl.DocxDocumentParser;
 import com.workbuddy.worker.parser.office.impl.ExcelDocumentParser;

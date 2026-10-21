@@ -54,7 +54,8 @@ public final class ConfigFixtures {
      * @return 按配置面取值构造的实例
      */
     public static StructureProperties structure() {
-        return bind(StructureProperties.class, "knowledge.structure", CONFIG_ROOT.resolve("knowledge/knowledge-structure.yml"));
+        return bind(StructureProperties.class, "knowledge.structure",
+                CONFIG_ROOT.resolve("knowledge/knowledge-structure.yml"));
     }
 
     /**
@@ -63,7 +64,8 @@ public final class ConfigFixtures {
      * @return 按配置面取值构造的实例
      */
     public static PreprocessProperties preprocess() {
-        return bind(PreprocessProperties.class, "knowledge.preprocess", CONFIG_ROOT.resolve("knowledge/knowledge-preprocess.yml"));
+        return bind(PreprocessProperties.class, "knowledge.preprocess",
+                CONFIG_ROOT.resolve("knowledge/knowledge-preprocess.yml"));
     }
 
     /**
@@ -106,8 +108,9 @@ public final class ConfigFixtures {
     private static <T> T bind(Class<T> type, String prefix, Path yml) {
         return new Binder(new MapConfigurationPropertySource(cached(yml)))
                 .bind(prefix, type)
-                .orElseThrow(() -> new IllegalStateException(
-                        "配置绑定失败: " + yml.toAbsolutePath().normalize() + " 前缀 " + prefix + "（类型 " + type.getSimpleName() + "）"));
+                .orElseThrow(() -> new IllegalStateException("配置绑定失败: "
+                        + yml.toAbsolutePath().normalize() + " 前缀 " + prefix
+                        + "（类型 " + type.getSimpleName() + "）"));
     }
 
     /** 一份配置文件的拍平键值（按路径缓存） */

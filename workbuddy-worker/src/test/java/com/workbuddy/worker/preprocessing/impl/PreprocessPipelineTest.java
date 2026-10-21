@@ -24,7 +24,6 @@ import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.worker.preprocessing.rule.CleanRule;
 import com.workbuddy.worker.preprocessing.PreprocessContext;
-import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.common.enums.preprocess.PreprocessAction;
 import com.workbuddy.common.enums.preprocess.PreprocessParam;
 import com.workbuddy.common.enums.preprocess.PreprocessRule;

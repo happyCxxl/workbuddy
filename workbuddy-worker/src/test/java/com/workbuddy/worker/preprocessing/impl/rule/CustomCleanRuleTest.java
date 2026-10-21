@@ -5,7 +5,6 @@ import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.enums.preprocess.CustomRuleAction;
 import com.workbuddy.worker.preprocessing.rule.CustomRuleMatcher;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessCustomRule;
-import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
 import com.workbuddy.worker.preprocessing.rule.RuleContext;
 import com.workbuddy.worker.testkit.StrategyFixtures;

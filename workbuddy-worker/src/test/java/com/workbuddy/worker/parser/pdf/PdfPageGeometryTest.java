@@ -6,7 +6,6 @@ import com.workbuddy.common.domain.parse.PageDimension;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
 import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
 import org.apache.pdfbox.pdmodel.PDDocument;

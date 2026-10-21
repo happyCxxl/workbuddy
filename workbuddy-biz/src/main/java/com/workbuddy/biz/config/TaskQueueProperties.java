@@ -66,11 +66,13 @@ public class TaskQueueProperties {
      */
     public Duration timeoutOf(String stage) {
         PipelineStage parsed = parseStage(stage);
-        if (NullUtil.isNull(parsed) || NullUtil.isNull(timeout)) {
+        Map<PipelineStage, Duration> configured = timeout;
+        // 直接与 null 比较：SpotBugs 不识别 NullUtil（转调 Hutool）的判空，字段解引用会报 UWF
+        if (parsed == null || configured == null) {
             return DEFAULT_TIMEOUT;
         }
-        Duration configured = timeout.get(parsed);
-        return NullUtil.isNull(configured) ? DEFAULT_TIMEOUT : configured;
+        Duration value = configured.get(parsed);
+        return NullUtil.isNull(value) ? DEFAULT_TIMEOUT : value;
     }
 
     /** 环节标识归一化：去空格、转大写、连字符转下划线后按枚举名匹配，认不出返回 null */

@@ -29,7 +29,6 @@ import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.structure.AssembleContext;
 import com.workbuddy.worker.structure.DocumentAssemblerPort;
-import com.workbuddy.worker.structure.StructureProperties;
 import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

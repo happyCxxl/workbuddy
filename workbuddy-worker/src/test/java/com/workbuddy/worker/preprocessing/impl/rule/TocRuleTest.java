@@ -5,7 +5,6 @@ import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.enums.preprocess.PreprocessParam;
 import com.workbuddy.common.enums.preprocess.PreprocessRule;
-import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
 import com.workbuddy.worker.preprocessing.rule.RuleContext;
 import com.workbuddy.worker.testkit.StrategyFixtures;

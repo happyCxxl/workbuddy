@@ -1,7 +1,6 @@
 package com.workbuddy.biz.config;
 
 import cn.hutool.core.util.StrUtil;
-import com.workbuddy.common.utils.NullUtil;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -32,10 +31,12 @@ public class RetrievalCapabilityProperties {
      * @return 能力名集合（不可变；清单未配置时为空集）
      */
     public Set<String> enabledNames() {
-        if (NullUtil.isNull(enabled)) {
+        List<String> configured = enabled;
+        // 直接与 null 比较：SpotBugs 不识别 NullUtil（转调 Hutool）的判空，字段解引用会报 UWF
+        if (configured == null) {
             return Set.of();
         }
-        return enabled.stream()
+        return configured.stream()
                 .filter(StrUtil::isNotBlank)
                 .map(name -> name.trim().toUpperCase(Locale.ROOT))
                 .collect(Collectors.toUnmodifiableSet());

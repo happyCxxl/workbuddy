@@ -7,7 +7,6 @@ import com.workbuddy.common.domain.structure.UnifiedPage;
 import com.workbuddy.common.enums.structure.ElementMark;
 import com.workbuddy.common.enums.structure.PageMark;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
-import com.workbuddy.worker.structure.StructureProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -8,7 +8,6 @@ import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.worker.chunking.SliceContext;
 import com.workbuddy.worker.chunking.impl.fallback.RecursiveLengthFallback;
 import com.workbuddy.common.enums.chunk.ChunkAlgorithm;
-import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import org.junit.jupiter.api.Test;
 

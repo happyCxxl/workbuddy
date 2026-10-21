@@ -1,6 +1,5 @@
 package com.workbuddy.worker.embedding.strategy;
 
-import com.workbuddy.worker.embedding.EmbedProperties;
 
 import org.junit.jupiter.api.Test;
 

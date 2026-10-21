@@ -4,7 +4,6 @@ import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.domain.preprocess.TraceEntry;
 import com.workbuddy.common.domain.preprocess.ViewCell;
 import com.workbuddy.common.domain.preprocess.ViewElement;
-import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.preprocessing.rule.RuleContext;
 import com.workbuddy.worker.testkit.StrategyFixtures;
 import org.junit.jupiter.api.Test;

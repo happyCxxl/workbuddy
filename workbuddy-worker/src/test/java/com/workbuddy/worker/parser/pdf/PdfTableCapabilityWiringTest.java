@@ -7,7 +7,6 @@ import com.workbuddy.common.domain.parse.capability.TableCell;
 import com.workbuddy.common.domain.parse.capability.TableResult;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.capability.LayoutProvider;
 import com.workbuddy.worker.parser.capability.StructuredOcrProvider;

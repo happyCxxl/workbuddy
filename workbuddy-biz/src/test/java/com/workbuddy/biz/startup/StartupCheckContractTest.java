@@ -8,7 +8,6 @@ import com.workbuddy.biz.config.TaskQueueProperties;
 import com.workbuddy.common.startup.StartupCheck;
 import com.workbuddy.model.config.ModelVendorProperties;
 import com.workbuddy.model.startup.ModelVendorValidator;
-import com.workbuddy.worker.input.FileValidationProperties;
 import com.workbuddy.worker.parser.DocumentParserPort;
 import com.workbuddy.worker.parser.office.impl.DocDocumentParser;
 import com.workbuddy.worker.parser.office.impl.DocxDocumentParser;

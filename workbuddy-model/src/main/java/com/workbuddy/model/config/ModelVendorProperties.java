@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * 模型厂商连接配置（配置键 `workbuddy.model.vendors.<厂商码>`，厂商码即 Map 键）。

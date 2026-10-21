@@ -27,7 +27,6 @@ import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategyParser;
 import com.workbuddy.common.convert.KnowledgeConverterImpl;

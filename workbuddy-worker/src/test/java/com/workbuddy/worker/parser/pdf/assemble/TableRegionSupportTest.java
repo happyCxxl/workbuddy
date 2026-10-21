@@ -3,7 +3,6 @@ package com.workbuddy.worker.parser.pdf.assemble;
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.capability.TableRegion;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
 import com.workbuddy.worker.parser.pdf.extract.PdfPageExtractor;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;

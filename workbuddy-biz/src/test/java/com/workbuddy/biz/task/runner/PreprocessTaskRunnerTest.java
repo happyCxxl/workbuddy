@@ -28,7 +28,6 @@ import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.preprocessing.PreprocessContext;
-import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.preprocessing.PreprocessorPort;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategyParser;
 import com.workbuddy.common.convert.KnowledgeConverterImpl;

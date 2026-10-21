@@ -2,7 +2,6 @@ package com.workbuddy.worker.preprocessing.strategy;
 
 import com.workbuddy.common.enums.preprocess.PreprocessParam;
 import com.workbuddy.common.enums.preprocess.PreprocessRule;
-import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import org.junit.jupiter.api.Test;
 
 import com.workbuddy.worker.testkit.PropertiesFixtures;

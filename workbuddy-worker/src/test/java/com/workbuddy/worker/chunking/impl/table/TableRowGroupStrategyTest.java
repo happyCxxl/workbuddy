@@ -9,7 +9,6 @@ import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.worker.chunking.SliceContext;
-import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import org.junit.jupiter.api.Test;
 

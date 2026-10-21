@@ -3,7 +3,6 @@ package com.workbuddy.worker.testkit;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
-import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategyParser;
 

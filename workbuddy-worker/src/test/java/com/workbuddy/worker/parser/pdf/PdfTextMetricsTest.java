@@ -5,7 +5,6 @@ import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.SignalType;
-import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
 import com.workbuddy.worker.parser.pdf.model.CharInfo;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
