@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -94,7 +95,7 @@ class PreprocessTaskRunnerTest {
                 fileStorage, storageRouter);
         runner = new PreprocessTaskRunner(pipelineTaskDbService, fileResultDbService,
                 pipelineProductDbService, fileStorage, preprocessor,
-                new PreprocessProperties(), new PreprocessStrategyParser(new PreprocessProperties()),
+                ConfigFixtures.preprocess(), new PreprocessStrategyParser(ConfigFixtures.preprocess()),
                 new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()),
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
                         , new KnowledgeConverterImpl()),

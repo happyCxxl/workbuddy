@@ -18,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -47,7 +48,7 @@ class PdfTableContinuationTest {
 
     private ParseSource parse(byte[] data) {
         ParseContext context = new ParseContext();
-        context.setProperties(new ParseProperties());
+        context.setProperties(PropertiesFixtures.parse());
         FileReference fileRef = new FileReference();
         fileRef.setFileId("F-continuation");
         fileRef.setFileName("continuation.pdf");

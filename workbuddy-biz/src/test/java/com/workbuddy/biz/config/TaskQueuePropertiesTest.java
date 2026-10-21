@@ -24,7 +24,7 @@ class TaskQueuePropertiesTest {
 
     @BeforeEach
     void setUp() {
-        properties = new TaskQueueProperties();
+        properties = ConfigFixtures.task();
     }
 
     /**

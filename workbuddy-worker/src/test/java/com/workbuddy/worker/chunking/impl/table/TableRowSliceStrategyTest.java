@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,7 +44,7 @@ class TableRowSliceStrategyTest {
     private SliceContext context(UnifiedElement table) {
         SliceContext context = new SliceContext();
         context.setView(new PreprocessView());
-        ChunkProperties props = new ChunkProperties();
+        ChunkProperties props = PropertiesFixtures.chunk();
         context.setStrategy(StrategyFixtures.chunkDefaults(props));
         context.setTitlePath(List.of("第一章 投标人须知", "1.3 评分标准"));
         Map<String, UnifiedElement> byId = new HashMap<>();

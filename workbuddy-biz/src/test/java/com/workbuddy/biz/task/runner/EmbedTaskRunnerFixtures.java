@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import com.workbuddy.biz.config.ConfigFixtures;
 
 /** 向量化任务执行器测试夹具：构造执行器与任务/产物/输出样例。 */
 final class EmbedTaskRunnerFixtures {
@@ -66,7 +67,7 @@ final class EmbedTaskRunnerFixtures {
                                   EmbedderPort embedder,
                                   IndexSetService indexSetService,
                                   KnowledgeConverter embedConverter) {
-        EmbedProperties embedProperties = new EmbedProperties();
+        EmbedProperties embedProperties = ConfigFixtures.embed();
         // 存储守卫用真实实例 + mock 依赖：链类型取不到（默认 mock 返回 null）时不拦
         ChainStorageSupport chainStorage = new ChainStorageSupport(fileResultDbService, sourceFileDbService,
                 fileStorage, storageRouter);
@@ -74,8 +75,8 @@ final class EmbedTaskRunnerFixtures {
                 pipelineProductDbService, chunkSetDbService, embeddingSetDbService,
                 embeddingRecordDbService, fileStorage, indexSetService, embedder,
                 new EmbedStrategyParser(embedProperties),
-                new ChunkStrategyParser(new ChunkProperties()),
-                embedProperties, new ChunkProperties(),
+                new ChunkStrategyParser(ConfigFixtures.chunk()),
+                embedProperties, ConfigFixtures.chunk(),
                 new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()),
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
                         , new KnowledgeConverterImpl()),

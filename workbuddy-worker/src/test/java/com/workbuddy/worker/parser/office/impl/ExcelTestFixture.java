@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 
 /**
  * Excel 解析测试共享夹具：被测解析器、解析上下文与工作簿字节化。
@@ -38,7 +39,7 @@ final class ExcelTestFixture {
         fileRef.setMimeType(mimeType);
         context.setFileRef(fileRef);
         context.setInputStream(new ByteArrayInputStream(data));
-        context.setProperties(new ParseProperties());
+        context.setProperties(PropertiesFixtures.parse());
         return context;
     }
 

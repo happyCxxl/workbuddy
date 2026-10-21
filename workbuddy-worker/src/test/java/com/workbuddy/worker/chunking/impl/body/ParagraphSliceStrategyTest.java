@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,7 +27,7 @@ class ParagraphSliceStrategyTest {
     private SliceContext context() {
         SliceContext context = new SliceContext();
         context.setView(new PreprocessView());
-        ChunkProperties props = new ChunkProperties();
+        ChunkProperties props = PropertiesFixtures.chunk();
         context.setStrategy(StrategyFixtures.chunkDefaults(props));
         context.setById(new HashMap<>());
         context.setTitlePath(List.of("第一章 总则"));

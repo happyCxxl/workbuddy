@@ -1,6 +1,6 @@
 # 解析环节配置：PDF 与 Office 的解析阈值与质量判定参数。
 # 键的来源：knowledge-worker 的 ParseProperties（前缀 knowledge.parse）。
-# 本环节配置的默认值在此处维护；配置面与代码面的一致性由 ParsePropertiesConfigTest 对账。
+# 本环节配置的默认值在此处维护；配置面覆盖全部字段由 PropertiesConfigCoverageTest 对账。
 knowledge:
   # 解析阈值全量默认值（与 knowledge-worker 的 ParseProperties 同名 kebab-case；配置来源 = 本文件与 ParseProperties 内置默认值）
   parse:

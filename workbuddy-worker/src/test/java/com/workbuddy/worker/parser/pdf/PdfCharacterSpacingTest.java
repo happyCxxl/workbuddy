@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,7 +43,7 @@ class PdfCharacterSpacingTest {
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
     private LineTexts.Options options() {
-        return LineTexts.Options.of(new ParseProperties());
+        return LineTexts.Options.of(PropertiesFixtures.parse());
     }
 
     /**
@@ -252,7 +253,7 @@ class PdfCharacterSpacingTest {
         fileRef.setMimeType("application/pdf");
         context.setFileRef(fileRef);
         context.setInputStream(new ByteArrayInputStream(data));
-        context.setProperties(new ParseProperties());
+        context.setProperties(PropertiesFixtures.parse());
         return parser.parse(context);
     }
 

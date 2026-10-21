@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import com.workbuddy.biz.config.ConfigFixtures;
 
 /** 切片任务执行器测试夹具：构造执行器与任务/产物/输出样例。 */
 final class ChunkTaskRunnerFixtures {
@@ -63,8 +64,8 @@ final class ChunkTaskRunnerFixtures {
                 fileStorage, storageRouter);
         return new ChunkTaskRunner(pipelineTaskDbService, fileResultDbService,
                 pipelineProductDbService, chunkSetDbService, chunkDbService,
-                fileStorage, chunker, new ChunkProperties(),
-                new ChunkStrategyParser(new ChunkProperties()),
+                fileStorage, chunker, ConfigFixtures.chunk(),
+                new ChunkStrategyParser(ConfigFixtures.chunk()),
                 new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()),
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
                         , new KnowledgeConverterImpl()),

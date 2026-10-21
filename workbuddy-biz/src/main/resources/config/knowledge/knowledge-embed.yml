@@ -1,0 +1,25 @@
+# 向量化环节配置：批处理、重试与复用回溯口径。
+# 键的来源：knowledge-worker 的 EmbedProperties（前缀 knowledge.embed）。
+# 本环节配置的默认值在此处维护。
+knowledge:
+  embed:
+    # 单批条数（策略快照未显式指定时取本值）
+    batch-size: 32
+    # 单批超时（毫秒）
+    timeout-ms: 30000
+    # 失败批次最大重试次数（指数退避，按批隔离）
+    max-retries: 2
+    # 账本复用开关：ON=启用（同策略向量按内容哈希复用）；引号防 YAML 把 ON 解析成布尔
+    cache-enabled: "ON"
+    # 父片向量化开关：OFF=只向量化子片
+    include-parent: "OFF"
+    # 空文本跳过开关
+    skip-empty: "ON"
+    # 账本复用回溯上限：新→旧最多回看多少个同策略账本
+    reuse-backtrack-limit: 10
+    # Token 估算除数（字符数 ÷ 该值，中文经验值）
+    token-divisor: 1.5
+    # 前置校验窗口系数：切片最大片长 ≤ 模型窗口 tokens × 本系数
+    window-check-factor: 1.5
+    # 批次重试退避基数（毫秒；第 n 次重试等待 base × 3^(n-1)）
+    retry-backoff-base-ms: 1000

@@ -19,7 +19,7 @@ import java.util.TreeMap;
 public class ModelVendorProperties {
 
     /** 厂商码 → 连接配置；按厂商码排序，校验与日志的遍历顺序固定 */
-    private Map<String, Vendor> vendors = new TreeMap<>();
+    private Map<String, Vendor> vendors;
 
     /**
      * 单个厂商的连接配置。

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -25,7 +26,7 @@ class DedupMergerImplTest {
 
     @BeforeEach
     void setUp() {
-        properties = new StructureProperties();
+        properties = PropertiesFixtures.structure();
         merger = new DedupMergerImpl();
     }
 

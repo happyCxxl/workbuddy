@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,7 +31,7 @@ class ImageCaptionSliceStrategyTest {
     private SliceContext context(String caption) {
         SliceContext context = new SliceContext();
         context.setView(new PreprocessView());
-        ChunkProperties props = new ChunkProperties();
+        ChunkProperties props = PropertiesFixtures.chunk();
         context.setStrategy(StrategyFixtures.chunkDefaults(props));
         context.setTitlePath(List.of("第一章", "1.2 附图"));
         UnifiedElement unified = new UnifiedElement();

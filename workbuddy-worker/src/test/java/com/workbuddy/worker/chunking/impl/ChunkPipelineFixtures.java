@@ -32,6 +32,7 @@ import com.workbuddy.worker.testkit.StrategyFixtures;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 
 /** 切片管线测试夹具：注册全部切片算法、构造视图/结构文档与策略上下文。 */
 final class ChunkPipelineFixtures {
@@ -40,7 +41,7 @@ final class ChunkPipelineFixtures {
     }
 
     static ChunkPipeline pipeline() {
-        ChunkProperties props = new ChunkProperties();
+        ChunkProperties props = PropertiesFixtures.chunk();
         return new ChunkPipeline(
                 new SliceStrategyRegistry(List.of(
                         new ParagraphSliceStrategy(), new StructureHybridSliceStrategy(),
@@ -61,7 +62,7 @@ final class ChunkPipelineFixtures {
         return new ChunkPipeline(
                 new SliceStrategyRegistry(all),
                 new FallbackSlicerRegistry(List.of(new RecursiveLengthFallback())),
-                new ChunkProperties(),
+                PropertiesFixtures.chunk(),
                 List.of(new StructureOverlapProcessor(), new MinMergeProcessor(), new TitleInContentProcessor()));
     }
 
@@ -90,7 +91,7 @@ final class ChunkPipelineFixtures {
         ChunkContext context = new ChunkContext();
         context.setView(view);
         context.setDocument(document);
-        ChunkProperties props = new ChunkProperties();
+        ChunkProperties props = PropertiesFixtures.chunk();
         context.setStrategy(StrategyFixtures.chunkDefaults(props));
         context.setFileResultId(10L);
         context.setUpstreamProductRef(50L);
@@ -99,7 +100,7 @@ final class ChunkPipelineFixtures {
 
     static ChunkContext context(PreprocessView view, UnifiedDocument document, String configJson) {
         ChunkContext context = context(view, document);
-        context.setStrategy(new ChunkStrategyParser(new ChunkProperties()).parse(configJson));
+        context.setStrategy(new ChunkStrategyParser(PropertiesFixtures.chunk()).parse(configJson));
         return context;
     }
 

@@ -1,5 +1,6 @@
 package com.workbuddy.biz.task;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import com.workbuddy.biz.config.TaskQueueProperties;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
@@ -50,7 +51,7 @@ class TaskStartupCompensatorTest {
 
     @BeforeEach
     void setUp() {
-        properties = new TaskQueueProperties();
+        properties = ConfigFixtures.task();
         compensator = new TaskStartupCompensator(pipelineTaskDbService, taskQueue, redisLock, properties);
     }
 

@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 
 /**
  * PDF 解析测试共享夹具：被测解析器、解析上下文与文档保存/画线等基础操作。
@@ -34,7 +35,7 @@ final class PdfParserTestFixture {
         fileRef.setMimeType("application/pdf");
         context.setFileRef(fileRef);
         context.setInputStream(new ByteArrayInputStream(data));
-        context.setProperties(new ParseProperties());
+        context.setProperties(PropertiesFixtures.parse());
         return context;
     }
 

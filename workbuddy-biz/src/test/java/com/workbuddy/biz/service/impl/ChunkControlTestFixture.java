@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -93,7 +94,7 @@ final class ChunkControlTestFixture {
                 new TaskTriggerSupport(pipelineTaskDbService, chainStorage, taskQueue),
                 new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService),
                 chunkSetDbService, chunkDbService,
-                new ChunkStrategyParser(new ChunkProperties()),
+                new ChunkStrategyParser(ConfigFixtures.chunk()),
                 new KnowledgeConverterImpl(), fileStorage, accessGuard, new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
         lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -125,7 +126,7 @@ class PdfElementIdTest {
         fileRef.setMimeType("application/pdf");
         context.setFileRef(fileRef);
         context.setInputStream(new ByteArrayInputStream(data));
-        context.setProperties(new ParseProperties());
+        context.setProperties(PropertiesFixtures.parse());
         return context;
     }
 

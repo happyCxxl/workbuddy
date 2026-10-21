@@ -30,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,9 +50,9 @@ class PdfLayoutCapabilityTraceTest {
                     .extractPage(doc, 1, context);
             List<Double> starts = page.lines().stream().map(PageLine::x).toList();
 
-            assertEquals(2, LayoutComplexity.spanningLineCount(page.lines(), new ParseProperties()),
+            assertEquals(2, LayoutComplexity.spanningLineCount(page.lines(), PropertiesFixtures.parse()),
                     () -> "lines=" + page.lines().size() + " starts=" + starts);
-            assertTrue(LayoutComplexity.isComplex(page.lines(), new ParseProperties()),
+            assertTrue(LayoutComplexity.isComplex(page.lines(), PropertiesFixtures.parse()),
                     () -> "lines=" + page.lines().size() + " starts=" + starts);
         }
     }
@@ -88,7 +89,7 @@ class PdfLayoutCapabilityTraceTest {
         fileRef.setMimeType("application/pdf");
         context.setFileRef(fileRef);
         context.setInputStream(new ByteArrayInputStream(buildThreeColumnPdf()));
-        context.setProperties(new ParseProperties());
+        context.setProperties(PropertiesFixtures.parse());
         return context;
     }
 

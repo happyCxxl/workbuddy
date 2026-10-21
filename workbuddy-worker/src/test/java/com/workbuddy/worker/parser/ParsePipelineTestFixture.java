@@ -21,13 +21,14 @@ import com.workbuddy.worker.parser.signal.fallback.VectorPageFallbackHandler;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 
 /**
  * 解析管线测试共享夹具：解析阈值、信号检测器、上下文、假解析器与判定单元指标构造。
  */
 final class ParsePipelineTestFixture {
 
-    private final ParseProperties properties = new ParseProperties();
+    private final ParseProperties properties = PropertiesFixtures.parse();
     private final SignalDetectorImpl signalDetector = new SignalDetectorImpl();
 
     /**

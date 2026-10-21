@@ -9,6 +9,7 @@ import com.workbuddy.worker.preprocessing.rule.RuleContext;
 import com.workbuddy.worker.testkit.StrategyFixtures;
 import org.junit.jupiter.api.Test;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -37,7 +38,7 @@ class HeaderFooterRuleTest {
         strategy.rule(PreprocessRule.HEADER_FOOTER).setAction(pageHeaderFooter);
         RuleContext context = new RuleContext();
         context.setStrategy(strategy);
-        context.setProperties(new PreprocessProperties());
+        context.setProperties(PropertiesFixtures.preprocess());
         return context;
     }
 

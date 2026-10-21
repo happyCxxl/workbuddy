@@ -1,0 +1,16 @@
+# 向量库连接配置：Milvus 服务地址与连接口径（索引构建与检索环节共用）。
+# 键的来源：knowledge-infra 的 MilvusProperties（前缀 knowledge.vector.milvus）。
+# 本环节配置的默认值在此处维护。
+knowledge:
+  vector:
+    milvus:
+      # 启用开关：false = 不注册客户端 Bean，索引与检索环节跳过向量库
+      enable: true
+      # 服务地址
+      host: localhost
+      # 端口
+      port: 19530
+      # 数据库名
+      database: knowledge
+      # 连接超时（毫秒）
+      connect-timeout-ms: 10000

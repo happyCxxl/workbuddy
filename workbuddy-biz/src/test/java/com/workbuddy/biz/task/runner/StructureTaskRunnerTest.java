@@ -40,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.charset.StandardCharsets;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -87,7 +88,7 @@ class StructureTaskRunnerTest {
         ChainStorageSupport chainStorage = new ChainStorageSupport(fileResultDbService, sourceFileDbService,
                 fileStorage, storageRouter);
         runner = new StructureTaskRunner(pipelineTaskDbService, pipelineProductDbService,
-                fileStorage, documentAssembler, new StructureProperties(),
+                fileStorage, documentAssembler, ConfigFixtures.structure(),
                 new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()),
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
                         , new KnowledgeConverterImpl()),

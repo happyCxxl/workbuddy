@@ -7,6 +7,7 @@ import com.workbuddy.worker.chunking.ChunkProperties;
 
 import org.junit.jupiter.api.Test;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -18,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ChunkStrategyParserTest {
 
-    private final ChunkStrategyParser parser = new ChunkStrategyParser(new ChunkProperties());
+    private final ChunkStrategyParser parser = new ChunkStrategyParser(PropertiesFixtures.chunk());
 
     /**
      * 守护 {@code structuredConfigShouldFillMissingDefaults}：该场景行为改动即失败。

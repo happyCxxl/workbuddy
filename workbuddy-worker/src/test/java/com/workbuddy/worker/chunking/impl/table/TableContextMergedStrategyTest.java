@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,7 +51,7 @@ class TableContextMergedStrategyTest {
     private SliceContext context(UnifiedElement table, String configJson, String leadParagraph) {
         SliceContext context = new SliceContext();
         context.setView(new PreprocessView());
-        context.setStrategy(new ChunkStrategyParser(new ChunkProperties()).parse(configJson));
+        context.setStrategy(new ChunkStrategyParser(PropertiesFixtures.chunk()).parse(configJson));
         context.setTitlePath(List.of("第一章 投标人须知"));
         context.setLeadParagraph(leadParagraph);
         Map<String, UnifiedElement> byId = new HashMap<>();

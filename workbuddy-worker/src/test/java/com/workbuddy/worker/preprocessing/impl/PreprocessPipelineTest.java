@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -53,7 +54,7 @@ class PreprocessPipelineTest {
                 new EncodingCleanRule(), new TextTidyRule(), new HeaderFooterRule(),
                 new TocRule(), new RepeatRule(), new FieldNormalizeRule(), new NoiseRule(),
                 new CustomCleanRule());
-        return new PreprocessPipeline(rules, new PreprocessProperties());
+        return new PreprocessPipeline(rules, PropertiesFixtures.preprocess());
     }
 
     private UnifiedElement element(String id, String type, Integer page, String text) {
@@ -69,7 +70,7 @@ class PreprocessPipelineTest {
         PreprocessContext context = new PreprocessContext();
         context.setDocument(document);
         context.setStrategy(strategy);
-        context.setProperties(new PreprocessProperties());
+        context.setProperties(PropertiesFixtures.preprocess());
         context.setFileResultId(10L);
         context.setUpstreamProductRef(50L);
         return context;
@@ -272,7 +273,7 @@ class PreprocessPipelineTest {
     @Test
     void ruleExceptionShouldIsolateToPartialSuccess() {
         List<CleanRule> rules = createRules();
-        PreprocessPipeline pipeline = new PreprocessPipeline(rules, new PreprocessProperties());
+        PreprocessPipeline pipeline = new PreprocessPipeline(rules, PropertiesFixtures.preprocess());
         List<UnifiedElement> elements = new ArrayList<>();
         elements.add(element("n-1", UnifiedElementType.PARAGRAPH.name(), null, "正文内容"));
         UnifiedDocument document = document(elements, null);

@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,7 +44,7 @@ class StructureAssemblerImplTest {
 
     @BeforeEach
     void setUp() {
-        properties = new StructureProperties();
+        properties = PropertiesFixtures.structure();
         List<TitleRule> rules = List.of(new StyleTitleRule(), new ChapterTitleRule(),
                 new SingleNumberTitleRule(), new NumberTitleRule(), new CnParenTitleRule(),
                 new CnDotTitleRule(), new FontSignalTitleRule());

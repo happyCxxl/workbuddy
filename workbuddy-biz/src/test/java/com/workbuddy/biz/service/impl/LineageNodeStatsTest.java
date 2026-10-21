@@ -40,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import static com.workbuddy.biz.service.impl.LineageQueryTestFixtures.FILE_RESULT_ID;
 import static com.workbuddy.biz.service.impl.LineageQueryTestFixtures.KB_ID;
 import static com.workbuddy.biz.service.impl.LineageQueryTestFixtures.chunkSetOfOneChunk;
@@ -94,7 +95,7 @@ class LineageNodeStatsTest {
         FileResultAccessGuard accessGuard = new FileResultAccessGuard(fileResultDbService, knowledgeBaseDbService);
         service = new LineageQueryServiceImpl(pipelineTaskDbService, pipelineProductDbService, stepLogDbService,
                 chunkSetDbService, embeddingSetDbService, fileStorage, accessGuard,
-                new ChunkStrategyParser(new ChunkProperties()));
+                new ChunkStrategyParser(ConfigFixtures.chunk()));
     }
 
     /** 文件清单与集合行夹具（集合行为空） */

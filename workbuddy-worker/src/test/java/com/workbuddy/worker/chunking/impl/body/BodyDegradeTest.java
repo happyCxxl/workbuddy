@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -53,7 +54,7 @@ class BodyDegradeTest {
     private SliceContext context(String configJson) {
         SliceContext context = new SliceContext();
         context.setView(new PreprocessView());
-        context.setStrategy(new ChunkStrategyParser(new ChunkProperties()).parse(configJson));
+        context.setStrategy(new ChunkStrategyParser(PropertiesFixtures.chunk()).parse(configJson));
         context.setTitlePath(List.of("第一章 投标人须知"));
         context.setBodyBuffer(new ArrayList<>());
         context.setFallback(new RecursiveLengthFallback());

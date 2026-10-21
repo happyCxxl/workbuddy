@@ -78,7 +78,7 @@ class ModelVendorPropertiesTest {
     void shouldExposeNoVendorsWhenSectionAbsent() {
         ModelVendorProperties properties = bind(Map.of());
 
-        assertTrue(properties.getVendors().isEmpty());
+        assertNull(properties.getVendors());
     }
 
     /**

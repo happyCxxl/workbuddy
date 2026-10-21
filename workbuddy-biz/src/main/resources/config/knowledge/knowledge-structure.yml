@@ -1,0 +1,41 @@
+# 组装环节配置：去重、XY-cut、续表、标题与噪声判定阈值。
+# 键的来源：knowledge-worker 的 StructureProperties（前缀 knowledge.structure）。
+# 本环节配置的默认值在此处维护；阈值为草案值，待代表性样本标定。
+knowledge:
+  structure:
+    # 去重 IoU 阈值
+    iou-threshold: 0.3
+    # 去重文本相似度阈值（Jaccard）
+    text-similarity-threshold: 0.7
+    # XY-cut 行带间距 ÷ 行高
+    xy-cut-band-gap-ratio: 1.5
+    # XY-cut 块间距（pt）
+    xy-cut-block-gap: 12.0
+    # 续表表头一致阈值
+    continuation-header-similarity: 0.8
+    # 续表放宽规则：列宽容差（pt）
+    continuation-column-width-tolerance: 3.0
+    # 续表放宽规则：列宽命中率下限
+    column-width-match-ratio: 0.6
+    # 标题字号佐证比例：字号 ≥ 文档中位数 × 该值即视为有字号佐证
+    font-backed-size-ratio: 1.05
+    # 字号/加粗标题规则比例：字号 ≥ 文档中位数 × 该值才成标题
+    font-signal-size-ratio: 1.15
+    # 页首判定阈值（pt）：表格 bbox.y 低于该值视为页首
+    page-top-threshold: 50.0
+    # 标题候选短句长度上限（防编号误判）
+    title-candidate-max-length: 40
+    # 重复页判定：两页文本 bigram Jaccard 阈值
+    repeat-page-jaccard: 0.95
+    # 重复段判定：文本相似度阈值
+    repeat-segment-similarity: 0.9
+    # 重复段判定：段落最小长度（字符）
+    repeat-segment-min-len: 50
+    # 噪声页判定：页文本乱码率阈值
+    noise-garbled-ratio: 0.4
+    # 模型判断兜底开关（false = 只走几何口径）
+    model-fallback-enabled: false
+    # 溯源偏低阈值（百分比）：可回溯占比低于该值才提告警，与详情页结论文案同口径
+    provenance-low-percent: 80
+    # 重复判定：按需重建的 bigram 集合缓存条数上限（内存有界）
+    repeat-set-cache-size: 64

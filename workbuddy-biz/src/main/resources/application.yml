@@ -12,8 +12,13 @@ spring:
       - classpath:config/workbuddy-auth.yml
       - classpath:config/workbuddy-file.yml
       - classpath:config/workbuddy-model.yml
-      - classpath:config/knowledge/knowledge-task.yml
       - classpath:config/knowledge/knowledge-parse.yml
+      - classpath:config/knowledge/knowledge-structure.yml
+      - classpath:config/knowledge/knowledge-preprocess.yml
+      - classpath:config/knowledge/knowledge-chunk.yml
+      - classpath:config/knowledge/knowledge-embed.yml
+      - classpath:config/knowledge/knowledge-milvus.yml
+      - classpath:config/knowledge/knowledge-task.yml
       - classpath:config/knowledge/knowledge-retrieval.yml
       - optional:classpath:application-local.yml
   application:

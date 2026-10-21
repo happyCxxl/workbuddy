@@ -13,6 +13,7 @@ import com.workbuddy.worker.parser.DocumentParserPort;
 import com.workbuddy.worker.parser.office.impl.DocDocumentParser;
 import com.workbuddy.worker.parser.office.impl.DocxDocumentParser;
 import com.workbuddy.worker.parser.office.impl.ExcelDocumentParser;
+import com.workbuddy.worker.parser.office.impl.PptDocumentParser;
 import com.workbuddy.worker.parser.pdf.PdfBoxDocumentParser;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
 import com.workbuddy.worker.startup.ParserWhitelistChecker;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,7 +40,7 @@ class StartupCheckContractTest {
     @Test
     void realChecksShouldProceedOnPassPath() {
         assertProceeds(new ModelVendorValidator(new ModelVendorProperties()));
-        assertProceeds(new ParserWhitelistChecker(realParsers(), new FileValidationProperties()));
+        assertProceeds(new ParserWhitelistChecker(realParsers(), ConfigFixtures.fileValidation()));
         assertProceeds(new RetrievalCapabilityCheck(new RetrievalCapabilityProperties()));
         assertProceeds(new TaskTimeoutCheck(new TaskQueueProperties()));
         assertProceeds(new AuthConfigCheck(jwtProperties(), new LoginGuardProperties()));
@@ -51,7 +53,7 @@ class StartupCheckContractTest {
     void knownChecksShouldKeepTheirOrderTier() {
         assertEquals(StartupCheck.ORDER_CREDENTIALS, new ModelVendorValidator(new ModelVendorProperties()).order());
         assertEquals(StartupCheck.ORDER_ASSEMBLY,
-                new ParserWhitelistChecker(List.of(), new FileValidationProperties()).order());
+                new ParserWhitelistChecker(List.of(), ConfigFixtures.fileValidation()).order());
         assertEquals(StartupCheck.ORDER_PARAMETERS,
                 new RetrievalCapabilityCheck(new RetrievalCapabilityProperties()).order());
         assertEquals(StartupCheck.ORDER_PARAMETERS, new TaskTimeoutCheck(new TaskQueueProperties()).order());
@@ -76,9 +78,10 @@ class StartupCheckContractTest {
         return properties;
     }
 
-    /** 真实解析器集合：覆盖 FileValidationProperties 的默认白名单 */
+    /** 真实解析器集合：覆盖配置面的启用白名单（`knowledge.file.enabled-formats`，含 PPT/PPTX） */
     private List<DocumentParserPort> realParsers() {
         return List.of(new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer()),
-                new DocxDocumentParser(), new DocDocumentParser(), new ExcelDocumentParser());
+                new DocxDocumentParser(), new DocDocumentParser(), new ExcelDocumentParser(),
+                new PptDocumentParser());
     }
 }

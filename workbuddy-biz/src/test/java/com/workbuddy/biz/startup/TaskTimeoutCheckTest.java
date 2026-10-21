@@ -3,6 +3,7 @@ package com.workbuddy.biz.startup;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.startup.StartupCheckChain;
+import com.workbuddy.biz.config.ConfigFixtures;
 import com.workbuddy.biz.config.TaskQueueProperties;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ class TaskTimeoutCheckTest {
      */
     @Test
     void shouldPassWithDefaultTimeouts() {
-        new TaskTimeoutCheck(new TaskQueueProperties()).check(next);
+        new TaskTimeoutCheck(ConfigFixtures.task()).check(next);
 
         assertTrue(proceeded.get(), "通过路径必须推进链");
     }
@@ -38,7 +39,7 @@ class TaskTimeoutCheckTest {
      */
     @Test
     void shouldRejectZeroTimeout() {
-        TaskQueueProperties properties = new TaskQueueProperties();
+        TaskQueueProperties properties = ConfigFixtures.task();
         properties.getTimeout().put(PipelineStage.CHUNK, Duration.ZERO);
 
         KnowledgeException error = assertThrows(KnowledgeException.class,
@@ -53,9 +54,19 @@ class TaskTimeoutCheckTest {
      */
     @Test
     void shouldRejectNegativeTimeout() {
-        TaskQueueProperties properties = new TaskQueueProperties();
+        TaskQueueProperties properties = ConfigFixtures.task();
         properties.getTimeout().put(PipelineStage.EMBED, Duration.ofMinutes(-1));
 
         assertThrows(KnowledgeException.class, () -> new TaskTimeoutCheck(properties).check(next));
+    }
+
+    /**
+     * 守护 {@code shouldPassWhenTimeoutSectionAbsent}：该场景行为改动即失败。
+     */
+    @Test
+    void shouldPassWhenTimeoutSectionAbsent() {
+        new TaskTimeoutCheck(new TaskQueueProperties()).check(next);
+
+        assertTrue(proceeded.get(), "未配置任何环节超时时按全局默认放行");
     }
 }

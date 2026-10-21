@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -25,7 +26,7 @@ class TextTidyRuleTest {
     private RuleContext context() {
         RuleContext context = new RuleContext();
         context.setStrategy(StrategyFixtures.preprocessDefaults());
-        context.setProperties(new PreprocessProperties());
+        context.setProperties(PropertiesFixtures.preprocess());
         return context;
     }
 

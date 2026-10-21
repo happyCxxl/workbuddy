@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,8 +23,8 @@ class LayoutComplexityTest {
     void linesWithSpanningGapShouldBeComplex() {
         List<PageLine> lines = List.of(spanningLine(100), spanningLine(80));
 
-        assertEquals(2, LayoutComplexity.spanningLineCount(lines, new ParseProperties()));
-        assertTrue(LayoutComplexity.isComplex(lines, new ParseProperties()));
+        assertEquals(2, LayoutComplexity.spanningLineCount(lines, PropertiesFixtures.parse()));
+        assertTrue(LayoutComplexity.isComplex(lines, PropertiesFixtures.parse()));
     }
 
     /** 普通词距（间隙远小于门槛）→ 不跨栏、不判复杂页（{@code normalWordGapsShouldNotBeComplex}）。 */
@@ -33,8 +34,8 @@ class LayoutComplexityTest {
                 line(List.of(new Token("alpha", 72, 100), new Token("one", 105, 130)), 100),
                 line(List.of(new Token("alpha", 72, 100), new Token("two", 105, 130)), 80));
 
-        assertEquals(0, LayoutComplexity.spanningLineCount(lines, new ParseProperties()));
-        assertFalse(LayoutComplexity.isComplex(lines, new ParseProperties()));
+        assertEquals(0, LayoutComplexity.spanningLineCount(lines, PropertiesFixtures.parse()));
+        assertFalse(LayoutComplexity.isComplex(lines, PropertiesFixtures.parse()));
     }
 
     /** 只有一行跨栏：未达门槛（默认 2 行）（{@code singleSpanningLineShouldNotBeComplex}）。 */
@@ -43,15 +44,15 @@ class LayoutComplexityTest {
         List<PageLine> lines = List.of(spanningLine(100),
                 line(List.of(new Token("alpha", 72, 100), new Token("two", 105, 130)), 80));
 
-        assertEquals(1, LayoutComplexity.spanningLineCount(lines, new ParseProperties()));
-        assertFalse(LayoutComplexity.isComplex(lines, new ParseProperties()));
+        assertEquals(1, LayoutComplexity.spanningLineCount(lines, PropertiesFixtures.parse()));
+        assertFalse(LayoutComplexity.isComplex(lines, PropertiesFixtures.parse()));
     }
 
     /** 门槛与间隙系数都可配（{@code thresholdsShouldBeConfigurable}）。 */
     @Test
     void thresholdsShouldBeConfigurable() {
         List<PageLine> lines = List.of(spanningLine(100));
-        ParseProperties properties = new ParseProperties();
+        ParseProperties properties = PropertiesFixtures.parse();
         properties.setLayoutModelMinSpanningLines(1);
         properties.setLayoutSpanningGapFactor(2.0);
 

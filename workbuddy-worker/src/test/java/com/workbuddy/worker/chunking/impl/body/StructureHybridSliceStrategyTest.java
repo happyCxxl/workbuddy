@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,7 +29,7 @@ class StructureHybridSliceStrategyTest {
     private SliceContext context() {
         SliceContext context = new SliceContext();
         context.setView(new PreprocessView());
-        context.setStrategy(new ChunkStrategyParser(new ChunkProperties())
+        context.setStrategy(new ChunkStrategyParser(PropertiesFixtures.chunk())
                 .parse("{\"routes\":{\"body\":{\"algorithm\":\"structure-hybrid\"}}}"));
         context.setById(new HashMap<>());
         context.setTitlePath(List.of("第一章 总则"));

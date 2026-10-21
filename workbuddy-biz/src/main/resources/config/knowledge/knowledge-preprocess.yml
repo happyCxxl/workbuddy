@@ -1,0 +1,11 @@
+# 预处理环节配置：处置聚合阈值与摘要上限。
+# 键的来源：knowledge-worker 的 PreprocessProperties（前缀 knowledge.preprocess）。
+# 本环节配置的默认值在此处维护；识别侧阈值在解析/组装环节配置，本环节只留处置聚合阈值。
+knowledge:
+  preprocess:
+    # 目录页判定：该页 TOC_LINE 元素数下限
+    toc-min-lines-per-page: 3
+    # 目录连续窗口：Word 无页概念，连续 TOC_LINE 元素数下限
+    toc-run-min-length: 3
+    # trace 前后摘要截断长度（防膨胀）
+    trace-before-after-max-len: 80

@@ -5,7 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * 登录失败防护配置（前缀 knowledge.auth.guard）。
+ * 登录失败防护配置（前缀 knowledge.auth.guard；同名 kebab-case 键在 config/workbuddy-auth.yml）。
+ * 字段不带代码侧默认值，配置面是唯一基线。
  */
 @Data
 @Component
@@ -13,14 +14,14 @@ import org.springframework.stereotype.Component;
 public class LoginGuardProperties {
 
     /** 是否启用登录失败防护 */
-    private boolean enabled = true;
+    private boolean enabled;
 
     /** 同一「账号 + IP」允许的连续失败次数 */
-    private int failThreshold = 5;
+    private int failThreshold;
 
     /** 同一 IP 允许的连续失败次数（跨账号，防喷洒撞库） */
-    private int ipFailThreshold = 20;
+    private int ipFailThreshold;
 
     /** 计数窗口与锁定时长（分钟）：窗口自首次失败起算，期间不再续期 */
-    private int lockMinutes = 15;
+    private int lockMinutes;
 }

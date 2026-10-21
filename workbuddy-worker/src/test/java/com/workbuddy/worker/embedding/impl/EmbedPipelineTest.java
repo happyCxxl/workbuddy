@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -63,7 +64,7 @@ class EmbedPipelineTest {
      */
     @BeforeEach
     void setUp() {
-        properties = new EmbedProperties();
+        properties = PropertiesFixtures.embed();
         properties.setMaxRetries(0);
         pipeline = new EmbedPipeline(properties, checker, template);
 

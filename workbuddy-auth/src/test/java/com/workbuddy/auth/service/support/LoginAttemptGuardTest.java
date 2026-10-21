@@ -47,6 +47,10 @@ class LoginAttemptGuardTest {
     @BeforeEach
     void setUp() {
         properties = new LoginGuardProperties();
+        properties.setEnabled(true);
+        properties.setFailThreshold(5);
+        properties.setIpFailThreshold(20);
+        properties.setLockMinutes(15);
         guard = new LoginAttemptGuard(redisCounter, properties);
     }
 

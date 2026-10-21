@@ -24,7 +24,7 @@ public final class StrategyFixtures {
 
     /** 切片策略模板（默认 ChunkProperties） */
     public static ChunkStrategy chunkDefaults() {
-        return chunkDefaults(new ChunkProperties());
+        return chunkDefaults(PropertiesFixtures.chunk());
     }
 
     /** 切片策略模板（模板参数按传入 properties 补全） */
@@ -34,6 +34,6 @@ public final class StrategyFixtures {
 
     /** 预处理策略模板（七规则与参数按默认 PreprocessProperties 补全） */
     public static PreprocessStrategy preprocessDefaults() {
-        return new PreprocessStrategyParser(new PreprocessProperties()).parse(PREPROCESS_TEMPLATE);
+        return new PreprocessStrategyParser(PropertiesFixtures.preprocess()).parse(PREPROCESS_TEMPLATE);
     }
 }

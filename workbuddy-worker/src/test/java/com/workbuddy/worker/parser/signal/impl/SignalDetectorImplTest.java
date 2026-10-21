@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -79,7 +80,7 @@ class SignalDetectorImplTest {
         source.setUnitCount(1);
         source.setPageMetrics(List.of(metric));
         ParseContext context = new ParseContext();
-        context.setProperties(new ParseProperties());
+        context.setProperties(PropertiesFixtures.parse());
         return detector.detect(source, context);
     }
 }

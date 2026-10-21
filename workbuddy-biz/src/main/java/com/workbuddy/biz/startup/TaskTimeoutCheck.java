@@ -43,6 +43,11 @@ public class TaskTimeoutCheck implements StartupCheck {
      */
     @Override
     public void check(StartupCheckChain next) {
+        if (NullUtil.isNull(properties.getTimeout())) {
+            log.warn("未配置任何环节超时（`knowledge.task.timeout`），各环节统一按全局默认 5 分钟");
+            next.proceed();
+            return;
+        }
         List<String> illegal = properties.getTimeout().entrySet().stream()
                 .filter(entry -> !isPositive(entry.getValue()))
                 .map(entry -> entry.getKey().name() + "=" + entry.getValue())

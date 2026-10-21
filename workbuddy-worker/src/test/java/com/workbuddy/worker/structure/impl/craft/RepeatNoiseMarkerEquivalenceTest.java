@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -35,7 +36,7 @@ class RepeatNoiseMarkerEquivalenceTest {
 
     @BeforeEach
     void setUp() {
-        properties = new StructureProperties();
+        properties = PropertiesFixtures.structure();
         marker = new RepeatNoiseMarkerImpl(properties);
     }
 

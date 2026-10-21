@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -22,7 +23,7 @@ class ReadingOrderResolverImplTest {
 
     @BeforeEach
     void setUp() {
-        properties = new StructureProperties();
+        properties = PropertiesFixtures.structure();
         resolver = new ReadingOrderResolverImpl();
     }
 

@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -33,7 +34,7 @@ class PdfPageNumberTest {
     /** 页底数字行紧贴上方正文（与正文间无空白）→ 留在正文，不判页码（{@code bottomNumberTouchingBodyShouldStayInBody}）。 */
     @Test
     void bottomNumberTouchingBodyShouldStayInBody() throws Exception {
-        ParseSource source = parser.parse(context(buildBodyTouchingNumbers(), new ParseProperties()));
+        ParseSource source = parser.parse(context(buildBodyTouchingNumbers(), PropertiesFixtures.parse()));
 
         assertEquals(List.of(), footerTexts(source), () -> "footers=" + footerTexts(source));
         assertTrue(bodyTexts(source).stream().anyMatch(text -> text.contains("2024")),
@@ -45,7 +46,7 @@ class PdfPageNumberTest {
     /** 页底数字行与上方正文留出空白（孤立在页脚区）→ 判页码（{@code isolatedBottomNumberShouldBePageNumber}）。 */
     @Test
     void isolatedBottomNumberShouldBePageNumber() throws Exception {
-        ParseSource source = parser.parse(context(buildIsolatedNumbers(), new ParseProperties()));
+        ParseSource source = parser.parse(context(buildIsolatedNumbers(), PropertiesFixtures.parse()));
 
         assertEquals(List.of("1", "2"), footerTexts(source), () -> "footers=" + footerTexts(source));
     }
@@ -53,7 +54,7 @@ class PdfPageNumberTest {
     /** 空洞度比例上收到配置：比例放大后同一份文档不再判页码（{@code isolationRatioShouldComeFromProperties}）。 */
     @Test
     void isolationRatioShouldComeFromProperties() throws Exception {
-        ParseProperties properties = new ParseProperties();
+        ParseProperties properties = PropertiesFixtures.parse();
         properties.setPageNumberIsolationRatio(100.0);
 
         ParseSource source = parser.parse(context(buildIsolatedNumbers(), properties));

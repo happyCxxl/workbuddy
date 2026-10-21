@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,7 +56,7 @@ class CustomCleanRuleTest {
         }
         RuleContext context = new RuleContext();
         context.setStrategy(strategy);
-        context.setProperties(new PreprocessProperties());
+        context.setProperties(PropertiesFixtures.preprocess());
         context.setCustomRuleMatchers(matchers);
         return context;
     }

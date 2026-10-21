@@ -30,7 +30,7 @@ class AuthConfigCheckTest {
      */
     @Test
     void shouldPassWithValidConfig() {
-        new AuthConfigCheck(jwt(SECRET, 1, 30), new LoginGuardProperties()).check(next);
+        new AuthConfigCheck(jwt(SECRET, 1, 30), guard()).check(next);
 
         assertTrue(proceeded.get(), "通过路径必须推进链");
     }
@@ -41,7 +41,7 @@ class AuthConfigCheckTest {
     @Test
     void shouldRejectBlankSecret() {
         KnowledgeException error = assertThrows(KnowledgeException.class,
-                () -> new AuthConfigCheck(jwt("  ", 1, 30), new LoginGuardProperties()).check(next));
+                () -> new AuthConfigCheck(jwt("  ", 1, 30), guard()).check(next));
 
         assertTrue(error.getMessage().contains("secret"), () -> "message=" + error.getMessage());
         assertFalse(proceeded.get(), "失败即止，不推进链");
@@ -53,9 +53,9 @@ class AuthConfigCheckTest {
     @Test
     void shouldRejectNonPositiveTtl() {
         assertThrows(KnowledgeException.class,
-                () -> new AuthConfigCheck(jwt(SECRET, 0, 30), new LoginGuardProperties()).check(next));
+                () -> new AuthConfigCheck(jwt(SECRET, 0, 30), guard()).check(next));
         assertThrows(KnowledgeException.class,
-                () -> new AuthConfigCheck(jwt(SECRET, 1, -1), new LoginGuardProperties()).check(next));
+                () -> new AuthConfigCheck(jwt(SECRET, 1, -1), guard()).check(next));
     }
 
     /**
@@ -63,7 +63,7 @@ class AuthConfigCheckTest {
      */
     @Test
     void shouldRejectNonPositiveGuardThreshold() {
-        LoginGuardProperties guard = new LoginGuardProperties();
+        LoginGuardProperties guard = guard();
         guard.setFailThreshold(0);
 
         assertThrows(KnowledgeException.class, () -> new AuthConfigCheck(jwt(SECRET, 1, 30), guard).check(next));
@@ -72,7 +72,7 @@ class AuthConfigCheckTest {
     /** 防护关闭时阈值不参与任何判断，非正也不拒（{@code shouldSkipGuardCheckWhenDisabled}）。 */
     @Test
     void shouldSkipGuardCheckWhenDisabled() {
-        LoginGuardProperties guard = new LoginGuardProperties();
+        LoginGuardProperties guard = guard();
         guard.setEnabled(false);
         guard.setFailThreshold(0);
         guard.setIpFailThreshold(0);
@@ -85,8 +85,18 @@ class AuthConfigCheckTest {
     /** 短密钥只告警，不阻断启动（本地开发用短密钥）（{@code shouldTolerateShortSecret}）。 */
     @Test
     void shouldTolerateShortSecret() {
-        assertDoesNotThrow(() -> new AuthConfigCheck(jwt("short", 1, 30), new LoginGuardProperties()).check(next));
+        assertDoesNotThrow(() -> new AuthConfigCheck(jwt("short", 1, 30), guard()).check(next));
         assertTrue(proceeded.get());
+    }
+
+    /** 防护配置：启用且阈值合法（阈值由用例显式给出，不依赖配置类的字段初值） */
+    private LoginGuardProperties guard() {
+        LoginGuardProperties properties = new LoginGuardProperties();
+        properties.setEnabled(true);
+        properties.setFailThreshold(5);
+        properties.setIpFailThreshold(20);
+        properties.setLockMinutes(15);
+        return properties;
     }
 
     private JwtProperties jwt(String secret, long ttlDays, long rememberTtlDays) {

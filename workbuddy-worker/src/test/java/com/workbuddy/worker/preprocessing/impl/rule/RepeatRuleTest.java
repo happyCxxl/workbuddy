@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -51,7 +52,7 @@ class RepeatRuleTest {
     private RuleContext context(PreprocessStrategy strategy, Set<Integer> repeatedPages) {
         RuleContext context = new RuleContext();
         context.setStrategy(strategy);
-        context.setProperties(new PreprocessProperties());
+        context.setProperties(PropertiesFixtures.preprocess());
         context.setTocLineCountByPage(new HashMap<>());
         context.setTocRunElementIds(new HashSet<>());
         context.setRepeatedPageNumbers(repeatedPages);

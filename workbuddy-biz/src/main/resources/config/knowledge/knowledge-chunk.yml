@@ -1,0 +1,39 @@
+# 切片环节配置：切分长度、重叠与算法默认参数。
+# 键的来源：knowledge-worker 的 ChunkProperties（前缀 knowledge.chunk）。
+# 本环节配置的默认值在此处维护；参数为草案值，随代表性样本标定。
+knowledge:
+  chunk:
+    # 目标切片长度上限（字符；整段不可拆时允许超出）
+    target-max-len: 800
+    # 软上限：超过触发递归降级
+    soft-max-len: 1000
+    # 递归兜底固定长度
+    recursive-len: 500
+    # 递归兜底重叠（仅兜底用，结构切片不用）
+    recursive-overlap: 50
+    # 最小切片：相邻小段落合并至该长度（对齐 Unstructured 的 combine_under_n_chars 口径）
+    min-merge-len: 300
+    # 结构切片重叠：相邻 BODY/TABLE 片的前缀式重叠字符数，0=不重叠
+    structure-overlap: 0
+    # 表格行组阈值：行文本低于该字符数按行组切
+    table-row-group-threshold: 30
+    # 表格行组大小：每 N 行一组（行级切片 row-slice 用）
+    table-row-group-size: 3
+    # 标题路径保留级数
+    title-path-max-level: 3
+    # Token 估算除数（字符数 ÷ 该值，中文经验值）
+    token-divisor: 1.5
+    # 标题边界算法：一节文本最大长度，超出走兜底降级
+    title-boundary-max-len: 3000
+    # 正文固定窗口算法：窗口长度
+    body-window-len: 500
+    # 正文固定窗口算法：窗口重叠
+    body-window-overlap: 50
+    # 表格行组切片（row-group）：每片最大行数
+    row-group-size: 5
+    # 表格行组切片（row-group）：每片最大字符数
+    row-group-max-len: 600
+    # 表格整表切片（whole-table）：整表最大长度，超出降级行级
+    whole-table-max-len: 2000
+    # 表格表+引导段落（context-merged）：前导段截断长度
+    context-lead-max-len: 200

@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,7 +61,7 @@ class AssemblerPipelineTest {
 
     @BeforeEach
     void setUp() {
-        properties = new StructureProperties();
+        properties = PropertiesFixtures.structure();
         StructureJudgeRegistry registry = new StructureJudgeRegistry(new ArrayList<>(), properties);
         List<TitleRule> rules = List.of(new StyleTitleRule(), new ChapterTitleRule(),
                 new SingleNumberTitleRule(), new NumberTitleRule(), new CnParenTitleRule(),

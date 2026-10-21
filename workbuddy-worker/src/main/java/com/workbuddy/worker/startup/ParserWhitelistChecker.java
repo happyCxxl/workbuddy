@@ -1,9 +1,11 @@
 package com.workbuddy.worker.startup;
 
 import com.workbuddy.common.enums.input.FileFormat;
+import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.startup.StartupCheck;
 import com.workbuddy.common.startup.StartupCheckChain;
+import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.input.FileValidationProperties;
 import com.workbuddy.worker.parser.DocumentParserPort;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +62,8 @@ public class ParserWhitelistChecker implements StartupCheck {
 
     /** 校验并返回结论；白名单里的格式没有解析器时抛异常阻断启动 */
     void checkWhitelist(List<DocumentParserPort> parserPorts, List<String> enabledFormats) {
+        ThrowUtil.throwIf(NullUtil.isNull(enabledFormats), ErrorCode.PARAM_INVALID,
+                "文件格式白名单未配置（配置键 knowledge.file.enabled-formats）");
         List<FileFormat> enabled = new ArrayList<>();
         for (String name : enabledFormats) {
             enabled.add(FileFormat.valueOf(name.trim().toUpperCase(java.util.Locale.ROOT)));

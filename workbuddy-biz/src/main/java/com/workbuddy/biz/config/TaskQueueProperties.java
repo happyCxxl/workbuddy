@@ -7,47 +7,47 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 /**
- * 任务队列配置（knowledge.task 前缀）。
+ * 任务队列配置（knowledge.task 前缀；同名 kebab-case 键在 config/knowledge/knowledge-task.yml）。
+ * 字段不带代码侧默认值，配置面是唯一基线；未配置环节的回退常量见 {@link #DEFAULT_TIMEOUT}。
  */
 @Data
 @Component
 @ConfigurationProperties(prefix = "knowledge.task")
 public class TaskQueueProperties {
 
-    /** 未配置环节的回退超时 */
+    /** 未配置环节的回退超时（兜底常量，非配置项） */
     private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(5);
 
     /** 任务唤醒队列 key（Redis List） */
-    private String queueKey = "knowledge:task:queue";
+    private String queueKey;
 
     /** 消费侧 BRPOP 阻塞时长 */
-    private Duration wakeupTimeout = Duration.ofSeconds(5);
+    private Duration wakeupTimeout;
 
     /** 任务执行线程池并发 */
-    private int concurrency = 2;
+    private int concurrency;
 
     /** 每次叫醒扫库领批上限（超出留待下次叫醒） */
-    private int claimBatchSize = 10;
+    private int claimBatchSize;
 
     /** 启动补偿：QUEUED 且创建时间早于此阈值才补投 */
-    private Duration compensateThreshold = Duration.ofMinutes(5);
+    private Duration compensateThreshold;
 
-    /** 低频兜底对账开关（默认开启：入库未入队的滞留任务由它兜住） */
-    private boolean lowFreqSweepEnabled = true;
+    /** 低频兜底对账开关（入库未入队的滞留任务由它兜住） */
+    private boolean lowFreqSweepEnabled;
 
-    /** 低频兜底周期（配合 5 分钟补投门槛，最长滞留约 6 分钟） */
-    private Duration lowFreqSweepInterval = Duration.ofMinutes(1);
+    /** 低频兜底周期（配合补投门槛决定最长滞留时长） */
+    private Duration lowFreqSweepInterval;
 
     /** 补偿/兜底分布式锁持有时长（SET NX EX） */
-    private Duration sweepLockTtl = Duration.ofSeconds(30);
+    private Duration sweepLockTtl;
 
     /** 停机时等待在跑任务结束的上限；到点中断仍未结束的任务 */
-    private Duration shutdownWait = Duration.ofSeconds(30);
+    private Duration shutdownWait;
 
     /**
      * 单任务超时：按环节配置；未配置环节回退全局默认。
@@ -55,13 +55,7 @@ public class TaskQueueProperties {
      * <p>键是 {@link PipelineStage} 枚举：配置里写错环节名（如 `pars`）在绑定期直接失败，不再静默回退默认值。
      * 配置键仍写 kebab 形式（`build-index`），宽松绑定认它。
      */
-    private Map<PipelineStage, Duration> timeout = new HashMap<>(Map.of(
-            PipelineStage.PARSE, Duration.ofMinutes(5),
-            PipelineStage.STRUCTURE, Duration.ofMinutes(5),
-            PipelineStage.PREPROCESS, Duration.ofMinutes(5),
-            PipelineStage.CHUNK, Duration.ofMinutes(5),
-            PipelineStage.EMBED, Duration.ofMinutes(10),
-            PipelineStage.BUILD_INDEX, Duration.ofMinutes(10)));
+    private Map<PipelineStage, Duration> timeout;
 
     /**
      * 取指定环节的单任务超时：环节标识支持枚举名（BUILD_INDEX）与配置键（build-index）两种写法；
@@ -72,7 +66,7 @@ public class TaskQueueProperties {
      */
     public Duration timeoutOf(String stage) {
         PipelineStage parsed = parseStage(stage);
-        if (NullUtil.isNull(parsed)) {
+        if (NullUtil.isNull(parsed) || NullUtil.isNull(timeout)) {
             return DEFAULT_TIMEOUT;
         }
         Duration configured = timeout.get(parsed);

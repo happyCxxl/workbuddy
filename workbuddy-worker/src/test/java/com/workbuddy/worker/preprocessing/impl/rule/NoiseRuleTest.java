@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -42,7 +43,7 @@ class NoiseRuleTest {
         strategy.rule(PreprocessRule.NOISE).setAction(action);
         RuleContext context = new RuleContext();
         context.setStrategy(strategy);
-        context.setProperties(new PreprocessProperties());
+        context.setProperties(PropertiesFixtures.preprocess());
         context.setTocLineCountByPage(new HashMap<>());
         context.setTocRunElementIds(new HashSet<>());
         context.setRepeatedPageNumbers(new HashSet<>());

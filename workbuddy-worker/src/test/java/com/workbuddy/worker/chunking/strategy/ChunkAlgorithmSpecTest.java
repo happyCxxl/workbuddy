@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -117,7 +118,7 @@ class ChunkAlgorithmSpecTest {
     @Test
     void defaultParamsShouldFillPerAlgorithm() {
         Map<String, String> defaults = ChunkAlgorithmSpec.defaultParams(ChunkRoute.TABLE, "row-group",
-                new ChunkProperties());
+                PropertiesFixtures.chunk());
 
         assertEquals("5", defaults.get("groupSize"));
         assertEquals("600", defaults.get("maxLen"));
@@ -132,7 +133,7 @@ class ChunkAlgorithmSpecTest {
             Set<String> allowed = new HashSet<>();
             ChunkParam.ofAlgorithm(algorithm).forEach(param -> allowed.add(param.key()));
             Set<String> defaults = ChunkAlgorithmSpec
-                    .defaultParams(algorithm.route(), algorithm.key(), new ChunkProperties()).keySet();
+                    .defaultParams(algorithm.route(), algorithm.key(), PropertiesFixtures.chunk()).keySet();
             for (String key : defaults) {
                 assertTrue(allowed.contains(key),
                         algorithm.key() + " 的默认参数 " + key + " 不在 ChunkParam 目录里");

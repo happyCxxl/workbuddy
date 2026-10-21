@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -86,7 +87,7 @@ class ParseTaskRunnerTest {
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
                         , new KnowledgeConverterImpl()),
                 fileStorage, parsePipeline,
-                new ParseProperties(), new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()));
+                ConfigFixtures.parse(), new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()));
     }
 
     private WbPipelineTask queuedTask() {

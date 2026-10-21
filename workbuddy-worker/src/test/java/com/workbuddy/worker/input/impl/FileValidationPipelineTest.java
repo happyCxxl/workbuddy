@@ -29,6 +29,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,7 +49,7 @@ class FileValidationPipelineTest {
 
     @BeforeEach
     void setUp() {
-        properties = new FileValidationProperties();
+        properties = PropertiesFixtures.fileValidation();
     }
 
     /** 全部校验步骤真实实例（无 mock） */

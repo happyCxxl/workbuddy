@@ -1,11 +1,31 @@
-# 任务环节配置：队列键、唤醒超时、低频扫描与启动补偿。
+# 任务环节配置：队列键、唤醒超时、并发、低频扫描与启动补偿。
 # 键的来源：knowledge-biz 的 TaskQueueProperties（前缀 knowledge.task）。
 # 本环节配置的默认值在此处维护。
 knowledge:
   task:
+    # 任务唤醒队列 key（Redis List）
     queue-key: knowledge:task:queue
+    # 消费侧 BRPOP 阻塞时长
     wakeup-timeout: 5s
+    # 任务执行线程池并发
+    concurrency: 2
+    # 每次叫醒扫库领批上限（超出留待下次叫醒）
+    claim-batch-size: 10
+    # 启动补偿：QUEUED 且创建时间早于此阈值才补投
     compensate-threshold: 5m
+    # 低频兜底对账开关（入库未入队的滞留任务由它兜住）
     low-freq-sweep-enabled: true
+    # 低频兜底周期（配合 5 分钟补投门槛，最长滞留约 6 分钟）
     low-freq-sweep-interval: 1m
+    # 补偿/兜底分布式锁持有时长（SET NX EX）
     sweep-lock-ttl: 30s
+    # 停机时等待在跑任务结束的上限；到点中断仍未结束的任务
+    shutdown-wait: 30s
+    # 单任务超时（按环节）：键是 PipelineStage 枚举，kebab 形式与枚举名都认，写错环节名在绑定期直接失败
+    timeout:
+      parse: 5m
+      structure: 5m
+      preprocess: 5m
+      chunk: 5m
+      embed: 10m
+      build-index: 10m

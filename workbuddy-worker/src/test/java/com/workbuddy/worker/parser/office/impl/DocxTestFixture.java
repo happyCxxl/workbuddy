@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 
 /**
  * DOCX 解析测试共享夹具：被测解析器、解析上下文与文档字节化。
@@ -39,7 +40,7 @@ final class DocxTestFixture {
         fileRef.setMimeType(MIME_DOCX);
         context.setFileRef(fileRef);
         context.setInputStream(new ByteArrayInputStream(data));
-        context.setProperties(new ParseProperties());
+        context.setProperties(PropertiesFixtures.parse());
         return context;
     }
 

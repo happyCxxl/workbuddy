@@ -39,7 +39,7 @@
 - **`ParseElement.headerRepeated` 无赋值点**：字段与下游读取（组装环节续表判定）都在，字段注释已标明当前无解析器赋值；是否补写或从契约中移除，需与组装环节的续表判定一起定。
 - **解析环节的模型能力当前未接入**：`CapabilityRegistry` 的三个口由占位实现 `CapabilityRegistryImpl` 恒返回 null，三项 provider 实现与开关随模型调用层一并移除，主流程恒走规则路径（`TableCandidateDetector` / `RuleLines` / `ProjectionPageLayoutAnalyzer`）。要恢复，按「Spring Bean 集合 ∩ 三项开关」接回实现类，调用方不用改；**真实链路上的图像字节来源同样缺**：页面与区域栅格化、图像落对象存储的键约定、按页或区域取回字节都还没有落地。
 - **分栏能力只到端口、没有实现选择**：`PageLayoutAnalyzer` 当前只有投影法规则实现，没有按开关切换实现的能力；是否补 `PageLayoutRegistry`（与 `CapabilityRegistry` / `StructureJudgeRegistry` 同范式）尚未决定。PDFBox 自带的文章线索（beads，仅当文件声明时存在）是否接入也尚未决定。
-- **解析阈值的唯一落点是配置文件**：`ParseProperties` 的阈值（行容差、页级判定、表格四条、分栏六条、扫描页图片占比、Office 单元折算、图片元素面积门槛）全量写在 `../../../workbuddy-biz/src/main/resources/config/knowledge/knowledge-parse.yml`（解析环节配置只此一处，由主文件 `application.yml` 的 `spring.config.import` 清单载入），逐键与 `ParseProperties` 同名 kebab-case，默认值与代码默认值一致（`ParsePropertiesConfigTest` 对账）；改阈值改配置即可，代码侧只留兜底默认值。
+- **解析阈值的唯一落点是配置文件**：`ParseProperties` 的阈值（行容差、页级判定、表格四条、分栏六条、扫描页图片占比、Office 单元折算、图片元素面积门槛）全量写在 `../../../workbuddy-biz/src/main/resources/config/knowledge/knowledge-parse.yml`（解析环节配置只此一处，由主文件 `application.yml` 的 `spring.config.import` 清单载入），逐键与 `ParseProperties` 同名 kebab-case，键的覆盖完整性由 `PropertiesConfigCoverageTest` 守（缺键时绑定不报错，运行期取 0 或 null）；改阈值改配置即可，代码侧只留兜底默认值。
 - **图片未识别告警逐张产**：`OCR_IMAGE` 事实按图片逐张产（Office 与 PDF 同口径），多图文档的告警条数会很多；是否按页 / 按文档聚合尚未决定。
 - **PPT / PPTX 未接入解析**：`FileFormat` 已登记两种格式，但没有对应解析器（未进启用白名单）；接入后是否按 Azure 的 slide 页单位口径折算单元尚未决定。
 - **Word 虚拟单元与真实页不等价**：DOC / DOCX 按 3000 字符折算判定单元，页码与真实排版页对不上（OOXML 不存分页）；预览定位是否改用「段落序号」而非页码尚未决定。

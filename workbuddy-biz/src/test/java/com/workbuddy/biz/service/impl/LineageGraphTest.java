@@ -38,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import static com.workbuddy.biz.service.impl.LineageQueryTestFixtures.FILE_RESULT_ID;
 import static com.workbuddy.biz.service.impl.LineageQueryTestFixtures.KB_ID;
 import static com.workbuddy.biz.service.impl.LineageQueryTestFixtures.chunkSetOfOneChunk;
@@ -88,7 +89,7 @@ class LineageGraphTest {
         FileResultAccessGuard accessGuard = new FileResultAccessGuard(fileResultDbService, knowledgeBaseDbService);
         service = new LineageQueryServiceImpl(pipelineTaskDbService, pipelineProductDbService, stepLogDbService,
                 chunkSetDbService, embeddingSetDbService, fileStorage, accessGuard,
-                new ChunkStrategyParser(new ChunkProperties()));
+                new ChunkStrategyParser(ConfigFixtures.chunk()));
     }
 
     /** 让 10 号知识库归当前登录用户所有（归属校验要能过） */

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,7 +28,7 @@ class RepeatNoiseMarkerImplTest {
 
     @BeforeEach
     void setUp() {
-        marker = new RepeatNoiseMarkerImpl(new StructureProperties());
+        marker = new RepeatNoiseMarkerImpl(PropertiesFixtures.structure());
     }
 
     private UnifiedElement element(String id, String type, Integer page, String text) {

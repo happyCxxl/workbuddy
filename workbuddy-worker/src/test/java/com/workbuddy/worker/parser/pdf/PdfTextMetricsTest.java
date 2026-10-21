@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,7 +47,7 @@ class PdfTextMetricsTest {
 
     /** 行文本重建阈值：取解析阈值默认值 */
     private LineTexts.Options lineTextOptions() {
-        return LineTexts.Options.of(new ParseProperties());
+        return LineTexts.Options.of(PropertiesFixtures.parse());
     }
 
     /**

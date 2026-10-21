@@ -4,6 +4,7 @@ import com.workbuddy.worker.embedding.EmbedProperties;
 
 import org.junit.jupiter.api.Test;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class EmbedStrategyParserTest {
 
-    private final EmbedStrategyParser parser = new EmbedStrategyParser(new EmbedProperties());
+    private final EmbedStrategyParser parser = new EmbedStrategyParser(PropertiesFixtures.embed());
 
     /**
      * 守护 {@code configShouldFillDefaults}：该场景行为改动即失败。

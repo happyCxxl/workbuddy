@@ -37,6 +37,7 @@ import com.workbuddy.worker.embedding.strategy.EmbedStrategy;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategyParser;
 import com.workbuddy.common.convert.KnowledgeConverterImpl;
 
+import com.workbuddy.biz.config.ConfigFixtures;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -81,9 +82,9 @@ final class EmbedControlTestFixture {
                 fileStorage, storageRouter);
         service = new EmbedControlServiceImpl(pipelineProductDbService, stepLogDbService,
                 embeddingSetDbService, embeddingRecordDbService, new KnowledgeConverterImpl(),
-                new EmbedStrategyParser(new EmbedProperties()),
-                new ChunkStrategyParser(new ChunkProperties()),
-                new EmbedProperties(), new ChunkProperties(),
+                new EmbedStrategyParser(ConfigFixtures.embed()),
+                new ChunkStrategyParser(ConfigFixtures.chunk()),
+                ConfigFixtures.embed(), ConfigFixtures.chunk(),
                 new StageStrategySupport(strategyVersionDbService, strategyBindingDbService, knowledgeBaseDbService),
                 new TaskTriggerSupport(pipelineTaskDbService, chainStorage, taskQueue),
                 new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService), accessGuard,

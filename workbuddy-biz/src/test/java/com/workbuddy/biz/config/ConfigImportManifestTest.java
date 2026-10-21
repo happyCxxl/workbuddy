@@ -60,6 +60,11 @@ class ConfigImportManifestTest {
 
     static {
         DOMAINS.put("knowledge-parse.yml", List.of("knowledge.parse."));
+        DOMAINS.put("knowledge-structure.yml", List.of("knowledge.structure."));
+        DOMAINS.put("knowledge-preprocess.yml", List.of("knowledge.preprocess."));
+        DOMAINS.put("knowledge-chunk.yml", List.of("knowledge.chunk."));
+        DOMAINS.put("knowledge-embed.yml", List.of("knowledge.embed."));
+        DOMAINS.put("knowledge-milvus.yml", List.of("knowledge.vector.milvus."));
         DOMAINS.put("workbuddy-auth.yml", List.of("knowledge.auth."));
         DOMAINS.put("workbuddy-file.yml", List.of("knowledge.file."));
         DOMAINS.put("knowledge-task.yml", List.of("knowledge.task."));

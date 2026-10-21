@@ -5,6 +5,7 @@ import com.workbuddy.common.enums.preprocess.PreprocessRule;
 import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import org.junit.jupiter.api.Test;
 
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -16,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PreprocessStrategyParserTest {
 
-    private final PreprocessStrategyParser parser = new PreprocessStrategyParser(new PreprocessProperties());
+    private final PreprocessStrategyParser parser = new PreprocessStrategyParser(PropertiesFixtures.preprocess());
 
     /**
      * 守护 {@code structuredConfigShouldFillMissingDefaults}：该场景行为改动即失败。
