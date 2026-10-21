@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-21",
-      "baseline": "5cb97c70",
-      "note": "转换层拆分后用例数保持 846、覆盖率门禁通过；无新增风险项"
+      "baseline": "0c3cac6d",
+      "note": "新增验证各档耗时基线与 Surefire 并行实测；build cache 取舍记入 10；用例规模未变"
     },
     "01": {
       "status": "已复核",

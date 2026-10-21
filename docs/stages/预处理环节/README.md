@@ -34,43 +34,43 @@
 
 ## 代码索引
 
-| 位置                                                 | 职责                                                                                                                       |
-|------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
-| `preprocessing/impl/PreprocessPipeline`              | 环节编排：预计算（重复页 / 噪声页 / 目录计数与窗口 / 自定义正则预编译）→ 逐元素建副本 → 按 `order` 执行启用规则 → 视图组装 |
-| `preprocessing/PreprocessContext`                    | 输入：上游产物、策略、全局默认值、产物引用                                                                                 |
-| `preprocessing/PreprocessOutcome`                    | 产出：派生视图、步骤日志、告警、建议状态                                                                                   |
-| `preprocessing/PreprocessProperties`                 | 全局默认值（`knowledge.preprocess` 前缀）：目录行数下限、连续窗口下限                                                      |
-| `preprocessing/rule/CleanRule`                       | 规则契约：`name` / `stepName` / `order` / `enabledIn` / `apply`                                                            |
-| `preprocessing/rule/RuleContext`                     | 规则执行上下文：策略、预计算的页集合与目录窗口、自定义正则匹配器                                                           |
-| `preprocessing/rule/CustomRuleMatcher`               | 预编译后的自定义正则（pattern + 动作 + 替换文本 + 原文）                                                                   |
-| `preprocessing/impl/rule/EncodingCleanRule`          | ① 编码规范化 `encoding-clean-v1`（乱码残留 + NFKC，产出三层文本基座）                                                      |
-| `preprocessing/impl/rule/TextTidyRule`               | ② 段落/表格文本整理 `text-tidy-v1`（六项子规则，含折行段落合并）                                                           |
-| `preprocessing/impl/rule/HeaderFooterRule`           | ③ 页眉页脚处置（按解析识别出的 `HEADER` / `FOOTER` 元素）                                                                  |
-| `preprocessing/impl/rule/TocRule`                    | ④ 目录处置（页内行数或连续窗口判定，阈值对三种处置都生效）                                                                 |
-| `preprocessing/impl/rule/RepeatRule`                 | ⑤ 重复处置（组装标记的重复页 / 重复段，除首份外）                                                                          |
-| `preprocessing/impl/rule/FieldNormalizeRule`         | ⑥ 字段规范化 `field-normalize-v1`（金额 / 日期 / 面积 / 证号，四类子开关）                                                 |
-| `preprocessing/impl/rule/NoiseRule`                  | ⑦ 噪声处置（组装标记的噪声页上的元素）                                                                                     |
-| `preprocessing/impl/rule/CustomCleanRule`            | ⑧ 自定义规则 `custom-clean-v1`（链尾，按序施加用户正则）                                                                   |
-| `preprocessing/impl/rule/MarkDisposeSupport`         | 标记类规则共用的三档处置（剔除 / 保留 / 标记）；剔除档清检索文本与单元格检索文本                                           |
-| `preprocessing/impl/rule/ViewElementHelper`          | 视图元素通用操作（清单元格文本等）                                                                                         |
-| `preprocessing/strategy/PreprocessStrategy`          | 策略快照模型：七规则配置 + 自定义规则组；取值读取与旧开关换算                                                              |
-| `preprocessing/strategy/PreprocessAlgorithmSpec`     | 默认补齐（归一化）与保存校验（biz 调用），规则目录与参数范围以此为准                                                       |
-| `preprocessing/strategy/PreprocessStrategyParser`    | 快照 JSON → 策略对象（触发侧与控制面读取共用同一解析口径，失败回退内置默认）                                               |
-| `preprocessing/strategy/PreprocessRuleConfig`        | 单条规则配置：`action`（三态）/ `enabled`（开关）/ `params`                                                                |
-| `preprocessing/strategy/CustomRuleGroup`             | 自定义规则组：总开关 + 有序规则列表                                                                                        |
-| `preprocessing/strategy/PreprocessCustomRule`        | 单条自定义规则：`pattern` / `action` / `replacement`                                                                       |
-| `common/enums/preprocess/PreprocessRule`             | 七条固定规则的键与说明；三态规则与旧开关格式名单                                                                           |
-| `common/enums/preprocess/PreprocessParam`            | 参数目录：归属规则、范围（数值参数的 min / max）、默认值、说明                                                             |
-| `common/enums/preprocess/PreprocessAction`           | 三态动作：`KEEP` / `MARK` / `EXCLUDE`                                                                                      |
-| `common/enums/preprocess/CustomRuleAction`           | 自定义动作：`REMOVE` / `REPLACE` / `EXTRACT`，含说明与替换文本约束                                                         |
-| `common/enums/preprocess/ViewElementStatus`          | 处置状态字典（视图元素状态即它）                                                                                           |
-| `common/enums/preprocess/PreprocessFieldType`        | 字段类型：金额 / 日期 / 面积 / 证书号                                                                                      |
-| `common/domain/preprocess/`                          | 产物契约：`PreprocessView` / `ViewElement` / `ViewCell` / `NormalizedField` / `TraceEntry`                                 |
-| `common/domain/rules/PreprocessViewRules`            | 剔除口径：`EXCLUDED_STATUSES` 与 `CHUNK_SKIP_STATUSES`                                                                     |
-| `biz/task/runner/PreprocessTaskRunner`               | 领任务 → 读上游产物 → 调管线 → 写产物行与子步骤 → 回写终态（原子条件更新）                                                 |
-| `biz/service/impl/PreprocessControlServiceImpl`      | 控制面：策略快照读取（归一化后下发）、详情与统计读取                                                                       |
-| `biz/service/support/stats/PreprocessStatsSupport`   | 详情统计与结论文案（按产物现算，不落库）                                                                                   |
-| `biz/service/support/assemble/PreprocessVoAssembler` | 产物 → 元素 / 轨迹 / 字段 / 单元格视图（纯映射，不查库）                                                                   |
+| 位置                                               | 职责                                                                                                                       |
+|----------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| `preprocessing/impl/PreprocessPipeline`            | 环节编排：预计算（重复页 / 噪声页 / 目录计数与窗口 / 自定义正则预编译）→ 逐元素建副本 → 按 `order` 执行启用规则 → 视图组装 |
+| `preprocessing/PreprocessContext`                  | 输入：上游产物、策略、全局默认值、产物引用                                                                                 |
+| `preprocessing/PreprocessOutcome`                  | 产出：派生视图、步骤日志、告警、建议状态                                                                                   |
+| `preprocessing/PreprocessProperties`               | 全局默认值（`knowledge.preprocess` 前缀）：目录行数下限、连续窗口下限                                                      |
+| `preprocessing/rule/CleanRule`                     | 规则契约：`name` / `stepName` / `order` / `enabledIn` / `apply`                                                            |
+| `preprocessing/rule/RuleContext`                   | 规则执行上下文：策略、预计算的页集合与目录窗口、自定义正则匹配器                                                           |
+| `preprocessing/rule/CustomRuleMatcher`             | 预编译后的自定义正则（pattern + 动作 + 替换文本 + 原文）                                                                   |
+| `preprocessing/impl/rule/EncodingCleanRule`        | ① 编码规范化 `encoding-clean-v1`（乱码残留 + NFKC，产出三层文本基座）                                                      |
+| `preprocessing/impl/rule/TextTidyRule`             | ② 段落/表格文本整理 `text-tidy-v1`（六项子规则，含折行段落合并）                                                           |
+| `preprocessing/impl/rule/HeaderFooterRule`         | ③ 页眉页脚处置（按解析识别出的 `HEADER` / `FOOTER` 元素）                                                                  |
+| `preprocessing/impl/rule/TocRule`                  | ④ 目录处置（页内行数或连续窗口判定，阈值对三种处置都生效）                                                                 |
+| `preprocessing/impl/rule/RepeatRule`               | ⑤ 重复处置（组装标记的重复页 / 重复段，除首份外）                                                                          |
+| `preprocessing/impl/rule/FieldNormalizeRule`       | ⑥ 字段规范化 `field-normalize-v1`（金额 / 日期 / 面积 / 证号，四类子开关）                                                 |
+| `preprocessing/impl/rule/NoiseRule`                | ⑦ 噪声处置（组装标记的噪声页上的元素）                                                                                     |
+| `preprocessing/impl/rule/CustomCleanRule`          | ⑧ 自定义规则 `custom-clean-v1`（链尾，按序施加用户正则）                                                                   |
+| `preprocessing/impl/rule/MarkDisposeSupport`       | 标记类规则共用的三档处置（剔除 / 保留 / 标记）；剔除档清检索文本与单元格检索文本                                           |
+| `preprocessing/impl/rule/ViewElementHelper`        | 视图元素通用操作（清单元格文本等）                                                                                         |
+| `preprocessing/strategy/PreprocessStrategy`        | 策略快照模型：七规则配置 + 自定义规则组；取值读取与旧开关换算                                                              |
+| `preprocessing/strategy/PreprocessAlgorithmSpec`   | 默认补齐（归一化）与保存校验（biz 调用），规则目录与参数范围以此为准                                                       |
+| `preprocessing/strategy/PreprocessStrategyParser`  | 快照 JSON → 策略对象（触发侧与控制面读取共用同一解析口径，失败回退内置默认）                                               |
+| `preprocessing/strategy/PreprocessRuleConfig`      | 单条规则配置：`action`（三态）/ `enabled`（开关）/ `params`                                                                |
+| `preprocessing/strategy/CustomRuleGroup`           | 自定义规则组：总开关 + 有序规则列表                                                                                        |
+| `preprocessing/strategy/PreprocessCustomRule`      | 单条自定义规则：`pattern` / `action` / `replacement`                                                                       |
+| `common/enums/preprocess/PreprocessRule`           | 七条固定规则的键与说明；三态规则与旧开关格式名单                                                                           |
+| `common/enums/preprocess/PreprocessParam`          | 参数目录：归属规则、范围（数值参数的 min / max）、默认值、说明                                                             |
+| `common/enums/preprocess/PreprocessAction`         | 三态动作：`KEEP` / `MARK` / `EXCLUDE`                                                                                      |
+| `common/enums/preprocess/CustomRuleAction`         | 自定义动作：`REMOVE` / `REPLACE` / `EXTRACT`，含说明与替换文本约束                                                         |
+| `common/enums/preprocess/ViewElementStatus`        | 处置状态字典（视图元素状态即它）                                                                                           |
+| `common/enums/preprocess/PreprocessFieldType`      | 字段类型：金额 / 日期 / 面积 / 证书号                                                                                      |
+| `common/domain/preprocess/`                        | 产物契约：`PreprocessView` / `ViewElement` / `ViewCell` / `NormalizedField` / `TraceEntry`                                 |
+| `common/domain/rules/PreprocessViewRules`          | 剔除口径：`EXCLUDED_STATUSES` 与 `CHUNK_SKIP_STATUSES`                                                                     |
+| `biz/task/runner/PreprocessTaskRunner`             | 领任务 → 读上游产物 → 调管线 → 写产物行与子步骤 → 回写终态（原子条件更新）                                                 |
+| `biz/service/impl/PreprocessControlServiceImpl`    | 控制面：策略快照读取（归一化后下发）、详情与统计读取                                                                       |
+| `biz/service/support/stats/PreprocessStatsSupport` | 详情统计与结论文案（按产物现算，不落库）                                                                                   |
+| `common/convert/PreprocessVoConverter`             | 产物 → 元素 / 轨迹 / 字段 / 单元格视图（纯映射，不查库）                                                                   |
 
 ## 待定项
 
