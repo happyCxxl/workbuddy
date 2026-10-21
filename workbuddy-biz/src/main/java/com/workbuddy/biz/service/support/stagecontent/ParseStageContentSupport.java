@@ -11,7 +11,9 @@ import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.biz.service.support.assemble.StageContentItemSupport;
+import com.workbuddy.common.convert.KnowledgeConverter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import com.workbuddy.biz.service.support.artifact.StageArtifactReader;
 
 import java.util.ArrayList;
@@ -20,10 +22,11 @@ import java.util.List;
 /**
  * 解析环节内容：sources 平铺元素，顺序号从 1 起，extra 带来源/页网格/边界框/Office 锚点/表格单元格。
  */
-public final class ParseStageContentSupport {
+@Component
+@RequiredArgsConstructor
+public class ParseStageContentSupport {
 
-    private ParseStageContentSupport() {
-    }
+    private final KnowledgeConverter knowledgeConverter;
 
     /**
      * 解析产物 → 内容条目。
@@ -32,7 +35,7 @@ public final class ParseStageContentSupport {
      * @param ref         解析产物对象位置
      * @return 内容条目；产物缺失或读不到时为空列表
      */
-    public static List<StageContentItemVO> items(FileStorage fileStorage, ObjectRef ref) {
+    public List<StageContentItemVO> items(FileStorage fileStorage, ObjectRef ref) {
         ParseResult result = StageArtifactReader.read(fileStorage, ref, ParseResult.class);
         List<StageContentItemVO> items = new ArrayList<>();
         if (NullUtil.isNull(result) || NullUtil.isNull(result.getSources())) {
@@ -54,12 +57,12 @@ public final class ParseStageContentSupport {
     }
 
     /** 解析环节专属字段 + 公共页网格字段 + 原文定位锚点 + 表格单元格明细 */
-    private static StageContentExtraVO parseExtra(ParseSource source, ParseElement element) {
+    private StageContentExtraVO parseExtra(ParseSource source, ParseElement element) {
         StageContentExtraVO extra = new StageContentExtraVO();
         extra.setSource(source.getSource());
         extra.setProvider(source.getProvider());
-        StageContentItemSupport.putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
-        StageContentItemSupport.putBbox(extra, element.getBbox());
+        knowledgeConverter.putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
+        knowledgeConverter.putBbox(extra, element.getBbox());
         putOfficeAnchor(extra, element);
         // 表格单元格明细（TABLE 元素内嵌）：解析详情按行列渲染网格，单元格与文本原样下发、不做截断
         if (NullUtil.isNotNull(element.getCells()) && !element.getCells().isEmpty()) {
@@ -74,7 +77,7 @@ public final class ParseStageContentSupport {
      * <p>Word 段落给样式名（渲染器把样式名写在段落 DOM 上）；Excel 给工作表名与单元格行列
      * （行列是解析产物里的 0 基下标，与表格区域高亮同一口径）。
      */
-    private static void putOfficeAnchor(StageContentExtraVO extra, ParseElement element) {
+    private void putOfficeAnchor(StageContentExtraVO extra, ParseElement element) {
         if (StrUtil.isNotBlank(element.getStyle())) {
             extra.setStyle(element.getStyle());
         }

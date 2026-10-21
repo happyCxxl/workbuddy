@@ -55,6 +55,14 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     private final WbEmbeddingRecordDbService embeddingRecordDbService;
     private final FileStorage fileStorage;
     private final TaskDetailSupport detailSupport;
+
+    private final StructureStageContentSupport structureStageContentSupport;
+
+    private final ParseStageContentSupport parseStageContentSupport;
+
+    private final EmbedStageContentSupport embedStageContentSupport;
+
+    private final ChunkStageContentSupport chunkStageContentSupport;
     private final FileResultAccessGuard accessGuard;
 
     /**
@@ -124,7 +132,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
         try {
             if (PipelineStage.CHUNK.name().equals(stage)) {
                 // 切片：过滤与分页都下推到 wb_knowledge_chunk（切片集合可能很大），total 按过滤后的口径给
-                ChunkStageContentSupport.fillPage(vo, ObjectRef.ofProduct(product), chunkFilter, pageNo, pageSize,
+                chunkStageContentSupport.fillPage(vo, ObjectRef.ofProduct(product), chunkFilter, pageNo, pageSize,
                         chunkSetDbService, chunkDbService);
             } else {
                 // 页码与状态过滤都先于分页：total 与翻页都按过滤后的口径给
@@ -153,10 +161,10 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     private List<StageContentItemVO> buildItems(String stage, WbPipelineProduct product) {
         ObjectRef ref = ObjectRef.ofProduct(product);
         return switch (stage) {
-            case "PARSE" -> ParseStageContentSupport.items(fileStorage, ref);
-            case "STRUCTURE" -> StructureStageContentSupport.items(fileStorage, ref);
+            case "PARSE" -> parseStageContentSupport.items(fileStorage, ref);
+            case "STRUCTURE" -> structureStageContentSupport.items(fileStorage, ref);
             case "PREPROCESS" -> PreprocessStageContentSupport.items(fileStorage, ref);
-            case "EMBED" -> EmbedStageContentSupport.items(embeddingSetDbService, embeddingRecordDbService, ref);
+            case "EMBED" -> embedStageContentSupport.items(embeddingSetDbService, embeddingRecordDbService, ref);
             default -> List.of();
         };
     }

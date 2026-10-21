@@ -1,7 +1,7 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.IndexSetService;
-import com.workbuddy.biz.service.support.assemble.BuildOrderAssembler;
+import com.workbuddy.biz.service.support.index.BuildOrderCommandFactory;
 import com.workbuddy.common.dto.response.index.IndexValidateVO;
 import com.workbuddy.common.dto.response.index.IndexVersionVO;
 import com.workbuddy.common.dto.response.index.IndexBuildTriggerVO;
@@ -35,7 +35,7 @@ class KnowledgeFileIndexControllerRoutingTest {
 
     private IndexSetService indexSetService;
 
-    private BuildOrderAssembler buildOrderAssembler;
+    private BuildOrderCommandFactory buildOrderCommandFactory;
 
     private MockMvc mockMvc;
 
@@ -45,9 +45,9 @@ class KnowledgeFileIndexControllerRoutingTest {
     @BeforeEach
     void setUp() {
         indexSetService = mock(IndexSetService.class);
-        buildOrderAssembler = mock(BuildOrderAssembler.class);
+        buildOrderCommandFactory = mock(BuildOrderCommandFactory.class);
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new KnowledgeFileIndexController(indexSetService, buildOrderAssembler)).build();
+                new KnowledgeFileIndexController(indexSetService, buildOrderCommandFactory)).build();
     }
 
     /**
@@ -78,7 +78,7 @@ class KnowledgeFileIndexControllerRoutingTest {
      */
     @Test
     void buildShouldRouteThroughAssembler() throws Exception {
-        when(buildOrderAssembler.toCommand(any(), eq(9L))).thenReturn(null);
+        when(buildOrderCommandFactory.toCommand(any(), eq(9L))).thenReturn(null);
         when(indexSetService.buildCandidate(any())).thenReturn(new IndexBuildTriggerVO());
 
         mockMvc.perform(post("/knowledge-base/9/index-sets")
@@ -86,7 +86,7 @@ class KnowledgeFileIndexControllerRoutingTest {
                         .content("{\"comboSnapshot\":{},\"trigger\":\"manual\"}"))
                 .andExpect(status().isOk());
 
-        verify(buildOrderAssembler).toCommand(any(), eq(9L));
+        verify(buildOrderCommandFactory).toCommand(any(), eq(9L));
         verify(indexSetService).buildCandidate(any());
     }
 
@@ -102,7 +102,7 @@ class KnowledgeFileIndexControllerRoutingTest {
                         .content("{\"trigger\":\"manual\"}"))
                 .andExpect(status().isBadRequest());
 
-        verify(buildOrderAssembler, org.mockito.Mockito.never()).toCommand(any(), any());
+        verify(buildOrderCommandFactory, org.mockito.Mockito.never()).toCommand(any(), any());
     }
 
     /**

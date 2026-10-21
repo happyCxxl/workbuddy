@@ -1,11 +1,11 @@
 package com.workbuddy.biz.service.support;
 
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
-import com.workbuddy.biz.service.support.assemble.EmbedVoAssembler;
 import com.workbuddy.biz.service.support.stats.EmbedStatsSupport;
-import com.workbuddy.biz.service.support.assemble.EmbedVoAssemblerImpl;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -16,9 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 向量化详情 VO 组装器单测：集合摘要三态统计（SUCCESS/FAILED/SKIPPED 计数、CACHED 不参与）/ 记录条目映射。
  */
-class EmbedVoAssemblerTest {
+class EmbedConverterTest {
 
-    private final EmbedVoAssembler assembler = new EmbedVoAssemblerImpl();
+    private final KnowledgeConverter assembler = new KnowledgeConverterImpl();
 
     private WbEmbeddingSet embeddingSet() {
         WbEmbeddingSet set = new WbEmbeddingSet();

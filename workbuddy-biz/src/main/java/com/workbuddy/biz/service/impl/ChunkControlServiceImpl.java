@@ -6,7 +6,7 @@ import com.workbuddy.biz.service.db.WbChunkDbService;
 import com.workbuddy.biz.service.db.WbChunkSetDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
-import com.workbuddy.biz.service.support.assemble.ChunkVoAssembler;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
@@ -62,7 +62,7 @@ public class ChunkControlServiceImpl implements ChunkControlService {
     private final WbChunkSetDbService chunkSetDbService;
     private final WbChunkDbService chunkDbService;
     private final ChunkStrategyParser strategyParser;
-    private final ChunkVoAssembler voAssembler;
+    private final KnowledgeConverter voConverter;
     private final FileStorage fileStorage;
     private final FileResultAccessGuard accessGuard;
     private final UpstreamProductGate upstreamProductGate;
@@ -117,7 +117,7 @@ public class ChunkControlServiceImpl implements ChunkControlService {
             if (NullUtil.isNotNull(chunkSetRow)) {
                 List<WbChunk> chunks = chunkDbService.listByChunkSetId(chunkSetRow.getId());
                 vo.setSummary(ChunkStatsSupport.summaryOf(chunkSetRow, chunks));
-                vo.setChunks(voAssembler.toChunkItemVOs(chunks, productChunks(chunkSet)));
+                vo.setChunks(voConverter.toChunkItemVOs(chunks, productChunks(chunkSet)));
             }
             detailSupport.withProductRef(vo, product);
         }

@@ -6,7 +6,7 @@ import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
-import com.workbuddy.biz.service.support.assemble.EmbedVoAssembler;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.biz.service.support.stats.EmbedStatsSupport;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
@@ -57,7 +57,7 @@ public class EmbedControlServiceImpl implements EmbedControlService {
     private final WbPipelineStepLogDbService stepLogDbService;
     private final WbEmbeddingSetDbService embeddingSetDbService;
     private final WbEmbeddingRecordDbService embeddingRecordDbService;
-    private final EmbedVoAssembler voAssembler;
+    private final KnowledgeConverter voConverter;
     private final EmbedStrategyParser strategyParser;
     private final ChunkStrategyParser chunkStrategyParser;
     private final EmbedProperties embedProperties;
@@ -129,7 +129,7 @@ public class EmbedControlServiceImpl implements EmbedControlService {
             if (NullUtil.isNotNull(embeddingSet)) {
                 List<WbEmbeddingRecord> records = embeddingRecordDbService.listByEmbeddingSetId(embeddingSet.getId());
                 vo.setSummary(EmbedStatsSupport.summaryOf(embeddingSet, records));
-                vo.setRecords(voAssembler.toRecordItemVOs(records));
+                vo.setRecords(voConverter.toRecordItemVOs(records));
             }
             vo.setArtifactId(product.getArtifactId());
             vo.setContentHash(product.getContentHash());

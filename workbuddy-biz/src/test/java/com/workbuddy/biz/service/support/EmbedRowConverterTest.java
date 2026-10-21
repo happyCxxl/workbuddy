@@ -7,7 +7,8 @@ import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.RowStatus;
-import com.workbuddy.biz.service.support.common.EmbedRowSupport;
+import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -22,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * <p>守护 {@code setRow}/{@code recordRow} 的字段口径：产物集合的每一列（策略、模型、维度、度量、归一化、
  * 计数、对象位置）与记录行的每一列（片定位、输入文本与指纹、请求号、状态）漏搬都会让详情与对账读不到。
  */
-class EmbedRowSupportTest {
+class EmbedRowConverterTest {
+
+    private static final KnowledgeConverter CONVERTER = new KnowledgeConverterImpl();
 
     /**
      * 集合行：文件、集合、策略、模型/维度/度量/归一化、计数、产物位置与状态逐列落库。
@@ -43,7 +46,7 @@ class EmbedRowSupportTest {
         set.setRecords(List.of(new EmbeddingRecord()));
         ObjectRef ref = new ObjectRef(9L, StorageType.MINIO, "artifacts", "embed/set-1.json");
 
-        WbEmbeddingSet row = EmbedRowSupport.setRow(10L, set, "embed-default-v1", ref);
+        WbEmbeddingSet row = CONVERTER.setRow(10L, set, "embed-default-v1", ref);
 
         assertEquals(10L, row.getFileResultId());
         assertEquals(60L, row.getChunkSetRef());
@@ -72,7 +75,7 @@ class EmbedRowSupportTest {
         EmbeddingSet set = new EmbeddingSet();
         set.setNormalized(false);
 
-        WbEmbeddingSet row = EmbedRowSupport.setRow(10L, set, "embed-default-v1", ref());
+        WbEmbeddingSet row = CONVERTER.setRow(10L, set, "embed-default-v1", ref());
 
         assertEquals(Boolean.FALSE, row.getNormalized());
         assertNull(row.getEmbeddingSetId());
@@ -97,7 +100,7 @@ class EmbedRowSupportTest {
         record.setStatus("SUCCESS");
         record.setCacheHit(true);
 
-        WbEmbeddingRecord row = EmbedRowSupport.recordRow(70L, record);
+        WbEmbeddingRecord row = CONVERTER.recordRow(70L, record);
 
         assertEquals(70L, row.getEmbeddingSetId());
         assertEquals("emb-1", row.getEmbeddingId());

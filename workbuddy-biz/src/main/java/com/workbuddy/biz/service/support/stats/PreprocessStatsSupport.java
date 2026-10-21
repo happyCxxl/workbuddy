@@ -169,17 +169,6 @@ public final class PreprocessStatsSupport {
         return summary;
     }
 
-    /**
-     * 对外展示的处理轨迹：只保留非 KEEP 条目（KEEP 表示未命中改写，前端差异化展示用不到）。
-     *
-     * @param element 视图元素
-     * @return 需要展示的轨迹条目（可能为空列表）
-     */
-    public static List<TraceEntry> visibleTrace(ViewElement element) {
-        return ObjectUtil.defaultIfNull(element.getPreprocessTrace(), List.<TraceEntry>of()).stream()
-                .filter(entry -> !TraceEntry.ACTION_KEEP.equals(entry.getAction()))
-                .toList();
-    }
 
     /**
      * 按状态分布（状态名到元素数；缺失状态归入 UNKNOWN）。

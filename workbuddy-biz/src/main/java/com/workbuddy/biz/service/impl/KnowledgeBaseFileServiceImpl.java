@@ -7,8 +7,10 @@ import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.db.WbSubmitLogDbService;
-import com.workbuddy.biz.service.support.assemble.InputVoAssembler;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseAccessSupport;
+import com.workbuddy.common.convert.FileConverter;
+import com.workbuddy.common.convert.SystemConverter;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
@@ -26,12 +28,10 @@ import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 import com.workbuddy.common.dto.response.task.StageStatusVO;
-import com.workbuddy.common.enums.input.SubmitStatus;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
-import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -87,10 +87,14 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
 
     private final TransactionTemplate transactionTemplate;
 
-    private final InputVoAssembler inputVoAssembler;
+    private final KnowledgeConverter inputVoAssembler;
 
 
     private final KnowledgeBaseAccessSupport accessSupport;
+
+    private final FileConverter fileConverter;
+
+    private final SystemConverter systemConverter;
 
     /**
      * 提交文件：幂等检查 → 归属校验 → 文件校验 → 建档三写。
@@ -285,15 +289,8 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
         fileResult.setUserId(userId);
         kbFileResultDbService.save(fileResult);
 
-        WbSubmitLog submitLog = new WbSubmitLog();
-        submitLog.setKnowledgeBaseId(kb.getId());
-        submitLog.setRequestId(request.getRequestId());
-        submitLog.setFileId(request.getFileId());
-        submitLog.setSha256(validationResult.getSha256());
-        submitLog.setFileName(metadata.getFileName());
-        submitLog.setFileResultId(fileResult.getId());
-        submitLog.setStatus(SubmitStatus.PASS.name());
-        submitLog.setUserId(userId);
+        WbSubmitLog submitLog = systemConverter.toSubmitLogPass(kb.getId(), request, validationResult,
+                metadata, fileResult.getId(), userId);
         submitLogDbService.save(submitLog);
         return submitLog;
     }
@@ -307,14 +304,7 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
                     request.getFileId(), sourceFile.getId());
             return sourceFile;
         }
-        sourceFile = new WbSourceFile();
-        sourceFile.setFileId(request.getFileId());
-        sourceFile.setSha256(validationResult.getSha256());
-        sourceFile.setFileName(metadata.getFileName());
-        sourceFile.setMimeType(validationResult.getMimeType());
-        sourceFile.setFileSize(validationResult.getSize());
-        sourceFile.setInputSnapshot(JsonUtil.toJsonStr(metadata));
-        sourceFile.setUserId(userId);
+        sourceFile = fileConverter.toSourceFile(request, validationResult, metadata, userId);
         try {
             sourceFileDbService.save(sourceFile);
         } catch (DuplicateKeyException e) {
@@ -340,16 +330,8 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
      */
     private FileSubmitVO recordFailAndReturn(Long knowledgeBaseId, FileSubmitDTO request, String failReason,
                                              String fileName) {
-        WbSubmitLog failLog = new WbSubmitLog();
-        failLog.setKnowledgeBaseId(knowledgeBaseId);
-        failLog.setRequestId(request.getRequestId());
-        failLog.setFileId(request.getFileId());
-        failLog.setFileName(fileName);
-        // sha256 列 NOT NULL 无默认值；校验失败（尤其文件不存在）算不出指纹，存空串占位
-        failLog.setSha256("");
-        failLog.setStatus(SubmitStatus.FAIL.name());
-        failLog.setFailReason(failReason);
-        failLog.setUserId(accessSupport.currentUserId());
+        WbSubmitLog failLog = systemConverter.toSubmitLogFail(knowledgeBaseId, request, failReason,
+                fileName, accessSupport.currentUserId());
         submitLogDbService.save(failLog);
         log.info("===> KnowledgeBaseFileServiceImpl submit 校验失败, kbId={}, fileId={}, fileName={}, failReason={}",
                 knowledgeBaseId, request.getFileId(), fileName, failReason);

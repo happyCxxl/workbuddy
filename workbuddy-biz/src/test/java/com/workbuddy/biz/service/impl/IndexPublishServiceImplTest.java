@@ -17,6 +17,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.worker.indexing.ComboSnapshot;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +58,7 @@ class IndexPublishServiceImplTest {
         indexVersionDbService = mock(WbIndexVersionDbService.class);
         kbAuditLogDbService = mock(WbAuditLogDbService.class);
         IndexVersionStateSupport stateSupport =
-                new IndexVersionStateSupport(indexSetDbService, indexVersionDbService);
+                new IndexVersionStateSupport(indexSetDbService, indexVersionDbService, new KnowledgeConverterImpl());
         service = new IndexPublishServiceImpl(knowledgeBaseDbService, indexSetDbService,
                 indexVersionDbService, kbAuditLogDbService, stateSupport);
     }

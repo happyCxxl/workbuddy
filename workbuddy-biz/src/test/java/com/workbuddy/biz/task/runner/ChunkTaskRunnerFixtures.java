@@ -29,6 +29,7 @@ import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.ChunkerPort;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -64,9 +65,10 @@ final class ChunkTaskRunnerFixtures {
                 pipelineProductDbService, chunkSetDbService, chunkDbService,
                 fileStorage, chunker, new ChunkProperties(),
                 new ChunkStrategyParser(new ChunkProperties()),
-                new StepLogPersistence(stepLogDbService),
-                new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage),
-                new UpstreamProductGate(pipelineTaskDbService));
+                new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()),
+                new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
+                        , new KnowledgeConverterImpl()),
+                new UpstreamProductGate(pipelineTaskDbService), new KnowledgeConverterImpl());
     }
 
     static WbPipelineTask upstreamTask(PipelineTaskStatus status) {

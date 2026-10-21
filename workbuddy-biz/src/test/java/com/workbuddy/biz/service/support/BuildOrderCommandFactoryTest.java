@@ -5,8 +5,7 @@ import com.workbuddy.common.dto.request.index.ComboSnapshotDTO;
 import com.workbuddy.common.enums.index.IndexShape;
 import com.workbuddy.worker.indexing.BuildOrder;
 import com.workbuddy.worker.indexing.ComboSnapshot;
-import com.workbuddy.biz.service.support.assemble.BuildOrderAssembler;
-import com.workbuddy.biz.service.support.assemble.BuildOrderAssemblerImpl;
+import com.workbuddy.biz.service.support.index.BuildOrderCommandFactory;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -24,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>守护 {@code toCommand}/{@code toSnapshot} 的字段搬运、拷贝语义与空值兜底：
  * 知识库 ID 取路径参数，组合快照各维度原样搬运，请求为空返回 null。
  */
-class BuildOrderAssemblerTest {
+class BuildOrderCommandFactoryTest {
 
-    private final BuildOrderAssembler assembler = new BuildOrderAssemblerImpl();
+    private final BuildOrderCommandFactory factory = new BuildOrderCommandFactory();
 
     /**
      * 请求为空返回 null。
@@ -35,7 +34,7 @@ class BuildOrderAssemblerTest {
      */
     @Test
     void toCommandShouldReturnNullForNullRequest() {
-        assertNull(assembler.toCommand(null, 9L));
+        assertNull(factory.toCommand(null, 9L));
     }
 
     /**
@@ -57,7 +56,7 @@ class BuildOrderAssemblerTest {
                 "EMBED", "embed-default-v1")));
         request.setComboSnapshot(snapshot);
 
-        BuildOrder order = assembler.toCommand(request, 9L);
+        BuildOrder order = factory.toCommand(request, 9L);
 
         assertEquals(9L, order.getKnowledgeBaseId());
         assertEquals("manual", order.getTrigger());
@@ -83,7 +82,7 @@ class BuildOrderAssemblerTest {
         BuildOrderDTO request = new BuildOrderDTO();
         request.setComboSnapshot(snapshot);
 
-        ComboSnapshot combo = assembler.toCommand(request, 9L).getComboSnapshot();
+        ComboSnapshot combo = factory.toCommand(request, 9L).getComboSnapshot();
         strategies.put("CHUNK", "chunk-mutated");
 
         assertNotSame(strategies, combo.getStageStrategies());
@@ -100,7 +99,7 @@ class BuildOrderAssemblerTest {
         BuildOrderDTO request = new BuildOrderDTO();
         request.setTrigger("manual");
 
-        BuildOrder order = assembler.toCommand(request, 9L);
+        BuildOrder order = factory.toCommand(request, 9L);
 
         assertNull(order.getComboSnapshot());
     }
@@ -120,7 +119,7 @@ class BuildOrderAssemblerTest {
         BuildOrderDTO request = new BuildOrderDTO();
         request.setComboSnapshot(snapshot);
 
-        ComboSnapshot combo = assembler.toCommand(request, 9L).getComboSnapshot();
+        ComboSnapshot combo = factory.toCommand(request, 9L).getComboSnapshot();
 
         assertEquals("ALL", combo.getFileScopeMode());
         assertEquals(IndexShape.FULL_VECTOR, combo.getShape());

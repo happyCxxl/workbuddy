@@ -7,7 +7,9 @@ import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.biz.service.support.assemble.StageContentItemSupport;
+import com.workbuddy.common.convert.KnowledgeConverter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import com.workbuddy.biz.service.support.artifact.StageArtifactReader;
 
 import java.util.ArrayList;
@@ -16,10 +18,11 @@ import java.util.List;
 /**
  * 组装环节内容：统一文档元素按序映射 type/status/display，extra 带层级、页网格与边界框。
  */
-public final class StructureStageContentSupport {
+@Component
+@RequiredArgsConstructor
+public class StructureStageContentSupport {
 
-    private StructureStageContentSupport() {
-    }
+    private final KnowledgeConverter knowledgeConverter;
 
     /**
      * 统一文档产物 → 内容条目。
@@ -28,7 +31,7 @@ public final class StructureStageContentSupport {
      * @param ref         组装产物对象位置
      * @return 内容条目；产物缺失或读不到时为空列表
      */
-    public static List<StageContentItemVO> items(FileStorage fileStorage, ObjectRef ref) {
+    public List<StageContentItemVO> items(FileStorage fileStorage, ObjectRef ref) {
         UnifiedDocument document = StageArtifactReader.read(fileStorage, ref, UnifiedDocument.class);
         List<StageContentItemVO> items = new ArrayList<>();
         if (NullUtil.isNull(document) || NullUtil.isNull(document.getElements())) {
@@ -49,13 +52,13 @@ public final class StructureStageContentSupport {
     }
 
     /** 组装环节专属字段 + 公共页网格字段 */
-    private static StageContentExtraVO structureExtra(UnifiedElement element) {
+    private StageContentExtraVO structureExtra(UnifiedElement element) {
         StageContentExtraVO extra = new StageContentExtraVO();
         if (NullUtil.isNotNull(element.getLevel())) {
             extra.setLevel(element.getLevel());
         }
-        StageContentItemSupport.putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
-        StageContentItemSupport.putBbox(extra, element.getBbox());
+        knowledgeConverter.putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
+        knowledgeConverter.putBbox(extra, element.getBbox());
         return extra;
     }
 }

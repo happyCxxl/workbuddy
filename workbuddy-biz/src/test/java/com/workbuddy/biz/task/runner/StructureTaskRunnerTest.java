@@ -30,6 +30,7 @@ import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.structure.AssembleContext;
 import com.workbuddy.worker.structure.DocumentAssemblerPort;
 import com.workbuddy.worker.structure.StructureProperties;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -87,8 +88,9 @@ class StructureTaskRunnerTest {
                 fileStorage, storageRouter);
         runner = new StructureTaskRunner(pipelineTaskDbService, pipelineProductDbService,
                 fileStorage, documentAssembler, new StructureProperties(),
-                new StepLogPersistence(stepLogDbService),
-                new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage),
+                new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()),
+                new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
+                        , new KnowledgeConverterImpl()),
                 new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
         lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))

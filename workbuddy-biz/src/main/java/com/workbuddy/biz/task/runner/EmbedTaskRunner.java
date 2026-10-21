@@ -5,7 +5,7 @@ import com.workbuddy.biz.service.IndexSetService;
 import com.workbuddy.biz.service.db.WbChunkSetDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
-import com.workbuddy.biz.service.support.common.EmbedRowSupport;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
@@ -74,6 +74,7 @@ public class EmbedTaskRunner {
     private final StepLogPersistence stepLogPersistence;
     private final ProductPersistence productPersistence;
     private final UpstreamProductGate upstreamProductGate;
+    private final KnowledgeConverter embedConverter;
 
     /**
      * 执行单个向量化任务（由消费循环提交，外层看门狗负责超时）。
@@ -199,7 +200,7 @@ public class EmbedTaskRunner {
         WbPipelineProduct product = productPersistence.persist(task, PipelineStage.EMBED,
                 chunkProduct.getId(), JsonUtil.toJsonStr(strategy), embeddingSet);
 
-        WbEmbeddingSet setRow = EmbedRowSupport.setRow(fileResult.getId(), embeddingSet,
+        WbEmbeddingSet setRow = embedConverter.setRow(fileResult.getId(), embeddingSet,
                 embeddingSet.getStrategyVersion(), ObjectRef.ofProduct(product));
         embeddingSetDbService.save(setRow);
 
@@ -217,7 +218,7 @@ public class EmbedTaskRunner {
     }
 
     private WbEmbeddingRecord toKbRecord(Long embeddingSetId, EmbeddingRecord record) {
-        WbEmbeddingRecord row = EmbedRowSupport.recordRow(embeddingSetId, record);
+        WbEmbeddingRecord row = embedConverter.recordRow(embeddingSetId, record);
         row.setCacheHit(record.isCacheHit());
         return row;
     }

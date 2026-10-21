@@ -13,6 +13,7 @@ import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkOutcome;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
@@ -23,7 +24,6 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
-import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -64,7 +64,10 @@ public class ChunkTaskRunner {
     private final ChunkStrategyParser strategyParser;
     private final StepLogPersistence stepLogPersistence;
     private final ProductPersistence productPersistence;
+
     private final UpstreamProductGate upstreamProductGate;
+
+    private final KnowledgeConverter knowledgeConverter;
 
     /**
      * 执行单个切片任务（由消费循环提交，外层看门狗负责超时）。
@@ -159,22 +162,15 @@ public class ChunkTaskRunner {
         WbPipelineProduct product = productPersistence.persist(task, PipelineStage.CHUNK,
                 preprocessProduct.getId(), JsonUtil.toJsonStr(strategy), chunkSet);
 
-        WbChunkSet chunkSetRow = new WbChunkSet();
-        chunkSetRow.setFileResultId(fileResult.getId());
-        chunkSetRow.setUpstreamProductId(preprocessProduct.getId());
-        chunkSetRow.setChunkStrategyVersion(strategy.fullVersion());
-        chunkSetRow.setChunkCount(chunkSet.getChunkCount());
-        chunkSetRow.setTotalChars(chunkSet.getChunks().stream().mapToInt(Chunk::getCharCount).sum());
-        chunkSetRow.setStatus(RowStatus.ACTIVE.name());
-        chunkSetRow.setArtifactId(product.getArtifactId());
-        chunkSetRow.setStorageType(product.getStorageType());
-        chunkSetRow.setStorageSourceId(product.getStorageSourceId());
-        chunkSetRow.setBucket(product.getBucket());
+        WbChunkSet chunkSetRow = knowledgeConverter.toChunkSetRow(fileResult.getId(), preprocessProduct.getId(),
+                strategy.fullVersion(), chunkSet.getChunkCount(),
+                chunkSet.getChunks().stream().mapToInt(Chunk::getCharCount).sum(), product);
         chunkSetDbService.save(chunkSetRow);
 
         List<WbChunk> chunkRows = new ArrayList<>();
         for (Chunk chunk : chunkSet.getChunks()) {
-            chunkRows.add(toKbChunk(chunkSetRow.getId(), strategy.fullVersion(), chunk));
+            chunkRows.add(knowledgeConverter.toChunkRow(chunk, chunkSetRow.getId(), strategy.fullVersion(),
+                    formatPageRange(chunk.getPageRange())));
         }
         chunkDbService.saveBatch(chunkRows, BATCH_SIZE);
 
@@ -182,26 +178,6 @@ public class ChunkTaskRunner {
         log.info("===> ChunkTaskRunner 切片完成, taskId={}, fileResultId={}, status={}, chunkCount={}, artifactId={}",
                 task.getId(), fileResult.getId(), outcome.getSuggestedStatus().name(), chunkSet.getChunkCount(),
                 product.getArtifactId());
-    }
-
-    private WbChunk toKbChunk(Long chunkSetId, String strategyVersion, Chunk chunk) {
-        WbChunk row = new WbChunk();
-        row.setChunkSetId(chunkSetId);
-        row.setChunkId(chunk.getChunkId());
-        row.setParentChunkId(chunk.getParentChunkId());
-        row.setContent(chunk.getContent());
-        row.setContentType(chunk.getContentType());
-        row.setTitlePath(chunk.getTitlePath());
-        // 溯源不落 MySQL：父片溯源会随章节大小无界增长（实测单父片 3503 字符，
-        // 远超 wb_knowledge_chunk.source_element_ids 的容量），且检索链路用的是 Milvus 里的那份，
-        // 该列曾是纯冗余副本。全量溯源只在产物与 Milvus 中保存。
-        row.setPageRange(formatPageRange(chunk.getPageRange()));
-        row.setTableRef(chunk.getTableRef());
-        row.setOrderNo(chunk.getOrder());
-        row.setCharCount(chunk.getCharCount());
-        row.setTokenCount(chunk.getTokenCount());
-        row.setStrategyVersion(strategyVersion);
-        return row;
     }
 
     /** 页码范围落库：null → null；单页 "3"；连续 "1-3"；非连续压缩连续段逗号连接（无损等价，不截断） */

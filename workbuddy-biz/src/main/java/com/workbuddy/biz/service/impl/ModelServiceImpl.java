@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.biz.service.ModelService;
 import com.workbuddy.biz.service.db.WbModelDbService;
+import com.workbuddy.common.convert.SystemConverter;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;
 import com.workbuddy.common.enums.model.ModelCapability;
@@ -44,6 +45,8 @@ import java.util.Set;
 public class ModelServiceImpl implements ModelService {
 
     private final WbModelDbService wbModelDbService;
+
+    private final SystemConverter systemConverter;
     private final ModelVendorProperties modelVendorProperties;
     private final AuditEventPublisher auditEventPublisher;
 
@@ -137,6 +140,7 @@ public class ModelServiceImpl implements ModelService {
      * 业务列搬运：文本 trim、能力清单解析成落库 CSV、思考标记缺省 0、数值列原样复制；
      * 币种与状态由新增 / 编辑各自定值，不在本方法。
      */
+    // 只处理需要业务加工的列（trim / 能力解析 / 默认值）；纯字段搬运在 SystemConverter
     private void applyColumns(WbModel row, ModelSaveDTO dto) {
         row.setVendorCode(StrUtil.trimToNull(dto.getVendorCode()));
         row.setModelKey(StrUtil.trimToNull(dto.getModelKey()));

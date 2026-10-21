@@ -6,9 +6,9 @@ import com.workbuddy.common.domain.preprocess.TraceEntry;
 import com.workbuddy.common.domain.preprocess.ViewCell;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.enums.preprocess.ViewElementStatus;
-import com.workbuddy.biz.service.support.assemble.PreprocessVoAssembler;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
-import com.workbuddy.biz.service.support.assemble.PreprocessVoAssemblerImpl;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -19,9 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * 预处理详情 VO 组装器单测（纯映射无状态类，用真实实例断言）。
  */
-class PreprocessVoAssemblerTest {
+class PreprocessVoConverterTest {
 
-    private final PreprocessVoAssembler assembler = new PreprocessVoAssemblerImpl();
+    private final KnowledgeConverter assembler = new KnowledgeConverterImpl();
 
     private ViewElement element(String id, String status, String display, String normalized) {
         ViewElement element = new ViewElement();

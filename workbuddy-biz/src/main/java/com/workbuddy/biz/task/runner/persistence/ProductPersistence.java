@@ -3,6 +3,7 @@ package com.workbuddy.biz.task.runner.persistence;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;
@@ -30,7 +31,10 @@ public class ProductPersistence {
     private final WbPipelineProductDbService pipelineProductDbService;
     private final WbPipelineTaskDbService pipelineTaskDbService;
     private final ChainStorageSupport chainStorageSupport;
+
     private final FileStorage fileStorage;
+
+    private final KnowledgeConverter knowledgeConverter;
 
     /**
      * 落库阶段产物并回写任务产物引用；返回产物行（artifactId = sha256 = contentHash，
@@ -63,17 +67,8 @@ public class ProductPersistence {
         byte[] content = json.getBytes(StandardCharsets.UTF_8);
         ObjectRef ref = fileStorage.putObject(content);
 
-        WbPipelineProduct product = new WbPipelineProduct();
-        product.setTaskId(task.getId());
-        product.setFileResultId(task.getFileResultId());
-        product.setStage(stage.name());
-        product.setUpstreamProductId(upstreamProductId);
-        product.setCapabilitySnapshot(capabilitySnapshot);
-        product.setArtifactId(ref.objectKey());
-        product.setStorageType(ref.storageType().getCode());
-        product.setStorageSourceId(ref.sourceId());
-        product.setBucket(ref.bucket());
-        product.setContentHash(ref.objectKey());
+        WbPipelineProduct product = knowledgeConverter.toProduct(task, stage, upstreamProductId,
+                capabilitySnapshot, ref);
         pipelineProductDbService.save(product);
         pipelineTaskDbService.updateProductId(task.getId(), product.getId());
         return product;

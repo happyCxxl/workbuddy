@@ -1,12 +1,12 @@
 package com.workbuddy.biz.service.support;
 
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.entity.WbChunk;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
-import com.workbuddy.biz.service.support.assemble.ChunkVoAssembler;
 import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
-import com.workbuddy.biz.service.support.assemble.ChunkVoAssemblerImpl;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -17,9 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * 切片详情 VO 组装器单测（纯映射无状态类，用真实实例断言）。
  */
-class ChunkVoAssemblerTest {
+class ChunkConverterTest {
 
-    private final ChunkVoAssembler assembler = new ChunkVoAssemblerImpl();
+    private final KnowledgeConverter assembler = new KnowledgeConverterImpl();
 
     private WbChunk chunk(String id, String type, String parentChunkId, int chars) {
         WbChunk chunk = new WbChunk();

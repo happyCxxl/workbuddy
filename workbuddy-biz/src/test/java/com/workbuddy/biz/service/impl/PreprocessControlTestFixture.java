@@ -30,7 +30,7 @@ import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategyParser;
-import com.workbuddy.biz.service.support.assemble.PreprocessVoAssemblerImpl;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -77,7 +77,7 @@ final class PreprocessControlTestFixture {
                 new TaskTriggerSupport(pipelineTaskDbService, chainStorage, taskQueue),
                 new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService), fileStorage,
                 new PreprocessStrategyParser(new PreprocessProperties()),
-                new PreprocessVoAssemblerImpl(), accessGuard, new UpstreamProductGate(pipelineTaskDbService));
+                new KnowledgeConverterImpl(), accessGuard, new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
         lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
                 .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));

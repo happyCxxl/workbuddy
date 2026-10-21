@@ -20,6 +20,11 @@ import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.filecenter.storage.FileStorage;
+import com.workbuddy.biz.service.support.stagecontent.ChunkStageContentSupport;
+import com.workbuddy.biz.service.support.stagecontent.EmbedStageContentSupport;
+import com.workbuddy.biz.service.support.stagecontent.ParseStageContentSupport;
+import com.workbuddy.biz.service.support.stagecontent.StructureStageContentSupport;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,7 +83,11 @@ class StageContentStageMappingTest {
     @BeforeEach
     void setUp() {
         service = new StageContentQueryServiceImpl(pipelineProductDbService, chunkSetDbService, chunkDbService,
-                embeddingSetDbService, embeddingRecordDbService, fileStorage, detailSupport, accessGuard);
+                embeddingSetDbService, embeddingRecordDbService, fileStorage, detailSupport
+                        , new StructureStageContentSupport(new KnowledgeConverterImpl())
+                        , new ParseStageContentSupport(new KnowledgeConverterImpl())
+                        , new EmbedStageContentSupport(new KnowledgeConverterImpl())
+                        , new ChunkStageContentSupport(new KnowledgeConverterImpl()), accessGuard);
     }
 
     /** 任务解析替身：返回固定任务，聚焦本用例的条目映射 */

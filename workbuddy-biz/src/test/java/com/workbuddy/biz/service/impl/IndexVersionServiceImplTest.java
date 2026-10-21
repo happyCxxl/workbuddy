@@ -14,6 +14,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.worker.indexing.MilvusIndexPort;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -56,7 +57,7 @@ class IndexVersionServiceImplTest {
         milvusIndexPort = mock(MilvusIndexPort.class);
         buildService = mock(IndexBuildService.class);
         IndexVersionStateSupport stateSupport =
-                new IndexVersionStateSupport(indexSetDbService, indexVersionDbService);
+                new IndexVersionStateSupport(indexSetDbService, indexVersionDbService, new KnowledgeConverterImpl());
         service = new IndexVersionServiceImpl(indexVersionDbService, kbAuditLogDbService, milvusIndexPort,
                 buildService, stateSupport, TransactionTestSupport.template());
     }

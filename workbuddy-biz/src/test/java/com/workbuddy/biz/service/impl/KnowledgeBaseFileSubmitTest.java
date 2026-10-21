@@ -18,7 +18,9 @@ import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.worker.input.FileValidatorPort;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.biz.service.support.assemble.InputVoAssemblerImpl;
+import com.workbuddy.common.convert.FileConverterImpl;
+import com.workbuddy.common.convert.SystemConverterImpl;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -70,8 +72,10 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
         fileStorage = mock(FileStorage.class);
         service = new KnowledgeBaseFileServiceImpl(submitLogDbService, kbFileResultDbService,
                 sourceFileDbService, pipelineTaskDbService, fileValidator, fileStorage, mock(StorageRouter.class),
-                TransactionTestSupport.template(), new InputVoAssemblerImpl(),
-                new KnowledgeBaseAccessSupport(knowledgeBaseDbService));
+                TransactionTestSupport.template(), new KnowledgeConverterImpl(),
+                new KnowledgeBaseAccessSupport(knowledgeBaseDbService)
+                        , new FileConverterImpl()
+                        , new SystemConverterImpl());
         login(ME, UserRole.USER);
     }
 

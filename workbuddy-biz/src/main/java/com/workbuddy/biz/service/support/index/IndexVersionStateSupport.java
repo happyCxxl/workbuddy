@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
@@ -32,6 +33,9 @@ public class IndexVersionStateSupport {
 
     private final WbIndexSetDbService indexSetDbService;
     private final WbIndexVersionDbService indexVersionDbService;
+
+    private final KnowledgeConverter knowledgeConverter;
+
 
     /**
      * 按 ID 读取版本行。
@@ -81,13 +85,8 @@ public class IndexVersionStateSupport {
      */
     public WbIndexVersion createVersion(WbIndexSet set, String comboJson, Integer chunkCount,
                                         Integer vectorCount) {
-        WbIndexVersion version = new WbIndexVersion();
-        version.setIndexSetId(set.getId());
-        version.setVersionNo(indexVersionDbService.nextVersionNo(set.getId()));
-        version.setComboSnapshot(comboJson);
-        version.setStatus(IndexVersionStatus.CREATED.name());
-        version.setChunkCount(chunkCount);
-        version.setVectorCount(vectorCount);
+        WbIndexVersion version = knowledgeConverter.toIndexVersion(set,
+                indexVersionDbService.nextVersionNo(set.getId()), comboJson, chunkCount, vectorCount);
         try {
             indexVersionDbService.save(version);
         } catch (DuplicateKeyException e) {

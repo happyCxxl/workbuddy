@@ -4,11 +4,11 @@ import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.preprocess.TraceEntry;
 import com.workbuddy.common.domain.preprocess.ViewElement;
+import com.workbuddy.common.domain.rules.PreprocessViewRules;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.utils.JsonUtil;
-import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.biz.service.support.artifact.StageArtifactReader;
@@ -63,7 +63,7 @@ public final class PreprocessStageContentSupport {
                 extra.setPage(element.getPage());
             }
             // 处理轨迹只对被处理过的元素下发（非 KEEP 条目），避免响应体膨胀
-            List<TraceEntry> trace = PreprocessStatsSupport.visibleTrace(element);
+            List<TraceEntry> trace = PreprocessViewRules.nonKeepTrace(element);
             if (!trace.isEmpty()) {
                 extra.setTrace(JsonUtil.toJsonStr(trace));
             }

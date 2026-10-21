@@ -9,6 +9,7 @@ import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
@@ -33,6 +34,7 @@ import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.embedding.EmbedderPort;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategyParser;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -62,7 +64,8 @@ final class EmbedTaskRunnerFixtures {
                                   FileStorage fileStorage,
                                   StorageRouter storageRouter,
                                   EmbedderPort embedder,
-                                  IndexSetService indexSetService) {
+                                  IndexSetService indexSetService,
+                                  KnowledgeConverter embedConverter) {
         EmbedProperties embedProperties = new EmbedProperties();
         // 存储守卫用真实实例 + mock 依赖：链类型取不到（默认 mock 返回 null）时不拦
         ChainStorageSupport chainStorage = new ChainStorageSupport(fileResultDbService, sourceFileDbService,
@@ -73,9 +76,11 @@ final class EmbedTaskRunnerFixtures {
                 new EmbedStrategyParser(embedProperties),
                 new ChunkStrategyParser(new ChunkProperties()),
                 embedProperties, new ChunkProperties(),
-                new StepLogPersistence(stepLogDbService),
-                new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage),
-                new UpstreamProductGate(pipelineTaskDbService));
+                new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()),
+                new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
+                        , new KnowledgeConverterImpl()),
+                new UpstreamProductGate(pipelineTaskDbService),
+                embedConverter);
     }
 
     static WbPipelineTask upstreamTask(PipelineTaskStatus status) {

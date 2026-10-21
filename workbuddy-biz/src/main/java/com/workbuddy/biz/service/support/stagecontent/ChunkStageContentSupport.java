@@ -13,7 +13,9 @@ import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.biz.service.support.assemble.StageContentItemSupport;
+import com.workbuddy.common.convert.KnowledgeConverter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,10 +23,11 @@ import java.util.List;
 /**
  * 切片环节内容：按该次运行产物 artifactId 精确取切片集合，过滤与分页都下推到 wb_knowledge_chunk。
  */
-public final class ChunkStageContentSupport {
+@Component
+@RequiredArgsConstructor
+public class ChunkStageContentSupport {
 
-    private ChunkStageContentSupport() {
-    }
+    private final KnowledgeConverter knowledgeConverter;
 
     /**
      * 切片分页内容：过滤（内容类型 / 是否兜底 / 有无父片）与分页都下推 DB，条目按集合内顺序给出对齐键。
@@ -39,7 +42,7 @@ public final class ChunkStageContentSupport {
      * @param chunkSetDbService 切片集合数据访问
      * @param chunkDbService   切片数据访问
      */
-    public static void fillPage(StageContentVO vo, ObjectRef ref, ChunkContentFilterDTO filter,
+    public void fillPage(StageContentVO vo, ObjectRef ref, ChunkContentFilterDTO filter,
                                 int pageNo, int pageSize, WbChunkSetDbService chunkSetDbService,
                                 WbChunkDbService chunkDbService) {
         WbChunkSet chunkSet = chunkSetDbService.getByArtifactId(ref.objectKey());
@@ -56,8 +59,8 @@ public final class ChunkStageContentSupport {
     }
 
     /** 切片条目：对齐键取切片 ID（与详情侧的片同键，两侧互相定位） */
-    private static StageContentItemVO chunkItemOf(WbChunk chunk) {
-        StageContentItemVO item = StageContentItemSupport.itemOf(0, chunk.getContentType(), null,
+    private StageContentItemVO chunkItemOf(WbChunk chunk) {
+        StageContentItemVO item = knowledgeConverter.itemOf(0, chunk.getContentType(), null,
                 chunk.getContent(), chunkExtra(chunk));
         item.setSeq(ObjectUtil.defaultIfNull(chunk.getOrderNo(), 0));
         item.setAlignKey(StrUtil.blankToDefault(chunk.getChunkId(), String.valueOf(item.getSeq())));
@@ -65,7 +68,7 @@ public final class ChunkStageContentSupport {
     }
 
     /** 切片环节专属字段（来源元素个数与兜底原因只在切片产物里，不进这里） */
-    private static StageContentExtraVO chunkExtra(WbChunk chunk) {
+    private StageContentExtraVO chunkExtra(WbChunk chunk) {
         StageContentExtraVO extra = new StageContentExtraVO();
         extra.setChunkId(chunk.getChunkId());
         extra.setContentType(chunk.getContentType());

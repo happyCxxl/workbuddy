@@ -65,7 +65,8 @@ class ModelServiceImplTest {
         vendors.put("self-ocr", vendor(null));
         vendors.get("dashscope").setDisplayName("阿里百炼");
         vendorProperties.setVendors(vendors);
-        service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher);
+        service = new ModelServiceImpl(kbModelDbService
+                , new com.workbuddy.common.convert.SystemConverterImpl(), vendorProperties, auditEventPublisher);
     }
 
     /**

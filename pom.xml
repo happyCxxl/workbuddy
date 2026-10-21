@@ -275,6 +275,10 @@
           <failOnViolation>true</failOnViolation>
           <!-- 测试代码同样是源码：风格门禁与主源码同一口径（JAVA-META-003） -->
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <!-- 注解处理器生成的实现类不是手写源码：只扫 src 下的源根，避免生成代码的行长/导入规则误报 -->
+          <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+          </sourceDirectories>
         </configuration>
         <executions>
           <execution>
@@ -301,6 +305,8 @@
             allowed here"）。
           -->
           <minimumTokens>45</minimumTokens>
+        <!-- 注解块是声明式配置：映射器的 @Mapping 清单不计入重复率 -->
+        <ignoreAnnotations>true</ignoreAnnotations>
         </configuration>
         <executions>
           <execution>

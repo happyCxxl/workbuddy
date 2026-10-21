@@ -24,6 +24,7 @@ import com.workbuddy.common.enums.knowledge.AuditObjectType;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.knowledge.StrategyBindingSwitch;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,8 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
 
     private final KnowledgeBaseBindingSupport bindingSupport;
 
+    private final KnowledgeConverter knowledgeBaseConverter;
+
     /**
      * 新建知识库（默认启用状态），并写 CREATE 审计。
      *
@@ -73,9 +76,7 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(KnowledgeBaseCreateDTO dto) {
-        WbKnowledgeBase kb = new WbKnowledgeBase();
-        kb.setName(dto.getName());
-        kb.setDescription(dto.getDescription());
+        WbKnowledgeBase kb = knowledgeBaseConverter.toEntity(dto);
         kb.setStatus(KnowledgeBaseStatus.ACTIVE.getCode());
         kb.setStrategyBindingEnabled(resolveBindingEnabled(dto.getStrategyBindingEnabled()));
         kb.setUserId(accessSupport.requireCurrentUserId());

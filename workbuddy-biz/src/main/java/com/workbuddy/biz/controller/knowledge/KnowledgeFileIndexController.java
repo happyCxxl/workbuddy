@@ -1,7 +1,7 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.IndexSetService;
-import com.workbuddy.biz.service.support.assemble.BuildOrderAssembler;
+import com.workbuddy.biz.service.support.index.BuildOrderCommandFactory;
 import com.workbuddy.common.dto.request.index.BuildOrderDTO;
 import com.workbuddy.common.dto.response.index.IndexBuildTriggerVO;
 import com.workbuddy.common.dto.response.index.IndexComboVO;
@@ -34,7 +34,7 @@ public class KnowledgeFileIndexController {
 
     private final IndexSetService indexSetService;
 
-    private final BuildOrderAssembler buildOrderAssembler;
+    private final BuildOrderCommandFactory buildOrderCommandFactory;
 
     /**
      * 列出知识库的索引版本。
@@ -75,7 +75,7 @@ public class KnowledgeFileIndexController {
             @Valid @RequestBody BuildOrderDTO request) {
         log.info("===> KnowledgeFileIndexController build 触发索引构建, kbId={}, trigger={}",
                 id, request.getTrigger());
-        return R.ok(indexSetService.buildCandidate(buildOrderAssembler.toCommand(request, id)), "构建任务已入队");
+        return R.ok(indexSetService.buildCandidate(buildOrderCommandFactory.toCommand(request, id)), "构建任务已入队");
     }
 
     /**

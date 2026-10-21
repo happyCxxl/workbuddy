@@ -25,6 +25,11 @@ import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.filecenter.storage.FileStorage;
+import com.workbuddy.biz.service.support.stagecontent.ChunkStageContentSupport;
+import com.workbuddy.biz.service.support.stagecontent.EmbedStageContentSupport;
+import com.workbuddy.biz.service.support.stagecontent.ParseStageContentSupport;
+import com.workbuddy.biz.service.support.stagecontent.StructureStageContentSupport;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -92,7 +97,10 @@ class StageContentQueryOrchestrationTest {
         service = new StageContentQueryServiceImpl(pipelineProductDbService, chunkSetDbService, chunkDbService,
                 mock(WbEmbeddingSetDbService.class), mock(WbEmbeddingRecordDbService.class), fileStorage,
                 new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService),
-                accessGuard);
+                new StructureStageContentSupport(new KnowledgeConverterImpl())
+                        , new ParseStageContentSupport(new KnowledgeConverterImpl())
+                        , new EmbedStageContentSupport(new KnowledgeConverterImpl())
+                        , new ChunkStageContentSupport(new KnowledgeConverterImpl()), accessGuard);
     }
 
     /**
@@ -319,7 +327,11 @@ class StageContentQueryOrchestrationTest {
         FileResultAccessGuard accessGuard = new FileResultAccessGuard(fileResultDbService, knowledgeBaseDbService);
         StageContentQueryServiceImpl withMockedDetail = new StageContentQueryServiceImpl(pipelineProductDbService,
                 chunkSetDbService, chunkDbService, mock(WbEmbeddingSetDbService.class),
-                mock(WbEmbeddingRecordDbService.class), fileStorage, detailSupport, accessGuard);
+                mock(WbEmbeddingRecordDbService.class), fileStorage, detailSupport
+                        , new StructureStageContentSupport(new KnowledgeConverterImpl())
+                        , new ParseStageContentSupport(new KnowledgeConverterImpl())
+                        , new EmbedStageContentSupport(new KnowledgeConverterImpl())
+                        , new ChunkStageContentSupport(new KnowledgeConverterImpl()), accessGuard);
 
         withMockedDetail.stageContent(FILE_RESULT_ID, "PARSE", TASK_ID, null, null, null);
 

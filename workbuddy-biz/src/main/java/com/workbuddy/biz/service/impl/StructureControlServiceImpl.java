@@ -5,7 +5,7 @@ import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.stats.StatsSupport;
 import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
-import com.workbuddy.biz.service.support.assemble.StructureVoAssembler;
+import com.workbuddy.common.convert.KnowledgeConverter;
 import com.workbuddy.biz.service.support.common.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
@@ -45,7 +45,7 @@ public class StructureControlServiceImpl implements StructureControlService {
     private final TaskTriggerSupport triggerSupport;
     private final TaskDetailSupport detailSupport;
     private final FileStorage fileStorage;
-    private final StructureVoAssembler voAssembler;
+    private final KnowledgeConverter voConverter;
     private final FileResultAccessGuard accessGuard;
     private final UpstreamProductGate upstreamProductGate;
 
@@ -130,9 +130,9 @@ public class StructureControlServiceImpl implements StructureControlService {
                 return null;
             }
             vo.setSummary(StructureStatsSupport.summaryOf(document));
-            vo.setWarnings(voAssembler.toWarningTexts(document.getQuality()));
-            vo.setConflicts(voAssembler.toConflicts(document.getQuality()));
-            vo.setOutline(voAssembler.toOutline(document));
+            vo.setWarnings(voConverter.toWarningTexts(document.getQuality()));
+            vo.setConflicts(voConverter.toConflicts(document.getQuality()));
+            vo.setOutline(voConverter.toOutline(document));
             return document;
         } catch (Exception e) {
             KnowledgeException storageFailure = StatsSupport.storageFailureOf(e);

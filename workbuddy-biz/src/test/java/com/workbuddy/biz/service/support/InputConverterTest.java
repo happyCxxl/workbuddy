@@ -6,8 +6,8 @@ import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
-import com.workbuddy.biz.service.support.assemble.InputVoAssembler;
-import com.workbuddy.biz.service.support.assemble.InputVoAssemblerImpl;
+import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.KnowledgeConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -21,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * <p>守护 {@code toSubmitLogVO}/{@code toFileResultVO}/{@code toSubmitResponse} 的逐列搬运：
  * 提交记录与文件结果列表的每一列都直接决定页面显示，漏搬即空白。
  */
-class InputVoAssemblerTest {
+class InputConverterTest {
 
-    private final InputVoAssembler assembler = new InputVoAssemblerImpl();
+    private final KnowledgeConverter assembler = new KnowledgeConverterImpl();
 
     /**
      * 提交记录：实体列逐列映射到 VO。
