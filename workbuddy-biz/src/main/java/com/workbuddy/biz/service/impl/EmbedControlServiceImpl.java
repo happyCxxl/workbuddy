@@ -7,6 +7,7 @@ import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.support.assemble.EmbedVoAssembler;
+import com.workbuddy.biz.service.support.stats.EmbedStatsSupport;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.common.TaskDetailSupport;
@@ -127,7 +128,7 @@ public class EmbedControlServiceImpl implements EmbedControlService {
             WbEmbeddingSet embeddingSet = embeddingSetDbService.getByArtifactId(product.getArtifactId());
             if (NullUtil.isNotNull(embeddingSet)) {
                 List<WbEmbeddingRecord> records = embeddingRecordDbService.listByEmbeddingSetId(embeddingSet.getId());
-                vo.setSummary(voAssembler.toSummary(embeddingSet, records));
+                vo.setSummary(EmbedStatsSupport.summaryOf(embeddingSet, records));
                 vo.setRecords(voAssembler.toRecordItemVOs(records));
             }
             vo.setArtifactId(product.getArtifactId());

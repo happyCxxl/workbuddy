@@ -268,7 +268,7 @@ class IndexBuildCallbackTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(file);
         when(fixture.knowledgeBaseDbService.getById(1L)).thenReturn(kbOn());
         fixture.stubProductCombo(file, "preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
-        when(fixture.indexRowAssembler.assemble(eq(10L), anyString(), any(), any())).thenReturn(null);
+        when(fixture.indexRowSupport.assemble(eq(10L), anyString(), any(), any())).thenReturn(null);
         when(fixture.indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
         AtomicReference<WbIndexVersion> saved = new AtomicReference<>();
         when(fixture.indexVersionDbService.listByIndexSetId(5L)).thenAnswer(inv -> saved.get() == null
@@ -346,7 +346,7 @@ class IndexBuildCallbackTest {
         com.workbuddy.worker.indexing.IndexRow withoutVector = indexRow();
         withoutVector.setChunkId("chunk-2");
         withoutVector.setVector(null);
-        when(fixture.indexRowAssembler.assemble(eq(10L), anyString(), any(), any()))
+        when(fixture.indexRowSupport.assemble(eq(10L), anyString(), any(), any()))
                 .thenReturn(List.of(withVector, withoutVector));
         when(fixture.milvusIndexPort.listChunkIds("kb_1_v1", 10L)).thenReturn(List.of("chunk-1", "chunk-2"));
         when(fixture.indexComboService.resolveBoundCombo(1L)).thenReturn(comboAll());

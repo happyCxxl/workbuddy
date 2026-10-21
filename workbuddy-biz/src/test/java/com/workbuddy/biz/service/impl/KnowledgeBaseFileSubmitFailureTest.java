@@ -5,9 +5,7 @@ import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.db.WbSubmitLogDbService;
-import com.workbuddy.biz.service.support.assemble.InputVoAssembler;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseAccessSupport;
-import com.workbuddy.biz.service.support.assemble.TaskVoAssembler;
 import com.workbuddy.biz.testkit.TransactionTestSupport;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
@@ -26,6 +24,7 @@ import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileValidatorPort;
+import com.workbuddy.biz.service.support.assemble.InputVoAssemblerImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -74,7 +73,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
         fileStorage = mock(FileStorage.class);
         service = new KnowledgeBaseFileServiceImpl(submitLogDbService, kbFileResultDbService,
                 sourceFileDbService, pipelineTaskDbService, fileValidator, fileStorage, mock(StorageRouter.class),
-                TransactionTestSupport.template(), new InputVoAssembler(), new TaskVoAssembler(),
+                TransactionTestSupport.template(), new InputVoAssemblerImpl(),
                 new KnowledgeBaseAccessSupport(knowledgeBaseDbService));
         login(ME, UserRole.USER);
     }

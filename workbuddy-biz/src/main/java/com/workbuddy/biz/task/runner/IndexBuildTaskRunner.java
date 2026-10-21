@@ -9,7 +9,7 @@ import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.index.IndexComboReconciler;
-import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
+import com.workbuddy.biz.service.support.index.IndexRowSupport;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.entity.WbFileResult;
@@ -55,7 +55,7 @@ public class IndexBuildTaskRunner {
     private final MilvusIndexPort milvusIndexPort;
     private final IndexSetService indexSetService;
     private final IndexComboReconciler indexComboReconciler;
-    private final IndexRowAssembler indexRowAssembler;
+    private final IndexRowSupport indexRowSupport;
 
     /**
      * 执行单个索引构建任务（由消费循环提交，外层看门狗负责超时）。
@@ -188,7 +188,7 @@ public class IndexBuildTaskRunner {
                 continue;
             }
             WbFileResult file = fileResultDbService.getById(fileId);
-            List<IndexRow> rows = indexRowAssembler.assemble(fileId,
+            List<IndexRow> rows = indexRowSupport.assemble(fileId,
                     NullUtil.isNull(file) ? "" : StrUtil.blankToDefault(file.getOwner(), ""),
                     products.chunkRow(), products.embedRow());
             if (NullUtil.isNull(rows) || rows.isEmpty()) {

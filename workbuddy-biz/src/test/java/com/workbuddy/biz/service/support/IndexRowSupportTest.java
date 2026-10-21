@@ -9,7 +9,7 @@ import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.indexing.IndexRow;
-import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
+import com.workbuddy.biz.service.support.index.IndexRowSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,19 +32,19 @@ import static org.mockito.Mockito.when;
  * 产物存储为系统边界，用替身。
  */
 @ExtendWith(MockitoExtension.class)
-class IndexRowAssemblerTest {
+class IndexRowSupportTest {
 
     @Mock
     private FileStorage fileStorage;
 
-    private IndexRowAssembler assembler;
+    private IndexRowSupport assembler;
 
     /**
      * 每个用例重建装配器。
      */
     @BeforeEach
     void setUp() {
-        assembler = new IndexRowAssembler(fileStorage);
+        assembler = new IndexRowSupport(fileStorage);
     }
 
     /**

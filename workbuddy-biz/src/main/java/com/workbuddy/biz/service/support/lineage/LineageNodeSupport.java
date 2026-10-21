@@ -1,4 +1,4 @@
-package com.workbuddy.biz.service.support.assemble;
+package com.workbuddy.biz.service.support.lineage;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
@@ -10,8 +10,13 @@ import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
+import com.workbuddy.common.dto.response.chunk.ChunkStatsVO;
+import com.workbuddy.common.dto.response.embed.EmbedStatsVO;
 import com.workbuddy.common.dto.response.lineage.LineageNodeVO;
 import com.workbuddy.common.dto.response.lineage.LineageParseStatsVO;
+import com.workbuddy.common.dto.response.preprocess.PreprocessStatsVO;
+import com.workbuddy.common.dto.response.structure.StructureStatsVO;
+import com.workbuddy.common.dto.response.task.StageStatsVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
@@ -25,7 +30,6 @@ import com.workbuddy.biz.service.support.common.LineageCapabilitySupport;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,13 +41,13 @@ import java.util.Set;
  * 另读产物本体现算；step_log 聚合作为预处理环节的 matched/changed 口径。
  */
 @Slf4j
-public final class LineageNodeAssembler {
+public final class LineageNodeSupport {
 
     /** 有策略环节（strategySnapshot 为策略快照，节点展示 strategyVersion） */
     private static final Set<String> STRATEGY_STAGES = Set.of(
             PipelineStage.PREPROCESS.name(), PipelineStage.CHUNK.name(), PipelineStage.EMBED.name());
 
-    private LineageNodeAssembler() {
+    private LineageNodeSupport() {
     }
 
     /**
@@ -97,10 +101,11 @@ public final class LineageNodeAssembler {
         if (STRATEGY_STAGES.contains(task.getStage())) {
             node.setStrategyVersion(LineageCapabilitySupport.strategyVersion(task.getStrategySnapshot()));
         }
-        Map<String, Object> stats = new LinkedHashMap<>();
+        StageStatsVO stats;
         boolean structureStage = PipelineStage.STRUCTURE.name().equals(task.getStage());
         boolean preprocessStage = PipelineStage.PREPROCESS.name().equals(task.getStage());
         boolean chunkStage = PipelineStage.CHUNK.name().equals(task.getStage());
+        boolean embedStage = PipelineStage.EMBED.name().equals(task.getStage());
         if (NullUtil.isNotNull(product)) {
             node.setArtifactId(product.getArtifactId());
             node.setContentHash(product.getContentHash());
@@ -111,22 +116,21 @@ public final class LineageNodeAssembler {
             if (PipelineStage.PARSE.name().equals(task.getStage())) {
                 fillParseStats(node, task, artifacts.parseResults().get(task.getId()));
             }
-            fillStats(stats, task, product, artifacts, stepAgg);
         }
-        // 组装统计在通用统计之后落位：通用 map 只覆盖切片与向量化等环节，而组装统计由本环节独占，
-        // 放在它之前会被随后的空 map 覆盖掉。
+        // 环节统计由各环节的统计支持类直接产出具体 VO；库表聚合口径随环节并入同一个 VO
         if (structureStage) {
-            fillStructureStats(stats, node, task, artifacts.documents().get(task.getId()));
+            stats = fillStructureStats(node, task, artifacts.documents().get(task.getId()));
+        } else if (preprocessStage) {
+            stats = fillPreprocessStats(node, task, artifacts.views().get(task.getId()), product,
+                    stepAgg.get(task.getId()));
+        } else if (chunkStage) {
+            stats = fillChunkStats(node, task, artifacts, chunkStrategyParser, product);
+        } else if (embedStage) {
+            stats = fillEmbedStats(product, artifacts);
+        } else {
+            stats = new StageStatsVO();
         }
-        // 预处理统计在通用统计之后并入：通用 map 里的 matched/changed 由 step_log 聚合而来，必须保留
-        if (preprocessStage) {
-            fillPreprocessStats(stats, node, task, artifacts.views().get(task.getId()));
-        }
-        // 切片统计同样在通用统计之后并入：通用 map 里的 chunkCount 由集合表聚合而来，必须保留
-        if (chunkStage) {
-            fillChunkStats(stats, node, task, artifacts, chunkStrategyParser);
-        }
-        node.setStats(StageStatsAssembler.from(task.getStage(), stats));
+        node.setStats(stats);
         return node;
     }
 
@@ -137,50 +141,76 @@ public final class LineageNodeAssembler {
         node.setParseSummary(ParseStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
     }
 
-    /** 组装节点统计与摘要行一并回填：本环节统计整份替换本地 map，摘要走通用 stageSummary */
-    private static void fillStructureStats(Map<String, Object> stats, LineageNodeVO node, WbPipelineTask task,
-                                           UnifiedDocument document) {
-        Map<String, Object> structureStats =
+    /** 组装节点统计与摘要行一并回填：统计由组装统计支持类产出，摘要走通用 stageSummary */
+    private static StructureStatsVO fillStructureStats(LineageNodeVO node, WbPipelineTask task,
+                                                       UnifiedDocument document) {
+        StructureStatsVO stats =
                 StructureStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(), document);
-        node.setStageSummary(
-                StructureStatsSupport.summary(node.getErrorMsg(), structureStats, task.getStatus()));
-        if (NullUtil.isNotNull(structureStats)) {
-            stats.clear();
-            stats.putAll(structureStats);
-        }
+        node.setStageSummary(StructureStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
+        return NullUtil.isNull(stats) ? new StructureStatsVO() : stats;
     }
 
     /**
-     * 预处理节点统计与摘要行一并回填：统计并入本地 map（保留 step_log 聚合来的 matched/changed），
-     * 摘要走通用 stageSummary。
+     * 预处理节点统计与摘要行一并回填：产物统计由预处理支持类产出，matched/changed（step_log 聚合）
+     * 并入同一个 VO；摘要走通用 stageSummary。
      */
-    private static void fillPreprocessStats(Map<String, Object> stats, LineageNodeVO node, WbPipelineTask task,
-                                            PreprocessView view) {
-        Map<String, Object> preprocessStats =
+    private static PreprocessStatsVO fillPreprocessStats(LineageNodeVO node, WbPipelineTask task,
+                                                         PreprocessView view, WbPipelineProduct product,
+                                                         long[] stepAgg) {
+        PreprocessStatsVO stats =
                 PreprocessStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(), view);
-        node.setStageSummary(
-                PreprocessStatsSupport.summary(node.getErrorMsg(), preprocessStats, task.getStatus()));
-        if (NullUtil.isNotNull(preprocessStats)) {
-            stats.putAll(preprocessStats);
+        node.setStageSummary(PreprocessStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
+        PreprocessStatsVO result = NullUtil.isNull(stats) ? new PreprocessStatsVO() : stats;
+        // 库表聚合口径只对有产物的节点陈述（无产物时不编造 0 值）
+        if (NullUtil.isNotNull(product)) {
+            long[] agg = ObjectUtil.defaultIfNull(stepAgg, new long[] { 0, 0 });
+            result.setMatched(agg[0]);
+            result.setChanged(agg[1]);
         }
+        return result;
     }
 
     /**
-     * 切片节点统计与摘要行一并回填：统计并入本地 map（保留集合表聚合来的 chunkCount），
+     * 切片节点统计与摘要行一并回填：产物统计由切片支持类产出，集合表聚合的 chunkCount 在产物不可读时兜底；
      * 摘要走通用 stageSummary；片长上限与兜底参数取该次运行的策略快照。
      *
      * <p>快照缺失或损坏时策略取 null（不构造默认策略）：策略类口径整组留空，其余统计照常下发。
      */
-    private static void fillChunkStats(Map<String, Object> stats, LineageNodeVO node, WbPipelineTask task,
-                                       LineageArtifactReader.NodeArtifacts artifacts,
-                                       ChunkStrategyParser chunkStrategyParser) {
-        Map<String, Object> chunkStats = ChunkStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(),
+    private static ChunkStatsVO fillChunkStats(LineageNodeVO node, WbPipelineTask task,
+                                               LineageArtifactReader.NodeArtifacts artifacts,
+                                               ChunkStrategyParser chunkStrategyParser,
+                                               WbPipelineProduct product) {
+        ChunkStatsVO stats = ChunkStatsSupport.stats(task.getStartedAt(), task.getFinishedAt(),
                 artifacts.chunkSets().get(task.getId()), chunkStrategyOf(task, chunkStrategyParser),
                 artifacts.upstreamViews().get(task.getId()));
-        node.setStageSummary(ChunkStatsSupport.summary(node.getErrorMsg(), chunkStats, task.getStatus()));
-        if (NullUtil.isNotNull(chunkStats)) {
-            stats.putAll(chunkStats);
+        node.setStageSummary(ChunkStatsSupport.summary(node.getErrorMsg(), stats, task.getStatus()));
+        if (NullUtil.isNotNull(stats)) {
+            return stats;
         }
+        ChunkStatsVO result = new ChunkStatsVO();
+        // 产物不可读时仍有集合表聚合的片数口径
+        if (NullUtil.isNotNull(product) && NullUtil.isNotNull(artifacts.chunkSetByArtifact())) {
+            WbChunkSet chunkSet = artifacts.chunkSetByArtifact().get(product.getArtifactId());
+            if (NullUtil.isNotNull(chunkSet)) {
+                result.setChunkCount(chunkSet.getChunkCount());
+            }
+        }
+        return result;
+    }
+
+    /** 向量化节点统计：记录数与缓存命中数取集合表聚合（本环节无产物级统计） */
+    private static EmbedStatsVO fillEmbedStats(WbPipelineProduct product,
+                                               LineageArtifactReader.NodeArtifacts artifacts) {
+        EmbedStatsVO stats = new EmbedStatsVO();
+        if (NullUtil.isNull(product) || NullUtil.isNull(artifacts.embedSetByArtifact())) {
+            return stats;
+        }
+        WbEmbeddingSet embedSet = artifacts.embedSetByArtifact().get(product.getArtifactId());
+        if (NullUtil.isNotNull(embedSet)) {
+            stats.setRecordCount(embedSet.getRecordCount());
+            stats.setCachedCount(embedSet.getCachedCount());
+        }
+        return stats;
     }
 
     /**
@@ -199,24 +229,4 @@ public final class LineageNodeAssembler {
         }
     }
 
-    /** 统计摘要：CHUNK/EMBED 按 artifactId 匹配集合表；PREPROCESS 用 step_log 聚合 */
-    private static void fillStats(Map<String, Object> stats, WbPipelineTask task, WbPipelineProduct product,
-                                  LineageArtifactReader.NodeArtifacts artifacts, Map<Long, long[]> stepAgg) {
-        if (PipelineStage.CHUNK.name().equals(task.getStage())) {
-            WbChunkSet chunkSet = artifacts.chunkSetByArtifact().get(product.getArtifactId());
-            if (NullUtil.isNotNull(chunkSet)) {
-                stats.put("chunkCount", chunkSet.getChunkCount());
-            }
-        } else if (PipelineStage.EMBED.name().equals(task.getStage())) {
-            WbEmbeddingSet embedSet = artifacts.embedSetByArtifact().get(product.getArtifactId());
-            if (NullUtil.isNotNull(embedSet)) {
-                stats.put("recordCount", embedSet.getRecordCount());
-                stats.put("cachedCount", embedSet.getCachedCount());
-            }
-        } else if (PipelineStage.PREPROCESS.name().equals(task.getStage())) {
-            long[] agg = stepAgg.getOrDefault(task.getId(), new long[] { 0, 0 });
-            stats.put("matched", agg[0]);
-            stats.put("changed", agg[1]);
-        }
-    }
 }

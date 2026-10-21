@@ -38,9 +38,9 @@
     },
     "05": {
       "status": "已复核",
-      "reviewed": "2026-10-20",
-      "baseline": "aad71107",
-      "note": "构建配置把测试源码纳入 Checkstyle；模块结构未变"
+      "reviewed": "2026-10-21",
+      "baseline": "1818e936",
+      "note": "biz 引入 MapStruct（mapstruct + 编译期处理器 + Lombok 桥接）；模块结构与依赖边未变"
     },
     "06": {
       "status": "已复核",
@@ -62,9 +62,9 @@
     },
     "09": {
       "status": "已复核",
-      "reviewed": "2026-10-20",
-      "baseline": "4f64e287",
-      "note": "助手包按关注点拆为 8 个子包；横切机制所在类与语义未变"
+      "reviewed": "2026-10-21",
+      "baseline": "1818e936",
+      "note": "映射改为编译期生成（无反射）、统计下沉 stats/；索引行与执行树装配移出 assemble/；新增对象映射与统计口径小节"
     }
   }
 }

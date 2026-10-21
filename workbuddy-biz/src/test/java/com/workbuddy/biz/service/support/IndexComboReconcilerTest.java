@@ -11,7 +11,7 @@ import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.worker.indexing.ComboSnapshot;
-import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
+import com.workbuddy.biz.service.support.index.IndexRowSupport;
 import com.workbuddy.biz.service.support.index.IndexComboReconciler;
 import com.workbuddy.biz.service.support.index.IndexLineageResolver;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,14 +55,14 @@ class IndexComboReconcilerTest {
     @Mock
     private IndexLineageResolver lineageResolver;
     @Mock
-    private IndexRowAssembler indexRowAssembler;
+    private IndexRowSupport indexRowSupport;
 
     private IndexComboReconciler reconciler;
 
     @BeforeEach
     void setUp() {
         reconciler = new IndexComboReconciler(fileResultDbService, chunkSetDbService,
-                embeddingSetDbService, lineageResolver, indexRowAssembler);
+                embeddingSetDbService, lineageResolver, indexRowSupport);
     }
 
     private WbChunkSet chunkRow(Long id, String strategy) {
@@ -216,7 +216,7 @@ class IndexComboReconcilerTest {
         record.setVector(List.of(1.0f, 2.0f));
         record.setInputText("投标保证金叁万元");
         artifact.setRecords(List.of(record));
-        when(indexRowAssembler.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed))).thenReturn(artifact);
+        when(indexRowSupport.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed))).thenReturn(artifact);
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
         combo.setFileScopeMode("LIST");
         combo.setFileResultIds(List.of(10L));
@@ -300,7 +300,7 @@ class IndexComboReconcilerTest {
                 .thenReturn(List.of(chunkRow(1L, "chunk-hybrid-v1")));
         when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(embed));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
-        when(indexRowAssembler.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed))).thenReturn(null);
+        when(indexRowSupport.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed))).thenReturn(null);
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
 
         IndexComboReconciler.ComboExpectation expectation = reconciler.computeExpected(1L, combo);
@@ -329,7 +329,7 @@ class IndexComboReconcilerTest {
         EmbeddingRecord skipped = record("chunk-4", "SKIPPED", List.of(), "跳过内容");
         EmbeddingSet artifact = new EmbeddingSet();
         artifact.setRecords(List.of(success, cached, failed, skipped));
-        when(indexRowAssembler.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed))).thenReturn(artifact);
+        when(indexRowSupport.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed))).thenReturn(artifact);
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
 
         IndexComboReconciler.ComboExpectation expectation = reconciler.computeExpected(1L, combo);
@@ -367,8 +367,8 @@ class IndexComboReconcilerTest {
         artifact10.setRecords(List.of(record("chunk-1", "SUCCESS", List.of(1.0f), "文本一")));
         EmbeddingSet artifact11 = new EmbeddingSet();
         artifact11.setRecords(List.of(record("chunk-2", "SUCCESS", List.of(2.0f), "文本二")));
-        when(indexRowAssembler.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed10))).thenReturn(artifact10);
-        when(indexRowAssembler.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed11))).thenReturn(artifact11);
+        when(indexRowSupport.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed10))).thenReturn(artifact10);
+        when(indexRowSupport.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed11))).thenReturn(artifact11);
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
 
         IndexComboReconciler.ComboExpectation expectation = reconciler.computeExpected(1L, combo);

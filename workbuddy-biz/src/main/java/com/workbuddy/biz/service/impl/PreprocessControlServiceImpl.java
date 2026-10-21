@@ -4,7 +4,6 @@ import com.workbuddy.biz.service.PreprocessControlService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.assemble.PreprocessVoAssembler;
-import com.workbuddy.biz.service.support.assemble.StageStatsAssembler;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.stats.StatsSupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
@@ -29,13 +28,13 @@ import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategyParser;
+import com.workbuddy.common.dto.response.preprocess.PreprocessStatsVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * 预处理控制面服务实现（手动逐环节）：
@@ -106,8 +105,8 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
             view = readView(product, vo);
         }
         // 统计与摘要读产物现算：与执行树预处理节点同一份口径，不落产物；产物读不到时不陈述结论
-        Map<String, Object> stageStats = PreprocessStatsSupport.stats(vo.getStartedAt(), vo.getFinishedAt(), view);
-        vo.setStageStats(StageStatsAssembler.fromPreprocess(stageStats));
+        PreprocessStatsVO stageStats = PreprocessStatsSupport.stats(vo.getStartedAt(), vo.getFinishedAt(), view);
+        vo.setStageStats(stageStats);
         vo.setStageSummary(PreprocessStatsSupport.summary(vo.getErrorMsg(), stageStats, vo.getStatus()));
         return vo;
     }
@@ -128,7 +127,7 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
                 log.debug("预处理视图产物反序列化为空, artifactId={}", product.getArtifactId());
                 return null;
             }
-            vo.setSummary(voAssembler.toSummary(view));
+            vo.setSummary(PreprocessStatsSupport.summaryOf(view));
             vo.setElements(voAssembler.toElementVOs(view));
             return view;
         } catch (Exception e) {

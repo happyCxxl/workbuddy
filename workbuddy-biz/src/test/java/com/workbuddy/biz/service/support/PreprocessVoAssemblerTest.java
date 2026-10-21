@@ -7,6 +7,8 @@ import com.workbuddy.common.domain.preprocess.ViewCell;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.biz.service.support.assemble.PreprocessVoAssembler;
+import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
+import com.workbuddy.biz.service.support.assemble.PreprocessVoAssemblerImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class PreprocessVoAssemblerTest {
 
-    private final PreprocessVoAssembler assembler = new PreprocessVoAssembler();
+    private final PreprocessVoAssembler assembler = new PreprocessVoAssemblerImpl();
 
     private ViewElement element(String id, String status, String display, String normalized) {
         ViewElement element = new ViewElement();
@@ -44,7 +46,7 @@ class PreprocessVoAssemblerTest {
         view.getElements().add(element("e-3", ViewElementStatus.EXCLUDED_HEADER.name(), "展示3", "检索3"));
         view.getElements().add(element("e-4", ViewElementStatus.REPEATED.name(), "展示4", null));
 
-        var summary = assembler.toSummary(view);
+        var summary = PreprocessStatsSupport.summaryOf(view);
 
         assertEquals(4, summary.getElementCount());
         assertEquals(2, summary.getChangedCount());
@@ -67,7 +69,7 @@ class PreprocessVoAssemblerTest {
         view.getElements().add(element("e-4", ViewElementStatus.EXCLUDED_NOISE.name(), "展示4", null));
         view.getElements().add(element("e-5", ViewElementStatus.NOISE.name(), "展示5", "检索5"));
 
-        var summary = assembler.toSummary(view);
+        var summary = PreprocessStatsSupport.summaryOf(view);
 
         // 标记档的重复份只计「仅标记」，不进「重复」与「不进切片」口径
         assertEquals(5, summary.getElementCount());

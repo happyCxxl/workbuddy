@@ -6,7 +6,7 @@ import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.index.IndexComboReconciler;
-import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
+import com.workbuddy.biz.service.support.index.IndexRowSupport;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.entity.WbFileResult;
@@ -76,7 +76,7 @@ class IndexBuildTaskRunnerTest {
     @Mock
     private IndexComboReconciler indexComboReconciler;
     @Mock
-    private IndexRowAssembler indexRowAssembler;
+    private IndexRowSupport indexRowSupport;
 
     private IndexBuildTaskRunner runner;
 
@@ -84,7 +84,7 @@ class IndexBuildTaskRunnerTest {
     void setUp() {
         runner = new IndexBuildTaskRunner(pipelineTaskDbService, indexVersionDbService,
                 knowledgeBaseDbService, fileResultDbService, milvusIndexPort, indexSetService,
-                indexComboReconciler, indexRowAssembler);
+                indexComboReconciler, indexRowSupport);
     }
 
     private ComboSnapshot comboAll() {
@@ -148,7 +148,7 @@ class IndexBuildTaskRunnerTest {
         when(fileResultDbService.getById(10L)).thenReturn(file);
         IndexRow row = new IndexRow();
         row.setChunkId("chunk-1");
-        when(indexRowAssembler.assemble(eq(10L), eq("userA"), eq(chunkRow), eq(embedRow)))
+        when(indexRowSupport.assemble(eq(10L), eq("userA"), eq(chunkRow), eq(embedRow)))
                 .thenReturn(List.of(row));
     }
 

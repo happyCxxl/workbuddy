@@ -1,4 +1,4 @@
-package com.workbuddy.biz.service.support.assemble;
+package com.workbuddy.biz.service.support.index;
 
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
@@ -28,7 +28,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class IndexRowAssembler {
+public class IndexRowSupport {
 
     private final FileStorage fileStorage;
 
@@ -44,7 +44,7 @@ public class IndexRowAssembler {
     public List<IndexRow> assemble(Long fileResultId, String owner, WbChunkSet chunkRow, WbEmbeddingSet embedRow) {
         EmbeddingSet embedSet = readEmbeddingSet(ObjectRef.ofEmbeddingSet(embedRow));
         if (NullUtil.isNull(embedSet) || NullUtil.isNull(embedSet.getRecords())) {
-            log.warn("===> IndexRowAssembler 向量产物缺失或记录为空, artifactId={}", embedRow.getArtifactId());
+            log.warn("===> IndexRowSupport 向量产物缺失或记录为空, artifactId={}", embedRow.getArtifactId());
             return null;
         }
         Map<String, Chunk> chunkById = readChunkIndex(ObjectRef.ofChunkSet(chunkRow));

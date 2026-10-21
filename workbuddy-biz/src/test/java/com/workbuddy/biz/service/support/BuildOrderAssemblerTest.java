@@ -6,6 +6,7 @@ import com.workbuddy.common.enums.index.IndexShape;
 import com.workbuddy.worker.indexing.BuildOrder;
 import com.workbuddy.worker.indexing.ComboSnapshot;
 import com.workbuddy.biz.service.support.assemble.BuildOrderAssembler;
+import com.workbuddy.biz.service.support.assemble.BuildOrderAssemblerImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -25,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class BuildOrderAssemblerTest {
 
-    private final BuildOrderAssembler assembler = new BuildOrderAssembler();
+    private final BuildOrderAssembler assembler = new BuildOrderAssemblerImpl();
 
     /**
      * 请求为空返回 null。

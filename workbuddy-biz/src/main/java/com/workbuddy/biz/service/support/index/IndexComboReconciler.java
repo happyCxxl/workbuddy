@@ -13,7 +13,6 @@ import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.indexing.ComboSnapshot;
-import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -42,7 +41,7 @@ public class IndexComboReconciler {
     private final WbChunkSetDbService chunkSetDbService;
     private final WbEmbeddingSetDbService embeddingSetDbService;
     private final IndexLineageResolver lineageResolver;
-    private final IndexRowAssembler indexRowAssembler;
+    private final IndexRowSupport indexRowSupport;
 
     /**
      * 对账期望（实时）。
@@ -224,7 +223,7 @@ public class IndexComboReconciler {
                 return new ComboExpectation(Set.of(), 0, 0, false, products.gap(), true, null, null, null);
             }
             dims.add(ObjectUtil.defaultIfNull(products.embedRow().getDimension(), 0));
-            EmbeddingSet embedSet = indexRowAssembler.readEmbeddingSet(ObjectRef.ofEmbeddingSet(products.embedRow()));
+            EmbeddingSet embedSet = indexRowSupport.readEmbeddingSet(ObjectRef.ofEmbeddingSet(products.embedRow()));
             if (NullUtil.isNull(embedSet) || NullUtil.isNull(embedSet.getRecords())) {
                 return new ComboExpectation(Set.of(), 0, 0, false,
                         "文件 " + fileId + " 向量产物读取失败", true, null, null, null);

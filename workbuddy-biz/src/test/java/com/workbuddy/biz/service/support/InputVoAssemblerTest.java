@@ -7,6 +7,7 @@ import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 import com.workbuddy.biz.service.support.assemble.InputVoAssembler;
+import com.workbuddy.biz.service.support.assemble.InputVoAssemblerImpl;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 class InputVoAssemblerTest {
 
-    private final InputVoAssembler assembler = new InputVoAssembler();
+    private final InputVoAssembler assembler = new InputVoAssemblerImpl();
 
     /**
      * 提交记录：实体列逐列映射到 VO。

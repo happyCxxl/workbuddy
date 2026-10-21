@@ -4,10 +4,14 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
+import com.workbuddy.common.domain.entity.WbChunk;
+import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.domain.rules.PreprocessViewRules;
 import com.workbuddy.common.domain.storage.ObjectRef;
+import com.workbuddy.common.dto.response.chunk.ChunkStatsVO;
+import com.workbuddy.common.dto.response.chunk.ChunkSummaryVO;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.enums.chunk.ChunkRoute;
 import com.workbuddy.common.enums.chunk.PipelineKey;
@@ -28,81 +32,9 @@ import java.util.Set;
  * 切片产物统计汇总：读切片集合产物 → 片数/类型分布/片长/兜底/父子/来源计数 → 摘要文案。
  *
  * <p>纯读取，不落库、不改产物；执行树的切片节点与切片详情共用同一份口径。
- * 键值含义见本类的 {@code KEY_*} 常量。
+ * 统计字段含义见 {@link ChunkStatsVO}。
  */
 public final class ChunkStatsSupport {
-
-    /** 切片总数（含父片；父片不产向量，片数会比检索条数多） */
-    public static final String KEY_CHUNK_COUNT = "chunkCount";
-
-    /** 父片数（contentType=SECTION） */
-    public static final String KEY_SECTION_COUNT = "sectionCount";
-
-    /** 正文片数 */
-    public static final String KEY_PARAGRAPH_COUNT = "paragraphCount";
-
-    /** 表格片数 */
-    public static final String KEY_TABLE_COUNT = "tableCount";
-
-    /** 图片片数 */
-    public static final String KEY_IMAGE_COUNT = "imageCount";
-
-    /** 兜底片数（超长降级切分） */
-    public static final String KEY_FALLBACK_COUNT = "fallbackCount";
-
-    /** 被挂子片的父片数（按子片的 parentChunkId 反查） */
-    public static final String KEY_PARENT_COUNT = "parentCount";
-
-    /** 孤儿片数（无父片、也无同节邻居） */
-    public static final String KEY_ORPHAN_COUNT = "orphanCount";
-
-    /** 总字符数（全部片 content 长度合计） */
-    public static final String KEY_TOTAL_CHARS = "totalChars";
-
-    /** 平均片长（四舍五入取整） */
-    public static final String KEY_AVG_CHARS = "avgChars";
-
-    /** 最长片（字符数） */
-    public static final String KEY_MAX_CHARS = "maxChars";
-
-    /** 超过目标片长上限（targetMaxLen）的片数 */
-    public static final String KEY_OVER_TARGET_MAX_COUNT = "overTargetMaxCount";
-
-    /** 超过软上限（softMaxLen）的片数：这些片只能靠兜底降级切开 */
-    public static final String KEY_OVER_SOFT_MAX_COUNT = "overSoftMaxCount";
-
-    /** 最小合并长度（流程层 minMergeLen，默认 300） */
-    public static final String KEY_MIN_MERGE_LEN = "minMergeLen";
-
-    /** 欠长片数（子片里短于 minMergeLen 的片：合并后仍偏短，多为合并尾巴） */
-    public static final String KEY_UNDER_MIN_MERGE_COUNT = "underMinMergeCount";
-
-    /** 进入切片的元素数（上游视图元素 − 跳过） */
-    public static final String KEY_ROUTED_ELEMENT_COUNT = "routedElementCount";
-
-    /** 跳过元素数（预处理剔除态与重复份，不进切片） */
-    public static final String KEY_SKIPPED_ELEMENT_COUNT = "skippedElementCount";
-
-    /** 来源元素多于 1 个的片数 */
-    public static final String KEY_MULTI_SOURCE_CHUNK_COUNT = "multiSourceChunkCount";
-
-    /** 平均来源元素数（四舍五入取整） */
-    public static final String KEY_AVG_SOURCE_ELEMENT_COUNT = "avgSourceElementCount";
-
-    /** 正文切片的目标片长上限（策略参数） */
-    public static final String KEY_TARGET_MAX_LEN = "targetMaxLen";
-
-    /** 正文切片的软上限（策略参数） */
-    public static final String KEY_SOFT_MAX_LEN = "softMaxLen";
-
-    /** 兜底切分的单片长度（策略参数） */
-    public static final String KEY_FALLBACK_LEN = "fallbackLen";
-
-    /** 兜底切分的重叠字符数（策略参数） */
-    public static final String KEY_FALLBACK_OVERLAP = "fallbackOverlap";
-
-    /** 本次运行耗时（毫秒） */
-    public static final String KEY_DURATION_MS = "durationMs";
 
     /** 正文路由的目标片长参数键 */
     private static final String PARAM_TARGET_MAX_LEN = "targetMaxLen";
@@ -131,7 +63,42 @@ public final class ChunkStatsSupport {
     }
 
     /**
-     * 切片集合 + 策略 + 上游视图 → 统计。键值含义见本类的 {@code KEY_*} 常量。
+     * 切片详情统计：总数/总字符/平均片长/父子片数/类型分布（父子口径与 {@link ChunkContentType} 一致）。
+     *
+     * @param chunkSet 切片集合行
+     * @param chunks   切片行列表
+     * @return 切片统计视图
+     */
+    public static ChunkSummaryVO summaryOf(WbChunkSet chunkSet, List<WbChunk> chunks) {
+        ChunkSummaryVO vo = new ChunkSummaryVO();
+        vo.setChunkCount(chunkSet.getChunkCount());
+        vo.setTotalChars(chunkSet.getTotalChars());
+        // 父片 = SECTION；子片 = parentChunkId 非空；无章节归属的孤儿子片两者皆非（不计入父子数）
+        int parentCount = 0;
+        int childCount = 0;
+        Map<String, Integer> typeCounts = new LinkedHashMap<>();
+        for (WbChunk chunk : ObjectUtil.defaultIfNull(chunks, List.<WbChunk>of())) {
+            if (ChunkContentType.SECTION.name().equals(chunk.getContentType())) {
+                parentCount++;
+            } else if (StrUtil.isNotBlank(chunk.getParentChunkId())) {
+                childCount++;
+            }
+            if (StrUtil.isNotBlank(chunk.getContentType())) {
+                typeCounts.merge(chunk.getContentType(), 1, Integer::sum);
+            }
+        }
+        vo.setParentChunkCount(parentCount);
+        vo.setChildChunkCount(childCount);
+        int chunkCount = ObjectUtil.defaultIfNull(chunkSet.getChunkCount(), 0);
+        vo.setAvgChars(chunkCount > 0 && NullUtil.isNotNull(chunkSet.getTotalChars())
+                ? (int) Math.round((double) chunkSet.getTotalChars() / chunkCount)
+                : 0);
+        vo.setTypeCounts(typeCounts);
+        return vo;
+    }
+
+    /**
+     * 切片集合 + 策略 + 上游视图 → 统计。
      *
      * @param startedAt    运行开始时间（提供耗时），可空
      * @param finishedAt   运行结束时间（提供耗时），可空
@@ -140,21 +107,21 @@ public final class ChunkStatsSupport {
      * @param upstreamView 上游预处理视图（提供"进入切片 / 跳过"元素数），可空
      * @return 统计；产物为空时返回 null（不陈述结论）
      */
-    public static Map<String, Object> stats(LocalDateTime startedAt, LocalDateTime finishedAt, ChunkSet chunkSet,
-                                            ChunkStrategy strategy, PreprocessView upstreamView) {
+    public static ChunkStatsVO stats(LocalDateTime startedAt, LocalDateTime finishedAt, ChunkSet chunkSet,
+                                     ChunkStrategy strategy, PreprocessView upstreamView) {
         if (NullUtil.isNull(chunkSet)) {
             return null;
         }
         List<Chunk> chunks = ObjectUtil.defaultIfNull(chunkSet.getChunks(), List.of());
-        Map<String, Object> stats = new LinkedHashMap<>();
-        stats.put(KEY_CHUNK_COUNT, chunks.size());
+        ChunkStatsVO stats = new ChunkStatsVO();
+        stats.setChunkCount(chunks.size());
         putTypeCounts(stats, chunks);
         putLengthStats(stats, chunks);
         putRoutingStats(stats, upstreamView);
         putStrategyParams(stats, chunks, strategy);
-        stats.put(KEY_MULTI_SOURCE_CHUNK_COUNT, countMultiSource(chunks));
-        stats.put(KEY_AVG_SOURCE_ELEMENT_COUNT, avgSourceCount(chunks));
-        stats.put(KEY_DURATION_MS, StatsSupport.durationMs(startedAt, finishedAt));
+        stats.setMultiSourceChunkCount(countMultiSource(chunks));
+        stats.setAvgSourceElementCount(avgSourceCount(chunks));
+        stats.setDurationMs(StatsSupport.durationMs(startedAt, finishedAt));
         return stats;
     }
 
@@ -167,32 +134,32 @@ public final class ChunkStatsSupport {
      * @param status   任务状态
      * @return 结论文案；统计缺失或无可陈述内容时返回 null
      */
-    public static String summary(String errorMsg, Map<String, Object> stats, String status) {
+    public static String summary(String errorMsg, ChunkStatsVO stats, String status) {
         return StatsSupport.summaryOf(errorMsg, status, "切片失败", () -> chunkSummaryBody(stats));
     }
 
     /** 集合统计陈述：统计缺失时不陈述结论；空集合与各异常形态逐条陈述 */
-    private static String chunkSummaryBody(Map<String, Object> stats) {
+    private static String chunkSummaryBody(ChunkStatsVO stats) {
         if (NullUtil.isNull(stats)) {
             return null;
         }
-        if (intOf(stats.get(KEY_CHUNK_COUNT)) == 0) {
+        if (n(stats.getChunkCount()) == 0) {
             return "没有产出任何切片（无可切内容）";
         }
         List<String> notes = new ArrayList<>();
-        int parents = intOf(stats.get(KEY_PARENT_COUNT));
+        int parents = n(stats.getParentCount());
         if (parents > 0) {
             notes.add("片数含 " + parents + " 条不产向量的父片");
         }
-        int fallback = intOf(stats.get(KEY_FALLBACK_COUNT));
+        int fallback = n(stats.getFallbackCount());
         if (fallback > 0) {
             notes.add(fallback + " 片走了兜底切分");
         }
-        int orphans = intOf(stats.get(KEY_ORPHAN_COUNT));
+        int orphans = n(stats.getOrphanCount());
         if (orphans > 0) {
             notes.add(orphans + " 片无同节邻居");
         }
-        int overSoft = intOf(stats.get(KEY_OVER_SOFT_MAX_COUNT));
+        int overSoft = n(stats.getOverSoftMaxCount());
         if (overSoft > 0) {
             notes.add(overSoft + " 片超过软上限");
         }
@@ -203,7 +170,7 @@ public final class ChunkStatsSupport {
     }
 
     /** 按内容类型计数（父片单列，其余按四路切片产物） */
-    private static void putTypeCounts(Map<String, Object> stats, List<Chunk> chunks) {
+    private static void putTypeCounts(ChunkStatsVO stats, List<Chunk> chunks) {
         int section = 0;
         int paragraph = 0;
         int table = 0;
@@ -221,37 +188,37 @@ public final class ChunkStatsSupport {
                 }
             }
         }
-        stats.put(KEY_SECTION_COUNT, section);
-        stats.put(KEY_PARAGRAPH_COUNT, paragraph);
-        stats.put(KEY_TABLE_COUNT, table);
-        stats.put(KEY_IMAGE_COUNT, image);
-        stats.put(KEY_FALLBACK_COUNT, fallback);
-        stats.put(KEY_PARENT_COUNT, countParents(chunks));
-        stats.put(KEY_ORPHAN_COUNT, countOrphans(chunks));
+        stats.setSectionCount(section);
+        stats.setParagraphCount(paragraph);
+        stats.setTableCount(table);
+        stats.setImageCount(image);
+        stats.setFallbackCount(fallback);
+        stats.setParentCount(countParents(chunks));
+        stats.setOrphanCount(countOrphans(chunks));
     }
 
     /** 片长统计：总量 / 均值 / 最长片 / 超目标上限与超软上限的片数 */
-    private static void putLengthStats(Map<String, Object> stats, List<Chunk> chunks) {
+    private static void putLengthStats(ChunkStatsVO stats, List<Chunk> chunks) {
         int totalChars = chunks.stream().mapToInt(Chunk::getCharCount).sum();
         int maxChars = chunks.stream().mapToInt(Chunk::getCharCount).max().orElse(0);
-        stats.put(KEY_TOTAL_CHARS, totalChars);
-        stats.put(KEY_AVG_CHARS, chunks.isEmpty() ? 0 : Math.round((float) totalChars / chunks.size()));
-        stats.put(KEY_MAX_CHARS, maxChars);
+        stats.setTotalChars(totalChars);
+        stats.setAvgChars(chunks.isEmpty() ? 0 : Math.round((float) totalChars / chunks.size()));
+        stats.setMaxChars(maxChars);
     }
 
     /** 进入切片 / 跳过元素数：口径取上游视图（跳过 = 预处理剔除态与重复份） */
-    private static void putRoutingStats(Map<String, Object> stats, PreprocessView upstreamView) {
+    private static void putRoutingStats(ChunkStatsVO stats, PreprocessView upstreamView) {
         if (NullUtil.isNull(upstreamView)) {
             return;
         }
         List<ViewElement> elements = ObjectUtil.defaultIfNull(upstreamView.getElements(), List.of());
         int skipped = PreprocessStatsSupport.countStatuses(elements, PreprocessViewRules.CHUNK_SKIP_STATUSES);
-        stats.put(KEY_SKIPPED_ELEMENT_COUNT, skipped);
-        stats.put(KEY_ROUTED_ELEMENT_COUNT, elements.size() - skipped);
+        stats.setSkippedElementCount(skipped);
+        stats.setRoutedElementCount(elements.size() - skipped);
     }
 
     /** 策略参数（片长上限与兜底切分参数）：策略不可解析时不下发这几个口径 */
-    private static void putStrategyParams(Map<String, Object> stats, List<Chunk> chunks, ChunkStrategy strategy) {
+    private static void putStrategyParams(ChunkStatsVO stats, List<Chunk> chunks, ChunkStrategy strategy) {
         if (NullUtil.isNull(strategy)) {
             return;
         }
@@ -259,20 +226,20 @@ public final class ChunkStatsSupport {
         if (NullUtil.isNotNull(body)) {
             int targetMaxLen = body.intParam(PARAM_TARGET_MAX_LEN, 0);
             int softMaxLen = body.intParam(PARAM_SOFT_MAX_LEN, 0);
-            stats.put(KEY_TARGET_MAX_LEN, targetMaxLen);
-            stats.put(KEY_SOFT_MAX_LEN, softMaxLen);
-            stats.put(KEY_OVER_TARGET_MAX_COUNT, countOver(chunks, targetMaxLen));
-            stats.put(KEY_OVER_SOFT_MAX_COUNT, countOver(chunks, softMaxLen));
+            stats.setTargetMaxLen(targetMaxLen);
+            stats.setSoftMaxLen(softMaxLen);
+            stats.setOverTargetMaxCount(countOver(chunks, targetMaxLen));
+            stats.setOverSoftMaxCount(countOver(chunks, softMaxLen));
         }
         ChunkRouteConfig fallback = strategy.route(ChunkRoute.FALLBACK);
         if (NullUtil.isNotNull(fallback)) {
-            stats.put(KEY_FALLBACK_LEN, fallback.intParam(PARAM_FALLBACK_LEN, 0));
-            stats.put(KEY_FALLBACK_OVERLAP, fallback.intParam(PARAM_FALLBACK_OVERLAP, 0));
+            stats.setFallbackLen(fallback.intParam(PARAM_FALLBACK_LEN, 0));
+            stats.setFallbackOverlap(fallback.intParam(PARAM_FALLBACK_OVERLAP, 0));
         }
         int minMergeLen = strategy.pipelineInt(PipelineKey.MIN_MERGE_LEN, 0);
         if (minMergeLen > 0) {
-            stats.put(KEY_MIN_MERGE_LEN, minMergeLen);
-            stats.put(KEY_UNDER_MIN_MERGE_COUNT, countUnder(chunks, minMergeLen));
+            stats.setMinMergeLen(minMergeLen);
+            stats.setUnderMinMergeCount(countUnder(chunks, minMergeLen));
         }
     }
 
@@ -341,7 +308,8 @@ public final class ChunkStatsSupport {
         return Math.round((float) total / chunks.size());
     }
 
-    private static int intOf(Object value) {
-        return value instanceof Number number ? number.intValue() : 0;
+    /** 计数取整：null 记 0（摘要文案里"没有/多少片"按 0 陈述） */
+    private static int n(Integer value) {
+        return value == null ? 0 : value;
     }
 }

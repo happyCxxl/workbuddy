@@ -10,6 +10,8 @@ import com.workbuddy.common.enums.parse.QualityWarningCode;
 import com.workbuddy.common.enums.structure.RelationType;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.biz.service.support.assemble.StructureVoAssembler;
+import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
+import com.workbuddy.biz.service.support.assemble.StructureVoAssemblerImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -23,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class StructureVoAssemblerTest {
 
-    private final StructureVoAssembler assembler = new StructureVoAssembler();
+    private final StructureVoAssembler assembler = new StructureVoAssemblerImpl();
 
     private UnifiedElement element(String id, String type) {
         UnifiedElement element = new UnifiedElement();
@@ -51,7 +53,7 @@ class StructureVoAssemblerTest {
         quality.getWarnings().add(QualityWarning.of(QualityWarningCode.NOISE_PAGE, null, "WARN", "告警"));
         document.setQuality(quality);
 
-        var summary = assembler.toSummary(document);
+        var summary = StructureStatsSupport.summaryOf(document);
 
         assertEquals(4, summary.getElementCount());
         assertEquals(1, summary.getTitleCount());

@@ -10,7 +10,6 @@ import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
-import com.workbuddy.biz.service.support.assemble.PreprocessVoAssembler;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.common.TaskDetailSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
@@ -31,6 +30,7 @@ import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategyParser;
+import com.workbuddy.biz.service.support.assemble.PreprocessVoAssemblerImpl;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -77,7 +77,7 @@ final class PreprocessControlTestFixture {
                 new TaskTriggerSupport(pipelineTaskDbService, chainStorage, taskQueue),
                 new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService), fileStorage,
                 new PreprocessStrategyParser(new PreprocessProperties()),
-                new PreprocessVoAssembler(), accessGuard, new UpstreamProductGate(pipelineTaskDbService));
+                new PreprocessVoAssemblerImpl(), accessGuard, new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
         lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
                 .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));

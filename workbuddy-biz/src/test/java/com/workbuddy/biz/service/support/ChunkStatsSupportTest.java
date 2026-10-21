@@ -2,6 +2,7 @@ package com.workbuddy.biz.service.support;
 
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
+import com.workbuddy.common.dto.response.chunk.ChunkStatsVO;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
@@ -17,10 +18,8 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -57,33 +56,33 @@ class ChunkStatsSupportTest {
                 chunk("chunk-0005", ChunkContentType.FALLBACK, 10, null, List.of("e1", "e2", "e3")),
                 chunk("chunk-0006", ChunkContentType.SECTION, 5, null, List.of()));
 
-        Map<String, Object> stats = ChunkStatsSupport.stats(null, null, chunkSet, strategy(), null);
+        ChunkStatsVO stats = ChunkStatsSupport.stats(null, null, chunkSet, strategy(), null);
 
-        assertEquals(6, stats.get(ChunkStatsSupport.KEY_CHUNK_COUNT));
-        assertEquals(2, stats.get(ChunkStatsSupport.KEY_SECTION_COUNT));
-        assertEquals(1, stats.get(ChunkStatsSupport.KEY_PARAGRAPH_COUNT));
-        assertEquals(1, stats.get(ChunkStatsSupport.KEY_TABLE_COUNT));
-        assertEquals(1, stats.get(ChunkStatsSupport.KEY_IMAGE_COUNT));
-        assertEquals(1, stats.get(ChunkStatsSupport.KEY_FALLBACK_COUNT));
-        assertEquals(1, stats.get(ChunkStatsSupport.KEY_PARENT_COUNT));
+        assertEquals(6, stats.getChunkCount());
+        assertEquals(2, stats.getSectionCount());
+        assertEquals(1, stats.getParagraphCount());
+        assertEquals(1, stats.getTableCount());
+        assertEquals(1, stats.getImageCount());
+        assertEquals(1, stats.getFallbackCount());
+        assertEquals(1, stats.getParentCount());
         // 孤儿 = 无父片且自身不是父片：表格 / 图片 / 兜底 三片
-        assertEquals(3, stats.get(ChunkStatsSupport.KEY_ORPHAN_COUNT));
-        assertEquals(945, stats.get(ChunkStatsSupport.KEY_TOTAL_CHARS));
-        assertEquals(158, stats.get(ChunkStatsSupport.KEY_AVG_CHARS));
-        assertEquals(500, stats.get(ChunkStatsSupport.KEY_MAX_CHARS));
+        assertEquals(3, stats.getOrphanCount());
+        assertEquals(945, stats.getTotalChars());
+        assertEquals(158, stats.getAvgChars());
+        assertEquals(500, stats.getMaxChars());
         // 目标上限 100：正好 100 的片不算超；软上限 200：500 与 300 超
-        assertEquals(100, stats.get(ChunkStatsSupport.KEY_TARGET_MAX_LEN));
-        assertEquals(200, stats.get(ChunkStatsSupport.KEY_SOFT_MAX_LEN));
-        assertEquals(2, stats.get(ChunkStatsSupport.KEY_OVER_TARGET_MAX_COUNT));
-        assertEquals(2, stats.get(ChunkStatsSupport.KEY_OVER_SOFT_MAX_COUNT));
+        assertEquals(100, stats.getTargetMaxLen());
+        assertEquals(200, stats.getSoftMaxLen());
+        assertEquals(2, stats.getOverTargetMaxCount());
+        assertEquals(2, stats.getOverSoftMaxCount());
         // 欠长 30：正好 30 的片不算欠；父片（SECTION）不参与欠长统计
-        assertEquals(30, stats.get(ChunkStatsSupport.KEY_MIN_MERGE_LEN));
-        assertEquals(1, stats.get(ChunkStatsSupport.KEY_UNDER_MIN_MERGE_COUNT));
-        assertEquals(50, stats.get(ChunkStatsSupport.KEY_FALLBACK_LEN));
-        assertEquals(5, stats.get(ChunkStatsSupport.KEY_FALLBACK_OVERLAP));
+        assertEquals(30, stats.getMinMergeLen());
+        assertEquals(1, stats.getUnderMinMergeCount());
+        assertEquals(50, stats.getFallbackLen());
+        assertEquals(5, stats.getFallbackOverlap());
         // 来源元素：多来源 2 片（2 个与 3 个来源），平均 (1+2+0+1+3+0)/6 ≈ 1.17 → 1
-        assertEquals(2, stats.get(ChunkStatsSupport.KEY_MULTI_SOURCE_CHUNK_COUNT));
-        assertEquals(1, stats.get(ChunkStatsSupport.KEY_AVG_SOURCE_ELEMENT_COUNT));
+        assertEquals(2, stats.getMultiSourceChunkCount());
+        assertEquals(1, stats.getAvgSourceElementCount());
     }
 
     /**
@@ -101,11 +100,11 @@ class ChunkStatsSupportTest {
         LocalDateTime started = LocalDateTime.of(2024, 5, 1, 10, 0, 0);
         LocalDateTime finished = started.plusSeconds(2);
 
-        Map<String, Object> stats = ChunkStatsSupport.stats(started, finished, chunkSet, strategy(), view);
+        ChunkStatsVO stats = ChunkStatsSupport.stats(started, finished, chunkSet, strategy(), view);
 
-        assertEquals(2, stats.get(ChunkStatsSupport.KEY_SKIPPED_ELEMENT_COUNT));
-        assertEquals(2, stats.get(ChunkStatsSupport.KEY_ROUTED_ELEMENT_COUNT));
-        assertEquals(2000L, stats.get(ChunkStatsSupport.KEY_DURATION_MS));
+        assertEquals(2, stats.getSkippedElementCount());
+        assertEquals(2, stats.getRoutedElementCount());
+        assertEquals(2000L, stats.getDurationMs());
     }
 
     /**
@@ -115,18 +114,18 @@ class ChunkStatsSupportTest {
      */
     @Test
     void statsShouldOmitStrategyKeysWhenInputsMissing() {
-        Map<String, Object> stats = ChunkStatsSupport.stats(null, null, chunkSet(), null, null);
+        ChunkStatsVO stats = ChunkStatsSupport.stats(null, null, chunkSet(), null, null);
 
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_CHUNK_COUNT));
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_AVG_CHARS));
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_MAX_CHARS));
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_MULTI_SOURCE_CHUNK_COUNT));
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_AVG_SOURCE_ELEMENT_COUNT));
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_ORPHAN_COUNT));
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_PARENT_COUNT));
-        assertFalse(stats.containsKey(ChunkStatsSupport.KEY_TARGET_MAX_LEN));
-        assertFalse(stats.containsKey(ChunkStatsSupport.KEY_SKIPPED_ELEMENT_COUNT));
-        assertNull(stats.get(ChunkStatsSupport.KEY_DURATION_MS));
+        assertEquals(0, stats.getChunkCount());
+        assertEquals(0, stats.getAvgChars());
+        assertEquals(0, stats.getMaxChars());
+        assertEquals(0, stats.getMultiSourceChunkCount());
+        assertEquals(0, stats.getAvgSourceElementCount());
+        assertEquals(0, stats.getOrphanCount());
+        assertEquals(0, stats.getParentCount());
+        assertNull(stats.getTargetMaxLen());
+        assertNull(stats.getSkippedElementCount());
+        assertNull(stats.getDurationMs());
     }
 
     /**
@@ -140,10 +139,10 @@ class ChunkStatsSupportTest {
         strategy.getPipeline().put(PipelineKey.MIN_MERGE_LEN.key(), "0");
         ChunkSet chunkSet = chunkSet(chunk("chunk-0001", ChunkContentType.PARAGRAPH, 5, null, List.of()));
 
-        Map<String, Object> stats = ChunkStatsSupport.stats(null, null, chunkSet, strategy, null);
+        ChunkStatsVO stats = ChunkStatsSupport.stats(null, null, chunkSet, strategy, null);
 
-        assertFalse(stats.containsKey(ChunkStatsSupport.KEY_MIN_MERGE_LEN));
-        assertFalse(stats.containsKey(ChunkStatsSupport.KEY_UNDER_MIN_MERGE_COUNT));
+        assertNull(stats.getMinMergeLen());
+        assertNull(stats.getUnderMinMergeCount());
     }
 
     /**
@@ -156,23 +155,23 @@ class ChunkStatsSupportTest {
         assertNull(ChunkStatsSupport.summary(null, null, PipelineTaskStatus.SUCCESS.name()));
 
         assertEquals("没有产出任何切片（无可切内容）", ChunkStatsSupport.summary(null,
-                Map.of(ChunkStatsSupport.KEY_CHUNK_COUNT, 0), PipelineTaskStatus.SUCCESS.name()));
+                emptyStats(), PipelineTaskStatus.SUCCESS.name()));
 
-        Map<String, Object> normal = Map.of(
-                ChunkStatsSupport.KEY_CHUNK_COUNT, 3,
-                ChunkStatsSupport.KEY_PARENT_COUNT, 0,
-                ChunkStatsSupport.KEY_FALLBACK_COUNT, 0,
-                ChunkStatsSupport.KEY_ORPHAN_COUNT, 0,
-                ChunkStatsSupport.KEY_OVER_SOFT_MAX_COUNT, 0);
+        ChunkStatsVO normal = new ChunkStatsVO();
+        normal.setChunkCount(3);
+        normal.setParentCount(0);
+        normal.setFallbackCount(0);
+        normal.setOrphanCount(0);
+        normal.setOverSoftMaxCount(0);
         assertEquals("全部为正文 / 表格 / 图片片，未走兜底",
                 ChunkStatsSupport.summary(null, normal, PipelineTaskStatus.PARTIAL_SUCCESS.name()));
 
-        Map<String, Object> abnormal = Map.of(
-                ChunkStatsSupport.KEY_CHUNK_COUNT, 9,
-                ChunkStatsSupport.KEY_PARENT_COUNT, 2,
-                ChunkStatsSupport.KEY_FALLBACK_COUNT, 3,
-                ChunkStatsSupport.KEY_ORPHAN_COUNT, 1,
-                ChunkStatsSupport.KEY_OVER_SOFT_MAX_COUNT, 4);
+        ChunkStatsVO abnormal = new ChunkStatsVO();
+        abnormal.setChunkCount(9);
+        abnormal.setParentCount(2);
+        abnormal.setFallbackCount(3);
+        abnormal.setOrphanCount(1);
+        abnormal.setOverSoftMaxCount(4);
         String text = ChunkStatsSupport.summary(null, abnormal, PipelineTaskStatus.SUCCESS.name());
         assertTrue(text.contains("片数含 2 条不产向量的父片"), text);
         assertTrue(text.contains("3 片走了兜底切分"), text);
@@ -183,6 +182,13 @@ class ChunkStatsSupportTest {
         assertEquals("解析超时", ChunkStatsSupport.summary("解析超时", null, PipelineTaskStatus.FAILED.name()));
         assertEquals("切片失败", ChunkStatsSupport.summary(" ", null, PipelineTaskStatus.FAILED.name()));
         assertNull(ChunkStatsSupport.summary(null, normal, PipelineTaskStatus.RUNNING.name()));
+    }
+
+    /** 空统计（无任何计数，等价于「没有产出切片」） */
+    private static ChunkStatsVO emptyStats() {
+        ChunkStatsVO stats = new ChunkStatsVO();
+        stats.setChunkCount(0);
+        return stats;
     }
 
     /** 切片夹具 */
@@ -251,10 +257,10 @@ class ChunkStatsSupportTest {
                 chunk("chunk-0001", ChunkContentType.PARAGRAPH, 50, null, List.of("e1")),
                 chunk("chunk-0002", ChunkContentType.TABLE, 0, null, List.of("e1")));
 
-        Map<String, Object> stats = ChunkStatsSupport.stats(null, null, chunkSet, zero, null);
+        ChunkStatsVO stats = ChunkStatsSupport.stats(null, null, chunkSet, zero, null);
 
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_OVER_TARGET_MAX_COUNT));
-        assertEquals(0, stats.get(ChunkStatsSupport.KEY_OVER_SOFT_MAX_COUNT));
+        assertEquals(0, stats.getOverTargetMaxCount());
+        assertEquals(0, stats.getOverSoftMaxCount());
     }
 
     /**
@@ -271,9 +277,9 @@ class ChunkStatsSupportTest {
                 chunk("p-2", ChunkContentType.PARAGRAPH, 20, "s-1", List.of("e2")),
                 chunk("p-3", ChunkContentType.PARAGRAPH, 25, "s-2", List.of("e3")));
 
-        Map<String, Object> stats = ChunkStatsSupport.stats(null, null, chunkSet, strategy(), null);
+        ChunkStatsVO stats = ChunkStatsSupport.stats(null, null, chunkSet, strategy(), null);
 
         // 三个正文短片（10/20/25）都低于 minMergeLen=30；两个更短的父片不参与欠长统计
-        assertEquals(3, stats.get(ChunkStatsSupport.KEY_UNDER_MIN_MERGE_COUNT));
+        assertEquals(3, stats.getUnderMinMergeCount());
     }
 }

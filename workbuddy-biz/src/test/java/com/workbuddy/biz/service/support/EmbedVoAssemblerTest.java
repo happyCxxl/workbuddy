@@ -4,6 +4,8 @@ import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
 import com.workbuddy.biz.service.support.assemble.EmbedVoAssembler;
+import com.workbuddy.biz.service.support.stats.EmbedStatsSupport;
+import com.workbuddy.biz.service.support.assemble.EmbedVoAssemblerImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -16,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class EmbedVoAssemblerTest {
 
-    private final EmbedVoAssembler assembler = new EmbedVoAssembler();
+    private final EmbedVoAssembler assembler = new EmbedVoAssemblerImpl();
 
     private WbEmbeddingSet embeddingSet() {
         WbEmbeddingSet set = new WbEmbeddingSet();
@@ -56,7 +58,7 @@ class EmbedVoAssemblerTest {
                 record("emb-0004", "CACHED"),
                 record("emb-0005", "SKIPPED"));
 
-        var summary = assembler.toSummary(embeddingSet(), records);
+        var summary = EmbedStatsSupport.summaryOf(embeddingSet(), records);
 
         assertEquals("es-cs-1-embed-default-v1", summary.getEmbeddingSetId());
         assertEquals("embed-default-v1", summary.getStrategyVersion());
@@ -81,7 +83,7 @@ class EmbedVoAssemblerTest {
                 record("emb-0002", "FAILED"),
                 record("emb-0003", "SUCCESS"));
 
-        var summary = assembler.toSummary(embeddingSet(), records);
+        var summary = EmbedStatsSupport.summaryOf(embeddingSet(), records);
 
         assertEquals(2, summary.getFailedCount());
         assertEquals(1, summary.getSuccessCount());
@@ -93,7 +95,7 @@ class EmbedVoAssemblerTest {
      */
     @Test
     void summaryShouldIgnoreUnknownStatus() {
-        var summary = assembler.toSummary(embeddingSet(), List.of(record("emb-0001", "PENDING")));
+        var summary = EmbedStatsSupport.summaryOf(embeddingSet(), List.of(record("emb-0001", "PENDING")));
 
         assertEquals(0, summary.getSuccessCount());
         assertEquals(0, summary.getFailedCount());

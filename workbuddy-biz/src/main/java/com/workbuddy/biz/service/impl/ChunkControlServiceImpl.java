@@ -7,7 +7,6 @@ import com.workbuddy.biz.service.db.WbChunkSetDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
 import com.workbuddy.biz.service.support.assemble.ChunkVoAssembler;
-import com.workbuddy.biz.service.support.assemble.StageStatsAssembler;
 import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
@@ -35,6 +34,7 @@ import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
+import com.workbuddy.common.dto.response.chunk.ChunkStatsVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -116,15 +116,15 @@ public class ChunkControlServiceImpl implements ChunkControlService {
             WbChunkSet chunkSetRow = chunkSetDbService.getByArtifactId(product.getArtifactId());
             if (NullUtil.isNotNull(chunkSetRow)) {
                 List<WbChunk> chunks = chunkDbService.listByChunkSetId(chunkSetRow.getId());
-                vo.setSummary(voAssembler.toSummary(chunkSetRow, chunks));
+                vo.setSummary(ChunkStatsSupport.summaryOf(chunkSetRow, chunks));
                 vo.setChunks(voAssembler.toChunkItemVOs(chunks, productChunks(chunkSet)));
             }
             detailSupport.withProductRef(vo, product);
         }
         // 统计与摘要读产物现算：与执行树切片节点同一份口径，不落产物；产物读不到时不陈述结论
-        Map<String, Object> stageStats = ChunkStatsSupport.stats(vo.getStartedAt(), vo.getFinishedAt(), chunkSet,
+        ChunkStatsVO stageStats = ChunkStatsSupport.stats(vo.getStartedAt(), vo.getFinishedAt(), chunkSet,
                 strategyOf(task), readUpstreamView(task));
-        vo.setStageStats(StageStatsAssembler.fromChunk(stageStats));
+        vo.setStageStats(stageStats);
         vo.setStageSummary(ChunkStatsSupport.summary(vo.getErrorMsg(), stageStats, vo.getStatus()));
         return vo;
     }

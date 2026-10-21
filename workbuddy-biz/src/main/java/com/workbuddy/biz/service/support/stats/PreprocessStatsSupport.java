@@ -8,6 +8,8 @@ import com.workbuddy.common.domain.preprocess.TraceEntry;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.domain.rules.PreprocessViewRules;
 import com.workbuddy.common.domain.storage.ObjectRef;
+import com.workbuddy.common.dto.response.preprocess.PreprocessStatsVO;
+import com.workbuddy.common.dto.response.preprocess.PreprocessSummaryVO;
 import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -17,62 +19,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 /**
  * 预处理产物统计汇总：读派生视图产物 → 保留/剔除/仅标记/字段/改写计数与分布 → 摘要文案。
  *
  * <p>纯读取，不落库、不改产物；执行树的预处理节点与预处理详情共用同一份口径。
- * 键值含义见本类的 {@code KEY_*} 常量。
+ * 统计字段含义见 {@link PreprocessStatsVO}。
  */
 public final class PreprocessStatsSupport {
 
-    /** 视图元素总数 */
-    public static final String KEY_ELEMENT_COUNT = "elementCount";
-
-    /** 保留元素数（剔除态与重复份之外，全部进检索内容流） */
-    public static final String KEY_RETAINED_COUNT = "retainedCount";
-
-    /** 保留占比（百分比整数） */
-    public static final String KEY_RETENTION_PERCENT = "retentionPercent";
-
-    /** 剔除元素数（页眉/页脚/目录/噪声被剔除与冲突被裁决方；不含重复份） */
-    public static final String KEY_EXCLUDED_COUNT = "excludedCount";
-
-    /** 重复份元素数（剔除档；标记档的重复份计入仅标记） */
-    public static final String KEY_REPEATED_COUNT = "repeatedCount";
-
-    /** 不进切片的元素数（剔除态 + 重复份） */
-    public static final String KEY_CHUNK_SKIPPED_COUNT = "chunkSkippedCount";
-
-    /** 仅标记元素数（页眉/页脚/目录/噪声：仍进检索内容流） */
-    public static final String KEY_MARKED_COUNT = "markedCount";
-
-    /** 标准化字段总数（金额/日期/面积/证书号） */
-    public static final String KEY_FIELD_COUNT = "fieldCount";
-
-    /** 文本改写元素数（检索文本与展示文本不同的元素） */
-    public static final String KEY_CHANGED_COUNT = "changedCount";
-
-    /** 编码清理命中的元素数（文本改写的一档） */
-    public static final String KEY_ENCODING_COUNT = "encodingCount";
-
-    /** 文本整理命中的元素数（文本改写的一档） */
-    public static final String KEY_TIDY_COUNT = "tidyCount";
-
-    /** 按状态分布（状态名 → 元素数） */
-    public static final String KEY_STATUS_COUNTS = "statusCounts";
-
-    /** 按字段类型分布（字段类型名 → 字段数） */
-    public static final String KEY_FIELD_TYPE_COUNTS = "fieldTypeCounts";
-
-    /** 受影响元素所在的最小页（没有受影响元素时不下发该键） */
-    public static final String KEY_PAGE_FROM = "pageFrom";
-
-    /** 受影响元素所在的最大页（同上） */
-    public static final String KEY_PAGE_TO = "pageTo";
-
-    /** 本次运行耗时（毫秒） */
-    public static final String KEY_DURATION_MS = "durationMs";
 
     /** 仅标记状态：页眉页脚/目录/噪声/重复份被标注，内容仍在检索流里 */
     public static final List<String> MARKED_STATUSES = List.of(
@@ -104,15 +58,15 @@ public final class PreprocessStatsSupport {
     }
 
     /**
-     * 派生视图 → 统计。键值含义见本类的 {@code KEY_*} 常量。
+     * 派生视图 → 统计。
      *
      * @param startedAt  运行开始时间（提供耗时），可空
      * @param finishedAt 运行结束时间（提供耗时），可空
      * @param view       该次运行的派生视图，可空
      * @return 统计；产物为空时返回 null（不陈述结论）
      */
-    public static Map<String, Object> stats(LocalDateTime startedAt, LocalDateTime finishedAt,
-                                            PreprocessView view) {
+    public static PreprocessStatsVO stats(LocalDateTime startedAt, LocalDateTime finishedAt,
+                                          PreprocessView view) {
         if (NullUtil.isNull(view)) {
             return null;
         }
@@ -121,21 +75,21 @@ public final class PreprocessStatsSupport {
         int repeated = countStatuses(elements, List.of(ViewElementStatus.REPEATED.name()));
         int skipped = excluded + repeated;
 
-        Map<String, Object> stats = new LinkedHashMap<>();
-        stats.put(KEY_ELEMENT_COUNT, elements.size());
-        stats.put(KEY_RETAINED_COUNT, elements.size() - skipped);
-        stats.put(KEY_RETENTION_PERCENT, percent(elements.size() - skipped, elements.size()));
-        stats.put(KEY_EXCLUDED_COUNT, excluded);
-        stats.put(KEY_REPEATED_COUNT, repeated);
-        stats.put(KEY_CHUNK_SKIPPED_COUNT, skipped);
-        stats.put(KEY_MARKED_COUNT, countStatuses(elements, MARKED_STATUSES));
-        stats.put(KEY_FIELD_COUNT, countFields(elements));
-        stats.put(KEY_CHANGED_COUNT, countChanged(elements));
-        stats.put(KEY_ENCODING_COUNT, countByRulePrefix(elements, RULE_ENCODING_PREFIX));
-        stats.put(KEY_TIDY_COUNT, countByRulePrefix(elements, RULE_TIDY_PREFIX));
-        stats.put(KEY_STATUS_COUNTS, statusCounts(elements));
-        stats.put(KEY_FIELD_TYPE_COUNTS, fieldTypeCounts(elements));
-        stats.put(KEY_DURATION_MS, StatsSupport.durationMs(startedAt, finishedAt));
+        PreprocessStatsVO stats = new PreprocessStatsVO();
+        stats.setElementCount(elements.size());
+        stats.setRetainedCount(elements.size() - skipped);
+        stats.setRetentionPercent(percent(elements.size() - skipped, elements.size()));
+        stats.setExcludedCount(excluded);
+        stats.setRepeatedCount(repeated);
+        stats.setChunkSkippedCount(skipped);
+        stats.setMarkedCount(countStatuses(elements, MARKED_STATUSES));
+        stats.setFieldCount(countFields(elements));
+        stats.setChangedCount(countChanged(elements));
+        stats.setEncodingCount(countByRulePrefix(elements, RULE_ENCODING_PREFIX));
+        stats.setTidyCount(countByRulePrefix(elements, RULE_TIDY_PREFIX));
+        stats.setStatusCounts(statusCounts(elements));
+        stats.setFieldTypeCounts(fieldTypeCounts(elements));
+        stats.setDurationMs(StatsSupport.durationMs(startedAt, finishedAt));
         putAffectedRange(stats, elements);
         return stats;
     }
@@ -149,28 +103,28 @@ public final class PreprocessStatsSupport {
      * @param status   任务状态
      * @return 结论文案；统计缺失或无可陈述内容时返回 null
      */
-    public static String summary(String errorMsg, Map<String, Object> stats, String status) {
+    public static String summary(String errorMsg, PreprocessStatsVO stats, String status) {
         return StatsSupport.summaryOf(errorMsg, status, "预处理失败", () -> viewSummaryBody(stats));
     }
 
     /** 视图统计陈述：统计缺失时不陈述结论；空视图与各异常项逐条陈述 */
-    private static String viewSummaryBody(Map<String, Object> stats) {
+    private static String viewSummaryBody(PreprocessStatsVO stats) {
         if (NullUtil.isNull(stats)) {
             return null;
         }
-        if (intOf(stats.get(KEY_ELEMENT_COUNT)) == 0) {
+        if (n(stats.getElementCount()) == 0) {
             return "无任何可处理的元素（空视图）";
         }
         List<String> notes = new ArrayList<>();
-        int marked = intOf(stats.get(KEY_MARKED_COUNT));
+        int marked = n(stats.getMarkedCount());
         if (marked > 0) {
             notes.add(marked + " 项仅标记、仍在检索内容流");
         }
-        int excluded = intOf(stats.get(KEY_EXCLUDED_COUNT));
+        int excluded = n(stats.getExcludedCount());
         if (excluded > 0) {
             notes.add(excluded + " 项已剔除出检索内容流");
         }
-        int repeated = intOf(stats.get(KEY_REPEATED_COUNT));
+        int repeated = n(stats.getRepeatedCount());
         if (repeated > 0) {
             notes.add("重复份 " + repeated + " 已剔除");
         }
@@ -191,6 +145,40 @@ public final class PreprocessStatsSupport {
         return (int) elements.stream()
                 .filter(element -> statuses.contains(element.getStatus()))
                 .count();
+    }
+
+    /**
+     * 预处理详情统计（展示口径：检索文本与展示文本不同的元素数等；与步骤日志的规则改写计数口径不同）。
+     *
+     * @param view 预处理视图
+     * @return 统计视图
+     */
+    public static PreprocessSummaryVO summaryOf(PreprocessView view) {
+        List<ViewElement> elements = ObjectUtil.defaultIfNull(view.getElements(), List.<ViewElement>of());
+        int excludedCount = countStatuses(elements, PreprocessViewRules.EXCLUDED_STATUSES);
+        int repeatedCount = countStatuses(elements, List.of(ViewElementStatus.REPEATED.name()));
+        PreprocessSummaryVO summary = new PreprocessSummaryVO();
+        summary.setElementCount(elements.size());
+        summary.setChangedCount(countChanged(elements));
+        summary.setExcludedCount(excludedCount);
+        summary.setRepeatedCount(repeatedCount);
+        summary.setMarkedCount(countStatuses(elements, MARKED_STATUSES));
+        summary.setChunkSkippedCount(excludedCount + repeatedCount);
+        summary.setFieldCount(countFields(elements));
+        summary.setStatusCounts(statusCounts(elements));
+        return summary;
+    }
+
+    /**
+     * 对外展示的处理轨迹：只保留非 KEEP 条目（KEEP 表示未命中改写，前端差异化展示用不到）。
+     *
+     * @param element 视图元素
+     * @return 需要展示的轨迹条目（可能为空列表）
+     */
+    public static List<TraceEntry> visibleTrace(ViewElement element) {
+        return ObjectUtil.defaultIfNull(element.getPreprocessTrace(), List.<TraceEntry>of()).stream()
+                .filter(entry -> !TraceEntry.ACTION_KEEP.equals(entry.getAction()))
+                .toList();
     }
 
     /**
@@ -270,9 +258,9 @@ public final class PreprocessStatsSupport {
     /**
      * 受影响页范围：被处置（状态非 NORMAL）或文本有改写 / 提字段的元素所在页的始末页。
      *
-     * <p>一个都取不到时不下发这两个键（前端按"无页码范围"展示）。
+     * <p>一个都取不到时不下发这两个字段（前端按"无页码范围"展示）。
      */
-    private static void putAffectedRange(Map<String, Object> stats, List<ViewElement> elements) {
+    private static void putAffectedRange(PreprocessStatsVO stats, List<ViewElement> elements) {
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
         for (ViewElement element : elements) {
@@ -283,8 +271,8 @@ public final class PreprocessStatsSupport {
             max = Math.max(max, element.getPage());
         }
         if (min <= max) {
-            stats.put(KEY_PAGE_FROM, min);
-            stats.put(KEY_PAGE_TO, max);
+            stats.setPageFrom(min);
+            stats.setPageTo(max);
         }
     }
 
@@ -301,7 +289,8 @@ public final class PreprocessStatsSupport {
         return total <= 0 ? 0 : (int) Math.round(part * (double) PERCENT_BASE / total);
     }
 
-    private static int intOf(Object value) {
-        return value instanceof Number number ? number.intValue() : 0;
+    /** 计数取整：null 记 0（摘要文案里"多少项"按 0 陈述） */
+    private static int n(Integer value) {
+        return value == null ? 0 : value;
     }
 }

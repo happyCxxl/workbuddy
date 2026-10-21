@@ -1,6 +1,5 @@
 package com.workbuddy.biz.service.support.stagecontent;
 
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.preprocess.TraceEntry;
@@ -9,6 +8,7 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.utils.JsonUtil;
+import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.biz.service.support.artifact.StageArtifactReader;
@@ -63,7 +63,7 @@ public final class PreprocessStageContentSupport {
                 extra.setPage(element.getPage());
             }
             // 处理轨迹只对被处理过的元素下发（非 KEEP 条目），避免响应体膨胀
-            List<TraceEntry> trace = nonKeepTrace(element);
+            List<TraceEntry> trace = PreprocessStatsSupport.visibleTrace(element);
             if (!trace.isEmpty()) {
                 extra.setTrace(JsonUtil.toJsonStr(trace));
             }
@@ -71,12 +71,5 @@ public final class PreprocessStageContentSupport {
             items.add(item);
         }
         return items;
-    }
-
-    /** 处理轨迹里的非 KEEP 条目（KEEP = 未命中改写，下发没有意义） */
-    private static List<TraceEntry> nonKeepTrace(ViewElement element) {
-        return ObjectUtil.defaultIfNull(element.getPreprocessTrace(), List.<TraceEntry>of()).stream()
-                .filter(entry -> !TraceEntry.ACTION_KEEP.equals(entry.getAction()))
-                .toList();
     }
 }

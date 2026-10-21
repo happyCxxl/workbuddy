@@ -11,7 +11,6 @@ import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
-import com.workbuddy.biz.service.support.assemble.EmbedVoAssembler;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.common.TaskDetailSupport;
@@ -36,6 +35,7 @@ import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategy;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategyParser;
+import com.workbuddy.biz.service.support.assemble.EmbedVoAssemblerImpl;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -80,7 +80,7 @@ final class EmbedControlTestFixture {
         ChainStorageSupport chainStorage = new ChainStorageSupport(fileResultDbService, sourceFileDbService,
                 fileStorage, storageRouter);
         service = new EmbedControlServiceImpl(pipelineProductDbService, stepLogDbService,
-                embeddingSetDbService, embeddingRecordDbService, new EmbedVoAssembler(),
+                embeddingSetDbService, embeddingRecordDbService, new EmbedVoAssemblerImpl(),
                 new EmbedStrategyParser(new EmbedProperties()),
                 new ChunkStrategyParser(new ChunkProperties()),
                 new EmbedProperties(), new ChunkProperties(),

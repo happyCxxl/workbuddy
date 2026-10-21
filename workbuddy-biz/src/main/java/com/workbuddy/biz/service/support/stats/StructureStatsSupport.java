@@ -3,12 +3,17 @@ package com.workbuddy.biz.service.support.stats;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.Provenance;
+import com.workbuddy.common.domain.parse.QualityWarning;
 import com.workbuddy.common.domain.storage.ObjectRef;
+import com.workbuddy.common.domain.structure.ConflictRecord;
 import com.workbuddy.common.domain.structure.DocumentInfo;
+import com.workbuddy.common.domain.structure.DocumentQuality;
 import com.workbuddy.common.domain.structure.DocumentRelation;
 import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.domain.structure.UnifiedElement;
 import com.workbuddy.common.domain.structure.UnifiedPage;
+import com.workbuddy.common.dto.response.structure.StructureStatsVO;
+import com.workbuddy.common.dto.response.structure.StructureSummaryVO;
 import com.workbuddy.common.enums.structure.ElementMark;
 import com.workbuddy.common.enums.structure.PageMark;
 import com.workbuddy.common.enums.structure.RelationType;
@@ -18,77 +23,16 @@ import com.workbuddy.filecenter.storage.FileStorage;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 组装产物统计汇总：读统一文档产物 → 元素构成 / 层级分布 / 溯源覆盖率 → 摘要文案。
  *
  * <p>纯读取，不落库、不改产物、不进能力快照。执行树的组装节点与组装详情共用同一份口径。
+ * 统计字段含义见 {@link StructureStatsVO}。
  */
 public final class StructureStatsSupport {
 
-    /** 元素总数 */
-    public static final String KEY_ELEMENT_COUNT = "elementCount";
-
-    /** 标题元素数 */
-    public static final String KEY_TITLE_COUNT = "titleCount";
-
-    /** 章节层数 */
-    public static final String KEY_CHAPTER_COUNT = "chapterCount";
-
-    /** 一级标题数 */
-    public static final String KEY_LEVEL_1 = "level1Count";
-
-    /** 二级标题数 */
-    public static final String KEY_LEVEL_2 = "level2Count";
-
-    /** 三级及以下标题数 */
-    public static final String KEY_LEVEL_3_PLUS = "level3PlusCount";
-
-    /** 父子关系数（章节树） */
-    public static final String KEY_PARENT_CHILD_COUNT = "parentChildCount";
-
-    /** 疑似续表数 */
-    public static final String KEY_CONTINUATION_COUNT = "continuationCount";
-
-    /** 疑似续表数（放宽规则命中；关系 detail 标注"疑似"） */
-    public static final String KEY_SUSPECTED_CONTINUATION_COUNT = "suspectedContinuationCount";
-
-    /** 溯源齐备的元素数 */
-    public static final String KEY_TRACED_COUNT = "tracedCount";
-
-    /** 溯源覆盖率（百分比整数） */
-    public static final String KEY_PROVENANCE_COVERAGE = "provenanceCoverage";
-
-    /** 本次运行耗时（毫秒） */
-    public static final String KEY_DURATION_MS = "durationMs";
-
-    /** 无坐标元素数（阅读顺序靠"按坐标排 + 无坐标按原序追加"） */
-    /** 阅读顺序口径：产物里没有"是否重排"的标记，用"无坐标元素数"表达（跨页续表保留首页框，不再计入） */
-    public static final String KEY_WITHOUT_BBOX_COUNT = "withoutBboxCount";
-
-    /** 重复段数（元素 marks = REPEATED_SEGMENT） */
-    public static final String KEY_REPEATED_SEGMENT_COUNT = "repeatedSegmentCount";
-
-    /** 重复页数（页 marks = REPEATED_PAGE） */
-    public static final String KEY_REPEATED_PAGE_COUNT = "repeatedPageCount";
-
-    /** 噪声页数（页 marks = NOISE_PAGE） */
-    public static final String KEY_NOISE_PAGE_COUNT = "noisePageCount";
-
-    /** 页总数 */
-    public static final String KEY_PAGE_COUNT = "pageCount";
-
-    /** 疑似续表涉及的起始页 */
-    public static final String KEY_CONTINUATION_FROM_PAGE = "continuationFromPage";
-
-    /** 疑似续表涉及的结束页 */
-    public static final String KEY_CONTINUATION_TO_PAGE = "continuationToPage";
-
-    /** 产物 schema 语义化版本 */
-    public static final String KEY_SCHEMA_VERSION = "schemaVersion";
 
     /** 溯源覆盖率的"偏低"阈值（百分比）：低于它结论行提一句 */
     public static final int PROVENANCE_LOW_PERCENT = 80;
@@ -108,23 +52,23 @@ public final class StructureStatsSupport {
     }
 
     /**
-     * 组装产物本体 → 统计。键值含义见本类的 {@code KEY_*} 常量。
+     * 组装产物本体 → 统计。
      *
      * @param startedAt 运行开始时间（提供耗时），可空
      * @param finishedAt 运行结束时间（提供耗时），可空
      * @param document  该次运行的组装产物，可空
      * @return 统计；产物为空时返回 null（不陈述结论）
      */
-    public static Map<String, Object> stats(LocalDateTime startedAt, LocalDateTime finishedAt,
-                                            UnifiedDocument document) {
+    public static StructureStatsVO stats(LocalDateTime startedAt, LocalDateTime finishedAt,
+                                         UnifiedDocument document) {
         if (NullUtil.isNull(document)) {
             return null;
         }
         List<UnifiedElement> elements = ObjectUtil.defaultIfNull(document.getElements(), List.of());
         List<DocumentRelation> relations = ObjectUtil.defaultIfNull(document.getRelations(), List.of());
 
-        Map<String, Object> stats = new LinkedHashMap<>();
-        stats.put(KEY_ELEMENT_COUNT, elements.size());
+        StructureStatsVO stats = new StructureStatsVO();
+        stats.setElementCount(elements.size());
 
         int titleCount = 0;
         int level1 = 0;
@@ -150,11 +94,11 @@ public final class StructureStatsSupport {
             }
         }
         // 章节层数：有 SECTION 节点按平台章节计，否则按一级标题计
-        stats.put(KEY_TITLE_COUNT, titleCount);
-        stats.put(KEY_CHAPTER_COUNT, hasChapter ? countSections(elements) : chapterCount);
-        stats.put(KEY_LEVEL_1, level1);
-        stats.put(KEY_LEVEL_2, level2);
-        stats.put(KEY_LEVEL_3_PLUS, level3Plus);
+        stats.setTitleCount(titleCount);
+        stats.setChapterCount(hasChapter ? countSections(elements) : chapterCount);
+        stats.setLevel1Count(level1);
+        stats.setLevel2Count(level2);
+        stats.setLevel3PlusCount(level3Plus);
 
         int parentChild = 0;
         int continuation = 0;
@@ -169,30 +113,30 @@ public final class StructureStatsSupport {
                 }
             }
         }
-        stats.put(KEY_PARENT_CHILD_COUNT, parentChild);
-        stats.put(KEY_CONTINUATION_COUNT, continuation);
-        stats.put(KEY_SUSPECTED_CONTINUATION_COUNT, suspectedContinuation);
+        stats.setParentChildCount(parentChild);
+        stats.setContinuationCount(continuation);
+        stats.setSuspectedContinuationCount(suspectedContinuation);
 
         // 溯源口径：结构性节点（SECTION）不计入分母；可回溯 = 自身或子元素（表格单元格）带定位
         List<UnifiedElement> provenanceScope = elements.stream()
                 .filter(element -> !isStructuralElement(element))
                 .toList();
         long traced = provenanceScope.stream().filter(StructureStatsSupport::isTraced).count();
-        stats.put(KEY_TRACED_COUNT, traced);
-        stats.put(KEY_PROVENANCE_COVERAGE, coverage(traced, provenanceScope.size()));
-        stats.put(KEY_DURATION_MS, StatsSupport.durationMs(startedAt, finishedAt));
+        stats.setTracedCount((int) traced);
+        stats.setProvenanceCoverage(coverage(traced, provenanceScope.size()));
+        stats.setDurationMs(StatsSupport.durationMs(startedAt, finishedAt));
 
         // 阅读顺序口径：产物里没有"是否重排"的标记，用"无坐标元素数"表达 ——
         // 有坐标的元素按坐标排、无坐标的按原序追加，两者共同决定阅读顺序
         long withoutBbox = elements.stream().filter(element -> NullUtil.isNull(element.getBbox())).count();
-        stats.put(KEY_WITHOUT_BBOX_COUNT, withoutBbox);
+        stats.setWithoutBboxCount((int) withoutBbox);
 
         // 重复与噪声：从元素 marks 与页 marks 现算（标记由组装环节写入产物）
-        stats.put(KEY_REPEATED_SEGMENT_COUNT, countMarks(elements, ElementMark.REPEATED_SEGMENT.name()));
+        stats.setRepeatedSegmentCount(countMarks(elements, ElementMark.REPEATED_SEGMENT.name()));
         List<UnifiedPage> pages = ObjectUtil.defaultIfNull(document.getPages(), List.of());
-        stats.put(KEY_REPEATED_PAGE_COUNT, countPageMarks(pages, PageMark.REPEATED_PAGE.name()));
-        stats.put(KEY_NOISE_PAGE_COUNT, countPageMarks(pages, PageMark.NOISE_PAGE.name()));
-        stats.put(KEY_PAGE_COUNT, pages.size());
+        stats.setRepeatedPageCount(countPageMarks(pages, PageMark.REPEATED_PAGE.name()));
+        stats.setNoisePageCount(countPageMarks(pages, PageMark.NOISE_PAGE.name()));
+        stats.setPageCount(pages.size());
 
         // 疑似续表页码范围：产物关系里 CONTINUATION_OF 的 from/to 带 `#p页码` 后缀
         putContinuationRange(stats, relations);
@@ -200,9 +144,41 @@ public final class StructureStatsSupport {
         // 产物 schema 语义化版本（文档信息里落库，卡片身份行展示）
         DocumentInfo info = document.getDocumentInfo();
         if (NullUtil.isNotNull(info) && StrUtil.isNotBlank(info.getSchemaVersion())) {
-            stats.put(KEY_SCHEMA_VERSION, info.getSchemaVersion());
+            stats.setSchemaVersion(info.getSchemaVersion());
         }
         return stats;
+    }
+
+    /**
+     * 组装详情统计：元素按类型计数 + 关系/冲突/告警数。
+     *
+     * @param document 统一文档产物
+     * @return 结构统计视图
+     */
+    public static StructureSummaryVO summaryOf(UnifiedDocument document) {
+        List<UnifiedElement> elements = ObjectUtil.defaultIfNull(document.getElements(), List.<UnifiedElement>of());
+        DocumentQuality quality = ObjectUtil.defaultIfNull(document.getQuality(), new DocumentQuality());
+        StructureSummaryVO summary = new StructureSummaryVO();
+        summary.setElementCount(elements.size());
+        summary.setTitleCount(countByType(elements, UnifiedElementType.TITLE));
+        summary.setParagraphCount(countByType(elements, UnifiedElementType.PARAGRAPH));
+        summary.setTableCount(countByType(elements, UnifiedElementType.TABLE));
+        summary.setImageCount(countByType(elements, UnifiedElementType.IMAGE));
+        summary.setRelationCount(ObjectUtil.defaultIfNull(document.getRelations(), List.<DocumentRelation>of()).size());
+        summary.setConflictCount(ObjectUtil.defaultIfNull(quality.getConflicts(), List.<ConflictRecord>of()).size());
+        summary.setWarningCount(ObjectUtil.defaultIfNull(quality.getWarnings(), List.<QualityWarning>of()).size());
+        return summary;
+    }
+
+    /**
+     * 指定类型的元素数。
+     *
+     * @param elements 元素列表
+     * @param type     元素类型
+     * @return 命中类型的元素数
+     */
+    public static int countByType(List<UnifiedElement> elements, UnifiedElementType type) {
+        return (int) elements.stream().filter(e -> type.name().equals(e.getType())).count();
     }
 
     /** 该接续关系是否属放宽规则命中的疑似接续（组装环节写在关系 detail 里） */
@@ -230,7 +206,7 @@ public final class StructureStatsSupport {
      * <p>关系形如 `from = 元素id#p后页`、`to = 元素id#p前页`，故按 `#p` 后缀取页码；
      * 一条都取不到时不下发该键（前端按"无页码"展示）。
      */
-    private static void putContinuationRange(Map<String, Object> stats, List<DocumentRelation> relations) {
+    private static void putContinuationRange(StructureStatsVO stats, List<DocumentRelation> relations) {
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
         for (DocumentRelation relation : relations) {
@@ -246,8 +222,8 @@ public final class StructureStatsSupport {
             }
         }
         if (min <= max) {
-            stats.put(KEY_CONTINUATION_FROM_PAGE, min);
-            stats.put(KEY_CONTINUATION_TO_PAGE, max);
+            stats.setContinuationFromPage(min);
+            stats.setContinuationToPage(max);
         }
     }
 
@@ -278,29 +254,29 @@ public final class StructureStatsSupport {
      * @param status   任务状态
      * @return 结论文案；统计缺失或无可陈述内容时返回 null
      */
-    public static String summary(String errorMsg, Map<String, Object> stats, String status) {
+    public static String summary(String errorMsg, StructureStatsVO stats, String status) {
         return StatsSupport.summaryOf(errorMsg, status, "组装失败", () -> structureSummaryBody(stats));
     }
 
     /** 组装统计陈述：统计缺失（产物不可读）时不陈述结论；空树与各项异常逐条陈述 */
-    private static String structureSummaryBody(Map<String, Object> stats) {
+    private static String structureSummaryBody(StructureStatsVO stats) {
         if (NullUtil.isNull(stats)) {
             return null;
         }
-        if (intOf(stats.get(KEY_ELEMENT_COUNT)) == 0) {
+        if (n(stats.getElementCount()) == 0) {
             return "无任何可组装元素（空树）";
         }
         List<String> notes = new ArrayList<>();
-        int coverage = intOf(stats.get(KEY_PROVENANCE_COVERAGE));
+        int coverage = n(stats.getProvenanceCoverage());
         if (coverage < PROVENANCE_LOW_PERCENT) {
             notes.add("溯源偏低 " + coverage + "%");
         }
-        int suspectedContinuation = intOf(stats.get(KEY_SUSPECTED_CONTINUATION_COUNT));
+        int suspectedContinuation = n(stats.getSuspectedContinuationCount());
         if (suspectedContinuation > 0) {
             notes.add("疑似续表 " + suspectedContinuation + " 处");
         }
-        int repeated = intOf(stats.get(KEY_REPEATED_SEGMENT_COUNT));
-        int noise = intOf(stats.get(KEY_NOISE_PAGE_COUNT));
+        int repeated = n(stats.getRepeatedSegmentCount());
+        int noise = n(stats.getNoisePageCount());
         if (repeated > 0 || noise > 0) {
             notes.add("重复与噪声待处置");
         }
@@ -343,7 +319,8 @@ public final class StructureStatsSupport {
         return total <= 0 ? 0 : (int) Math.round(traced * 100.0 / total);
     }
 
-    private static int intOf(Object value) {
-        return value instanceof Number number ? number.intValue() : 0;
+    /** 计数取整：null 记 0（摘要文案里"多少项"按 0 陈述） */
+    private static int n(Integer value) {
+        return value == null ? 0 : value;
     }
 }

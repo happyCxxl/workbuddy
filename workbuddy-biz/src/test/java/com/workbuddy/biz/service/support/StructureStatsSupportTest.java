@@ -13,6 +13,7 @@ import com.workbuddy.common.enums.structure.PageMark;
 import com.workbuddy.common.enums.structure.RelationType;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.common.enums.storage.StorageType;
+import com.workbuddy.common.dto.response.structure.StructureStatsVO;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,6 @@ import org.mockito.Mockito;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -46,7 +46,7 @@ class StructureStatsSupportTest {
         return element;
     }
 
-    private Map<String, Object> statsOf(List<UnifiedElement> elements) {
+    private StructureStatsVO statsOf(List<UnifiedElement> elements) {
         UnifiedDocument document = new UnifiedDocument();
         document.setElements(elements);
         return StructureStatsSupport.stats(null, null, document);
@@ -65,10 +65,10 @@ class StructureStatsSupportTest {
         cell.setProvenance(new Provenance("f-1", "office#sheet[评分表]/cell[0,0]"));
         table.setCells(List.of(cell));
 
-        Map<String, Object> stats = statsOf(List.of(section, table));
+        StructureStatsVO stats = statsOf(List.of(section, table));
 
-        assertEquals(1L, stats.get(StructureStatsSupport.KEY_TRACED_COUNT));
-        assertEquals(100, stats.get(StructureStatsSupport.KEY_PROVENANCE_COVERAGE));
+        assertEquals(1, stats.getTracedCount().intValue());
+        assertEquals(100, stats.getProvenanceCoverage());
     }
 
     /**
@@ -78,11 +78,11 @@ class StructureStatsSupportTest {
      */
     @Test
     void tableWithoutProvenanceShouldCountMissing() {
-        Map<String, Object> stats = statsOf(List.of(
+        StructureStatsVO stats = statsOf(List.of(
                 traced("n-1", UnifiedElementType.PARAGRAPH), element("t-1", UnifiedElementType.TABLE)));
 
-        assertEquals(1L, stats.get(StructureStatsSupport.KEY_TRACED_COUNT));
-        assertEquals(50, stats.get(StructureStatsSupport.KEY_PROVENANCE_COVERAGE));
+        assertEquals(1, stats.getTracedCount().intValue());
+        assertEquals(50, stats.getProvenanceCoverage());
     }
 
     /**
@@ -98,10 +98,10 @@ class StructureStatsSupportTest {
         }
         elements.add(element("t-1", UnifiedElementType.TABLE));
 
-        Map<String, Object> stats = statsOf(elements);
+        StructureStatsVO stats = statsOf(elements);
 
-        assertEquals(5L, stats.get(StructureStatsSupport.KEY_TRACED_COUNT));
-        assertEquals(83, stats.get(StructureStatsSupport.KEY_PROVENANCE_COVERAGE));
+        assertEquals(5, stats.getTracedCount().intValue());
+        assertEquals(83, stats.getProvenanceCoverage());
         assertFalse(StructureStatsSupport.summary(null, stats, "SUCCESS").contains("溯源偏低"));
     }
 
@@ -115,10 +115,10 @@ class StructureStatsSupportTest {
         UnifiedElement table = element("t-1", UnifiedElementType.TABLE);
         table.setCells(List.of(element("tc-1", UnifiedElementType.TABLE_CELL)));
 
-        Map<String, Object> stats = statsOf(List.of(
+        StructureStatsVO stats = statsOf(List.of(
                 element("n-1", UnifiedElementType.PARAGRAPH), table));
 
-        assertEquals(0, stats.get(StructureStatsSupport.KEY_PROVENANCE_COVERAGE));
+        assertEquals(0, stats.getProvenanceCoverage());
         assertTrue(StructureStatsSupport.summary(null, stats, "SUCCESS").contains("溯源偏低 0%"));
     }
 
@@ -136,10 +136,10 @@ class StructureStatsSupportTest {
                 new DocumentRelation(RelationType.CONTINUATION_OF.name(), "n-1#p3", "n-1#p1",
                         "疑似续表（放宽规则），表头继承")));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(2, stats.get(StructureStatsSupport.KEY_CONTINUATION_COUNT));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_SUSPECTED_CONTINUATION_COUNT));
+        assertEquals(2, stats.getContinuationCount());
+        assertEquals(1, stats.getSuspectedContinuationCount());
         assertTrue(StructureStatsSupport.summary(null, stats, "SUCCESS").contains("疑似续表 1 处"));
     }
 
@@ -158,13 +158,13 @@ class StructureStatsSupportTest {
         UnifiedDocument document = new UnifiedDocument();
         document.setElements(new ArrayList<>(List.of(section, noLevel, level1, level2, level3)));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(4, stats.get(StructureStatsSupport.KEY_TITLE_COUNT));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_CHAPTER_COUNT));
-        assertEquals(2, stats.get(StructureStatsSupport.KEY_LEVEL_1));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_LEVEL_2));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_LEVEL_3_PLUS));
+        assertEquals(4, stats.getTitleCount());
+        assertEquals(1, stats.getChapterCount());
+        assertEquals(2, stats.getLevel1Count());
+        assertEquals(1, stats.getLevel2Count());
+        assertEquals(1, stats.getLevel3PlusCount());
     }
 
     /**
@@ -177,9 +177,9 @@ class StructureStatsSupportTest {
         UnifiedDocument document = new UnifiedDocument();
         document.setElements(new ArrayList<>(List.of(titled("t-1", 1), titled("t-2", 2))));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_CHAPTER_COUNT));
+        assertEquals(1, stats.getChapterCount());
     }
 
     /**
@@ -196,12 +196,12 @@ class StructureStatsSupportTest {
                 relation(RelationType.CONTINUATION_OF, "n-1#p4", "n-2#p6"),
                 relation(RelationType.PARENT_CHILD, "n-3", "n-4"))));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(2, stats.get(StructureStatsSupport.KEY_PARENT_CHILD_COUNT));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_CONTINUATION_COUNT));
-        assertEquals(4, stats.get(StructureStatsSupport.KEY_CONTINUATION_FROM_PAGE));
-        assertEquals(6, stats.get(StructureStatsSupport.KEY_CONTINUATION_TO_PAGE));
+        assertEquals(2, stats.getParentChildCount());
+        assertEquals(1, stats.getContinuationCount());
+        assertEquals(4, stats.getContinuationFromPage());
+        assertEquals(6, stats.getContinuationToPage());
     }
 
     /**
@@ -223,14 +223,14 @@ class StructureStatsSupportTest {
         info.setSchemaVersion("2.0");
         document.setDocumentInfo(info);
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_REPEATED_SEGMENT_COUNT));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_REPEATED_PAGE_COUNT));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_NOISE_PAGE_COUNT));
-        assertEquals(3, stats.get(StructureStatsSupport.KEY_PAGE_COUNT));
-        assertEquals(1L, stats.get(StructureStatsSupport.KEY_WITHOUT_BBOX_COUNT));
-        assertEquals("2.0", stats.get(StructureStatsSupport.KEY_SCHEMA_VERSION));
+        assertEquals(1, stats.getRepeatedSegmentCount());
+        assertEquals(1, stats.getRepeatedPageCount());
+        assertEquals(1, stats.getNoisePageCount());
+        assertEquals(3, stats.getPageCount());
+        assertEquals(1, stats.getWithoutBboxCount().intValue());
+        assertEquals("2.0", stats.getSchemaVersion());
     }
 
     /**
@@ -244,13 +244,13 @@ class StructureStatsSupportTest {
         document.setElements(new ArrayList<>());
         document.setRelations(new ArrayList<>(List.of(relation(RelationType.CONTINUATION_OF, "n-1", "n-2"))));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(0, stats.get(StructureStatsSupport.KEY_ELEMENT_COUNT));
-        assertEquals(0, stats.get(StructureStatsSupport.KEY_CHAPTER_COUNT));
-        assertEquals(0, stats.get(StructureStatsSupport.KEY_PROVENANCE_COVERAGE));
-        assertFalse(stats.containsKey(StructureStatsSupport.KEY_CONTINUATION_FROM_PAGE));
-        assertFalse(stats.containsKey(StructureStatsSupport.KEY_SCHEMA_VERSION));
+        assertEquals(0, stats.getElementCount());
+        assertEquals(0, stats.getChapterCount());
+        assertEquals(0, stats.getProvenanceCoverage());
+        assertNull(stats.getContinuationFromPage());
+        assertNull(stats.getSchemaVersion());
     }
 
     /**
@@ -279,23 +279,24 @@ class StructureStatsSupportTest {
      */
     @Test
     void summaryShouldStateEmptyHealthyAndFailedShapes() {
-        assertEquals("无任何可组装元素（空树）", StructureStatsSupport.summary(null,
-                Map.of(StructureStatsSupport.KEY_ELEMENT_COUNT, 0), "SUCCESS"));
+        StructureStatsVO empty = new StructureStatsVO();
+        empty.setElementCount(0);
+        assertEquals("无任何可组装元素（空树）", StructureStatsSupport.summary(null, empty, "SUCCESS"));
 
-        Map<String, Object> exactlyThreshold = Map.of(
-                StructureStatsSupport.KEY_ELEMENT_COUNT, 3,
-                StructureStatsSupport.KEY_PROVENANCE_COVERAGE, 80,
-                StructureStatsSupport.KEY_SUSPECTED_CONTINUATION_COUNT, 0,
-                StructureStatsSupport.KEY_REPEATED_SEGMENT_COUNT, 0,
-                StructureStatsSupport.KEY_NOISE_PAGE_COUNT, 0);
+        StructureStatsVO exactlyThreshold = new StructureStatsVO();
+        exactlyThreshold.setElementCount(3);
+        exactlyThreshold.setProvenanceCoverage(80);
+        exactlyThreshold.setSuspectedContinuationCount(0);
+        exactlyThreshold.setRepeatedSegmentCount(0);
+        exactlyThreshold.setNoisePageCount(0);
         assertEquals("结构可用", StructureStatsSupport.summary(null, exactlyThreshold, "SUCCESS"));
 
-        Map<String, Object> noisy = Map.of(
-                StructureStatsSupport.KEY_ELEMENT_COUNT, 3,
-                StructureStatsSupport.KEY_PROVENANCE_COVERAGE, 100,
-                StructureStatsSupport.KEY_SUSPECTED_CONTINUATION_COUNT, 0,
-                StructureStatsSupport.KEY_REPEATED_SEGMENT_COUNT, 0,
-                StructureStatsSupport.KEY_NOISE_PAGE_COUNT, 2);
+        StructureStatsVO noisy = new StructureStatsVO();
+        noisy.setElementCount(3);
+        noisy.setProvenanceCoverage(100);
+        noisy.setSuspectedContinuationCount(0);
+        noisy.setRepeatedSegmentCount(0);
+        noisy.setNoisePageCount(2);
         assertEquals("结构可用 · 重复与噪声待处置", StructureStatsSupport.summary(null, noisy, "SUCCESS"));
 
         assertEquals("解析器超时", StructureStatsSupport.summary("解析器超时", null, "FAILED"));
@@ -319,12 +320,12 @@ class StructureStatsSupportTest {
                 // 父子关系即使带 #p 页码也不进接续页码范围
                 relation(RelationType.PARENT_CHILD, "e3#p9", "e4#p9"))));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_CONTINUATION_COUNT));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_SUSPECTED_CONTINUATION_COUNT));
-        assertEquals(5, stats.get(StructureStatsSupport.KEY_CONTINUATION_FROM_PAGE));
-        assertEquals(5, stats.get(StructureStatsSupport.KEY_CONTINUATION_TO_PAGE));
+        assertEquals(1, stats.getContinuationCount());
+        assertEquals(1, stats.getSuspectedContinuationCount());
+        assertEquals(5, stats.getContinuationFromPage());
+        assertEquals(5, stats.getContinuationToPage());
     }
 
     /** 带层级的标题元素 */
@@ -357,11 +358,11 @@ class StructureStatsSupportTest {
         document.setElements(new ArrayList<>(List.of(
                 titled("t-1", 1), titled("t-2", 2), titled("t-3", 3), titled("t-4", 4))));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_LEVEL_1));
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_LEVEL_2));
-        assertEquals(2, stats.get(StructureStatsSupport.KEY_LEVEL_3_PLUS));
+        assertEquals(1, stats.getLevel1Count());
+        assertEquals(1, stats.getLevel2Count());
+        assertEquals(2, stats.getLevel3PlusCount());
     }
 
     /**
@@ -375,9 +376,9 @@ class StructureStatsSupportTest {
         document.setElements(new ArrayList<>(List.of(element("e-1", UnifiedElementType.PARAGRAPH))));
         document.setPages(new ArrayList<>(List.of(page("NOISE_PAGE"), page(null), page(null))));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(1, stats.get(StructureStatsSupport.KEY_NOISE_PAGE_COUNT));
+        assertEquals(1, stats.getNoisePageCount());
     }
 
     /**
@@ -413,10 +414,10 @@ class StructureStatsSupportTest {
                 relation(RelationType.CONTINUATION_OF, " ", "e2#p"),
                 relation(RelationType.CONTINUATION_OF, "e3#px", "e4"))));
 
-        Map<String, Object> stats = StructureStatsSupport.stats(null, null, document);
+        StructureStatsVO stats = StructureStatsSupport.stats(null, null, document);
 
-        assertEquals(2, stats.get(StructureStatsSupport.KEY_CONTINUATION_COUNT));
-        assertFalse(stats.containsKey(StructureStatsSupport.KEY_CONTINUATION_FROM_PAGE));
-        assertFalse(stats.containsKey(StructureStatsSupport.KEY_CONTINUATION_TO_PAGE));
+        assertEquals(2, stats.getContinuationCount());
+        assertNull(stats.getContinuationFromPage());
+        assertNull(stats.getContinuationToPage());
     }
 }

@@ -8,7 +8,7 @@ import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.index.IndexComboReconciler;
 import com.workbuddy.biz.service.support.index.IndexLineageResolver;
-import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
+import com.workbuddy.biz.service.support.index.IndexRowSupport;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.entity.WbFileResult;
@@ -53,7 +53,7 @@ class IndexComboServiceImplTest {
     @Mock
     private IndexLineageResolver lineageResolver;
     @Mock
-    private IndexRowAssembler indexRowAssembler;
+    private IndexRowSupport indexRowSupport;
 
     private IndexComboServiceImpl service;
 
@@ -61,7 +61,7 @@ class IndexComboServiceImplTest {
     void setUp() {
         // 真实对账器：枚举的完整性判定复用其 selectComboProducts 单一口径
         IndexComboReconciler reconciler = new IndexComboReconciler(fileResultDbService, chunkSetDbService,
-                embeddingSetDbService, lineageResolver, indexRowAssembler);
+                embeddingSetDbService, lineageResolver, indexRowSupport);
         service = new IndexComboServiceImpl(knowledgeBaseDbService, strategyBindingDbService,
                 strategyVersionDbService, fileResultDbService, reconciler);
     }

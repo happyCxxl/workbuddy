@@ -8,7 +8,7 @@ import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.artifact.LineageArtifactReader;
-import com.workbuddy.biz.service.support.assemble.LineageNodeAssembler;
+import com.workbuddy.biz.service.support.lineage.LineageNodeSupport;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.dto.response.lineage.LineageEdgeVO;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * 执行树聚合实现：批量 in 查询拼图（≈5 次 DB 访问），无 N+1。
  * 节点=一次运行；边=upstreamProductId 血缘反查（task.productId → product.id → 产出任务）；
  * 节点/边排序与访问校验在本类，产物批量读取在 {@link LineageArtifactReader}，
- * 统计与摘要组装在 {@link LineageNodeAssembler}。
+ * 统计与摘要组装在 {@link LineageNodeSupport}。
  */
 @Service
 @RequiredArgsConstructor
@@ -71,7 +71,7 @@ public class LineageQueryServiceImpl implements LineageQueryService {
             }
         }
 
-        Map<Long, long[]> stepAgg = LineageNodeAssembler.aggregateStepLogs(tasks, stepLogDbService);
+        Map<Long, long[]> stepAgg = LineageNodeSupport.aggregateStepLogs(tasks, stepLogDbService);
         LineageArtifactReader.NodeArtifacts artifacts = LineageArtifactReader.read(tasks, productById,
                 taskIdByProductId, fileResultId, fileStorage, chunkSetDbService, embeddingSetDbService);
 
@@ -88,7 +88,7 @@ public class LineageQueryServiceImpl implements LineageQueryService {
         for (WbPipelineTask task : ordered) {
             WbPipelineProduct product =
                     NullUtil.isNull(task.getProductId()) ? null : productById.get(task.getProductId());
-            nodes.add(LineageNodeAssembler.toNode(task, product, stepAgg, artifacts, chunkStrategyParser));
+            nodes.add(LineageNodeSupport.toNode(task, product, stepAgg, artifacts, chunkStrategyParser));
             if (NullUtil.isNotNull(task.getUpstreamProductId())) {
                 Long fromTaskId = taskIdByProductId.get(task.getUpstreamProductId());
                 if (NullUtil.isNotNull(fromTaskId)) {

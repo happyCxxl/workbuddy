@@ -9,7 +9,6 @@ import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.db.WbSubmitLogDbService;
 import com.workbuddy.biz.service.support.assemble.InputVoAssembler;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseAccessSupport;
-import com.workbuddy.biz.service.support.assemble.TaskVoAssembler;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
@@ -90,7 +89,6 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
 
     private final InputVoAssembler inputVoAssembler;
 
-    private final TaskVoAssembler taskVoAssembler;
 
     private final KnowledgeBaseAccessSupport accessSupport;
 
@@ -241,7 +239,9 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
             for (String statusStage : statusStages) {
                 WbPipelineTask task = stageTaskMaps.get(statusStage).get(vo.getId());
                 if (NullUtil.isNotNull(task)) {
-                    statuses.add(taskVoAssembler.toStageStatusVO(task));
+                    StageStatusVO stageStatus = new StageStatusVO();
+                    stageStatus.applyFrom(task);
+                    statuses.add(stageStatus);
                 }
             }
             if (!statuses.isEmpty()) {

@@ -3,7 +3,6 @@ package com.workbuddy.biz.service.impl;
 import com.workbuddy.biz.service.StructureControlService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
-import com.workbuddy.biz.service.support.assemble.StageStatsAssembler;
 import com.workbuddy.biz.service.support.stats.StatsSupport;
 import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
 import com.workbuddy.biz.service.support.assemble.StructureVoAssembler;
@@ -23,13 +22,13 @@ import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
+import com.workbuddy.common.dto.response.structure.StructureStatsVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * 结构组装控制面服务实现（手动逐环节）：
@@ -93,9 +92,9 @@ public class StructureControlServiceImpl implements StructureControlService {
             document = readDocument(product, vo);
         }
         // 统计与摘要读产物现算：与执行树组装节点同一份口径，不落产物；产物读不到时不陈述结论
-        Map<String, Object> stageStats =
+        StructureStatsVO stageStats =
                 StructureStatsSupport.stats(vo.getStartedAt(), vo.getFinishedAt(), document);
-        vo.setStageStats(StageStatsAssembler.fromStructure(stageStats));
+        vo.setStageStats(stageStats);
         vo.setStageSummary(StructureStatsSupport.summary(vo.getErrorMsg(), stageStats, vo.getStatus()));
         return vo;
     }
@@ -130,7 +129,7 @@ public class StructureControlServiceImpl implements StructureControlService {
             if (NullUtil.isNull(document)) {
                 return null;
             }
-            vo.setSummary(voAssembler.toSummary(document));
+            vo.setSummary(StructureStatsSupport.summaryOf(document));
             vo.setWarnings(voAssembler.toWarningTexts(document.getQuality()));
             vo.setConflicts(voAssembler.toConflicts(document.getQuality()));
             vo.setOutline(voAssembler.toOutline(document));

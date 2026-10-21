@@ -11,7 +11,6 @@ import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
-import com.workbuddy.biz.service.support.assemble.ChunkVoAssembler;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.common.TaskDetailSupport;
@@ -40,6 +39,7 @@ import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
+import com.workbuddy.biz.service.support.assemble.ChunkVoAssemblerImpl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -94,7 +94,7 @@ final class ChunkControlTestFixture {
                 new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService),
                 chunkSetDbService, chunkDbService,
                 new ChunkStrategyParser(new ChunkProperties()),
-                new ChunkVoAssembler(), fileStorage, accessGuard, new UpstreamProductGate(pipelineTaskDbService));
+                new ChunkVoAssemblerImpl(), fileStorage, accessGuard, new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
         lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
                 .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));

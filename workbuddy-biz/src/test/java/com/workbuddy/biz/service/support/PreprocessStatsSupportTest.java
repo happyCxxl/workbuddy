@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.preprocess.PreprocessView;
 import com.workbuddy.common.domain.preprocess.TraceEntry;
 import com.workbuddy.common.domain.preprocess.ViewElement;
 import com.workbuddy.common.domain.storage.ObjectRef;
+import com.workbuddy.common.dto.response.preprocess.PreprocessStatsVO;
 import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -52,7 +52,7 @@ class PreprocessStatsSupportTest {
     void statsShouldAggregateAllDimensions() {
         LocalDateTime started = LocalDateTime.of(2024, 7, 1, 8, 0, 0);
 
-        Map<String, Object> stats = PreprocessStatsSupport.stats(started, started.plusSeconds(2), view(
+        PreprocessStatsVO stats = PreprocessStatsSupport.stats(started, started.plusSeconds(2), view(
                 element(ViewElementStatus.NORMAL, "同", "同", 1),
                 element(ViewElementStatus.EXCLUDED_HEADER, "页眉", "页眉", 2),
                 element(ViewElementStatus.EXCLUDED_TOC, "目录", "目录", 3),
@@ -66,22 +66,22 @@ class PreprocessStatsSupportTest {
                 element(ViewElementStatus.NORMAL, null, null, null),
                 blankStatusElement()));
 
-        assertEquals(12, stats.get(PreprocessStatsSupport.KEY_ELEMENT_COUNT));
+        assertEquals(12, stats.getElementCount());
         // 剔除 2（页眉/目录）+ 重复份 1 → 不进切片 3，保留 9，占比 75%
-        assertEquals(2, stats.get(PreprocessStatsSupport.KEY_EXCLUDED_COUNT));
-        assertEquals(1, stats.get(PreprocessStatsSupport.KEY_REPEATED_COUNT));
-        assertEquals(3, stats.get(PreprocessStatsSupport.KEY_CHUNK_SKIPPED_COUNT));
-        assertEquals(9, stats.get(PreprocessStatsSupport.KEY_RETAINED_COUNT));
-        assertEquals(75, stats.get(PreprocessStatsSupport.KEY_RETENTION_PERCENT));
-        assertEquals(2, stats.get(PreprocessStatsSupport.KEY_MARKED_COUNT));
-        assertEquals(3, stats.get(PreprocessStatsSupport.KEY_FIELD_COUNT));
-        assertEquals(1, stats.get(PreprocessStatsSupport.KEY_CHANGED_COUNT));
-        assertEquals(1, stats.get(PreprocessStatsSupport.KEY_ENCODING_COUNT));
-        assertEquals(1, stats.get(PreprocessStatsSupport.KEY_TIDY_COUNT));
-        assertEquals(2000L, stats.get(PreprocessStatsSupport.KEY_DURATION_MS));
+        assertEquals(2, stats.getExcludedCount());
+        assertEquals(1, stats.getRepeatedCount());
+        assertEquals(3, stats.getChunkSkippedCount());
+        assertEquals(9, stats.getRetainedCount());
+        assertEquals(75, stats.getRetentionPercent());
+        assertEquals(2, stats.getMarkedCount());
+        assertEquals(3, stats.getFieldCount());
+        assertEquals(1, stats.getChangedCount());
+        assertEquals(1, stats.getEncodingCount());
+        assertEquals(1, stats.getTidyCount());
+        assertEquals(2000L, stats.getDurationMs());
 
         @SuppressWarnings("unchecked")
-        Map<String, Integer> statusCounts = (Map<String, Integer>) stats.get(PreprocessStatsSupport.KEY_STATUS_COUNTS);
+        Map<String, Integer> statusCounts = stats.getStatusCounts();
         assertEquals(6, statusCounts.get(ViewElementStatus.NORMAL.name()));
         assertEquals(1, statusCounts.get(ViewElementStatus.EXCLUDED_HEADER.name()));
         assertEquals(1, statusCounts.get(ViewElementStatus.REPEATED.name()));
@@ -89,13 +89,13 @@ class PreprocessStatsSupportTest {
 
         @SuppressWarnings("unchecked")
         Map<String, Integer> fieldTypeCounts =
-                (Map<String, Integer>) stats.get(PreprocessStatsSupport.KEY_FIELD_TYPE_COUNTS);
+                stats.getFieldTypeCounts();
         assertEquals(2, fieldTypeCounts.get("金额"));
         assertEquals(1, fieldTypeCounts.get("日期"));
 
         // 受影响元素（非 NORMAL / 文本改写 / 提过字段）所在页 2..8；NORMAL 且无改动的页 1 不计
-        assertEquals(2, stats.get(PreprocessStatsSupport.KEY_PAGE_FROM));
-        assertEquals(8, stats.get(PreprocessStatsSupport.KEY_PAGE_TO));
+        assertEquals(2, stats.getPageFrom());
+        assertEquals(8, stats.getPageTo());
     }
 
     /**
@@ -105,12 +105,12 @@ class PreprocessStatsSupportTest {
      */
     @Test
     void statsShouldOmitPageRangeWhenNothingAffected() {
-        Map<String, Object> stats = PreprocessStatsSupport.stats(null, null, view(
+        PreprocessStatsVO stats = PreprocessStatsSupport.stats(null, null, view(
                 element(ViewElementStatus.NORMAL, "同", "同", 1),
                 element(ViewElementStatus.NORMAL, null, null, 2)));
 
-        assertFalse(stats.containsKey(PreprocessStatsSupport.KEY_PAGE_FROM));
-        assertFalse(stats.containsKey(PreprocessStatsSupport.KEY_PAGE_TO));
+        assertNull(stats.getPageFrom());
+        assertNull(stats.getPageTo());
     }
 
     /**
@@ -120,11 +120,11 @@ class PreprocessStatsSupportTest {
      */
     @Test
     void statsShouldKeepSingleAffectedPage() {
-        Map<String, Object> stats = PreprocessStatsSupport.stats(null, null, view(
+        PreprocessStatsVO stats = PreprocessStatsSupport.stats(null, null, view(
                 element(ViewElementStatus.MARKED_FOOTER, "页脚", "页脚", 6)));
 
-        assertEquals(6, stats.get(PreprocessStatsSupport.KEY_PAGE_FROM));
-        assertEquals(6, stats.get(PreprocessStatsSupport.KEY_PAGE_TO));
+        assertEquals(6, stats.getPageFrom());
+        assertEquals(6, stats.getPageTo());
     }
 
     /**
@@ -139,11 +139,11 @@ class PreprocessStatsSupportTest {
         ViewElement otherRulesOnly = element(ViewElementStatus.NORMAL, null, null, 2);
         otherRulesOnly.setPreprocessTrace(new ArrayList<>(List.of(trace("dedup-page"), trace("table-merge"))));
 
-        Map<String, Object> stats = PreprocessStatsSupport.stats(null, null,
+        PreprocessStatsVO stats = PreprocessStatsSupport.stats(null, null,
                 view(withBlankRuleFirst, otherRulesOnly));
 
-        assertEquals(1, stats.get(PreprocessStatsSupport.KEY_ENCODING_COUNT));
-        assertEquals(0, stats.get(PreprocessStatsSupport.KEY_TIDY_COUNT));
+        assertEquals(1, stats.getEncodingCount());
+        assertEquals(0, stats.getTidyCount());
     }
 
     /**
@@ -176,21 +176,21 @@ class PreprocessStatsSupportTest {
         assertNull(PreprocessStatsSupport.summary(null, null, PipelineTaskStatus.SUCCESS.name()));
 
         assertEquals("无任何可处理的元素（空视图）", PreprocessStatsSupport.summary(null,
-                Map.of(PreprocessStatsSupport.KEY_ELEMENT_COUNT, 0), PipelineTaskStatus.SUCCESS.name()));
+                new PreprocessStatsVO(), PipelineTaskStatus.SUCCESS.name()));
 
-        Map<String, Object> clean = Map.of(
-                PreprocessStatsSupport.KEY_ELEMENT_COUNT, 5,
-                PreprocessStatsSupport.KEY_MARKED_COUNT, 0,
-                PreprocessStatsSupport.KEY_EXCLUDED_COUNT, 0,
-                PreprocessStatsSupport.KEY_REPEATED_COUNT, 0);
+        PreprocessStatsVO clean = new PreprocessStatsVO();
+        clean.setElementCount(5);
+        clean.setMarkedCount(0);
+        clean.setExcludedCount(0);
+        clean.setRepeatedCount(0);
         assertEquals("未剔除内容，全部进入切片",
                 PreprocessStatsSupport.summary(null, clean, PipelineTaskStatus.PARTIAL_SUCCESS.name()));
 
-        Map<String, Object> dirty = Map.of(
-                PreprocessStatsSupport.KEY_ELEMENT_COUNT, 9,
-                PreprocessStatsSupport.KEY_MARKED_COUNT, 2,
-                PreprocessStatsSupport.KEY_EXCLUDED_COUNT, 3,
-                PreprocessStatsSupport.KEY_REPEATED_COUNT, 1);
+        PreprocessStatsVO dirty = new PreprocessStatsVO();
+        dirty.setElementCount(9);
+        dirty.setMarkedCount(2);
+        dirty.setExcludedCount(3);
+        dirty.setRepeatedCount(1);
         String text = PreprocessStatsSupport.summary(null, dirty, PipelineTaskStatus.SUCCESS.name());
         assertTrue(text.contains("2 项仅标记、仍在检索内容流"), text);
         assertTrue(text.contains("3 项已剔除出检索内容流"), text);
@@ -273,10 +273,10 @@ class PreprocessStatsSupportTest {
         element.setDisplayText("显示文本");
         element.setPage(3);
 
-        Map<String, Object> stats = PreprocessStatsSupport.stats(null, null, view(element));
+        PreprocessStatsVO stats = PreprocessStatsSupport.stats(null, null, view(element));
 
-        assertEquals(0, stats.get(PreprocessStatsSupport.KEY_CHANGED_COUNT));
-        assertFalse(stats.containsKey(PreprocessStatsSupport.KEY_PAGE_FROM));
+        assertEquals(0, stats.getChangedCount());
+        assertNull(stats.getPageFrom());
     }
 
     /**
@@ -286,9 +286,9 @@ class PreprocessStatsSupportTest {
      */
     @Test
     void statsShouldReportZeroPercentForEmptyView() {
-        Map<String, Object> stats = PreprocessStatsSupport.stats(null, null, view());
+        PreprocessStatsVO stats = PreprocessStatsSupport.stats(null, null, view());
 
-        assertEquals(0, stats.get(PreprocessStatsSupport.KEY_RETENTION_PERCENT));
-        assertEquals(0, stats.get(PreprocessStatsSupport.KEY_ELEMENT_COUNT));
+        assertEquals(0, stats.getRetentionPercent());
+        assertEquals(0, stats.getElementCount());
     }
 }

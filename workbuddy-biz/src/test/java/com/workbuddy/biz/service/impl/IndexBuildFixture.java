@@ -16,7 +16,7 @@ import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.index.IndexBuildSupport;
 import com.workbuddy.biz.service.support.index.IndexComboReconciler;
 import com.workbuddy.biz.service.support.index.IndexLineageResolver;
-import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
+import com.workbuddy.biz.service.support.index.IndexRowSupport;
 import com.workbuddy.biz.service.support.index.IndexVersionStateSupport;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.common.domain.entity.WbChunkSet;
@@ -54,7 +54,7 @@ final class IndexBuildFixture {
     final PreprocessControlService preprocessControlService = mock(PreprocessControlService.class);
     final WbPipelineProductDbService productDbService = mock(WbPipelineProductDbService.class);
     final IndexLineageResolver lineageResolver = mock(IndexLineageResolver.class);
-    final IndexRowAssembler indexRowAssembler = mock(IndexRowAssembler.class);
+    final IndexRowSupport indexRowSupport = mock(IndexRowSupport.class);
     final IndexComboReconciler indexComboReconciler = mock(IndexComboReconciler.class);
     final MilvusIndexPort milvusIndexPort = mock(MilvusIndexPort.class);
     final TaskQueueSupport taskQueue = mock(TaskQueueSupport.class);
@@ -68,7 +68,7 @@ final class IndexBuildFixture {
             lineageResolver);
     final IndexBuildServiceImpl service = new IndexBuildServiceImpl(knowledgeBaseDbService, indexSetDbService,
             indexVersionDbService, pipelineTaskDbService, fileResultDbService, chunkSetDbService,
-            embeddingSetDbService, indexComboService, lineageResolver, indexRowAssembler, milvusIndexPort,
+            embeddingSetDbService, indexComboService, lineageResolver, indexRowSupport, milvusIndexPort,
             taskQueue, publishService, stateSupport, buildSupport);
 
     void stubProductCombo(WbFileResult file, String preprocess, String chunk, String embed) {
@@ -86,7 +86,7 @@ final class IndexBuildFixture {
         chunkRow.setUpstreamProductId(100L);
         when(chunkSetDbService.getById(1L)).thenReturn(chunkRow);
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn(preprocess);
-        when(indexRowAssembler.assemble(eq(file.getId()), eq("userA"), eq(chunkRow), eq(embedRow)))
+        when(indexRowSupport.assemble(eq(file.getId()), eq("userA"), eq(chunkRow), eq(embedRow)))
                 .thenReturn(List.of(IndexSetTestFixtures.indexRow()));
     }
 

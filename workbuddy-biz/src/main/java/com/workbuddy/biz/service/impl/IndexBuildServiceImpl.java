@@ -14,7 +14,7 @@ import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.index.IndexBuildSupport;
 import com.workbuddy.biz.service.support.index.IndexLineageResolver;
-import com.workbuddy.biz.service.support.assemble.IndexRowAssembler;
+import com.workbuddy.biz.service.support.index.IndexRowSupport;
 import com.workbuddy.biz.service.support.index.IndexVersionStateSupport;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.common.domain.entity.WbChunkSet;
@@ -70,7 +70,7 @@ public class IndexBuildServiceImpl implements IndexBuildService {
     private final WbEmbeddingSetDbService embeddingSetDbService;
     private final IndexComboService indexComboService;
     private final IndexLineageResolver lineageResolver;
-    private final IndexRowAssembler indexRowAssembler;
+    private final IndexRowSupport indexRowSupport;
     private final MilvusIndexPort milvusIndexPort;
     private final TaskQueueSupport taskQueue;
     private final IndexPublishService publishService;
@@ -100,7 +100,7 @@ public class IndexBuildServiceImpl implements IndexBuildService {
 
         // ② 定位/复用组合集合（绑定关=评测模式不自动注册新组合；无活跃版本时跳过追加）
         WbIndexVersion version = registerComboCollection(kbId, product.combo(), product.dimension());
-        List<IndexRow> rows = indexRowAssembler.assemble(fileResultId,
+        List<IndexRow> rows = indexRowSupport.assemble(fileResultId,
                 StrUtil.blankToDefault(file.getOwner(), ""), product.chunkRow(), product.embedRow());
         if (NullUtil.isNotNull(version)) {
             if (NullUtil.isNull(rows)) {

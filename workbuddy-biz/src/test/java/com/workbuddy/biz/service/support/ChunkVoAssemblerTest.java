@@ -5,6 +5,8 @@ import com.workbuddy.common.domain.entity.WbChunk;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.biz.service.support.assemble.ChunkVoAssembler;
+import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
+import com.workbuddy.biz.service.support.assemble.ChunkVoAssemblerImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -17,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class ChunkVoAssemblerTest {
 
-    private final ChunkVoAssembler assembler = new ChunkVoAssembler();
+    private final ChunkVoAssembler assembler = new ChunkVoAssemblerImpl();
 
     private WbChunk chunk(String id, String type, String parentChunkId, int chars) {
         WbChunk chunk = new WbChunk();
@@ -45,7 +47,7 @@ class ChunkVoAssemblerTest {
                 chunk("c-3", ChunkContentType.TABLE.name(), "c-1", 250),
                 chunk("c-4", ChunkContentType.PARAGRAPH.name(), null, 150));
 
-        var summary = assembler.toSummary(chunkSet, chunks);
+        var summary = ChunkStatsSupport.summaryOf(chunkSet, chunks);
 
         assertEquals(4, summary.getChunkCount());
         assertEquals(1000, summary.getTotalChars());
