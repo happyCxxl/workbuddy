@@ -55,7 +55,7 @@ public class TaskQueueProperties {
      * <p>键是 {@link PipelineStage} 枚举：配置里写错环节名（如 `pars`）在绑定期直接失败，不再静默回退默认值。
      * 配置键仍写 kebab 形式（`build-index`），宽松绑定认它。
      */
-    private Map<PipelineStage, Duration> timeout;
+    private Map<PipelineStage, Duration> timeout = Map.of();
 
     /**
      * 取指定环节的单任务超时：环节标识支持枚举名（BUILD_INDEX）与配置键（build-index）两种写法；
@@ -66,13 +66,11 @@ public class TaskQueueProperties {
      */
     public Duration timeoutOf(String stage) {
         PipelineStage parsed = parseStage(stage);
-        Map<PipelineStage, Duration> configured = timeout;
-        // 直接与 null 比较：SpotBugs 不识别 NullUtil（转调 Hutool）的判空，字段解引用会报 UWF
-        if (parsed == null || configured == null) {
+        if (NullUtil.isNull(parsed) || NullUtil.isNull(timeout)) {
             return DEFAULT_TIMEOUT;
         }
-        Duration value = configured.get(parsed);
-        return NullUtil.isNull(value) ? DEFAULT_TIMEOUT : value;
+        Duration configured = timeout.get(parsed);
+        return NullUtil.isNull(configured) ? DEFAULT_TIMEOUT : configured;
     }
 
     /** 环节标识归一化：去空格、转大写、连字符转下划线后按枚举名匹配，认不出返回 null */

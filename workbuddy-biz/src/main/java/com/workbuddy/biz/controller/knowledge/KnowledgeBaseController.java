@@ -35,7 +35,7 @@ import java.util.List;
 /**
  * 知识库管理接口：知识库读写 + 文件提交（建档）、提交记录、文件结果查询
  * （三者归属与生命周期都由知识库决定，路径挂在 `/knowledge-base/{id}/**` 下）。
- * 业务编排在 `KnowledgeBaseService` 实现（含文档提交建档、提交记录与文件结果查询），本类只做薄转发。
+ * 业务由三个用例服务实现编排，`KnowledgeBaseService` 门面按 API 用例委托；本类只做薄转发。
  *
  * <p>**可见范围**：普通用户只读写自己创建的知识库，管理员不限归属
  */
@@ -60,7 +60,7 @@ public class KnowledgeBaseController {
     @PostMapping
     public R<String> create(@Valid @RequestBody KnowledgeBaseCreateDTO dto) {
         log.info("===> KnowledgeBaseController create 创建知识库, name={}", dto.getName());
-        return R.ok(String.valueOf(knowledgeBaseService.create(dto)), "创建成功");
+        return R.ok(String.valueOf(knowledgeBaseService.createKnowledgeBase(dto)), "创建成功");
     }
 
     /**
@@ -80,7 +80,7 @@ public class KnowledgeBaseController {
             @Valid @RequestBody KnowledgeBaseUpdateDTO dto) {
         dto.setId(id);
         log.info("===> KnowledgeBaseController update 更新知识库, id={}", id);
-        return R.ok(knowledgeBaseService.update(dto), "更新成功");
+        return R.ok(knowledgeBaseService.updateKnowledgeBase(dto), "更新成功");
     }
 
     /**
@@ -95,7 +95,7 @@ public class KnowledgeBaseController {
     @GetMapping("/{id}")
     public R<KnowledgeBaseVO> detail(
             @PathVariable("id") Long id) {
-        return R.ok(knowledgeBaseService.detail(id));
+        return R.ok(knowledgeBaseService.getKnowledgeBase(id));
     }
 
     /**
@@ -110,7 +110,7 @@ public class KnowledgeBaseController {
      */
     @GetMapping("/page")
     public R<IPage<KnowledgeBaseVO>> page(@Valid KnowledgeBaseQueryDTO query) {
-        return R.ok(knowledgeBaseService.page(query));
+        return R.ok(knowledgeBaseService.pageKnowledgeBases(query));
     }
 
     /**
@@ -123,7 +123,7 @@ public class KnowledgeBaseController {
      */
     @GetMapping("/stats")
     public R<KnowledgeBaseStatsVO> stats() {
-        return R.ok(knowledgeBaseService.stats());
+        return R.ok(knowledgeBaseService.getKnowledgeBaseStats());
     }
 
     /**
@@ -139,7 +139,7 @@ public class KnowledgeBaseController {
     public R<Boolean> disable(
             @PathVariable("id") Long id) {
         log.info("===> KnowledgeBaseController disable 停用知识库, id={}", id);
-        return R.ok(knowledgeBaseService.disable(id), "停用成功");
+        return R.ok(knowledgeBaseService.disableKnowledgeBase(id), "停用成功");
     }
 
     /**
@@ -152,7 +152,7 @@ public class KnowledgeBaseController {
     public R<Boolean> enable(
             @PathVariable("id") Long id) {
         log.info("===> KnowledgeBaseController enable 启用知识库, id={}", id);
-        return R.ok(knowledgeBaseService.enable(id), "启用成功");
+        return R.ok(knowledgeBaseService.enableKnowledgeBase(id), "启用成功");
     }
 
     /**
@@ -168,7 +168,7 @@ public class KnowledgeBaseController {
     public R<Boolean> delete(
             @PathVariable("id") Long id) {
         log.info("===> KnowledgeBaseController delete 删除知识库, id={}", id);
-        return R.ok(knowledgeBaseService.delete(id), "删除成功");
+        return R.ok(knowledgeBaseService.deleteKnowledgeBase(id), "删除成功");
     }
 
 
@@ -190,7 +190,7 @@ public class KnowledgeBaseController {
             @Valid @RequestBody FileSubmitDTO request) {
         log.info("===> KnowledgeBaseController submit 提交文件, kbId={}, fileId={}, requestId={}",
                 id, request.getFileId(), request.getRequestId());
-        return R.ok(knowledgeBaseService.submit(id, request));
+        return R.ok(knowledgeBaseService.submitKnowledgeBaseFile(id, request));
     }
 
     /**
@@ -205,7 +205,7 @@ public class KnowledgeBaseController {
     public R<IPage<SubmitLogVO>> submitLogs(
             @PathVariable("id") Long id,
             @Valid SubmitLogQueryDTO query) {
-        return R.ok(knowledgeBaseService.pageSubmitLogs(id, query));
+        return R.ok(knowledgeBaseService.pageKnowledgeBaseSubmitLogs(id, query));
     }
 
     /**
@@ -220,7 +220,7 @@ public class KnowledgeBaseController {
     public R<IPage<FileResultVO>> fileResults(
             @PathVariable("id") Long id,
             @Valid FileResultQueryDTO query) {
-        return R.ok(knowledgeBaseService.pageFileResults(id, query));
+        return R.ok(knowledgeBaseService.pageKnowledgeBaseFileResults(id, query));
     }
 
     /**
@@ -238,7 +238,7 @@ public class KnowledgeBaseController {
     public R<StrategyBindingVO> strategyBinding(
             @PathVariable("id") Long id,
             @RequestParam("strategyType") String strategyType) {
-        return R.ok(knowledgeBaseService.strategyBinding(id, strategyType));
+        return R.ok(knowledgeBaseService.getKnowledgeBaseStrategyBinding(id, strategyType));
     }
 
     /**
@@ -254,7 +254,7 @@ public class KnowledgeBaseController {
     @GetMapping("/strategy-bindings")
     public R<List<StrategyBindingVO>> strategyBindings(
             @RequestParam("strategyType") String strategyType) {
-        return R.ok(knowledgeBaseService.strategyBindings(strategyType));
+        return R.ok(knowledgeBaseService.listKnowledgeBaseStrategyBindings(strategyType));
     }
 
     /**
@@ -274,7 +274,7 @@ public class KnowledgeBaseController {
             @PathVariable("id") Long id,
             @Valid @RequestBody StrategyBindingUpdateDTO dto) {
         log.info("===> KnowledgeBaseController bindStrategy 绑定知识库策略, id={}, type={}", id, dto.getStrategyType());
-        return R.ok(knowledgeBaseService.bindStrategy(id, dto), "绑定成功");
+        return R.ok(knowledgeBaseService.bindKnowledgeBaseStrategy(id, dto), "绑定成功");
     }
 
     /**
@@ -294,6 +294,6 @@ public class KnowledgeBaseController {
             @PathVariable("id") Long id,
             @Valid @RequestBody StrategyBindingsUpdateDTO request) {
         log.info("===> KnowledgeBaseController bindStrategies 批量绑定知识库策略集合, id={}", id);
-        return R.ok(knowledgeBaseService.bindStrategies(id, request), "绑定成功");
+        return R.ok(knowledgeBaseService.bindKnowledgeBaseStrategies(id, request), "绑定成功");
     }
 }

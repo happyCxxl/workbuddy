@@ -25,10 +25,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * 知识库应用服务门面：保持原对外接口不变，按管理、绑定、文档输入三块委托给对应用例实现。
+ * 知识库应用服务门面：对 Controller 暴露 API 级方法，按管理、绑定、文档输入三块委托给对应用例实现。
  *
- * <p>本类不承载业务编排与事务边界，事务注解落在被委托的实现上；调用方仍只依赖
- * {@link KnowledgeBaseService}，拆分不改变 API 契约、错误码与日志语义。
+ * <p>本类不承载业务编排与事务边界，事务注解落在被委托的实现上；对外契约由
+ * {@link KnowledgeBaseService} 独立声明，不与内部用例接口形成继承关系。
  */
 @Service
 @RequiredArgsConstructor
@@ -47,7 +47,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 新知识库 ID
      */
     @Override
-    public Long create(KnowledgeBaseCreateDTO dto) {
+    public Long createKnowledgeBase(KnowledgeBaseCreateDTO dto) {
         return crudService.create(dto);
     }
 
@@ -58,7 +58,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 更新成功为 true
      */
     @Override
-    public boolean update(KnowledgeBaseUpdateDTO dto) {
+    public boolean updateKnowledgeBase(KnowledgeBaseUpdateDTO dto) {
         return crudService.update(dto);
     }
 
@@ -69,7 +69,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 知识库详情
      */
     @Override
-    public KnowledgeBaseVO detail(Long id) {
+    public KnowledgeBaseVO getKnowledgeBase(Long id) {
         return crudService.detail(id);
     }
 
@@ -80,7 +80,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 知识库分页
      */
     @Override
-    public IPage<KnowledgeBaseVO> page(KnowledgeBaseQueryDTO query) {
+    public IPage<KnowledgeBaseVO> pageKnowledgeBases(KnowledgeBaseQueryDTO query) {
         return crudService.page(query);
     }
 
@@ -90,7 +90,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 统计视图
      */
     @Override
-    public KnowledgeBaseStatsVO stats() {
+    public KnowledgeBaseStatsVO getKnowledgeBaseStats() {
         return crudService.stats();
     }
 
@@ -101,7 +101,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 变更成功为 true
      */
     @Override
-    public boolean disable(Long id) {
+    public boolean disableKnowledgeBase(Long id) {
         return crudService.disable(id);
     }
 
@@ -112,7 +112,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 变更成功为 true
      */
     @Override
-    public boolean enable(Long id) {
+    public boolean enableKnowledgeBase(Long id) {
         return crudService.enable(id);
     }
 
@@ -123,7 +123,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 删除成功为 true
      */
     @Override
-    public boolean delete(Long id) {
+    public boolean deleteKnowledgeBase(Long id) {
         return crudService.delete(id);
     }
 
@@ -135,7 +135,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 绑定视图
      */
     @Override
-    public StrategyBindingVO strategyBinding(Long id, String strategyType) {
+    public StrategyBindingVO getKnowledgeBaseStrategyBinding(Long id, String strategyType) {
         return bindingService.strategyBinding(id, strategyType);
     }
 
@@ -146,7 +146,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 绑定视图列表
      */
     @Override
-    public List<StrategyBindingVO> strategyBindings(String strategyType) {
+    public List<StrategyBindingVO> listKnowledgeBaseStrategyBindings(String strategyType) {
         return bindingService.strategyBindings(strategyType);
     }
 
@@ -158,7 +158,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 成功为 true
      */
     @Override
-    public boolean bindStrategy(Long id, StrategyBindingUpdateDTO dto) {
+    public boolean bindKnowledgeBaseStrategy(Long id, StrategyBindingUpdateDTO dto) {
         return bindingService.bindStrategy(id, dto);
     }
 
@@ -170,7 +170,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 成功为 true
      */
     @Override
-    public boolean bindStrategies(Long id, StrategyBindingsUpdateDTO request) {
+    public boolean bindKnowledgeBaseStrategies(Long id, StrategyBindingsUpdateDTO request) {
         return bindingService.bindStrategies(id, request);
     }
 
@@ -182,7 +182,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 提交响应
      */
     @Override
-    public FileSubmitVO submit(Long knowledgeBaseId, FileSubmitDTO request) {
+    public FileSubmitVO submitKnowledgeBaseFile(Long knowledgeBaseId, FileSubmitDTO request) {
         return fileService.submit(knowledgeBaseId, request);
     }
 
@@ -194,7 +194,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 提交记录分页
      */
     @Override
-    public IPage<SubmitLogVO> pageSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDTO query) {
+    public IPage<SubmitLogVO> pageKnowledgeBaseSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDTO query) {
         return fileService.pageSubmitLogs(knowledgeBaseId, query);
     }
 
@@ -206,7 +206,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @return 文件结果分页
      */
     @Override
-    public IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDTO query) {
+    public IPage<FileResultVO> pageKnowledgeBaseFileResults(Long knowledgeBaseId, FileResultQueryDTO query) {
         return fileService.pageFileResults(knowledgeBaseId, query);
     }
 }

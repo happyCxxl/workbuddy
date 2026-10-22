@@ -56,14 +56,14 @@ class KnowledgeBaseControllerRoutingTest {
      */
     @Test
     void createShouldRouteToService() throws Exception {
-        when(knowledgeBaseService.create(any())).thenReturn(1L);
+        when(knowledgeBaseService.createKnowledgeBase(any())).thenReturn(1L);
 
         mockMvc.perform(post("/knowledge-base")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"标书库\"}"))
                 .andExpect(status().isOk());
 
-        verify(knowledgeBaseService).create(any());
+        verify(knowledgeBaseService).createKnowledgeBase(any());
     }
 
     /**
@@ -73,14 +73,14 @@ class KnowledgeBaseControllerRoutingTest {
      */
     @Test
     void updateShouldRouteWithPathIdAndBody() throws Exception {
-        when(knowledgeBaseService.update(any())).thenReturn(true);
+        when(knowledgeBaseService.updateKnowledgeBase(any())).thenReturn(true);
 
         mockMvc.perform(put("/knowledge-base/9")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\":9,\"name\":\"新名\"}"))
                 .andExpect(status().isOk());
 
-        verify(knowledgeBaseService).update(any());
+        verify(knowledgeBaseService).updateKnowledgeBase(any());
     }
 
     /**
@@ -95,7 +95,7 @@ class KnowledgeBaseControllerRoutingTest {
                         .content("{\"name\":\"新名\"}"))
                 .andExpect(status().isBadRequest());
 
-        verify(knowledgeBaseService, org.mockito.Mockito.never()).update(any());
+        verify(knowledgeBaseService, org.mockito.Mockito.never()).updateKnowledgeBase(any());
     }
 
     /**
@@ -105,11 +105,11 @@ class KnowledgeBaseControllerRoutingTest {
      */
     @Test
     void detailShouldRouteToService() throws Exception {
-        when(knowledgeBaseService.detail(9L)).thenReturn(new KnowledgeBaseVO());
+        when(knowledgeBaseService.getKnowledgeBase(9L)).thenReturn(new KnowledgeBaseVO());
 
         mockMvc.perform(get("/knowledge-base/9")).andExpect(status().isOk());
 
-        verify(knowledgeBaseService).detail(9L);
+        verify(knowledgeBaseService).getKnowledgeBase(9L);
     }
 
     /**
@@ -119,15 +119,15 @@ class KnowledgeBaseControllerRoutingTest {
      */
     @Test
     void pageAndStatsShouldTakeExactPathsOverPathVariable() throws Exception {
-        when(knowledgeBaseService.page(any())).thenReturn(new Page<>());
-        when(knowledgeBaseService.stats()).thenReturn(new KnowledgeBaseStatsVO());
+        when(knowledgeBaseService.pageKnowledgeBases(any())).thenReturn(new Page<>());
+        when(knowledgeBaseService.getKnowledgeBaseStats()).thenReturn(new KnowledgeBaseStatsVO());
 
         mockMvc.perform(get("/knowledge-base/page")).andExpect(status().isOk());
         mockMvc.perform(get("/knowledge-base/stats")).andExpect(status().isOk());
 
-        verify(knowledgeBaseService).page(any());
-        verify(knowledgeBaseService).stats();
-        verify(knowledgeBaseService, org.mockito.Mockito.never()).detail(any());
+        verify(knowledgeBaseService).pageKnowledgeBases(any());
+        verify(knowledgeBaseService).getKnowledgeBaseStats();
+        verify(knowledgeBaseService, org.mockito.Mockito.never()).getKnowledgeBase(any());
     }
 
     /**
@@ -137,17 +137,17 @@ class KnowledgeBaseControllerRoutingTest {
      */
     @Test
     void disableEnableDeleteShouldRouteToService() throws Exception {
-        when(knowledgeBaseService.disable(9L)).thenReturn(true);
-        when(knowledgeBaseService.enable(9L)).thenReturn(true);
-        when(knowledgeBaseService.delete(9L)).thenReturn(true);
+        when(knowledgeBaseService.disableKnowledgeBase(9L)).thenReturn(true);
+        when(knowledgeBaseService.enableKnowledgeBase(9L)).thenReturn(true);
+        when(knowledgeBaseService.deleteKnowledgeBase(9L)).thenReturn(true);
 
         mockMvc.perform(post("/knowledge-base/9/disable")).andExpect(status().isOk());
         mockMvc.perform(post("/knowledge-base/9/enable")).andExpect(status().isOk());
         mockMvc.perform(delete("/knowledge-base/9")).andExpect(status().isOk());
 
-        verify(knowledgeBaseService).disable(9L);
-        verify(knowledgeBaseService).enable(9L);
-        verify(knowledgeBaseService).delete(9L);
+        verify(knowledgeBaseService).disableKnowledgeBase(9L);
+        verify(knowledgeBaseService).enableKnowledgeBase(9L);
+        verify(knowledgeBaseService).deleteKnowledgeBase(9L);
     }
 
     /**
@@ -157,14 +157,14 @@ class KnowledgeBaseControllerRoutingTest {
      */
     @Test
     void submitShouldRouteWithBody() throws Exception {
-        when(knowledgeBaseService.submit(eq(9L), any())).thenReturn(new FileSubmitVO());
+        when(knowledgeBaseService.submitKnowledgeBaseFile(eq(9L), any())).thenReturn(new FileSubmitVO());
 
         mockMvc.perform(post("/knowledge-base/9/submit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"fileId\":\"f-1\"}"))
                 .andExpect(status().isOk());
 
-        verify(knowledgeBaseService).submit(eq(9L), any());
+        verify(knowledgeBaseService).submitKnowledgeBaseFile(eq(9L), any());
     }
 
     /**
@@ -174,14 +174,14 @@ class KnowledgeBaseControllerRoutingTest {
      */
     @Test
     void submitLogsAndFileResultsShouldRouteToService() throws Exception {
-        when(knowledgeBaseService.pageSubmitLogs(eq(9L), any())).thenReturn(new Page<SubmitLogVO>());
-        when(knowledgeBaseService.pageFileResults(eq(9L), any())).thenReturn(new Page<FileResultVO>());
+        when(knowledgeBaseService.pageKnowledgeBaseSubmitLogs(eq(9L), any())).thenReturn(new Page<SubmitLogVO>());
+        when(knowledgeBaseService.pageKnowledgeBaseFileResults(eq(9L), any())).thenReturn(new Page<FileResultVO>());
 
         mockMvc.perform(get("/knowledge-base/9/submit-logs")).andExpect(status().isOk());
         mockMvc.perform(get("/knowledge-base/9/file-results")).andExpect(status().isOk());
 
-        verify(knowledgeBaseService).pageSubmitLogs(eq(9L), any());
-        verify(knowledgeBaseService).pageFileResults(eq(9L), any());
+        verify(knowledgeBaseService).pageKnowledgeBaseSubmitLogs(eq(9L), any());
+        verify(knowledgeBaseService).pageKnowledgeBaseFileResults(eq(9L), any());
     }
 
     /**
@@ -192,10 +192,11 @@ class KnowledgeBaseControllerRoutingTest {
      */
     @Test
     void strategyBindingEndpointsShouldRouteToService() throws Exception {
-        when(knowledgeBaseService.strategyBinding(9L, "CHUNK")).thenReturn(new StrategyBindingVO());
-        when(knowledgeBaseService.strategyBindings("CHUNK")).thenReturn(List.of(new StrategyBindingVO()));
-        when(knowledgeBaseService.bindStrategy(eq(9L), any())).thenReturn(true);
-        when(knowledgeBaseService.bindStrategies(eq(9L), any())).thenReturn(true);
+        when(knowledgeBaseService.getKnowledgeBaseStrategyBinding(9L, "CHUNK")).thenReturn(new StrategyBindingVO());
+        when(knowledgeBaseService.listKnowledgeBaseStrategyBindings("CHUNK"))
+                .thenReturn(List.of(new StrategyBindingVO()));
+        when(knowledgeBaseService.bindKnowledgeBaseStrategy(eq(9L), any())).thenReturn(true);
+        when(knowledgeBaseService.bindKnowledgeBaseStrategies(eq(9L), any())).thenReturn(true);
 
         mockMvc.perform(get("/knowledge-base/9/strategy-binding")
                         .param("strategyType", "CHUNK"))
@@ -212,10 +213,10 @@ class KnowledgeBaseControllerRoutingTest {
                         .content("{\"bindings\":[{\"strategyType\":\"CHUNK\",\"strategyVersionId\":3}]}"))
                 .andExpect(status().isOk());
 
-        verify(knowledgeBaseService).strategyBinding(9L, "CHUNK");
-        verify(knowledgeBaseService).strategyBindings("CHUNK");
-        verify(knowledgeBaseService).bindStrategy(eq(9L), any());
-        verify(knowledgeBaseService).bindStrategies(eq(9L), any());
+        verify(knowledgeBaseService).getKnowledgeBaseStrategyBinding(9L, "CHUNK");
+        verify(knowledgeBaseService).listKnowledgeBaseStrategyBindings("CHUNK");
+        verify(knowledgeBaseService).bindKnowledgeBaseStrategy(eq(9L), any());
+        verify(knowledgeBaseService).bindKnowledgeBaseStrategies(eq(9L), any());
     }
 
     /**
@@ -227,6 +228,6 @@ class KnowledgeBaseControllerRoutingTest {
     void strategyBindingShouldRejectMissingType() throws Exception {
         mockMvc.perform(get("/knowledge-base/9/strategy-binding")).andExpect(status().isBadRequest());
 
-        verify(knowledgeBaseService, org.mockito.Mockito.never()).strategyBinding(any(), any());
+        verify(knowledgeBaseService, org.mockito.Mockito.never()).getKnowledgeBaseStrategyBinding(any(), any());
     }
 }
