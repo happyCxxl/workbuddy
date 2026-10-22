@@ -41,6 +41,9 @@ class ModelRouterTest {
     private ModelCooldownStore modelCooldownStore;
 
     @Mock
+    private ModelCircuitBreakers modelCircuitBreakers;
+
+    @Mock
     private RouteStateStore routeStateStore;
 
     private ModelRouteProperties routeProperties;
@@ -51,9 +54,10 @@ class ModelRouterTest {
     void setUp() {
         routeProperties = new ModelRouteProperties();
         router = new ModelRouter(modelCatalogPort, new CapacityFirstStrategy(),
-                modelCapacityGuard, modelCooldownStore, routeStateStore, routeProperties);
+                modelCapacityGuard, modelCooldownStore, modelCircuitBreakers, routeStateStore, routeProperties);
         lenient().when(modelCapacityGuard.snapshot(any(), any(), any())).thenReturn(new CapacitySnapshot(1, 1));
         lenient().when(modelCooldownStore.coolingDown(any())).thenReturn(false);
+        lenient().when(modelCircuitBreakers.isOpen(any())).thenReturn(false);
         lenient().when(routeStateStore.slowStartFactor(any(), anyLong())).thenReturn(1.0);
         lenient().when(routeStateStore.latencyMillis(any())).thenReturn(0L);
     }
@@ -153,6 +157,20 @@ class ModelRouterTest {
         List<ModelDescriptor> candidates = router.candidates(ModelCapability.CHAT, null);
 
         assertEquals(List.of("b", "a"), candidates.stream().map(ModelDescriptor::getModelKey).toList());
+    }
+
+    /** 熔断打开的模型不进候选（{@code shouldExcludeOpenCircuit}）。 */
+    @Test
+    void shouldExcludeOpenCircuit() {
+        when(modelCatalogPort.listByCapability(ModelCapability.CHAT)).thenReturn(List.of(
+                model("a", "ENABLED", 60, 1000),
+                model("b", "ENABLED", 60, 1000)));
+        when(modelCircuitBreakers.isOpen(new ModelRef("dashscope", "a"))).thenReturn(true);
+
+        List<ModelDescriptor> candidates = router.candidates(ModelCapability.CHAT, null);
+
+        assertEquals(1, candidates.size());
+        assertEquals("b", candidates.getFirst().getModelKey());
     }
 
     /** 已尝试过的模型跳过，取下一个（{@code shouldSelectNextNotTried}）。 */

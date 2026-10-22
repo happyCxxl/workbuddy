@@ -33,6 +33,8 @@ public class ModelRouter {
 
     private final ModelCooldownStore modelCooldownStore;
 
+    private final ModelCircuitBreakers modelCircuitBreakers;
+
     private final RouteStateStore routeStateStore;
 
     private final ModelRouteProperties modelRouteProperties;
@@ -56,6 +58,7 @@ public class ModelRouter {
                 .filter(model -> NullUtil.isNotNull(model.getRpmLimit()) && model.getRpmLimit() > 0)
                 .filter(model -> NullUtil.isNotNull(model.getTpmLimit()) && model.getTpmLimit() > 0)
                 .filter(model -> !modelCooldownStore.coolingDown(refOf(model)))
+                .filter(model -> !modelCircuitBreakers.isOpen(refOf(model)))
                 .toList();
         List<RouteCandidate> ranked = matched.stream().map(this::toCandidate).toList();
         return routingStrategy.order(ranked).stream().map(RouteCandidate::model).toList();

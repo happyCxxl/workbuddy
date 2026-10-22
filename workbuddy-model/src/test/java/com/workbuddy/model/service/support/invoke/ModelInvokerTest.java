@@ -10,6 +10,8 @@ import com.workbuddy.model.ModelAdapter;
 import com.workbuddy.model.ModelRef;
 import com.workbuddy.model.config.ModelRouteProperties;
 import com.workbuddy.model.service.support.capacity.ModelCapacityGuard;
+import com.workbuddy.model.service.support.capacity.ModelCooldownStore;
+import com.workbuddy.model.service.support.route.ModelCircuitBreakers;
 import com.workbuddy.model.service.support.route.ModelRouter;
 import com.workbuddy.model.service.support.route.RouteStateStore;
 import dev.langchain4j.exception.AuthenticationException;
@@ -56,6 +58,15 @@ class ModelInvokerTest {
     private ModelCapacityGuard modelCapacityGuard;
 
     @Mock
+    private ModelCircuitBreakers modelCircuitBreakers;
+
+    @Mock
+    private ModelCooldownStore modelCooldownStore;
+
+    @Mock
+    private DbModelCallRecorder modelCallRecorder;
+
+    @Mock
     private RouteStateStore routeStateStore;
 
     private ModelInvoker invoker;
@@ -66,8 +77,10 @@ class ModelInvokerTest {
     void setUp() {
         routeProperties = new ModelRouteProperties();
         invoker = new ModelInvoker(modelAdapter, modelRouter, modelCapacityGuard,
-                new ModelErrorClassifier(), routeProperties, routeStateStore);
+                modelCircuitBreakers, modelCooldownStore, new ModelErrorClassifier(),
+                routeProperties, routeStateStore, modelCallRecorder);
         lenient().when(modelCapacityGuard.tryAcquire(any(), any(), any())).thenReturn(true);
+        lenient().when(modelCircuitBreakers.tryAcquire(any())).thenReturn(true);
     }
 
     private ModelDescriptor model(String modelKey) {
@@ -187,7 +200,7 @@ class ModelInvokerTest {
         verify(modelAdapter).chat(modelB, request);
     }
 
-    /** 全部候选容量不足：按 40465 收口（{@code shouldRejectWhenCapacityExhausted}）。 */
+    /** 全部候选容量不足：按 40470 收口（{@code shouldRejectWhenCapacityExhausted}）。 */
     @Test
     void shouldRejectWhenCapacityExhausted() {
         routeProperties.setMaxAttempts(2);
@@ -197,7 +210,7 @@ class ModelInvokerTest {
 
         WorkbuddyException error = assertThrows(WorkbuddyException.class, () -> invoker.chat(request()));
 
-        assertEquals(ErrorCode.MODEL_RATE_LIMITED, error.getErrorCode());
+        assertEquals(ErrorCode.MODEL_UNAVAILABLE, error.getErrorCode());
         verify(modelAdapter, never()).chat(any(), any());
     }
 }

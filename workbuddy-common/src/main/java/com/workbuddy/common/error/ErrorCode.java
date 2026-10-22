@@ -139,7 +139,7 @@ public enum ErrorCode {
     /** 系统异常 */
     SYSTEM_ERROR(40500, "系统异常，请稍后重试"),
 
-    // ===== 模型调用（40460~40469）：只承载码值与文案，模态与厂商信息由异常 detail 补齐 =====
+    // ===== 模型调用（40460~40470）：只承载码值与文案，模态与厂商信息由异常 detail 补齐 =====
 
     /** 厂商未实现该模态 */
     MODEL_MODALITY_UNSUPPORTED(40460, "模型未支持该模态"),
@@ -169,7 +169,10 @@ public enum ErrorCode {
     MODEL_UNREACHABLE(40468, "模型服务不可达"),
 
     /** 输出未过结构校验 */
-    MODEL_OUTPUT_INVALID(40469, "模型输出结构校验失败");
+    MODEL_OUTPUT_INVALID(40469, "模型输出结构校验失败"),
+
+    /** 候选全部熔断、冷却或容量不足，本次请求暂无可用模型 */
+    MODEL_UNAVAILABLE(40470, "模型暂时不可用");
 
     private final int code;
 

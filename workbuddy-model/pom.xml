@@ -54,6 +54,12 @@
             <artifactId>langchain4j-open-ai</artifactId>
         </dependency>
 
+        <!-- 模型级熔断（版本由根 pom 的 dependencyManagement 单点钉定） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+        </dependency>
+
         <!-- 配置属性元数据（生成 META-INF/spring-configuration-metadata.json，IDE 按它解析本模块的键；
              optional：不进依赖方的运行时类路径） -->
         <dependency>

@@ -488,6 +488,31 @@ CREATE TABLE wb_model
    COMMENT ='模型目录：一行 = 一个模型的厂商归属、能力、长度、价格与限额';
 
 -- ============================================================================
+-- 模型调用明细：一次尝试一行，成功失败都记，只插不改
+-- ============================================================================
+CREATE TABLE wb_model_call
+(
+    id                BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    request_id        VARCHAR(64) NOT NULL COMMENT '一次业务请求的追踪 ID（同一次请求的多次尝试共用）',
+    task_id           BIGINT               DEFAULT NULL COMMENT '处理链任务 ID（可空）',
+    capability        VARCHAR(32) NOT NULL COMMENT '能力（ModelCapability）',
+    vendor_code       VARCHAR(64) NOT NULL COMMENT '厂商码',
+    model_key         VARCHAR(128) NOT NULL COMMENT '厂商侧模型名',
+    route_reason      VARCHAR(32) NOT NULL COMMENT 'RouteReason',
+    attempt           INT         NOT NULL COMMENT '本次请求内的尝试序号（1 起）',
+    status            VARCHAR(16) NOT NULL COMMENT 'SUCCESS / FAILED',
+    error_code        INT                  DEFAULT NULL COMMENT '失败时的错误码',
+    latency_ms        INT         NOT NULL COMMENT '本模型调用耗时',
+    prompt_tokens     INT                  DEFAULT NULL COMMENT '输入 token（usage 回填）',
+    completion_tokens INT                  DEFAULT NULL COMMENT '输出 token（usage 回填）',
+    create_time       DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    PRIMARY KEY (id),
+    KEY idx_model_time (vendor_code, model_key, create_time),
+    KEY idx_request (request_id)
+) ENGINE = InnoDB
+   COMMENT ='模型调用明细：一次尝试一行，成功失败都记';
+
+-- ============================================================================
 -- ============================================================================
 -- 十一、初始数据
 -- ============================================================================
