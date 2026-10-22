@@ -1,6 +1,7 @@
 package com.workbuddy.common.exception;
 
 import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.utils.NullUtil;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -32,14 +33,20 @@ public final class ThrowUtil {
     /**
      * 条件成立时按错误码抛出，detail 覆盖默认消息。
      *
+     * <p>detail 为空或全空白时回退错误码自带的默认文案（异常消息不落空）。
+     *
      * @param condition  为 true 时抛出
      * @param errorCode  错误码
-     * @param errMessage 补充原因
+     * @param errMessage 补充原因（可空；空则用错误码默认文案）
      */
     public static void throwIf(boolean condition, ErrorCode errorCode, String errMessage) {
-        if (condition) {
-            throw new WorkbuddyException(errorCode, errMessage);
+        if (!condition) {
+            return;
         }
+        if (NullUtil.isNull(errMessage) || errMessage.isBlank()) {
+            throw new WorkbuddyException(errorCode);
+        }
+        throw new WorkbuddyException(errorCode, errMessage);
     }
 
     /**

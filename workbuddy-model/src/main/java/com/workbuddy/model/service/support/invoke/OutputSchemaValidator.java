@@ -86,10 +86,9 @@ public class OutputSchemaValidator {
             throw invalid("输出不是合法 JSON: " + error.getMessage());
         }
         List<Error> errors = schema.validate(schemaNode);
-        if (!errors.isEmpty()) {
-            throw new WorkbuddyException(ErrorCode.MODEL_OUTPUT_INVALID,
-                    "输出不满足 JSON Schema: " + errors.getFirst().getMessage());
-        }
+        ThrowUtil.throwIf(!errors.isEmpty(),
+                () -> new WorkbuddyException(ErrorCode.MODEL_OUTPUT_INVALID,
+                        "输出不满足 JSON Schema: " + errors.getFirst().getMessage()));
         return node;
     }
 

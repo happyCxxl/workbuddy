@@ -199,9 +199,8 @@ public abstract class AbstractFileStorage implements FileStorage {
         try {
             return provider.get(ref.bucket(), ref.objectKey());
         } catch (Exception e) {
-            if (!provider.exists(ref.bucket(), ref.objectKey())) {
-                throw new WorkbuddyException(ErrorCode.STORAGE_OBJECT_MISSING, "对象不存在: " + ref.path());
-            }
+            ThrowUtil.throwIf(!provider.exists(ref.bucket(), ref.objectKey()),
+                    ErrorCode.STORAGE_OBJECT_MISSING, "对象不存在: " + ref.path());
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象读取失败: " + ref.path());
         }
     }

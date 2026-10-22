@@ -89,6 +89,21 @@ class ThrowUtilTest {
     }
 
     /**
+     * 守护 {@code throwIfShouldFallbackToDefaultMessageWhenDetailBlank}：该场景行为改动即失败。
+     */
+    @Test
+    void throwIfShouldFallbackToDefaultMessageWhenDetailBlank() {
+        WorkbuddyException nullDetail = assertThrows(WorkbuddyException.class,
+                () -> ThrowUtil.throwIf(true, ErrorCode.USER_NOT_FOUND, (String) null));
+        assertEquals(ErrorCode.USER_NOT_FOUND.getCode(), nullDetail.getCode());
+        assertEquals(ErrorCode.USER_NOT_FOUND.getMessage(), nullDetail.getMessage());
+
+        WorkbuddyException blankDetail = assertThrows(WorkbuddyException.class,
+                () -> ThrowUtil.throwIf(true, ErrorCode.USER_NOT_FOUND, "   "));
+        assertEquals(ErrorCode.USER_NOT_FOUND.getMessage(), blankDetail.getMessage());
+    }
+
+    /**
      * 守护 {@code throwIfShouldRunActionBeforeThrowing}：该场景行为改动即失败。
      */
     @Test

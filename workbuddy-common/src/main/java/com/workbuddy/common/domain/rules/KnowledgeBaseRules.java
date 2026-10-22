@@ -100,12 +100,8 @@ public final class KnowledgeBaseRules {
     /** 状态闸门公共实现：状态缺失或非预期即抛对应错误码 */
     private static void requireStatus(WbKnowledgeBase kb, KnowledgeBaseStatus expected, ErrorCode errorCode,
                                       String message) {
-        if (NullUtil.isNull(kb.getStatus()) || !ObjectUtil.equal(kb.getStatus(), expected.getCode())) {
-            if (NullUtil.isNull(message)) {
-                throw new WorkbuddyException(errorCode);
-            }
-            throw new WorkbuddyException(errorCode, message);
-        }
+        ThrowUtil.throwIf(NullUtil.isNull(kb.getStatus()) || !ObjectUtil.equal(kb.getStatus(), expected.getCode()),
+                errorCode, message);
     }
 
     /**

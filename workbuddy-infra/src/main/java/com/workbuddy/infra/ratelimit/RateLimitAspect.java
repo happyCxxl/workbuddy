@@ -1,7 +1,7 @@
 package com.workbuddy.infra.ratelimit;
 
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.WorkbuddyException;
+import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.annotation.RateLimit;
 import com.workbuddy.common.utils.ClientIpUtil;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +36,8 @@ public class RateLimitAspect {
     @Around("@annotation(rateLimit)")
     public Object around(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
         String key = bucketKey(joinPoint);
-        if (!bucketRateLimiter.tryAcquire(key, rateLimit.capacity(), rateLimit.periodSeconds())) {
-            throw new WorkbuddyException(ErrorCode.RATE_LIMITED, messageOf(rateLimit));
-        }
+        ThrowUtil.throwIf(!bucketRateLimiter.tryAcquire(key, rateLimit.capacity(), rateLimit.periodSeconds()),
+                ErrorCode.RATE_LIMITED, messageOf(rateLimit));
         return joinPoint.proceed();
     }
 
