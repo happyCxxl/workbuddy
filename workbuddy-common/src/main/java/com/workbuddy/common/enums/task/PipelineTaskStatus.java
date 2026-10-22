@@ -1,5 +1,6 @@
 package com.workbuddy.common.enums.task;
 
+import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 
 import java.util.EnumSet;
@@ -59,13 +60,12 @@ public enum PipelineTaskStatus {
      * @return 目标状态
      */
     public static PipelineTaskStatus requireTransition(PipelineTaskStatus from, PipelineTaskStatus to) {
-        if (NullUtil.isNull(from) || NullUtil.isNull(to)) {
-            throw new IllegalArgumentException("任务状态迁移的源/目标不能为空");
-        }
-        if (!from.allowedTargets().contains(to)) {
-            throw new IllegalArgumentException("非法的任务状态迁移：" + from + " → " + to
-                    + "（" + from + " 只允许 " + from.allowedTargets() + "）");
-        }
+        ThrowUtil.throwIf(NullUtil.isNull(from) || NullUtil.isNull(to),
+                () -> new IllegalArgumentException("任务状态迁移的源/目标不能为空"));
+        // 上一条守卫已在源状态为空时抛出，这里的 from 必然非空
+        ThrowUtil.throwIf(!from.allowedTargets().contains(to),
+                () -> new IllegalArgumentException("非法的任务状态迁移：" + from + " → " + to
+                        + "（" + from + " 只允许 " + from.allowedTargets() + "）"));
         return to;
     }
 }

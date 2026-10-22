@@ -101,6 +101,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         try {
             strategyVersionDbService.save(row);
         } catch (DuplicateKeyException e) {
+            log.warn("策略版本唯一键冲突, type={}, name={}, version={}", type, name, version, e);
             throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "同环节同名版本已存在");
         }
         return toVO(row);
@@ -174,6 +175,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         try {
             config = JsonUtil.toMap(configSnapshot);
         } catch (Exception e) {
+            log.warn("策略版本配置不是合法 JSON, type={}", type, e);
             throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "配置不是合法 JSON");
         }
         String error = switch (type) {

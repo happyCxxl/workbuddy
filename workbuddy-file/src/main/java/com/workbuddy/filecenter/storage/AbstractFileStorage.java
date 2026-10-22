@@ -10,6 +10,7 @@ import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.db.WbFileObjectDbService;
 import com.workbuddy.infra.storage.StorageProvider;
 import com.workbuddy.filecenter.provider.StorageRouter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.util.Map;
  * <p>写入走当前启用的数据源（{@link StorageRouter#writer()}），桶名取该数据源的参数；
  * 读取按记录里的数据源 ID 选后端，桶名取自记录，不由定义回填。
  */
+@Slf4j
 public abstract class AbstractFileStorage implements FileStorage {
 
     protected final StorageRouter router;
@@ -62,6 +64,7 @@ public abstract class AbstractFileStorage implements FileStorage {
                         "application/octet-stream");
             }
         } catch (Exception e) {
+            log.warn("对象写入失败, sha256={}", sha256, e);
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + sha256);
         }
         return new ObjectRef(sourceId, provider.type(), bucket, sha256);
@@ -84,6 +87,7 @@ public abstract class AbstractFileStorage implements FileStorage {
         try {
             provider.put(bucket, key, in, size, contentType);
         } catch (Exception e) {
+            log.warn("对象写入失败, key={}", key, e);
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + key);
         }
         return new ObjectRef(sourceId, provider.type(), bucket, key);
@@ -101,6 +105,7 @@ public abstract class AbstractFileStorage implements FileStorage {
         try (InputStream in = openRef(ref)) {
             return in.readAllBytes();
         } catch (IOException e) {
+            log.warn("对象读取失败, ref={}", ref.path(), e);
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象读取失败: " + ref.path());
         }
     }
@@ -170,6 +175,7 @@ public abstract class AbstractFileStorage implements FileStorage {
             router.writer().put(bucket, key, digest, size, contentType);
             return HexFormat.of().formatHex(digest.getMessageDigest().digest());
         } catch (Exception e) {
+            log.warn("对象写入失败, key={}", key, e);
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + key);
         }
     }
@@ -199,6 +205,7 @@ public abstract class AbstractFileStorage implements FileStorage {
         try {
             return provider.get(ref.bucket(), ref.objectKey());
         } catch (Exception e) {
+            log.warn("对象读取失败, ref={}", ref.path(), e);
             ThrowUtil.throwIf(!provider.exists(ref.bucket(), ref.objectKey()),
                     ErrorCode.STORAGE_OBJECT_MISSING, "对象不存在: " + ref.path());
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象读取失败: " + ref.path());
@@ -215,6 +222,7 @@ public abstract class AbstractFileStorage implements FileStorage {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
         } catch (Exception e) {
+            log.warn("对象指纹计算失败", e);
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象指纹计算失败");
         }
     }

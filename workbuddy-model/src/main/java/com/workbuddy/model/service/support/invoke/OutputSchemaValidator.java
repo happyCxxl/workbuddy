@@ -13,6 +13,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 /**
  * 输出结构校验：调用前拒绝缺 schema 的 JSON_SCHEMA；调用后按格式校验并返回 JSON 树。
  */
+@Slf4j
 @Component
 public class OutputSchemaValidator {
 
@@ -76,6 +78,7 @@ public class OutputSchemaValidator {
         try {
             schema = SCHEMAS.getSchema(output.getSchema());
         } catch (RuntimeException error) {
+            log.warn("JSON Schema 无法编译, format={}", output.getFormat(), error);
             throw new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST,
                     "JSON Schema 无法编译: " + error.getMessage());
         }

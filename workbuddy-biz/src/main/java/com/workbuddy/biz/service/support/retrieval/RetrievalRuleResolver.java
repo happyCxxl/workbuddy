@@ -54,6 +54,7 @@ public class RetrievalRuleResolver {
         try {
             return JsonUtil.toObject(configSnapshot, RetrievalRuleSpec.class);
         } catch (Exception e) {
+            log.warn("检索规则配置不是合法 JSON, length={}", configSnapshot.length(), e);
             throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "检索规则配置不是合法 JSON");
         }
     }

@@ -10,6 +10,7 @@ import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.db.WbFileObjectDbService;
 import com.workbuddy.infra.storage.StorageProvider;
 import com.workbuddy.filecenter.provider.StorageRouter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,7 @@ import java.io.InputStream;
  *
  * <p>类名与后端无关：注入的 StorageRouter 按数据源定义决定字节落在 MinIO 还是本地磁盘。
  */
+@Slf4j
 @Service
 public class DefaultFileStorage extends AbstractFileStorage {
 
@@ -52,6 +54,7 @@ public class DefaultFileStorage extends AbstractFileStorage {
         try (InputStream in = new BufferedInputStream(file.getInputStream())) {
             sha256 = putWithDigest(bucket, fileId, in, file.getSize(), file.getContentType());
         } catch (IOException e) {
+            log.warn("文件上传失败, fileName={}", file.getOriginalFilename(), e);
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "文件上传失败: " + file.getOriginalFilename());
         }
 

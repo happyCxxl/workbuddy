@@ -205,6 +205,7 @@ public class ModelInvoker {
             if (NullUtil.isNotNull(last)) {
                 throw last;
             }
+            log.warn("模型调用重试耗尽", exhausted);
             throw new WorkbuddyException(ErrorCode.MODEL_SERVER_ERROR, "模型调用重试耗尽");
         }
     }

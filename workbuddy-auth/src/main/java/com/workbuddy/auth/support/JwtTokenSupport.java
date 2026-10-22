@@ -10,6 +10,7 @@ import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -20,6 +21,7 @@ import java.util.Objects;
 /**
  * JWT 令牌支撑：签发与解析。
  */
+@Slf4j
 @Component
 public class JwtTokenSupport {
 
@@ -125,6 +127,8 @@ public class JwtTokenSupport {
         } catch (WorkbuddyException e) {
             throw e;
         } catch (Exception e) {
+            // 不记录令牌内容：只留解析/校验失败的原因，供排查过期与签名问题
+            log.warn("令牌校验失败", e);
             throw new WorkbuddyException(ErrorCode.UNAUTHORIZED);
         }
     }

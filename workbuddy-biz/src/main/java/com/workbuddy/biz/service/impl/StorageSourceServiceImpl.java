@@ -299,6 +299,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
         try {
             StorageProviderFactory.create(def).initialize();
         } catch (Exception e) {
+            log.warn("存储数据源连接失败, source={}", def.name(), e);
             throw new WorkbuddyException(ErrorCode.STORAGE_SOURCE_PROBE_FAILED,
                     "存储数据源连接失败: " + def.name() + "（" + e.getMessage() + "）");
         }

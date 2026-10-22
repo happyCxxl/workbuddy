@@ -1,5 +1,6 @@
 package com.workbuddy.model.startup;
 
+import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.startup.StartupCheck;
 import com.workbuddy.common.startup.StartupCheckChain;
 import com.workbuddy.model.config.ModelRouteProperties;
@@ -34,21 +35,16 @@ public class ModelRouteConfigCheck implements StartupCheck {
      */
     @Override
     public void check(StartupCheckChain next) {
-        if (properties.getCooldownSeconds() <= 0) {
-            throw new IllegalStateException("模型路由冷却时长必须为正数（workbuddy.model.route.cooldown-seconds）");
-        }
-        if (properties.getSlowStartSeconds() < 0) {
-            throw new IllegalStateException("模型路由 slow start 窗口不能为负数（workbuddy.model.route.slow-start-seconds）");
-        }
-        if (properties.getErrorTriggerRatio() <= 0 || properties.getErrorTriggerRatio() > 1) {
-            throw new IllegalStateException("模型路由失败率阈值必须在 (0,1] 内（workbuddy.model.route.error-trigger-ratio）");
-        }
-        if (properties.getErrorWindowSeconds() <= 0) {
-            throw new IllegalStateException("模型路由统计窗口必须为正数（workbuddy.model.route.error-window-seconds）");
-        }
-        if (properties.getMaxAttempts() <= 0) {
-            throw new IllegalStateException("模型路由尝试上限必须为正数（workbuddy.model.route.max-attempts）");
-        }
+        ThrowUtil.throwIf(properties.getCooldownSeconds() <= 0,
+                () -> new IllegalStateException("模型路由冷却时长必须为正数（workbuddy.model.route.cooldown-seconds）"));
+        ThrowUtil.throwIf(properties.getSlowStartSeconds() < 0,
+                () -> new IllegalStateException("模型路由 slow start 窗口不能为负数（workbuddy.model.route.slow-start-seconds）"));
+        ThrowUtil.throwIf(properties.getErrorTriggerRatio() <= 0 || properties.getErrorTriggerRatio() > 1,
+                () -> new IllegalStateException("模型路由失败率阈值必须在 (0,1] 内（workbuddy.model.route.error-trigger-ratio）"));
+        ThrowUtil.throwIf(properties.getErrorWindowSeconds() <= 0,
+                () -> new IllegalStateException("模型路由统计窗口必须为正数（workbuddy.model.route.error-window-seconds）"));
+        ThrowUtil.throwIf(properties.getMaxAttempts() <= 0,
+                () -> new IllegalStateException("模型路由尝试上限必须为正数（workbuddy.model.route.max-attempts）"));
         log.info("===> ModelRouteConfigCheck 路由配置校验通过, cooldown={}s, slowStart={}s, maxAttempts={}",
                 properties.getCooldownSeconds(), properties.getSlowStartSeconds(), properties.getMaxAttempts());
         next.proceed();

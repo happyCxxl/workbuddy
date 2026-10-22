@@ -59,6 +59,7 @@ public class AvatarServiceImpl implements AvatarService {
         try (InputStream in = file.getInputStream()) {
             ref = fileStorage.putRaw(key, in, file.getSize(), contentTypeOf(extension));
         } catch (IOException e) {
+            log.warn("头像写入失败, key={}", key, e);
             throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "头像写入失败");
         }
         String url = fileStorage.publicUrl(ref);
@@ -109,6 +110,7 @@ public class AvatarServiceImpl implements AvatarService {
                 return "webp";
             }
         } catch (IOException e) {
+            log.warn("头像文件读取失败, fileName={}", file.getOriginalFilename(), e);
             throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "头像文件读取失败");
         }
         throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "只支持 PNG / JPG / WebP 图片");
