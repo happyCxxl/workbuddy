@@ -66,10 +66,10 @@ class PropertiesConfigCoverageTest {
         TARGETS.put("knowledge.chunk", ChunkProperties.class);
         TARGETS.put("knowledge.embed", EmbedProperties.class);
         TARGETS.put("knowledge.vector.milvus", MilvusProperties.class);
-        TARGETS.put("knowledge.file", FileValidationProperties.class);
+        TARGETS.put("workbuddy.file", FileValidationProperties.class);
         TARGETS.put("knowledge.task", TaskQueueProperties.class);
-        TARGETS.put("knowledge.auth.jwt", JwtProperties.class);
-        TARGETS.put("knowledge.auth.guard", LoginGuardProperties.class);
+        TARGETS.put("workbuddy.auth.jwt", JwtProperties.class);
+        TARGETS.put("workbuddy.auth.guard", LoginGuardProperties.class);
         TARGETS.put("retrieval.capabilities", RetrievalCapabilityProperties.class);
         TARGETS.put("retrieval.run", RetrievalRunProperties.class);
     }

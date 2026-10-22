@@ -89,12 +89,12 @@ public final class PropertiesFixtures {
     }
 
     /**
-     * 文件校验参数基线（`knowledge.file`）。
+     * 文件校验参数基线（`workbuddy.file`）。
      *
      * @return 按配置面取值构造的实例
      */
     public static FileValidationProperties fileValidation() {
-        return bind(FileValidationProperties.class, "knowledge.file", CONFIG_ROOT.resolve("workbuddy-file.yml"));
+        return bind(FileValidationProperties.class, "workbuddy.file", CONFIG_ROOT.resolve("workbuddy-file.yml"));
     }
 
     /** 绑定一个前缀：与启动时同一条 YAML 加载 + Binder 路径 */

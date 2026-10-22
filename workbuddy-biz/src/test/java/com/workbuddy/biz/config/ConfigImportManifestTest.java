@@ -65,8 +65,8 @@ class ConfigImportManifestTest {
         DOMAINS.put("knowledge-chunk.yml", List.of("knowledge.chunk."));
         DOMAINS.put("knowledge-embed.yml", List.of("knowledge.embed."));
         DOMAINS.put("knowledge-milvus.yml", List.of("knowledge.vector.milvus."));
-        DOMAINS.put("workbuddy-auth.yml", List.of("knowledge.auth."));
-        DOMAINS.put("workbuddy-file.yml", List.of("knowledge.file."));
+        DOMAINS.put("workbuddy-auth.yml", List.of("workbuddy.auth."));
+        DOMAINS.put("workbuddy-file.yml", List.of("workbuddy.file."));
         DOMAINS.put("knowledge-task.yml", List.of("knowledge.task."));
         DOMAINS.put("knowledge-retrieval.yml", List.of("retrieval."));
         DOMAINS.put(EMPTY_ALLOWED, List.of("workbuddy.model."));
