@@ -1,11 +1,10 @@
-package com.workbuddy.biz.startup;
+package com.workbuddy.model.registry;
 
-import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.RegisteredModel;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.model.ModelStatus;
-import com.workbuddy.model.registry.ModelRegistry;
+import com.workbuddy.model.db.WbModelDbService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;

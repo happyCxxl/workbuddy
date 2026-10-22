@@ -1,4 +1,4 @@
-package com.workbuddy.biz.service;
+package com.workbuddy.model.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;

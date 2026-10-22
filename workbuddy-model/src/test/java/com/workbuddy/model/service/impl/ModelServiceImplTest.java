@@ -1,8 +1,7 @@
-package com.workbuddy.biz.service.impl;
+package com.workbuddy.model.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.enums.model.AuthType;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;
@@ -16,6 +15,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.security.audit.AuditEventPublisher;
 import com.workbuddy.model.config.ModelVendorProperties;
+import com.workbuddy.model.db.WbModelDbService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -65,8 +65,7 @@ class ModelServiceImplTest {
         vendors.put("self-ocr", vendor(null));
         vendors.get("dashscope").setDisplayName("阿里百炼");
         vendorProperties.setVendors(vendors);
-        service = new ModelServiceImpl(kbModelDbService
-                , new com.workbuddy.common.convert.SystemConverterImpl(), vendorProperties, auditEventPublisher);
+        service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.workbuddy.biz.service.db;
+package com.workbuddy.model.db;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.common.domain.entity.WbModel;

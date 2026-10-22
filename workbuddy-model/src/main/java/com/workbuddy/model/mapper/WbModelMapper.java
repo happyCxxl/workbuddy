@@ -1,4 +1,4 @@
-package com.workbuddy.biz.mapper;
+package com.workbuddy.model.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.workbuddy.common.domain.entity.WbModel;

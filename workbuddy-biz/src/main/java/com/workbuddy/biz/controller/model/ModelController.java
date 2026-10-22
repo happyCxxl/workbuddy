@@ -1,7 +1,7 @@
 package com.workbuddy.biz.controller.model;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.workbuddy.biz.service.ModelService;
+import com.workbuddy.model.service.ModelService;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;
 import com.workbuddy.common.dto.request.model.ModelSaveDTO;
 import com.workbuddy.common.dto.request.model.ModelStatusDTO;

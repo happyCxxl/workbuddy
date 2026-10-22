@@ -30,6 +30,18 @@
             <artifactId>workbuddy-common</artifactId>
         </dependency>
 
+        <!-- 数据访问基座与 Redis/bucket4j 能力（功能模块自包含，与 auth/file 模块同构） -->
+        <dependency>
+            <groupId>com.workbuddy</groupId>
+            <artifactId>workbuddy-infra</artifactId>
+        </dependency>
+
+        <!-- MyBatis-Plus（wb_model / wb_model_call 的 Mapper 与 lambda 查询） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+
         <!-- Spring 基础（组件与配置属性） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

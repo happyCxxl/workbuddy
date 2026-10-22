@@ -1,11 +1,8 @@
-package com.workbuddy.biz.service.impl;
+package com.workbuddy.model.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.biz.service.ModelService;
-import com.workbuddy.biz.service.db.WbModelDbService;
-import com.workbuddy.common.convert.SystemConverter;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;
 import com.workbuddy.common.enums.model.ModelCapability;
@@ -22,6 +19,8 @@ import com.workbuddy.common.security.audit.AuditEventPublisher;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.config.ModelVendorProperties;
+import com.workbuddy.model.db.WbModelDbService;
+import com.workbuddy.model.service.ModelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,7 +45,6 @@ public class ModelServiceImpl implements ModelService {
 
     private final WbModelDbService wbModelDbService;
 
-    private final SystemConverter systemConverter;
     private final ModelVendorProperties modelVendorProperties;
     private final AuditEventPublisher auditEventPublisher;
 

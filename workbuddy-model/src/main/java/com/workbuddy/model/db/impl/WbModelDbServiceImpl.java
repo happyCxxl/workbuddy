@@ -1,15 +1,15 @@
-package com.workbuddy.biz.service.db.impl;
+package com.workbuddy.model.db.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.workbuddy.biz.mapper.WbModelMapper;
-import com.workbuddy.biz.service.db.WbModelDbService;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.infra.persistence.InfraDbServiceImpl;
+import com.workbuddy.model.db.WbModelDbService;
+import com.workbuddy.model.mapper.WbModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
