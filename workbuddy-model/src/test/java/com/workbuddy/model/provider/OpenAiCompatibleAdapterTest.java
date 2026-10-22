@@ -8,6 +8,8 @@ import com.workbuddy.common.domain.model.chat.ChatMessage;
 import com.workbuddy.common.domain.model.chat.ChatOptions;
 import com.workbuddy.common.domain.model.chat.ChatRequest;
 import com.workbuddy.common.domain.model.chat.ChatResult;
+import com.workbuddy.common.domain.model.chat.OutputFormat;
+import com.workbuddy.common.domain.model.chat.OutputSpec;
 import com.workbuddy.common.enums.model.FinishReason;
 import com.workbuddy.model.config.ModelVendorProperties;
 import org.junit.jupiter.api.AfterEach;
@@ -116,6 +118,39 @@ class OpenAiCompatibleAdapterTest {
         String body = requests.get("/v1/chat/completions").replace(" ", "");
         assertTrue(body.contains("\"model\":\"qwen-max\""), body);
         assertTrue(body.contains("\"max_tokens\":64") || body.contains("\"max_completion_tokens\":64"), body);
+    }
+
+    /** JSON_OBJECT 输出：请求体带 response_format=json_object（{@code shouldMapJsonObjectOutput}）。 */
+    @Test
+    void shouldMapJsonObjectOutput() {
+        OutputSpec output = new OutputSpec();
+        output.setFormat(OutputFormat.JSON_OBJECT);
+        ChatRequest request = new ChatRequest();
+        request.setMessages(List.of(ChatMessage.user("hi")));
+        request.setOutput(output);
+
+        adapter.chat(model("qwen-max"), request);
+
+        String body = requests.get("/v1/chat/completions").replace(" ", "");
+        assertTrue(body.contains("\"response_format\""), body);
+        assertTrue(body.contains("\"json_object\""), body);
+    }
+
+    /** JSON_SCHEMA 输出：请求体带 json_schema 与 schema 文本（{@code shouldMapJsonSchemaOutput}）。 */
+    @Test
+    void shouldMapJsonSchemaOutput() {
+        OutputSpec output = new OutputSpec();
+        output.setFormat(OutputFormat.JSON_SCHEMA);
+        output.setSchema("{\"type\":\"object\"}");
+        ChatRequest request = new ChatRequest();
+        request.setMessages(List.of(ChatMessage.user("hi")));
+        request.setOutput(output);
+
+        adapter.chat(model("qwen-max"), request);
+
+        String body = requests.get("/v1/chat/completions").replace(" ", "");
+        assertTrue(body.contains("\"json_schema\""), body);
+        assertTrue(body.contains("\"type\":\"object\""), body);
     }
 
     /** embed：请求体带模型与文本，响应回填二维向量与维度（{@code shouldMapEmbedding}）。 */

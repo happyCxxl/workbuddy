@@ -7,6 +7,8 @@ import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.domain.model.chat.ChatOptions;
 import com.workbuddy.common.domain.model.chat.ChatRequest;
 import com.workbuddy.common.domain.model.chat.ChatResult;
+import com.workbuddy.common.domain.model.chat.OutputFormat;
+import com.workbuddy.common.domain.model.chat.OutputSpec;
 import com.workbuddy.common.domain.model.chat.TokenUsage;
 import com.workbuddy.common.enums.model.FinishReason;
 import com.workbuddy.common.utils.NullUtil;
@@ -16,6 +18,10 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.ResponseFormatType;
+import dev.langchain4j.model.chat.request.json.JsonRawSchema;
+import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.Response;
 import lombok.RequiredArgsConstructor;
@@ -56,8 +62,28 @@ public class OpenAiCompatibleAdapter implements ModelAdapter {
                 builder.maxOutputTokens(options.getMaxOutputTokens());
             }
         }
+        applyOutput(builder, request.getOutput());
         ChatResponse response = instanceRegistry.chat(model).chat(builder.build());
         return toChatResult(response, model);
+    }
+
+    /** 输出约束 → LC4j response_format；TEXT 不设 */
+    private void applyOutput(dev.langchain4j.model.chat.request.ChatRequest.Builder builder, OutputSpec output) {
+        if (NullUtil.isNull(output) || NullUtil.isNull(output.getFormat())
+                || output.getFormat() == OutputFormat.TEXT) {
+            return;
+        }
+        if (output.getFormat() == OutputFormat.JSON_OBJECT) {
+            builder.responseFormat(ResponseFormat.JSON);
+            return;
+        }
+        builder.responseFormat(ResponseFormat.builder()
+                .type(ResponseFormatType.JSON)
+                .jsonSchema(JsonSchema.builder()
+                        .name("output")
+                        .rootElement(JsonRawSchema.from(output.getSchema()))
+                        .build())
+                .build());
     }
 
     /**

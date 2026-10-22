@@ -12,6 +12,9 @@ public class ChatResult {
     /** 模型回复文本 */
     private String content;
 
+    /** 解析后的 JSON 树（TEXT 输出或解析失败时为空） */
+    private Object json;
+
     /** 模型名回显 */
     private String model;
 

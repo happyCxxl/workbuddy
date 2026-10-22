@@ -17,6 +17,9 @@ public class ChatRequest {
     /** 采样参数组，空 = 整组走厂商缺省 */
     private ChatOptions options;
 
+    /** 输出约束，空按 TEXT 处理 */
+    private OutputSpec output;
+
     /** 所需能力，空按 CHAT 处理 */
     private ModelCapability capability = ModelCapability.CHAT;
 }

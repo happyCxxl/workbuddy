@@ -3,6 +3,8 @@ package com.workbuddy.model.service.support.invoke;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.domain.model.chat.ChatRequest;
 import com.workbuddy.common.domain.model.chat.ChatResult;
+import com.workbuddy.common.domain.model.chat.OutputFormat;
+import com.workbuddy.common.domain.model.chat.OutputSpec;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
@@ -25,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -77,8 +80,8 @@ class ModelInvokerTest {
     void setUp() {
         routeProperties = new ModelRouteProperties();
         invoker = new ModelInvoker(modelAdapter, modelRouter, modelCapacityGuard,
-                modelCircuitBreakers, modelCooldownStore, new ModelErrorClassifier(),
-                routeProperties, routeStateStore, modelCallRecorder);
+                modelCircuitBreakers, modelCooldownStore, new OutputSchemaValidator(),
+                new ModelErrorClassifier(), routeProperties, routeStateStore, modelCallRecorder);
         lenient().when(modelCapacityGuard.tryAcquire(any(), any(), any())).thenReturn(true);
         lenient().when(modelCircuitBreakers.tryAcquire(any())).thenReturn(true);
     }
@@ -102,6 +105,27 @@ class ModelInvokerTest {
         ChatResult result = new ChatResult();
         result.setContent(content);
         return result;
+    }
+
+    /** 输出结构校验失败可换下一个模型（{@code shouldFallbackOnInvalidOutput}）。 */
+    @Test
+    void shouldFallbackOnInvalidOutput() {
+        ModelDescriptor modelA = model("a");
+        ModelDescriptor modelB = model("b");
+        ChatRequest request = request();
+        OutputSpec output = new OutputSpec();
+        output.setFormat(OutputFormat.JSON_OBJECT);
+        request.setOutput(output);
+        when(modelRouter.select(eq(ModelCapability.CHAT), isNull(), anySet()))
+                .thenReturn(modelA, modelB);
+        when(modelAdapter.chat(modelA, request)).thenReturn(result("[]"));
+        when(modelAdapter.chat(modelB, request)).thenReturn(result("{\"ok\":1}"));
+
+        ChatResult actual = invoker.chat(request);
+
+        assertEquals("{\"ok\":1}", actual.getContent());
+        assertNotNull(actual.getJson());
+        verify(modelAdapter).chat(modelB, request);
     }
 
     /** 首个候选成功：调用一次适配器并记录延迟（{@code shouldCallFirstCandidate}）。 */

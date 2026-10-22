@@ -50,6 +50,8 @@ public class ModelInvoker {
 
     private final ModelCooldownStore modelCooldownStore;
 
+    private final OutputSchemaValidator outputSchemaValidator;
+
     private final ModelErrorClassifier modelErrorClassifier;
 
     private final ModelRouteProperties modelRouteProperties;
@@ -65,9 +67,14 @@ public class ModelInvoker {
      * @return 对话结果
      */
     public ChatResult chat(ChatRequest request) {
+        outputSchemaValidator.checkBeforeCall(request.getOutput());
         ModelCapability capability = NullUtil.isNull(request.getCapability())
                 ? ModelCapability.CHAT : request.getCapability();
-        return invoke(capability, null, model -> modelAdapter.chat(model, request), ChatResult::getTokenUsage);
+        return invoke(capability, null, model -> {
+            ChatResult result = modelAdapter.chat(model, request);
+            result.setJson(outputSchemaValidator.validate(request.getOutput(), result.getContent()));
+            return result;
+        }, ChatResult::getTokenUsage);
     }
 
     /**
