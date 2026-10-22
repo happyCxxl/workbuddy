@@ -4,6 +4,7 @@ import com.workbuddy.common.domain.embed.EmbeddingRequest;
 import com.workbuddy.common.domain.embed.EmbeddingResult;
 import com.workbuddy.common.domain.model.chat.ChatRequest;
 import com.workbuddy.common.domain.model.chat.ChatResult;
+import com.workbuddy.common.domain.model.vision.VisionRequest;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.model.service.support.invoke.ModelInvoker;
@@ -64,5 +65,21 @@ class AiModelClientTest {
                 assertThrows(WorkbuddyException.class, () -> client.chat(null)).getErrorCode());
         assertEquals(ErrorCode.MODEL_BAD_REQUEST,
                 assertThrows(WorkbuddyException.class, () -> client.embed(null)).getErrorCode());
+        assertEquals(ErrorCode.MODEL_BAD_REQUEST,
+                assertThrows(WorkbuddyException.class, () -> client.vision(null)).getErrorCode());
+    }
+
+    /** 视觉：转发给调用器（{@code visionShouldDelegate}）。 */
+    @Test
+    void visionShouldDelegate() {
+        AiModelClient client = new AiModelClient(modelInvoker);
+        VisionRequest request = new VisionRequest();
+        ChatResult expected = new ChatResult();
+        when(modelInvoker.vision(request)).thenReturn(expected);
+
+        ChatResult actual = client.vision(request);
+
+        assertSame(expected, actual);
+        verify(modelInvoker).vision(request);
     }
 }

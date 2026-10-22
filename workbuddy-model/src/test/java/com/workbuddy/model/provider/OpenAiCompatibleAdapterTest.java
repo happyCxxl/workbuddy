@@ -10,6 +10,7 @@ import com.workbuddy.common.domain.model.chat.ChatRequest;
 import com.workbuddy.common.domain.model.chat.ChatResult;
 import com.workbuddy.common.domain.model.chat.OutputFormat;
 import com.workbuddy.common.domain.model.chat.OutputSpec;
+import com.workbuddy.common.domain.model.vision.VisionRequest;
 import com.workbuddy.common.enums.model.FinishReason;
 import com.workbuddy.model.config.ModelVendorProperties;
 import org.junit.jupiter.api.AfterEach;
@@ -153,7 +154,35 @@ class OpenAiCompatibleAdapterTest {
         assertTrue(body.contains("\"type\":\"object\""), body);
     }
 
-    /** embed：请求体带模型与文本，响应回填二维向量与维度（{@code shouldMapEmbedding}）。 */
+    /** 视觉：字节按 MIME 组 data URL（{@code shouldMapVisionBytes}）。 */
+    @Test
+    void shouldMapVisionBytes() {
+        VisionRequest request = new VisionRequest();
+        request.setImageBytes(new byte[]{1, 2, 3});
+        request.setMimeType("image/png");
+        request.setPrompt("read");
+
+        ChatResult result = adapter.vision(model("qwen-vl"), request);
+
+        assertEquals("hello", result.getContent());
+        String body = requests.get("/v1/chat/completions").replace(" ", "");
+        assertTrue(body.contains("\"image_url\""), body);
+        assertTrue(body.contains("data:image/png;base64,AQID"), body);
+    }
+
+    /** 视觉：引用按 URL 提交（{@code shouldMapVisionRef}）。 */
+    @Test
+    void shouldMapVisionRef() {
+        VisionRequest request = new VisionRequest();
+        request.setImageRef("https://example.com/a.png");
+
+        adapter.vision(model("qwen-vl"), request);
+
+        String body = requests.get("/v1/chat/completions").replace(" ", "");
+        assertTrue(body.contains("https://example.com/a.png"), body);
+    }
+
+    /** 向量编码：文本按请求顺序提交，向量按同一顺序回填（{@code shouldMapEmbedding}）。 */
     @Test
     void shouldMapEmbedding() {
         EmbeddingRequest request = new EmbeddingRequest();

@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.model.chat.ChatRequest;
 import com.workbuddy.common.domain.model.chat.ChatResult;
 import com.workbuddy.common.domain.model.chat.OutputFormat;
 import com.workbuddy.common.domain.model.chat.OutputSpec;
+import com.workbuddy.common.domain.model.vision.VisionRequest;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
@@ -79,6 +80,7 @@ class ModelInvokerTest {
     @BeforeEach
     void setUp() {
         routeProperties = new ModelRouteProperties();
+        routeProperties.setMaxAttempts(3);
         invoker = new ModelInvoker(modelAdapter, modelRouter, modelCapacityGuard,
                 modelCircuitBreakers, modelCooldownStore, new OutputSchemaValidator(),
                 new ModelErrorClassifier(), routeProperties, routeStateStore, modelCallRecorder);
@@ -126,6 +128,35 @@ class ModelInvokerTest {
         assertEquals("{\"ok\":1}", actual.getContent());
         assertNotNull(actual.getJson());
         verify(modelAdapter).chat(modelB, request);
+    }
+
+    /** 视觉成功：按 OCR 能力选模型（{@code shouldCallVision}）。 */
+    @Test
+    void shouldCallVision() {
+        ModelDescriptor modelA = model("a");
+        VisionRequest request = new VisionRequest();
+        request.setImageBytes(new byte[]{1});
+        request.setMimeType("image/png");
+        ChatResult expected = result("ocr");
+        when(modelRouter.select(eq(ModelCapability.OCR), isNull(), anySet())).thenReturn(modelA);
+        when(modelAdapter.vision(modelA, request)).thenReturn(expected);
+
+        ChatResult actual = invoker.vision(request);
+
+        assertSame(expected, actual);
+        verify(modelAdapter).vision(modelA, request);
+    }
+
+    /** 视觉字节缺 MIME：按 40001 拒绝，不发起调用（{@code shouldRejectVisionWithoutMime}）。 */
+    @Test
+    void shouldRejectVisionWithoutMime() {
+        VisionRequest request = new VisionRequest();
+        request.setImageBytes(new byte[]{1});
+
+        WorkbuddyException error = assertThrows(WorkbuddyException.class, () -> invoker.vision(request));
+
+        assertEquals(ErrorCode.MODEL_BAD_REQUEST, error.getErrorCode());
+        verify(modelAdapter, never()).vision(any(), any());
     }
 
     /** 首个候选成功：调用一次适配器并记录延迟（{@code shouldCallFirstCandidate}）。 */

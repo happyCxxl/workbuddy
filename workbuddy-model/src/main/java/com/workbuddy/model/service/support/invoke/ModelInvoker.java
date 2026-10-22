@@ -1,11 +1,13 @@
 package com.workbuddy.model.service.support.invoke;
 
+import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.embed.EmbeddingRequest;
 import com.workbuddy.common.domain.embed.EmbeddingResult;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.domain.model.chat.ChatRequest;
 import com.workbuddy.common.domain.model.chat.ChatResult;
 import com.workbuddy.common.domain.model.chat.TokenUsage;
+import com.workbuddy.common.domain.model.vision.VisionRequest;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.model.RouteReason;
 import com.workbuddy.common.error.ErrorCode;
@@ -86,6 +88,32 @@ public class ModelInvoker {
     public EmbeddingResult embed(EmbeddingRequest request) {
         return invoke(ModelCapability.EMBEDDING, request.getModel(),
                 model -> modelAdapter.embed(model, request), result -> null);
+    }
+
+    /**
+     * 视觉/OCR 调用：图片字节或引用二选一，复用对话的选路、限流、降级与结构校验。
+     *
+     * @param request 视觉请求
+     * @return 视觉结果
+     */
+    public ChatResult vision(VisionRequest request) {
+        validateVision(request);
+        outputSchemaValidator.checkBeforeCall(request.getOutput());
+        return invoke(ModelCapability.OCR, null, model -> {
+            ChatResult result = modelAdapter.vision(model, request);
+            result.setJson(outputSchemaValidator.validate(request.getOutput(), result.getContent()));
+            return result;
+        }, ChatResult::getTokenUsage);
+    }
+
+    /** 视觉入参校验：字节与引用二选一，字节必须带 MIME */
+    private void validateVision(VisionRequest request) {
+        if (request.hasBytes() && StrUtil.isBlank(request.getMimeType())) {
+            throw new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片 MIME 类型");
+        }
+        if (!request.hasBytes() && StrUtil.isBlank(request.getImageRef())) {
+            throw new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片字节或引用");
+        }
     }
 
     /**

@@ -92,7 +92,7 @@
 - 本项目业务接口的 HTTP 状态码恒为 200（规则见 `JAVA-DTO-007`）；三处出口分别是 `GlobalExceptionHandler`、`RestAuthenticationEntryPoint`、`RestAccessDeniedHandler`，后两者在 `workbuddy-auth` 的 `security` 包。
 - 二进制资源（头像等）存对象存储，公开读只放开头像前缀（`avatar/*`）；上传响应与用户资料直接下发对象 URL，浏览器 `<img src>` 直连存储，应用层不提供读接口、不代理字节（规则见 `JAVA-DTO-012`）。本地磁盘后端没有公开读能力，上传时拒绝并提示切换对象存储。
 - 前端对应类型是 `../web/src/types/response.ts` 的 `R<T>`，分页数据对应 `PageResult<T>`。
-- `R.failed(msg)`（`code=1`）是通用失败码，现有代码无人调用；业务失败一律抛 `KnowledgeException`。
+- `R.failed(msg)`（`code=1`）是通用失败码，现有代码无人调用；业务失败一律抛 `WorkbuddyException`。
 
 ### 二、错误码
 
@@ -290,3 +290,5 @@
 | `stages/切片环节/README.md`                 | 切片环节的环节定位、代码索引与待定项；主体见同目录 `01-功能逻辑.md`   |
 | `design/对象存储多后端-方案对比.md`         | 对象存储多后端的现状、根因、目标态、方案对比与落地路径                |
 | `design/实现-01-适配器骨架与真实调用.md`    | 模型能力平台第一片实现文档——适配器骨架与真实调用                      |
+| `design/模型能力与模型池-市面调研.md`       | 模型能力录入与模型表、模型池路由与限流、故障切换、结构化输出的市面做法与选型建议 |
+| `design/实现-02-模型池与调用链路.md`        | 从模型录入到调用返回的实现步骤：架构与管线、模块归属、路由限流、熔断降级、结构化输出 |

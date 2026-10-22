@@ -53,6 +53,7 @@ class ModelRouterTest {
     @BeforeEach
     void setUp() {
         routeProperties = new ModelRouteProperties();
+        routeProperties.setSlowStartSeconds(45);
         router = new ModelRouter(modelCatalogPort, new CapacityFirstStrategy(),
                 modelCapacityGuard, modelCooldownStore, modelCircuitBreakers, routeStateStore, routeProperties);
         lenient().when(modelCapacityGuard.snapshot(any(), any(), any())).thenReturn(new CapacitySnapshot(1, 1));
