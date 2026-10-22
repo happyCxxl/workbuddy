@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.common.domain.entity.WbModel;
+import com.workbuddy.common.convert.ModelConverter;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.model.ModelStatus;
@@ -20,8 +21,8 @@ import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.config.ModelVendorProperties;
 import com.workbuddy.model.db.WbModelDbService;
-import com.workbuddy.model.registry.ModelRegistryRefresher;
 import com.workbuddy.model.service.ModelService;
+import com.workbuddy.model.service.support.catalog.ModelRegistryRefresher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,7 @@ public class ModelServiceImpl implements ModelService {
     private final ModelVendorProperties modelVendorProperties;
     private final AuditEventPublisher auditEventPublisher;
     private final ModelRegistryRefresher modelRegistryRefresher;
+    private final ModelConverter modelConverter;
 
     /**
      * 分页查模型目录。
@@ -76,9 +78,8 @@ public class ModelServiceImpl implements ModelService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO create(ModelSaveDTO dto) {
-        WbModel row = new WbModel();
-        applyColumns(row, dto);
-        row.setCurrency(dto.getCurrency());
+        WbModel row = modelConverter.toModel(dto);
+        applyBusinessColumns(row, dto);
         row.setStatus(ModelStatus.ENABLED.name());
         ensureUnique(row.getVendorCode(), row.getModelKey(), null);
         wbModelDbService.save(row);
@@ -102,10 +103,9 @@ public class ModelServiceImpl implements ModelService {
     public ModelItemVO update(Long id, ModelUpdateDTO dto) {
         WbModel before = requireRow(id);
         String beforeJson = JsonUtil.toJsonStr(before);
-        WbModel after = new WbModel();
+        WbModel after = modelConverter.toModel(dto);
         after.setId(id);
-        applyColumns(after, dto);
-        after.setCurrency(dto.getCurrency());
+        applyBusinessColumns(after, dto);
         after.setStatus(before.getStatus());
         ensureUnique(after.getVendorCode(), after.getModelKey(), id);
         wbModelDbService.updateModel(after);
@@ -142,26 +142,15 @@ public class ModelServiceImpl implements ModelService {
     }
 
     /**
-     * 业务列搬运：文本 trim、能力清单解析成落库 CSV、思考标记缺省 0、数值列原样复制；
-     * 币种与状态由新增 / 编辑各自定值，不在本方法。
+     * 业务列加工：文本 trim、能力清单解析成落库 CSV、思考标记缺省 0；
+     * 纯字段搬运与币种由 {@link ModelConverter#toModel} 完成，状态由新增 / 编辑各自定值。
      */
-    // 只处理需要业务加工的列（trim / 能力解析 / 默认值）；纯字段搬运在 SystemConverter
-    private void applyColumns(WbModel row, ModelSaveDTO dto) {
+    private void applyBusinessColumns(WbModel row, ModelSaveDTO dto) {
         row.setVendorCode(normalizeVendor(dto.getVendorCode()));
         row.setModelKey(StrUtil.trimToNull(dto.getModelKey()));
         row.setCapabilities(capabilities(dto.getCapabilities()));
         row.setThinkingEnabled(
                 NullUtil.isNull(dto.getThinkingEnabled()) ? Integer.valueOf(0) : dto.getThinkingEnabled());
-        row.setInputLimit(dto.getInputLimit());
-        row.setOutputLimit(dto.getOutputLimit());
-        row.setThinkingInputLimit(dto.getThinkingInputLimit());
-        row.setThinkingOutputLimit(dto.getThinkingOutputLimit());
-        row.setContextWindow(dto.getContextWindow());
-        row.setPriceInPerM(dto.getPriceInPerM());
-        row.setPriceInPerMCacheHit(dto.getPriceInPerMCacheHit());
-        row.setPriceOutPerM(dto.getPriceOutPerM());
-        row.setRpmLimit(dto.getRpmLimit());
-        row.setTpmLimit(dto.getTpmLimit());
     }
 
     /**

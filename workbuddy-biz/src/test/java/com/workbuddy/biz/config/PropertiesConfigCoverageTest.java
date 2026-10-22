@@ -3,6 +3,7 @@ package com.workbuddy.biz.config;
 import com.workbuddy.auth.config.JwtProperties;
 import com.workbuddy.auth.config.LoginGuardProperties;
 import com.workbuddy.infra.vector.MilvusProperties;
+import com.workbuddy.model.config.ModelRouteProperties;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.input.FileValidationProperties;
@@ -72,6 +73,7 @@ class PropertiesConfigCoverageTest {
         TARGETS.put("workbuddy.auth.guard", LoginGuardProperties.class);
         TARGETS.put("retrieval.capabilities", RetrievalCapabilityProperties.class);
         TARGETS.put("retrieval.run", RetrievalRunProperties.class);
+        TARGETS.put("workbuddy.model.route", ModelRouteProperties.class);
     }
 
     @TempDir

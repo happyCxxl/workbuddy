@@ -15,9 +15,9 @@ import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
-import com.workbuddy.model.catalog.ModelCatalogPort;
-import com.workbuddy.model.gateway.AiClient;
+import com.workbuddy.common.exception.WorkbuddyException;
+import com.workbuddy.model.AiClient;
+import com.workbuddy.model.ModelCatalogPort;
 import com.workbuddy.worker.embedding.EmbedContext;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.embedding.check.ConsistencyChecker;
@@ -81,7 +81,7 @@ class EmbedPipelineTest {
         properties.setMaxRetries(0);
         lenient().when(modelCatalogPort.listByCapability(ModelCapability.EMBEDDING))
                 .thenReturn(List.of(embeddingModel("text-embedding-v4")));
-        lenient().doThrow(new KnowledgeException(ErrorCode.MODEL_SERVER_ERROR, "fake down"))
+        lenient().doThrow(new WorkbuddyException(ErrorCode.MODEL_SERVER_ERROR, "fake down"))
                 .when(aiClient).embed(any());
         pipeline = new EmbedPipeline(properties, checker, template, aiClient, modelCatalogPort);
 

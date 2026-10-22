@@ -2,6 +2,7 @@ package com.workbuddy.model.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.workbuddy.common.convert.ModelConverterImpl;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.enums.model.AuthType;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;
@@ -12,11 +13,11 @@ import com.workbuddy.common.dto.response.model.ModelItemVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.AuditObjectType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.audit.AuditEventPublisher;
 import com.workbuddy.model.config.ModelVendorProperties;
 import com.workbuddy.model.db.WbModelDbService;
-import com.workbuddy.model.registry.ModelRegistryRefresher;
+import com.workbuddy.model.service.support.catalog.ModelRegistryRefresher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -69,7 +70,8 @@ class ModelServiceImplTest {
         vendors.put("self-ocr", vendor(null));
         vendors.get("dashscope").setDisplayName("阿里百炼");
         vendorProperties.setVendors(vendors);
-        service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher, refresher);
+        service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher, refresher,
+                new ModelConverterImpl());
     }
 
     /**
@@ -226,7 +228,7 @@ class ModelServiceImplTest {
         ModelSaveDTO unknown = saveDto();
         unknown.setCapabilities(List.of("VISION"));
 
-        KnowledgeException unknownError = assertThrows(KnowledgeException.class, () -> service.create(unknown));
+        WorkbuddyException unknownError = assertThrows(WorkbuddyException.class, () -> service.create(unknown));
 
         assertEquals(ErrorCode.PARAM_INVALID, unknownError.getErrorCode());
         assertTrue(unknownError.getMessage().contains("VISION"), unknownError.getMessage());
@@ -305,7 +307,7 @@ class ModelServiceImplTest {
     void updateShouldRejectMissingRow() {
         when(kbModelDbService.getExistingById(9L)).thenReturn(null);
 
-        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.update(9L, updateDto()));
+        WorkbuddyException error = assertThrows(WorkbuddyException.class, () -> service.update(9L, updateDto()));
 
         assertEquals(ErrorCode.MODEL_NOT_FOUND, error.getErrorCode());
         verify(kbModelDbService, never()).updateModel(any());
@@ -340,7 +342,7 @@ class ModelServiceImplTest {
         when(kbModelDbService.getExistingById(3L)).thenReturn(row(3L, "dashscope", "qwen-max", "CHAT", "DISABLED"));
         ModelStatusDTO blank = new ModelStatusDTO();
         blank.setStatus("   ");
-        KnowledgeException error = assertThrows(KnowledgeException.class,
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> service.updateStatus(3L, blank));
         assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
         verify(kbModelDbService, never()).updateStatus(any(), any());
@@ -358,7 +360,7 @@ class ModelServiceImplTest {
         ModelSaveDTO dto = saveDto();
         dto.setVendorCode("no-such-vendor");
 
-        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.create(dto));
+        WorkbuddyException error = assertThrows(WorkbuddyException.class, () -> service.create(dto));
 
         assertEquals(ErrorCode.MODEL_VENDOR_UNKNOWN, error.getErrorCode());
         verify(kbModelDbService, never()).save(any(WbModel.class));
@@ -380,7 +382,7 @@ class ModelServiceImplTest {
     void createShouldRejectDuplicateKey() {
         when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(true);
 
-        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.create(saveDto()));
+        WorkbuddyException error = assertThrows(WorkbuddyException.class, () -> service.create(saveDto()));
 
         assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
         verify(kbModelDbService, never()).save(any(WbModel.class));

@@ -6,7 +6,9 @@ import com.workbuddy.auth.startup.AuthConfigCheck;
 import com.workbuddy.biz.config.RetrievalCapabilityProperties;
 import com.workbuddy.biz.config.TaskQueueProperties;
 import com.workbuddy.common.startup.StartupCheck;
+import com.workbuddy.model.config.ModelRouteProperties;
 import com.workbuddy.model.config.ModelVendorProperties;
+import com.workbuddy.model.startup.ModelRouteConfigCheck;
 import com.workbuddy.model.startup.ModelVendorValidator;
 import com.workbuddy.worker.parser.DocumentParserPort;
 import com.workbuddy.worker.parser.office.impl.DocDocumentParser;
@@ -39,6 +41,7 @@ class StartupCheckContractTest {
     @Test
     void realChecksShouldProceedOnPassPath() {
         assertProceeds(new ModelVendorValidator(new ModelVendorProperties()));
+        assertProceeds(new ModelRouteConfigCheck(new ModelRouteProperties()));
         assertProceeds(new ParserWhitelistChecker(realParsers(), ConfigFixtures.fileValidation()));
         assertProceeds(new RetrievalCapabilityCheck(new RetrievalCapabilityProperties()));
         assertProceeds(new TaskTimeoutCheck(new TaskQueueProperties()));
@@ -51,6 +54,7 @@ class StartupCheckContractTest {
     @Test
     void knownChecksShouldKeepTheirOrderTier() {
         assertEquals(StartupCheck.ORDER_CREDENTIALS, new ModelVendorValidator(new ModelVendorProperties()).order());
+        assertEquals(StartupCheck.ORDER_PARAMETERS, new ModelRouteConfigCheck(new ModelRouteProperties()).order());
         assertEquals(StartupCheck.ORDER_ASSEMBLY,
                 new ParserWhitelistChecker(List.of(), ConfigFixtures.fileValidation()).order());
         assertEquals(StartupCheck.ORDER_PARAMETERS,

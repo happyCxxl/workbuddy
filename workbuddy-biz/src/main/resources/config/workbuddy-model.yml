@@ -6,6 +6,13 @@
 
 workbuddy:
   model:
+    # 路由与容量：冷却/熔断/slow start/尝试上限/ token 估算（键来源 ModelRouteProperties）
+    route:
+      cooldown-seconds: 60
+      slow-start-seconds: 45
+      error-trigger-ratio: 0.05
+      error-window-seconds: 60
+      max-attempts: 3
     vendors:
       # 阿里百炼：OpenAI 兼容端点，base-url 留空即取适配器内置默认地址（https://dashscope.aliyuncs.com/compatible-mode/v1）
 #      dashscope:

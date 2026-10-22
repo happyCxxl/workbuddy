@@ -2,7 +2,7 @@ package com.workbuddy.model.config;
 
 import com.workbuddy.common.enums.model.AuthType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.model.startup.ModelVendorValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -122,7 +122,7 @@ class ModelVendorPropertiesTest {
         vendor.setBaseUrl("https://llm.example.com/v1");
         vendor.setApiKey(null);
 
-        KnowledgeException error = assertThrows(KnowledgeException.class,
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> validator.validate(propertiesOf("dashscope", vendor)));
 
         assertEquals(ErrorCode.MODEL_AUTH_FAILED, error.getErrorCode());
@@ -138,7 +138,7 @@ class ModelVendorPropertiesTest {
         ModelVendorProperties.Vendor vendor = vendor();
         vendor.setApiKey("   ");
 
-        KnowledgeException error = assertThrows(KnowledgeException.class,
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> validator.validate(propertiesOf("dashscope", vendor)));
 
         assertEquals(ErrorCode.MODEL_AUTH_FAILED, error.getErrorCode());
@@ -153,7 +153,7 @@ class ModelVendorPropertiesTest {
         ModelVendorProperties.Vendor vendor = vendor();
         vendor.setAuthType(null);
 
-        KnowledgeException error = assertThrows(KnowledgeException.class,
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> validator.validate(propertiesOf("dashscope", vendor)));
 
         assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
@@ -178,7 +178,7 @@ class ModelVendorPropertiesTest {
     void shouldFailStartupWhenTimeoutNotPositive() {
         ModelVendorProperties.Vendor zero = vendor();
         zero.setTimeoutMs(0);
-        KnowledgeException zeroError = assertThrows(KnowledgeException.class,
+        WorkbuddyException zeroError = assertThrows(WorkbuddyException.class,
                 () -> validator.validate(propertiesOf("dashscope", zero)));
 
         assertEquals(ErrorCode.PARAM_INVALID, zeroError.getErrorCode());
@@ -187,7 +187,7 @@ class ModelVendorPropertiesTest {
 
         ModelVendorProperties.Vendor negative = vendor();
         negative.setTimeoutMs(-1);
-        KnowledgeException negativeError = assertThrows(KnowledgeException.class,
+        WorkbuddyException negativeError = assertThrows(WorkbuddyException.class,
                 () -> validator.validate(propertiesOf("dashscope", negative)));
 
         assertEquals(ErrorCode.PARAM_INVALID, negativeError.getErrorCode());
@@ -203,7 +203,7 @@ class ModelVendorPropertiesTest {
             ModelVendorProperties.Vendor vendor = vendor();
             vendor.setBaseUrl(baseUrl);
 
-            KnowledgeException error = assertThrows(KnowledgeException.class,
+            WorkbuddyException error = assertThrows(WorkbuddyException.class,
                     () -> validator.validate(propertiesOf("dashscope", vendor)), baseUrl);
 
             assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode(), baseUrl);
@@ -216,7 +216,7 @@ class ModelVendorPropertiesTest {
      */
     @Test
     void shouldFailStartupWhenVendorCodeBlank() {
-        KnowledgeException error = assertThrows(KnowledgeException.class,
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> validator.validate(propertiesOf("  ", vendor())));
 
         assertEquals(ErrorCode.MODEL_VENDOR_UNKNOWN, error.getErrorCode());

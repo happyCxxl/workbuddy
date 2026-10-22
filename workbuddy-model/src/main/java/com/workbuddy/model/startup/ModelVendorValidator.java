@@ -80,7 +80,7 @@ public class ModelVendorValidator implements StartupCheck {
         log.info("模型厂商配置校验通过, vendors=[{}]", codes);
     }
 
-    /** 校验单个厂商；厂商码缺失或配置项非法即抛 KnowledgeException */
+    /** 校验单个厂商；厂商码缺失或配置项非法即抛 WorkbuddyException */
     private void validateVendor(String vendorCode, ModelVendorProperties.Vendor vendor) {
         ThrowUtil.throwIf(NullUtil.isNull(vendorCode) || vendorCode.isBlank(), ErrorCode.MODEL_VENDOR_UNKNOWN,
                 "厂商码不能为空（配置键 knowledge.model.vendors）");
