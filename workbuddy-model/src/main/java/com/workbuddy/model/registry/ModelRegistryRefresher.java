@@ -24,6 +24,7 @@ public class ModelRegistryRefresher {
     public void refreshAfterCommit() {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                /** 事务提交后重载注册表。 */
                 @Override
                 public void afterCommit() {
                     safeReload();
