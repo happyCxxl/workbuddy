@@ -4,16 +4,24 @@ import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.embed.EmbedOutcome;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
+import com.workbuddy.common.domain.embed.EmbeddingResult;
 import com.workbuddy.common.domain.embed.EmbeddingSet;
+import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.domain.task.StepLogInfo;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.enums.embed.EmbedMetric;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
+import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
+import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.model.catalog.ModelCatalogPort;
+import com.workbuddy.model.gateway.AiClient;
 import com.workbuddy.worker.embedding.EmbedContext;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.embedding.check.ConsistencyChecker;
+import com.workbuddy.worker.embedding.check.ConsistencyResult;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategy;
 import com.workbuddy.worker.embedding.template.InputTemplatePort;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,14 +40,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
- * 向量化编排：前置校验、筛选、账本复用与批次失败隔离。
- *
- * <p>守护 {@link EmbedPipeline#embed} 的失败分类与产出结构。模型调用层尚未接入
- * （{@code embedBatch} 固定抛错），因此成功路径只经「全部复用命中」验证；
- * 模型成功后的回填分支当前不可达，未纳入用例。
+ * 向量化编排：前置校验、筛选、账本复用、批次失败隔离与模型调用成功路径。
  */
 @ExtendWith(MockitoExtension.class)
 class EmbedPipelineTest {
@@ -50,6 +57,12 @@ class EmbedPipelineTest {
 
     @Mock
     private InputTemplatePort template;
+
+    @Mock
+    private AiClient aiClient;
+
+    @Mock
+    private ModelCatalogPort modelCatalogPort;
 
     private EmbedProperties properties;
 
@@ -66,7 +79,11 @@ class EmbedPipelineTest {
     void setUp() {
         properties = PropertiesFixtures.embed();
         properties.setMaxRetries(0);
-        pipeline = new EmbedPipeline(properties, checker, template);
+        lenient().when(modelCatalogPort.listByCapability(ModelCapability.EMBEDDING))
+                .thenReturn(List.of(embeddingModel("text-embedding-v4")));
+        lenient().doThrow(new KnowledgeException(ErrorCode.MODEL_SERVER_ERROR, "fake down"))
+                .when(aiClient).embed(any());
+        pipeline = new EmbedPipeline(properties, checker, template, aiClient, modelCatalogPort);
 
         strategy = new EmbedStrategy();
         strategy.setName("embed");
@@ -280,6 +297,70 @@ class EmbedPipelineTest {
             assertNotNull(log.getStepName());
             assertTrue(log.getStepName().length() > 0);
         }
+    }
+
+    /**
+     * 模型返回向量且四关通过：记录回填成功，任务成功。
+     *
+     * <p>守护 {@code embedBatch} 与四关之后的回填：模型调用接回后成功路径必须可达。
+     */
+    @Test
+    void succeedsWhenModelReturnsVectors() {
+        context.setChunkSet(chunkSet(textChunk("c1", "正文一"), textChunk("c2", "正文二")));
+        when(template.render(any(), any())).thenReturn("正文一");
+        doReturn(embeddingResult(2, DIMENSION)).when(aiClient).embed(any());
+        when(checker.check(any(), any(), any())).thenReturn(ConsistencyResult.pass());
+
+        EmbedOutcome outcome = pipeline.embed(context);
+
+        assertEquals(PipelineTaskStatus.SUCCESS, outcome.getSuggestedStatus());
+        EmbeddingSet set = outcome.getEmbeddingSet();
+        assertNotNull(set);
+        assertEquals(2, set.getRecordCount());
+        assertEquals(0, set.getCachedCount());
+        assertEquals(DIMENSION, set.getDimension());
+        assertEquals(EmbedRecordStatus.SUCCESS.name(), set.getRecords().getFirst().getStatus());
+    }
+
+    /**
+     * 构造目录行（向量能力）。
+     *
+     * @param modelKey 模型名
+     * @return 目录行
+     */
+    private ModelDescriptor embeddingModel(String modelKey) {
+        ModelDescriptor model = new ModelDescriptor();
+        model.setVendorCode("dashscope");
+        model.setModelKey(modelKey);
+        model.setCapabilities(Set.of(ModelCapability.EMBEDDING));
+        model.setStatus("ENABLED");
+        model.setRpmLimit(60);
+        model.setTpmLimit(100000);
+        return model;
+    }
+
+    /**
+     * 构造向量结果。
+     *
+     * @param count     条数
+     * @param dimension 维度
+     * @return 向量结果
+     */
+    private EmbeddingResult embeddingResult(int count, int dimension) {
+        EmbeddingResult result = new EmbeddingResult();
+        List<List<Float>> vectors = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            List<Float> vector = new ArrayList<>();
+            for (int j = 0; j < dimension; j++) {
+                vector.add(0.1f);
+            }
+            vectors.add(vector);
+        }
+        result.setEmbeddings(vectors);
+        result.setDimension(dimension);
+        result.setModel("text-embedding-v4");
+        result.setRequestId("rid");
+        return result;
     }
 
     /**

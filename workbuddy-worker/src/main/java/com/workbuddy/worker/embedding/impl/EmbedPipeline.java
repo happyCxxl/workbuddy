@@ -14,9 +14,12 @@ import com.workbuddy.common.domain.task.StepLogInfo;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.enums.embed.EmbeddingModel;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
+import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.model.catalog.ModelCatalogPort;
+import com.workbuddy.model.gateway.AiClient;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.embedding.EmbedContext;
 import com.workbuddy.worker.embedding.EmbedWindowRules;
@@ -50,19 +53,17 @@ public class EmbedPipeline implements EmbedderPort {
     private final EmbedProperties properties;
     private final ConsistencyChecker checker;
     private final InputTemplatePort template;
+    private final AiClient aiClient;
+    private final ModelCatalogPort modelCatalogPort;
 
     /**
-     * 一批文本的向量编码。
-     *
-     * <p>模型调用层已移除，接入模型模块后在此调用向量编码门面（入参 {@link EmbeddingRequest}，
-     * 出参 {@link EmbeddingResult}）；当前一律失败，批次按失败隔离，不回写账本。
+     * 一批文本的向量编码：交给模型门面，按请求里的模型名精确选模型。
      *
      * @param request 本批入参
      * @return 向量结果
      */
     private EmbeddingResult embedBatch(EmbeddingRequest request) {
-        throw new UnsupportedOperationException("向量编码不可用：模型调用层待接入，本批模型=" + request.getModel()
-                + "，条数=" + (NullUtil.isNull(request.getTexts()) ? 0 : request.getTexts().size()));
+        return aiClient.embed(request);
     }
 
     /**
@@ -158,6 +159,11 @@ public class EmbedPipeline implements EmbedderPort {
         EmbeddingModel model = EmbeddingModel.of(strategy.getModel());
         if (NullUtil.isNull(model) || !model.enabled()) {
             return "模型不存在或未启用: " + strategy.getModel();
+        }
+        boolean registered = modelCatalogPort.listByCapability(ModelCapability.EMBEDDING).stream()
+                .anyMatch(candidate -> strategy.getModel().equals(candidate.getModelKey()));
+        if (!registered) {
+            return "模型目录未录入或未启用: " + strategy.getModel();
         }
         if (NullUtil.isNull(strategy.getContextWindowTokens()) || strategy.getContextWindowTokens() <= 0) {
             return "模型目录缺少上下文窗口声明: " + strategy.getModel();

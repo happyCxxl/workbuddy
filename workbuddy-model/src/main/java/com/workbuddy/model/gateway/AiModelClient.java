@@ -7,6 +7,7 @@ import com.workbuddy.common.domain.model.chat.ChatResult;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.adapter.ModelAdapter;
 import com.workbuddy.model.invoke.ModelInvoker;
@@ -33,9 +34,7 @@ public class AiModelClient implements AiClient {
      */
     @Override
     public ChatResult chat(ChatRequest request) {
-        if (NullUtil.isNull(request)) {
-            throw new KnowledgeException(ErrorCode.MODEL_BAD_REQUEST, "对话请求为空");
-        }
+        ThrowUtil.throwIf(NullUtil.isNull(request),ErrorCode.MODEL_BAD_REQUEST, "对话请求为空");
         CallContext context = new CallContext();
         context.setCapability(NullUtil.isNull(request.getCapability())
                 ? ModelCapability.CHAT : request.getCapability());
@@ -51,9 +50,7 @@ public class AiModelClient implements AiClient {
      */
     @Override
     public EmbeddingResult embed(EmbeddingRequest request) {
-        if (NullUtil.isNull(request)) {
-            throw new KnowledgeException(ErrorCode.MODEL_BAD_REQUEST, "向量化请求为空");
-        }
+        ThrowUtil.throwIf(NullUtil.isNull(request),ErrorCode.MODEL_BAD_REQUEST, "向量化请求为空");
         CallContext context = new CallContext();
         context.setCapability(ModelCapability.EMBEDDING);
         context.setModelKeyFilter(request.getModel());
