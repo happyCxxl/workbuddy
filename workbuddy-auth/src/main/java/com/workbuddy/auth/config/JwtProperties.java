@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "knowledge.auth.jwt")
+@ConfigurationProperties(prefix = "workbuddy.auth.jwt")
 public class JwtProperties {
 
     /** 签名密钥；仓库里的默认值是占位串，上线必须换掉 */

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "knowledge.auth.guard")
+@ConfigurationProperties(prefix = "workbuddy.auth.guard")
 public class LoginGuardProperties {
 
     /** 是否启用登录失败防护 */

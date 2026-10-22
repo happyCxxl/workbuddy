@@ -1,7 +1,7 @@
 # 文件环节配置：上传校验口径。
 # 键的来源：knowledge-worker 的 FileValidationProperties（前缀 knowledge.file）。
 # 本环节配置的默认值在此处维护。
-knowledge:
+workbuddy:
   file:
     max-size: 104857600
     enabled-formats: PDF,DOC,DOCX,XLS,XLSX,PPT,PPTX

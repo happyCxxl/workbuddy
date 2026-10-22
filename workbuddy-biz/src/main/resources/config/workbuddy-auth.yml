@@ -1,7 +1,7 @@
 # 登录认证环节配置：令牌签发与登录失败防护。
 # 键的来源：JwtUtil 的 @Value 注入点（knowledge.auth.jwt.*）与 LoginGuardProperties（前缀 knowledge.auth.guard）。
 # 本环节配置的默认值在此处维护。
-knowledge:
+workbuddy:
   auth:
     jwt:
       secret: knowledge-jwt-secret-change-me-in-production

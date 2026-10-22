@@ -13,7 +13,7 @@ import java.util.List;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "knowledge.file")
+@ConfigurationProperties(prefix = "workbuddy.file")
 public class FileValidationProperties {
 
     /** 文件大小上限（字节）；超限即停、不再继续读取 */
