@@ -85,19 +85,19 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(illegal), "thinkingEnabled");
     }
 
-    /** 厂商码大小写不敏感；与配置清单外的取值拒绝（含曾配置后停用的厂商）（{@code vendorCodeShouldMatchConfiguredSet}）。 */
+    /** 限额必填且为正数（{@code limitsShouldBeRequiredAndPositive}）。 */
     @Test
-    void vendorCodeShouldMatchConfiguredSet() {
-        ModelSaveDTO upper = saveDto();
-        upper.setVendorCode("DEEPSEEK");
-        ModelSaveDTO unconfigured = saveDto();
-        unconfigured.setVendorCode("dashscope");
-        ModelSaveDTO unknown = saveDto();
-        unknown.setVendorCode("no-such-vendor");
+    void limitsShouldBeRequiredAndPositive() {
+        ModelSaveDTO missingRpm = saveDto();
+        missingRpm.setRpmLimit(null);
+        ModelSaveDTO missingTpm = saveDto();
+        missingTpm.setTpmLimit(null);
+        ModelSaveDTO zero = saveDto();
+        zero.setRpmLimit(0);
 
-        assertTrue(VALIDATOR.validate(upper).isEmpty());
-        assertPropertyViolated(VALIDATOR.validate(unconfigured), "vendorCode");
-        assertPropertyViolated(VALIDATOR.validate(unknown), "vendorCode");
+        assertPropertyViolated(VALIDATOR.validate(missingRpm), "rpmLimit");
+        assertPropertyViolated(VALIDATOR.validate(missingTpm), "tpmLimit");
+        assertPropertyViolated(VALIDATOR.validate(zero), "rpmLimit");
     }
 
     /** 币种必填、只认 CNY / USD 精确大小写（{@code currencyShouldMatchDictionary}）。 */
@@ -125,10 +125,10 @@ class ModelDtoValidationTest {
         assertPropertyViolated(VALIDATOR.validate(statusDto(" ")), "status");
     }
 
-    /** 清单查询：三个能力取值与大小写不敏感都放行，字典外取值（含带空格的）拒绝（{@code queryCapabilityShouldMatchDictionary}）。 */
+    /** 清单查询：六个能力取值与大小写不敏感都放行，字典外取值（含带空格的）拒绝（{@code queryCapabilityShouldMatchDictionary}）。 */
     @Test
     void queryCapabilityShouldMatchDictionary() {
-        for (String legal : new String[] { "CHAT", "embedding", "OCR", null }) {
+        for (String legal : new String[] { "CHAT", "embedding", "OCR", "rerank", "IMAGE", "VIDEO", null }) {
             assertTrue(VALIDATOR.validate(queryDto(legal, null)).isEmpty(), "合法取值被拒: " + legal);
         }
         assertPropertyViolated(VALIDATOR.validate(queryDto("LAYOUT", null)), "capability");

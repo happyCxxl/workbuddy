@@ -455,13 +455,13 @@ CREATE TABLE wb_storage_source
 -- ============================================================================
 
 -- 模型目录：一行 = 一个可调用的模型。厂商连接与密钥在配置（knowledge.model.vendors.*），本表只存厂商码。
--- capabilities 为多值（逗号分隔，取值 CHAT/EMBEDDING/OCR），候选集按能力筛，限额按模型行算。
+-- capabilities 为多值（逗号分隔，取值 CHAT/EMBEDDING/OCR/RERANK/IMAGE/VIDEO），候选集按能力筛，限额按模型行算。
 CREATE TABLE wb_model
 (
     id                        BIGINT         NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
     vendor_code               VARCHAR(64)    NOT NULL COMMENT '厂商码（knowledge.model.vendors 配置里的键）',
     model_key                 VARCHAR(128)   NOT NULL COMMENT '厂商侧模型名（请求体里的模型标识）',
-    capabilities              VARCHAR(255)   NOT NULL COMMENT '能力清单（多值，逗号分隔：CHAT/EMBEDDING/OCR）',
+    capabilities              VARCHAR(255)   NOT NULL COMMENT '能力清单（多值，逗号分隔：CHAT/EMBEDDING/OCR/RERANK/IMAGE/VIDEO）',
     thinking_enabled          TINYINT        NOT NULL DEFAULT 0 COMMENT '是否支持思考模式：1 支持 / 0 不支持（仅登记能力，不装配请求参数）',
     input_limit               INT                     DEFAULT NULL COMMENT '最大输入长度（tokens，可空）',
     output_limit              INT                     DEFAULT NULL COMMENT '最大输出长度（tokens，可空）',
@@ -472,8 +472,8 @@ CREATE TABLE wb_model
     price_in_per_m_cache_hit  DECIMAL(18, 6)          DEFAULT NULL COMMENT '输入每百万 token 单价·缓存命中（可空；对应能力 CHAT）',
     price_out_per_m           DECIMAL(18, 6)          DEFAULT NULL COMMENT '输出每百万 token 单价（可空；对应能力 CHAT）',
     currency                  VARCHAR(8)     NOT NULL DEFAULT 'CNY' COMMENT '币种：CNY / USD',
-    rpm_limit                 INT                     DEFAULT NULL COMMENT '每分钟请求数上限（可空；与 tpm 都空则该模型不参与容量占用判断）',
-    tpm_limit                 INT                     DEFAULT NULL COMMENT '每分钟 token 上限（可空）',
+    rpm_limit                 INT            NOT NULL COMMENT '每分钟请求数上限',
+    tpm_limit                 INT            NOT NULL COMMENT '每分钟 token 上限',
     status                    VARCHAR(16)    NOT NULL DEFAULT 'ENABLED' COMMENT '状态：ENABLED 启用 / DISABLED 停用',
     del_flag                  VARCHAR(1)     NOT NULL DEFAULT '0' COMMENT '删除标记：0 正常 / 1 已删',
     create_by                 VARCHAR(64)             DEFAULT NULL COMMENT '创建人',

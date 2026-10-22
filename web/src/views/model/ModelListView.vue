@@ -350,18 +350,18 @@
             <el-input-number
               v-model="form.rpmLimit"
               class="model-form-control"
-              :min="0"
+              :min="1"
               :controls="false"
-              placeholder="可留空"
+              placeholder="必填"
             />
           </el-form-item>
           <el-form-item prop="tpmLimit" label="TPM" class="model-form-item">
             <el-input-number
               v-model="form.tpmLimit"
               class="model-form-control"
-              :min="0"
+              :min="1"
               :controls="false"
-              placeholder="可留空"
+              placeholder="必填"
             />
           </el-form-item>
           <el-form-item prop="currency" label="币种" class="model-form-item">
@@ -524,8 +524,8 @@ const formRules: FormRules = {
   priceInPerM: [NON_NEGATIVE_RULE],
   priceInPerMCacheHit: [NON_NEGATIVE_RULE],
   priceOutPerM: [NON_NEGATIVE_RULE],
-  rpmLimit: [NON_NEGATIVE_RULE],
-  tpmLimit: [NON_NEGATIVE_RULE],
+  rpmLimit: [NON_NEGATIVE_RULE, { required: true, message: '请输入 RPM 上限', trigger: 'blur' }],
+  tpmLimit: [NON_NEGATIVE_RULE, { required: true, message: '请输入 TPM 上限', trigger: 'blur' }],
 };
 
 const drawerTitle = computed(() =>

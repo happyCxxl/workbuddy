@@ -214,7 +214,7 @@ class WbModelDbServiceImplTest {
     @Test
     void updateAllShouldCarryValuesOnEntityAndClearNullColumns() {
         WbModel row = row(6L);
-        // 十个数值列全部清空：实体更新策略跳过 null，必须逐列显式写 NULL
+        // 八个可空数值列全部清空：实体更新策略跳过 null，必须逐列显式写 NULL
         row.setInputLimit(null);
         row.setOutputLimit(null);
         row.setThinkingInputLimit(null);
@@ -222,8 +222,6 @@ class WbModelDbServiceImplTest {
         row.setContextWindow(null);
         row.setPriceInPerM(null);
         row.setPriceInPerMCacheHit(null);
-        row.setRpmLimit(null);
-        row.setTpmLimit(null);
 
         dbService.updateModel(row);
 
@@ -237,8 +235,7 @@ class WbModelDbServiceImplTest {
 
         String sqlSet = ((LambdaUpdateWrapper<WbModel>) wrapperCaptor.getValue()).getSqlSet();
         for (String column : List.of("input_limit", "output_limit", "thinking_input_limit",
-                "thinking_output_limit", "context_window", "price_in_per_m", "price_in_per_m_cache_hit",
-                "rpm_limit", "tpm_limit")) {
+                "thinking_output_limit", "context_window", "price_in_per_m", "price_in_per_m_cache_hit")) {
             // 按 SET 片段精确匹配：thinking_input_limit 等列名互为前缀，纯 contains 会放过漏清列
             assertTrue(java.util.Arrays.stream(sqlSet.split(","))
                     .anyMatch(part -> part.startsWith(column + "=")), column + " 未清空: " + sqlSet);

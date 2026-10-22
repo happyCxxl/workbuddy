@@ -20,8 +20,9 @@ public class ModelQueryDTO extends PageQueryDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 能力（可空，字典名：CHAT / EMBEDDING / OCR，大小写不敏感） */
-    @Pattern(regexp = "(?i)CHAT|EMBEDDING|OCR", message = "能力取值只能是 CHAT / EMBEDDING / OCR")
+    /** 能力（可空，字典名：CHAT / EMBEDDING / OCR / RERANK / IMAGE / VIDEO，大小写不敏感） */
+    @Pattern(regexp = "(?i)CHAT|EMBEDDING|OCR|RERANK|IMAGE|VIDEO",
+            message = "能力取值只能是 CHAT / EMBEDDING / OCR / RERANK / IMAGE / VIDEO")
     private String capability;
 
     /** 状态（可空，字典名：ENABLED / DISABLED，大小写不敏感） */

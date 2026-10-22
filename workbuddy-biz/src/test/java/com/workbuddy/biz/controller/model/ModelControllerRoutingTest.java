@@ -83,7 +83,8 @@ class ModelControllerRoutingTest {
         mockMvc.perform(post("/model/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"vendorCode\":\"deepseek\",\"modelKey\":\"qwen-max\","
-                        + "\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\",\"priceInPerM\":20,\"rpmLimit\":600}"))
+                        + "\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\",\"priceInPerM\":20,"
+                        + "\"rpmLimit\":600,\"tpmLimit\":120000}"))
                 .andExpect(status().isOk());
 
         ModelSaveDTO dto = capturedSave();
@@ -103,7 +104,8 @@ class ModelControllerRoutingTest {
         mockMvc.perform(put("/model/update/5")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"vendorCode\":\"deepseek\",\"modelKey\":\"qwen-plus\","
-                        + "\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\"}"))
+                        + "\"capabilities\":[\"CHAT\"],\"currency\":\"CNY\","
+                        + "\"rpmLimit\":600,\"tpmLimit\":120000}"))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);

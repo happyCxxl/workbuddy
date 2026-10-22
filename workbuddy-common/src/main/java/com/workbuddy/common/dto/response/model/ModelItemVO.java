@@ -63,9 +63,9 @@ public class ModelItemVO {
     /** 币种 CNY / USD */
     private String currency;
 
-    /** 每分钟请求数上限，可空 */
+    /** 每分钟请求数上限（必填） */
     private Integer rpmLimit;
 
-    /** 每分钟 token 上限，可空 */
+    /** 每分钟 token 上限（必填） */
     private Integer tpmLimit;
 }

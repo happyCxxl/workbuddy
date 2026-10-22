@@ -1,10 +1,12 @@
 package com.workbuddy.model.registry;
 
 import com.workbuddy.common.domain.model.RegisteredModel;
+import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.utils.NullUtil;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 模型内存注册表：录入模型（wb_model）中启用行的运行时快照。
@@ -39,5 +41,37 @@ public class ModelRegistry {
      */
     public List<RegisteredModel> all() {
         return models;
+    }
+
+    /**
+     * 按能力取启用行（注册表只装启用行）。
+     *
+     * @param capability 能力，可空
+     * @return 含该能力的行（保持注册表顺序）；能力为空时为空列表
+     */
+    public List<RegisteredModel> byCapability(ModelCapability capability) {
+        if (NullUtil.isNull(capability)) {
+            return List.of();
+        }
+        return models.stream()
+                .filter(model -> NullUtil.isNotNull(model.getCapabilities())
+                        && model.getCapabilities().contains(capability))
+                .toList();
+    }
+
+    /**
+     * 按厂商码与模型名取一行。
+     *
+     * @param vendorCode 厂商码，可空
+     * @param modelKey   厂商侧模型名，可空
+     * @return 命中行；参数为空或未命中时为空
+     */
+    public Optional<RegisteredModel> find(String vendorCode, String modelKey) {
+        if (NullUtil.isNull(vendorCode) || NullUtil.isNull(modelKey)) {
+            return Optional.empty();
+        }
+        return models.stream()
+                .filter(model -> vendorCode.equals(model.getVendorCode()) && modelKey.equals(model.getModelKey()))
+                .findFirst();
     }
 }

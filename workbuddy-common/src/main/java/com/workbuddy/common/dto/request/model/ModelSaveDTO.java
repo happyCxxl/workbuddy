@@ -4,7 +4,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -27,11 +29,10 @@ public class ModelSaveDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 厂商码（必填，取值必须在 workbuddy.model.vendors 配置里）
+     * 厂商码（必填，服务层按 workbuddy.model.vendors 的键校验）
      */
     @NotBlank(message = "厂商码不能为空")
     @Size(max = 64, message = "厂商码最长 64 字符")
-    @Pattern(regexp = "(?i)deepseek", message = "厂商码需要和配置值保持一致，为：deepseek")
     private String vendorCode;
 
     /**
@@ -110,14 +111,16 @@ public class ModelSaveDTO implements Serializable {
     private String currency;
 
     /**
-     * 每分钟请求数上限（可空）
+     * 每分钟请求数上限（必填）
      */
-    @PositiveOrZero(message = "RPM 上限不能为负数")
+    @NotNull(message = "RPM 上限不能为空")
+    @Positive(message = "RPM 上限必须为正数")
     private Integer rpmLimit;
 
     /**
-     * 每分钟 token 上限（可空）
+     * 每分钟 token 上限（必填）
      */
-    @PositiveOrZero(message = "TPM 上限不能为负数")
+    @NotNull(message = "TPM 上限不能为空")
+    @Positive(message = "TPM 上限必须为正数")
     private Integer tpmLimit;
 }

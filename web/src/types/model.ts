@@ -7,18 +7,18 @@ export const MODEL_STATUS = {
 } as const;
 
 /**
- * 能力码值：与后端 `ModelCapability` 枚举一致。
- *
- * <p>方案 §4.6 的能力字典另有 `RERANK` / `IMAGE` 两个取值，`common` 的枚举里没有，
- * 接口按枚举校验会拒绝这两个值，页面不列这两个取值。
+ * 能力码值：与后端 `ModelCapability` 枚举一致；`LAYOUT` / `TABLE_STRUCTURE` 是业务用法，不进字典。
  */
-export const MODEL_CAPABILITIES = ['CHAT', 'EMBEDDING', 'OCR'] as const;
+export const MODEL_CAPABILITIES = ['CHAT', 'EMBEDDING', 'OCR', 'RERANK', 'IMAGE', 'VIDEO'] as const;
 
 /** 能力展示名（页面标签与下拉文案） */
 export const MODEL_CAPABILITY_LABELS: Record<string, string> = {
   CHAT: '对话',
   EMBEDDING: '向量编码',
   OCR: '文字识别',
+  RERANK: '检索重排',
+  IMAGE: '文生图',
+  VIDEO: '文生视频',
 };
 
 /** 币种码值（wb_model.currency） */

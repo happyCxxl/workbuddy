@@ -20,6 +20,7 @@ import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.config.ModelVendorProperties;
 import com.workbuddy.model.db.WbModelDbService;
+import com.workbuddy.model.registry.ModelRegistryRefresher;
 import com.workbuddy.model.service.ModelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +36,8 @@ import java.util.Set;
 /**
  * 模型管理服务实现：模型目录的清单分页与写入、启停。
  *
- * <p>校验全部在 DTO 注解（Controller `@Valid` 触发）；本类只做能力逐项字典解析，
- * 唯一键冲突由 uk_vendor_model 索引拦下转 40001，清单分页的过滤全在 SQL 侧完成。
+ * <p>格式校验在 DTO 注解（Controller `@Valid` 触发）；厂商是否在配置里、唯一键是否冲突、
+ * 能力是否在字典里由本类判定，清单分页的过滤全在 SQL 侧完成。
  */
 @Slf4j
 @Service
@@ -47,6 +48,7 @@ public class ModelServiceImpl implements ModelService {
 
     private final ModelVendorProperties modelVendorProperties;
     private final AuditEventPublisher auditEventPublisher;
+    private final ModelRegistryRefresher modelRegistryRefresher;
 
     /**
      * 分页查模型目录。
@@ -78,11 +80,13 @@ public class ModelServiceImpl implements ModelService {
         applyColumns(row, dto);
         row.setCurrency(dto.getCurrency());
         row.setStatus(ModelStatus.ENABLED.name());
+        ensureUnique(row.getVendorCode(), row.getModelKey(), null);
         wbModelDbService.save(row);
         auditEventPublisher.publish(AuditActionType.MODEL_CREATE, AuditObjectType.MODEL.key(), row.getId(), null,
                 JsonUtil.toJsonStr(row));
         log.info("===> ModelServiceImpl create 新增模型, id={}, vendor={}, model={}",
                 row.getId(), row.getVendorCode(), row.getModelKey());
+        modelRegistryRefresher.refreshAfterCommit();
         return toItem(row);
     }
 
@@ -103,11 +107,13 @@ public class ModelServiceImpl implements ModelService {
         applyColumns(after, dto);
         after.setCurrency(dto.getCurrency());
         after.setStatus(before.getStatus());
+        ensureUnique(after.getVendorCode(), after.getModelKey(), id);
         wbModelDbService.updateModel(after);
         auditEventPublisher.publish(AuditActionType.MODEL_UPDATE, AuditObjectType.MODEL.key(), id, beforeJson,
                 JsonUtil.toJsonStr(after));
         log.info("===> ModelServiceImpl update 修改模型, id={}, vendor={}, model={}",
                 id, after.getVendorCode(), after.getModelKey());
+        modelRegistryRefresher.refreshAfterCommit();
         return toItem(after);
     }
 
@@ -131,6 +137,7 @@ public class ModelServiceImpl implements ModelService {
         auditEventPublisher.publish(isEnabled(target) ? AuditActionType.MODEL_ENABLE : AuditActionType.MODEL_DISABLE,
                 AuditObjectType.MODEL.key(), id, beforeJson, JsonUtil.toJsonStr(row));
         log.info("===> ModelServiceImpl updateStatus 模型启停, id={}, status={}", id, target);
+        modelRegistryRefresher.refreshAfterCommit();
         return toItem(row);
     }
 
@@ -140,7 +147,7 @@ public class ModelServiceImpl implements ModelService {
      */
     // 只处理需要业务加工的列（trim / 能力解析 / 默认值）；纯字段搬运在 SystemConverter
     private void applyColumns(WbModel row, ModelSaveDTO dto) {
-        row.setVendorCode(StrUtil.trimToNull(dto.getVendorCode()));
+        row.setVendorCode(normalizeVendor(dto.getVendorCode()));
         row.setModelKey(StrUtil.trimToNull(dto.getModelKey()));
         row.setCapabilities(capabilities(dto.getCapabilities()));
         row.setThinkingEnabled(
@@ -168,6 +175,26 @@ public class ModelServiceImpl implements ModelService {
             capabilities.add(capability);
         }
         return ModelCapability.join(capabilities);
+    }
+
+    /**
+     * 厂商码归一化：必须在配置里（大小写不敏感），落库统一小写
+     */
+    private String normalizeVendor(String vendorCode) {
+        String trimmed = StrUtil.trimToNull(vendorCode);
+        String normalized = NullUtil.isNull(trimmed) ? null : trimmed.toLowerCase(Locale.ROOT);
+        ThrowUtil.throwIf(NullUtil.isNull(normalized) || !vendorMap().containsKey(normalized),
+                ErrorCode.MODEL_VENDOR_UNKNOWN, "厂商未配置：" + vendorCode);
+        return normalized;
+    }
+
+    /**
+     * 唯一键预检：同厂商同模型名（编辑时排除自身），DB 唯一键兜底
+     */
+    private void ensureUnique(String vendorCode, String modelKey, Long excludeId) {
+        boolean exists = wbModelDbService.existsVendorAndModelKey(vendorCode, modelKey, excludeId);
+        ThrowUtil.throwIf(exists, ErrorCode.PARAM_INVALID,
+                "同厂商下模型已存在：" + vendorCode + "/" + modelKey);
     }
 
     /**

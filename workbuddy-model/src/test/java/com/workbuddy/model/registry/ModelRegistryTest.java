@@ -76,4 +76,29 @@ class ModelRegistryTest {
 
         assertEquals(1, registry.all().size());
     }
+
+    /** 按能力筛选只返回含该能力的行（{@code byCapabilityShouldFilter}）。 */
+    @Test
+    void byCapabilityShouldFilterRows() {
+        RegisteredModel embedding = model("dashscope", "text-embedding-v4");
+        embedding.setCapabilities(Set.of(ModelCapability.EMBEDDING));
+        registry.reload(List.of(model("deepseek", "deepseek-chat"), embedding));
+
+        List<RegisteredModel> rows = registry.byCapability(ModelCapability.EMBEDDING);
+
+        assertEquals(1, rows.size());
+        assertEquals("text-embedding-v4", rows.getFirst().getModelKey());
+        assertTrue(registry.byCapability(null).isEmpty());
+    }
+
+    /** 厂商码 + 模型名定位：空参数与未命中都返回空（{@code findShouldLocateByVendorAndModelKey}）。 */
+    @Test
+    void findShouldLocateByVendorAndModelKey() {
+        registry.reload(List.of(model("deepseek", "deepseek-chat"), model("dashscope", "qwen-max")));
+
+        assertEquals("deepseek-chat", registry.find("deepseek", "deepseek-chat").orElseThrow().getModelKey());
+        assertTrue(registry.find("deepseek", "qwen-max").isEmpty());
+        assertTrue(registry.find(null, "qwen-max").isEmpty());
+        assertTrue(registry.find("deepseek", null).isEmpty());
+    }
 }

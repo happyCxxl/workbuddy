@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -42,6 +43,16 @@ class ModelRegistryLoaderTest {
         row.setVendorCode(vendorCode);
         row.setModelKey(modelKey);
         row.setCapabilities(capabilities);
+        row.setContextWindow(32768);
+        row.setInputLimit(30720);
+        row.setOutputLimit(8192);
+        row.setPriceInPerM(new BigDecimal("20"));
+        row.setPriceInPerMCacheHit(new BigDecimal("2"));
+        row.setPriceOutPerM(new BigDecimal("60"));
+        row.setCurrency("CNY");
+        row.setRpmLimit(600);
+        row.setTpmLimit(120000);
+        row.setStatus("ENABLED");
         return row;
     }
 
@@ -62,6 +73,16 @@ class ModelRegistryLoaderTest {
         assertEquals("deepseek", first.getVendorCode());
         assertEquals("deepseek-chat", first.getModelKey());
         assertEquals(Set.of(ModelCapability.CHAT, ModelCapability.EMBEDDING), first.getCapabilities());
+        assertEquals(32768, first.getContextWindow());
+        assertEquals(30720, first.getInputLimit());
+        assertEquals(8192, first.getOutputLimit());
+        assertEquals(new BigDecimal("20"), first.getPriceInPerM());
+        assertEquals(new BigDecimal("2"), first.getPriceInPerMCacheHit());
+        assertEquals(new BigDecimal("60"), first.getPriceOutPerM());
+        assertEquals("CNY", first.getCurrency());
+        assertEquals(600, first.getRpmLimit());
+        assertEquals(120000, first.getTpmLimit());
+        assertEquals("ENABLED", first.getStatus());
     }
 
     /** 空表合法：装载零行，注册表为空（{@code shouldTolerateEmptyCatalog}）。 */

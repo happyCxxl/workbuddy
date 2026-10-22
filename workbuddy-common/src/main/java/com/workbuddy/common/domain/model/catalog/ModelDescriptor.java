@@ -30,6 +30,12 @@ public class ModelDescriptor {
     /** 上下文窗口（tokens，可空） */
     private Integer contextWindow;
 
+    /** 最大输入长度（tokens，可空） */
+    private Integer inputLimit;
+
+    /** 最大输出长度（tokens，可空） */
+    private Integer outputLimit;
+
     /** 输入每百万 token 单价（可空） */
     private BigDecimal priceInPerM;
 

@@ -49,12 +49,22 @@ public class ModelRegistryLoader {
         reload();
     }
 
-    /** wb_model 启用行 → 注册表行：能力 CSV 解析一次 */
+    /** wb_model 启用行 → 注册表行：能力 CSV 解析一次，长度/价格/限额/状态全量搬运 */
     private RegisteredModel toRegistered(WbModel row) {
         RegisteredModel model = new RegisteredModel();
         model.setVendorCode(row.getVendorCode());
         model.setModelKey(row.getModelKey());
         model.setCapabilities(ModelCapability.parse(row.getCapabilities()));
+        model.setContextWindow(row.getContextWindow());
+        model.setInputLimit(row.getInputLimit());
+        model.setOutputLimit(row.getOutputLimit());
+        model.setPriceInPerM(row.getPriceInPerM());
+        model.setPriceInPerMCacheHit(row.getPriceInPerMCacheHit());
+        model.setPriceOutPerM(row.getPriceOutPerM());
+        model.setCurrency(row.getCurrency());
+        model.setRpmLimit(row.getRpmLimit());
+        model.setTpmLimit(row.getTpmLimit());
+        model.setStatus(row.getStatus());
         return model;
     }
 }

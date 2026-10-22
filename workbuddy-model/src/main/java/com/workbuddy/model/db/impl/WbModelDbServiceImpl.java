@@ -107,8 +107,6 @@ public class WbModelDbServiceImpl extends InfraDbServiceImpl<WbModelMapper, WbMo
         clearIfNull(wrapper, WbModel::getPriceInPerM, row.getPriceInPerM());
         clearIfNull(wrapper, WbModel::getPriceInPerMCacheHit, row.getPriceInPerMCacheHit());
         clearIfNull(wrapper, WbModel::getPriceOutPerM, row.getPriceOutPerM());
-        clearIfNull(wrapper, WbModel::getRpmLimit, row.getRpmLimit());
-        clearIfNull(wrapper, WbModel::getTpmLimit, row.getTpmLimit());
         update(row, wrapper);
     }
 

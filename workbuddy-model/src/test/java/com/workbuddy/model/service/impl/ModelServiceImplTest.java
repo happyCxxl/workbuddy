@@ -16,6 +16,7 @@ import com.workbuddy.common.exception.KnowledgeException;
 import com.workbuddy.common.security.audit.AuditEventPublisher;
 import com.workbuddy.model.config.ModelVendorProperties;
 import com.workbuddy.model.db.WbModelDbService;
+import com.workbuddy.model.registry.ModelRegistryRefresher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -53,19 +54,22 @@ class ModelServiceImplTest {
 
     private ModelVendorProperties vendorProperties;
 
+    private ModelRegistryRefresher refresher;
+
     private ModelServiceImpl service;
 
     @BeforeEach
     void setUp() {
         kbModelDbService = mock(WbModelDbService.class);
         auditEventPublisher = mock(AuditEventPublisher.class);
+        refresher = mock(ModelRegistryRefresher.class);
         vendorProperties = new ModelVendorProperties();
         Map<String, ModelVendorProperties.Vendor> vendors = new LinkedHashMap<>();
         vendors.put("dashscope", vendor("sk-dashscope"));
         vendors.put("self-ocr", vendor(null));
         vendors.get("dashscope").setDisplayName("阿里百炼");
         vendorProperties.setVendors(vendors);
-        service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher);
+        service = new ModelServiceImpl(kbModelDbService, vendorProperties, auditEventPublisher, refresher);
     }
 
     /**
@@ -194,6 +198,7 @@ class ModelServiceImplTest {
         assertEquals(List.of("CHAT", "EMBEDDING"), item.getCapabilities());
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_CREATE), eq(AUDIT_OBJECT_TYPE), isNull(),
                 isNull(), anyString());
+        verify(refresher).refreshAfterCommit();
     }
 
     /**
@@ -219,12 +224,12 @@ class ModelServiceImplTest {
     @Test
     void createShouldRejectIllegalCapability() {
         ModelSaveDTO unknown = saveDto();
-        unknown.setCapabilities(List.of("RERANK"));
+        unknown.setCapabilities(List.of("VISION"));
 
         KnowledgeException unknownError = assertThrows(KnowledgeException.class, () -> service.create(unknown));
 
         assertEquals(ErrorCode.PARAM_INVALID, unknownError.getErrorCode());
-        assertTrue(unknownError.getMessage().contains("RERANK"), unknownError.getMessage());
+        assertTrue(unknownError.getMessage().contains("VISION"), unknownError.getMessage());
         verify(kbModelDbService, never()).save(any());
     }
 
@@ -345,6 +350,40 @@ class ModelServiceImplTest {
         assertEquals("ENABLED", service.updateStatus(3L, enable).getStatus());
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_ENABLE), eq(AUDIT_OBJECT_TYPE), eq(3L),
                 anyString(), anyString());
+    }
+
+    /** 厂商码不在配置里：按 MODEL_VENDOR_UNKNOWN 拒绝且不写库（{@code vendorShouldBeConfigured}）。 */
+    @Test
+    void createShouldRejectUnknownVendor() {
+        ModelSaveDTO dto = saveDto();
+        dto.setVendorCode("no-such-vendor");
+
+        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.create(dto));
+
+        assertEquals(ErrorCode.MODEL_VENDOR_UNKNOWN, error.getErrorCode());
+        verify(kbModelDbService, never()).save(any(WbModel.class));
+    }
+
+    /** 厂商码大小写不敏感，落库统一小写（{@code vendorShouldBeNormalized}）。 */
+    @Test
+    void createShouldNormalizeVendorCase() {
+        ModelSaveDTO dto = saveDto();
+        dto.setVendorCode("DASHSCOPE");
+
+        service.create(dto);
+
+        assertEquals("dashscope", capturedSave().getVendorCode());
+    }
+
+    /** 同厂商同模型名：预检命中按 40001 拒绝且不写库（{@code duplicateShouldBeRejected}）。 */
+    @Test
+    void createShouldRejectDuplicateKey() {
+        when(kbModelDbService.existsVendorAndModelKey("dashscope", "qwen-max", null)).thenReturn(true);
+
+        KnowledgeException error = assertThrows(KnowledgeException.class, () -> service.create(saveDto()));
+
+        assertEquals(ErrorCode.PARAM_INVALID, error.getErrorCode());
+        verify(kbModelDbService, never()).save(any(WbModel.class));
     }
 
     /** 字段齐全的新增收参：覆盖长度四列、价格三列与限额两列 */
