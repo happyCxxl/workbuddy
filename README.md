@@ -53,7 +53,7 @@
 > `mvn verify` 在打包之外还会执行静态检查门禁（SpotBugs / Checkstyle / PMD / CPD）；门禁绑在
 > `verify` 相位，因此 `mvn package` 不会触发它。推送前钩子（`.husky/pre-push` → `.agent/tools/common/pre-push-gate.sh`）
 > 按本次推送范围计算要跑的步骤，**并逐步打印进度**（`[i/N]` 横幅 + 失败定位与复跑命令），
-> 推送过程随时可见进度；提交前钩子只做就地格式化（`.agent/standards/vue/04-检查手段.md`）。
+> 推送过程随时可见进度；提交前钩子只做就地格式化（`.agent/standards/common/07-检查手段.md`）。
 >
 > 想在推送前先跑，或指定范围重跑：`sh .agent/tools/common/pre-push-gate.sh`（可带范围，如
 > `sh .agent/tools/common/pre-push-gate.sh origin/main..HEAD`）。

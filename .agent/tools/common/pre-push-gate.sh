@@ -78,6 +78,13 @@ if node "$root/.agent/tools/common/check-artifacts.mjs"; then :; else
   report_fail "$step" "版本库混入中间产物" "node .agent/tools/common/check-artifacts.mjs"
 fi
 
+# 规范边界：.agent/ 要能被别的项目整包复用，就不能引用包外路径
+total=$((total + 1))
+run_step "规范边界：node .agent/tools/common/check-scope.mjs"
+if node "$root/.agent/tools/common/check-scope.mjs"; then :; else
+  report_fail "$step" "规范引用了 .agent 之外的路径" "node .agent/tools/common/check-scope.mjs"
+fi
+
 if [ "$has_text" -gt 0 ]; then
   run_step "编码完整性：node .agent/tools/common/check-encoding.mjs"
   if node "$root/.agent/tools/common/check-encoding.mjs"; then :; else
