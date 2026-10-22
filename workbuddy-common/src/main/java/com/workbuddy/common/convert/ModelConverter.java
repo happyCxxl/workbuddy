@@ -12,12 +12,22 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 /**
- * 模型转换：注册表行 → 目录视图、保存请求 → 模型实体（编译期生成实现，运行期无反射）。
+ * 模型转换：库表行 → 注册表行 / 目录视图、保存请求 → 模型实体（编译期生成实现，运行期无反射）。
  *
- * <p>字段同名直接搬运；向量规格由模型名从 {@link EmbeddingModel} 叠加，放在后置映射里。
+ * <p>字段同名直接搬运；能力 CSV 与向量规格是派生字段，放在表达式 / 后置映射里。
  */
 @Mapper(componentModel = "spring")
 public interface ModelConverter {
+
+    /**
+     * 库表行 → 注册表行：能力 CSV 解析成集合，其余字段同名搬运。
+     *
+     * @param row 库表行
+     * @return 注册表行
+     */
+    @Mapping(target = "capabilities",
+            expression = "java(com.workbuddy.common.enums.model.ModelCapability.parse(row.getCapabilities()))")
+    RegisteredModel toRegistered(WbModel row);
 
     /**
      * 注册表行 → 目录视图。

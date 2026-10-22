@@ -11,6 +11,7 @@ import com.workbuddy.common.domain.model.vision.VisionRequest;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.model.RouteReason;
 import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.ModelAdapter;
@@ -21,6 +22,9 @@ import com.workbuddy.model.service.support.capacity.ModelCooldownStore;
 import com.workbuddy.model.service.support.route.ModelCircuitBreakers;
 import com.workbuddy.model.service.support.route.ModelRouter;
 import com.workbuddy.model.service.support.route.RouteStateStore;
+import io.github.resilience4j.retry.MaxRetriesExceededException;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,6 +33,8 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -106,14 +112,12 @@ public class ModelInvoker {
         }, ChatResult::getTokenUsage);
     }
 
-    /** 视觉入参校验：字节与引用二选一，字节必须带 MIME */
+    /**
+     * 视觉入参校验：字节与引用二选一，字节必须带 MIME
+     */
     private void validateVision(VisionRequest request) {
-        if (request.hasBytes() && StrUtil.isBlank(request.getMimeType())) {
-            throw new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片 MIME 类型");
-        }
-        if (!request.hasBytes() && StrUtil.isBlank(request.getImageRef())) {
-            throw new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片字节或引用");
-        }
+        ThrowUtil.throwIf(request.hasBytes() && StrUtil.isBlank(request.getMimeType()), ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片 MIME 类型");
+        ThrowUtil.throwIf(!request.hasBytes() && StrUtil.isBlank(request.getImageRef()), ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片字节或引用");
     }
 
     /**
@@ -131,69 +135,97 @@ public class ModelInvoker {
         String requestId = UUID.randomUUID().toString();
         int maxAttempts = Math.max(1, modelRouteProperties.getMaxAttempts());
         Set<ModelRef> tried = new HashSet<>();
-        WorkbuddyException lastError = null;
-        for (int attempt = 0; attempt < maxAttempts; attempt++) {
-            ModelDescriptor model = modelRouter.select(capability, modelKeyFilter, tried);
-            if (NullUtil.isNull(model)) {
-                break;
-            }
-            ModelRef ref = new ModelRef(model.getVendorCode(), model.getModelKey());
-            tried.add(ref);
-            if (!modelCircuitBreakers.tryAcquire(ref)) {
-                lastError = new WorkbuddyException(ErrorCode.MODEL_UNAVAILABLE,
-                        "模型熔断中：" + ref.vendorCode() + "/" + ref.modelKey());
-                continue;
-            }
-            if (!modelCapacityGuard.tryAcquire(ref, model.getRpmLimit(), model.getTpmLimit())) {
-                modelCircuitBreakers.releasePermission(ref);
-                lastError = new WorkbuddyException(ErrorCode.MODEL_UNAVAILABLE,
-                        "模型容量不足：" + ref.vendorCode() + "/" + ref.modelKey());
-                continue;
-            }
-            long startedAt = System.currentTimeMillis();
-            try {
-                T result = call.apply(model);
-                long latencyMs = System.currentTimeMillis() - startedAt;
-                modelCircuitBreakers.onSuccess(ref, latencyMs);
-                routeStateStore.recordLatency(ref, latencyMs);
-                modelCallRecorder.record(requestId, capability, ref, attempt + 1, true, null,
-                        latencyMs, usageOf.apply(result), reason(attempt));
-                return result;
-            } catch (RuntimeException error) {
-                long latencyMs = System.currentTimeMillis() - startedAt;
-                WorkbuddyException translated = modelErrorClassifier.translate(error);
-                if (modelErrorClassifier.isVendorUnhealthy(error)) {
-                    modelCircuitBreakers.onFailure(ref, latencyMs, error);
-                    if (translated.getErrorCode() == ErrorCode.MODEL_RATE_LIMITED) {
-                        modelCooldownStore.markCooldown(ref,
-                                Duration.ofSeconds(modelRouteProperties.getCooldownSeconds()));
+        AtomicReference<WorkbuddyException> lastError = new AtomicReference<>();
+        AtomicInteger attemptCounter = new AtomicInteger();
+        Retry retry = Retry.of("model-invoke", RetryConfig.custom()
+                .maxAttempts(maxAttempts)
+                .waitDuration(Duration.ZERO)
+                .retryOnException(this::shouldRetry)
+                .build());
+        try {
+            return retry.executeSupplier(() -> {
+                ModelDescriptor model = modelRouter.select(capability, modelKeyFilter, tried);
+                if (NullUtil.isNull(model)) {
+                    WorkbuddyException previous = lastError.get();
+                    if (NullUtil.isNotNull(previous)) {
+                        throw previous;
                     }
-                } else {
-                    modelCircuitBreakers.onSuccess(ref, latencyMs);
+                    throw new WorkbuddyException(ErrorCode.MODEL_NOT_FOUND,
+                            "无可用模型：capability=" + capability + filterDetail(modelKeyFilter));
                 }
-                lastError = translated;
-                modelCallRecorder.record(requestId, capability, ref, attempt + 1, false,
-                        translated.getErrorCode(), latencyMs, null, reason(attempt));
-                if (!modelErrorClassifier.canFallback(error)) {
+                int attempt = attemptCounter.incrementAndGet();
+                ModelRef ref = new ModelRef(model.getVendorCode(), model.getModelKey());
+                tried.add(ref);
+                if (!modelCircuitBreakers.tryAcquire(ref)) {
+                    WorkbuddyException unavailable = new WorkbuddyException(ErrorCode.MODEL_UNAVAILABLE,
+                            "模型熔断中：" + ref.vendorCode() + "/" + ref.modelKey());
+                    lastError.set(unavailable);
+                    throw unavailable;
+                }
+                if (!modelCapacityGuard.tryAcquire(ref, model.getRpmLimit(), model.getTpmLimit())) {
+                    modelCircuitBreakers.releasePermission(ref);
+                    WorkbuddyException unavailable = new WorkbuddyException(ErrorCode.MODEL_UNAVAILABLE,
+                            "模型容量不足：" + ref.vendorCode() + "/" + ref.modelKey());
+                    lastError.set(unavailable);
+                    throw unavailable;
+                }
+                long startedAt = System.currentTimeMillis();
+                try {
+                    T result = call.apply(model);
+                    long latencyMs = System.currentTimeMillis() - startedAt;
+                    modelCircuitBreakers.onSuccess(ref, latencyMs);
+                    routeStateStore.recordLatency(ref, latencyMs);
+                    modelCallRecorder.record(requestId, capability, ref, attempt, true, null,
+                            latencyMs, usageOf.apply(result), reason(attempt - 1));
+                    return result;
+                } catch (RuntimeException error) {
+                    long latencyMs = System.currentTimeMillis() - startedAt;
+                    WorkbuddyException translated = modelErrorClassifier.translate(error);
+                    if (modelErrorClassifier.isVendorUnhealthy(error)) {
+                        modelCircuitBreakers.onFailure(ref, latencyMs, error);
+                        if (translated.getErrorCode() == ErrorCode.MODEL_RATE_LIMITED) {
+                            modelCooldownStore.markCooldown(ref,
+                                    Duration.ofSeconds(modelRouteProperties.getCooldownSeconds()));
+                        }
+                    } else {
+                        modelCircuitBreakers.onSuccess(ref, latencyMs);
+                    }
+                    lastError.set(translated);
+                    modelCallRecorder.record(requestId, capability, ref, attempt, false,
+                            translated.getErrorCode(), latencyMs, null, reason(attempt - 1));
+                    log.warn("模型调用失败，换下一个候选: {}/{}, error={}",
+                            ref.vendorCode(), ref.modelKey(), translated.getMessage());
                     throw translated;
                 }
-                log.warn("模型调用失败，换下一个候选: {}/{}, error={}",
-                        ref.vendorCode(), ref.modelKey(), translated.getMessage());
+            });
+        } catch (MaxRetriesExceededException exhausted) {
+            WorkbuddyException last = lastError.get();
+            if (NullUtil.isNotNull(last)) {
+                throw last;
             }
+            throw new WorkbuddyException(ErrorCode.MODEL_SERVER_ERROR, "模型调用重试耗尽");
         }
-        if (NullUtil.isNotNull(lastError)) {
-            throw lastError;
-        }
-        throw new WorkbuddyException(ErrorCode.MODEL_NOT_FOUND,
-                "无可用模型：capability=" + capability + filterDetail(modelKeyFilter));
     }
 
-    /** 首次尝试记常规，后续记降级而来 */
+    /** Retry 判定：容量/熔断跳过与可降级错误才换下一个，其余直接停 */
+    private boolean shouldRetry(Throwable error) {
+        if (error instanceof WorkbuddyException workbuddyException) {
+            return workbuddyException.getErrorCode() == ErrorCode.MODEL_UNAVAILABLE
+                    || modelErrorClassifier.canFallback(workbuddyException);
+        }
+        return modelErrorClassifier.canFallback(error);
+    }
+
+    /**
+     * 首次尝试记常规，后续记降级而来
+     */
     private RouteReason reason(int attempt) {
         return attempt == 0 ? RouteReason.OK : RouteReason.FALLBACK_FROM;
     }
 
-    /** 无候选时的可读原因 */
+    /**
+     * 无候选时的可读原因
+     */
     private String filterDetail(String modelKeyFilter) {
         return NullUtil.isNull(modelKeyFilter) ? "" : "，model=" + modelKeyFilter;
     }

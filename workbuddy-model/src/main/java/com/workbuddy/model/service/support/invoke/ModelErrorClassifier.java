@@ -3,8 +3,6 @@ package com.workbuddy.model.service.support.invoke;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import dev.langchain4j.exception.AuthenticationException;
-import dev.langchain4j.exception.ContentFilteredException;
-import dev.langchain4j.exception.InternalServerException;
 import dev.langchain4j.exception.InvalidRequestException;
 import dev.langchain4j.exception.ModelNotFoundException;
 import dev.langchain4j.exception.NonRetriableException;
@@ -42,32 +40,18 @@ public class ModelErrorClassifier {
      * @return 带 MODEL_* 错误码的知识异常
      */
     public WorkbuddyException translate(Throwable error) {
-        if (error instanceof WorkbuddyException workbuddyException) {
-            return workbuddyException;
-        }
         String detail = error.getClass().getSimpleName() + ": " + error.getMessage();
-        if (error instanceof RateLimitException) {
-            return new WorkbuddyException(ErrorCode.MODEL_RATE_LIMITED, detail);
-        }
-        if (error instanceof AuthenticationException) {
-            return new WorkbuddyException(ErrorCode.MODEL_AUTH_FAILED, detail);
-        }
-        if (error instanceof ModelNotFoundException) {
-            return new WorkbuddyException(ErrorCode.MODEL_NOT_FOUND, detail);
-        }
-        if (error instanceof InvalidRequestException || error instanceof ContentFilteredException) {
-            return new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, detail);
-        }
-        if (error instanceof TimeoutException) {
-            return new WorkbuddyException(ErrorCode.MODEL_TIMEOUT, detail);
-        }
-        if (error instanceof InternalServerException) {
-            return new WorkbuddyException(ErrorCode.MODEL_SERVER_ERROR, detail);
-        }
-        if (error instanceof UnresolvedModelServerException) {
-            return new WorkbuddyException(ErrorCode.MODEL_UNREACHABLE, detail);
-        }
-        return new WorkbuddyException(ErrorCode.MODEL_SERVER_ERROR, detail);
+        return switch (error) {
+            case WorkbuddyException workbuddyException -> workbuddyException;
+            case RateLimitException ignored -> new WorkbuddyException(ErrorCode.MODEL_RATE_LIMITED, detail);
+            case AuthenticationException ignored -> new WorkbuddyException(ErrorCode.MODEL_AUTH_FAILED, detail);
+            case ModelNotFoundException ignored -> new WorkbuddyException(ErrorCode.MODEL_NOT_FOUND, detail);
+            // ContentFilteredException 是 InvalidRequestException 的子类，由本分支覆盖
+            case InvalidRequestException ignored -> new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, detail);
+            case TimeoutException ignored -> new WorkbuddyException(ErrorCode.MODEL_TIMEOUT, detail);
+            case UnresolvedModelServerException ignored -> new WorkbuddyException(ErrorCode.MODEL_UNREACHABLE, detail);
+            default -> new WorkbuddyException(ErrorCode.MODEL_SERVER_ERROR, detail);
+        };
     }
 
     /**
@@ -80,14 +64,11 @@ public class ModelErrorClassifier {
         if (error instanceof WorkbuddyException workbuddyException) {
             return FALLBACK_CODES.contains(workbuddyException.getErrorCode());
         }
-        if (error instanceof RateLimitException || error instanceof TimeoutException
-                || error instanceof InternalServerException || error instanceof UnresolvedModelServerException) {
+        // DNS 不可达是 NonRetriableException 的子类，按覆盖规则归可降级
+        if (error instanceof UnresolvedModelServerException) {
             return true;
         }
-        if (error instanceof RetriableException) {
-            return true;
-        }
-        return false;
+        return error instanceof RetriableException;
     }
 
     /**
@@ -100,18 +81,14 @@ public class ModelErrorClassifier {
         if (error instanceof WorkbuddyException workbuddyException) {
             return UNHEALTHY_CODES.contains(workbuddyException.getErrorCode());
         }
-        if (error instanceof RateLimitException || error instanceof TimeoutException
-                || error instanceof InternalServerException || error instanceof UnresolvedModelServerException) {
+        // DNS 不可达按覆盖规则计入不健康
+        if (error instanceof UnresolvedModelServerException) {
             return true;
         }
         if (error instanceof RetriableException) {
             return true;
         }
-        if (error instanceof AuthenticationException || error instanceof InvalidRequestException
-                || error instanceof ContentFilteredException || error instanceof ModelNotFoundException
-                || error instanceof NonRetriableException) {
-            return false;
-        }
-        return true;
+        // 未识别异常按服务端错误计，保守归不健康；其余非可重试异常不算不健康
+        return !(error instanceof NonRetriableException);
     }
 }

@@ -1,8 +1,7 @@
 package com.workbuddy.model.service.support.catalog;
 
-import com.workbuddy.common.domain.entity.WbModel;
+import com.workbuddy.common.convert.ModelConverter;
 import com.workbuddy.common.domain.model.RegisteredModel;
-import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.model.ModelStatus;
 import com.workbuddy.model.db.WbModelDbService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,8 @@ public class ModelRegistryLoader {
 
     private final ModelRegistry modelRegistry;
 
+    private final ModelConverter modelConverter;
+
     /**
      * 重读启用行并全量推入注册表。
      *
@@ -36,7 +37,7 @@ public class ModelRegistryLoader {
      */
     public int reload() {
         List<RegisteredModel> rows = wbModelDbService.listByCondition(ModelStatus.ENABLED.name()).stream()
-                .map(this::toRegistered)
+                .map(modelConverter::toRegistered)
                 .toList();
         modelRegistry.reload(rows);
         log.info("===> 模型注册表装载完成, 启用模型 {} 行", rows.size());
@@ -47,24 +48,5 @@ public class ModelRegistryLoader {
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
         reload();
-    }
-
-    /** wb_model 启用行 → 注册表行：能力 CSV 解析一次，长度/价格/限额/状态全量搬运 */
-    private RegisteredModel toRegistered(WbModel row) {
-        RegisteredModel model = new RegisteredModel();
-        model.setVendorCode(row.getVendorCode());
-        model.setModelKey(row.getModelKey());
-        model.setCapabilities(ModelCapability.parse(row.getCapabilities()));
-        model.setContextWindow(row.getContextWindow());
-        model.setInputLimit(row.getInputLimit());
-        model.setOutputLimit(row.getOutputLimit());
-        model.setPriceInPerM(row.getPriceInPerM());
-        model.setPriceInPerMCacheHit(row.getPriceInPerMCacheHit());
-        model.setPriceOutPerM(row.getPriceOutPerM());
-        model.setCurrency(row.getCurrency());
-        model.setRpmLimit(row.getRpmLimit());
-        model.setTpmLimit(row.getTpmLimit());
-        model.setStatus(row.getStatus());
-        return model;
     }
 }

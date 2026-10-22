@@ -3,6 +3,7 @@ package com.workbuddy.model.provider;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.ModelRef;
@@ -28,7 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ModelInstanceRegistry {
 
-    /** 厂商配置缺省超时（毫秒），与配置口径一致 */
+    /**
+     * 厂商配置缺省超时（毫秒），与配置口径一致
+     */
     private static final int DEFAULT_TIMEOUT_MS = 60000;
 
     private final ModelVendorProperties vendorProperties;
@@ -59,15 +62,17 @@ public class ModelInstanceRegistry {
         return embeddingModels.computeIfAbsent(ref, this::buildEmbedding);
     }
 
-    /** 目录行 → 运行时定位；模型名为空按参数错误拒绝 */
+    /**
+     * 目录行 → 运行时定位；模型名为空按参数错误拒绝
+     */
     private ModelRef refOf(ModelDescriptor model) {
-        if (NullUtil.isNull(model) || StrUtil.isBlank(model.getModelKey())) {
-            throw new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, "模型名为空，无法构建实例");
-        }
+        ThrowUtil.throwIf(NullUtil.isNull(model) || StrUtil.isBlank(model.getModelKey()), ErrorCode.MODEL_BAD_REQUEST, "模型名为空，无法构建实例");
         return new ModelRef(model.getVendorCode(), model.getModelKey());
     }
 
-    /** 构建对话实例：baseUrl 留空走 LC4j 缺省地址 */
+    /**
+     * 构建对话实例：baseUrl 留空走 LC4j 缺省地址
+     */
     private ChatModel buildChat(ModelRef ref) {
         ModelVendorProperties.Vendor vendor = requireVendor(ref);
         OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
@@ -83,7 +88,9 @@ public class ModelInstanceRegistry {
         return builder.build();
     }
 
-    /** 构建向量实例 */
+    /**
+     * 构建向量实例
+     */
     private EmbeddingModel buildEmbedding(ModelRef ref) {
         ModelVendorProperties.Vendor vendor = requireVendor(ref);
         OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder builder = OpenAiEmbeddingModel.builder()
@@ -99,18 +106,20 @@ public class ModelInstanceRegistry {
         return builder.build();
     }
 
-    /** 厂商必须已配置且密钥可解析；否则运行期拒绝 */
+    /**
+     * 厂商必须已配置且密钥可解析；否则运行期拒绝
+     */
     private ModelVendorProperties.Vendor requireVendor(ModelRef ref) {
         Map<String, ModelVendorProperties.Vendor> vendors = vendorProperties.getVendors();
         ModelVendorProperties.Vendor vendor = NullUtil.isNull(vendors) ? null : vendors.get(ref.vendorCode());
-        if (NullUtil.isNull(vendor) || StrUtil.isBlank(vendor.getApiKey())) {
-            throw new WorkbuddyException(ErrorCode.MODEL_VENDOR_UNKNOWN,
-                    "厂商未配置或缺少 api-key：" + ref.vendorCode());
-        }
+        ThrowUtil.throwIf(NullUtil.isNull(vendor) || StrUtil.isBlank(vendor.getApiKey()), ErrorCode.MODEL_VENDOR_UNKNOWN,
+                "厂商未配置或缺少 api-key：" + ref.vendorCode());
         return vendor;
     }
 
-    /** 超时取配置，留空用缺省 60 秒 */
+    /**
+     * 超时取配置，留空用缺省 60 秒
+     */
     private int timeoutOf(ModelVendorProperties.Vendor vendor) {
         return NullUtil.isNull(vendor.getTimeoutMs()) ? DEFAULT_TIMEOUT_MS : vendor.getTimeoutMs();
     }

@@ -1,5 +1,6 @@
 package com.workbuddy.model.service.support.catalog;
 
+import com.workbuddy.common.convert.ModelConverterImpl;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.RegisteredModel;
 import com.workbuddy.common.enums.model.ModelCapability;
@@ -35,7 +36,7 @@ class ModelRegistryLoaderTest {
     @BeforeEach
     void setUp() {
         registry = new ModelRegistry();
-        loader = new ModelRegistryLoader(wbModelDbService, registry);
+        loader = new ModelRegistryLoader(wbModelDbService, registry, new ModelConverterImpl());
     }
 
     private WbModel row(String vendorCode, String modelKey, String capabilities) {

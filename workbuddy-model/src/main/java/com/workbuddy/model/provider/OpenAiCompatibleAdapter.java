@@ -70,8 +70,11 @@ public class OpenAiCompatibleAdapter implements ModelAdapter {
         return toChatResult(response, model);
     }
 
-    /** 输出约束 → LC4j response_format；TEXT 不设 */
-    private void applyOutput(dev.langchain4j.model.chat.request.ChatRequest.Builder builder, OutputSpec output) {        if (NullUtil.isNull(output) || NullUtil.isNull(output.getFormat())
+    /**
+     * 输出约束 → LC4j response_format；TEXT 不设
+     */
+    private void applyOutput(dev.langchain4j.model.chat.request.ChatRequest.Builder builder, OutputSpec output) {
+        if (NullUtil.isNull(output) || NullUtil.isNull(output.getFormat())
                 || output.getFormat() == OutputFormat.TEXT) {
             return;
         }
@@ -139,7 +142,9 @@ public class OpenAiCompatibleAdapter implements ModelAdapter {
         return result;
     }
 
-    /** 我们的消息 → LC4j 消息；角色为空按 user 处理 */
+    /**
+     * 我们的消息 → LC4j 消息；角色为空按 user 处理
+     */
     private List<dev.langchain4j.data.message.ChatMessage> toLc4jMessages(ChatRequest request) {
         List<dev.langchain4j.data.message.ChatMessage> messages = new ArrayList<>();
         if (NullUtil.isNull(request.getMessages())) {
@@ -160,7 +165,9 @@ public class OpenAiCompatibleAdapter implements ModelAdapter {
         return messages;
     }
 
-    /** LC4j 响应 → 我们的对话结果 */
+    /**
+     * LC4j 响应 → 我们的对话结果
+     */
     private ChatResult toChatResult(ChatResponse response, ModelDescriptor model) {
         ChatResult result = new ChatResult();
         AiMessage aiMessage = response.aiMessage();
@@ -172,7 +179,9 @@ public class OpenAiCompatibleAdapter implements ModelAdapter {
         return result;
     }
 
-    /** LC4j 停止原因 → 我们的字典（工具执行归 OTHER） */
+    /**
+     * LC4j 停止原因 → 我们的字典（工具执行归 OTHER）
+     */
     private FinishReason toFinishReason(dev.langchain4j.model.output.FinishReason reason) {
         if (NullUtil.isNull(reason)) {
             return FinishReason.OTHER;
@@ -185,7 +194,9 @@ public class OpenAiCompatibleAdapter implements ModelAdapter {
         };
     }
 
-    /** LC4j 用量 → 我们的用量；缺失返回 null */
+    /**
+     * LC4j 用量 → 我们的用量；缺失返回 null
+     */
     private TokenUsage toTokenUsage(dev.langchain4j.model.output.TokenUsage usage) {
         if (NullUtil.isNull(usage)) {
             return null;

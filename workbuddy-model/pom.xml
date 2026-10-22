@@ -60,6 +60,12 @@
             <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
 
+        <!-- 模型调用重试/换模（与熔断同版本管理，不用手写循环） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-retry</artifactId>
+        </dependency>
+
         <!-- 严格 JSON Schema 校验（模型输出结构校验，版本由根 pom 单点钉定） -->
         <dependency>
             <groupId>com.networknt</groupId>

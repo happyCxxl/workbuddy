@@ -95,6 +95,11 @@
         <artifactId>resilience4j-circuitbreaker</artifactId>
         <version>${resilience4j.version}</version>
       </dependency>
+      <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-retry</artifactId>
+        <version>${resilience4j.version}</version>
+      </dependency>
 
       <!-- 统一钉版：json-schema-validator 3.0.8 传递 tools.jackson.core:jackson-databind 3.2.1，
            该库类初始化要读 com.fasterxml.jackson.annotation.JsonSerializeAs（2.16 起才有），

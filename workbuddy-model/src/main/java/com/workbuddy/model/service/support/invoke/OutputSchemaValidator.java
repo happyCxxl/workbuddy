@@ -10,6 +10,7 @@ import com.networknt.schema.SpecificationVersion;
 import com.workbuddy.common.domain.model.chat.OutputFormat;
 import com.workbuddy.common.domain.model.chat.OutputSpec;
 import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import org.springframework.stereotype.Component;
@@ -22,14 +23,20 @@ import java.util.List;
 @Component
 public class OutputSchemaValidator {
 
-    /** 我们的 JSON 树用 Jackson 2（与接口序列化一致） */
+    /**
+     * 我们的 JSON 树用 Jackson 2（与接口序列化一致）
+     */
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    /** networknt 3.x 使用 Jackson 3 节点，校验单独用一份 mapper */
+    /**
+     * networknt 3.x 使用 Jackson 3 节点，校验单独用一份 mapper
+     */
     private static final tools.jackson.databind.ObjectMapper JSON3 =
             new tools.jackson.databind.json.JsonMapper();
 
-    /** 严格 JSON Schema 校验器（2020-12 方言） */
+    /**
+     * 严格 JSON Schema 校验器（2020-12 方言）
+     */
     private static final SchemaRegistry SCHEMAS =
             SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_2020_12);
 
@@ -42,9 +49,7 @@ public class OutputSchemaValidator {
         if (NullUtil.isNull(output) || output.getFormat() != OutputFormat.JSON_SCHEMA) {
             return;
         }
-        if (StrUtil.isBlank(output.getSchema())) {
-            throw new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, "JSON_SCHEMA 输出缺少 schema");
-        }
+        ThrowUtil.throwIf(StrUtil.isBlank(output.getSchema()), ErrorCode.MODEL_BAD_REQUEST, "JSON_SCHEMA 输出缺少 schema");
     }
 
     /**
@@ -62,14 +67,11 @@ public class OutputSchemaValidator {
         }
         JsonNode node = parse(content);
         if (format == OutputFormat.JSON_OBJECT) {
-            if (!node.isObject()) {
-                throw invalid("JSON_OBJECT 输出不是合法 JSON 对象");
-            }
+            ThrowUtil.throwIf(!node.isObject(), ErrorCode.MODEL_OUTPUT_INVALID, "JSON_OBJECT 输出不是合法 JSON 对象");
             return node;
         }
-        if (StrUtil.isBlank(output.getSchema())) {
-            throw new WorkbuddyException(ErrorCode.MODEL_BAD_REQUEST, "JSON_SCHEMA 输出缺少 schema");
-        }
+        ThrowUtil.throwIf(StrUtil.isBlank(output.getSchema()), ErrorCode.MODEL_BAD_REQUEST,
+                "JSON_SCHEMA 输出缺少 schema");
         Schema schema;
         try {
             schema = SCHEMAS.getSchema(output.getSchema());
@@ -85,15 +87,14 @@ public class OutputSchemaValidator {
         }
         List<Error> errors = schema.validate(schemaNode);
         if (!errors.isEmpty()) {
-            throw invalid("输出不满足 JSON Schema: " + errors.getFirst().getMessage());
+            throw new WorkbuddyException(ErrorCode.MODEL_OUTPUT_INVALID,
+                    "输出不满足 JSON Schema: " + errors.getFirst().getMessage());
         }
         return node;
     }
 
     private JsonNode parse(String content) {
-        if (StrUtil.isBlank(content)) {
-            throw invalid("输出为空，无法解析 JSON");
-        }
+        ThrowUtil.throwIf(StrUtil.isBlank(content), ErrorCode.MODEL_OUTPUT_INVALID, "输出为空，无法解析 JSON");
         try {
             return JSON.readTree(content);
         } catch (Exception error) {
