@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import org.junit.jupiter.api.Test;
 
@@ -33,11 +33,11 @@ class KnowledgeBaseRulesTest {
     void disableShouldRequireActiveStatus() {
         assertDoesNotThrow(() -> KnowledgeBaseRules.checkCanDisable(kb(KnowledgeBaseStatus.ACTIVE, null)));
 
-        KnowledgeException disabled = assertThrows(KnowledgeException.class,
+        WorkbuddyException disabled = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkCanDisable(kb(KnowledgeBaseStatus.DISABLED, null)));
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL.getCode(), disabled.getCode());
 
-        KnowledgeException missing = assertThrows(KnowledgeException.class,
+        WorkbuddyException missing = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkCanDisable(kb(null, null)));
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL.getCode(), missing.getCode());
     }
@@ -51,7 +51,7 @@ class KnowledgeBaseRulesTest {
     void enableShouldRequireDisabledStatus() {
         assertDoesNotThrow(() -> KnowledgeBaseRules.checkCanEnable(kb(KnowledgeBaseStatus.DISABLED, null)));
 
-        KnowledgeException active = assertThrows(KnowledgeException.class,
+        WorkbuddyException active = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkCanEnable(kb(KnowledgeBaseStatus.ACTIVE, null)));
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL.getCode(), active.getCode());
     }
@@ -65,7 +65,7 @@ class KnowledgeBaseRulesTest {
     void submitShouldRequireActiveStatus() {
         assertDoesNotThrow(() -> KnowledgeBaseRules.checkCanSubmit(kb(KnowledgeBaseStatus.ACTIVE, null)));
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkCanSubmit(kb(KnowledgeBaseStatus.DISABLED, null)));
         assertEquals(ErrorCode.KB_NOT_ACTIVE.getCode(), ex.getCode());
     }
@@ -89,9 +89,9 @@ class KnowledgeBaseRulesTest {
     @Test
     void visibilityShouldRejectMissingLoginContext() {
         assertEquals(ErrorCode.UNAUTHORIZED.getCode(),
-                assertThrows(KnowledgeException.class, () -> KnowledgeBaseRules.visibleOwnerId(null)).getCode());
+                assertThrows(WorkbuddyException.class, () -> KnowledgeBaseRules.visibleOwnerId(null)).getCode());
         assertEquals(ErrorCode.UNAUTHORIZED.getCode(),
-                assertThrows(KnowledgeException.class,
+                assertThrows(WorkbuddyException.class,
                         () -> KnowledgeBaseRules.visibleOwnerId(user(null, UserRole.USER))).getCode());
     }
 
@@ -109,7 +109,7 @@ class KnowledgeBaseRulesTest {
         assertDoesNotThrow(() -> KnowledgeBaseRules.checkAccessible(own, user(9L, UserRole.USER)));
 
         assertEquals(ErrorCode.KB_NOT_FOUND.getCode(),
-                assertThrows(KnowledgeException.class,
+                assertThrows(WorkbuddyException.class,
                         () -> KnowledgeBaseRules.checkAccessible(others, user(9L, UserRole.USER))).getCode());
     }
 
@@ -122,14 +122,14 @@ class KnowledgeBaseRulesTest {
     @Test
     void accessibleShouldNotDistinguishForbiddenFromMissing() {
         assertEquals(ErrorCode.KB_NOT_FOUND.getCode(),
-                assertThrows(KnowledgeException.class,
+                assertThrows(WorkbuddyException.class,
                         () -> KnowledgeBaseRules.checkAccessible(null, user(9L, UserRole.USER))).getCode());
         assertEquals(ErrorCode.KB_NOT_FOUND.getCode(),
-                assertThrows(KnowledgeException.class,
+                assertThrows(WorkbuddyException.class,
                         () -> KnowledgeBaseRules.checkAccessible(kb(KnowledgeBaseStatus.ACTIVE, null),
                                 user(9L, UserRole.USER))).getCode());
         assertEquals(ErrorCode.UNAUTHORIZED.getCode(),
-                assertThrows(KnowledgeException.class,
+                assertThrows(WorkbuddyException.class,
                         () -> KnowledgeBaseRules.checkAccessible(kb(KnowledgeBaseStatus.ACTIVE, 9L), null))
                         .getCode());
     }

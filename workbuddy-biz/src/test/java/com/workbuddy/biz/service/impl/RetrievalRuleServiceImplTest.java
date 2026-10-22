@@ -13,7 +13,7 @@ import com.workbuddy.common.dto.response.retrieval.RetrievalRulePublishVO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -137,12 +137,12 @@ class RetrievalRuleServiceImplTest {
         when(indexSetDbService.getById(5L)).thenReturn(setRow(1L));
         when(strategyVersionDbService.getById(500L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.publishDefaultRule(1L, dto()));
         assertEquals(ErrorCode.RETRIEVAL_RULE_NOT_FOUND, e.getErrorCode());
 
         when(strategyVersionDbService.getById(500L)).thenReturn(ruleRow("CHUNK"));
-        KnowledgeException e2 = assertThrows(KnowledgeException.class,
+        WorkbuddyException e2 = assertThrows(WorkbuddyException.class,
                 () -> service.publishDefaultRule(1L, dto()));
         assertEquals(ErrorCode.RETRIEVAL_RULE_NOT_FOUND, e2.getErrorCode());
         verify(indexVersionDbService, never()).updateById(org.mockito.ArgumentMatchers.any());
@@ -156,7 +156,7 @@ class RetrievalRuleServiceImplTest {
         when(indexVersionDbService.getById(20L)).thenReturn(versionRow());
         when(indexSetDbService.getById(5L)).thenReturn(setRow(2L));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.publishDefaultRule(1L, dto()));
 
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND, e.getErrorCode());
@@ -171,7 +171,7 @@ class RetrievalRuleServiceImplTest {
     void publishShouldRejectMissingVersion() {
         when(indexVersionDbService.getById(20L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.publishDefaultRule(1L, dto()));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.publishDefaultRule(1L, dto()));
 
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND, e.getErrorCode());
     }

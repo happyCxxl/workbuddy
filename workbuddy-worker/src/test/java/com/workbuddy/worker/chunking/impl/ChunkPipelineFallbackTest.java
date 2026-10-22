@@ -9,7 +9,7 @@ import com.workbuddy.common.enums.preprocess.ViewElementStatus;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.worker.chunking.ChunkContext;
 import com.workbuddy.worker.chunking.SliceContext;
 import com.workbuddy.worker.chunking.slice.SliceStrategy;
@@ -140,7 +140,7 @@ class ChunkPipelineFallbackTest {
         List<ViewElement> elements = List.of(viewElement("n-1", UnifiedElementType.PARAGRAPH.name(), 1,
                 "正文内容", ViewElementStatus.NORMAL.name()));
 
-        assertThrows(KnowledgeException.class, () -> pipeline().chunk(
+        assertThrows(WorkbuddyException.class, () -> pipeline().chunk(
                 context(view(elements), document(List.of()),
                         "{\"routes\":{\"body\":{\"algorithm\":\"semantic\"}}}")));
     }

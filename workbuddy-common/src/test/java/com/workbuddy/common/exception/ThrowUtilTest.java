@@ -62,7 +62,7 @@ class ThrowUtilTest {
      */
     @Test
     void throwIfShouldThrowWithDefaultMessage() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> ThrowUtil.throwIf(true, ErrorCode.LOGIN_FAILED));
         assertEquals(ErrorCode.LOGIN_FAILED.getCode(), e.getCode());
         assertEquals(ErrorCode.LOGIN_FAILED.getMessage(), e.getMessage());
@@ -73,7 +73,7 @@ class ThrowUtilTest {
      */
     @Test
     void throwIfShouldThrowWithDetailMessage() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> ThrowUtil.throwIf(true, ErrorCode.USERNAME_EXISTS, "用户名 admin 已存在"));
         assertEquals(ErrorCode.USERNAME_EXISTS.getCode(), e.getCode());
         assertEquals("用户名 admin 已存在", e.getMessage());
@@ -95,7 +95,7 @@ class ThrowUtilTest {
     void throwIfShouldRunActionBeforeThrowing() {
         List<String> trace = new ArrayList<>();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> ThrowUtil.throwIf(true, ErrorCode.LOGIN_FAILED, () -> trace.add("action")));
 
         assertEquals(ErrorCode.LOGIN_FAILED.getCode(), e.getCode());
@@ -119,7 +119,7 @@ class ThrowUtilTest {
      */
     @Test
     void throwIfShouldNotMaskBusinessErrorWhenActionFails() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> ThrowUtil.throwIf(true, ErrorCode.USERNAME_EXISTS, "用户名已存在", () -> {
                     throw new IllegalStateException("补充动作自身失败");
                 }));

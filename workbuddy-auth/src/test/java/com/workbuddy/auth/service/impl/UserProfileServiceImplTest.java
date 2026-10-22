@@ -5,7 +5,7 @@ import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.audit.AuditEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +42,7 @@ class UserProfileServiceImplTest {
     void getUserProfileShouldRejectMissingUser() {
         when(fixture.userDbService.getById(9L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().getUserProfile(9L));
 
         assertEquals(ErrorCode.USER_NOT_FOUND, e.getErrorCode());
@@ -116,7 +116,7 @@ class UserProfileServiceImplTest {
         when(fixture.userDbService.getById(2L)).thenReturn(fixture.plainUser());
         when(fixture.passwordEncoder.matches("wrong-old", "bcrypt-hash")).thenReturn(false);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().changePassword(2L, fixture.passwordRequest("wrong-old", "newpass123")));
 
         assertEquals(ErrorCode.OLD_PASSWORD_MISMATCH, e.getErrorCode());
@@ -131,7 +131,7 @@ class UserProfileServiceImplTest {
         when(fixture.userDbService.getById(2L)).thenReturn(fixture.plainUser());
         when(fixture.passwordEncoder.matches("samepass123", "bcrypt-hash")).thenReturn(true);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().changePassword(2L,
                         fixture.passwordRequest("samepass123", "samepass123")));
 
@@ -178,7 +178,7 @@ class UserProfileServiceImplTest {
     void changePasswordShouldRejectMissingUser() {
         when(fixture.userDbService.getById(9L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().changePassword(9L,
                         fixture.passwordRequest("oldpass123", "newpass123")));
 

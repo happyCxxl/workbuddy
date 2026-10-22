@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.db.WbFileObjectDbService;
@@ -62,7 +62,7 @@ public abstract class AbstractFileStorage implements FileStorage {
                         "application/octet-stream");
             }
         } catch (Exception e) {
-            throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + sha256);
+            throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + sha256);
         }
         return new ObjectRef(sourceId, provider.type(), bucket, sha256);
     }
@@ -84,7 +84,7 @@ public abstract class AbstractFileStorage implements FileStorage {
         try {
             provider.put(bucket, key, in, size, contentType);
         } catch (Exception e) {
-            throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + key);
+            throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + key);
         }
         return new ObjectRef(sourceId, provider.type(), bucket, key);
     }
@@ -94,14 +94,14 @@ public abstract class AbstractFileStorage implements FileStorage {
      *
      * @param ref 对象位置
      * @return 对象字节
-     * @throws KnowledgeException 对象缺失（40454）或读取故障（40500）
+     * @throws WorkbuddyException 对象缺失（40454）或读取故障（40500）
      */
     @Override
     public byte[] getObject(ObjectRef ref) {
         try (InputStream in = openRef(ref)) {
             return in.readAllBytes();
         } catch (IOException e) {
-            throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "对象读取失败: " + ref.path());
+            throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象读取失败: " + ref.path());
         }
     }
 
@@ -132,7 +132,7 @@ public abstract class AbstractFileStorage implements FileStorage {
      *
      * @param fileId 文件 ID
      * @return 存储口径（类型码值与数据源实例 ID）
-     * @throws KnowledgeException 档案不存在（40402）
+     * @throws WorkbuddyException 档案不存在（40402）
      */
     @Override
     public StorageRef refOf(String fileId) {
@@ -170,7 +170,7 @@ public abstract class AbstractFileStorage implements FileStorage {
             router.writer().put(bucket, key, digest, size, contentType);
             return HexFormat.of().formatHex(digest.getMessageDigest().digest());
         } catch (Exception e) {
-            throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + key);
+            throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象写入失败: " + key);
         }
     }
 
@@ -179,7 +179,7 @@ public abstract class AbstractFileStorage implements FileStorage {
      *
      * @param fileId 文件 ID
      * @return 档案行
-     * @throws KnowledgeException 档案不存在（40402）
+     * @throws WorkbuddyException 档案不存在（40402）
      */
     protected WbFileObject requireObject(String fileId) {
         WbFileObject object = fileObjectDbService.getByFileId(fileId);
@@ -192,7 +192,7 @@ public abstract class AbstractFileStorage implements FileStorage {
      *
      * @param ref 对象位置
      * @return 对象内容流
-     * @throws KnowledgeException 对象缺失（40454）或读取故障（40500）
+     * @throws WorkbuddyException 对象缺失（40454）或读取故障（40500）
      */
     protected InputStream openRef(ObjectRef ref) {
         StorageProvider provider = router.of(ref);
@@ -200,9 +200,9 @@ public abstract class AbstractFileStorage implements FileStorage {
             return provider.get(ref.bucket(), ref.objectKey());
         } catch (Exception e) {
             if (!provider.exists(ref.bucket(), ref.objectKey())) {
-                throw new KnowledgeException(ErrorCode.STORAGE_OBJECT_MISSING, "对象不存在: " + ref.path());
+                throw new WorkbuddyException(ErrorCode.STORAGE_OBJECT_MISSING, "对象不存在: " + ref.path());
             }
-            throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "对象读取失败: " + ref.path());
+            throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象读取失败: " + ref.path());
         }
     }
 
@@ -216,7 +216,7 @@ public abstract class AbstractFileStorage implements FileStorage {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
         } catch (Exception e) {
-            throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "对象指纹计算失败");
+            throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "对象指纹计算失败");
         }
     }
 }

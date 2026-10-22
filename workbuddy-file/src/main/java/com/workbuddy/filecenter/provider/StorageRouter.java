@@ -3,7 +3,7 @@ package com.workbuddy.filecenter.provider;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.infra.storage.StorageProvider;
@@ -73,7 +73,7 @@ public class StorageRouter {
      * 标记当前启用的数据源：先取后端完成探活（建桶或建根目录），成功后替换当前启用标记。
      *
      * @param sourceId 目标数据源 ID
-     * @throws KnowledgeException 该 ID 未注册或其参数不齐（40455）
+     * @throws WorkbuddyException 该 ID 未注册或其参数不齐（40455）
      */
     public void markCurrent(Long sourceId) {
         StorageProvider provider = of(sourceId);
@@ -156,7 +156,7 @@ public class StorageRouter {
      * 当前启用数据源的文件对象桶名。
      *
      * @return 桶名
-     * @throws KnowledgeException 未启用任何数据源（40455）
+     * @throws WorkbuddyException 未启用任何数据源（40455）
      */
     public String currentFileBucket() {
         return requireCurrentDef().fileBucket();
@@ -166,7 +166,7 @@ public class StorageRouter {
      * 当前启用数据源的内容寻址对象桶名。
      *
      * @return 桶名
-     * @throws KnowledgeException 未启用任何数据源（40455）
+     * @throws WorkbuddyException 未启用任何数据源（40455）
      */
     public String currentArtifactBucket() {
         return requireCurrentDef().artifactBucket();
@@ -176,7 +176,7 @@ public class StorageRouter {
      * 新对象的写入后端。
      *
      * @return 当前启用数据源对应的存储后端
-     * @throws KnowledgeException 未启用任何数据源（40455）
+     * @throws WorkbuddyException 未启用任何数据源（40455）
      */
     public StorageProvider writer() {
         return of(requireCurrentDef().id());
@@ -187,7 +187,7 @@ public class StorageRouter {
      *
      * @param sourceId 数据源 ID
      * @return 该数据源的提供者（首次调用时构造并初始化）
-     * @throws KnowledgeException ID 为空或未注册（40455）
+     * @throws WorkbuddyException ID 为空或未注册（40455）
      */
     public StorageProvider of(Long sourceId) {
         ThrowUtil.throwIf(NullUtil.isNull(sourceId), ErrorCode.STORAGE_BACKEND_UNCONFIGURED,
@@ -202,7 +202,7 @@ public class StorageRouter {
      *
      * @param ref 对象位置
      * @return 该位置的存储后端
-     * @throws KnowledgeException 位置里的数据源为空或未注册（40455）
+     * @throws WorkbuddyException 位置里的数据源为空或未注册（40455）
      */
     public StorageProvider of(ObjectRef ref) {
         return of(ref.sourceId());
@@ -213,7 +213,7 @@ public class StorageRouter {
      *
      * @param ref 对象位置
      * @return 可直接交给浏览器读取的地址；本地后端返回 null
-     * @throws KnowledgeException 位置里的数据源为空或未注册（40455）
+     * @throws WorkbuddyException 位置里的数据源为空或未注册（40455）
      */
     public String publicUrl(ObjectRef ref) {
         return of(ref).publicUrl(ref.bucket(), ref.objectKey());

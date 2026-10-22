@@ -5,7 +5,7 @@ import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.rules.KnowledgeBaseRules;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
@@ -39,7 +39,7 @@ public class FileResultAccessGuard {
      *
      * @param fileResultId 文件结果 ID
      * @return 文件结果实体
-     * @throws KnowledgeException 无登录上下文（UNAUTHORIZED 40101）、记录不存在（FILE_RESULT_NOT_FOUND 40432）
+     * @throws WorkbuddyException 无登录上下文（UNAUTHORIZED 40101）、记录不存在（FILE_RESULT_NOT_FOUND 40432）
      *                            或不可访问（KB_NOT_FOUND 40401）
      */
     public WbFileResult requireExisting(Long fileResultId) {
@@ -57,7 +57,7 @@ public class FileResultAccessGuard {
      *
      * @param fileResult 已取到的文件结果，可空
      * @param user       登录用户（可空：无登录上下文一律拒绝）
-     * @throws KnowledgeException 无登录上下文（UNAUTHORIZED 40101）或不可访问（KB_NOT_FOUND 40401）
+     * @throws WorkbuddyException 无登录上下文（UNAUTHORIZED 40101）或不可访问（KB_NOT_FOUND 40401）
      */
     public void check(WbFileResult fileResult, KnowledgeUser user) {
         KnowledgeBaseRules.visibleOwnerId(user);

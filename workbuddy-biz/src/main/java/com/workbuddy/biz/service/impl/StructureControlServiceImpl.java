@@ -17,7 +17,7 @@ import com.workbuddy.common.dto.response.structure.StructureDetailVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
@@ -135,7 +135,7 @@ public class StructureControlServiceImpl implements StructureControlService {
             vo.setOutline(voConverter.toOutline(document));
             return document;
         } catch (Exception e) {
-            KnowledgeException storageFailure = StatsSupport.storageFailureOf(e);
+            WorkbuddyException storageFailure = StatsSupport.storageFailureOf(e);
             if (NullUtil.isNotNull(storageFailure)) {
                 throw storageFailure;
             }

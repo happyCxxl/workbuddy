@@ -10,7 +10,7 @@ import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.rules.KnowledgeBaseRules;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.StageStrategy;
@@ -106,7 +106,7 @@ public class StageStrategySupport {
             return bindMeta(parse.apply(row.getConfigSnapshot()), row);
         } catch (RuntimeException e) {
             log.warn("策略版本配置快照为空或损坏, strategyVersionId={}", row.getId(), e);
-            throw new KnowledgeException(ErrorCode.STRATEGY_VERSION_NOT_FOUND,
+            throw new WorkbuddyException(ErrorCode.STRATEGY_VERSION_NOT_FOUND,
                     "策略版本配置已损坏，请检查该策略版本的配置内容");
         }
     }

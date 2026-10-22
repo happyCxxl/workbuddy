@@ -13,7 +13,7 @@ import com.workbuddy.common.dto.response.home.HomeSummaryVO;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.strategy.StrategyType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.SecurityUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -146,7 +146,7 @@ class KnowledgeHomeServiceImplTest {
     void recentSubmitsShouldRejectMissingLoginContext() {
         security.when(SecurityUtil::getUser).thenReturn(null);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> service.recentSubmits(new HomeRecentSubmitQueryDTO()));
 
         assertEquals(ErrorCode.UNAUTHORIZED.getCode(), ex.getCode());

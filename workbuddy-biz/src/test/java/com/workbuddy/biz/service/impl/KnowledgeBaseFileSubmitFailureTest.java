@@ -20,7 +20,7 @@ import com.workbuddy.common.enums.input.SubmitStatus;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileValidatorPort;
@@ -201,7 +201,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
         disabled.setUserId(ME);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(disabled);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.submit(1L, request()));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.submit(1L, request()));
         assertEquals(ErrorCode.KB_NOT_ACTIVE, e.getErrorCode());
     }
 
@@ -218,7 +218,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
         others.setUserId(ME + 1);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(others);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.submit(1L, request()));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.submit(1L, request()));
 
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
         verify(sourceFileDbService, never()).save(any(WbSourceFile.class));
@@ -234,7 +234,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
         FileSubmitDTO request = request();
         request.setRequestId("  ");
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.submit(1L, request));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.submit(1L, request));
         assertEquals(ErrorCode.REQUEST_ID_MISSING, e.getErrorCode());
     }
 

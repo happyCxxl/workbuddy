@@ -8,7 +8,7 @@ import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.worker.preprocessing.strategy.PreprocessStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,7 +83,7 @@ class PreprocessControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.strategyBindingDbService.getByKbAndType(10L, PreprocessStrategy.TYPE)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -101,7 +101,7 @@ class PreprocessControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.knowledgeBaseDbService.getActiveById(10L)).thenReturn(fixture.bindingOffKnowledgeBase());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.strategyBindingDbService, never()).getByKbAndType(any(), any());
@@ -176,7 +176,7 @@ class PreprocessControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         fixture.stubBoundVersion(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -195,7 +195,7 @@ class PreprocessControlTriggerTest {
         disabled.setStatus(RowStatus.INACTIVE.name());
         fixture.stubBoundVersion(disabled);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -211,7 +211,7 @@ class PreprocessControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.strategyVersionDbService.getById(999L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, 999L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, 999L, null));
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
         verify(fixture.pipelineProductDbService, never()).getByFileResultIdAndStage(any(), any());
@@ -227,7 +227,7 @@ class PreprocessControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         fixture.stubBoundStrategy();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, null));
         assertEquals(ErrorCode.TASK_UPSTREAM_MISSING, e.getErrorCode());
         assertTrue(e.getMessage().contains("未指定上游统一结构产物"), e.getMessage());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -248,7 +248,7 @@ class PreprocessControlTriggerTest {
         when(fixture.pipelineTaskDbService.getById(PreprocessControlTestFixture.UPSTREAM_TASK_ID))
                 .thenReturn(fixture.upstreamTask(PipelineTaskStatus.FAILED));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_UPSTREAM_NOT_READY, e.getErrorCode());
         assertTrue(e.getMessage().contains(PipelineTaskStatus.FAILED.name()), e.getMessage());
@@ -269,7 +269,7 @@ class PreprocessControlTriggerTest {
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         fixture.existingPreprocessTask(50L, 66L, running);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         // 拒绝文案带任务号与状态：用户能看出是哪条任务占着执行键
@@ -293,7 +293,7 @@ class PreprocessControlTriggerTest {
         fixture.existingPreprocessTask(50L, 66L, queued);
 
         // 执行键命中即拒绝，触发入口不再补投唤醒；QUEUED 补投归启动补偿与低频扫描
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -314,7 +314,7 @@ class PreprocessControlTriggerTest {
         fixture.existingPreprocessTask(50L, 66L, succeeded);
 
         // 查重只看执行键、不看任务状态
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -354,7 +354,7 @@ class PreprocessControlTriggerTest {
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401
         SecurityTestSupport.loginOtherUser();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.preprocess(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.preprocess(10L, null, 50L));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 
@@ -369,7 +369,7 @@ class PreprocessControlTriggerTest {
         fixture.stubBoundStrategy();
 
         when(fixture.pipelineProductDbService.getById(999L)).thenReturn(null);
-        KnowledgeException missing = assertThrows(KnowledgeException.class,
+        WorkbuddyException missing = assertThrows(WorkbuddyException.class,
                 () -> service.preprocess(10L, null, 999L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, missing.getErrorCode());
         assertTrue(missing.getMessage().contains("不存在"), missing.getMessage());
@@ -377,7 +377,7 @@ class PreprocessControlTriggerTest {
         WbPipelineProduct wrongStage = fixture.structureProduct();
         wrongStage.setStage(PipelineStage.CHUNK.name());
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(wrongStage);
-        KnowledgeException stageMismatch = assertThrows(KnowledgeException.class,
+        WorkbuddyException stageMismatch = assertThrows(WorkbuddyException.class,
                 () -> service.preprocess(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, stageMismatch.getErrorCode());
         assertTrue(stageMismatch.getMessage().contains("环节不匹配"), stageMismatch.getMessage());
@@ -385,7 +385,7 @@ class PreprocessControlTriggerTest {
         WbPipelineProduct foreign = fixture.structureProduct();
         foreign.setFileResultId(99L);
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(foreign);
-        KnowledgeException foreignError = assertThrows(KnowledgeException.class,
+        WorkbuddyException foreignError = assertThrows(WorkbuddyException.class,
                 () -> service.preprocess(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, foreignError.getErrorCode());
         assertTrue(foreignError.getMessage().contains("不属于该文件结果"), foreignError.getMessage());

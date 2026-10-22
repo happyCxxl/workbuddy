@@ -6,7 +6,7 @@ import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 
@@ -76,7 +76,7 @@ public record ObjectRef(Long sourceId, StorageType storageType, String bucket, S
      * @param bucket      桶名
      * @param objectKey   对象键
      * @return 对象位置
-     * @throws KnowledgeException 数据源为空、类型空或未知、桶名或对象键为空（40455）
+     * @throws WorkbuddyException 数据源为空、类型空或未知、桶名或对象键为空（40455）
      */
     public static ObjectRef of(Long sourceId, String storageType, String bucket, String objectKey) {
         StorageType type = StorageType.of(storageType);

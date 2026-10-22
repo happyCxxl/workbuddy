@@ -9,7 +9,7 @@ import java.io.Serial;
  * 统一业务异常：携带错误码，默认消息取错误码文案。
  */
 @Getter
-public class KnowledgeException extends RuntimeException {
+public class WorkbuddyException extends RuntimeException {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -21,7 +21,7 @@ public class KnowledgeException extends RuntimeException {
      *
      * @param errorCode 错误码
      */
-    public KnowledgeException(ErrorCode errorCode) {
+    public WorkbuddyException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
@@ -32,7 +32,7 @@ public class KnowledgeException extends RuntimeException {
      * @param errorCode 错误码
      * @param detail    补充原因（覆盖默认消息）
      */
-    public KnowledgeException(ErrorCode errorCode, String detail) {
+    public WorkbuddyException(ErrorCode errorCode, String detail) {
         super(detail);
         this.errorCode = errorCode;
     }

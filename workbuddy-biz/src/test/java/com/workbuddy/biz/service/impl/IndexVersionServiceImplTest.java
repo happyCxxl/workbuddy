@@ -11,7 +11,7 @@ import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.worker.indexing.MilvusIndexPort;
 import com.workbuddy.common.convert.KnowledgeConverterImpl;
@@ -100,7 +100,7 @@ class IndexVersionServiceImplTest {
         when(indexVersionDbService.getById(10L)).thenReturn(target);
         when(indexSetDbService.getById(5L)).thenReturn(set);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.rollback(10L));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.rollback(10L));
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), ex.getCode());
         verify(buildService, never()).compensate(any(), any());
     }
@@ -117,7 +117,7 @@ class IndexVersionServiceImplTest {
         when(indexVersionDbService.getById(15L)).thenReturn(target);
         when(indexSetDbService.getById(5L)).thenReturn(indexSet());
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.rollback(15L));
 
         assertEquals(ErrorCode.INDEX_COMBO_SNAPSHOT_LEGACY.getCode(), ex.getCode());
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
@@ -136,7 +136,7 @@ class IndexVersionServiceImplTest {
         when(indexVersionDbService.getById(15L)).thenReturn(target);
         when(indexSetDbService.getById(5L)).thenReturn(indexSet());
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.rollback(15L));
 
         assertEquals(ErrorCode.INDEX_FROZEN_SCOPE_PUBLISH_FORBIDDEN.getCode(), ex.getCode());
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
@@ -151,18 +151,18 @@ class IndexVersionServiceImplTest {
     @Test
     void rollbackShouldGuardTargetSetPointerAndBuildingStatus() {
         when(indexVersionDbService.getById(15L)).thenReturn(null);
-        KnowledgeException noTarget = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        WorkbuddyException noTarget = assertThrows(WorkbuddyException.class, () -> service.rollback(15L));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noTarget.getCode());
 
         WbIndexVersion target = versionRow(15L, "v1", IndexVersionStatus.RETIRED.name());
         when(indexVersionDbService.getById(15L)).thenReturn(target);
         when(indexSetDbService.getById(5L)).thenReturn(null);
-        KnowledgeException noSet = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        WorkbuddyException noSet = assertThrows(WorkbuddyException.class, () -> service.rollback(15L));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noSet.getCode());
 
         WbIndexSet noPointer = indexSet();
         when(indexSetDbService.getById(5L)).thenReturn(noPointer);
-        KnowledgeException notPublished = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        WorkbuddyException notPublished = assertThrows(WorkbuddyException.class, () -> service.rollback(15L));
         assertEquals(ErrorCode.INDEX_NOT_PUBLISHED.getCode(), notPublished.getCode());
 
         WbIndexSet set = indexSet();
@@ -170,7 +170,7 @@ class IndexVersionServiceImplTest {
         when(indexSetDbService.getById(5L)).thenReturn(set);
         WbIndexVersion building = versionRow(15L, "v1", IndexVersionStatus.BUILDING.name());
         when(indexVersionDbService.getById(15L)).thenReturn(building);
-        KnowledgeException conflict = assertThrows(KnowledgeException.class, () -> service.rollback(15L));
+        WorkbuddyException conflict = assertThrows(WorkbuddyException.class, () -> service.rollback(15L));
         assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), conflict.getCode());
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
     }
@@ -213,7 +213,7 @@ class IndexVersionServiceImplTest {
         when(indexVersionDbService.getById(30L)).thenReturn(version);
         when(indexSetDbService.getById(5L)).thenReturn(set);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.recycle(30L));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.recycle(30L));
         assertEquals(ErrorCode.INDEX_ONLINE_DELETE_FORBIDDEN.getCode(), ex.getCode());
         verify(milvusIndexPort, never()).drop(anyString());
     }
@@ -253,13 +253,13 @@ class IndexVersionServiceImplTest {
         WbIndexVersion building = versionRow(30L, "v3", IndexVersionStatus.BUILDING.name());
         when(indexVersionDbService.getById(30L)).thenReturn(building);
         when(indexSetDbService.getById(5L)).thenReturn(indexSet());
-        KnowledgeException buildingError = assertThrows(KnowledgeException.class,
+        WorkbuddyException buildingError = assertThrows(WorkbuddyException.class,
                 () -> service.recycle(30L));
         assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), buildingError.getCode());
 
         WbIndexVersion retired = versionRow(31L, "v2", IndexVersionStatus.RETIRED.name());
         when(indexVersionDbService.getById(31L)).thenReturn(retired);
-        KnowledgeException retiredError = assertThrows(KnowledgeException.class,
+        WorkbuddyException retiredError = assertThrows(WorkbuddyException.class,
                 () -> service.recycle(31L));
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), retiredError.getCode());
         verify(milvusIndexPort, never()).drop(anyString());

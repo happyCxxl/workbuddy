@@ -8,7 +8,7 @@ import com.workbuddy.common.dto.response.retrieval.SearchHitVO;
 import com.workbuddy.common.dto.response.retrieval.SearchVO;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.worker.indexing.IndexRow;
 import com.workbuddy.worker.retrieval.RetrievalRuleSpec;
 import org.junit.jupiter.api.BeforeEach;
@@ -165,9 +165,9 @@ class SearchBenchmarkTest {
         WbPipelineStrategyVersion rule = fixture.ruleRow();
         when(fixture.strategyVersionDbService.getById(500L)).thenReturn(rule);
         when(fixture.retrievalRuleResolver.validate(rule.getConfigSnapshot()))
-                .thenThrow(new KnowledgeException(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, "该检索能力尚未启用: 加权融合"));
+                .thenThrow(new WorkbuddyException(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, "该检索能力尚未启用: 加权融合"));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.search(1L, request));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.search(1L, request));
 
         assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, e.getErrorCode());
         verify(fixture.milvusIndexPort, never()).searchVector(anyString(), any());
@@ -184,7 +184,7 @@ class SearchBenchmarkTest {
         SearchDTO request = fixture.request();
         request.setVersionId(30L);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.search(1L, request));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.search(1L, request));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
@@ -200,7 +200,7 @@ class SearchBenchmarkTest {
         missingRequest.setVersionId(99L);
         missingRequest.setRuleId(500L);
         when(fixture.indexVersionDbService.getById(99L)).thenReturn(null);
-        KnowledgeException missing = assertThrows(KnowledgeException.class,
+        WorkbuddyException missing = assertThrows(WorkbuddyException.class,
                 () -> service.search(1L, missingRequest));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND, missing.getErrorCode());
 
@@ -210,7 +210,7 @@ class SearchBenchmarkTest {
         when(fixture.indexVersionDbService.getById(98L))
                 .thenReturn(fixture.versionRow(98L, "v8", IndexVersionStatus.BUILDING.name(),
                         fixture.comboAll()));
-        KnowledgeException notReady = assertThrows(KnowledgeException.class,
+        WorkbuddyException notReady = assertThrows(WorkbuddyException.class,
                 () -> service.search(1L, buildingRequest));
         assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT, notReady.getErrorCode());
     }
@@ -229,14 +229,14 @@ class SearchBenchmarkTest {
                 .thenReturn(fixture.versionRow(30L, "v9", IndexVersionStatus.READY.name(),
                         fixture.comboAll()));
         when(fixture.strategyVersionDbService.getById(500L)).thenReturn(null);
-        KnowledgeException missing = assertThrows(KnowledgeException.class,
+        WorkbuddyException missing = assertThrows(WorkbuddyException.class,
                 () -> service.search(1L, request));
         assertEquals(ErrorCode.RETRIEVAL_RULE_NOT_FOUND, missing.getErrorCode());
 
         WbPipelineStrategyVersion wrongType = fixture.ruleRow();
         wrongType.setType("CHUNK");
         when(fixture.strategyVersionDbService.getById(500L)).thenReturn(wrongType);
-        KnowledgeException mismatch = assertThrows(KnowledgeException.class,
+        WorkbuddyException mismatch = assertThrows(WorkbuddyException.class,
                 () -> service.search(1L, request));
         assertEquals(ErrorCode.RETRIEVAL_RULE_NOT_FOUND, mismatch.getErrorCode());
     }

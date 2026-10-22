@@ -2,7 +2,7 @@ package com.workbuddy.auth.security;
 
 import com.workbuddy.auth.db.WbUserDbService;
 import com.workbuddy.auth.support.JwtTokenSupport;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
 import jakarta.servlet.FilterChain;
@@ -70,7 +70,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 } else {
                     SecurityContextHolder.clearContext();
                 }
-            } catch (KnowledgeException e) {
+            } catch (WorkbuddyException e) {
                 SecurityContextHolder.clearContext();
                 log.debug("===> JwtAuthFilter 令牌无效，按未认证处理, uri={}", request.getRequestURI());
             } catch (RuntimeException e) {

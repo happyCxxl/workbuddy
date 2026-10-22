@@ -2,7 +2,7 @@ package com.workbuddy.common.domain.rules;
 
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,7 +53,7 @@ class StageFunnelRulesTest {
      */
     @Test
     void resolveUpstreamStageShouldRejectUnknownStage() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> StageFunnelRules.resolveUpstreamStage("BUILD_INDEX"));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());

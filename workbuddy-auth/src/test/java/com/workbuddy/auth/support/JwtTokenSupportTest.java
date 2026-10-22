@@ -3,7 +3,7 @@ package com.workbuddy.auth.support;
 import com.workbuddy.auth.config.JwtProperties;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import org.junit.jupiter.api.Test;
 
@@ -98,7 +98,7 @@ class JwtTokenSupportTest {
         JwtTokenSupport jwtUtil = jwtUtil(7);
         String token = jwtUtil.sign(100L, "admin", UserRole.ADMIN, 0, TTL);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> jwtUtil.parse(token.substring(0, token.length() - 3) + "abc"));
 
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
@@ -113,7 +113,7 @@ class JwtTokenSupportTest {
         // 负有效期：签发即过期，不依赖执行耗时
         String token = jwtUtil.sign(100L, "admin", UserRole.ADMIN, 0, Duration.ofSeconds(-1));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> jwtUtil.parse(token));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> jwtUtil.parse(token));
 
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }

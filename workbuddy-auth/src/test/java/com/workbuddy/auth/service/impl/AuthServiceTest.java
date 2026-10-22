@@ -9,7 +9,7 @@ import com.workbuddy.common.dto.request.auth.RegisterDTO;
 import com.workbuddy.common.dto.response.auth.LoginVO;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -136,7 +136,7 @@ class AuthServiceTest {
     void loginShouldThrowWhenUserNotFound() {
         when(userDbService.findActiveByUsername("nobody")).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> authService.login(loginRequest("nobody", "pass123456")));
 
         assertEquals(ErrorCode.LOGIN_FAILED, e.getErrorCode());
@@ -150,7 +150,7 @@ class AuthServiceTest {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
         when(passwordEncoder.matches("wrong", "encoded")).thenReturn(false);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> authService.login(loginRequest("admin", "wrong")));
 
         assertEquals(ErrorCode.LOGIN_FAILED, e.getErrorCode());
@@ -163,7 +163,7 @@ class AuthServiceTest {
     void registerShouldThrowWhenUsernameExists() {
         when(userDbService.existsByUsername("admin")).thenReturn(true);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> authService.register(registerRequest()));
 
         assertEquals(ErrorCode.USERNAME_EXISTS, e.getErrorCode());
@@ -196,7 +196,7 @@ class AuthServiceTest {
     void loginShouldRejectWhenLockedWithoutTouchingDatabase() {
         when(loginAttemptGuard.isLocked("admin", "10.0.0.1")).thenReturn(true);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> authService.login(loginRequest("admin", "pass123456")));
 
         assertEquals(ErrorCode.LOGIN_TOO_FREQUENT, e.getErrorCode());
@@ -213,7 +213,7 @@ class AuthServiceTest {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
         when(passwordEncoder.matches("wrong", "encoded")).thenReturn(false);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> authService.login(loginRequest("admin", "wrong")));
 
         assertEquals(ErrorCode.LOGIN_FAILED, e.getErrorCode());

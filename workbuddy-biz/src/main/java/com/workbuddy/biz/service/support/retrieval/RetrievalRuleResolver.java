@@ -2,7 +2,7 @@ package com.workbuddy.biz.service.support.retrieval;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
@@ -54,7 +54,7 @@ public class RetrievalRuleResolver {
         try {
             return JsonUtil.toObject(configSnapshot, RetrievalRuleSpec.class);
         } catch (Exception e) {
-            throw new KnowledgeException(ErrorCode.PARAM_INVALID, "检索规则配置不是合法 JSON");
+            throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "检索规则配置不是合法 JSON");
         }
     }
 

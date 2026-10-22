@@ -16,7 +16,7 @@ import com.workbuddy.common.enums.storage.StorageSourceStatus;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
@@ -299,7 +299,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
         try {
             StorageProviderFactory.create(def).initialize();
         } catch (Exception e) {
-            throw new KnowledgeException(ErrorCode.STORAGE_SOURCE_PROBE_FAILED,
+            throw new WorkbuddyException(ErrorCode.STORAGE_SOURCE_PROBE_FAILED,
                     "存储数据源连接失败: " + def.name() + "（" + e.getMessage() + "）");
         }
     }

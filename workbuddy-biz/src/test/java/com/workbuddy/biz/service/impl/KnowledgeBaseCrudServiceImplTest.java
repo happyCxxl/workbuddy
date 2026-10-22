@@ -25,7 +25,7 @@ import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -148,8 +148,8 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
      */
     @Test
     void detailWhenAbsentShouldThrowNotFound() {
-        when(knowledgeBaseDbService.getActiveById(9L)).thenThrow(new KnowledgeException(ErrorCode.KB_NOT_FOUND));
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.detail(9L));
+        when(knowledgeBaseDbService.getActiveById(9L)).thenThrow(new WorkbuddyException(ErrorCode.KB_NOT_FOUND));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.detail(9L));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 
@@ -241,7 +241,7 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
     void disableOnDisabledShouldThrowAndNotUpdate() {
         when(knowledgeBaseDbService.getActiveById(4L)).thenReturn(kb(4L, 0));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.disable(4L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.disable(4L));
 
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL, e.getErrorCode());
         verify(knowledgeBaseDbService, never()).updateById(any());
@@ -274,7 +274,7 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
     void enableOnActiveShouldReject() {
         when(knowledgeBaseDbService.getActiveById(5L)).thenReturn(kb(5L, 1));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.enable(5L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.enable(5L));
 
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL, e.getErrorCode());
         verify(knowledgeBaseDbService, never()).updateById(any());

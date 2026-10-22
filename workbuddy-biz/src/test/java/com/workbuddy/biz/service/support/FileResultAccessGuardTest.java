@@ -5,7 +5,7 @@ import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.SecurityUtil;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
@@ -71,7 +71,7 @@ class FileResultAccessGuardTest {
     void requireExistingShouldRejectAnonymousBeforeLookup() {
         security.when(SecurityUtil::getUser).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> guard.requireExisting(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> guard.requireExisting(10L));
 
         assertEquals(ErrorCode.UNAUTHORIZED.getCode(), e.getCode());
         org.mockito.Mockito.verify(fileResultDbService, org.mockito.Mockito.never()).getById(10L);
@@ -87,7 +87,7 @@ class FileResultAccessGuardTest {
         security.when(SecurityUtil::getUser).thenReturn(admin());
         when(fileResultDbService.getById(10L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> guard.requireExisting(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> guard.requireExisting(10L));
 
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND.getCode(), e.getCode());
     }
@@ -103,7 +103,7 @@ class FileResultAccessGuardTest {
         WbFileResult fileResult = new WbFileResult();
         fileResult.setKnowledgeBaseId(2L);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> guard.check(fileResult, normalUser()));
 
         assertEquals(ErrorCode.KB_NOT_FOUND.getCode(), e.getCode());
@@ -116,7 +116,7 @@ class FileResultAccessGuardTest {
      */
     @Test
     void checkShouldRejectNullRecord() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> guard.check(null, normalUser()));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> guard.check(null, normalUser()));
 
         assertEquals(ErrorCode.KB_NOT_FOUND.getCode(), e.getCode());
     }

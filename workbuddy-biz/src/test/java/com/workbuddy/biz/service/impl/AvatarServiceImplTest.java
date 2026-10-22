@@ -5,7 +5,7 @@ import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.SecurityUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -143,7 +143,7 @@ class AvatarServiceImplTest {
      */
     @Test
     void uploadShouldRejectUnknownHead() {
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> service.upload(file("plain text".getBytes(), "text/plain")));
         assertEquals(ErrorCode.PARAM_INVALID, ex.getErrorCode());
     }
@@ -159,7 +159,7 @@ class AvatarServiceImplTest {
         when(file.isEmpty()).thenReturn(false);
         when(file.getSize()).thenReturn(2L * 1024 * 1024 + 1);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.upload(file));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.upload(file));
         assertEquals(ErrorCode.PARAM_INVALID, ex.getErrorCode());
     }
 
@@ -173,7 +173,7 @@ class AvatarServiceImplTest {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(true);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.upload(file));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.upload(file));
         assertEquals(ErrorCode.PARAM_INVALID, ex.getErrorCode());
     }
 
@@ -188,7 +188,7 @@ class AvatarServiceImplTest {
                 .thenReturn(new ObjectRef(5L, StorageType.LOCAL, "files", "avatar/1/a.png"));
         when(fileStorage.publicUrl(any(ObjectRef.class))).thenReturn(null);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> service.upload(file(PNG_HEAD, "image/png")));
         assertEquals(ErrorCode.PARAM_INVALID, ex.getErrorCode());
         assertNull(loginUser.getAvatar());
@@ -224,7 +224,7 @@ class AvatarServiceImplTest {
     void uploadShouldRejectAnonymous() {
         security.when(SecurityUtil::getUser).thenReturn(null);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> service.upload(file(PNG_HEAD, "image/png")));
         assertEquals(ErrorCode.UNAUTHORIZED, ex.getErrorCode());
     }

@@ -3,7 +3,7 @@ package com.workbuddy.biz.service.impl;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.biz.service.support.index.IndexComboReconciler;
 import com.workbuddy.worker.indexing.search.FullTextHit;
 import com.workbuddy.worker.indexing.search.FullTextQuery;
@@ -128,7 +128,7 @@ class IndexBuildValidateTest {
         when(fixture.indexVersionDbService.getById(20L)).thenReturn(version);
         when(fixture.indexSetDbService.getById(5L)).thenReturn(indexSet());
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> fixture.service.validate(20L));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> fixture.service.validate(20L));
         assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), ex.getCode());
     }
 }

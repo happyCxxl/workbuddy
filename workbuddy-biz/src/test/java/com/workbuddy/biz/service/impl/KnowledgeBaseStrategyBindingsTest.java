@@ -10,7 +10,7 @@ import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.domain.entity.WbStrategyBinding;
 import com.workbuddy.common.dto.response.knowledge.StrategyBindingVO;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,7 +59,7 @@ class KnowledgeBaseStrategyBindingsTest extends KnowledgeBaseTestFixture {
      */
     @Test
     void unknownTypeShouldReject() {
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> service.strategyBindings("NO_SUCH"));
 
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), ex.getCode());

@@ -13,7 +13,7 @@ import com.workbuddy.common.domain.task.StageOutcome;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -182,7 +182,7 @@ public final class TaskRunnerSupport {
      * @return 落库用的任务错误码码值
      */
     public static String failureCode(Exception e, PipelineTaskErrorCode fallback) {
-        if (e instanceof KnowledgeException knowledge
+        if (e instanceof WorkbuddyException knowledge
                 && knowledge.getErrorCode() == ErrorCode.STORAGE_TYPE_MISMATCH) {
             return PipelineTaskErrorCode.TASK_STORAGE_MISMATCH.name();
         }
@@ -197,7 +197,7 @@ public final class TaskRunnerSupport {
      */
     public static String failureText(Exception e) {
         String message = StrUtil.trimToNull(e.getMessage());
-        if (e instanceof KnowledgeException) {
+        if (e instanceof WorkbuddyException) {
             return NullUtil.isNull(message) ? e.getClass().getSimpleName() : message;
         }
         return NullUtil.isNull(message) ? e.getClass().getSimpleName()

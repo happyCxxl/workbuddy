@@ -6,7 +6,7 @@ import cn.hutool.jwt.JWTUtil;
 import com.workbuddy.auth.config.JwtProperties;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
@@ -105,7 +105,7 @@ public class JwtTokenSupport {
      *
      * @param token 令牌串
      * @return 用户模型（含令牌到期时刻）
-     * @throws KnowledgeException 签名无效或已过期（UNAUTHORIZED）
+     * @throws WorkbuddyException 签名无效或已过期（UNAUTHORIZED）
      */
     public KnowledgeUser parse(String token) {
         try {
@@ -122,10 +122,10 @@ public class JwtTokenSupport {
             user.setTokenVersion(readTokenVersion(jwt));
             user.setExpiresAt(expiresAt.toInstant());
             return user;
-        } catch (KnowledgeException e) {
+        } catch (WorkbuddyException e) {
             throw e;
         } catch (Exception e) {
-            throw new KnowledgeException(ErrorCode.UNAUTHORIZED);
+            throw new WorkbuddyException(ErrorCode.UNAUTHORIZED);
         }
     }
 

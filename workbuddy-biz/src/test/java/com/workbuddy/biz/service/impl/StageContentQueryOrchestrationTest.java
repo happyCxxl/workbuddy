@@ -23,7 +23,7 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.biz.service.support.stagecontent.ChunkStageContentSupport;
 import com.workbuddy.biz.service.support.stagecontent.EmbedStageContentSupport;
@@ -110,7 +110,7 @@ class StageContentQueryOrchestrationTest {
     void illegalStageShouldReject40001() {
         when(fileResultDbService.getById(FILE_RESULT_ID)).thenReturn(fileResultOfKb10());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.stageContent(FILE_RESULT_ID, "BUILD_INDEX", null, null, null, null));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
@@ -122,7 +122,7 @@ class StageContentQueryOrchestrationTest {
     void missingFileResultShouldReject40432() {
         when(fileResultDbService.getById(FILE_RESULT_ID)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.stageContent(FILE_RESULT_ID, "CHUNK", null, null, null, null));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
     }
@@ -138,7 +138,7 @@ class StageContentQueryOrchestrationTest {
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401
         SecurityTestSupport.loginOtherUser();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.stageContent(FILE_RESULT_ID, "PARSE", null, null, null, null));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
@@ -155,7 +155,7 @@ class StageContentQueryOrchestrationTest {
         preprocessTask.setStage(PipelineStage.PREPROCESS.name());
         when(pipelineTaskDbService.getById(TASK_ID)).thenReturn(preprocessTask);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.stageContent(FILE_RESULT_ID, "CHUNK", TASK_ID, null, null, null));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
@@ -265,7 +265,7 @@ class StageContentQueryOrchestrationTest {
         product.setArtifactId("art-p1");
         when(pipelineProductDbService.getById(PRODUCT_ID)).thenReturn(product);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.stageContent(FILE_RESULT_ID, "PREPROCESS", null, null, null, null));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());

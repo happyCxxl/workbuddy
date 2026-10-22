@@ -13,7 +13,7 @@ import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -249,7 +249,7 @@ class ChunkControlDetailTest {
         preprocessTask.setStage(PipelineStage.PREPROCESS.name());
         when(fixture.pipelineTaskDbService.getById(31L)).thenReturn(preprocessTask);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunkDetail(10L, 31L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunkDetail(10L, 31L));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
 
@@ -272,7 +272,7 @@ class ChunkControlDetailTest {
         product.setArtifactId("abc".repeat(16));
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(product);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunkDetail(10L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunkDetail(10L, null));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         verify(fixture.chunkSetDbService, never()).getByArtifactId(any());

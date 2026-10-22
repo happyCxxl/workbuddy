@@ -8,7 +8,7 @@ import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,7 +83,7 @@ class ChunkControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.strategyBindingDbService.getByKbAndType(10L, ChunkStrategy.TYPE)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -101,7 +101,7 @@ class ChunkControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.knowledgeBaseDbService.getActiveById(10L)).thenReturn(fixture.bindingOffKnowledgeBase());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.strategyBindingDbService, never()).getByKbAndType(any(), any());
@@ -118,7 +118,7 @@ class ChunkControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         fixture.stubBoundStrategy();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, null, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, null, null));
         assertEquals(ErrorCode.TASK_UPSTREAM_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
         verify(fixture.taskQueue, never()).enqueue(any());
@@ -138,7 +138,7 @@ class ChunkControlTriggerTest {
         when(fixture.pipelineTaskDbService.getById(ChunkControlTestFixture.UPSTREAM_TASK_ID))
                 .thenReturn(fixture.upstreamTask(PipelineTaskStatus.FAILED));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_UPSTREAM_NOT_READY, e.getErrorCode());
         assertTrue(e.getMessage().contains(PipelineTaskStatus.FAILED.name()), e.getMessage());
@@ -156,7 +156,7 @@ class ChunkControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.strategyVersionDbService.getById(999L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, 999L, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, 999L, 50L));
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
         verify(fixture.pipelineProductDbService, never()).getByFileResultIdAndStage(any(), any());
     }
@@ -232,7 +232,7 @@ class ChunkControlTriggerTest {
         when(fixture.strategyBindingDbService.getByKbAndType(10L, ChunkStrategy.TYPE)).thenReturn(fixture.binding());
         when(fixture.strategyVersionDbService.getById(66L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -251,7 +251,7 @@ class ChunkControlTriggerTest {
         wrongType.setType("PREPROCESS");
         when(fixture.strategyVersionDbService.getById(77L)).thenReturn(wrongType);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, 77L, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, 77L, 50L));
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
     }
 
@@ -268,7 +268,7 @@ class ChunkControlTriggerTest {
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         fixture.existingChunkTask(50L, 66L, running);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         // 拒绝文案带任务号与状态：用户能看出是哪条任务占着执行键
@@ -292,7 +292,7 @@ class ChunkControlTriggerTest {
         fixture.existingChunkTask(50L, 66L, queued);
 
         // 执行键命中即拒绝，触发入口不再补投唤醒；QUEUED 补投归启动补偿与低频扫描
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -310,7 +310,7 @@ class ChunkControlTriggerTest {
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401
         SecurityTestSupport.loginOtherUser();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, null, 50L));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 
@@ -325,7 +325,7 @@ class ChunkControlTriggerTest {
         fixture.stubBoundStrategy();
 
         when(fixture.pipelineProductDbService.getById(999L)).thenReturn(null);
-        KnowledgeException missing = assertThrows(KnowledgeException.class,
+        WorkbuddyException missing = assertThrows(WorkbuddyException.class,
                 () -> service.chunk(10L, null, 999L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, missing.getErrorCode());
         assertTrue(missing.getMessage().contains("不存在"), missing.getMessage());
@@ -333,7 +333,7 @@ class ChunkControlTriggerTest {
         WbPipelineProduct wrongStage = fixture.preprocessProduct();
         wrongStage.setStage(PipelineStage.PARSE.name());
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(wrongStage);
-        KnowledgeException stageMismatch = assertThrows(KnowledgeException.class,
+        WorkbuddyException stageMismatch = assertThrows(WorkbuddyException.class,
                 () -> service.chunk(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, stageMismatch.getErrorCode());
         assertTrue(stageMismatch.getMessage().contains("环节不匹配"), stageMismatch.getMessage());
@@ -341,7 +341,7 @@ class ChunkControlTriggerTest {
         WbPipelineProduct foreign = fixture.preprocessProduct();
         foreign.setFileResultId(99L);
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(foreign);
-        KnowledgeException foreignError = assertThrows(KnowledgeException.class,
+        WorkbuddyException foreignError = assertThrows(WorkbuddyException.class,
                 () -> service.chunk(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, foreignError.getErrorCode());
         assertTrue(foreignError.getMessage().contains("不属于该文件结果"), foreignError.getMessage());
@@ -362,7 +362,7 @@ class ChunkControlTriggerTest {
         wrongType.setType("EMBED");
         when(fixture.strategyVersionDbService.getById(77L)).thenReturn(wrongType);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, 77L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, 77L, null));
 
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
         assertTrue(e.getMessage().contains("类型不匹配"), e.getMessage());
@@ -380,7 +380,7 @@ class ChunkControlTriggerTest {
         inactive.setStatus(RowStatus.INACTIVE.name());
         when(fixture.strategyVersionDbService.getById(77L)).thenReturn(inactive);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.chunk(10L, 77L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.chunk(10L, 77L, null));
 
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
         assertTrue(e.getMessage().contains("已停用"), e.getMessage());

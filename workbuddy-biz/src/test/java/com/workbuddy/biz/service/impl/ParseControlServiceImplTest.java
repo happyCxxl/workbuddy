@@ -23,7 +23,7 @@ import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,7 +139,7 @@ class ParseControlServiceImplTest {
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         existingParseTask(running);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parse(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parse(10L));
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(pipelineTaskDbService, never()).save(any());
         verify(taskQueue, never()).enqueue(any());
@@ -157,7 +157,7 @@ class ParseControlServiceImplTest {
         existingParseTask(queued);
 
         // 执行键命中即拒绝，触发入口不再补投唤醒；QUEUED 补投归启动补偿与低频扫描
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parse(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parse(10L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(pipelineTaskDbService, never()).save(any());
@@ -175,7 +175,7 @@ class ParseControlServiceImplTest {
         success.setStatus(PipelineTaskStatus.SUCCESS.name());
         existingParseTask(success);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parse(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parse(10L));
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(pipelineTaskDbService, never()).save(any());
         verify(taskQueue, never()).enqueue(any());
@@ -192,7 +192,7 @@ class ParseControlServiceImplTest {
         partial.setStatus(PipelineTaskStatus.PARTIAL_SUCCESS.name());
         existingParseTask(partial);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parse(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parse(10L));
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(pipelineTaskDbService, never()).save(any());
     }
@@ -209,7 +209,7 @@ class ParseControlServiceImplTest {
         existingParseTask(failed);
 
         // 查重只看执行键：失败任务仍占着「无上游 + 无策略」这一档，触发入口不再按状态分流
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parse(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parse(10L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(pipelineTaskDbService, never()).save(any());
@@ -223,7 +223,7 @@ class ParseControlServiceImplTest {
     void parseMissingFileResultShouldReject() {
         when(fileResultDbService.getById(10L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parse(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parse(10L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
     }
 
@@ -294,7 +294,7 @@ class ParseControlServiceImplTest {
         product.setArtifactId("9f2c".repeat(16));
         when(pipelineProductDbService.getById(50L)).thenReturn(product);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parseDetail(10L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parseDetail(10L, null));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         verify(fileStorage, never()).getObject(any(ObjectRef.class));
@@ -323,7 +323,7 @@ class ParseControlServiceImplTest {
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401
         SecurityTestSupport.loginOtherUser();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parse(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parse(10L));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 
@@ -336,7 +336,7 @@ class ParseControlServiceImplTest {
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401
         SecurityTestSupport.loginOtherUser();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.parseDetail(10L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.parseDetail(10L, null));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 

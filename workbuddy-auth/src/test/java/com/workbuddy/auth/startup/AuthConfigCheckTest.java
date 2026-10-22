@@ -1,6 +1,6 @@
 package com.workbuddy.auth.startup;
 
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.startup.StartupCheckChain;
 import com.workbuddy.auth.config.JwtProperties;
 import com.workbuddy.auth.config.LoginGuardProperties;
@@ -40,7 +40,7 @@ class AuthConfigCheckTest {
      */
     @Test
     void shouldRejectBlankSecret() {
-        KnowledgeException error = assertThrows(KnowledgeException.class,
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> new AuthConfigCheck(jwt("  ", 1, 30), guard()).check(next));
 
         assertTrue(error.getMessage().contains("secret"), () -> "message=" + error.getMessage());
@@ -52,9 +52,9 @@ class AuthConfigCheckTest {
      */
     @Test
     void shouldRejectNonPositiveTtl() {
-        assertThrows(KnowledgeException.class,
+        assertThrows(WorkbuddyException.class,
                 () -> new AuthConfigCheck(jwt(SECRET, 0, 30), guard()).check(next));
-        assertThrows(KnowledgeException.class,
+        assertThrows(WorkbuddyException.class,
                 () -> new AuthConfigCheck(jwt(SECRET, 1, -1), guard()).check(next));
     }
 
@@ -66,7 +66,7 @@ class AuthConfigCheckTest {
         LoginGuardProperties guard = guard();
         guard.setFailThreshold(0);
 
-        assertThrows(KnowledgeException.class, () -> new AuthConfigCheck(jwt(SECRET, 1, 30), guard).check(next));
+        assertThrows(WorkbuddyException.class, () -> new AuthConfigCheck(jwt(SECRET, 1, 30), guard).check(next));
     }
 
     /** 防护关闭时阈值不参与任何判断，非正也不拒（{@code shouldSkipGuardCheckWhenDisabled}）。 */

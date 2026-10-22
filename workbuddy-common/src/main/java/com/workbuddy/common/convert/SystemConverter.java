@@ -1,12 +1,10 @@
 package com.workbuddy.common.convert;
 
 import com.workbuddy.common.config.BaseInfoConvertConfig;
-import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.input.FileValidationResult;
 import com.workbuddy.common.dto.request.input.FileSubmitDTO;
-import com.workbuddy.common.dto.request.model.ModelSaveDTO;
 import com.workbuddy.common.enums.input.SubmitStatus;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -74,23 +72,4 @@ public interface SystemConverter {
         failLog.setUserId(userId);
         return failLog;
     }
-
-    /**
-     * 模型保存请求 → 模型实体：只搬同名字段；trim、能力解析、默认值与状态由调用方处理。
-     *
-     * @param dto 保存请求
-     * @return 模型实体（未保存）
-     */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "delFlag", ignore = true)
-    @Mapping(target = "createBy", ignore = true)
-    @Mapping(target = "createTime", ignore = true)
-    @Mapping(target = "updateBy", ignore = true)
-    @Mapping(target = "updateTime", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "vendorCode", ignore = true)
-    @Mapping(target = "modelKey", ignore = true)
-    @Mapping(target = "capabilities", ignore = true)
-    @Mapping(target = "thinkingEnabled", ignore = true)
-    WbModel toModel(ModelSaveDTO dto);
 }

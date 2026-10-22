@@ -2,7 +2,7 @@ package com.workbuddy.biz.web;
 
 import com.workbuddy.common.web.R;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -26,8 +26,8 @@ public class GlobalExceptionHandler {
      * @param e 业务异常
      * @return 统一失败响应
      */
-    @ExceptionHandler(KnowledgeException.class)
-    public R<Void> handleKnowledgeException(KnowledgeException e) {
+    @ExceptionHandler(WorkbuddyException.class)
+    public R<Void> handleKnowledgeException(WorkbuddyException e) {
         log.warn("===> GlobalExceptionHandler 业务异常 code={}, msg={}", e.getCode(), e.getMessage());
         return new R<>(e.getCode(), e.getMessage(), null, null);
     }

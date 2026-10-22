@@ -2,7 +2,7 @@ package com.workbuddy.worker.indexing;
 
 import com.workbuddy.common.enums.index.IndexShape;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +57,7 @@ class ComboSnapshotTest {
      */
     @Test
     void requireStageStrategiesShouldThrowExplicitErrorForLegacySnapshot() {
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> new ComboSnapshot().requireStageStrategies());
 
         assertEquals(ErrorCode.INDEX_COMBO_SNAPSHOT_LEGACY.getCode(), ex.getCode());

@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbRetrievalRun;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRunVO;
 import com.workbuddy.common.dto.response.retrieval.SearchVO;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,7 +84,7 @@ class SearchRunQueryTest {
         run.setResultSnapshot("[]");
         when(fixture.retrievalRunDbService.listByIdsOrdered(List.of(1L))).thenReturn(List.of(run));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.compareRuns(1L, List.of(1L)));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -128,11 +128,11 @@ class SearchRunQueryTest {
      */
     @Test
     void compareRunsShouldRejectEmptyIds() {
-        KnowledgeException empty = assertThrows(KnowledgeException.class,
+        WorkbuddyException empty = assertThrows(WorkbuddyException.class,
                 () -> service.compareRuns(1L, List.of()));
         assertEquals(ErrorCode.PARAM_INVALID, empty.getErrorCode());
 
-        KnowledgeException nullIds = assertThrows(KnowledgeException.class,
+        WorkbuddyException nullIds = assertThrows(WorkbuddyException.class,
                 () -> service.compareRuns(1L, null));
         assertEquals(ErrorCode.PARAM_INVALID, nullIds.getErrorCode());
     }

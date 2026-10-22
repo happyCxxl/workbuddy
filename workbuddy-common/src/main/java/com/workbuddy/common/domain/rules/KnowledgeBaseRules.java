@@ -6,7 +6,7 @@ import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.knowledge.StrategyBindingSwitch;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
@@ -23,7 +23,7 @@ public final class KnowledgeBaseRules {
      * 停用校验：仅启用状态（ACTIVE=1）可停用。
      *
      * @param kb 知识库实体
-     * @throws KnowledgeException 非启用状态（KB_STATUS_ILLEGAL 40402）
+     * @throws WorkbuddyException 非启用状态（KB_STATUS_ILLEGAL 40402）
      */
     public static void checkCanDisable(WbKnowledgeBase kb) {
         requireStatus(kb, KnowledgeBaseStatus.ACTIVE, ErrorCode.KB_STATUS_ILLEGAL, "仅启用状态的知识库可以停用");
@@ -33,7 +33,7 @@ public final class KnowledgeBaseRules {
      * 启用校验：仅停用状态（DISABLED=0）可启用。
      *
      * @param kb 知识库实体
-     * @throws KnowledgeException 非停用状态（KB_STATUS_ILLEGAL 40402）
+     * @throws WorkbuddyException 非停用状态（KB_STATUS_ILLEGAL 40402）
      */
     public static void checkCanEnable(WbKnowledgeBase kb) {
         requireStatus(kb, KnowledgeBaseStatus.DISABLED, ErrorCode.KB_STATUS_ILLEGAL, "仅停用状态的知识库可以启用");
@@ -43,7 +43,7 @@ public final class KnowledgeBaseRules {
      * 提交校验：仅启用状态的知识库可接收文档提交。
      *
      * @param kb 知识库实体
-     * @throws KnowledgeException 非启用状态（KB_NOT_ACTIVE 40421）
+     * @throws WorkbuddyException 非启用状态（KB_NOT_ACTIVE 40421）
      */
     public static void checkCanSubmit(WbKnowledgeBase kb) {
         requireStatus(kb, KnowledgeBaseStatus.ACTIVE, ErrorCode.KB_NOT_ACTIVE, null);
@@ -58,7 +58,7 @@ public final class KnowledgeBaseRules {
      *
      * @param user 当前登录用户
      * @return 普通用户返回其用户 ID；管理员返回 null（不过滤）
-     * @throws KnowledgeException 无登录上下文（UNAUTHORIZED 40101）
+     * @throws WorkbuddyException 无登录上下文（UNAUTHORIZED 40101）
      */
     public static Long visibleOwnerId(KnowledgeUser user) {
         requireLogin(user);
@@ -76,7 +76,7 @@ public final class KnowledgeBaseRules {
      *
      * @param kb   知识库实体
      * @param user 当前登录用户
-     * @throws KnowledgeException 无登录上下文（UNAUTHORIZED 40101）或不可访问（KB_NOT_FOUND 40401）
+     * @throws WorkbuddyException 无登录上下文（UNAUTHORIZED 40101）或不可访问（KB_NOT_FOUND 40401）
      */
     public static void checkAccessible(WbKnowledgeBase kb, KnowledgeUser user) {
         requireLogin(user);
@@ -102,9 +102,9 @@ public final class KnowledgeBaseRules {
                                       String message) {
         if (NullUtil.isNull(kb.getStatus()) || !ObjectUtil.equal(kb.getStatus(), expected.getCode())) {
             if (NullUtil.isNull(message)) {
-                throw new KnowledgeException(errorCode);
+                throw new WorkbuddyException(errorCode);
             }
-            throw new KnowledgeException(errorCode, message);
+            throw new WorkbuddyException(errorCode, message);
         }
     }
 

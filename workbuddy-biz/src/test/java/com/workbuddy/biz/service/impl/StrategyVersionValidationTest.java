@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDTO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.worker.retrieval.RetrievalRuleSpec;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,7 +68,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createChunkWithInvalidJsonShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.chunkDto("{not-json")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertEquals("配置不是合法 JSON", e.getMessage());
@@ -80,7 +80,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createChunkWithUnsupportedAlgorithmShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.chunkDto(
                         "{\"routes\":{\"body\":{\"algorithm\":\"semantic\"}}}")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -93,7 +93,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createChunkWithParamOutOfRangeShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.chunkDto(
                         "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
                                 + "\"params\":{\"targetMaxLen\":\"99999\"}}}}")));
@@ -107,7 +107,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createChunkWithSoftBelowTargetShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.chunkDto(
                         "{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
                                 + "\"params\":{\"targetMaxLen\":\"800\",\"softMaxLen\":\"600\"}}}}")));
@@ -121,7 +121,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createChunkWithTableInBodyFlowAndContextMergedShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.chunkDto(
                         "{\"routes\":{\"table\":{\"algorithm\":\"context-merged\"}},"
                                 + "\"pipeline\":{\"tableInBodyFlow\":\"ON\"}}")));
@@ -155,7 +155,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createPreprocWithIllegalActionShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.preprocDto("{\"rules\":{\"headerFooter\":{\"action\":\"DELETE\"}}}")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertEquals("处置方式非法: headerFooter.DELETE", e.getMessage());
@@ -167,7 +167,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createPreprocWithParamOutOfRangeShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.preprocDto(
                         "{\"rules\":{\"toc\":{\"params\":{\"minLinesPerPage\":\"999\"}}}}")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -180,7 +180,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createPreprocWithInvalidRegexShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.preprocDto(
                         "{\"custom\":{\"rules\":[{\"pattern\":\"(\",\"action\":\"REMOVE\"}]}}")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -193,7 +193,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createPreprocWithReplaceMissingReplacementShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.preprocDto(
                         "{\"custom\":{\"rules\":[{\"pattern\":\"电话.*\",\"action\":\"REPLACE\"}]}}")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -243,7 +243,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createEmbedWithTemplateMissingPlaceholderShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.embedDto(
                         "{\"model\":\"text-embedding-v4\",\"docTemplate\":\"{titlePath}\"}")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -256,7 +256,7 @@ class StrategyVersionValidationTest {
      */
     @Test
     void createEmbedWithRangeViolationShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.embedDto("{\"model\":\"text-embedding-v4\",\"batchSize\":999}")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertEquals("batchSize 越界（允许 1~128）", e.getMessage());
@@ -287,9 +287,9 @@ class StrategyVersionValidationTest {
     @Test
     void createRetrievalWithUnknownFieldShouldReject() {
         when(fixture.retrievalRuleResolver.validate(anyString()))
-                .thenThrow(new KnowledgeException(ErrorCode.PARAM_INVALID, "未知检索规则字段: unknown"));
+                .thenThrow(new WorkbuddyException(ErrorCode.PARAM_INVALID, "未知检索规则字段: unknown"));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.retrievalDto("{\"channel\":\"HYBRID\",\"unknown\":1}")));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -302,9 +302,9 @@ class StrategyVersionValidationTest {
     @Test
     void createRetrievalWithLockedCapabilityShouldReject() {
         when(fixture.retrievalRuleResolver.validate(anyString()))
-                .thenThrow(new KnowledgeException(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, "该检索能力尚未启用: 加权融合"));
+                .thenThrow(new WorkbuddyException(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, "该检索能力尚未启用: 加权融合"));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.create(fixture.retrievalDto("{\"fusion\":{\"mode\":\"WEIGHTED\"}}")));
 
         assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, e.getErrorCode());
@@ -320,7 +320,7 @@ class StrategyVersionValidationTest {
     void createWithBlankConfigShouldSayConfigRequired() {
         StrategyVersionCreateDTO dto = fixture.preprocDto(" ");
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.create(dto));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.create(dto));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("配置不能为空"), e.getMessage());

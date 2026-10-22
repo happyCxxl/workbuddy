@@ -25,7 +25,7 @@ public final class ThrowUtil {
      */
     public static void throwIf(boolean condition, ErrorCode errorCode) {
         if (condition) {
-            throw new KnowledgeException(errorCode);
+            throw new WorkbuddyException(errorCode);
         }
     }
 
@@ -38,7 +38,7 @@ public final class ThrowUtil {
      */
     public static void throwIf(boolean condition, ErrorCode errorCode, String errMessage) {
         if (condition) {
-            throw new KnowledgeException(errorCode, errMessage);
+            throw new WorkbuddyException(errorCode, errMessage);
         }
     }
 
@@ -75,7 +75,7 @@ public final class ThrowUtil {
         if (!condition) {
             return;
         }
-        KnowledgeException failure = new KnowledgeException(errorCode);
+        WorkbuddyException failure = new WorkbuddyException(errorCode);
         runBeforeThrow(beforeThrow, failure);
         throw failure;
     }
@@ -93,13 +93,13 @@ public final class ThrowUtil {
         if (!condition) {
             return;
         }
-        KnowledgeException failure = new KnowledgeException(errorCode, errMessage);
+        WorkbuddyException failure = new WorkbuddyException(errorCode, errMessage);
         runBeforeThrow(beforeThrow, failure);
         throw failure;
     }
 
     /** 补充动作失败不掩盖业务异常：降级为 suppressed */
-    private static void runBeforeThrow(Runnable beforeThrow, KnowledgeException failure) {
+    private static void runBeforeThrow(Runnable beforeThrow, WorkbuddyException failure) {
         Objects.requireNonNull(beforeThrow, "beforeThrow 不可为 null");
         try {
             beforeThrow.run();

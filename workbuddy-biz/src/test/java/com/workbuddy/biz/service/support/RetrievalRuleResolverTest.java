@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.support;
 
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.worker.retrieval.RetrievalCapability;
 import com.workbuddy.worker.retrieval.RetrievalRuleSpec;
 import com.workbuddy.biz.service.support.retrieval.RetrievalRuleResolver;
@@ -78,7 +78,7 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldRejectUnknownField() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> resolver.validate(
                 "{\"channel\":\"HYBRID\",\"unknown\":1}"));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("未知检索规则字段"), e.getMessage());
@@ -91,7 +91,7 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldRejectUnknownNestedField() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> resolver.validate(
                 "{\"fusion\":{\"mode\":\"RRF\",\"weight\":0.5}}"));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("未知fusion字段"), e.getMessage());
@@ -104,7 +104,7 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldRejectIllegalChannel() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> resolver.validate(
                 "{\"channel\":\"GRAPH\"}"));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("非法检索通道"), e.getMessage());
@@ -117,7 +117,7 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldRejectTopKOutOfRange() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> resolver.validate(
                 "{\"topK\":0}"));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
@@ -129,9 +129,9 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldRejectBlankAndInvalidJson() {
-        assertEquals(ErrorCode.PARAM_INVALID, assertThrows(KnowledgeException.class,
+        assertEquals(ErrorCode.PARAM_INVALID, assertThrows(WorkbuddyException.class,
                 () -> resolver.validate("")).getErrorCode());
-        assertEquals(ErrorCode.PARAM_INVALID, assertThrows(KnowledgeException.class,
+        assertEquals(ErrorCode.PARAM_INVALID, assertThrows(WorkbuddyException.class,
                 () -> resolver.validate("not-json")).getErrorCode());
     }
 
@@ -142,7 +142,7 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldLockWeightedFusionWhenCapabilityOff() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> resolver.validate(
                 "{\"fusion\":{\"mode\":\"WEIGHTED\"}}"));
         assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, e.getErrorCode());
         assertTrue(e.getMessage().contains("加权融合"), e.getMessage());
@@ -155,13 +155,13 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldLockReservedModesWhenCapabilityOff() {
-        assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, assertThrows(KnowledgeException.class,
+        assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, assertThrows(WorkbuddyException.class,
                 () -> resolver.validate("{\"preprocess\":{\"mode\":\"REWRITE\"}}")).getErrorCode());
-        assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, assertThrows(KnowledgeException.class,
+        assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, assertThrows(WorkbuddyException.class,
                 () -> resolver.validate("{\"rerank\":{\"mode\":\"RERANK\"}}")).getErrorCode());
-        assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, assertThrows(KnowledgeException.class,
+        assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, assertThrows(WorkbuddyException.class,
                 () -> resolver.validate("{\"postprocess\":{\"mode\":\"NEIGHBOR_EXPAND\"}}")).getErrorCode());
-        assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, assertThrows(KnowledgeException.class,
+        assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, assertThrows(WorkbuddyException.class,
                 () -> resolver.validate("{\"scoreThreshold\":0.8}")).getErrorCode());
     }
 
@@ -190,7 +190,7 @@ class RetrievalRuleResolverTest {
                 "{\"preprocess\":{\"mode\":\"NONE\",\"unknown\":1}}",
                 "{\"rerank\":{\"mode\":\"NONE\",\"unknown\":1}}",
                 "{\"postprocess\":{\"mode\":\"NONE\",\"unknown\":1}}"}) {
-            KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(body), body);
+            WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> resolver.validate(body), body);
             assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode(), body);
             assertTrue(e.getMessage().contains("未知"), e.getMessage());
         }
@@ -208,7 +208,7 @@ class RetrievalRuleResolverTest {
                 "{\"preprocess\":{\"mode\":\"MAGIC\"}}",
                 "{\"rerank\":{\"mode\":\"MAGIC\"}}",
                 "{\"postprocess\":{\"mode\":\"MAGIC\"}}"}) {
-            KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(body), body);
+            WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> resolver.validate(body), body);
             assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode(), body);
             assertTrue(e.getMessage().contains("非法"), e.getMessage());
         }
@@ -246,7 +246,7 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldLockExpandCapability() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> resolver.validate("{\"preprocess\":{\"mode\":\"EXPAND\"}}"));
 
         assertEquals(ErrorCode.RETRIEVAL_CAPABILITY_LOCKED, e.getErrorCode());
@@ -259,7 +259,7 @@ class RetrievalRuleResolverTest {
      * @param body 规则快照
      */
     private void assertRejected(String body) {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> resolver.validate(body), body);
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> resolver.validate(body), body);
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode(), body);
     }
 
@@ -270,7 +270,7 @@ class RetrievalRuleResolverTest {
      */
     @Test
     void validateShouldRejectNestedNonObject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> resolver.validate("{\"fusion\":[]}"));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());

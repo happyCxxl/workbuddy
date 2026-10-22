@@ -10,7 +10,7 @@ import com.workbuddy.common.dto.request.user.UserQueryDTO;
 import com.workbuddy.common.dto.request.user.UserUpdateDTO;
 import com.workbuddy.common.dto.response.user.UserVO;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.SecurityUtil;
 import com.workbuddy.common.web.R;
@@ -151,12 +151,12 @@ class UserControllerTest {
     @Test
     void currentUserIdShouldRejectMissingLogin() {
         security.when(SecurityUtil::getUser).thenReturn(null);
-        KnowledgeException noLogin = assertThrows(KnowledgeException.class, controller::getUserProfile);
+        WorkbuddyException noLogin = assertThrows(WorkbuddyException.class, controller::getUserProfile);
         assertEquals(ErrorCode.UNAUTHORIZED.getCode(), noLogin.getCode());
 
         KnowledgeUser anonymous = new KnowledgeUser();
         security.when(SecurityUtil::getUser).thenReturn(anonymous);
-        KnowledgeException noId = assertThrows(KnowledgeException.class, controller::getUserProfile);
+        WorkbuddyException noId = assertThrows(WorkbuddyException.class, controller::getUserProfile);
         assertEquals(ErrorCode.UNAUTHORIZED.getCode(), noId.getCode());
     }
 }

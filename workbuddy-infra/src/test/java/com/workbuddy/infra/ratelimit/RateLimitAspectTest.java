@@ -1,7 +1,7 @@
 package com.workbuddy.infra.ratelimit;
 
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.annotation.RateLimit;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -64,7 +64,7 @@ class RateLimitAspectTest {
 
         when(bucketRateLimiter.tryAcquire(anyString(), eq(2), eq(30))).thenReturn(false);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> rateLimitAspect.around(joinPoint, annotation));
 
         assertEquals(ErrorCode.RATE_LIMITED, e.getErrorCode());

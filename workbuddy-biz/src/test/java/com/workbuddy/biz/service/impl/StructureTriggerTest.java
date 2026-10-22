@@ -5,7 +5,7 @@ import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -97,7 +97,7 @@ class StructureTriggerTest {
         wrongStage.setStage(PipelineStage.CHUNK.name());
         when(fixture.pipelineProductDbService.getById(88L)).thenReturn(wrongStage);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, 88L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structure(10L, 88L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
         assertTrue(e.getMessage().contains("指定产物环节不匹配"), e.getMessage());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -116,7 +116,7 @@ class StructureTriggerTest {
         when(fixture.pipelineTaskDbService.getById(StructureControlTestFixture.UPSTREAM_TASK_ID))
                 .thenReturn(fixture.upstreamTask(PipelineTaskStatus.FAILED));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structure(10L, 50L));
 
         assertEquals(ErrorCode.TASK_UPSTREAM_NOT_READY, e.getErrorCode());
         assertTrue(e.getMessage().contains(PipelineTaskStatus.FAILED.name()), e.getMessage());
@@ -155,7 +155,7 @@ class StructureTriggerTest {
     void structureWithoutParseProductShouldThrow40436() {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structure(10L, null));
         assertEquals(ErrorCode.TASK_UPSTREAM_MISSING, e.getErrorCode());
         assertTrue(e.getMessage().contains("未指定上游解析产物"), e.getMessage());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -172,7 +172,7 @@ class StructureTriggerTest {
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(fixture.parseProduct());
         fixture.existingStructureTask(50L, fixture.taskWithStatus(51L, PipelineTaskStatus.RUNNING));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structure(10L, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         // 拒绝文案带任务号与状态：用户能看出是哪条任务占着执行键
@@ -194,7 +194,7 @@ class StructureTriggerTest {
         fixture.existingStructureTask(50L, fixture.taskWithStatus(51L, PipelineTaskStatus.QUEUED));
 
         // 执行键命中即拒绝，触发入口不再补投唤醒；QUEUED 补投归启动补偿与低频扫描
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structure(10L, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -211,7 +211,7 @@ class StructureTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
 
         // 归属校验放行后进入业务分支：没有解析产物时报"产物不存在"，而不是归属的 40401
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structure(10L, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
     }
 
@@ -227,7 +227,7 @@ class StructureTriggerTest {
         foreign.setFileResultId(99L);
         when(fixture.pipelineProductDbService.getById(88L)).thenReturn(foreign);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structure(10L, 88L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structure(10L, 88L));
 
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
         assertTrue(e.getMessage().contains("不属于该文件结果"), e.getMessage());

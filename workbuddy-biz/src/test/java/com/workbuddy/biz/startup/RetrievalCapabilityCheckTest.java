@@ -1,7 +1,7 @@
 package com.workbuddy.biz.startup;
 
 import com.workbuddy.biz.config.RetrievalCapabilityProperties;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.startup.StartupCheckChain;
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +47,7 @@ class RetrievalCapabilityCheckTest {
     void shouldRejectUnknownName() {
         RetrievalCapabilityCheck check = new RetrievalCapabilityCheck(properties("EXPANDS"));
 
-        KnowledgeException error = assertThrows(KnowledgeException.class, () -> check.check(next));
+        WorkbuddyException error = assertThrows(WorkbuddyException.class, () -> check.check(next));
 
         assertTrue(error.getMessage().contains("EXPANDS"), () -> "message=" + error.getMessage());
         assertFalse(proceeded.get(), "失败即止，不推进链");

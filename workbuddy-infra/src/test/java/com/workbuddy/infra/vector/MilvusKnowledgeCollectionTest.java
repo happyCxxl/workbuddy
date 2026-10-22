@@ -2,7 +2,7 @@ package com.workbuddy.infra.vector;
 
 import com.google.gson.JsonObject;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import io.milvus.v2.client.MilvusClientV2;
 import io.milvus.v2.common.DataType;
 import io.milvus.v2.common.IndexParam;
@@ -337,7 +337,7 @@ class MilvusKnowledgeCollectionTest {
                 .thenReturn(DescribeCollectionResp.builder()
                         .collectionSchema(validSchema(512)).build());
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> collection.ensureCollection("kb_1_v1", DIMENSION));
 
         assertEquals(ErrorCode.INDEX_COLLECTION_SCHEMA_MISMATCH.getCode(), ex.getCode());
@@ -356,7 +356,7 @@ class MilvusKnowledgeCollectionTest {
         when(milvusClientV2.describeCollection(any(DescribeCollectionReq.class)))
                 .thenReturn(DescribeCollectionResp.builder().collectionSchema(schema).build());
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> collection.ensureCollection("kb_1_v1", DIMENSION));
 
         assertEquals(ErrorCode.INDEX_COLLECTION_SCHEMA_MISMATCH.getCode(), ex.getCode());
@@ -383,7 +383,7 @@ class MilvusKnowledgeCollectionTest {
         when(milvusClientV2.describeCollection(any(DescribeCollectionReq.class)))
                 .thenReturn(DescribeCollectionResp.builder().collectionSchema(schema).build());
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> collection.ensureCollection("kb_1_v1", DIMENSION));
 
         assertEquals(ErrorCode.INDEX_COLLECTION_SCHEMA_MISMATCH.getCode(), ex.getCode());

@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.support.artifact;
 
 import com.workbuddy.common.domain.storage.ObjectRef;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -45,7 +45,7 @@ public final class StageArtifactReader {
      * @param e 读取过程中抛出的异常
      * @return 命中则返回该异常，可原样抛出；其余情况返回 null
      */
-    public static KnowledgeException storageFailureOf(Exception e) {
+    public static WorkbuddyException storageFailureOf(Exception e) {
         return StatsSupport.storageFailureOf(e);
     }
 }

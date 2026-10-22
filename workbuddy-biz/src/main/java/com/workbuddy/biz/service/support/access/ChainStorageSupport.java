@@ -8,7 +8,7 @@ import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
@@ -109,7 +109,7 @@ public class ChainStorageSupport {
         try {
             StorageRef ref = fileStorage.refOf(fileId);
             return NullUtil.isNull(ref) ? null : ref.sourceId();
-        } catch (KnowledgeException e) {
+        } catch (WorkbuddyException e) {
             // 档案不存在：取不到链的数据源，交由读取阶段给出明确错误码
             ErrorCode code = e.getErrorCode();
             if (code == ErrorCode.FILE_NOT_FOUND || code == ErrorCode.STORAGE_BACKEND_UNCONFIGURED) {
@@ -143,7 +143,7 @@ public class ChainStorageSupport {
      * 存储一致性校验：不一致时拒绝执行。
      *
      * @param fileResultId 文件结果 ID
-     * @throws KnowledgeException 链的数据源与当前启用的数据源不一致（40453）
+     * @throws WorkbuddyException 链的数据源与当前启用的数据源不一致（40453）
      */
     public void requireStorageMatch(Long fileResultId) {
         Long chainSourceId = chainSourceIdOf(fileResultId);

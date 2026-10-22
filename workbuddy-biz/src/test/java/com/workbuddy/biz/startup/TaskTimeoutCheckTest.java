@@ -1,7 +1,7 @@
 package com.workbuddy.biz.startup;
 
 import com.workbuddy.common.enums.task.PipelineStage;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.startup.StartupCheckChain;
 import com.workbuddy.biz.config.ConfigFixtures;
 import com.workbuddy.biz.config.TaskQueueProperties;
@@ -42,7 +42,7 @@ class TaskTimeoutCheckTest {
         TaskQueueProperties properties = ConfigFixtures.task();
         properties.getTimeout().put(PipelineStage.CHUNK, Duration.ZERO);
 
-        KnowledgeException error = assertThrows(KnowledgeException.class,
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> new TaskTimeoutCheck(properties).check(next));
 
         assertTrue(error.getMessage().contains("CHUNK"), () -> "message=" + error.getMessage());
@@ -57,7 +57,7 @@ class TaskTimeoutCheckTest {
         TaskQueueProperties properties = ConfigFixtures.task();
         properties.getTimeout().put(PipelineStage.EMBED, Duration.ofMinutes(-1));
 
-        assertThrows(KnowledgeException.class, () -> new TaskTimeoutCheck(properties).check(next));
+        assertThrows(WorkbuddyException.class, () -> new TaskTimeoutCheck(properties).check(next));
     }
 
     /**

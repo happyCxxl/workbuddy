@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -34,7 +34,7 @@ public final class StatsSupport {
      * @param ref         产物对象位置（含存储类型与桶名），可空
      * @param type        产物本体类型
      * @return 产物本体；取不到返回 null
-     * @throws KnowledgeException 对象在所属存储中不存在（40454）或记录所属后端未配置（40455）
+     * @throws WorkbuddyException 对象在所属存储中不存在（40454）或记录所属后端未配置（40455）
      */
     public static <T> T readArtifact(FileStorage fileStorage, ObjectRef ref, Class<T> type) {
         if (NullUtil.isNull(fileStorage) || NullUtil.isNull(ref)) {
@@ -47,7 +47,7 @@ public final class StatsSupport {
             }
             return JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), type);
         } catch (Exception e) {
-            KnowledgeException storageFailure = storageFailureOf(e);
+            WorkbuddyException storageFailure = storageFailureOf(e);
             if (NullUtil.isNotNull(storageFailure)) {
                 throw storageFailure;
             }
@@ -64,8 +64,8 @@ public final class StatsSupport {
      * @param e 读取过程中抛出的异常
      * @return 命中则返回该异常，可原样抛出；其余情况返回 null
      */
-    public static KnowledgeException storageFailureOf(Exception e) {
-        if (!(e instanceof KnowledgeException failure)) {
+    public static WorkbuddyException storageFailureOf(Exception e) {
+        if (!(e instanceof WorkbuddyException failure)) {
             return null;
         }
         ErrorCode code = failure.getErrorCode();

@@ -5,7 +5,7 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.db.WbFileObjectDbService;
 import com.workbuddy.infra.storage.StorageProvider;
 import com.workbuddy.filecenter.provider.StorageRouter;
@@ -155,7 +155,7 @@ class DefaultFileStorageTest {
         org.mockito.Mockito.doThrow(new IllegalStateException("down"))
                 .when(provider).put(anyString(), anyString(), any(InputStream.class), anyLong(), anyString());
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> storage.putObject(CONTENT));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> storage.putObject(CONTENT));
 
         assertEquals(ErrorCode.SYSTEM_ERROR.getCode(), ex.getCode());
     }
@@ -203,7 +203,7 @@ class DefaultFileStorageTest {
         when(provider.get("artifacts", "absent")).thenThrow(new IllegalStateException("down"));
         when(provider.exists("artifacts", "absent")).thenReturn(false);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> storage.getObject(ref));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> storage.getObject(ref));
 
         assertEquals(ErrorCode.STORAGE_OBJECT_MISSING.getCode(), ex.getCode());
     }
@@ -220,7 +220,7 @@ class DefaultFileStorageTest {
         when(provider.get("artifacts", sha256(CONTENT))).thenThrow(new IllegalStateException("down"));
         when(provider.exists("artifacts", sha256(CONTENT))).thenReturn(true);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> storage.getObject(ref));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> storage.getObject(ref));
 
         assertEquals(ErrorCode.SYSTEM_ERROR.getCode(), ex.getCode());
     }
@@ -234,7 +234,7 @@ class DefaultFileStorageTest {
     void refOfShouldRejectMissingArchive() {
         when(fileObjectDbService.getByFileId("f404")).thenReturn(null);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> storage.refOf("f404"));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> storage.refOf("f404"));
 
         assertEquals(ErrorCode.FILE_NOT_FOUND.getCode(), ex.getCode());
     }

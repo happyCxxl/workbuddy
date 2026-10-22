@@ -6,7 +6,7 @@ import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -89,7 +89,7 @@ class ObjectRefTest {
         WbFileObject row = fileRow();
         row.setStorageSourceId(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> ObjectRef.ofFile(row));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> ObjectRef.ofFile(row));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         assertTrue(e.getMessage().contains("sourceId=null"), e.getMessage());
@@ -100,7 +100,7 @@ class ObjectRefTest {
      */
     @Test
     void unknownTypeShouldReject40455() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> ObjectRef.of(SOURCE_ID, "oss", "files", "F-88"));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
@@ -113,10 +113,10 @@ class ObjectRefTest {
     @Test
     void blankBucketOrObjectKeyShouldReject40455() {
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED,
-                assertThrows(KnowledgeException.class,
+                assertThrows(WorkbuddyException.class,
                         () -> ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "  ", "F-88")).getErrorCode());
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED,
-                assertThrows(KnowledgeException.class,
+                assertThrows(WorkbuddyException.class,
                         () -> ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "files", null)).getErrorCode());
     }
 }

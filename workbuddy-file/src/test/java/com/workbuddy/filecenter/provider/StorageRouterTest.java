@@ -3,7 +3,7 @@ package com.workbuddy.filecenter.provider;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.infra.storage.StorageSourceDef;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -96,7 +96,7 @@ class StorageRouterTest {
      */
     @Test
     void shouldRejectUnregisteredSourceIdWith40455() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> router.of(99L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> router.of(99L));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         assertTrue(e.getMessage().contains("99"), e.getMessage());
@@ -107,7 +107,7 @@ class StorageRouterTest {
      */
     @Test
     void shouldRejectNullSourceIdWith40455() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> router.of((Long) null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> router.of((Long) null));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
     }
@@ -158,8 +158,8 @@ class StorageRouterTest {
         assertNull(router.currentSourceId());
         assertNull(router.writeType());
         assertNull(router.currentDef());
-        assertThrows(KnowledgeException.class, () -> router.writer());
-        assertThrows(KnowledgeException.class, () -> router.currentFileBucket());
+        assertThrows(WorkbuddyException.class, () -> router.writer());
+        assertThrows(WorkbuddyException.class, () -> router.currentFileBucket());
     }
 
     /**
@@ -167,7 +167,7 @@ class StorageRouterTest {
      */
     @Test
     void markCurrentShouldRejectUnregisteredId() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> router.markCurrent(99L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> router.markCurrent(99L));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         assertNull(router.currentSourceId());
@@ -184,7 +184,7 @@ class StorageRouterTest {
 
         assertFalse(router.registered(SOURCE_A));
         assertNull(router.currentSourceId());
-        assertThrows(KnowledgeException.class, () -> router.of(SOURCE_A));
+        assertThrows(WorkbuddyException.class, () -> router.of(SOURCE_A));
     }
 
     /**

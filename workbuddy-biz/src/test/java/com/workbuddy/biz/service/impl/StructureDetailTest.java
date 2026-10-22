@@ -9,7 +9,7 @@ import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -150,7 +150,7 @@ class StructureDetailTest {
         parseTask.setStage(PipelineStage.PARSE.name());
         when(fixture.pipelineTaskDbService.getById(20L)).thenReturn(parseTask);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structureDetail(10L, 20L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structureDetail(10L, 20L));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
 
@@ -174,7 +174,7 @@ class StructureDetailTest {
         product.setArtifactId("def".repeat(16));
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(product);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.structureDetail(10L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structureDetail(10L, null));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         verify(fixture.fileStorage, never()).getObject(any(ObjectRef.class));

@@ -23,7 +23,7 @@ import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -345,7 +345,7 @@ class StructureTaskRunnerTest {
         when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(), "artifacts", "abc".repeat(22))))
                 .thenReturn(JsonUtil.toJsonStr(new ParseResult()).getBytes(StandardCharsets.UTF_8));
         when(documentAssembler.assemble(any(ParseResult.class), any(AssembleContext.class)))
-                .thenThrow(new KnowledgeException(ErrorCode.FILE_NOT_FOUND));
+                .thenThrow(new WorkbuddyException(ErrorCode.FILE_NOT_FOUND));
 
         runner.run(60L);
 

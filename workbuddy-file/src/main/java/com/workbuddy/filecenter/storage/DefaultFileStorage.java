@@ -5,7 +5,7 @@ import com.workbuddy.common.domain.entity.WbFileObject;
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.db.WbFileObjectDbService;
 import com.workbuddy.infra.storage.StorageProvider;
@@ -52,7 +52,7 @@ public class DefaultFileStorage extends AbstractFileStorage {
         try (InputStream in = new BufferedInputStream(file.getInputStream())) {
             sha256 = putWithDigest(bucket, fileId, in, file.getSize(), file.getContentType());
         } catch (IOException e) {
-            throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "文件上传失败: " + file.getOriginalFilename());
+            throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "文件上传失败: " + file.getOriginalFilename());
         }
 
         WbFileObject object = new WbFileObject();

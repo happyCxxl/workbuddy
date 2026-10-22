@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.dto.request.strategy.StrategyVersionCreateDTO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,7 +83,7 @@ class StrategyVersionCrudTest {
      */
     @Test
     void listWithUnknownTypeShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.list("INDEX", false));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.list("INDEX", false));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         verify(fixture.strategyVersionDbService, never()).listEnabledByType(any());
     }
@@ -93,7 +93,7 @@ class StrategyVersionCrudTest {
      */
     @Test
     void listWithBlankTypeShouldReject() {
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.list("  ", false));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.list("  ", false));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         verify(fixture.strategyVersionDbService, never()).listEnabledByType(any());
     }
@@ -121,7 +121,7 @@ class StrategyVersionCrudTest {
     void createWithUnknownTypeShouldReject() {
         StrategyVersionCreateDTO dto = fixture.chunkDto("{\"routes\":{}}");
         dto.setType("INDEX");
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.create(dto));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.create(dto));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         verify(fixture.strategyVersionDbService, never()).save(any());
     }
@@ -134,7 +134,7 @@ class StrategyVersionCrudTest {
         when(fixture.strategyVersionDbService.save(any(WbPipelineStrategyVersion.class)))
                 .thenThrow(new DuplicateKeyException("uk_type_name_version"));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.create(fixture.createDto()));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.create(fixture.createDto()));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertEquals("同环节同名版本已存在", e.getMessage());
     }
@@ -171,7 +171,7 @@ class StrategyVersionCrudTest {
     void updateNotFoundShouldReject() {
         when(fixture.strategyVersionDbService.getById(9L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.update(9L, fixture.updateDto()));
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
         verify(fixture.strategyVersionDbService, never()).save(any());
@@ -213,7 +213,7 @@ class StrategyVersionCrudTest {
     void enableNotFoundShouldReject() {
         when(fixture.strategyVersionDbService.getById(9L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.enable(9L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.enable(9L));
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
         verify(fixture.strategyVersionDbService, never()).updateById(any());
     }
@@ -246,7 +246,7 @@ class StrategyVersionCrudTest {
                 .thenReturn(fixture.row(9L, "v1", "ACTIVE"));
         when(fixture.strategyBindingDbService.existsByStrategyVersionId(9L)).thenReturn(true);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.delete(9L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.delete(9L));
         assertEquals(ErrorCode.STRATEGY_BOUND_DELETE_FORBIDDEN, e.getErrorCode());
         verify(fixture.strategyVersionDbService, never()).removeById(any(Serializable.class));
     }
@@ -258,7 +258,7 @@ class StrategyVersionCrudTest {
     void deleteNotFoundShouldReject() {
         when(fixture.strategyVersionDbService.getById(9L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.delete(9L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.delete(9L));
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
         verify(fixture.strategyVersionDbService, never()).removeById(any(Serializable.class));
     }

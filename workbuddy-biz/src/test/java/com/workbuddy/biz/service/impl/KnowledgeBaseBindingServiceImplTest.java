@@ -16,7 +16,7 @@ import com.workbuddy.common.enums.base.DelFlag;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -96,7 +96,7 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         StrategyBindingUpdateDTO unknownType = new StrategyBindingUpdateDTO();
         unknownType.setStrategyType("INDEX");
         unknownType.setStrategyVersionId(66L);
-        KnowledgeException typeError = assertThrows(KnowledgeException.class,
+        WorkbuddyException typeError = assertThrows(WorkbuddyException.class,
                 () -> service.bindStrategy(2L, unknownType));
         assertEquals(ErrorCode.PARAM_INVALID, typeError.getErrorCode());
         assertTrue(typeError.getMessage().contains("未知策略类型"), typeError.getMessage());
@@ -105,7 +105,7 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         missingVersion.setStrategyType("CHUNK");
         missingVersion.setStrategyVersionId(999L);
         when(strategyVersionDbService.getById(999L)).thenReturn(null);
-        KnowledgeException missing = assertThrows(KnowledgeException.class,
+        WorkbuddyException missing = assertThrows(WorkbuddyException.class,
                 () -> service.bindStrategy(2L, missingVersion));
         assertEquals(ErrorCode.PARAM_INVALID, missing.getErrorCode());
         assertTrue(missing.getMessage().contains("策略版本不存在"), missing.getMessage());
@@ -118,7 +118,7 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         mismatch.setStrategyType("CHUNK");
         mismatch.setStrategyVersionId(88L);
         when(strategyVersionDbService.getById(88L)).thenReturn(embedVersion);
-        KnowledgeException mismatchError = assertThrows(KnowledgeException.class,
+        WorkbuddyException mismatchError = assertThrows(WorkbuddyException.class,
                 () -> service.bindStrategy(2L, mismatch));
         assertEquals(ErrorCode.PARAM_INVALID, mismatchError.getErrorCode());
         assertTrue(mismatchError.getMessage().contains("策略类型与所选版本不匹配"), mismatchError.getMessage());
@@ -159,7 +159,7 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
     void strategyBindingWithUnknownTypeShouldReject() {
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.strategyBinding(2L, "INDEX"));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
     }
@@ -229,7 +229,7 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         dto.setStrategyType("CHUNK");
         dto.setStrategyVersionId(66L);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.bindStrategy(2L, dto));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.bindStrategy(2L, dto));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         verify(strategyBindingDbService, never()).save(any());
     }
@@ -268,8 +268,8 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L));
 
-        KnowledgeException e =
-                assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, request));
+        WorkbuddyException e =
+                assertThrows(WorkbuddyException.class, () -> service.bindStrategies(2L, request));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("需一次设置全部可绑定策略"), e.getMessage());
         verify(strategyBindingDbService, never()).save(any());
@@ -288,8 +288,8 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("EMBED", null));
 
-        KnowledgeException e =
-                assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, request));
+        WorkbuddyException e =
+                assertThrows(WorkbuddyException.class, () -> service.bindStrategies(2L, request));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("策略版本不能为空"), e.getMessage());
         verify(strategyBindingDbService, never()).save(any());
@@ -309,8 +309,8 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("EMBED", 33L));
 
-        KnowledgeException e =
-                assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, request));
+        WorkbuddyException e =
+                assertThrows(WorkbuddyException.class, () -> service.bindStrategies(2L, request));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("已关闭策略绑定"), e.getMessage());
         verify(strategyBindingDbService, never()).save(any());
@@ -329,8 +329,8 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("RETRIEVAL", 44L));
 
-        KnowledgeException e =
-                assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, request));
+        WorkbuddyException e =
+                assertThrows(WorkbuddyException.class, () -> service.bindStrategies(2L, request));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("未知策略类型"), e.getMessage());
         verify(strategyBindingDbService, never()).save(any());
@@ -351,7 +351,7 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         dto.setStrategyType("CHUNK");
         dto.setStrategyVersionId(66L);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.bindStrategy(2L, dto));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.bindStrategy(2L, dto));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         assertTrue(e.getMessage().contains("已关闭策略绑定"), e.getMessage());
         verify(strategyBindingDbService, never()).save(any());
@@ -368,15 +368,15 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
 
         StrategyBindingsUpdateDTO empty = new StrategyBindingsUpdateDTO();
         empty.setBindings(List.of());
-        KnowledgeException emptyError =
-                assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, empty));
+        WorkbuddyException emptyError =
+                assertThrows(WorkbuddyException.class, () -> service.bindStrategies(2L, empty));
         assertEquals(ErrorCode.PARAM_INVALID, emptyError.getErrorCode());
         assertTrue(emptyError.getMessage().contains("绑定列表不能为空"), emptyError.getMessage());
 
         StrategyBindingsUpdateDTO duplicated = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("CHUNK", 33L));
-        KnowledgeException dupError =
-                assertThrows(KnowledgeException.class, () -> service.bindStrategies(2L, duplicated));
+        WorkbuddyException dupError =
+                assertThrows(WorkbuddyException.class, () -> service.bindStrategies(2L, duplicated));
         assertEquals(ErrorCode.PARAM_INVALID, dupError.getErrorCode());
         assertTrue(dupError.getMessage().contains("策略类型重复"), dupError.getMessage());
 

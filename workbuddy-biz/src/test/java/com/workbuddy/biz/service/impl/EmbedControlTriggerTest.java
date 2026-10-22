@@ -8,7 +8,7 @@ import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +82,7 @@ class EmbedControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.strategyBindingDbService.getByKbAndType(10L, EmbedStrategy.TYPE)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -100,7 +100,7 @@ class EmbedControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.knowledgeBaseDbService.getActiveById(10L)).thenReturn(fixture.bindingOffKnowledgeBase());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.strategyBindingDbService, never()).getByKbAndType(any(), any());
@@ -117,7 +117,7 @@ class EmbedControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         fixture.stubBoundStrategy();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, null));
         assertEquals(ErrorCode.TASK_UPSTREAM_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
         verify(fixture.taskQueue, never()).enqueue(any());
@@ -137,7 +137,7 @@ class EmbedControlTriggerTest {
         when(fixture.pipelineTaskDbService.getById(EmbedControlTestFixture.UPSTREAM_TASK_ID))
                 .thenReturn(fixture.upstreamTask(PipelineTaskStatus.FAILED));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_UPSTREAM_NOT_READY, e.getErrorCode());
         assertTrue(e.getMessage().contains(PipelineTaskStatus.FAILED.name()), e.getMessage());
@@ -155,7 +155,7 @@ class EmbedControlTriggerTest {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         when(fixture.strategyVersionDbService.getById(999L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, 999L, null));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, 999L, null));
         assertEquals(ErrorCode.STRATEGY_VERSION_NOT_FOUND, e.getErrorCode());
     }
 
@@ -188,7 +188,7 @@ class EmbedControlTriggerTest {
         when(fixture.strategyBindingDbService.getByKbAndType(10L, EmbedStrategy.TYPE)).thenReturn(fixture.binding());
         when(fixture.strategyVersionDbService.getById(66L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_STRATEGY_MISSING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -227,7 +227,7 @@ class EmbedControlTriggerTest {
                 .thenReturn(fixture.chunkProduct("{\"routes\":{\"body\":{\"algorithm\":\"paragraph-aggregate\","
                         + "\"params\":{\"softMaxLen\":20000}}}}"));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, 50L));
         assertEquals(ErrorCode.EMBED_MODEL_INCOMPATIBLE, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
         verify(fixture.taskQueue, never()).enqueue(any());
@@ -283,7 +283,7 @@ class EmbedControlTriggerTest {
         running.setStatus(PipelineTaskStatus.RUNNING.name());
         fixture.existingEmbedTask(50L, 66L, running);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         // 拒绝文案带任务号与状态：用户能看出是哪条任务占着执行键
@@ -306,7 +306,7 @@ class EmbedControlTriggerTest {
         fixture.existingEmbedTask(50L, 66L, queued);
 
         // 执行键命中即拒绝，触发入口不再补投唤醒；QUEUED 补投归启动补偿与低频扫描
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, 50L));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -346,30 +346,30 @@ class EmbedControlTriggerTest {
     void upstreamProductShouldBeValidated() {
         when(fixture.fileResultDbService.getById(10L)).thenReturn(fixture.fileResult());
         fixture.stubBoundStrategy();
-        KnowledgeException missing = assertThrows(KnowledgeException.class,
+        WorkbuddyException missing = assertThrows(WorkbuddyException.class,
                 () -> service.embed(10L, null, null));
         assertEquals(ErrorCode.TASK_UPSTREAM_MISSING, missing.getErrorCode());
 
-        KnowledgeException zero = assertThrows(KnowledgeException.class,
+        WorkbuddyException zero = assertThrows(WorkbuddyException.class,
                 () -> service.embed(10L, null, 0L));
         assertEquals(ErrorCode.TASK_UPSTREAM_MISSING, zero.getErrorCode());
 
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(null);
-        KnowledgeException notFound = assertThrows(KnowledgeException.class,
+        WorkbuddyException notFound = assertThrows(WorkbuddyException.class,
                 () -> service.embed(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, notFound.getErrorCode());
 
         WbPipelineProduct wrongStage = fixture.chunkProduct(null);
         wrongStage.setStage(PipelineStage.PARSE.name());
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(wrongStage);
-        KnowledgeException stageMismatch = assertThrows(KnowledgeException.class,
+        WorkbuddyException stageMismatch = assertThrows(WorkbuddyException.class,
                 () -> service.embed(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, stageMismatch.getErrorCode());
 
         WbPipelineProduct foreign = fixture.chunkProduct(null);
         foreign.setFileResultId(99L);
         when(fixture.pipelineProductDbService.getById(50L)).thenReturn(foreign);
-        KnowledgeException foreignError = assertThrows(KnowledgeException.class,
+        WorkbuddyException foreignError = assertThrows(WorkbuddyException.class,
                 () -> service.embed(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, foreignError.getErrorCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -386,7 +386,7 @@ class EmbedControlTriggerTest {
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401
         SecurityTestSupport.loginOtherUser();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.embed(10L, null, 50L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.embed(10L, null, 50L));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 }

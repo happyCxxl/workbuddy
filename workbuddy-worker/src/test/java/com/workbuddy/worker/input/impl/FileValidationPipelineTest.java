@@ -5,7 +5,7 @@ import com.workbuddy.common.domain.input.FileValidationResult;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileValidationProperties;
 import com.workbuddy.worker.input.check.FileCheck;
@@ -156,7 +156,7 @@ class FileValidationPipelineTest {
     @Test
     void validateMissingFileShouldFailFileNotFound() {
         when(fileStorage.metadata("f1"))
-                .thenThrow(new KnowledgeException(ErrorCode.FILE_NOT_FOUND));
+                .thenThrow(new WorkbuddyException(ErrorCode.FILE_NOT_FOUND));
 
         FileValidationResult result = validator().validate("f1");
 

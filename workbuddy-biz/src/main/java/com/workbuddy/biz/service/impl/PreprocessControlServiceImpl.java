@@ -21,7 +21,7 @@ import com.workbuddy.common.dto.response.preprocess.PreprocessTriggerVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
@@ -131,7 +131,7 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
             vo.setElements(voConverter.toElementVOs(view));
             return view;
         } catch (Exception e) {
-            KnowledgeException storageFailure = StatsSupport.storageFailureOf(e);
+            WorkbuddyException storageFailure = StatsSupport.storageFailureOf(e);
             if (NullUtil.isNotNull(storageFailure)) {
                 throw storageFailure;
             }

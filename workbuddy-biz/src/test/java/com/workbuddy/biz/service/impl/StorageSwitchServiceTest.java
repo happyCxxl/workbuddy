@@ -9,7 +9,7 @@ import com.workbuddy.common.enums.storage.StorageSourceStatus;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.infra.storage.StorageSourceDef;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -108,7 +108,7 @@ class StorageSwitchServiceTest {
         stored.setStatus(StorageSourceStatus.DISABLED.getCode());
         when(fixture.storageSourceDbService.getById(StorageSourceTestFixture.LOCAL_ID)).thenReturn(stored);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.previewCurrent(StorageSourceTestFixture.LOCAL_ID));
 
         assertEquals(ErrorCode.STORAGE_SOURCE_ILLEGAL, e.getErrorCode());
@@ -129,7 +129,7 @@ class StorageSwitchServiceTest {
                 .thenReturn(fixture.row(StorageSourceTestFixture.LOCAL_ID, "本地磁盘", StorageType.LOCAL,
                         incomplete, StorageSourceStatus.ENABLED, 0));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.previewCurrent(StorageSourceTestFixture.LOCAL_ID));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
@@ -146,7 +146,7 @@ class StorageSwitchServiceTest {
     void previewShouldRejectUnknownIdWith40457() {
         when(fixture.storageSourceDbService.getById(StorageSourceTestFixture.OTHER_ID)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.previewCurrent(StorageSourceTestFixture.OTHER_ID));
 
         assertEquals(ErrorCode.STORAGE_SOURCE_NOT_FOUND, e.getErrorCode());
@@ -163,7 +163,7 @@ class StorageSwitchServiceTest {
         broken.setStorageType("oss");
         when(fixture.storageSourceDbService.getById(StorageSourceTestFixture.LOCAL_ID)).thenReturn(broken);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.switchCurrent(StorageSourceTestFixture.LOCAL_ID, StorageSourceTestFixture.OPERATOR));
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
@@ -254,7 +254,7 @@ class StorageSwitchServiceTest {
         when(fixture.storageRouter.currentSourceId()).thenReturn(StorageSourceTestFixture.OTHER_ID);
         when(fixture.pipelineTaskDbService.listByStatuses(any())).thenReturn(List.of());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.switchCurrent(StorageSourceTestFixture.LOCAL_ID, StorageSourceTestFixture.OPERATOR));
 
         assertEquals(ErrorCode.STORAGE_SOURCE_PROBE_FAILED, e.getErrorCode());
@@ -276,7 +276,7 @@ class StorageSwitchServiceTest {
         stored.setStatus(StorageSourceStatus.DISABLED.getCode());
         when(fixture.storageSourceDbService.getById(StorageSourceTestFixture.LOCAL_ID)).thenReturn(stored);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.switchCurrent(StorageSourceTestFixture.LOCAL_ID, StorageSourceTestFixture.OPERATOR));
 
         assertEquals(ErrorCode.STORAGE_SOURCE_ILLEGAL, e.getErrorCode());

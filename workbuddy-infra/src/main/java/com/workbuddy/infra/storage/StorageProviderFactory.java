@@ -1,7 +1,7 @@
 package com.workbuddy.infra.storage;
 
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public final class StorageProviderFactory {
      *
      * @param def 数据源定义
      * @return 该类型的提供者
-     * @throws KnowledgeException 必填参数不齐（40455）
+     * @throws WorkbuddyException 必填参数不齐（40455）
      */
     public static StorageProvider create(StorageSourceDef def) {
         List<String> missing = StorageSourceDef.missingKeys(def);

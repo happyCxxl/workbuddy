@@ -6,7 +6,7 @@ import com.workbuddy.common.domain.entity.WbRetrievalRun;
 import com.workbuddy.common.dto.response.retrieval.SearchHitVO;
 import com.workbuddy.common.dto.response.retrieval.SearchVO;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.worker.indexing.ComboSnapshot;
 import com.workbuddy.worker.indexing.IndexRow;
 import com.workbuddy.worker.indexing.search.FullTextHit;
@@ -372,7 +372,7 @@ class SearchProductionTest {
     void productionWithoutPublishedShouldThrow40446() {
         when(fixture.indexSetDbService.getByKb(1L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.search(1L, fixture.request()));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.search(1L, fixture.request()));
 
         assertEquals(ErrorCode.INDEX_NOT_PUBLISHED, e.getErrorCode());
     }
@@ -389,7 +389,7 @@ class SearchProductionTest {
         when(fixture.indexSetDbService.getByKb(9L)).thenReturn(set);
         when(fixture.indexVersionDbService.getById(30L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.search(9L, fixture.request()));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.search(9L, fixture.request()));
 
         assertEquals(ErrorCode.INDEX_NOT_PUBLISHED, e.getErrorCode());
     }

@@ -16,7 +16,7 @@ import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import org.junit.jupiter.api.BeforeEach;
@@ -144,7 +144,7 @@ class TaskTriggerSupportTest {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.STRUCTURE.name(), 50L, 0L))
                 .thenReturn(running);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> triggerSupport.trigger(10L, PipelineStage.STRUCTURE, 50L, null, null, "组装"));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
@@ -168,7 +168,7 @@ class TaskTriggerSupportTest {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.STRUCTURE.name(), 50L, 0L))
                 .thenReturn(succeeded);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> triggerSupport.trigger(10L, PipelineStage.STRUCTURE, 50L, null, null, "组装"));
 
         assertEquals(ErrorCode.TASK_ALREADY_PENDING, e.getErrorCode());
@@ -207,7 +207,7 @@ class TaskTriggerSupportTest {
         when(storageRouter.nameOf(ARCHIVE_SOURCE)).thenReturn("演示 MinIO");
         when(storageRouter.nameOf(CURRENT_SOURCE)).thenReturn("本地磁盘");
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> triggerSupport.trigger(10L, PipelineStage.STRUCTURE, 50L, null, null, "组装"));
 
         assertEquals(ErrorCode.STORAGE_TYPE_MISMATCH, e.getErrorCode());

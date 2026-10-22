@@ -1,5 +1,6 @@
 package com.workbuddy.common.enums.knowledge;
 
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.Getter;
 
@@ -27,7 +28,7 @@ public enum KnowledgeBaseStatus {
      *
      * @param code 码值
      * @return 枚举项；码值为空时为 null
-     * @throws com.workbuddy.common.exception.KnowledgeException 未知码值
+     * @throws WorkbuddyException 未知码值
      */
     public static KnowledgeBaseStatus of(Integer code) {
         if (NullUtil.isNull(code)) {

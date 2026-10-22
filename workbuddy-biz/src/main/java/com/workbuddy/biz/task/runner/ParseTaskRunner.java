@@ -16,7 +16,7 @@ import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -84,7 +84,7 @@ public class ParseTaskRunner {
             try (InputStream in = fileStorage.open(sourceFile.getFileId())) {
                 context.setInputStream(in);
                 outcome = parsePipeline.run(context);
-            } catch (KnowledgeException e) {
+            } catch (WorkbuddyException e) {
                 if (e.getErrorCode() == ErrorCode.FILE_NOT_FOUND) {
                     finishFailed(taskId, PipelineTaskErrorCode.PARSE_FAILED.name(),
                             "文件不存在或不可读（提交后可能被删除）");

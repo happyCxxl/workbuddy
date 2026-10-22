@@ -5,7 +5,7 @@ import com.workbuddy.biz.service.AvatarService;
 import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.common.utils.SecurityUtil;
@@ -59,7 +59,7 @@ public class AvatarServiceImpl implements AvatarService {
         try (InputStream in = file.getInputStream()) {
             ref = fileStorage.putRaw(key, in, file.getSize(), contentTypeOf(extension));
         } catch (IOException e) {
-            throw new KnowledgeException(ErrorCode.SYSTEM_ERROR, "头像写入失败");
+            throw new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "头像写入失败");
         }
         String url = fileStorage.publicUrl(ref);
         ThrowUtil.throwIf(NullUtil.isNull(url), ErrorCode.PARAM_INVALID,
@@ -109,9 +109,9 @@ public class AvatarServiceImpl implements AvatarService {
                 return "webp";
             }
         } catch (IOException e) {
-            throw new KnowledgeException(ErrorCode.PARAM_INVALID, "头像文件读取失败");
+            throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "头像文件读取失败");
         }
-        throw new KnowledgeException(ErrorCode.PARAM_INVALID, "只支持 PNG / JPG / WebP 图片");
+        throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "只支持 PNG / JPG / WebP 图片");
     }
 
     private String contentTypeOf(String extension) {

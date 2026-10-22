@@ -11,7 +11,7 @@ import com.workbuddy.common.dto.request.strategy.StrategyVersionUpdateDTO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
 import com.workbuddy.common.enums.task.RowStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
@@ -101,7 +101,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         try {
             strategyVersionDbService.save(row);
         } catch (DuplicateKeyException e) {
-            throw new KnowledgeException(ErrorCode.PARAM_INVALID, "同环节同名版本已存在");
+            throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "同环节同名版本已存在");
         }
         return toVO(row);
     }
@@ -174,7 +174,7 @@ public class StrategyVersionServiceImpl implements StrategyVersionService {
         try {
             config = JsonUtil.toMap(configSnapshot);
         } catch (Exception e) {
-            throw new KnowledgeException(ErrorCode.PARAM_INVALID, "配置不是合法 JSON");
+            throw new WorkbuddyException(ErrorCode.PARAM_INVALID, "配置不是合法 JSON");
         }
         String error = switch (type) {
             case "CHUNK" -> ChunkAlgorithmSpec.validate(config);

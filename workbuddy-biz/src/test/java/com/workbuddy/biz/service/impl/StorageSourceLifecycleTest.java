@@ -5,7 +5,7 @@ import com.workbuddy.common.dto.response.setting.StorageSourceVO;
 import com.workbuddy.common.enums.storage.StorageSourceStatus;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.infra.storage.StorageSourceDef;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +65,7 @@ class StorageSourceLifecycleTest {
     void initializeShouldFailWhenTableEmpty() {
         when(fixture.storageSourceDbService.listAll()).thenReturn(List.of());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.initialize());
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.initialize());
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         verify(fixture.storageSourceDbService, never()).save(any());
@@ -81,10 +81,10 @@ class StorageSourceLifecycleTest {
     void initializeShouldRecordFailedProbeAndKeepFailingFast() {
         when(fixture.storageSourceDbService.listAll())
                 .thenReturn(List.of(fixture.localRow(StorageSourceTestFixture.LOCAL_ID, "本地磁盘", true)));
-        doThrow(new KnowledgeException(ErrorCode.STORAGE_SOURCE_PROBE_FAILED, "连接不上"))
+        doThrow(new WorkbuddyException(ErrorCode.STORAGE_SOURCE_PROBE_FAILED, "连接不上"))
                 .when(fixture.storageRouter).markCurrent(StorageSourceTestFixture.LOCAL_ID);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.initialize());
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.initialize());
 
         assertEquals(ErrorCode.STORAGE_SOURCE_PROBE_FAILED, e.getErrorCode());
         // 失败结论先落库再抛：启动仍是 fail-fast，页面能看到这一行的连接状态
@@ -123,7 +123,7 @@ class StorageSourceLifecycleTest {
                 fixture.localParams(root.resolve("disabled").toString()), StorageSourceStatus.DISABLED, 0);
         when(fixture.storageSourceDbService.listAll()).thenReturn(List.of(disabled));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.initialize());
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.initialize());
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         verify(fixture.storageRouter, never()).register(any(StorageSourceDef.class));
@@ -142,7 +142,7 @@ class StorageSourceLifecycleTest {
         broken.setStorageType("oss");
         when(fixture.storageSourceDbService.listAll()).thenReturn(List.of(broken));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.initialize());
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.initialize());
 
         assertEquals(ErrorCode.STORAGE_BACKEND_UNCONFIGURED, e.getErrorCode());
         verify(fixture.storageRouter, never()).register(any(StorageSourceDef.class));

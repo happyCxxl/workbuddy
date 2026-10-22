@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.workbuddy.biz.mapper.WbKnowledgeBaseMapper;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +65,7 @@ class WbKnowledgeBaseDbServiceImplTest {
     void getActiveByIdWhenAbsentShouldThrowNotFound() {
         when(mapper.selectById(2L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> impl.getActiveById(2L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> impl.getActiveById(2L));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 

@@ -14,7 +14,7 @@ import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.worker.indexing.ComboSnapshot;
 import com.workbuddy.common.convert.KnowledgeConverterImpl;
@@ -106,7 +106,7 @@ class IndexPublishServiceImplTest {
         when(indexVersionDbService.getById(20L)).thenReturn(version);
         when(indexSetDbService.getById(5L)).thenReturn(set);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.publish(20L));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.publish(20L));
         assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), ex.getCode());
     }
 
@@ -123,7 +123,7 @@ class IndexPublishServiceImplTest {
         version.setComboSnapshot(JsonUtil.toJsonStr(comboList(List.of(10L), "embed-default-v1")));
         when(indexVersionDbService.getById(20L)).thenReturn(version);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.publish(20L));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.publish(20L));
 
         assertEquals(ErrorCode.INDEX_FROZEN_SCOPE_PUBLISH_FORBIDDEN.getCode(), ex.getCode());
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
@@ -205,7 +205,7 @@ class IndexPublishServiceImplTest {
         version.setIndexSetId(99L);
         when(indexVersionDbService.getById(30L)).thenReturn(version);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class, () -> service.versionDetail(1L, 30L));
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class, () -> service.versionDetail(1L, 30L));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -268,13 +268,13 @@ class IndexPublishServiceImplTest {
     void versionDetailShouldRequireSetAndVersion() {
         when(indexSetDbService.getByKb(1L)).thenReturn(null);
         when(indexVersionDbService.getById(20L)).thenReturn(versionRow(20L, "v2", IndexVersionStatus.READY.name()));
-        KnowledgeException noSet = assertThrows(KnowledgeException.class,
+        WorkbuddyException noSet = assertThrows(WorkbuddyException.class,
                 () -> service.versionDetail(1L, 20L));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noSet.getCode());
 
         when(indexSetDbService.getByKb(1L)).thenReturn(indexSet());
         when(indexVersionDbService.getById(20L)).thenReturn(null);
-        KnowledgeException noVersion = assertThrows(KnowledgeException.class,
+        WorkbuddyException noVersion = assertThrows(WorkbuddyException.class,
                 () -> service.versionDetail(1L, 20L));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noVersion.getCode());
     }
@@ -287,13 +287,13 @@ class IndexPublishServiceImplTest {
     @Test
     void publishShouldRequireVersionAndSet() {
         when(indexVersionDbService.getById(20L)).thenReturn(null);
-        KnowledgeException noVersion = assertThrows(KnowledgeException.class, () -> service.publish(20L));
+        WorkbuddyException noVersion = assertThrows(WorkbuddyException.class, () -> service.publish(20L));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noVersion.getCode());
 
         WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.READY.name());
         when(indexVersionDbService.getById(20L)).thenReturn(version);
         when(indexSetDbService.getById(5L)).thenReturn(null);
-        KnowledgeException noSet = assertThrows(KnowledgeException.class, () -> service.publish(20L));
+        WorkbuddyException noSet = assertThrows(WorkbuddyException.class, () -> service.publish(20L));
         assertEquals(ErrorCode.INDEX_VERSION_NOT_FOUND.getCode(), noSet.getCode());
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
     }
@@ -309,7 +309,7 @@ class IndexPublishServiceImplTest {
         noCombo.setComboSnapshot(null);
         when(indexVersionDbService.getById(20L)).thenReturn(noCombo);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.publish(20L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.publish(20L));
 
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), e.getCode());
         assertTrue(e.getMessage().contains("版本组合快照缺失"), e.getMessage());

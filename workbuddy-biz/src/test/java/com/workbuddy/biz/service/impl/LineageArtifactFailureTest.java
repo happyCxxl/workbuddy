@@ -18,7 +18,7 @@ import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import org.junit.jupiter.api.BeforeEach;
@@ -116,7 +116,7 @@ class LineageArtifactFailureTest {
         parseTask.setFinishedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 8));
         stubFile(parseTask);
         when(fileStorage.getObject(parseRef()))
-                .thenThrow(new KnowledgeException(ErrorCode.FILE_NOT_FOUND, "对象读取失败"));
+                .thenThrow(new WorkbuddyException(ErrorCode.FILE_NOT_FOUND, "对象读取失败"));
 
         LineageVO vo = service.lineage(FILE_RESULT_ID);
 
@@ -135,9 +135,9 @@ class LineageArtifactFailureTest {
         WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
         stubFile(parseTask);
         when(fileStorage.getObject(parseRef()))
-                .thenThrow(new KnowledgeException(ErrorCode.STORAGE_OBJECT_MISSING, "对象已不存在"));
+                .thenThrow(new WorkbuddyException(ErrorCode.STORAGE_OBJECT_MISSING, "对象已不存在"));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.lineage(FILE_RESULT_ID));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.lineage(FILE_RESULT_ID));
 
         assertEquals(ErrorCode.STORAGE_OBJECT_MISSING, e.getErrorCode());
     }

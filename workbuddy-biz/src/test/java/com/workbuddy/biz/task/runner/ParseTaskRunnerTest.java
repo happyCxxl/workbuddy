@@ -20,7 +20,7 @@ import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.parser.ParseContext;
@@ -251,7 +251,7 @@ class ParseTaskRunnerTest {
         when(pipelineTaskDbService.claim(20L)).thenReturn(1);
         stubFileChain();
         when(parsePipeline.run(any(ParseContext.class)))
-                .thenThrow(new KnowledgeException(ErrorCode.FILE_NOT_FOUND));
+                .thenThrow(new WorkbuddyException(ErrorCode.FILE_NOT_FOUND));
 
         runner.run(20L);
 

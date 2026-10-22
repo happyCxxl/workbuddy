@@ -5,7 +5,7 @@ import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.input.FileValidationResult;
 import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileCheckContext;
@@ -91,7 +91,7 @@ public class FileValidationPipeline implements FileValidatorPort {
     private FileMetadata loadMetadata(String fileId) {
         try {
             return fileStorage.metadata(fileId);
-        } catch (KnowledgeException e) {
+        } catch (WorkbuddyException e) {
             if (e.getErrorCode() == ErrorCode.FILE_NOT_FOUND) {
                 log.warn("===> FileValidationPipeline 文件不存在, fileId={}", fileId);
                 return null;

@@ -9,7 +9,7 @@ import com.workbuddy.common.enums.index.IndexVersionStatus;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.worker.indexing.BuildOrder;
 import com.workbuddy.worker.indexing.ComboSnapshot;
@@ -137,7 +137,7 @@ class IndexBuildServiceImplTest {
         order.setKnowledgeBaseId(1L);
         order.setComboSnapshot(combo);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(order));
 
         assertEquals(ErrorCode.PARAM_INVALID, ex.getErrorCode());
@@ -160,7 +160,7 @@ class IndexBuildServiceImplTest {
         BuildOrder order = new BuildOrder();
         order.setKnowledgeBaseId(1L);
         order.setComboSnapshot(comboAll());
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(order));
         assertEquals(ErrorCode.INDEX_BUILDING_CONFLICT.getCode(), ex.getCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -180,7 +180,7 @@ class IndexBuildServiceImplTest {
         combo.setFileScopeMode("LIST");
         order.setComboSnapshot(combo);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(order));
 
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), ex.getCode());
@@ -202,7 +202,7 @@ class IndexBuildServiceImplTest {
         combo.setFileResultIds(List.of(10L));
         order.setComboSnapshot(combo);
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(order));
 
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), ex.getCode());
@@ -282,17 +282,17 @@ class IndexBuildServiceImplTest {
      */
     @Test
     void buildCandidateShouldRejectIncompleteCommand() {
-        KnowledgeException nullOrder = assertThrows(KnowledgeException.class,
+        WorkbuddyException nullOrder = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(null));
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), nullOrder.getCode());
 
-        KnowledgeException noKb = assertThrows(KnowledgeException.class,
+        WorkbuddyException noKb = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(new BuildOrder()));
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), noKb.getCode());
 
         BuildOrder noCombo = new BuildOrder();
         noCombo.setKnowledgeBaseId(1L);
-        KnowledgeException comboMissing = assertThrows(KnowledgeException.class,
+        WorkbuddyException comboMissing = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(noCombo));
         assertEquals(ErrorCode.PARAM_INVALID.getCode(), comboMissing.getCode());
 
@@ -300,7 +300,7 @@ class IndexBuildServiceImplTest {
         BuildOrder unknownKb = new BuildOrder();
         unknownKb.setKnowledgeBaseId(1L);
         unknownKb.setComboSnapshot(comboAll());
-        KnowledgeException notFound = assertThrows(KnowledgeException.class,
+        WorkbuddyException notFound = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(unknownKb));
         assertEquals(ErrorCode.KB_NOT_FOUND.getCode(), notFound.getCode());
         verify(fixture.pipelineTaskDbService, never()).save(any());
@@ -319,7 +319,7 @@ class IndexBuildServiceImplTest {
         order.setKnowledgeBaseId(1L);
         order.setComboSnapshot(new ComboSnapshot());
 
-        KnowledgeException ex = assertThrows(KnowledgeException.class,
+        WorkbuddyException ex = assertThrows(WorkbuddyException.class,
                 () -> fixture.service.buildCandidate(order));
 
         assertEquals(ErrorCode.INDEX_COMBO_INCOMPLETE.getCode(), ex.getCode());

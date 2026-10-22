@@ -5,7 +5,7 @@ import com.workbuddy.common.domain.rules.KnowledgeBaseRules;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +56,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void disableWhenDisabledShouldThrow() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkCanDisable(kb(KnowledgeBaseStatus.DISABLED.getCode())));
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL, e.getErrorCode());
     }
@@ -66,7 +66,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void disableWhenStatusNullShouldThrow() {
-        assertThrows(KnowledgeException.class, () -> KnowledgeBaseRules.checkCanDisable(kb(null)));
+        assertThrows(WorkbuddyException.class, () -> KnowledgeBaseRules.checkCanDisable(kb(null)));
     }
 
     /**
@@ -82,7 +82,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void enableWhenActiveShouldThrow() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkCanEnable(kb(KnowledgeBaseStatus.ACTIVE.getCode())));
         assertEquals(ErrorCode.KB_STATUS_ILLEGAL, e.getErrorCode());
     }
@@ -92,7 +92,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void enableWhenStatusNullShouldThrow() {
-        assertThrows(KnowledgeException.class, () -> KnowledgeBaseRules.checkCanEnable(kb(null)));
+        assertThrows(WorkbuddyException.class, () -> KnowledgeBaseRules.checkCanEnable(kb(null)));
     }
 
     /**
@@ -108,7 +108,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void submitWhenDisabledShouldThrow() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkCanSubmit(kb(KnowledgeBaseStatus.DISABLED.getCode())));
         assertEquals(ErrorCode.KB_NOT_ACTIVE, e.getErrorCode());
     }
@@ -118,7 +118,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void submitWhenStatusNullShouldThrow() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkCanSubmit(kb(null)));
         assertEquals(ErrorCode.KB_NOT_ACTIVE, e.getErrorCode());
     }
@@ -147,7 +147,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void visibleOwnerIdWithoutLoginShouldThrow() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.visibleOwnerId(null));
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }
@@ -160,7 +160,7 @@ class KnowledgeBaseRulesTest {
         KnowledgeUser user = user(ME, UserRole.USER);
         user.setId(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.visibleOwnerId(user));
 
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
@@ -180,7 +180,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void accessibleWhenOthersKbShouldThrowNotFound() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkAccessible(ownedKb(OTHER), user(ME, UserRole.USER)));
         // 抛"不存在"而不是"无权限"：后者等于确认该库存在，把别人的库 ID 变成可探测信息
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
@@ -191,7 +191,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void accessibleWhenOwnerIsNullShouldThrowNotFoundForNormalUser() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkAccessible(ownedKb(null), user(ME, UserRole.USER)));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
@@ -212,7 +212,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void accessibleWithoutLoginShouldThrowUnauthorized() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkAccessible(ownedKb(ME), null));
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }
@@ -222,7 +222,7 @@ class KnowledgeBaseRulesTest {
      */
     @Test
     void accessibleWithNullKbShouldThrowNotFound() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> KnowledgeBaseRules.checkAccessible(null, user(ME, UserRole.USER)));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }

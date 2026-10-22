@@ -27,7 +27,7 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.biz.service.support.stagecontent.ChunkStageContentSupport;
@@ -304,7 +304,7 @@ class StageContentQueryStructureTest {
     void stageContentWithForeignTaskIdShouldMentionStageLabel() {
         when(pipelineTaskDbService.getById(999L)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.stageContent(10L, "PARSE", 999L, null, null, null));
 
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());

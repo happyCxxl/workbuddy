@@ -22,7 +22,7 @@ import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileValidatorPort;
@@ -279,7 +279,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
      */
     @Test
     void pageFileResultsShouldRejectUnknownStage() {
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> service.pageFileResults(1L, fileResultQuery("INDEX")));
         assertEquals(ErrorCode.PARAM_INVALID, e.getErrorCode());
         verify(kbFileResultDbService, never()).pageByKb(anyLong(), anyLong(), any());

@@ -1,7 +1,7 @@
 package com.workbuddy.biz.web;
 
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.web.R;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -32,7 +32,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void knowledgeExceptionShouldPassThroughCodeAndMessage() {
         R<Void> result = handler.handleKnowledgeException(
-                new KnowledgeException(ErrorCode.KB_NOT_FOUND, "知识库 9 不存在"));
+                new WorkbuddyException(ErrorCode.KB_NOT_FOUND, "知识库 9 不存在"));
 
         assertEquals(ErrorCode.KB_NOT_FOUND.getCode(), result.getCode());
         assertEquals("知识库 9 不存在", result.getMsg());

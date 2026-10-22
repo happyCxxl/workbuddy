@@ -15,7 +15,7 @@ import com.workbuddy.common.domain.structure.UnifiedDocument;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -108,7 +108,7 @@ public class StructureTaskRunner {
 
     /** 失败归口的任务错误码：上游文件/结果缺失按"上游不可读"归口，存储不一致走共享映射，其余按组装执行异常兜底 */
     private String errorCodeOf(Exception e) {
-        if (e instanceof KnowledgeException knowledge && isUpstreamMissing(knowledge.getErrorCode())) {
+        if (e instanceof WorkbuddyException knowledge && isUpstreamMissing(knowledge.getErrorCode())) {
             return PipelineTaskErrorCode.STRUCTURE_UPSTREAM_UNREADABLE.name();
         }
         return TaskRunnerSupport.failureCode(e, PipelineTaskErrorCode.STRUCTURE_FAILED);

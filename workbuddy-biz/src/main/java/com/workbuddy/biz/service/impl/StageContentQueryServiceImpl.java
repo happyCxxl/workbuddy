@@ -24,7 +24,7 @@ import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -142,7 +142,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
                 vo.setItems(StageContentPaginationSupport.slice(all, pageNo, pageSize));
             }
         } catch (Exception e) {
-            KnowledgeException storageFailure = StageArtifactReader.storageFailureOf(e);
+            WorkbuddyException storageFailure = StageArtifactReader.storageFailureOf(e);
             if (NullUtil.isNotNull(storageFailure)) {
                 throw storageFailure;
             }

@@ -24,7 +24,7 @@ import com.workbuddy.common.dto.response.preprocess.PreprocessStatsVO;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import org.junit.jupiter.api.BeforeEach;
@@ -275,7 +275,7 @@ class LineageGraphTest {
     void missingFileResultShouldReject40432() {
         when(fileResultDbService.getById(FILE_RESULT_ID)).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.lineage(FILE_RESULT_ID));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.lineage(FILE_RESULT_ID));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
     }
 
@@ -290,7 +290,7 @@ class LineageGraphTest {
         // 归属看的是知识库归属：换一个登录用户，越权与"不存在"同样返回 40401
         SecurityTestSupport.loginOtherUser();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> service.lineage(FILE_RESULT_ID));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.lineage(FILE_RESULT_ID));
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
 

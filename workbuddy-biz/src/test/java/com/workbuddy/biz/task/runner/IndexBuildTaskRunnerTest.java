@@ -19,7 +19,7 @@ import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.worker.indexing.BuildOrder;
 import com.workbuddy.worker.indexing.ComboSnapshot;
@@ -259,7 +259,7 @@ class IndexBuildTaskRunnerTest {
         when(indexVersionDbService.getByTaskId(1L)).thenReturn(version);
         when(indexComboReconciler.computeExpected(eq(1L), any(ComboSnapshot.class)))
                 .thenReturn(completeExpectation());
-        doThrow(new KnowledgeException(ErrorCode.INDEX_COLLECTION_SCHEMA_MISMATCH, "维度不一致"))
+        doThrow(new WorkbuddyException(ErrorCode.INDEX_COLLECTION_SCHEMA_MISMATCH, "维度不一致"))
                 .when(milvusIndexPort).ensureCollection("kb_1_v1", 1024);
 
         runner.run(1L);

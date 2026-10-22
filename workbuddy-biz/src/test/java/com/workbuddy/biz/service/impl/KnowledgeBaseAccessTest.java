@@ -19,7 +19,7 @@ import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -103,7 +103,7 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
 
         // 无登录上下文：拒绝，而不是静默落一条 user_id = NULL 的孤儿数据
         SecurityContextHolder.clearContext();
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> crudService.create(dto));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> crudService.create(dto));
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }
 
@@ -117,7 +117,7 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
         when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
         SecurityContextHolder.clearContext();
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> crudService.detail(2L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> crudService.detail(2L));
 
         assertEquals(ErrorCode.UNAUTHORIZED, e.getErrorCode());
     }
@@ -133,7 +133,7 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(9L)).thenReturn(others);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> crudService.detail(9L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> crudService.detail(9L));
 
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
@@ -150,7 +150,7 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
         legacy.setUserId(null);
         when(knowledgeBaseDbService.getActiveById(9L)).thenReturn(legacy);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> crudService.detail(9L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> crudService.detail(9L));
 
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
     }
@@ -169,7 +169,7 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
         dto.setId(3L);
         dto.setName("改别人的库");
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> crudService.update(dto));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> crudService.update(dto));
 
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
         verify(knowledgeBaseDbService, never()).updateById(any());
@@ -186,7 +186,7 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(4L)).thenReturn(others);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> crudService.disable(4L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> crudService.disable(4L));
 
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
         verify(knowledgeBaseDbService, never()).updateById(any());
@@ -203,7 +203,7 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
         others.setUserId(OTHER);
         when(knowledgeBaseDbService.getActiveById(6L)).thenReturn(others);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> crudService.delete(6L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> crudService.delete(6L));
 
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
         verify(knowledgeBaseDbService, never()).removeById(any());
@@ -222,8 +222,8 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
         StrategyBindingsUpdateDTO request = bindRequest(
                 bindItem("PREPROCESS", 11L), bindItem("CHUNK", 22L), bindItem("EMBED", 33L));
 
-        KnowledgeException e =
-                assertThrows(KnowledgeException.class, () -> bindingService.bindStrategies(2L, request));
+        WorkbuddyException e =
+                assertThrows(WorkbuddyException.class, () -> bindingService.bindStrategies(2L, request));
 
         assertEquals(ErrorCode.KB_NOT_FOUND, e.getErrorCode());
         verify(strategyBindingDbService, never()).save(any());

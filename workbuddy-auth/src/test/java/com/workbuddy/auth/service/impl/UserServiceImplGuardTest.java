@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbUser;
 import com.workbuddy.common.dto.request.user.UserUpdateDTO;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,7 +38,7 @@ class UserServiceImplGuardTest {
     void addUserShouldRejectDuplicateUsername() {
         when(fixture.userDbService.findActiveByUsername("admin")).thenReturn(fixture.adminUser(1L));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().addUser(fixture.createRequest("admin", null, null)));
 
         assertEquals(ErrorCode.USERNAME_EXISTS, e.getErrorCode());
@@ -52,7 +52,7 @@ class UserServiceImplGuardTest {
     void addUserShouldRejectInvalidRole() {
         when(fixture.userDbService.findActiveByUsername("newbie")).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().addUser(fixture.createRequest("newbie", "SUPERMAN", null)));
 
         assertEquals(ErrorCode.ROLE_INVALID, e.getErrorCode());
@@ -70,7 +70,7 @@ class UserServiceImplGuardTest {
         UserUpdateDTO request = new UserUpdateDTO();
         request.setRole(UserRole.USER.getCode());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().updateUser(1L, request));
 
         assertEquals(ErrorCode.USER_SELF_OPERATION_FORBIDDEN, e.getErrorCode());
@@ -88,7 +88,7 @@ class UserServiceImplGuardTest {
         UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(0);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().updateUser(1L, request));
 
         assertEquals(ErrorCode.USER_SELF_OPERATION_FORBIDDEN, e.getErrorCode());
@@ -107,7 +107,7 @@ class UserServiceImplGuardTest {
         // 仅降级角色（状态保持启用）：旧实现只看 status，这条路径能绕过守卫
         request.setRole(UserRole.USER.getCode());
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().updateUser(2L, request));
 
         assertEquals(ErrorCode.LAST_ADMIN_FORBIDDEN, e.getErrorCode());
@@ -144,7 +144,7 @@ class UserServiceImplGuardTest {
         UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(99);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().updateUser(2L, request));
 
         assertEquals(ErrorCode.USER_STATUS_INVALID, e.getErrorCode());
@@ -158,7 +158,7 @@ class UserServiceImplGuardTest {
     void addUserShouldRejectInvalidStatus() {
         when(fixture.userDbService.findActiveByUsername("newbie")).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().addUser(fixture.createRequest("newbie", null, 7)));
 
         assertEquals(ErrorCode.USER_STATUS_INVALID, e.getErrorCode());
@@ -177,7 +177,7 @@ class UserServiceImplGuardTest {
         UserUpdateDTO request = new UserUpdateDTO();
         request.setStatus(0);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().updateUser(2L, request));
 
         assertEquals(ErrorCode.LAST_ADMIN_FORBIDDEN, e.getErrorCode());
@@ -210,7 +210,7 @@ class UserServiceImplGuardTest {
     void updateUserShouldThrowWhenUserMissing() {
         when(fixture.userDbService.getById(anyLong())).thenReturn(null);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class,
+        WorkbuddyException e = assertThrows(WorkbuddyException.class,
                 () -> fixture.service().updateUser(404L, new UserUpdateDTO()));
 
         assertEquals(ErrorCode.USER_NOT_FOUND, e.getErrorCode());
@@ -224,7 +224,7 @@ class UserServiceImplGuardTest {
         when(fixture.userDbService.getById(1L)).thenReturn(fixture.adminUser(1L));
         fixture.authenticateAs(1L);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> fixture.service().deleteUser(1L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> fixture.service().deleteUser(1L));
 
         assertEquals(ErrorCode.USER_SELF_OPERATION_FORBIDDEN, e.getErrorCode());
         verify(fixture.userDbService, never()).removeById(anyLong());
@@ -238,7 +238,7 @@ class UserServiceImplGuardTest {
         when(fixture.userDbService.getById(2L)).thenReturn(fixture.adminUser(2L));
         fixture.authenticateAs(99L);
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> fixture.service().deleteUser(2L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> fixture.service().deleteUser(2L));
 
         assertEquals(ErrorCode.LAST_ADMIN_FORBIDDEN, e.getErrorCode());
         verify(fixture.userDbService, never()).removeById(anyLong());

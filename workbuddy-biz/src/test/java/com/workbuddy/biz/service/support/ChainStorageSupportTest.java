@@ -7,7 +7,7 @@ import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.storage.StorageRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.KnowledgeException;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
@@ -110,7 +110,7 @@ class ChainStorageSupportTest {
     @Test
     void archiveSourceShouldBeNullWhenArchiveMissing() {
         when(fileStorage.refOf("F-88"))
-                .thenThrow(new KnowledgeException(ErrorCode.FILE_NOT_FOUND, "文件档案不存在"));
+                .thenThrow(new WorkbuddyException(ErrorCode.FILE_NOT_FOUND, "文件档案不存在"));
 
         assertNull(support.storageSourceIdOfFile("F-88"));
     }
@@ -131,9 +131,9 @@ class ChainStorageSupportTest {
     @Test
     void archiveSourceShouldRethrowOtherFailure() {
         when(fileStorage.refOf("F-88"))
-                .thenThrow(new KnowledgeException(ErrorCode.SYSTEM_ERROR, "存储不可用"));
+                .thenThrow(new WorkbuddyException(ErrorCode.SYSTEM_ERROR, "存储不可用"));
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> support.storageSourceIdOfFile("F-88"));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> support.storageSourceIdOfFile("F-88"));
 
         assertEquals(ErrorCode.SYSTEM_ERROR, e.getErrorCode());
     }
@@ -198,7 +198,7 @@ class ChainStorageSupportTest {
         when(storageRouter.nameOf(ARCHIVE_SOURCE)).thenReturn("演示 MinIO");
         when(storageRouter.nameOf(CURRENT_SOURCE)).thenReturn("本地磁盘");
 
-        KnowledgeException e = assertThrows(KnowledgeException.class, () -> support.requireStorageMatch(10L));
+        WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> support.requireStorageMatch(10L));
 
         assertEquals(ErrorCode.STORAGE_TYPE_MISMATCH, e.getErrorCode());
         // 文案按数据源名称给出两侧，用户能直接看出差在哪两个数据源
