@@ -1,4 +1,4 @@
-package com.workbuddy.model.service.impl;
+package com.workbuddy.model;
 
 import com.workbuddy.common.domain.embed.EmbeddingRequest;
 import com.workbuddy.common.domain.embed.EmbeddingResult;
@@ -8,7 +8,6 @@ import com.workbuddy.common.domain.model.vision.VisionRequest;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.model.AiClient;
 import com.workbuddy.model.service.support.invoke.ModelInvoker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

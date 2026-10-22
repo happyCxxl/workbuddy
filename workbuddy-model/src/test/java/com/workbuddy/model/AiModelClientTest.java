@@ -1,4 +1,4 @@
-package com.workbuddy.model.service.impl;
+package com.workbuddy.model;
 
 import com.workbuddy.common.domain.embed.EmbeddingRequest;
 import com.workbuddy.common.domain.embed.EmbeddingResult;

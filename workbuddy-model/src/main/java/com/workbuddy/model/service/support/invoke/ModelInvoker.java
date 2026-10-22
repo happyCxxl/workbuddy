@@ -116,8 +116,10 @@ public class ModelInvoker {
      * 视觉入参校验：字节与引用二选一，字节必须带 MIME
      */
     private void validateVision(VisionRequest request) {
-        ThrowUtil.throwIf(request.hasBytes() && StrUtil.isBlank(request.getMimeType()), ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片 MIME 类型");
-        ThrowUtil.throwIf(!request.hasBytes() && StrUtil.isBlank(request.getImageRef()), ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片字节或引用");
+        ThrowUtil.throwIf(request.hasBytes() && StrUtil.isBlank(request.getMimeType()),
+                ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片 MIME 类型");
+        ThrowUtil.throwIf(!request.hasBytes() && StrUtil.isBlank(request.getImageRef()),
+                ErrorCode.MODEL_BAD_REQUEST, "视觉请求缺少图片字节或引用");
     }
 
     /**

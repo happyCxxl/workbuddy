@@ -43,6 +43,7 @@ public class VisionRequest {
     public void clearBytes() {
         if (imageBytes != null) {
             Arrays.fill(imageBytes, (byte) 0);
+            imageBytes = null;
         }
     }
 }

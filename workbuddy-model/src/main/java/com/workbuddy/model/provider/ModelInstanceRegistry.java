@@ -4,7 +4,6 @@ import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
-import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.ModelRef;
 import com.workbuddy.model.config.ModelVendorProperties;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * 模型实例注册表：按「厂商码 + 模型名」懒构建并缓存 LC4j 实例。
@@ -66,7 +66,8 @@ public class ModelInstanceRegistry {
      * 目录行 → 运行时定位；模型名为空按参数错误拒绝
      */
     private ModelRef refOf(ModelDescriptor model) {
-        ThrowUtil.throwIf(NullUtil.isNull(model) || StrUtil.isBlank(model.getModelKey()), ErrorCode.MODEL_BAD_REQUEST, "模型名为空，无法构建实例");
+        ThrowUtil.throwIf(NullUtil.isNull(model) || StrUtil.isBlank(model.getModelKey()),
+                ErrorCode.MODEL_BAD_REQUEST, "模型名为空，无法构建实例");
         return new ModelRef(model.getVendorCode(), model.getModelKey());
     }
 
@@ -75,17 +76,17 @@ public class ModelInstanceRegistry {
      */
     private ChatModel buildChat(ModelRef ref) {
         ModelVendorProperties.Vendor vendor = requireVendor(ref);
-        OpenAiChatModel.OpenAiChatModelBuilder builder = OpenAiChatModel.builder()
+        OpenAiChatModel.OpenAiChatModelBuilder builder = chatBuilder(vendor, ref);
+        applyVendor(vendor, builder::baseUrl, builder::maxRetries);
+        return builder.build();
+    }
+
+    /** 对话实例的 builder：连接与模型名由入口参数决定 */
+    private OpenAiChatModel.OpenAiChatModelBuilder chatBuilder(ModelVendorProperties.Vendor vendor, ModelRef ref) {
+        return OpenAiChatModel.builder()
                 .apiKey(vendor.getApiKey())
                 .modelName(ref.modelKey())
                 .timeout(Duration.ofMillis(timeoutOf(vendor)));
-        if (StrUtil.isNotBlank(vendor.getBaseUrl())) {
-            builder.baseUrl(vendor.getBaseUrl());
-        }
-        if (NullUtil.isNotNull(vendor.getMaxRetries())) {
-            builder.maxRetries(vendor.getMaxRetries());
-        }
-        return builder.build();
     }
 
     /**
@@ -93,17 +94,29 @@ public class ModelInstanceRegistry {
      */
     private EmbeddingModel buildEmbedding(ModelRef ref) {
         ModelVendorProperties.Vendor vendor = requireVendor(ref);
-        OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder builder = OpenAiEmbeddingModel.builder()
+        OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder builder = embeddingBuilder(vendor, ref);
+        applyVendor(vendor, builder::baseUrl, builder::maxRetries);
+        return builder.build();
+    }
+
+    /** 向量实例的 builder：连接与模型名由入口参数决定 */
+    private OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder embeddingBuilder(
+            ModelVendorProperties.Vendor vendor, ModelRef ref) {
+        return OpenAiEmbeddingModel.builder()
                 .apiKey(vendor.getApiKey())
                 .modelName(ref.modelKey())
                 .timeout(Duration.ofMillis(timeoutOf(vendor)));
+    }
+
+    /** 对话/向量实例共用的厂商级可选参数：baseUrl 留空走 LC4j 缺省，maxRetries 留空走底层默认 */
+    private void applyVendor(ModelVendorProperties.Vendor vendor,
+                             Consumer<String> baseUrl, Consumer<Integer> maxRetries) {
         if (StrUtil.isNotBlank(vendor.getBaseUrl())) {
-            builder.baseUrl(vendor.getBaseUrl());
+            baseUrl.accept(vendor.getBaseUrl());
         }
         if (NullUtil.isNotNull(vendor.getMaxRetries())) {
-            builder.maxRetries(vendor.getMaxRetries());
+            maxRetries.accept(vendor.getMaxRetries());
         }
-        return builder.build();
     }
 
     /**
@@ -112,8 +125,8 @@ public class ModelInstanceRegistry {
     private ModelVendorProperties.Vendor requireVendor(ModelRef ref) {
         Map<String, ModelVendorProperties.Vendor> vendors = vendorProperties.getVendors();
         ModelVendorProperties.Vendor vendor = NullUtil.isNull(vendors) ? null : vendors.get(ref.vendorCode());
-        ThrowUtil.throwIf(NullUtil.isNull(vendor) || StrUtil.isBlank(vendor.getApiKey()), ErrorCode.MODEL_VENDOR_UNKNOWN,
-                "厂商未配置或缺少 api-key：" + ref.vendorCode());
+        ThrowUtil.throwIf(NullUtil.isNull(vendor) || StrUtil.isBlank(vendor.getApiKey()),
+                ErrorCode.MODEL_VENDOR_UNKNOWN, "厂商未配置或缺少 api-key：" + ref.vendorCode());
         return vendor;
     }
 

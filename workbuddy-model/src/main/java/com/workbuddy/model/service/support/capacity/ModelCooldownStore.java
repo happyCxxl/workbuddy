@@ -26,7 +26,7 @@ public class ModelCooldownStore {
      * @return 冷却中为 true
      */
     public boolean coolingDown(ModelRef ref) {
-        return stringRedisTemplate.hasKey(key(ref));
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key(ref)));
     }
 
     /**
