@@ -59,7 +59,8 @@ export default [
       'no-var': 'error',
       'prefer-const': 'error',
       curly: ['error', 'all'],
-      eqeqeq: ['error', 'always'],
+      // 与 null 字面量比较时放行 ==/!=：同时覆盖 null 与 undefined（对齐 Google TS 风格指南的例外）
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-new-object': 'error',
       'no-array-constructor': 'error',
       quotes: ['error', 'single', { avoidEscape: true }],
