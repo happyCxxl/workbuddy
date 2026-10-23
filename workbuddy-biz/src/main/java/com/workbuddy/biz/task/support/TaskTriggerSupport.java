@@ -76,7 +76,8 @@ public class TaskTriggerSupport {
         try {
             taskQueue.enqueue(task.getId());
         } catch (Exception e) {
-            log.error("===> TaskTriggerSupport 触发{}任务入队失败, fileResultId={}, taskId={}", stageLabel, fileResultId, task.getId(), e);
+            log.error("===> TaskTriggerSupport 触发{}任务入队失败, fileResultId={}, taskId={}",
+                    stageLabel, fileResultId, task.getId(), e);
             pipelineTaskDbService.failQueued(task.getId(), PipelineTaskErrorCode.TASK_ENQUEUE_FAILED.name(),
                     "任务入队失败，请重试");
             throw e;

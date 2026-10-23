@@ -62,9 +62,9 @@
     },
     "09": {
       "status": "已复核",
-      "reviewed": "2026-10-22",
-      "baseline": "a15ed541",
-      "note": "抛出入口口径补齐：条件守卫走 ThrowUtil.throwIf（业务错误码 / 内部缺陷工厂两类）；catch 包装不用工具类，改为先记带栈 warn 再抛业务异常——16 处已补日志，业务消息保持干净"
+      "reviewed": "2026-10-23",
+      "baseline": "953ba984",
+      "note": "TaskTriggerSupport 入队失败日志按行宽换行（门禁修复）；异常类型、错误码与日志内容未变"
     }
   }
 }

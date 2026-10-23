@@ -87,7 +87,8 @@ public class PreprocessTaskRunner {
                 byte[] content = fileStorage.getObject(ObjectRef.ofProduct(structureProduct));
                 document = JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), UnifiedDocument.class);
             } catch (Exception e) {
-                log.warn("===> PreprocessTaskRunner 读取上游统一结构产物失败, taskId={}, artifactId={}", taskId, structureProduct.getArtifactId(), e);
+                log.warn("===> PreprocessTaskRunner 读取上游统一结构产物失败, taskId={}, artifactId={}",
+                        taskId, structureProduct.getArtifactId(), e);
                 finishFailed(taskId, PipelineTaskErrorCode.PREPROCESS_EMPTY.name(),
                         "上游统一结构产物读取失败: " + e.getMessage());
                 return;

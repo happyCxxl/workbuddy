@@ -136,7 +136,8 @@ public class PreprocessPipeline implements PreprocessorPort {
                     stat.error = StrUtil.maxLength(String.valueOf(e.getMessage()), 200);
                     outcome.getWarnings().add(rule.stepName() + ": " + view.getElementId() + ": "
                             + StrUtil.maxLength(String.valueOf(e.getMessage()), 100));
-                    log.warn("===> PreprocessPipeline 预处理规则异常, rule={}, elementId={}", rule.name(), view.getElementId(), e);
+                    log.warn("===> PreprocessPipeline 预处理规则异常, rule={}, elementId={}",
+                            rule.name(), view.getElementId(), e);
                 }
             }
         }

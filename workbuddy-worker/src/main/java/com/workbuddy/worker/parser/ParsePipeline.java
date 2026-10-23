@@ -362,7 +362,8 @@ public class ParsePipeline {
             return;
         }
         // 门槛不足：连每页原始指标一起打印（扫描件/乱码口径/文字占比口径）
-        log.warn("===> ParsePipeline 解析成功占比不足, unitCount={}, blankUnits={}, failedUnits={}, ratio={}, threshold={}, pageMetrics={}",
+        log.warn("===> ParsePipeline 解析成功占比不足, unitCount={}, blankUnits={}, failedUnits={}, "
+                        + "ratio={}, threshold={}, pageMetrics={}",
                 unitCount, blankUnits, failedUnits, String.format("%.2f", ratio),
                 properties.getSuccessUnitRatio(),
                 nativeSource.getPageMetrics().stream()

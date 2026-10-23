@@ -103,7 +103,8 @@ public class ChunkTaskRunner {
                 byte[] content = fileStorage.getObject(ObjectRef.ofProduct(preprocessProduct));
                 view = JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), PreprocessView.class);
             } catch (Exception e) {
-                log.warn("===> ChunkTaskRunner 读取上游预处理视图产物失败, taskId={}, artifactId={}", taskId, preprocessProduct.getArtifactId(), e);
+                log.warn("===> ChunkTaskRunner 读取上游预处理视图产物失败, taskId={}, artifactId={}",
+                        taskId, preprocessProduct.getArtifactId(), e);
                 finishFailed(taskId, PipelineTaskErrorCode.CHUNK_EMPTY.name(),
                         "上游预处理视图产物读取失败: " + e.getMessage());
                 return;

@@ -111,7 +111,8 @@ public class EmbedTaskRunner {
                 byte[] content = fileStorage.getObject(ObjectRef.ofProduct(chunkProduct));
                 chunkSet = JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), ChunkSet.class);
             } catch (Exception e) {
-                log.warn("===> EmbedTaskRunner 读取上游切片产物失败, taskId={}, artifactId={}", taskId, chunkProduct.getArtifactId(), e);
+                log.warn("===> EmbedTaskRunner 读取上游切片产物失败, taskId={}, artifactId={}",
+                        taskId, chunkProduct.getArtifactId(), e);
                 finishFailed(taskId, PipelineTaskErrorCode.EMBED_EMPTY.name(),
                         "上游切片产物读取失败: " + e.getMessage());
                 return;

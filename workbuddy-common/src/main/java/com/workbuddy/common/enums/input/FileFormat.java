@@ -4,6 +4,7 @@ import com.workbuddy.common.utils.NullUtil;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * 文件格式识别字典（Tika 真实格式全集），不是白名单：
@@ -74,7 +75,7 @@ public enum FileFormat {
         if (NullUtil.isNull(extension)) {
             return null;
         }
-        return switch (extension.toLowerCase()) {
+        return switch (extension.toLowerCase(Locale.ROOT)) {
             case "pdf" -> PDF;
             case "doc" -> DOC;
             case "docx" -> DOCX;
