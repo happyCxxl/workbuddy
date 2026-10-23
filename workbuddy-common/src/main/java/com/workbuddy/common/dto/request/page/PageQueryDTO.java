@@ -23,6 +23,9 @@ public class PageQueryDTO implements Serializable {
     /** 默认每页条数 */
     private static final long DEFAULT_SIZE = 10L;
 
+    /** 每页条数上限：超上限服务端截断（JAVA-DTO-003），当前前端最大取 200（文件清单一次拉全） */
+    private static final long MAX_SIZE = 200L;
+
     /** 当前页（可空，按默认 1） */
     private Long current;
 
@@ -39,11 +42,12 @@ public class PageQueryDTO implements Serializable {
     }
 
     /**
-     * 每页条数兜底：未传或小于 1 时取默认值。
+     * 每页条数兜底：未传或小于 1 时取默认值；超过 {@value #MAX_SIZE} 截断为上限。
      *
      * @return 生效的每页条数
      */
     public long sizeOrDefault() {
-        return NullUtil.isNull(size) || size < 1 ? DEFAULT_SIZE : size;
+        long effective = NullUtil.isNull(size) || size < 1 ? DEFAULT_SIZE : size;
+        return Math.min(effective, MAX_SIZE);
     }
 }
