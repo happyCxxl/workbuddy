@@ -1,4 +1,4 @@
-package com.workbuddy.worker.input;
+package com.workbuddy.filecenter.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,14 +14,14 @@ import java.util.List;
 @Data
 @Component
 @ConfigurationProperties(prefix = "workbuddy.file")
-public class FileValidationProperties {
+public class FileProperties {
 
     /** 文件大小上限（字节）；超限即停、不再继续读取 */
     private long maxSize;
 
     /**
      * 启用格式白名单（FileFormat 枚举名）。
-     * 白名单里的每种格式都必须有解析器接得住，启动期由 `ParserWhitelistChecker` 校验。
+     * 白名单里的每种格式都必须有解析器接得住，启动期由 worker 的 `ParserWhitelistChecker` 校验。
      */
     private List<String> enabledFormats;
 

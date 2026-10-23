@@ -2,7 +2,7 @@ package com.workbuddy.biz.config;
 
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.embedding.EmbedProperties;
-import com.workbuddy.worker.input.FileValidationProperties;
+import com.workbuddy.filecenter.config.FileProperties;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.structure.StructureProperties;
@@ -91,8 +91,8 @@ public final class ConfigFixtures {
      *
      * @return 按配置面取值构造的实例
      */
-    public static FileValidationProperties fileValidation() {
-        return bind(FileValidationProperties.class, "workbuddy.file", CONFIG_ROOT.resolve("workbuddy-file.yml"));
+    public static FileProperties fileValidation() {
+        return bind(FileProperties.class, "workbuddy.file", CONFIG_ROOT.resolve("workbuddy-file.yml"));
     }
 
     /**

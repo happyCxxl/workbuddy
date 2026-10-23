@@ -13,17 +13,17 @@ import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.domain.input.FileValidationResult;
+import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.dto.request.input.FileSubmitDTO;
 import com.workbuddy.common.dto.response.input.FileSubmitVO;
-import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.enums.input.SubmitStatus;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
+import com.workbuddy.filecenter.service.FileService;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.worker.input.FileValidatorPort;
 import com.workbuddy.common.convert.file.FileConverterImpl;
 import com.workbuddy.common.convert.system.SystemConverterImpl;
 import com.workbuddy.common.convert.knowledge.InputConverterImpl;
@@ -55,7 +55,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
 
     private WbPipelineTaskDbService pipelineTaskDbService;
 
-    private FileValidatorPort fileValidator;
+    private FileService fileService;
 
     private FileStorage fileStorage;
 
@@ -71,10 +71,10 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
         sourceFileDbService = mock(WbSourceFileDbService.class);
         submitLogDbService = mock(WbSubmitLogDbService.class);
         pipelineTaskDbService = mock(WbPipelineTaskDbService.class);
-        fileValidator = mock(FileValidatorPort.class);
+        fileService = mock(FileService.class);
         fileStorage = mock(FileStorage.class);
         service = new KnowledgeBaseFileServiceImpl(submitLogDbService, kbFileResultDbService,
-                sourceFileDbService, pipelineTaskDbService, fileValidator, fileStorage, mock(StorageRouter.class),
+                sourceFileDbService, pipelineTaskDbService, fileStorage, fileService, mock(StorageRouter.class),
                 TransactionTestSupport.template(), new InputConverterImpl(),
                 new KnowledgeBaseAccessSupport(knowledgeBaseDbService)
                         , new FileConverterImpl()
@@ -91,7 +91,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
     void submitFailLogShouldCarryAllFields() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
-        when(fileValidator.validate("88"))
+        when(fileService.validate("88"))
                 .thenReturn(FileValidationResult.fail(FileValidationFailReason.FILE_ENCRYPTED));
         when(fileStorage.metadata("88")).thenReturn(metadata());
         when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
@@ -123,7 +123,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
     void submitFailLogShouldTolerateMissingMetadata() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
-        when(fileValidator.validate("88"))
+        when(fileService.validate("88"))
                 .thenReturn(FileValidationResult.fail(FileValidationFailReason.FILE_NOT_FOUND));
         when(fileStorage.metadata("88")).thenThrow(new IllegalStateException("对象不存在"));
         when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
@@ -148,7 +148,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
     void submitValidationFailShouldOnlyWriteFailLog() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
-        when(fileValidator.validate("88"))
+        when(fileService.validate("88"))
                 .thenReturn(FileValidationResult.fail(FileValidationFailReason.FORMAT_NOT_ALLOWED));
         when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
             inv.getArgument(0, WbSubmitLog.class).setId(30L);
@@ -173,7 +173,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
     void submitFileNotFoundShouldRecordFailLog() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
-        when(fileValidator.validate("88"))
+        when(fileService.validate("88"))
                 .thenReturn(FileValidationResult.fail(FileValidationFailReason.FILE_NOT_FOUND));
         when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
             inv.getArgument(0, WbSubmitLog.class).setId(30L);

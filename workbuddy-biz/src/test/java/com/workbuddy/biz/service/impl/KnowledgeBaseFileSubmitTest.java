@@ -16,7 +16,7 @@ import com.workbuddy.common.enums.input.SubmitStatus;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.filecenter.provider.StorageRouter;
-import com.workbuddy.worker.input.FileValidatorPort;
+import com.workbuddy.filecenter.service.FileService;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.common.convert.file.FileConverterImpl;
 import com.workbuddy.common.convert.system.SystemConverterImpl;
@@ -52,7 +52,7 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
 
     private WbPipelineTaskDbService pipelineTaskDbService;
 
-    private FileValidatorPort fileValidator;
+    private FileService fileService;
 
     private FileStorage fileStorage;
 
@@ -68,10 +68,10 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
         sourceFileDbService = mock(WbSourceFileDbService.class);
         submitLogDbService = mock(WbSubmitLogDbService.class);
         pipelineTaskDbService = mock(WbPipelineTaskDbService.class);
-        fileValidator = mock(FileValidatorPort.class);
+        fileService = mock(FileService.class);
         fileStorage = mock(FileStorage.class);
         service = new KnowledgeBaseFileServiceImpl(submitLogDbService, kbFileResultDbService,
-                sourceFileDbService, pipelineTaskDbService, fileValidator, fileStorage, mock(StorageRouter.class),
+                sourceFileDbService, pipelineTaskDbService, fileStorage, fileService, mock(StorageRouter.class),
                 TransactionTestSupport.template(), new InputConverterImpl(),
                 new KnowledgeBaseAccessSupport(knowledgeBaseDbService)
                         , new FileConverterImpl()
@@ -88,7 +88,7 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
     void submitSuccessShouldWriteThreeWithoutTask() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
-        when(fileValidator.validate("88")).thenReturn(passResult());
+        when(fileService.validate("88")).thenReturn(passResult());
         when(fileStorage.metadata("88")).thenReturn(metadata());
         stubSuccessWrites(sourceFileDbService, kbFileResultDbService, submitLogDbService);
 
@@ -135,8 +135,8 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
         assertEquals(Long.valueOf(ME), savedLog.getUserId());
 
         // 文件校验与元数据是外部 IO，必须先于事务内的三写
-        InOrder externalFirst = inOrder(fileValidator, fileStorage, sourceFileDbService);
-        externalFirst.verify(fileValidator).validate("88");
+        InOrder externalFirst = inOrder(fileService, fileStorage, sourceFileDbService);
+        externalFirst.verify(fileService).validate("88");
         externalFirst.verify(fileStorage).metadata("88");
         externalFirst.verify(sourceFileDbService).save(any(WbSourceFile.class));
     }
@@ -150,7 +150,7 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
     void submitShouldReuseExistingSourceFile() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
-        when(fileValidator.validate("88")).thenReturn(passResult());
+        when(fileService.validate("88")).thenReturn(passResult());
         when(fileStorage.metadata("88")).thenReturn(metadata());
         WbSourceFile existing = new WbSourceFile();
         existing.setId(7L);
@@ -194,7 +194,7 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
 
         assertEquals(30L, response.getSubmitLog().getId());
         assertEquals(20L, response.getPipelineTaskId());
-        verify(fileValidator, never()).validate(any());
+        verify(fileService, never()).validate(any());
         verify(knowledgeBaseDbService, never()).getActiveById(any());
     }
 
@@ -206,7 +206,7 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
     @Test
     void submitLogDuplicateKeyShouldReplayExisting() {
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
-        when(fileValidator.validate("88")).thenReturn(passResult());
+        when(fileService.validate("88")).thenReturn(passResult());
         when(fileStorage.metadata("88")).thenReturn(metadata());
         when(sourceFileDbService.findByFileId("88")).thenReturn(null);
         when(sourceFileDbService.save(any(WbSourceFile.class))).thenAnswer(inv -> {
@@ -244,7 +244,7 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
     void sourceFileDuplicateKeyShouldReuseExistingRow() {
         when(submitLogDbService.getByRequestId("req-1")).thenReturn(null);
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
-        when(fileValidator.validate("88")).thenReturn(passResult());
+        when(fileService.validate("88")).thenReturn(passResult());
         when(fileStorage.metadata("88")).thenReturn(metadata());
         // 同 fileId 并发建档：先查无、保存撞 uk_file_id、重查复用
         when(sourceFileDbService.save(any(WbSourceFile.class))).thenThrow(new DuplicateKeyException("uk_file_id"));

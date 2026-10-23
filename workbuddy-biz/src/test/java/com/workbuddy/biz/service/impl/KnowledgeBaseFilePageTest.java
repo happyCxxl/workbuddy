@@ -24,8 +24,8 @@ import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
+import com.workbuddy.filecenter.service.FileService;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.worker.input.FileValidatorPort;
 import com.workbuddy.common.convert.file.FileConverterImpl;
 import com.workbuddy.common.convert.system.SystemConverterImpl;
 import com.workbuddy.common.convert.knowledge.InputConverterImpl;
@@ -80,7 +80,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
         fileStorage = mock(FileStorage.class);
         storageRouter = mock(StorageRouter.class);
         service = new KnowledgeBaseFileServiceImpl(submitLogDbService, kbFileResultDbService,
-                sourceFileDbService, pipelineTaskDbService, mock(FileValidatorPort.class), fileStorage, storageRouter,
+                sourceFileDbService, pipelineTaskDbService, fileStorage, mock(FileService.class), storageRouter,
                 TransactionTestSupport.template(), new InputConverterImpl(),
                 new KnowledgeBaseAccessSupport(mock(WbKnowledgeBaseDbService.class))
                         , new FileConverterImpl()
