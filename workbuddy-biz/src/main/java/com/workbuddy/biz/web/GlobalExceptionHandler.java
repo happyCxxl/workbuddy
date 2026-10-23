@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
         } else if (NullUtil.isNotNull(detail) && detail.contains("JSON parse error")) {
             msg = "JSON 格式错误";
         }
-        log.warn("===> GlobalExceptionHandler 请求体读取失败: {}", detail);
+        log.warn("===> GlobalExceptionHandler 请求体读取失败, type={}", e.getClass().getSimpleName());
         return new R<>(ErrorCode.PARAM_INVALID.getCode(), msg, null, null);
     }
 
