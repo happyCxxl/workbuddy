@@ -32,7 +32,7 @@ for (const rel of files) {
       if (insideHit) continue;
       const outsideHit = bases.find((c) => !inside(c) && existsSync(c));
       errors.push(
-        `${rel}:${i + 1} ${outside ? `引用了 .agent 之外的路径：${p}` : `路径不存在：${p}`}`,
+        `${rel}:${i + 1} ${outsideHit ? `引用了 .agent 之外的路径：${p}` : `路径不存在：${p}`}`,
       );
     }
   });
@@ -45,4 +45,5 @@ if (errors.length === 0) {
 for (const e of errors) console.log(`ERROR ${e}`);
 console.log('');
 console.log(`规范边界：ERROR ${errors.length}；规范要能被别的项目整包复用，就不能指向包外文件`);
+console.log('复跑：node .agent/tools/common/check-scope.mjs');
 process.exit(1);
