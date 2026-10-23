@@ -20,11 +20,6 @@
         <Class name="com.workbuddy.worker.input.SpillBuffer"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
-    <!-- 无对应编号规则（并发可见性约定未立规，不为存量立规）：批次 3 把执行池字段改为构造期注入消除本告警后删除本豁免 -->
-    <Match>
-        <Class name="com.workbuddy.biz.task.PipelineTaskConsumer"/>
-        <Bug pattern="IS2_INCONSISTENT_SYNC,UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
-    </Match>
     <!-- JAVA-DTO-003：分页查询 DTO 的页码兜底，字段由 Spring 数据绑定器反射写入、不靠构造器初始化；
          判空统一走 NullUtil（内部转发 Hutool），SpotBugs 不识别其 null 语义，
          把紧随其后的拆箱比较 current < 1 判成"未初始化字段被解引用"。

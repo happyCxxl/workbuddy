@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-23",
-      "baseline": "a61c9d8d",
-      "note": "SpotBugs 排除清单补 COMMON-ANTI-05 的假阳性豁免边界（VisionRequest.hasBytes）；质量数据未变，复核基线随门禁配置变更前移"
+      "baseline": "405dc8fd",
+      "note": "删除 PipelineTaskConsumer 的过期 SpotBugs 豁免：执行池字段已为构造期注入，IS2/UWF 告警不再出现；质量数据未变"
     },
     "01": {
       "status": "已复核",
