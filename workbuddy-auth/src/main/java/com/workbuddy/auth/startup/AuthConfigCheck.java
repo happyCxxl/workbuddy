@@ -14,19 +14,22 @@ import org.springframework.stereotype.Component;
 /**
  * 认证配置启动期校验：令牌签名密钥与两档有效期、登录失败防护的三个阈值。
  *
- * <p>密钥为空、有效期非正、防护阈值为非正都会让认证行为悄悄失去意义（空密钥签出的令牌没有防护力、
- * TTL 为 0 时令牌签发即过期、阈值为 0 时防护不生效），一律在启动期拒绝。
- * 密钥短于 {@value #MIN_SECRET_LENGTH} 字符只告警：本地开发用短密钥是常见做法，不阻断启动。
+ * <p>密钥为空、为旧版占位串、短于 {@value #MIN_SECRET_LENGTH} 字符、有效期非正、防护阈值为非正，
+ * 都会让认证行为悄悄失去意义（空密钥签出的令牌没有防护力、TTL 为 0 时令牌签发即过期、
+ * 阈值为 0 时防护不生效），一律在启动期拒绝。
  *
- * <p>防护阈值只在 {@code knowledge.auth.guard.enabled=true} 时校验：关掉防护时这些值不参与任何判断。
+ * <p>防护阈值只在 {@code workbuddy.auth.guard.enabled=true} 时校验：关掉防护时这些值不参与任何判断。
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AuthConfigCheck implements StartupCheck {
 
-    /** 密钥长度告警门槛（HS256 的推荐密钥长度下限） */
+    /** 密钥长度下限（HS256 的推荐密钥长度下限） */
     private static final int MIN_SECRET_LENGTH = 32;
+
+    /** 旧版仓库占位密钥：出现在任何配置源都拒绝启动，防止「默认值即可用」的假安全 */
+    private static final String LEGACY_PLACEHOLDER_SECRET = "workbuddy-jwt-secret-change-me-in-production";
 
     private final JwtProperties jwtProperties;
 
@@ -58,16 +61,17 @@ public class AuthConfigCheck implements StartupCheck {
     private void checkJwt() {
         String secret = jwtProperties.getSecret();
         ThrowUtil.throwIf(NullUtil.isNull(secret) || secret.isBlank(), ErrorCode.PARAM_INVALID,
-                "令牌签名密钥未配置（配置键 knowledge.auth.jwt.secret）");
-        if (secret.trim().length() < MIN_SECRET_LENGTH) {
-            log.warn("令牌签名密钥长度 {} 小于建议的 {} 字符（配置键 knowledge.auth.jwt.secret），生产环境请换成长随机串",
-                    secret.trim().length(), MIN_SECRET_LENGTH);
-        }
+                "令牌签名密钥未配置（配置键 workbuddy.auth.jwt.secret，或环境变量 WORKBUDDY_JWT_SECRET）");
+        ThrowUtil.throwIf(LEGACY_PLACEHOLDER_SECRET.equals(secret.trim()), ErrorCode.PARAM_INVALID,
+                "令牌签名密钥仍是旧版占位串，请用环境变量 WORKBUDDY_JWT_SECRET 或本机覆盖文件提供（配置键 workbuddy.auth.jwt.secret）");
+        ThrowUtil.throwIf(secret.trim().length() < MIN_SECRET_LENGTH, ErrorCode.PARAM_INVALID,
+                "令牌签名密钥长度 " + secret.trim().length() + " 小于下限 " + MIN_SECRET_LENGTH
+                        + " 字符（配置键 workbuddy.auth.jwt.secret）");
         ThrowUtil.throwIf(jwtProperties.getTtlDays() <= 0, ErrorCode.PARAM_INVALID,
-                "令牌有效期必须为正数天，当前值 " + jwtProperties.getTtlDays() + "（配置键 knowledge.auth.jwt.ttl-days）");
+                "令牌有效期必须为正数天，当前值 " + jwtProperties.getTtlDays() + "（配置键 workbuddy.auth.jwt.ttl-days）");
         ThrowUtil.throwIf(jwtProperties.getTtlDaysRemember() <= 0, ErrorCode.PARAM_INVALID,
                 "记住我的令牌有效期必须为正数天，当前值 " + jwtProperties.getTtlDaysRemember()
-                        + "（配置键 knowledge.auth.jwt.ttl-days-remember）");
+                        + "（配置键 workbuddy.auth.jwt.ttl-days-remember）");
     }
 
     /** 登录失败防护阈值（防护关闭时不校验） */
@@ -78,12 +82,12 @@ public class AuthConfigCheck implements StartupCheck {
         }
         ThrowUtil.throwIf(loginGuardProperties.getFailThreshold() <= 0, ErrorCode.PARAM_INVALID,
                 "账号维度失败阈值必须为正数，当前值 " + loginGuardProperties.getFailThreshold()
-                        + "（配置键 knowledge.auth.guard.fail-threshold）");
+                        + "（配置键 workbuddy.auth.guard.fail-threshold）");
         ThrowUtil.throwIf(loginGuardProperties.getIpFailThreshold() <= 0, ErrorCode.PARAM_INVALID,
                 "IP 维度失败阈值必须为正数，当前值 " + loginGuardProperties.getIpFailThreshold()
-                        + "（配置键 knowledge.auth.guard.ip-fail-threshold）");
+                        + "（配置键 workbuddy.auth.guard.ip-fail-threshold）");
         ThrowUtil.throwIf(loginGuardProperties.getLockMinutes() <= 0, ErrorCode.PARAM_INVALID,
                 "锁定时长必须为正数分钟，当前值 " + loginGuardProperties.getLockMinutes()
-                        + "（配置键 knowledge.auth.guard.lock-minutes）");
+                        + "（配置键 workbuddy.auth.guard.lock-minutes）");
     }
 }

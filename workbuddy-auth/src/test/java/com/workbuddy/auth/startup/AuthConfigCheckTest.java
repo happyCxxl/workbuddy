@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 认证配置校验单测：密钥为空、有效期非正、防护阈值为非正即拒；防护关闭时跳过阈值校验。
+ * 认证配置校验单测：密钥为空、旧版占位串、短于 32 字符、有效期非正、防护阈值为非正即拒；防护关闭时跳过阈值校验。
  */
 class AuthConfigCheckTest {
 
@@ -82,11 +82,29 @@ class AuthConfigCheckTest {
         assertTrue(proceeded.get());
     }
 
-    /** 短密钥只告警，不阻断启动（本地开发用短密钥）（{@code shouldTolerateShortSecret}）。 */
+    /**
+     * 守护 {@code shouldRejectShortSecret}：短密钥签出的令牌防护力不足，一律在启动期拒绝。
+     */
     @Test
-    void shouldTolerateShortSecret() {
-        assertDoesNotThrow(() -> new AuthConfigCheck(jwt("short", 1, 30), guard()).check(next));
-        assertTrue(proceeded.get());
+    void shouldRejectShortSecret() {
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
+                () -> new AuthConfigCheck(jwt("short", 1, 30), guard()).check(next));
+
+        assertTrue(error.getMessage().contains("secret"), () -> "message=" + error.getMessage());
+        assertFalse(proceeded.get(), "失败即止，不推进链");
+    }
+
+    /**
+     * 守护 {@code shouldRejectLegacyPlaceholderSecret}：旧版占位串出现在任何配置源都拒绝启动。
+     */
+    @Test
+    void shouldRejectLegacyPlaceholderSecret() {
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
+                () -> new AuthConfigCheck(
+                        jwt("knowledge-jwt-secret-change-me-in-production", 1, 30), guard()).check(next));
+
+        assertTrue(error.getMessage().contains("占位"), () -> "message=" + error.getMessage());
+        assertFalse(proceeded.get(), "失败即止，不推进链");
     }
 
     /** 防护配置：启用且阈值合法（阈值由用例显式给出，不依赖配置类的字段初值） */

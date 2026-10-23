@@ -4,7 +4,9 @@
 workbuddy:
   auth:
     jwt:
-      secret: knowledge-jwt-secret-change-me-in-production
+      # 签名密钥必须外部化（SEC-01）：环境变量 WORKBUDDY_JWT_SECRET 或本机覆盖文件 application-local.yml 提供；
+      # 仓库默认留空，空值启动即被启动校验链拒绝。
+      secret: ${WORKBUDDY_JWT_SECRET:}
       # 不勾选「记住我」：短期令牌 + sessionStorage；勾选：长期令牌 + localStorage
       ttl-days: 1
       ttl-days-remember: 30
