@@ -13,7 +13,7 @@ import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentVO;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.StructureConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChunkStageContentSupport {
 
-    private final KnowledgeConverter knowledgeConverter;
+    private final StructureConverter knowledgeConverter;
 
     /**
      * 切片分页内容：过滤（内容类型 / 是否兜底 / 有无父片）与分页都下推 DB，条目按集合内顺序给出对齐键。

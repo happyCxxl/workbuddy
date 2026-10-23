@@ -1,4 +1,4 @@
-package com.workbuddy.common.convert;
+package com.workbuddy.common.convert.model;
 
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.RegisteredModel;

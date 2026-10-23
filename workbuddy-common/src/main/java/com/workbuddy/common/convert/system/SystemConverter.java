@@ -1,4 +1,4 @@
-package com.workbuddy.common.convert;
+package com.workbuddy.common.convert.system;
 
 import com.workbuddy.common.config.BaseInfoConvertConfig;
 import com.workbuddy.common.domain.entity.WbSubmitLog;
@@ -10,7 +10,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * 系统域转换：提交日志与模型实体（编译期生成实现，运行期无反射）。
+ * 系统域转换：提交日志实体（编译期生成实现，运行期无反射）。
  *
  * <p>通过路径走生成映射；失败路径需要常量与空指纹占位，用默认方法书写。
  * 公共列在此显式忽略：多来源映射无法继承单来源原型（见 `JAVA-DTO-013`）。

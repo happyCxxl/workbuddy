@@ -26,9 +26,9 @@ import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileValidatorPort;
-import com.workbuddy.common.convert.FileConverterImpl;
-import com.workbuddy.common.convert.SystemConverterImpl;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.file.FileConverterImpl;
+import com.workbuddy.common.convert.system.SystemConverterImpl;
+import com.workbuddy.common.convert.knowledge.InputConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -81,7 +81,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
         storageRouter = mock(StorageRouter.class);
         service = new KnowledgeBaseFileServiceImpl(submitLogDbService, kbFileResultDbService,
                 sourceFileDbService, pipelineTaskDbService, mock(FileValidatorPort.class), fileStorage, storageRouter,
-                TransactionTestSupport.template(), new KnowledgeConverterImpl(),
+                TransactionTestSupport.template(), new InputConverterImpl(),
                 new KnowledgeBaseAccessSupport(mock(WbKnowledgeBaseDbService.class))
                         , new FileConverterImpl()
                         , new SystemConverterImpl());

@@ -8,7 +8,7 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.StructureConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmbedStageContentSupport {
 
-    private final KnowledgeConverter knowledgeConverter;
+    private final StructureConverter knowledgeConverter;
 
     /**
      * 向量化记录 → 内容条目：顺序号从 1 起，对齐键与顺序号同值。

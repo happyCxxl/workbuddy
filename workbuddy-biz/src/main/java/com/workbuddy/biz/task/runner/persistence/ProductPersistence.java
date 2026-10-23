@@ -3,7 +3,7 @@ package com.workbuddy.biz.task.runner.persistence;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.PipelineConverter;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;
@@ -34,7 +34,7 @@ public class ProductPersistence {
 
     private final FileStorage fileStorage;
 
-    private final KnowledgeConverter knowledgeConverter;
+    private final PipelineConverter knowledgeConverter;
 
     /**
      * 落库阶段产物并回写任务产物引用；返回产物行（artifactId = sha256 = contentHash，

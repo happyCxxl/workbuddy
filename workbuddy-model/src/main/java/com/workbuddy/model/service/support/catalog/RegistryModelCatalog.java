@@ -1,6 +1,6 @@
 package com.workbuddy.model.service.support.catalog;
 
-import com.workbuddy.common.convert.ModelConverter;
+import com.workbuddy.common.convert.model.ModelConverter;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.model.ModelCatalogPort;

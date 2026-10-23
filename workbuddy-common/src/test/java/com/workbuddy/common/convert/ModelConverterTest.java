@@ -1,5 +1,7 @@
 package com.workbuddy.common.convert;
 
+import com.workbuddy.common.convert.model.ModelConverter;
+import com.workbuddy.common.convert.model.ModelConverterImpl;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.domain.model.RegisteredModel;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;

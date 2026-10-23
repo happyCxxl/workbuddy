@@ -24,9 +24,9 @@ import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.input.FileValidatorPort;
-import com.workbuddy.common.convert.FileConverterImpl;
-import com.workbuddy.common.convert.SystemConverterImpl;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.file.FileConverterImpl;
+import com.workbuddy.common.convert.system.SystemConverterImpl;
+import com.workbuddy.common.convert.knowledge.InputConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -75,7 +75,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
         fileStorage = mock(FileStorage.class);
         service = new KnowledgeBaseFileServiceImpl(submitLogDbService, kbFileResultDbService,
                 sourceFileDbService, pipelineTaskDbService, fileValidator, fileStorage, mock(StorageRouter.class),
-                TransactionTestSupport.template(), new KnowledgeConverterImpl(),
+                TransactionTestSupport.template(), new InputConverterImpl(),
                 new KnowledgeBaseAccessSupport(knowledgeBaseDbService)
                         , new FileConverterImpl()
                         , new SystemConverterImpl());

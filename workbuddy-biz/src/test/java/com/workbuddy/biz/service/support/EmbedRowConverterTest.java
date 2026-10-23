@@ -7,8 +7,8 @@ import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.RowStatus;
-import com.workbuddy.common.convert.KnowledgeConverter;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.EmbedConverter;
+import com.workbuddy.common.convert.knowledge.EmbedConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 class EmbedRowConverterTest {
 
-    private static final KnowledgeConverter CONVERTER = new KnowledgeConverterImpl();
+    private static final EmbedConverter CONVERTER = new EmbedConverterImpl();
 
     /**
      * 集合行：文件、集合、策略、模型/维度/度量/归一化、计数、产物位置与状态逐列落库。

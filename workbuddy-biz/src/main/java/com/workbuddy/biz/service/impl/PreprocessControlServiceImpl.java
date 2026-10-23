@@ -3,7 +3,7 @@ package com.workbuddy.biz.service.impl;
 import com.workbuddy.biz.service.PreprocessControlService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.PreprocessConverter;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.stats.StatsSupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
@@ -53,7 +53,7 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
     private final TaskDetailSupport detailSupport;
     private final FileStorage fileStorage;
     private final PreprocessStrategyParser strategyParser;
-    private final KnowledgeConverter voConverter;
+    private final PreprocessConverter voConverter;
     private final FileResultAccessGuard accessGuard;
     private final UpstreamProductGate upstreamProductGate;
 

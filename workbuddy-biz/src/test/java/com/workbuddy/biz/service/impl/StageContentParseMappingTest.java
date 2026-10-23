@@ -17,7 +17,7 @@ import com.workbuddy.biz.service.support.stagecontent.ChunkStageContentSupport;
 import com.workbuddy.biz.service.support.stagecontent.EmbedStageContentSupport;
 import com.workbuddy.biz.service.support.stagecontent.ParseStageContentSupport;
 import com.workbuddy.biz.service.support.stagecontent.StructureStageContentSupport;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.StructureConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,10 +68,10 @@ class StageContentParseMappingTest {
         service = new StageContentQueryServiceImpl(pipelineProductDbService, mock(WbChunkSetDbService.class),
                 mock(WbChunkDbService.class), mock(WbEmbeddingSetDbService.class),
                 mock(WbEmbeddingRecordDbService.class), fileStorage, detailSupport
-                        , new StructureStageContentSupport(new KnowledgeConverterImpl())
-                        , new ParseStageContentSupport(new KnowledgeConverterImpl())
-                        , new EmbedStageContentSupport(new KnowledgeConverterImpl())
-                        , new ChunkStageContentSupport(new KnowledgeConverterImpl()), accessGuard);
+                        , new StructureStageContentSupport(new StructureConverterImpl())
+                        , new ParseStageContentSupport(new StructureConverterImpl())
+                        , new EmbedStageContentSupport(new StructureConverterImpl())
+                        , new ChunkStageContentSupport(new StructureConverterImpl()), accessGuard);
     }
 
     /** 任务与产物夹具：产物键固定为 art */

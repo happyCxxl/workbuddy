@@ -1,4 +1,4 @@
-package com.workbuddy.common.convert;
+package com.workbuddy.common.convert.file;
 
 import com.workbuddy.common.config.BaseCreateInfoConvertConfig;
 import com.workbuddy.common.domain.entity.WbSourceFile;

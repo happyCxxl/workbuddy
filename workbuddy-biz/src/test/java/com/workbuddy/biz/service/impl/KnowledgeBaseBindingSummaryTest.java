@@ -9,7 +9,7 @@ import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseAccessSupport;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.KnowledgeBaseConverterImpl;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseBindingSupport;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbStrategyBinding;
@@ -73,7 +73,7 @@ class KnowledgeBaseBindingSummaryTest extends KnowledgeBaseTestFixture {
                 new KnowledgeBaseBindingSupport(strategyBindingDbService, strategyVersionDbService);
         crudService = new KnowledgeBaseCrudServiceImpl(knowledgeBaseDbService, kbAuditLogDbService,
                 kbFileResultDbService, mock(WbIndexSetDbService.class), mock(WbIndexVersionDbService.class),
-                accessSupport, bindingSupport, new KnowledgeConverterImpl());
+                accessSupport, bindingSupport, new KnowledgeBaseConverterImpl());
         bindingService = new KnowledgeBaseBindingServiceImpl(kbAuditLogDbService, strategyBindingDbService,
                 strategyVersionDbService, accessSupport, bindingSupport);
         login(ME, UserRole.USER);

@@ -25,7 +25,7 @@ import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParsePipeline;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.PipelineConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,9 +84,9 @@ class ParseTaskRunnerTest {
                 fileStorage, storageRouter);
         runner = new ParseTaskRunner(pipelineTaskDbService, fileResultDbService, sourceFileDbService,
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
-                        , new KnowledgeConverterImpl()),
+                        , new PipelineConverterImpl()),
                 fileStorage, parsePipeline,
-                ConfigFixtures.parse(), new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()));
+                ConfigFixtures.parse(), new StepLogPersistence(stepLogDbService, new PipelineConverterImpl()));
     }
 
     private WbPipelineTask queuedTask() {

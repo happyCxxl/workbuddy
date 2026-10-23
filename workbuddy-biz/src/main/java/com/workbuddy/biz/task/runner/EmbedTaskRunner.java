@@ -5,7 +5,7 @@ import com.workbuddy.biz.service.IndexSetService;
 import com.workbuddy.biz.service.db.WbChunkSetDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.EmbedConverter;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
@@ -74,7 +74,7 @@ public class EmbedTaskRunner {
     private final StepLogPersistence stepLogPersistence;
     private final ProductPersistence productPersistence;
     private final UpstreamProductGate upstreamProductGate;
-    private final KnowledgeConverter embedConverter;
+    private final EmbedConverter embedConverter;
 
     /**
      * 执行单个向量化任务（由消费循环提交，外层看门狗负责超时）。

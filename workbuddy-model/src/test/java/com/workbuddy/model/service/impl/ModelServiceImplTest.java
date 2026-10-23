@@ -2,7 +2,7 @@ package com.workbuddy.model.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.common.convert.ModelConverterImpl;
+import com.workbuddy.common.convert.model.ModelConverterImpl;
 import com.workbuddy.common.domain.entity.WbModel;
 import com.workbuddy.common.enums.model.AuthType;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;

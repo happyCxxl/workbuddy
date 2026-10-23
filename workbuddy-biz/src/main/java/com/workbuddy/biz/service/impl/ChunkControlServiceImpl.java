@@ -6,7 +6,7 @@ import com.workbuddy.biz.service.db.WbChunkDbService;
 import com.workbuddy.biz.service.db.WbChunkSetDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.ChunkConverter;
 import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
@@ -62,7 +62,7 @@ public class ChunkControlServiceImpl implements ChunkControlService {
     private final WbChunkSetDbService chunkSetDbService;
     private final WbChunkDbService chunkDbService;
     private final ChunkStrategyParser strategyParser;
-    private final KnowledgeConverter voConverter;
+    private final ChunkConverter voConverter;
     private final FileStorage fileStorage;
     private final FileResultAccessGuard accessGuard;
     private final UpstreamProductGate upstreamProductGate;

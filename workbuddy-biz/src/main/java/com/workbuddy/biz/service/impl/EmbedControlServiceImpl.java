@@ -6,7 +6,7 @@ import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.EmbedConverter;
 import com.workbuddy.biz.service.support.stats.EmbedStatsSupport;
 import com.workbuddy.biz.service.support.common.StageStrategySupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
@@ -57,7 +57,7 @@ public class EmbedControlServiceImpl implements EmbedControlService {
     private final WbPipelineStepLogDbService stepLogDbService;
     private final WbEmbeddingSetDbService embeddingSetDbService;
     private final WbEmbeddingRecordDbService embeddingRecordDbService;
-    private final KnowledgeConverter voConverter;
+    private final EmbedConverter voConverter;
     private final EmbedStrategyParser strategyParser;
     private final ChunkStrategyParser chunkStrategyParser;
     private final EmbedProperties embedProperties;

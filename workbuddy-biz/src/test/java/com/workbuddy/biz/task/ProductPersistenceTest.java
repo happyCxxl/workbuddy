@@ -13,7 +13,7 @@ import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.PipelineConverterImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,7 +60,7 @@ class ProductPersistenceTest {
         ChainStorageSupport chainStorage = new ChainStorageSupport(fileResultDbService, sourceFileDbService,
                 fileStorage, storageRouter);
         persistence = new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage,
-                fileStorage, new KnowledgeConverterImpl());
+                fileStorage, new PipelineConverterImpl());
     }
 
     private WbPipelineTask task() {

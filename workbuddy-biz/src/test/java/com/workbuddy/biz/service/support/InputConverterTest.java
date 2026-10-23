@@ -6,8 +6,8 @@ import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
-import com.workbuddy.common.convert.KnowledgeConverter;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.InputConverter;
+import com.workbuddy.common.convert.knowledge.InputConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 class InputConverterTest {
 
-    private final KnowledgeConverter assembler = new KnowledgeConverterImpl();
+    private final InputConverter assembler = new InputConverterImpl();
 
     /**
      * 提交记录：实体列逐列映射到 VO。

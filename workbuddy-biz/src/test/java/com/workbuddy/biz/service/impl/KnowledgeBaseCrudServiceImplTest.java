@@ -11,7 +11,7 @@ import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseAccessSupport;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.KnowledgeBaseConverterImpl;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseBindingSupport;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
@@ -85,7 +85,7 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
         service = new KnowledgeBaseCrudServiceImpl(knowledgeBaseDbService, kbAuditLogDbService,
                 kbFileResultDbService, indexSetDbService, indexVersionDbService,
                 new KnowledgeBaseAccessSupport(knowledgeBaseDbService), bindingSupport,
-                new KnowledgeConverterImpl());
+                new KnowledgeBaseConverterImpl());
         login(ME, UserRole.USER);
     }
 

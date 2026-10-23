@@ -1,12 +1,12 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.ChunkConverter;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.entity.WbChunk;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.ChunkConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class ChunkConverterTest {
 
-    private final KnowledgeConverter assembler = new KnowledgeConverterImpl();
+    private final ChunkConverter assembler = new ChunkConverterImpl();
 
     private WbChunk chunk(String id, String type, String parentChunkId, int chars) {
         WbChunk chunk = new WbChunk();

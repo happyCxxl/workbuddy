@@ -20,7 +20,7 @@ import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.storage.StorageType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.EmbedConverterImpl;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.embedding.EmbedContext;
@@ -96,7 +96,7 @@ class EmbedTaskRunnerSuccessTest {
     void setUp() {
         runner = runner(pipelineTaskDbService, fileResultDbService, sourceFileDbService, pipelineProductDbService,
                 stepLogDbService, chunkSetDbService, embeddingSetDbService, embeddingRecordDbService,
-                fileStorage, storageRouter, embedder, indexSetService, new KnowledgeConverterImpl());
+                fileStorage, storageRouter, embedder, indexSetService, new EmbedConverterImpl());
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
         lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
                 .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));

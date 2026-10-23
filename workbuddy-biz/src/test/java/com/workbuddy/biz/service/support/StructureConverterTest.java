@@ -9,9 +9,9 @@ import com.workbuddy.common.domain.parse.QualityWarning;
 import com.workbuddy.common.enums.parse.QualityWarningCode;
 import com.workbuddy.common.enums.structure.RelationType;
 import com.workbuddy.common.enums.structure.UnifiedElementType;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.StructureConverter;
 import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.StructureConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -23,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 组装详情 VO 组装器单测（纯映射无状态类，用真实实例断言）。
  */
-class StructureVoConverterTest {
+class StructureConverterTest {
 
-    private final KnowledgeConverter assembler = new KnowledgeConverterImpl();
+    private final StructureConverter assembler = new StructureConverterImpl();
 
     private UnifiedElement element(String id, String type) {
         UnifiedElement element = new UnifiedElement();

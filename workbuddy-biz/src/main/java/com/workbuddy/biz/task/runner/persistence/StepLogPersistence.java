@@ -3,7 +3,7 @@ package com.workbuddy.biz.task.runner.persistence;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.PipelineConverter;
 import com.workbuddy.common.domain.entity.WbPipelineStepLog;
 import com.workbuddy.common.domain.task.StepLogInfo;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class StepLogPersistence {
 
     private final WbPipelineStepLogDbService stepLogDbService;
 
-    private final KnowledgeConverter knowledgeConverter;
+    private final PipelineConverter knowledgeConverter;
 
 
     /** 逐条保存子步骤日志（公共字段拷贝 + 默认值补齐 + 错误文案截断）。 */
@@ -36,9 +36,7 @@ public class StepLogPersistence {
      */
     public void save(Long taskId, List<StepLogInfo> stepLogs) {
         for (StepLogInfo step : stepLogs) {
-            WbPipelineStepLog stepLog = new WbPipelineStepLog();
-            stepLog.copyFrom(step);
-            stepLog.setTaskId(taskId);
+            WbPipelineStepLog stepLog = knowledgeConverter.toStepLog(taskId, step);
             stepLog.setWarningCount(ObjectUtil.defaultIfNull(stepLog.getWarningCount(), 0));
             stepLog.setMatchedCount(ObjectUtil.defaultIfNull(stepLog.getMatchedCount(), 0));
             stepLog.setChangedCount(ObjectUtil.defaultIfNull(stepLog.getChangedCount(), 0));

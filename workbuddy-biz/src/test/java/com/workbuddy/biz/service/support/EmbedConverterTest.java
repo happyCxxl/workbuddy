@@ -1,11 +1,11 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.EmbedConverter;
 import com.workbuddy.common.domain.entity.WbEmbeddingRecord;
 import com.workbuddy.common.domain.entity.WbEmbeddingSet;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
 import com.workbuddy.biz.service.support.stats.EmbedStatsSupport;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.EmbedConverterImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class EmbedConverterTest {
 
-    private final KnowledgeConverter assembler = new KnowledgeConverterImpl();
+    private final EmbedConverter assembler = new EmbedConverterImpl();
 
     private WbEmbeddingSet embeddingSet() {
         WbEmbeddingSet set = new WbEmbeddingSet();

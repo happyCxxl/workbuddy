@@ -24,7 +24,7 @@ import com.workbuddy.common.enums.knowledge.AuditObjectType;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.knowledge.StrategyBindingSwitch;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.KnowledgeBaseConverter;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +65,7 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
 
     private final KnowledgeBaseBindingSupport bindingSupport;
 
-    private final KnowledgeConverter knowledgeBaseConverter;
+    private final KnowledgeBaseConverter knowledgeBaseConverter;
 
     /**
      * 新建知识库（默认启用状态），并写 CREATE 审计。

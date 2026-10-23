@@ -34,7 +34,7 @@ import com.workbuddy.biz.service.support.stagecontent.ChunkStageContentSupport;
 import com.workbuddy.biz.service.support.stagecontent.EmbedStageContentSupport;
 import com.workbuddy.biz.service.support.stagecontent.ParseStageContentSupport;
 import com.workbuddy.biz.service.support.stagecontent.StructureStageContentSupport;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.StructureConverterImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,10 +115,10 @@ class StageContentQueryStructureTest {
         service = new StageContentQueryServiceImpl(pipelineProductDbService,
                 chunkSetDbService, chunkDbService, embeddingSetDbService, embeddingRecordDbService,
                 fileStorage, new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService),
-                new StructureStageContentSupport(new KnowledgeConverterImpl())
-                        , new ParseStageContentSupport(new KnowledgeConverterImpl())
-                        , new EmbedStageContentSupport(new KnowledgeConverterImpl())
-                        , new ChunkStageContentSupport(new KnowledgeConverterImpl()), accessGuard);
+                new StructureStageContentSupport(new StructureConverterImpl())
+                        , new ParseStageContentSupport(new StructureConverterImpl())
+                        , new EmbedStageContentSupport(new StructureConverterImpl())
+                        , new ChunkStageContentSupport(new StructureConverterImpl()), accessGuard);
     }
 
     /**

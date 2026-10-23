@@ -1,6 +1,6 @@
 package com.workbuddy.model.service.support.catalog;
 
-import com.workbuddy.common.convert.ModelConverterImpl;
+import com.workbuddy.common.convert.model.ModelConverterImpl;
 import com.workbuddy.common.domain.model.RegisteredModel;
 import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.enums.embed.EmbedMetric;

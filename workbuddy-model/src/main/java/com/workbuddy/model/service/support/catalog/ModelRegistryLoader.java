@@ -1,6 +1,6 @@
 package com.workbuddy.model.service.support.catalog;
 
-import com.workbuddy.common.convert.ModelConverter;
+import com.workbuddy.common.convert.model.ModelConverter;
 import com.workbuddy.common.domain.model.RegisteredModel;
 import com.workbuddy.common.enums.model.ModelStatus;
 import com.workbuddy.model.db.WbModelDbService;

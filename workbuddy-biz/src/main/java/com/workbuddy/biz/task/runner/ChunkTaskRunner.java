@@ -13,7 +13,7 @@ import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkOutcome;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.entity.WbChunk;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.ChunkConverter;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
@@ -67,7 +67,7 @@ public class ChunkTaskRunner {
 
     private final UpstreamProductGate upstreamProductGate;
 
-    private final KnowledgeConverter knowledgeConverter;
+    private final ChunkConverter knowledgeConverter;
 
     /**
      * 执行单个切片任务（由消费循环提交，外层看门狗负责超时）。

@@ -21,7 +21,7 @@ import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.StructureConverterImpl;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -63,7 +63,7 @@ final class StructureControlTestFixture {
         service = new StructureControlServiceImpl(pipelineProductDbService,
                 new TaskTriggerSupport(pipelineTaskDbService, chainStorage, taskQueue),
                 new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService), fileStorage,
-                new KnowledgeConverterImpl(), accessGuard, new UpstreamProductGate(pipelineTaskDbService));
+                new StructureConverterImpl(), accessGuard, new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
         lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
                 .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));

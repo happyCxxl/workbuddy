@@ -27,7 +27,7 @@ import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.worker.indexing.ComboSnapshot;
 import com.workbuddy.worker.indexing.MilvusIndexPort;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.PipelineConverterImpl;
 
 import java.util.List;
 
@@ -62,7 +62,7 @@ final class IndexBuildFixture {
     final IndexPublishService publishService = mock(IndexPublishService.class);
 
     final IndexVersionStateSupport stateSupport =
-            new IndexVersionStateSupport(indexSetDbService, indexVersionDbService, new KnowledgeConverterImpl());
+            new IndexVersionStateSupport(indexSetDbService, indexVersionDbService, new PipelineConverterImpl());
     final IndexBuildSupport buildSupport = new IndexBuildSupport(stateSupport, indexComboReconciler,
             milvusIndexPort, indexSetDbService, indexVersionDbService, chunkSetDbService,
             strategyVersionDbService, preprocessControlService, chunkControlService, productDbService,

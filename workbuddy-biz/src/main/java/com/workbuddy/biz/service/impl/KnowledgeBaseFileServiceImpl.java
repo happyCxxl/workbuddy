@@ -7,10 +7,10 @@ import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.db.WbSubmitLogDbService;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.InputConverter;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseAccessSupport;
-import com.workbuddy.common.convert.FileConverter;
-import com.workbuddy.common.convert.SystemConverter;
+import com.workbuddy.common.convert.file.FileConverter;
+import com.workbuddy.common.convert.system.SystemConverter;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
@@ -87,7 +87,7 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
 
     private final TransactionTemplate transactionTemplate;
 
-    private final KnowledgeConverter inputVoAssembler;
+    private final InputConverter inputVoAssembler;
 
 
     private final KnowledgeBaseAccessSupport accessSupport;

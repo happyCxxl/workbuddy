@@ -9,7 +9,7 @@ import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.EmbedConverter;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
@@ -33,7 +33,7 @@ import com.workbuddy.worker.chunking.strategy.ChunkStrategyParser;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.embedding.EmbedderPort;
 import com.workbuddy.worker.embedding.strategy.EmbedStrategyParser;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.PipelineConverterImpl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ final class EmbedTaskRunnerFixtures {
                                   StorageRouter storageRouter,
                                   EmbedderPort embedder,
                                   IndexSetService indexSetService,
-                                  KnowledgeConverter embedConverter) {
+                                  EmbedConverter embedConverter) {
         EmbedProperties embedProperties = ConfigFixtures.embed();
         // 存储守卫用真实实例 + mock 依赖：链类型取不到（默认 mock 返回 null）时不拦
         ChainStorageSupport chainStorage = new ChainStorageSupport(fileResultDbService, sourceFileDbService,
@@ -76,9 +76,9 @@ final class EmbedTaskRunnerFixtures {
                 new EmbedStrategyParser(embedProperties),
                 new ChunkStrategyParser(ConfigFixtures.chunk()),
                 embedProperties, ConfigFixtures.chunk(),
-                new StepLogPersistence(stepLogDbService, new KnowledgeConverterImpl()),
+                new StepLogPersistence(stepLogDbService, new PipelineConverterImpl()),
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
-                        , new KnowledgeConverterImpl()),
+                        , new PipelineConverterImpl()),
                 new UpstreamProductGate(pipelineTaskDbService),
                 embedConverter);
     }

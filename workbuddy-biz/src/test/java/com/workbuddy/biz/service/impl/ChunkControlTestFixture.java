@@ -18,7 +18,7 @@ import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.testkit.SecurityTestSupport;
-import com.workbuddy.common.convert.KnowledgeConverterImpl;
+import com.workbuddy.common.convert.knowledge.ChunkConverterImpl;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.entity.WbChunk;
@@ -94,7 +94,7 @@ final class ChunkControlTestFixture {
                 new TaskDetailSupport(pipelineTaskDbService, stepLogDbService, pipelineProductDbService),
                 chunkSetDbService, chunkDbService,
                 new ChunkStrategyParser(ConfigFixtures.chunk()),
-                new KnowledgeConverterImpl(), fileStorage, accessGuard, new UpstreamProductGate(pipelineTaskDbService));
+                new ChunkConverterImpl(), fileStorage, accessGuard, new UpstreamProductGate(pipelineTaskDbService));
         // 上游产物的产出任务默认成功：门禁放行；不放行的状态由各用例自行改写（宽松桩）
         lenient().when(pipelineTaskDbService.getById(UPSTREAM_TASK_ID))
                 .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));

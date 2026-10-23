@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.workbuddy.common.domain.entity.WbModel;
-import com.workbuddy.common.convert.ModelConverter;
+import com.workbuddy.common.convert.model.ModelConverter;
 import com.workbuddy.common.dto.request.model.ModelQueryDTO;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.model.ModelStatus;

@@ -7,7 +7,7 @@ import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.common.convert.KnowledgeConverter;
+import com.workbuddy.common.convert.knowledge.StructureConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import com.workbuddy.biz.service.support.artifact.StageArtifactReader;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StructureStageContentSupport {
 
-    private final KnowledgeConverter knowledgeConverter;
+    private final StructureConverter knowledgeConverter;
 
     /**
      * 统一文档产物 → 内容条目。
