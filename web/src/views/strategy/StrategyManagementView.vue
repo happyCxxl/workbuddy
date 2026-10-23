@@ -642,8 +642,25 @@ async function toggleActive(): Promise<void> {
     return;
   }
   const target = selected.value;
+  const disabling = isStrategyActive(target);
+  const strategyName = `${target.name} ${target.version}`;
+  const typeLabel = strategyTypeLabel(target.type);
+  const confirmed = await ElMessageBox.confirm(
+    disabling
+      ? `确认停用${typeLabel}策略「${strategyName}」？停用后绑定该版本的知识库在触发相关环节时会因策略未启用而失败，可随时重新启用`
+      : `确认启用${typeLabel}策略「${strategyName}」？启用后绑定该版本的知识库恢复可用`,
+    disabling ? '停用确认' : '启用确认',
+    {
+      type: 'warning',
+      confirmButtonText: disabling ? '停用' : '启用',
+      cancelButtonText: '取消',
+    },
+  ).catch(() => false);
+  if (!confirmed) {
+    return;
+  }
   try {
-    if (isStrategyActive(target)) {
+    if (disabling) {
       await updateStrategyVersionDisable(target.id);
       ElMessage.success(`已停用 ${target.name} ${target.version}`);
     } else {
@@ -747,6 +764,20 @@ async function bind(knowledgeBaseId: string): Promise<void> {
 }
 
 async function unbind(knowledgeBaseId: string): Promise<void> {
+  const kbName =
+    knowledgeBases.value.find((kb) => kb.id === knowledgeBaseId)?.name ?? knowledgeBaseId;
+  const confirmed = await ElMessageBox.confirm(
+    `确认解绑知识库「${kbName}」与${strategyTypeLabel(activeType.value)}策略的绑定？解绑后该知识库没有该环节的策略，相关环节会拒绝触发`,
+    '解绑确认',
+    {
+      type: 'warning',
+      confirmButtonText: '解绑',
+      cancelButtonText: '取消',
+    },
+  ).catch(() => false);
+  if (!confirmed) {
+    return;
+  }
   try {
     await updateStrategyBinding(knowledgeBaseId, activeType.value, null);
     ElMessage.success('已解绑');

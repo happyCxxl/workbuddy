@@ -383,7 +383,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { addModel, getModelPage, updateModel, updateModelStatus } from '@/api/model';
@@ -754,6 +754,20 @@ async function handleSubmit(): Promise<void> {
 /** 启停：目标状态取反，成功后刷新清单 */
 async function handleToggleStatus(item: ModelItem): Promise<void> {
   const enabled = item.status === MODEL_STATUS.ENABLED;
+  const confirmed = await ElMessageBox.confirm(
+    enabled
+      ? `确认停用模型「${item.vendorName} / ${item.modelKey}」？停用后该模型不再参与路由与调用，可随时重新启用`
+      : `确认启用模型「${item.vendorName} / ${item.modelKey}」？启用后该模型重新进入可用清单`,
+    enabled ? '停用确认' : '启用确认',
+    {
+      type: 'warning',
+      confirmButtonText: enabled ? '停用' : '启用',
+      cancelButtonText: '取消',
+    },
+  ).catch(() => false);
+  if (!confirmed) {
+    return;
+  }
   togglingId.value = item.id;
   try {
     await updateModelStatus(item.id, enabled ? MODEL_STATUS.DISABLED : MODEL_STATUS.ENABLED);
