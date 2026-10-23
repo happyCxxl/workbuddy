@@ -6,7 +6,7 @@ import 'element-plus/dist/index.css';
 import 'element-plus/theme-chalk/dark/css-vars.css';
 
 import App from './App.vue';
-import router from './router';
+import { router } from './router';
 import '@/styles/tokens.css';
 import '@/styles/element-plus.css';
 import '@/styles/page-shell.css';

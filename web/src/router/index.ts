@@ -8,7 +8,7 @@ const HOME_PATH = '/home';
 
 // 路由表：页面按规范 §7 懒加载；path 用 kebab-case，name 与组件名保持一致；
 // meta.title 是浏览器页签的页面名（与平台名合成完整标题，见 utils/page-title.ts）
-const router = createRouter({
+export const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
@@ -120,4 +120,4 @@ router.afterEach((to) => {
   setRouteTitle(to.meta.title);
 });
 
-export default router;
+// 路由实例为命名导出（VUE-LANG-001），业务代码默认导出清零
