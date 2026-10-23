@@ -101,7 +101,7 @@ class AuthConfigCheckTest {
     void shouldRejectLegacyPlaceholderSecret() {
         WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> new AuthConfigCheck(
-                        jwt("knowledge-jwt-secret-change-me-in-production", 1, 30), guard()).check(next));
+                        jwt("workbuddy-jwt-secret-change-me-in-production", 1, 30), guard()).check(next));
 
         assertTrue(error.getMessage().contains("占位"), () -> "message=" + error.getMessage());
         assertFalse(proceeded.get(), "失败即止，不推进链");

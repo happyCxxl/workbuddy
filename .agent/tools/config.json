@@ -7,8 +7,5 @@
     "tableTag": "el-table",
     "columnTag": "el-table-column",
     "routerActiveClasses": ["router-link-active", "router-link-exact-active"]
-  },
-  "java": {
-    "maxFileLines": 400
   }
 }

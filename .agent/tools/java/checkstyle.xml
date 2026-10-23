@@ -39,5 +39,6 @@
         <module name="ParameterName"/>
         <module name="TypeName"/>
         <module name="ConstantName"/>
+        <module name="PackageName"/>
     </module>
 </module>
