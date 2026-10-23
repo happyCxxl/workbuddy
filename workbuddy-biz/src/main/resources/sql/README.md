@@ -6,7 +6,7 @@
 
 1. `DROP DATABASE IF EXISTS workbuddy` + `CREATE DATABASE workbuddy` + `USE workbuddy`——库名固定为 `workbuddy`，与
    `../../../../src/main/resources/application.yml` 中 `spring.datasource.url` 一致；
-2. 按依赖顺序建 21 张表（被引用的表在前，无外键约束）；
+2. 按依赖顺序建 23 张表（被引用的表在前，无外键约束）；
 3. 写入应用运行必需的初始数据（4 条环节策略版本 + 1 个管理员账号）。
 
 **脚本会删除同名库，库内原有数据全部丢弃；可重复执行，每次执行结果一致。**
@@ -25,6 +25,9 @@ mysql -h localhost -P 3306 -uroot -proot123 < workbuddy-biz/src/main/resources/s
 mysql -h localhost -P 3306 -uroot -proot123 < workbuddy-biz/src/main/resources/sql/init.sql
 ```
 
+> 以上 `-proot123` 是默认密码（仅供本机开发，COMMON-SEC-01 边界）；设置了环境变量 `WORKBUDDY_DB_PASSWORD` 时改用
+> `-p$env:WORKBUDDY_DB_PASSWORD`（PowerShell）或 `-p$WORKBUDDY_DB_PASSWORD`（bash）。
+
 Docker 环境（`docker/docker-compose.yml` 把本目录挂载到 MySQL 的 `/docker-entrypoint-initdb.d`）：
 
 ```powershell
@@ -35,7 +38,7 @@ docker compose up -d
 
 也可直接在客户端（Navicat / DataGrip / IDEA 数据库工具）里整体执行本文件。
 
-## 三、21 张表
+## 三、23 张表
 
 | #  | 表名                                     | 一句话职责                                                                      |
 |----|------------------------------------------|---------------------------------------------------------------------------------|
@@ -60,6 +63,8 @@ docker compose up -d
 | 19 | `wb_user`                                | 用户：登录账号、角色与令牌版本                                                  |
 | 20 | `wb_system_setting`                      | 系统设置：键值形态的单行配置，表留在库里备用                                    |
 | 21 | `wb_storage_source`                      | 存储数据源：一行一个实例（含连接参数），`is_current` 那一行决定新对象的写入位置 |
+| 22 | `wb_model`                              | 模型：供应商、模型键与启停状态，模型池路由与调用账本的基础                       |
+| 23 | `wb_model_call`                         | 模型调用明细：一次尝试一行（成功失败都记），只插不改                              |
 
 ## 四、初始数据
 

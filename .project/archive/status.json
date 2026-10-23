@@ -45,8 +45,8 @@
     "06": {
       "status": "已复核",
       "reviewed": "2026-10-23",
-      "baseline": "750d4a18",
-      "note": "补 WbModelCall 表（1505e711 引入时未同步）；业务表计数 21→22"
+      "baseline": "f700fa4c",
+      "note": "补 WbModelCall，业务表计数修正为 23（wb_system_setting 仅建表、无实体与 Mapper）；sql/README 同步补 wb_model/wb_model_call"
     },
     "07": {
       "status": "已复核",

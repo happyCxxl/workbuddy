@@ -29,7 +29,8 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/workbuddy?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: root123
+    # 默认密码 root123 仅供本机 docker 开发（COMMON-SEC-01 边界）；对外部署必须用环境变量 WORKBUDDY_DB_PASSWORD 覆盖
+    password: ${WORKBUDDY_DB_PASSWORD:root123}
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 2

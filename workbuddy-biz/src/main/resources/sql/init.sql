@@ -549,6 +549,8 @@ VALUES ('RETRIEVAL', 'hybrid-rrf-k60-top10-parent', 'v1',
 -- 存储数据源：MinIO 与本地磁盘两行；当前启用写在 is_current 上（全表至多一行为 1）
 -- 两列探测结论留空表示尚未探测，应用启动时探活当前启用那行并回写
 -- 表为空或没有可用当前行时应用启动失败，不在运行期按配置补行
+-- MinIO 行凭据与 docker-compose 的 MinIO 根凭据一致（默认 minioadmin 仅供本机开发，COMMON-SEC-01 边界）；
+-- 用环境变量覆盖 compose 凭据时，本行必须同步修改
 INSERT INTO wb_storage_source (id, name, storage_type, config_json, is_current, status, del_flag)
 VALUES (1, 'MinIO', 'minio',
         '{"endpoint":"http://localhost:9000","accessKey":"minioadmin","secretKey":"minioadmin","fileBucket":"files","artifactBucket":"artifacts"}',

@@ -41,7 +41,7 @@ Linux 宿主：`./volumes` 下目录由容器以 root 创建，宿主用户无�
 ## 启动
 
 ```powershell
-cd D:\projects-personal\knowledge\docker
+cd docker
 docker compose up -d
 ```
 
@@ -53,10 +53,10 @@ docker compose up -d
 
 | 组件         | 端口                            | 账号                    | 说明                                                                                     |
 |--------------|---------------------------------|-------------------------|------------------------------------------------------------------------------------------|
-| MySQL 8      | 3306                            | root / root123          | 首次启动自动建库 `workbuddy` + 全部表 + 策略 seed                                        |
+| MySQL 8      | 3306                            | root / root123（默认值仅供本机开发，环境变量 MYSQL_ROOT_PASSWORD 可覆盖） | 首次启动自动建库 `workbuddy` + 全部表 + 策略 seed                                        |
 | Redis 7      | 6379                            | 无密码                  | 任务唤醒队列 / 启动补偿分布式锁                                                          |
 | Milvus 2.5.5 | 19530（gRPC）/ 9091（健康检查） | —                       | 向量库；配套 etcd + minio 内部容器；应用启动时缺库自动建 `knowledge`（只自带 `default`） |
-| MinIO        | 9000（S3）/ 9001（控制台）      | minioadmin / minioadmin | 文件服务模块专用对象存储（`workbuddy-minio`）；Milvus 自用的 minio 不对外映射端口        |
+| MinIO        | 9000（S3）/ 9001（控制台）      | minioadmin / minioadmin（默认值仅供本机开发，环境变量 WORKBUDDY_MINIO_ROOT_* 可覆盖） | 文件服务模块专用对象存储（`workbuddy-minio`）；Milvus 自用的 minio 不对外映射端口        |
 
 与 `application.yml` 的对应关系：
 

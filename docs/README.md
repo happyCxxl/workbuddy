@@ -177,7 +177,7 @@
 
 ### 四、登录态与鉴权
 
-- 令牌是 JWT（Hutool 签发，HS256），载荷为 `sub`（用户 ID）、`username`、`role`、`tv`（令牌版本）、`exp`。有效期分两档，登录请求用 `remember` 选档：不勾选「记住我」按 `knowledge.auth.jwt.ttl-days`（当前 1 天），勾选按 `ttl-days-remember`（当前 30 天）。密钥来自 `knowledge.auth.jwt.secret`（当前是占位值 `knowledge-jwt-secret-change-me-in-production`，上生产必须替换）。
+- 令牌是 JWT（Hutool 签发，HS256），载荷为 `sub`（用户 ID）、`username`、`role`、`tv`（令牌版本）、`exp`。有效期分两档，登录请求用 `remember` 选档：不勾选「记住我」按 `workbuddy.auth.jwt.ttl-days`（当前 1 天），勾选按 `ttl-days-remember`（当前 30 天）。密钥来自 `workbuddy.auth.jwt.secret`：仓库默认留空，经环境变量 `WORKBUDDY_JWT_SECRET` 或本机 `application-local.yml` 提供；空值、旧版占位串、短于 32 字符都会在启动期被拒绝（`COMMON-SEC-01`）。
 - 令牌是无状态的，签发后服务端无法提前作废单张令牌（只能靠 `token_version` 全量失效）；短期档到期即需重新登录，不随"还在用"自动续期（规则见 `COMMON-SEC-20`）。
 - 前端把令牌存进 localStorage（勾「记住我」）或 sessionStorage，并把登录响应里的用户字段存成同一档的「用户快照」（键 `knowledge-user`：`id` / `username` / `displayName` / `email` / `phone` / `status` / `role`）。界面展示与菜单渲染只读快照，令牌载荷仅用于判断过期，真正的鉴权始终在后端。store 初始化时会直接丢弃过期令牌。
 - 后端 `JwtAuthFilter`（`workbuddy-auth` 的 `security` 包）每个请求都过一遍：验签 → 查过期 → 比对令牌版本（库中当前值 vs 载荷 `tv`）。改密码、改角色、停用、删除都会让该账号已签发的令牌立即失效，代价是每个带令牌请求多一次主键查询。
