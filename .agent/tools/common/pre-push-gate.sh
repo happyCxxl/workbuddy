@@ -61,6 +61,12 @@ fi
 # total 必须在首个 run_step 之前定稿，进度条全程显示同一个分母。
 total=$((total + 1)) # 中间产物
 total=$((total + 1)) # 规范边界
+# 项目层验证器：仓库自带 .project/tools/check-project-docs.mjs 时每次推送都跑（档案漂移兜底）。
+has_project_docs=0
+if [ -f "$root/.project/tools/check-project-docs.mjs" ]; then
+  has_project_docs=1
+  total=$((total + 1))
+fi
 
 report_fail() {
   echo ""
@@ -91,6 +97,14 @@ fi
 run_step "规范边界：node .agent/tools/common/check-scope.mjs"
 if node "$root/.agent/tools/common/check-scope.mjs"; then :; else
   report_fail "$step" "规范引用了 .agent 之外的路径" "node .agent/tools/common/check-scope.mjs"
+fi
+
+# 项目档案：仓库自带项目层验证器则运行（存在性探测，不写死项目语义）
+if [ "$has_project_docs" -eq 1 ]; then
+  run_step "项目档案：node .project/tools/check-project-docs.mjs"
+  if node "$root/.project/tools/check-project-docs.mjs"; then :; else
+    report_fail "$step" "项目档案与仓库现状不一致" "node .project/tools/check-project-docs.mjs"
+  fi
 fi
 
 if [ "$has_text" -gt 0 ]; then

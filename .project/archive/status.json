@@ -44,9 +44,9 @@
     },
     "06": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "d11aac77",
-      "note": "存储布局改为 infra 的 StorageProvider 与 Milvus 适配"
+      "reviewed": "2026-10-23",
+      "baseline": "750d4a18",
+      "note": "补 WbModelCall 表（1505e711 引入时未同步）；业务表计数 21→22"
     },
     "07": {
       "status": "已复核",

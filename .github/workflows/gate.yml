@@ -44,6 +44,9 @@ jobs:
       - name: 中间产物不入库
         run: node .agent/tools/common/check-artifacts.mjs
 
+      - name: 项目档案漂移（仓库自带项目层验证器则运行）
+        run: if [ -f .project/tools/check-project-docs.mjs ]; then node .project/tools/check-project-docs.mjs; fi
+
       - name: Java 形态检查
         run: node .agent/tools/java/check-java-conventions.mjs
 
