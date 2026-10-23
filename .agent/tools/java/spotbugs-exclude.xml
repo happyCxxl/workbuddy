@@ -40,4 +40,12 @@
         <Field name="size"/>
         <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>
+    <!-- COMMON-ANTI-05：图片字节字段由使用方写入、不靠构造器初始化；判空统一走 NullUtil，
+         SpotBugs 不识别其 null 语义，把 isNotNull 之后的 length 访问判成"未初始化字段被解引用"。
+         判空语义与原生 null 比较运行期等价，且 && 短路保证解引用时必非空。 -->
+    <Match>
+        <Class name="com.workbuddy.common.domain.model.vision.VisionRequest"/>
+        <Method name="hasBytes"/>
+        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+    </Match>
 </FindBugsFilter>

@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-23",
-      "baseline": "4b056060",
-      "note": "超长文件与 @Mock 信号全部论证登记：KnowledgeConverter 已按功能域拆分；19 个 @Mock>5 测试类统一登记（真实依赖面、暂不拆）；编排层日志前缀已清零（非编排层 45 处登记）"
+      "baseline": "a61c9d8d",
+      "note": "SpotBugs 排除清单补 COMMON-ANTI-05 的假阳性豁免边界（VisionRequest.hasBytes）；质量数据未变，复核基线随门禁配置变更前移"
     },
     "01": {
       "status": "已复核",
