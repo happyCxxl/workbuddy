@@ -8,7 +8,7 @@ import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
-import com.workbuddy.biz.service.support.common.TaskDetailSupport;
+import com.workbuddy.biz.service.support.task.TaskDetailSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.biz.task.support.TaskQueueSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;

@@ -1,4 +1,4 @@
-package com.workbuddy.biz.service.support.common;
+package com.workbuddy.biz.service.support.strategy;
 
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;

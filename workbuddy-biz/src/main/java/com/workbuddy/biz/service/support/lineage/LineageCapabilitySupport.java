@@ -1,4 +1,4 @@
-package com.workbuddy.biz.service.support.common;
+package com.workbuddy.biz.service.support.lineage;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.CapabilitySnapshot;

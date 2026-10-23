@@ -6,7 +6,7 @@ import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.stats.StatsSupport;
 import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
 import com.workbuddy.common.convert.knowledge.StructureConverter;
-import com.workbuddy.biz.service.support.common.TaskDetailSupport;
+import com.workbuddy.biz.service.support.task.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.biz.task.UpstreamProductGate;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;

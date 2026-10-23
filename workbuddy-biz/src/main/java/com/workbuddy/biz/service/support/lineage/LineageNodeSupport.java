@@ -26,7 +26,6 @@ import com.workbuddy.biz.service.support.stats.StructureStatsSupport;
 import com.workbuddy.biz.service.support.stats.PreprocessStatsSupport;
 import com.workbuddy.biz.service.support.stats.ChunkStatsSupport;
 import com.workbuddy.biz.service.support.artifact.LineageArtifactReader;
-import com.workbuddy.biz.service.support.common.LineageCapabilitySupport;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;

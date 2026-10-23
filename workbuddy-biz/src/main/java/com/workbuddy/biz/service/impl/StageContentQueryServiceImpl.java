@@ -15,7 +15,7 @@ import com.workbuddy.biz.service.support.stagecontent.PreprocessStageContentSupp
 import com.workbuddy.biz.service.support.artifact.StageArtifactReader;
 import com.workbuddy.biz.service.support.stagecontent.StageContentPaginationSupport;
 import com.workbuddy.biz.service.support.stagecontent.StructureStageContentSupport;
-import com.workbuddy.biz.service.support.common.TaskDetailSupport;
+import com.workbuddy.biz.service.support.task.TaskDetailSupport;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.storage.ObjectRef;

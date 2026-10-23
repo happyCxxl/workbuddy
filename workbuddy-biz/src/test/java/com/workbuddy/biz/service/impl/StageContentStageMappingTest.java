@@ -7,7 +7,7 @@ import com.workbuddy.biz.service.db.WbEmbeddingRecordDbService;
 import com.workbuddy.biz.service.db.WbEmbeddingSetDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
-import com.workbuddy.biz.service.support.common.TaskDetailSupport;
+import com.workbuddy.biz.service.support.task.TaskDetailSupport;
 import com.workbuddy.common.domain.entity.WbChunk;
 import com.workbuddy.common.domain.entity.WbChunkSet;
 import com.workbuddy.common.domain.entity.WbEmbeddingRecord;

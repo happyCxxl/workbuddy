@@ -3,7 +3,7 @@ package com.workbuddy.biz.service.impl;
 import com.workbuddy.biz.service.ParseControlService;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.stats.ParseStatsSupport;
-import com.workbuddy.biz.service.support.common.TaskDetailSupport;
+import com.workbuddy.biz.service.support.task.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;

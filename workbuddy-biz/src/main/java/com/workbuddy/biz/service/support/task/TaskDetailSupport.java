@@ -1,4 +1,4 @@
-package com.workbuddy.biz.service.support.common;
+package com.workbuddy.biz.service.support.task;
 
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;

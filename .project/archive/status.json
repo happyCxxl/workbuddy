@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-23",
-      "baseline": "953ba984",
-      "note": "TaskTriggerSupport 入队失败日志按行宽换行（门禁修复）；异常类型、错误码与日志内容未变"
+      "baseline": "40cf1fd6",
+      "note": "support/common 三助手按关注点迁包（lineage / strategy / task）；仅包名与 import 变化，行为与依赖方向未变"
     }
   }
 }
