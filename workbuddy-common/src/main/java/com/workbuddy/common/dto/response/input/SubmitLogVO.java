@@ -38,6 +38,9 @@ public class SubmitLogVO {
     /** 失败原因（PASS 时为空） */
     private String failReason;
 
+    /** 失败原因中文名（PASS 时为空；由 failReason 映射，前端直接展示） */
+    private String failReasonLabel;
+
     /** 提交时间 */
     private LocalDateTime createTime;
 }

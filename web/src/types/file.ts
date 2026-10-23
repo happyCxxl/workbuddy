@@ -16,6 +16,8 @@ export interface SubmitLog {
   status: string;
   /** 失败原因（PASS 时为空） */
   failReason: string | null;
+  /** 失败原因中文名（PASS 时为空；后端下发，直接展示） */
+  failReasonLabel: string | null;
   createTime: string | null;
 }
 

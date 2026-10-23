@@ -4,7 +4,6 @@ import cn.hutool.core.util.ObjectUtil;
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.input.FileValidationResult;
 import com.workbuddy.common.enums.input.FileFormat;
-import com.workbuddy.common.enums.input.FileValidationFailLabels;
 import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
@@ -53,30 +52,36 @@ public class FileServiceImpl implements FileService {
 
         // ① 扩展名白名单（廉价拦截，不读流）
         FileFormat declared = FileFormat.ofExtension(FileUtil.extensionOf(fileName));
-        reject(NullUtil.isNull(declared) || !FileUtil.whitelisted(declared, enabled),
-                FileValidationFailReason.FORMAT_NOT_ALLOWED);
+        ThrowUtil.throwIf(NullUtil.isNull(declared) || !FileUtil.whitelisted(declared, enabled),
+                ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.FORMAT_NOT_ALLOWED.label());
         // ② 大小统计与上限（单遍读流）
         long size;
         try (InputStream in = file.getInputStream()) {
             size = FileUtil.count(in, fileProperties.getMaxSize());
         } catch (IOException e) {
-            throw corrupted();
+            throw new WorkbuddyException(ErrorCode.FILE_UPLOAD_REJECTED,
+                    FileValidationFailReason.FILE_CORRUPTED.label());
         }
-        reject(size > fileProperties.getMaxSize(), FileValidationFailReason.FILE_TOO_LARGE);
+        ThrowUtil.throwIf(size > fileProperties.getMaxSize(),
+                ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.FILE_TOO_LARGE.label());
         // ③ 空文件
-        reject(FileUtil.isEmpty(size), FileValidationFailReason.FILE_CORRUPTED);
+        ThrowUtil.throwIf(FileUtil.isEmpty(size),
+                ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.FILE_CORRUPTED.label());
         // ④ 魔数识别与白名单（不信扩展名）
         String mediaType;
         try (InputStream in = file.getInputStream()) {
             mediaType = FileUtil.detect(in);
         } catch (IOException e) {
-            throw corrupted();
+            throw new WorkbuddyException(ErrorCode.FILE_UPLOAD_REJECTED,
+                    FileValidationFailReason.FILE_CORRUPTED.label());
         }
-        reject(FileUtil.isProtected(mediaType), FileValidationFailReason.FILE_ENCRYPTED);
-        reject(FileUtil.isReservedImage(mediaType), FileValidationFailReason.IMAGE_OCR_RESERVED);
+        ThrowUtil.throwIf(FileUtil.isProtected(mediaType),
+                ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.FILE_ENCRYPTED.label());
+        ThrowUtil.throwIf(FileUtil.isReservedImage(mediaType),
+                ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.IMAGE_OCR_RESERVED.label());
         FileFormat real = FileUtil.ofFormat(mediaType);
-        reject(NullUtil.isNull(real) || !FileUtil.whitelisted(real, enabled),
-                FileValidationFailReason.FORMAT_NOT_ALLOWED);
+        ThrowUtil.throwIf(NullUtil.isNull(real) || !FileUtil.whitelisted(real, enabled),
+                ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.FORMAT_NOT_ALLOWED.label());
         return fileStorage.putFile(file);
     }
 
@@ -186,17 +191,5 @@ public class FileServiceImpl implements FileService {
             }
             throw e;
         }
-    }
-
-    /** 条件成立时按上传拒绝码抛出（原因入 detail）；委托 {@link ThrowUtil} 统一构造业务异常 */
-    private static void reject(boolean condition, FileValidationFailReason reason) {
-        ThrowUtil.throwIf(condition, ErrorCode.FILE_UPLOAD_REJECTED,
-                FileValidationFailLabels.label(reason.name()));
-    }
-
-    /** 上传流读取失败按文件损坏拒绝 */
-    private static WorkbuddyException corrupted() {
-        return new WorkbuddyException(ErrorCode.FILE_UPLOAD_REJECTED,
-                FileValidationFailLabels.label(FileValidationFailReason.FILE_CORRUPTED.name()));
     }
 }

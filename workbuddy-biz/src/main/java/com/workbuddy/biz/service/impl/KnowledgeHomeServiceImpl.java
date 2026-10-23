@@ -17,7 +17,7 @@ import com.workbuddy.common.dto.request.home.HomeRecentSubmitQueryDTO;
 import com.workbuddy.common.dto.response.home.HomeRecentSubmitVO;
 import com.workbuddy.common.dto.response.home.HomeSummaryVO;
 import com.workbuddy.common.enums.input.FileFormat;
-import com.workbuddy.common.enums.input.FileValidationFailLabels;
+import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.strategy.StrategyType;
 import com.workbuddy.common.error.ErrorCode;
@@ -135,7 +135,7 @@ public class KnowledgeHomeServiceImpl implements KnowledgeHomeService {
         vo.setFileType(resolveFileType(row.getFileId(), mimeTypeByFileId));
         vo.setStatus(row.getStatus());
         vo.setFailReason(row.getFailReason());
-        vo.setFailReasonLabel(FileValidationFailLabels.label(row.getFailReason()));
+        vo.setFailReasonLabel(FileValidationFailReason.labelOf(row.getFailReason()));
         vo.setCreateTime(row.getCreateTime());
         return vo;
     }

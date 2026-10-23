@@ -28,7 +28,7 @@ class InputConverterTest {
     /**
      * 提交记录：实体列逐列映射到 VO。
      *
-     * <p>守护 {@code toSubmitLogVO}：知识库/文件/指纹/时间任一列漏搬即失败。
+     * <p>守护 {@code toSubmitLogVO}：知识库/文件/指纹/失败原因中文/时间任一列漏搬即失败。
      */
     @Test
     void toSubmitLogShouldCarryEveryColumn() {
@@ -45,6 +45,7 @@ class InputConverterTest {
         assertEquals(10L, vo.getFileResultId());
         assertEquals("FAIL", vo.getStatus());
         assertEquals("FORMAT_NOT_ALLOWED", vo.getFailReason());
+        assertEquals("格式不在允许范围", vo.getFailReasonLabel());
         assertEquals(log.getCreateTime(), vo.getCreateTime());
     }
 

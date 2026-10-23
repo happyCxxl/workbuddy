@@ -313,7 +313,8 @@ async function startImport(): Promise<void> {
 
       if (result.submitLog.status === 'FAIL') {
         item.state = 'failed';
-        item.reason = result.submitLog.failReason ?? '后端校验未通过';
+        item.reason =
+          result.submitLog.failReasonLabel ?? result.submitLog.failReason ?? '后端校验未通过';
         failed += 1;
       } else {
         item.state = 'passed';

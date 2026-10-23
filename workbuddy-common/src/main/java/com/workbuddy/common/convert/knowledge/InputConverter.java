@@ -7,21 +7,24 @@ import com.workbuddy.common.domain.entity.WbSubmitLog;
 import com.workbuddy.common.dto.response.input.FileResultVO;
 import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
+import com.workbuddy.common.enums.input.FileValidationFailReason;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
  * 文件提交转换：提交日志/文件结果 → VO 与提交响应。只搬字段，不查库、不算统计。
  */
-@Mapper(config = BaseInfoConvertConfig.class)
+@Mapper(config = BaseInfoConvertConfig.class, imports = FileValidationFailReason.class)
 public interface InputConverter {
 
     /**
-     * 提交日志实体 → 提交记录 VO（字段同名一一映射）。
+     * 提交日志实体 → 提交记录 VO（字段同名一一映射；失败原因额外下发中文名）。
      *
      * @param log 提交日志实体
      * @return 提交记录 VO
      */
+    @Mapping(target = "failReasonLabel",
+            expression = "java(FileValidationFailReason.labelOf(log.getFailReason()))")
     SubmitLogVO toSubmitLogVO(WbSubmitLog log);
 
     /**
