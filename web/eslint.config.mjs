@@ -55,7 +55,7 @@ export default [
       },
     },
     rules: {
-      // 语言底线（§4）：const 优先 / 禁 var / 大括号必加 / 严格相等 / 字面量
+      // 语言底线（VUE-MACHINE-001 / VUE-STYLE-001）：const 优先 / 禁 var / 大括号必加 / 严格相等 / 字面量
       'no-var': 'error',
       'prefer-const': 'error',
       curly: ['error', 'all'],
@@ -65,24 +65,24 @@ export default [
       'no-array-constructor': 'error',
       quotes: ['error', 'single', { avoidEscape: true }],
       semi: ['error', 'always'],
-      // 调试日志不得提交（§4.9，【应该】级先告警）
+      // 调试日志不得提交（见规范「命名」【应该】：调试输出不得提交，先告警）
       'no-console': 'warn',
     },
   },
   {
     files: ['src/**/*.{ts,vue}'],
     rules: {
-      // §2.3/§8：类型化接口层，禁止 any
+      // VUE-API-002：类型化接口层，禁止 any
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': 'error',
-      // 接口层收口（§2.3）：HTTP 库只允许出现在 src/api 内
+      // 接口层收口（VUE-API-001）：HTTP 库只允许出现在 src/api 内
       'no-restricted-imports': [
         'error',
         {
-          paths: [{ name: 'axios', message: 'HTTP 调用只允许写在 src/api/ 目录（见规范 §2.3）' }],
+          paths: [{ name: 'axios', message: 'HTTP 调用只允许写在 src/api/ 目录（VUE-API-001）' }],
         },
       ],
-      // §5.12：模板组件名 PascalCase + 自闭合
+      // VUE-COMP-007：模板组件名 PascalCase + 自闭合
       'vue/component-name-in-template-casing': ['error', 'PascalCase'],
       'vue/html-self-closing': [
         'error',
@@ -94,7 +94,7 @@ export default [
       'vue/singleline-html-element-content-newline': 'off',
       'vue/html-closing-bracket-newline': 'off',
       'vue/html-indent': 'off',
-      // §5.12：元素 attribute 顺序（【应该】级告警）
+      // 元素 attribute 顺序（见规范「组件」【应该】：标识→绑定→事件，告警级）
       'vue/attributes-order': 'warn',
       /*
        * 指令名拼错（v-loadin 之类）在别处都查不出来：`v-loading` 由
@@ -124,7 +124,7 @@ export default [
       '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
       '@typescript-eslint/no-unnecessary-template-expression': 'error',
       '@typescript-eslint/prefer-optional-chain': 'error',
-      // §3：命名口径（变量/函数 camelCase、常量 UPPER_CASE、类型 PascalCase）与嵌套 ≤3 层
+      // VUE-NAME-001 / VUE-NAME-005：命名口径（变量/函数 camelCase、常量 UPPER_CASE、类型 PascalCase）与嵌套 ≤3 层
       '@typescript-eslint/naming-convention': [
         'error',
         { selector: 'variable', format: ['camelCase', 'UPPER_CASE'] },

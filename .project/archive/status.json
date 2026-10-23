@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-23",
-      "baseline": "25335b0b",
-      "note": "规范整理：索引与检查手段合并、判定表补齐、规则编号去重；用例规模与门禁口径未变"
+      "baseline": "05317a34",
+      "note": "基线重算：1110 文件、WARN 39、349/320 测试文件、门禁命令 mvn -o -q verify；快照补 check-scope/check-modules/check-project-docs；风险表补超长文件、日志前缀、SEC-15/SEC-06/中间件凭据登记"
     },
     "01": {
       "status": "已复核",

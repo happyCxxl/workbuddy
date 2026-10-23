@@ -14,7 +14,7 @@ const IS_WIN = process.platform === 'win32';
 const BATCH = 40;
 const USAGE = [
   '用法：',
-  '  node .agent/tools/java/verify.mjs fast [文件...]            检查器档：改动文件的中间产物、编码、文档结构、Java 形态',
+  '  node .agent/tools/java/verify.mjs fast [文件...]            检查器档：按改动文件触发的检查器（中间产物、编码、文档结构、规范边界、入口指针、模块结构、Java 形态、注释、用例质量）',
   '  node .agent/tools/java/verify.mjs tests <模块> --test=<类>  定向用例档：单个用例类或方法',
   '  node .agent/tools/java/verify.mjs module <模块>             模块档：该模块全部用例，含依赖链编译',
   '  node .agent/tools/java/verify.mjs full                      全量档：整仓依赖链 + 静态检查 + 覆盖率',
@@ -95,6 +95,19 @@ function fast(files, opts) {
     steps.push(['编码完整性', [join(ROOT, '.agent/tools/common/check-encoding.mjs')]]);
   }
   if (docs.length) steps.push(['文档结构', [join(ROOT, '.agent/tools/common/check-docs.mjs')]]);
+  if (targets.some((f) => f.startsWith('.agent/'))) {
+    steps.push(['规范边界', [join(ROOT, '.agent/tools/common/check-scope.mjs')]]);
+  }
+  if (targets.some((f) => f.endsWith('AGENTS.md'))) {
+    steps.push(['入口指针', [join(ROOT, '.agent/tools/common/check-agents.mjs')]]);
+  }
+  if (targets.some((f) => f.endsWith('pom.xml'))) {
+    steps.push(['模块结构', [join(ROOT, '.agent/tools/common/check-modules.mjs')]]);
+  }
+  const testJava = targets.filter((f) => /src\/test\/.*\.java$/.test(f));
+  for (const batch of chunk(testJava, BATCH)) {
+    steps.push([`用例质量（${batch.length} 个文件）`, [join(ROOT, '.agent/tools/java/check-test-quality.mjs'), ...batch]]);
+  }
   for (const batch of chunk(java, BATCH)) {
     steps.push([`Java 形态（${batch.length} 个文件）`, [join(ROOT, '.agent/tools/java/check-java-conventions.mjs'), ...batch]]);
     steps.push([`Javadoc（${batch.length} 个文件）`, [join(ROOT, '.agent/tools/java/check-javadoc.mjs'), ...batch]]);

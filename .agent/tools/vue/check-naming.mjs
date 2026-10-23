@@ -25,13 +25,15 @@ for (const file of readdirSync(apiDir)) {
   ];
   for (const name of functionNames) {
     if (!verbPattern.test(name)) {
-      errors.push(`${file}: 接口函数 ${name} 必须以 ${verbs.join('/')} 开头（见规范“命名”）`);
+      errors.push(`${file}: 接口函数 ${name} 必须以 ${verbs.join('/')} 开头（VUE-NAME-002）`);
     }
   }
 }
 
 if (errors.length > 0) {
   console.error(errors.join('\n'));
+  console.error('');
+  console.error('复跑：cd web && pnpm lint:names');
   process.exit(1);
 }
 console.log('check-naming: 通过');

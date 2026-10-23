@@ -93,14 +93,14 @@ function checkSfc(rel, content) {
   const styleMatch = content.match(/<style(\s[^>]*)?>/);
   const styleStart = styleMatch ? styleMatch.index : -1;
   if (templateStart === -1 || (scriptStart !== -1 && scriptStart < templateStart)) {
-    errors.push(`${rel}: template 块必须位于最前（规范 §5.7）`);
+    errors.push(`${rel}: template 块必须位于最前（VUE-COMP-006）`);
   }
   if (styleStart !== -1) {
     if (styleStart < templateStart || (scriptStart !== -1 && styleStart < scriptStart)) {
-      errors.push(`${rel}: style 块必须位于 script 之后（规范 §5.7）`);
+      errors.push(`${rel}: style 块必须位于 script 之后（VUE-COMP-006）`);
     }
     if (!/<style\s[^>]*scoped/.test(styleMatch[0])) {
-      errors.push(`${rel}: style 块必须带 scoped（规范 §5.5）`);
+      errors.push(`${rel}: style 块必须带 scoped（VUE-COMP-005）`);
     }
   }
   return styleMatch;
@@ -117,7 +117,7 @@ function checkStyleRules(rel, css, templateClasses) {
   for (const match of clean.matchAll(/([^{}]+)\{/g)) {
     const selector = match[1];
     if (selector.includes(':deep(')) {
-      errors.push(`${rel}: 组件 scoped 样式禁用 :deep（Element Plus 定制放 styles/element-plus.css）`);
+      errors.push(`${rel}: 组件 scoped 样式禁用 :deep（VUE-CSS-006；Element Plus 定制放 styles/element-plus.css）`);
       continue;
     }
     for (const token of selector.matchAll(/\.([a-z0-9-]+)/g)) {
@@ -131,7 +131,7 @@ function checkStyleRules(rel, css, templateClasses) {
   }
   for (const cls of used) {
     if (!templateClasses.has(cls)) {
-      errors.push(`${rel}: 样式类 .${cls} 在模板中未使用（规范 §6.1）`);
+      errors.push(`${rel}: 样式类 .${cls} 在模板中未使用（VUE-CSS-007）`);
     }
   }
 }
@@ -140,12 +140,12 @@ function checkFontFamily(rel, css) {
   for (const match of css.matchAll(/font-family:\s*([^;]+);/g)) {
     const value = match[1].trim();
     if (value.includes('var(')) {
-      errors.push(`${rel}: font-family 必须为字面量字体栈，禁止 var() 形式（IDEA 无法解析）`);
+      errors.push(`${rel}: font-family 必须为字面量字体栈，禁止 var() 形式（VUE-CSS-008；IDEA 无法解析）`);
       continue;
     }
     const last = value.split(',').pop().trim().toLowerCase();
     if (!GENERIC_FAMILIES.has(last)) {
-      errors.push(`${rel}: font-family 必须以通用字体族结尾（如 monospace / sans-serif）`);
+      errors.push(`${rel}: font-family 必须以通用字体族结尾（VUE-CSS-008；如 monospace / sans-serif）`);
     }
   }
 }
@@ -159,7 +159,7 @@ function checkRouter() {
   const text = readFileSync(file, 'utf8');
   for (const match of text.matchAll(/component:\s*([^,]+),/g)) {
     if (!/\(\)\s*=>\s*import\(/.test(match[1])) {
-      errors.push('router/index.ts: 路由组件必须懒加载 () => import(...)（规范 §7.1）');
+      errors.push('router/index.ts: 路由组件必须懒加载 () => import(...)（VUE-ROUTE-001）');
     }
   }
 }
@@ -180,7 +180,7 @@ function checkFractionalPx(files) {
     const rel = file.slice(process.cwd().length + 1).replace(/\\/g, '/');
     const match = text.match(/\d+\.\d+px/);
     if (match) {
-      errors.push(`${rel}: 检测到小数 px 值 ${match[0]}（规范 §6 取整，避免跨浏览器渲染差异）`);
+      errors.push(`${rel}: 检测到小数 px 值 ${match[0]}（VUE-CSS-009：样式数值不得使用小数 px）`);
     }
   }
 }
@@ -214,6 +214,8 @@ checkRouter();
 
 if (errors.length > 0) {
   console.error(errors.join('\n'));
+  console.error('');
+  console.error('复跑：cd web && pnpm lint:spec');
   process.exit(1);
 }
 console.log('check-spec: 通过');
