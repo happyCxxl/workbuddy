@@ -100,6 +100,26 @@ class PipelineTaskConsumerTest {
         when(pipelineTaskDbService.listQueuedByStages(any(), anyInt())).thenReturn(List.of(tasks));
     }
 
+    /** 叫醒一次并返回一批任务；第二次进入阻塞弹出视为「本批已处理完」并给出信号，此后阻塞住消费循环避免空转 */
+    private CountDownLatch stubOneBatchWithBatchDone(WbPipelineTask... tasks) {
+        CountDownLatch batchDone = new CountDownLatch(1);
+        AtomicBoolean woken = new AtomicBoolean(false);
+        when(taskQueue.blockingPop()).thenAnswer(inv -> {
+            if (woken.compareAndSet(false, true)) {
+                return "1";
+            }
+            batchDone.countDown();
+            try {
+                new CountDownLatch(1).await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return null;
+        });
+        when(pipelineTaskDbService.listQueuedByStages(any(), anyInt())).thenReturn(List.of(tasks));
+        return batchDone;
+    }
+
     private WbPipelineTask task(Long id, PipelineStage stage) {
         WbPipelineTask task = new WbPipelineTask();
         task.setId(id);
@@ -162,7 +182,7 @@ class PipelineTaskConsumerTest {
         // 放行后 run 自然返回并移出在跑集合，停机时不该再打停机码
         release.countDown();
         assertTrue(done.await(WAIT_SECONDS, TimeUnit.SECONDS), "任务未收尾");
-        Thread.sleep(500);
+        TestAwait.awaitUntil("在跑簿记收尾（inFlight 清空）", () -> consumer.inFlightCount() == 0, 5000);
         consumer.stop();
 
         verify(pipelineTaskDbService, never()).finish(any(), eq(PipelineTaskStatus.FAILED),
@@ -179,11 +199,12 @@ class PipelineTaskConsumerTest {
         runUntilReleased(1L, entered, release);
         // 索引构建环节不在消费循环的五路分发内：扫到了也不领批（分发与产物归 BUILD_INDEX 自身链路）
         WbPipelineTask buildIndex = task(2L, PipelineStage.BUILD_INDEX);
-        stubOneBatch(task(1L, PipelineStage.PARSE), buildIndex);
+        CountDownLatch batchDone = stubOneBatchWithBatchDone(task(1L, PipelineStage.PARSE), buildIndex);
 
         consumer.start();
         assertTrue(entered.await(WAIT_SECONDS, TimeUnit.SECONDS), "任务未进入执行");
-        Thread.sleep(100);
+        // 等到本批全部处理完（含 BUILD_INDEX 的跳过决策），停机才不因 break 短路而空转验证
+        assertTrue(batchDone.await(WAIT_SECONDS, TimeUnit.SECONDS), "批次未处理完");
         consumer.stop();
         release.countDown();
 

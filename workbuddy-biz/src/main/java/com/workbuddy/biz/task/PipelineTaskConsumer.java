@@ -58,6 +58,11 @@ public class PipelineTaskConsumer {
     /** 执行中的 taskId 集合（停机时据此显式置失败） */
     private final Set<Long> inFlight = ConcurrentHashMap.newKeySet();
 
+    /** 执行中的任务数（测试可观察性：轮询等待簿记收尾用） */
+    int inFlightCount() {
+        return inFlight.size();
+    }
+
     /**
      * 构造消费者：两个执行器 bean 同类型，构造参数按 bean 名限定（不用 Lombok 生成构造器，它不带走 {@code @Qualifier}）。
      *
