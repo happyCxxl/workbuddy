@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-23",
-      "baseline": "40cf1fd6",
-      "note": "support/common 三助手按关注点迁包（lineage / strategy / task）；仅包名与 import 变化，行为与依赖方向未变"
+      "baseline": "bb69eaad",
+      "note": "metrics 端点移出免认证名单（SEC-04 默认拒绝），仅 health 保留放行；4 份环节文档同步"
     }
   }
 }
