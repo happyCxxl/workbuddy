@@ -321,6 +321,6 @@ public final class StructureStatsSupport {
 
     /** 计数取整：null 记 0（摘要文案里"多少项"按 0 陈述） */
     private static int n(Integer value) {
-        return value == null ? 0 : value;
+        return NullUtil.isNull(value) ? 0 : value;
     }
 }

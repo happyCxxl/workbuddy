@@ -1,5 +1,6 @@
 package com.workbuddy.model.service.support.route;
 
+import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.ModelRef;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +44,7 @@ public class RouteStateStore {
      */
     public long latencyMillis(ModelRef ref) {
         Double value = latencies.get(ref);
-        return value == null ? 0L : Math.round(value);
+        return NullUtil.isNull(value) ? 0L : Math.round(value);
     }
 
     /**

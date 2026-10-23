@@ -1,6 +1,7 @@
 package com.workbuddy.common.domain.model.vision;
 
 import com.workbuddy.common.domain.model.chat.OutputSpec;
+import com.workbuddy.common.utils.NullUtil;
 import lombok.Data;
 
 import java.util.Arrays;
@@ -34,14 +35,14 @@ public class VisionRequest {
      * @return 字节非空为 true
      */
     public boolean hasBytes() {
-        return imageBytes != null && imageBytes.length > 0;
+        return NullUtil.isNotNull(imageBytes) && imageBytes.length > 0;
     }
 
     /**
      * 清空字节字段，避免日志或序列化意外带出图片内容。
      */
     public void clearBytes() {
-        if (imageBytes != null) {
+        if (NullUtil.isNotNull(imageBytes)) {
             Arrays.fill(imageBytes, (byte) 0);
             imageBytes = null;
         }

@@ -1,5 +1,6 @@
 package com.workbuddy.model.service.support.capacity;
 
+import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.ModelRef;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -36,7 +37,7 @@ public class ModelCooldownStore {
      * @param duration 冷却时长；空或非正数忽略
      */
     public void markCooldown(ModelRef ref, Duration duration) {
-        if (duration == null || duration.isZero() || duration.isNegative()) {
+        if (NullUtil.isNull(duration) || duration.isZero() || duration.isNegative()) {
             return;
         }
         stringRedisTemplate.opsForValue().set(key(ref), "1", duration);

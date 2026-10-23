@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.model.chat.TokenUsage;
 import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.model.RouteReason;
 import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.model.ModelRef;
 import com.workbuddy.model.db.WbModelCallDbService;
 import lombok.RequiredArgsConstructor;
@@ -41,15 +42,15 @@ public class DbModelCallRecorder {
                        RouteReason reason) {
         WbModelCall row = new WbModelCall();
         row.setRequestId(requestId);
-        row.setCapability(capability == null ? "UNKNOWN" : capability.name());
+        row.setCapability(NullUtil.isNull(capability) ? "UNKNOWN" : capability.name());
         row.setVendorCode(ref.vendorCode());
         row.setModelKey(ref.modelKey());
-        row.setRouteReason(reason == null ? RouteReason.OK.name() : reason.name());
+        row.setRouteReason(NullUtil.isNull(reason) ? RouteReason.OK.name() : reason.name());
         row.setAttempt(attempt);
         row.setStatus(success ? "SUCCESS" : "FAILED");
-        row.setErrorCode(success || errorCode == null ? null : errorCode.getCode());
+        row.setErrorCode(success || NullUtil.isNull(errorCode) ? null : errorCode.getCode());
         row.setLatencyMs((int) Math.max(0, latencyMs));
-        if (usage != null) {
+        if (NullUtil.isNotNull(usage)) {
             row.setPromptTokens(usage.getInputTokens());
             row.setCompletionTokens(usage.getOutputTokens());
         }
