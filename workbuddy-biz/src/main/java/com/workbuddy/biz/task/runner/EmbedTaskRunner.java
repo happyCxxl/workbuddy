@@ -111,7 +111,7 @@ public class EmbedTaskRunner {
                 byte[] content = fileStorage.getObject(ObjectRef.ofProduct(chunkProduct));
                 chunkSet = JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), ChunkSet.class);
             } catch (Exception e) {
-                log.warn("读取上游切片产物失败, taskId={}, artifactId={}", taskId, chunkProduct.getArtifactId(), e);
+                log.warn("===> EmbedTaskRunner 读取上游切片产物失败, taskId={}, artifactId={}", taskId, chunkProduct.getArtifactId(), e);
                 finishFailed(taskId, PipelineTaskErrorCode.EMBED_EMPTY.name(),
                         "上游切片产物读取失败: " + e.getMessage());
                 return;
@@ -139,7 +139,7 @@ public class EmbedTaskRunner {
                     },
                     this::finishFailed);
         } catch (Exception e) {
-            log.error("向量化任务执行异常, taskId={}", taskId, e);
+            log.error("===> EmbedTaskRunner 向量化任务执行异常, taskId={}", taskId, e);
             finishFailed(taskId, TaskRunnerSupport.failureCode(e, PipelineTaskErrorCode.EMBED_FAILED),
                     String.valueOf(e.getMessage()));
         }
@@ -161,7 +161,7 @@ public class EmbedTaskRunner {
                     candidates.add(set);
                 }
             } catch (Exception e) {
-                log.warn("复用候选账本读取失败，跳过回溯, taskId={}, embeddingSetId={}, artifactId={}",
+                log.warn("===> EmbedTaskRunner 复用候选账本读取失败，跳过回溯, taskId={}, embeddingSetId={}, artifactId={}",
                         taskId, row.getEmbeddingSetId(), row.getArtifactId(), e);
             }
         }
@@ -188,7 +188,7 @@ public class EmbedTaskRunner {
         try {
             return chunkStrategyParser.parse(snapshot);
         } catch (Exception e) {
-            log.warn("上游切片策略快照缺失或损坏，跳过窗口兼容校验", e);
+            log.warn("===> EmbedTaskRunner 上游切片策略快照缺失或损坏，跳过窗口兼容校验", e);
             return null;
         }
     }
@@ -234,7 +234,7 @@ public class EmbedTaskRunner {
         try {
             indexSetService.onFileProductsReady(fileResultId);
         } catch (Exception e) {
-            log.warn("索引自动构建回调异常, fileResultId={}", fileResultId, e);
+            log.warn("===> EmbedTaskRunner 索引自动构建回调异常, fileResultId={}", fileResultId, e);
         }
     }
 }

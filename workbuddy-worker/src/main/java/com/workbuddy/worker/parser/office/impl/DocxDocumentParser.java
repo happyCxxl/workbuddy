@@ -84,7 +84,7 @@ public class DocxDocumentParser extends AbstractPoiDocumentParser {
             appendDocxHeaderFooter(source, doc, fileId);
             fillVirtualPageMetrics(source, context.getProperties().getOfficePageChars());
         } catch (Exception e) {
-            log.warn("DOCX 解析失败, fileId={}", fileId, e);
+            log.warn("===> DocxDocumentParser DOCX 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("DOCX 解析失败: " + e.getMessage(), e);
         }
     }
@@ -114,7 +114,7 @@ public class DocxDocumentParser extends AbstractPoiDocumentParser {
                 index++;
             }
         } catch (Exception e) {
-            log.warn("{}, fileId={}", kind.errorLog(), fileId, e);
+            log.warn("===> DocxDocumentParser {}, fileId={}", kind.errorLog(), fileId, e);
         }
     }
 

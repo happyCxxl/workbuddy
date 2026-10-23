@@ -44,7 +44,7 @@ public class TaskStartupCompensator {
         compensate("启动补偿");
         recoverOrphans();
         if (properties.isLowFreqSweepEnabled()) {
-            log.info("低频兜底已开启, interval={}", properties.getLowFreqSweepInterval());
+            log.info("===> TaskStartupCompensator 低频兜底已开启, interval={}", properties.getLowFreqSweepInterval());
         }
     }
 
@@ -62,7 +62,7 @@ public class TaskStartupCompensator {
     private void recoverOrphans() {
         String token = redisLock.tryLock(lockKey(), properties.getSweepLockTtl());
         if (NullUtil.isNull(token)) {
-            log.debug("补偿锁未抢到，跳过孤儿恢复");
+            log.debug("===> TaskStartupCompensator 补偿锁未抢到，跳过孤儿恢复");
             return;
         }
         try {
@@ -82,7 +82,7 @@ public class TaskStartupCompensator {
                 }
             }
             if (recovered > 0) {
-                log.info("孤儿任务恢复完成, count={}", recovered);
+                log.info("===> TaskStartupCompensator 孤儿任务恢复完成, count={}", recovered);
             }
         } finally {
             redisLock.unlock(lockKey(), token);
@@ -93,7 +93,7 @@ public class TaskStartupCompensator {
     private void compensate(String scene) {
         String token = redisLock.tryLock(lockKey(), properties.getSweepLockTtl());
         if (NullUtil.isNull(token)) {
-            log.debug("补偿锁未抢到，跳过本轮, scene={}", scene);
+            log.debug("===> TaskStartupCompensator 补偿锁未抢到，跳过本轮, scene={}", scene);
             return;
         }
         try {
@@ -103,7 +103,7 @@ public class TaskStartupCompensator {
                 taskQueue.enqueue(task.getId());
             }
             if (!stale.isEmpty()) {
-                log.info("补偿重投递完成, scene={}, count={}", scene, stale.size());
+                log.info("===> TaskStartupCompensator 补偿重投递完成, scene={}, count={}", scene, stale.size());
             }
         } finally {
             redisLock.unlock(lockKey(), token);

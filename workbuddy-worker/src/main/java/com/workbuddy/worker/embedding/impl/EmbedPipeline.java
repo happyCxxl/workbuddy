@@ -328,7 +328,7 @@ public class EmbedPipeline implements EmbedderPort {
                 return BatchOutcome.success();
             } catch (Exception e) {
                 lastError = e;
-                log.warn("批次模型调用失败, model={}, attempt={}/{}, requestId={}",
+                log.warn("===> EmbedPipeline 批次模型调用失败, model={}, attempt={}/{}, requestId={}",
                         strategy.getModel(), attempt + 1, maxRetries + 1, requestId, e);
             }
         }

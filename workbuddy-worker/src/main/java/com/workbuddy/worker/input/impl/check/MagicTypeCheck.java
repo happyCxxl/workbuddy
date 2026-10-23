@@ -60,7 +60,7 @@ public class MagicTypeCheck implements FileCheck {
         try (InputStream probeIn = context.getSpill().openStream()) {
             mediaType = tika.detect(probeIn);
         } catch (IOException e) {
-            log.warn("Tika 探测读取失败, fileId={}", context.getFileId(), e);
+            log.warn("===> MagicTypeCheck Tika 探测读取失败, fileId={}", context.getFileId(), e);
             return FileCheckResult.fail(FileValidationFailReason.FILE_CORRUPTED);
         }
         if (isProtected(mediaType)) {

@@ -128,7 +128,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
                 parseDocument(document, source, context, fileId);
             }
         } catch (Exception e) {
-            log.warn("PDF 解析失败, fileId={}", fileId, e);
+            log.warn("===> PdfBoxDocumentParser PDF 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("PDF 解析失败: " + e.getMessage(), e);
         } finally {
             deleteQuietly(tempFile);
@@ -212,7 +212,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
         try {
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            log.warn("解析临时文件删除失败, path={}", path, e);
+            log.warn("===> PdfBoxDocumentParser 解析临时文件删除失败, path={}", path, e);
         }
     }
 }

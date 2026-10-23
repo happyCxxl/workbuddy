@@ -61,7 +61,7 @@ public class CorruptionProbeCheck implements FileCheck {
             if (isEncryptedException(e)) {
                 return FileCheckResult.fail(FileValidationFailReason.FILE_ENCRYPTED);
             }
-            log.warn("Tika 试解析失败（损坏判定）, fileId={}, mediaType={}",
+            log.warn("===> CorruptionProbeCheck Tika 试解析失败（损坏判定）, fileId={}, mediaType={}",
                     context.getFileId(), context.getMediaType(), e);
             return FileCheckResult.fail(FileValidationFailReason.FILE_CORRUPTED);
         }

@@ -75,10 +75,10 @@ public class ParserWhitelistChecker implements StartupCheck {
         for (FileFormat format : FileFormat.values()) {
             boolean parserExists = parserPorts.stream().anyMatch(parser -> parser.supports(format.getMimeType()));
             if (parserExists && !enabled.contains(format)) {
-                log.warn("格式 {} 有解析器但未进白名单（`knowledge.file.enabled-formats`），文件侧不会放行", format);
+                log.warn("===> ParserWhitelistChecker 格式 {} 有解析器但未进白名单（`knowledge.file.enabled-formats`），文件侧不会放行", format);
             }
         }
-        log.info("解析格式白名单校验通过, enabledFormats={}, parsers={}", enabledFormats,
+        log.info("===> ParserWhitelistChecker 解析格式白名单校验通过, enabledFormats={}, parsers={}", enabledFormats,
                 parserPorts.stream().map(DocumentParserPort::capabilityName).toList());
     }
 }

@@ -80,7 +80,7 @@ public class FileValidationPipeline implements FileValidatorPort {
                     sha256.substring(0, Math.min(12, sha256.length())), System.currentTimeMillis() - start);
             return passed;
         } catch (IOException e) {
-            log.warn("读取文件流失败, fileId={}", fileId, e);
+            log.warn("===> FileValidationPipeline 读取文件流失败, fileId={}", fileId, e);
             return FileValidationResult.fail(FileValidationFailReason.FILE_CORRUPTED);
         } finally {
             spill.close();

@@ -143,7 +143,7 @@ public final class TaskRunnerSupport {
         try {
             return parse.apply(task.getStrategySnapshot());
         } catch (RuntimeException e) {
-            log.warn("任务策略快照缺失或损坏, taskId={}, stage={}", taskId, task.getStage(), e);
+            log.warn("===> TaskRunnerSupport 任务策略快照缺失或损坏, taskId={}, stage={}", taskId, task.getStage(), e);
             finisher.finish(taskId, strategyCode.name(), failureText);
             return null;
         }

@@ -98,7 +98,7 @@ final class ChunkElementRouter {
                 stats.warn(kind);
                 outcome.getWarnings().add(kind.name() + " 切片器: " + element.getElementId() + ": "
                         + StrUtil.maxLength(String.valueOf(e.getMessage()), 100));
-                log.warn("切片器异常, kind={}, elementId={}", kind, element.getElementId(), e);
+                log.warn("===> ChunkElementRouter 切片器异常, kind={}, elementId={}", kind, element.getElementId(), e);
             }
         }
         stats.routeNanos = System.nanoTime() - routeStartedNanos;

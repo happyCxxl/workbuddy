@@ -78,7 +78,7 @@ public class StructureTaskRunner {
                 byte[] content = fileStorage.getObject(ObjectRef.ofProduct(parseProduct));
                 parseResult = JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), ParseResult.class);
             } catch (Exception e) {
-                log.warn("读取上游解析产物失败, taskId={}, artifactId={}", taskId, parseProduct.getArtifactId(), e);
+                log.warn("===> StructureTaskRunner 读取上游解析产物失败, taskId={}, artifactId={}", taskId, parseProduct.getArtifactId(), e);
                 finishFailed(taskId, PipelineTaskErrorCode.STRUCTURE_UPSTREAM_UNREADABLE.name(),
                         "上游解析产物读取失败: " + TaskRunnerSupport.failureText(e));
                 return;
@@ -101,7 +101,7 @@ public class StructureTaskRunner {
                     () -> persistProduct(task, parseProduct, outcome),
                     this::finishFailed);
         } catch (Exception e) {
-            log.error("组装任务执行异常, taskId={}", taskId, e);
+            log.error("===> StructureTaskRunner 组装任务执行异常, taskId={}", taskId, e);
             finishFailed(taskId, errorCodeOf(e), TaskRunnerSupport.failureText(e));
         }
     }

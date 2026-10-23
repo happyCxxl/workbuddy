@@ -82,7 +82,7 @@ public class IndexBuildTaskRunner {
             }
             executeBuild(taskId, version, order);
         } catch (Exception e) {
-            log.error("索引构建任务执行异常, taskId={}", taskId, e);
+            log.error("===> IndexBuildTaskRunner 索引构建任务执行异常, taskId={}", taskId, e);
             try {
                 WbIndexVersion version = indexVersionDbService.getByTaskId(taskId);
                 if (NullUtil.isNotNull(version)
@@ -91,7 +91,7 @@ public class IndexBuildTaskRunner {
                     markFailed(version, "执行异常: " + truncate(String.valueOf(e.getMessage())));
                 }
             } catch (Exception markError) {
-                log.warn("索引版本失败回写异常, taskId={}", taskId, markError);
+                log.warn("===> IndexBuildTaskRunner 索引版本失败回写异常, taskId={}", taskId, markError);
             }
             finishFailed(taskId, PipelineTaskErrorCode.INDEX_BUILD_FAILED.name(),
                     truncate(String.valueOf(e.getMessage())));

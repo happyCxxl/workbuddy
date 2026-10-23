@@ -10,7 +10,7 @@
       "status": "已复核",
       "reviewed": "2026-10-23",
       "baseline": "4b056060",
-      "note": "超长文件处置更新：KnowledgeConverter 已按功能域拆分入库；EmbedPipeline/IndexBuildServiceImpl/FieldNormalizeRule 与 8 个超长测试类全部论证登记（理由见风险表行内）"
+      "note": "超长文件处置更新：KnowledgeConverter 已按功能域拆分入库；EmbedPipeline/IndexBuildServiceImpl/FieldNormalizeRule 与 8 个超长测试类全部论证登记；编排层日志前缀已清零（非编排层 45 处登记）"
     },
     "01": {
       "status": "已复核",

@@ -103,7 +103,7 @@ public class ChunkTaskRunner {
                 byte[] content = fileStorage.getObject(ObjectRef.ofProduct(preprocessProduct));
                 view = JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), PreprocessView.class);
             } catch (Exception e) {
-                log.warn("读取上游预处理视图产物失败, taskId={}, artifactId={}", taskId, preprocessProduct.getArtifactId(), e);
+                log.warn("===> ChunkTaskRunner 读取上游预处理视图产物失败, taskId={}, artifactId={}", taskId, preprocessProduct.getArtifactId(), e);
                 finishFailed(taskId, PipelineTaskErrorCode.CHUNK_EMPTY.name(),
                         "上游预处理视图产物读取失败: " + e.getMessage());
                 return;
@@ -129,7 +129,7 @@ public class ChunkTaskRunner {
                     () -> persistProduct(task, fileResult, preprocessProduct, strategy, outcome),
                     this::finishFailed);
         } catch (Exception e) {
-            log.error("切片任务执行异常, taskId={}", taskId, e);
+            log.error("===> ChunkTaskRunner 切片任务执行异常, taskId={}", taskId, e);
             finishFailed(taskId, TaskRunnerSupport.failureCode(e, PipelineTaskErrorCode.CHUNK_FAILED),
                     String.valueOf(e.getMessage()));
         }
@@ -149,7 +149,7 @@ public class ChunkTaskRunner {
             byte[] content = fileStorage.getObject(ObjectRef.ofProduct(structureProduct));
             return JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), UnifiedDocument.class);
         } catch (Exception e) {
-            log.warn("读取结构参照产物失败（titlePath/图注降级）, fileResultId={}",
+            log.warn("===> ChunkTaskRunner 读取结构参照产物失败（titlePath/图注降级）, fileResultId={}",
                     preprocessProduct.getFileResultId(), e);
             return null;
         }

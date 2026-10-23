@@ -113,7 +113,7 @@ public class SpillBuffer {
             try {
                 Files.deleteIfExists(tempFile);
             } catch (IOException e) {
-                log.warn("校验临时文件删除失败, tempFile={}", tempFile, e);
+                log.warn("===> SpillBuffer 校验临时文件删除失败, tempFile={}", tempFile, e);
                 tempFile.toFile().deleteOnExit();
             }
         }

@@ -96,7 +96,7 @@ public class DocDocumentParser extends AbstractPoiDocumentParser {
             }
             fillVirtualPageMetrics(source, context.getProperties().getOfficePageChars());
         } catch (Exception e) {
-            log.warn("DOC 解析失败, fileId={}", fileId, e);
+            log.warn("===> DocDocumentParser DOC 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("DOC 解析失败: " + e.getMessage(), e);
         }
     }
@@ -133,7 +133,7 @@ public class DocDocumentParser extends AbstractPoiDocumentParser {
             addStoryElement(source, stories.getFirstHeader(), ElementType.HEADER, "h0", "doc#header[0]", fileId);
             addStoryElement(source, stories.getFirstFooter(), ElementType.FOOTER, "f0", "doc#footer[0]", fileId);
         } catch (RuntimeException e) {
-            log.warn("DOC 页眉页脚读取失败, fileId={}", fileId, e);
+            log.warn("===> DocDocumentParser DOC 页眉页脚读取失败, fileId={}", fileId, e);
         }
     }
 

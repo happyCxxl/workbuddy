@@ -86,7 +86,7 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
             fillUnitMetrics(source, sheetTexts, sheetImages);
             appendXlsFormulaNote(source, workbook);
         } catch (Exception e) {
-            log.warn("Excel 解析失败, fileId={}", fileId, e);
+            log.warn("===> ExcelDocumentParser Excel 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("Excel 解析失败: " + e.getMessage(), e);
         }
     }
@@ -219,7 +219,7 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
         try {
             return formatter.formatCellValue(cell, null);
         } catch (RuntimeException e) {
-            log.debug("Excel 公式缓存值读取失败, sheet={}, cell={}", cell.getSheet().getSheetName(),
+            log.debug("===> ExcelDocumentParser Excel 公式缓存值读取失败, sheet={}, cell={}", cell.getSheet().getSheetName(),
                     cell.getAddress(), e);
             return "";
         }
@@ -235,7 +235,7 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
         try {
             return formatter.formatCellValue(cell, evaluator);
         } catch (RuntimeException e) {
-            log.debug("Excel 公式求值失败, sheet={}, cell={}", cell.getSheet().getSheetName(),
+            log.debug("===> ExcelDocumentParser Excel 公式求值失败, sheet={}, cell={}", cell.getSheet().getSheetName(),
                     cell.getAddress(), e);
             return "";
         }

@@ -100,7 +100,7 @@ public class PipelineTaskConsumer {
         Thread dispatcher = ThreadFactoryBuilder.create().setNamePrefix("parse-dispatcher-").setDaemon(true).build()
                 .newThread(this::loop);
         dispatcher.start();
-        log.info("解析消费循环启动, concurrency={}, claimBatchSize={}, timeout={}",
+        log.info("===> PipelineTaskConsumer 解析消费循环启动, concurrency={}, claimBatchSize={}, timeout={}",
                 properties.getConcurrency(), properties.getClaimBatchSize(),
                 properties.timeoutOf(PipelineStage.PARSE.name()));
     }
@@ -126,7 +126,7 @@ public class PipelineTaskConsumer {
                     dispatch(task);
                 }
             } catch (Exception e) {
-                log.warn("解析消费循环异常, 稍后重试", e);
+                log.warn("===> PipelineTaskConsumer 解析消费循环异常, 稍后重试", e);
                 sleepQuietly();
             }
         }
@@ -147,7 +147,7 @@ public class PipelineTaskConsumer {
             action = () -> embedRunner.run(task.getId());
         } else {
             // 未知环节：跳过并告警（后续环节加 Runner 即接入，主循环零改动）
-            log.warn("未知环节任务跳过, taskId={}, stage={}", task.getId(), task.getStage());
+            log.warn("===> PipelineTaskConsumer 未知环节任务跳过, taskId={}, stage={}", task.getId(), task.getStage());
             return;
         }
         try {
@@ -176,7 +176,7 @@ public class PipelineTaskConsumer {
         watchdogExecutor.shutdown();
         runnerExecutor.shutdown();
         int marked = markInFlightFailed();
-        log.info("解析消费循环停止, 仍在执行并显式置失败的任务数={}", marked);
+        log.info("===> PipelineTaskConsumer 解析消费循环停止, 仍在执行并显式置失败的任务数={}", marked);
     }
 
     /** 遍历执行中 taskId 逐条条件回写失败；runner 已写终态时受影响行数为 0，不覆盖 */
@@ -201,11 +201,11 @@ public class PipelineTaskConsumer {
             // 终态回写带 RUNNING 条件：与 runner 的兜底回写互斥，后到者受影响行数为 0
             pipelineTaskDbService.finish(taskId, PipelineTaskStatus.FAILED,
                     PipelineTaskErrorCode.EXECUTOR_TIMEOUT.name(), "单任务超时（看门狗判定）");
-            log.warn("任务超时, taskId={}", taskId);
+            log.warn("===> PipelineTaskConsumer 任务超时, taskId={}", taskId);
         } catch (RejectedExecutionException e) {
             // 执行池满：任务保持 QUEUED
         } catch (Exception e) {
-            log.warn("任务执行异常, taskId={}", taskId, e);
+            log.warn("===> PipelineTaskConsumer 任务执行异常, taskId={}", taskId, e);
         }
     }
 

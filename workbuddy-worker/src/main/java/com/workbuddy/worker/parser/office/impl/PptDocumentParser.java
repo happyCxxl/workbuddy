@@ -101,7 +101,7 @@ public class PptDocumentParser extends AbstractPoiDocumentParser {
             }
             fillUnitMetrics(source, unitTexts, unitImages);
         } catch (Exception e) {
-            log.warn("演示文稿解析失败, fileId={}", fileId, e);
+            log.warn("===> PptDocumentParser 演示文稿解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("演示文稿解析失败: " + e.getMessage(), e);
         }
     }

@@ -136,7 +136,7 @@ public class PreprocessPipeline implements PreprocessorPort {
                     stat.error = StrUtil.maxLength(String.valueOf(e.getMessage()), 200);
                     outcome.getWarnings().add(rule.stepName() + ": " + view.getElementId() + ": "
                             + StrUtil.maxLength(String.valueOf(e.getMessage()), 100));
-                    log.warn("预处理规则异常, rule={}, elementId={}", rule.name(), view.getElementId(), e);
+                    log.warn("===> PreprocessPipeline 预处理规则异常, rule={}, elementId={}", rule.name(), view.getElementId(), e);
                 }
             }
         }
@@ -211,7 +211,7 @@ public class PreprocessPipeline implements PreprocessorPort {
                 matchers.add(new CustomRuleMatcher(Pattern.compile(rule.getPattern()),
                         CustomRuleAction.of(rule.getAction()), rule.getReplacement(), rule.getPattern()));
             } catch (Exception e) {
-                log.warn("自定义规则正则编译失败，跳过, pattern={}", rule.getPattern());
+                log.warn("===> PreprocessPipeline 自定义规则正则编译失败，跳过, pattern={}", rule.getPattern());
             }
         }
         context.setCustomRuleMatchers(matchers);

@@ -60,7 +60,7 @@ public class SizeLimitCheck implements FileCheck {
             context.setSize(total);
             return FileCheckResult.pass();
         } catch (IOException e) {
-            log.warn("读取文件流失败, fileId={}", context.getFileId(), e);
+            log.warn("===> SizeLimitCheck 读取文件流失败, fileId={}", context.getFileId(), e);
             return FileCheckResult.fail(FileValidationFailReason.FILE_CORRUPTED);
         }
     }
