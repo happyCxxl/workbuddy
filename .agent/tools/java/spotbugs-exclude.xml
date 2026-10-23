@@ -4,30 +4,29 @@
 <!-- 判空口径：项目统一走 NullUtil（参数可空注解的内部实现转发 Hutool），空指针类告警不再需要按方法豁免；
      新增代码遇到 NP_* 告警时改判空写法，不要往本清单加条目 -->
 <FindBugsFilter>
-    <!-- Lombok 生成访问器与 Spring 容器注入字段对外暴露可变对象：项目通用模式（DTO/Bean），
-         防御性拷贝与 Lombok 风格冲突且无实际收益，按评审口径整体豁免 -->
+    <!-- JAVA-DTO-006：DTO/Bean 只承载字段（可变字段与 Lombok 风格一致），防御性拷贝与 Lombok 风格冲突且无实际收益，整体豁免 EI_EXPOSE_REP/REP2 -->
     <Match>
         <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
     <Match>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
-    <!-- 任务链与解析器统一捕获 Exception 归一化错误码：捕获范围即调用边界，按评审口径豁免 -->
+    <!-- JAVA-ERR-004：任务链与解析器统一捕获 Exception 归一化错误码（捕获后转码），捕获范围即调用边界，豁免 REC_CATCH_EXCEPTION -->
     <Match>
         <Bug pattern="REC_CATCH_EXCEPTION"/>
     </Match>
-    <!-- SpillBuffer：构造期 SHA-256 算法探测失败即抛（fail-fast 防御，JDK 必有该算法） -->
+    <!-- JAVA-ERR-002：SpillBuffer 构造期 SHA-256 算法探测失败即抛属内部缺陷 fail-fast（JDK 必有该算法），豁免 CT_CONSTRUCTOR_THROW -->
     <Match>
         <Class name="com.workbuddy.worker.input.SpillBuffer"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
-    <!-- PipelineTaskConsumer：执行池字段仅启动期同步写入、运行期只读（配合 volatile 可见性），按评审口径豁免 -->
+    <!-- 无对应编号规则（并发可见性约定未立规，不为存量立规）：批次 3 把执行池字段改为构造期注入消除本告警后删除本豁免 -->
     <Match>
         <Class name="com.workbuddy.biz.task.PipelineTaskConsumer"/>
         <Bug pattern="IS2_INCONSISTENT_SYNC,UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
     </Match>
-    <!-- 分页查询 DTO 的页码兜底：字段由 Spring 数据绑定器反射写入、不靠构造器初始化，
-         判空走 Hutool ObjectUtil.isNull（项目统一风格），SpotBugs 不识别其 null 语义，
+    <!-- JAVA-DTO-003：分页查询 DTO 的页码兜底，字段由 Spring 数据绑定器反射写入、不靠构造器初始化；
+         判空统一走 NullUtil（内部转发 Hutool），SpotBugs 不识别其 null 语义，
          把紧随其后的拆箱比较 current < 1 判成"未初始化字段被解引用"。
          判空语义与原生 null 比较运行期等价，且 || 短路保证解引用时必非空。
          注意：该告警的主元素是**字段**，用 <Method> 限定匹配不上，必须按字段豁免 -->

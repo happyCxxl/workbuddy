@@ -4,7 +4,7 @@
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <!-- 后端源码风格检查。行宽 120 取自阿里代码格式；星号导入按 Google 禁止。
-     依据见规范 java/08 与 JAVA-META-003。 -->
+     依据见 JAVA-META-003 与 `.agent/standards/common/07-检查手段.md` §3。 -->
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
 
