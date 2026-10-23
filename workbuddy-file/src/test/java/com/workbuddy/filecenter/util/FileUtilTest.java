@@ -40,7 +40,7 @@ class FileUtilTest {
     }
 
     /**
-     * 守护 {@code isProtected / isReservedImage / ofFormat}：媒体类型判定。
+     * 守护 {@code isProtected / isReservedImage / ofFormat}：媒体类型判定（码值解析口径见 JAVA-DTO-011）。
      */
     @Test
     void mediaTypeJudgementsShouldBeStable() {
