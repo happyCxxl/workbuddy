@@ -158,7 +158,7 @@ public class FileServiceImpl implements FileService {
     }
 
     /**
-     * 下载文件：以附件形式写进响应流，文件名按 UTF-8 编码。
+     * 下载文件：以附件形式写进响应流，文件名按 UTF-8 编码；带 sha256 校验器与禁缓存头。
      *
      * @param fileId   文件 ID
      * @param response 响应
@@ -172,6 +172,11 @@ public class FileServiceImpl implements FileService {
                 .build();
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, disposition.toString());
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        // private 禁止共享缓存；no-cache 允许缓存但每次回源校验；ETag 取元数据 sha256
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "private, no-cache");
+        if (NullUtil.isNotNull(metadata.getSha256())) {
+            response.setHeader(HttpHeaders.ETAG, "\"" + metadata.getSha256() + "\"");
+        }
         if (NullUtil.isNotNull(metadata.getFileSize())) {
             response.setContentLengthLong(metadata.getFileSize());
         }

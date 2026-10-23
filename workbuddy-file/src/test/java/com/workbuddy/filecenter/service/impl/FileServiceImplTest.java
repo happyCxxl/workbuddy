@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -30,7 +31,8 @@ import static org.mockito.Mockito.when;
  * 文件服务单测（上传 + 下载）。
  *
  * <p>守护 {@code download} 的响应契约：附件头按 UTF-8 编码文件名、内容类型为二进制流、
- * 有大小才写 Content-Length、内容原样写入响应；守护 {@code upload} 的校验前置与落库。
+ * 有大小才写 Content-Length、有 sha256 才写 ETag、带禁缓存头、内容原样写入响应；
+ * 守护 {@code upload} 的校验前置与落库。
  */
 @ExtendWith(MockitoExtension.class)
 class FileServiceImplTest {
@@ -147,6 +149,7 @@ class FileServiceImplTest {
         FileMetadata metadata = new FileMetadata();
         metadata.setFileName("招标文件.pdf");
         metadata.setFileSize(5L);
+        metadata.setSha256("sha-abc");
         when(fileStorage.metadata("f1")).thenReturn(metadata);
         byte[] content = "hello".getBytes(StandardCharsets.UTF_8);
         when(fileStorage.open("f1")).thenReturn(new ByteArrayInputStream(content));
@@ -157,6 +160,8 @@ class FileServiceImplTest {
         assertTrue(response.getHeader("Content-Disposition").startsWith("attachment"), 
                 response.getHeader("Content-Disposition"));
         assertEquals("application/octet-stream", response.getContentType());
+        assertEquals("\"sha-abc\"", response.getHeader(HttpHeaders.ETAG));
+        assertEquals("private, no-cache", response.getHeader(HttpHeaders.CACHE_CONTROL));
         assertEquals(5L, response.getContentLengthLong());
         assertEquals("hello", response.getContentAsString());
     }
@@ -177,5 +182,6 @@ class FileServiceImplTest {
         new FileServiceImpl(fileStorage, fileProperties()).download("f2", response);
 
         assertNull(response.getHeader("Content-Length"));
+        assertNull(response.getHeader(HttpHeaders.ETAG));
     }
 }
