@@ -57,6 +57,10 @@ if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
   [ -f "$root/pom.xml" ] && total=$((total + 1))
 fi
 [ "$has_web_chg" -eq 1 ] && total=$((total + 1))
+# 无条件步骤（与改动范围无关，每次推送都跑）也在此处一并计数：
+# total 必须在首个 run_step 之前定稿，进度条全程显示同一个分母。
+total=$((total + 1)) # 中间产物
+total=$((total + 1)) # 规范边界
 
 report_fail() {
   echo ""
@@ -78,14 +82,12 @@ run_step() {
 }
 
 # 中间产物：与改动范围无关，每次推送都查（仓库卫生）
-total=$((total + 1))
 run_step "中间产物：node .agent/tools/common/check-artifacts.mjs"
 if node "$root/.agent/tools/common/check-artifacts.mjs"; then :; else
   report_fail "$step" "版本库混入中间产物" "node .agent/tools/common/check-artifacts.mjs"
 fi
 
 # 规范边界：.agent/ 要能被别的项目整包复用，就不能引用包外路径
-total=$((total + 1))
 run_step "规范边界：node .agent/tools/common/check-scope.mjs"
 if node "$root/.agent/tools/common/check-scope.mjs"; then :; else
   report_fail "$step" "规范引用了 .agent 之外的路径" "node .agent/tools/common/check-scope.mjs"
