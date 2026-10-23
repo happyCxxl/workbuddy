@@ -671,7 +671,7 @@ defineExpose({ goToPage, revealHighlight, setZoom });
   position: relative;
   flex: none;
   overflow: hidden;
-  background: #fff;
+  background: var(--kb-preview-bg);
   box-shadow: 0 2px 10px rgb(0 0 0 / 35%);
 }
 

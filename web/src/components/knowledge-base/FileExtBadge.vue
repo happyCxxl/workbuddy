@@ -107,7 +107,7 @@ const tone = computed(() => EXT_TONES[props.ext.toUpperCase()] ?? 'generic');
 .file-ext[data-tone='pdf'] {
   border-color: rgb(255 122 122 / 45%);
   background: linear-gradient(160deg, rgb(255 122 122 / 32%), rgb(255 122 122 / 12%));
-  color: #ffc9c9;
+  color: var(--kb-file-pdf);
   box-shadow: 0 0 14px rgb(255 122 122 / 16%);
 }
 
@@ -115,7 +115,7 @@ const tone = computed(() => EXT_TONES[props.ext.toUpperCase()] ?? 'generic');
 .file-ext[data-tone='doc'] {
   border-color: rgb(96 165 250 / 45%);
   background: linear-gradient(160deg, rgb(96 165 250 / 32%), rgb(96 165 250 / 12%));
-  color: #bfdbfe;
+  color: var(--kb-file-doc);
   box-shadow: 0 0 14px rgb(96 165 250 / 16%);
 }
 
@@ -123,7 +123,7 @@ const tone = computed(() => EXT_TONES[props.ext.toUpperCase()] ?? 'generic');
 .file-ext[data-tone='sheet'] {
   border-color: rgb(74 222 128 / 45%);
   background: linear-gradient(160deg, rgb(74 222 128 / 32%), rgb(74 222 128 / 12%));
-  color: #bbf7d0;
+  color: var(--kb-file-sheet);
   box-shadow: 0 0 14px rgb(74 222 128 / 16%);
 }
 
@@ -131,7 +131,7 @@ const tone = computed(() => EXT_TONES[props.ext.toUpperCase()] ?? 'generic');
 .file-ext[data-tone='slide'] {
   border-color: rgb(251 146 60 / 45%);
   background: linear-gradient(160deg, rgb(251 146 60 / 32%), rgb(251 146 60 / 12%));
-  color: #fed7aa;
+  color: var(--kb-file-slide);
   box-shadow: 0 0 14px rgb(251 146 60 / 16%);
 }
 
@@ -139,7 +139,7 @@ const tone = computed(() => EXT_TONES[props.ext.toUpperCase()] ?? 'generic');
 .file-ext[data-tone='text'] {
   border-color: rgb(167 139 250 / 45%);
   background: linear-gradient(160deg, rgb(167 139 250 / 32%), rgb(167 139 250 / 12%));
-  color: #ddd6fe;
+  color: var(--kb-file-text);
   box-shadow: 0 0 14px rgb(167 139 250 / 16%);
 }
 
@@ -147,7 +147,7 @@ const tone = computed(() => EXT_TONES[props.ext.toUpperCase()] ?? 'generic');
 .file-ext[data-tone='image'] {
   border-color: rgb(34 211 238 / 45%);
   background: linear-gradient(160deg, rgb(34 211 238 / 32%), rgb(34 211 238 / 12%));
-  color: #a5f3fc;
+  color: var(--kb-file-image);
   box-shadow: 0 0 14px rgb(34 211 238 / 16%);
 }
 

@@ -26,6 +26,14 @@
   --kb-warn: #fbbf24;
   --kb-danger: #f87171;
   --kb-btn-text: #041510;
+  --kb-preview-bg: #fff;
+  --kb-preview-text: #000;
+  --kb-file-pdf: #ffc9c9;
+  --kb-file-doc: #bfdbfe;
+  --kb-file-sheet: #bbf7d0;
+  --kb-file-slide: #fed7aa;
+  --kb-file-text: #ddd6fe;
+  --kb-file-image: #a5f3fc;
   --kb-radius: 14px;
 }
 

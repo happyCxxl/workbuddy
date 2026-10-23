@@ -1107,12 +1107,12 @@ function goStages(): void {
 .ib-btn.is-primary {
   border-color: transparent;
   background: var(--kb-primary);
-  color: #041510;
+  color: var(--kb-btn-text);
   font-weight: 600;
 }
 
 .ib-btn.is-primary:hover {
-  color: #041510;
+  color: var(--kb-btn-text);
   filter: brightness(1.08);
 }
 

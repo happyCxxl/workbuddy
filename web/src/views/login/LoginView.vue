@@ -28,7 +28,7 @@
                 >
                   <path
                     d="M5 7.5l3.6 12 4.4-8.4 4.4 8.4L21 7.5"
-                    stroke="#041510"
+                    stroke="var(--kb-btn-text)"
                     stroke-width="2.6"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -115,7 +115,7 @@
                 >
                   <path
                     d="M5 7.5l3.6 12 4.4-8.4 4.4 8.4L21 7.5"
-                    stroke="#041510"
+                    stroke="var(--kb-btn-text)"
                     stroke-width="2.6"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -525,7 +525,11 @@ onBeforeUnmount(() => {
     linear-gradient(rgb(255 255 255 / 2.8%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(255 255 255 / 2.8%) 1px, transparent 1px);
   background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 25%, transparent 78%);
+  mask-image: radial-gradient(
+    ellipse 90% 70% at 50% 40%,
+    var(--kb-preview-text) 25%,
+    transparent 78%
+  );
 }
 
 .login-stars {

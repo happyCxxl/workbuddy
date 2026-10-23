@@ -306,7 +306,7 @@ defineExpose({ revealAnchor });
 
 .docx-preview-host {
   transform-origin: top left;
-  color: #000;
+  color: var(--kb-preview-text);
   cursor: text;
 }
 </style>

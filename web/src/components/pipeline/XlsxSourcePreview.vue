@@ -340,8 +340,8 @@ defineExpose({ revealAnchor });
 
 .xlsx-preview-grid {
   border-collapse: collapse;
-  background: #fff;
-  color: #000;
+  background: var(--kb-preview-bg);
+  color: var(--kb-preview-text);
   font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
   font-size: 12px;
 }
