@@ -1,6 +1,6 @@
 #!/bin/sh
 # 推送前门禁：按改动范围运行仓库内的检查器；技术栈按仓库实际存在的构建文件决定。
-# 通用约定：Maven 仓库跑 mvn，含 lint 脚本的前端仓库跑包管理器 lint；不写死任何项目路径。
+# 通用约定：Maven 仓库跑 mvn，含 lint 脚本的前端仓库跑包管理器 lint（前端目录按改动路径推导）；不写死任何项目路径。
 #
 # 用法：
 #   1) 由 git 钩子调用（从标准输入读 push 协议行）；
@@ -35,6 +35,16 @@ has_md=$(printf '%s\n' "$changed" | grep -cE '\.md$' || true)
 has_agents=$(printf '%s\n' "$changed" | grep -cE 'AGENTS\.md$' || true)
 has_pom=$(printf '%s\n' "$changed" | grep -cE '(^|/)pom\.xml$' || true)
 has_web=$(printf '%s\n' "$changed" | grep -cE '^(web|frontend|ui)/' || true)
+# 前端目录：优先取改动文件首段的 web|frontend|ui；否则取 package.json 所在目录（前端在仓库根的场景）。
+# 计数与执行条件同源：都只看 has_web_chg，避免「算了但没跑」的静默漏检。
+web_dir=$(printf '%s\n' "$changed" | grep -oE '^(web|frontend|ui)/' | head -n 1 | sed 's#/$##')
+if [ -z "$web_dir" ] && printf '%s\n' "$changed" | grep -qE '(^|/)package\.json$'; then
+  web_dir=$(printf '%s\n' "$changed" | grep -E '(^|/)package\.json$' | head -n 1 | sed 's#/package\.json$##')
+fi
+has_web_chg=0
+if [ "$has_web" -gt 0 ] || printf '%s\n' "$changed" | grep -qE '(^|/)package\.json$'; then
+  has_web_chg=1
+fi
 has_test=$(printf '%s\n' "$changed" | grep -cE '/src/test/.*\.java$' || true)
 
 [ "$has_text" -gt 0 ] && total=$((total + 1))
@@ -46,11 +56,7 @@ has_test=$(printf '%s\n' "$changed" | grep -cE '/src/test/.*\.java$' || true)
 if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
   [ -f "$root/pom.xml" ] && total=$((total + 1))
 fi
-if [ "$has_web" -gt 0 ] || printf '%s\n' "$changed" | grep -qE '(^|/)package\.json$'; then
-  if [ -f "$root/package.json" ] && grep -q '"lint"' "$root/package.json" 2>/dev/null; then
-    total=$((total + 1))
-  fi
-fi
+[ "$has_web_chg" -eq 1 ] && total=$((total + 1))
 
 report_fail() {
   echo ""
@@ -143,12 +149,13 @@ if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
   fi
 fi
 
-if [ "$has_web" -gt 0 ] || printf '%s\n' "$changed" | grep -qE '(^|/)package\.json$'; then
-  if [ -f "$root/package.json" ] && grep -q '"lint"' "$root/package.json" 2>/dev/null; then
-    run_step "前端校验：包管理器 lint"
-    if (cd "$root" && (command -v pnpm >/dev/null 2>&1 && pnpm lint || npm run lint)); then :; else
-      report_fail "$step" "前端校验失败" "pnpm lint"
-    fi
+if [ "$has_web_chg" -eq 1 ]; then
+  if [ -z "$web_dir" ] || [ ! -f "$root/$web_dir/package.json" ] || ! grep -q '"lint"' "$root/$web_dir/package.json" 2>/dev/null; then
+    report_fail "$step" "前端目录缺少带 lint 脚本的 package.json（${web_dir:-未定位}）" "在 ${web_dir:-前端目录} 补 lint 脚本后复跑门禁"
+  fi
+  run_step "前端校验：包管理器 lint（${web_dir}/）"
+  if (cd "$root/$web_dir" && (command -v pnpm >/dev/null 2>&1 && pnpm lint || npm run lint)); then :; else
+    report_fail "$step" "前端校验失败" "cd $web_dir && pnpm lint"
   fi
 fi
 
