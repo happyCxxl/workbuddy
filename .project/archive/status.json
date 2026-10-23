@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-23",
-      "baseline": "05317a34",
-      "note": "基线重算：1110 文件、WARN 39、349/320 测试文件、门禁命令 mvn -o -q verify；快照补 check-scope/check-modules/check-project-docs；风险表补超长文件、日志前缀、SEC-15/SEC-06/中间件凭据登记"
+      "baseline": "4b056060",
+      "note": "超长文件处置更新：KnowledgeConverter 已按功能域拆分入库；EmbedPipeline/IndexBuildServiceImpl/FieldNormalizeRule 与 8 个超长测试类全部论证登记（理由见风险表行内）"
     },
     "01": {
       "status": "已复核",
