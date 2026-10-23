@@ -6,7 +6,7 @@ import com.workbuddy.infra.vector.MilvusProperties;
 import com.workbuddy.model.config.ModelRouteProperties;
 import com.workbuddy.worker.chunking.ChunkProperties;
 import com.workbuddy.worker.embedding.EmbedProperties;
-import com.workbuddy.worker.input.FileValidationProperties;
+import com.workbuddy.filecenter.config.FileProperties;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.preprocessing.PreprocessProperties;
 import com.workbuddy.worker.structure.StructureProperties;
@@ -67,7 +67,7 @@ class PropertiesConfigCoverageTest {
         TARGETS.put("knowledge.chunk", ChunkProperties.class);
         TARGETS.put("knowledge.embed", EmbedProperties.class);
         TARGETS.put("knowledge.vector.milvus", MilvusProperties.class);
-        TARGETS.put("workbuddy.file", FileValidationProperties.class);
+        TARGETS.put("workbuddy.file", FileProperties.class);
         TARGETS.put("knowledge.task", TaskQueueProperties.class);
         TARGETS.put("workbuddy.auth.jwt", JwtProperties.class);
         TARGETS.put("workbuddy.auth.guard", LoginGuardProperties.class);

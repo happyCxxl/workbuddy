@@ -1,4 +1,4 @@
-package com.workbuddy.worker.input.impl;
+package com.workbuddy.filecenter.service.impl;
 
 import com.workbuddy.common.domain.input.FileMetadata;
 import com.workbuddy.common.domain.input.FileValidationResult;
@@ -6,14 +6,8 @@ import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
+import com.workbuddy.filecenter.config.FileProperties;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.worker.input.FileValidationProperties;
-import com.workbuddy.worker.input.check.FileCheck;
-import com.workbuddy.worker.input.impl.check.CorruptionProbeCheck;
-import com.workbuddy.worker.input.impl.check.EmptyFileCheck;
-import com.workbuddy.worker.input.impl.check.MagicTypeCheck;
-import com.workbuddy.worker.input.impl.check.MetadataMatchCheck;
-import com.workbuddy.worker.input.impl.check.SizeLimitCheck;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +23,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,29 +30,32 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * 文件校验步骤链单测：编排器（FileValidationPipeline）+ 五校验步骤（真实实例）。
+ * 文件服务提交校验流程单测：单次取流内大小统计与 sha256、空文件、双源比对、魔数识别、损坏探测。
  */
 @ExtendWith(MockitoExtension.class)
-class FileValidationPipelineTest {
+class FileServiceValidateTest {
 
     @Mock
     private FileStorage fileStorage;
 
-    private FileValidationProperties properties;
+    private FileProperties properties;
 
     @BeforeEach
     void setUp() {
-        properties = PropertiesFixtures.fileValidation();
+        properties = fileProperties();
     }
 
-    /** 全部校验步骤真实实例（无 mock） */
-    private List<FileCheck> checks() {
-        return List.of(new SizeLimitCheck(), new EmptyFileCheck(), new MetadataMatchCheck(),
-                new MagicTypeCheck(), new CorruptionProbeCheck());
+    /** 配置面真实取值（workbuddy-file.yml）直写夹具：测试工作目录在 file 模块，不启容器加载 */
+    private FileProperties fileProperties() {
+        FileProperties fixture = new FileProperties();
+        fixture.setMaxSize(104857600L);
+        fixture.setEnabledFormats(List.of("PDF", "DOC", "DOCX", "XLS", "XLSX", "PPT", "PPTX"));
+        fixture.setTempFileThreshold(10485760L);
+        return fixture;
     }
 
-    private FileValidationPipeline validator() {
-        return new FileValidationPipeline(fileStorage, properties, checks());
+    private FileServiceImpl service() {
+        return new FileServiceImpl(fileStorage, properties);
     }
 
     private void stubFile(String fileId, byte[] bytes) {
@@ -95,7 +91,7 @@ class FileValidationPipelineTest {
         byte[] bytes = minimalPdf();
         stubFile("f1", bytes);
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertTrue(result.isPassed());
         assertEquals(FileFormat.PDF, result.getFormat());
@@ -114,7 +110,7 @@ class FileValidationPipelineTest {
         assertTrue(bytes.length > 10);
         stubFile("f1", bytes);
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertTrue(result.isPassed());
         assertEquals(sha256(bytes), result.getSha256());
@@ -131,7 +127,7 @@ class FileValidationPipelineTest {
         assertTrue(bytes.length > 10);
         stubFile("f1", bytes);
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertFalse(result.isPassed());
         assertEquals(FileValidationFailReason.FILE_TOO_LARGE, result.getFailReason());
@@ -144,7 +140,7 @@ class FileValidationPipelineTest {
     void validateEmptyFileShouldFailCorrupted() {
         stubFile("f1", new byte[0]);
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertFalse(result.isPassed());
         assertEquals(FileValidationFailReason.FILE_CORRUPTED, result.getFailReason());
@@ -158,7 +154,7 @@ class FileValidationPipelineTest {
         when(fileStorage.metadata("f1"))
                 .thenThrow(new WorkbuddyException(ErrorCode.FILE_NOT_FOUND));
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertFalse(result.isPassed());
         assertEquals(FileValidationFailReason.FILE_NOT_FOUND, result.getFailReason());
@@ -175,7 +171,7 @@ class FileValidationPipelineTest {
         when(fileStorage.metadata("f1")).thenReturn(metadata);
         when(fileStorage.open("f1")).thenReturn(new ByteArrayInputStream(bytes));
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertFalse(result.isPassed());
         assertEquals(FileValidationFailReason.METADATA_MISMATCH, result.getFailReason());
@@ -193,7 +189,7 @@ class FileValidationPipelineTest {
         when(fileStorage.metadata("f1")).thenReturn(metadata);
         when(fileStorage.open("f1")).thenReturn(new ByteArrayInputStream(bytes));
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertTrue(result.isPassed());
         assertEquals(bytes.length, result.getSize());
@@ -208,7 +204,7 @@ class FileValidationPipelineTest {
         byte[] jpegMagic = new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0x00, 0x10};
         stubFile("f1", jpegMagic);
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertFalse(result.isPassed());
         assertEquals(FileValidationFailReason.IMAGE_OCR_RESERVED, result.getFailReason());
@@ -222,7 +218,7 @@ class FileValidationPipelineTest {
         // text/plain 可识别（TXT）但默认不在白名单
         stubFile("f1", "hello world".getBytes());
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertFalse(result.isPassed());
         assertEquals(FileValidationFailReason.FORMAT_NOT_ALLOWED, result.getFailReason());
@@ -236,7 +232,7 @@ class FileValidationPipelineTest {
         properties.setEnabledFormats(List.of("PDF", "TXT"));
         stubFile("f1", "hello world".getBytes());
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertTrue(result.isPassed());
         assertEquals(FileFormat.TXT, result.getFormat());
@@ -249,7 +245,7 @@ class FileValidationPipelineTest {
     void validateUnknownBinaryShouldFailNotAllowed() {
         stubFile("f1", new byte[]{0x00, 0x01, 0x02, 0x03});
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertFalse(result.isPassed());
         assertEquals(FileValidationFailReason.FORMAT_NOT_ALLOWED, result.getFailReason());
@@ -263,28 +259,10 @@ class FileValidationPipelineTest {
         // PDF 魔数通过但结构损坏：试解析失败 → 损坏判定
         stubFile("f1", "%PDF-1.4\nnot a real pdf".getBytes());
 
-        FileValidationResult result = validator().validate("f1");
+        FileValidationResult result = service().validate("f1");
 
         assertFalse(result.isPassed());
         assertEquals(FileValidationFailReason.FILE_CORRUPTED, result.getFailReason());
         verify(fileStorage).metadata("f1");
-    }
-
-    /**
-     * 守护 {@code checksShouldRunInOrderRegardlessOfInjectionOrder}：该场景行为改动即失败。
-     */
-    @Test
-    void checksShouldRunInOrderRegardlessOfInjectionOrder() throws Exception {
-        // 注入乱序（编排器按 order() 排序执行）：空文件仍应由空文件判定（而非魔数/试解析）拦截
-        byte[] bytes = minimalPdf();
-        stubFile("f1", bytes);
-        List<FileCheck> shuffled = List.of(new CorruptionProbeCheck(), new SizeLimitCheck(),
-                new MagicTypeCheck(), new MetadataMatchCheck(), new EmptyFileCheck());
-
-        FileValidationResult result = new FileValidationPipeline(fileStorage, properties, shuffled).validate("f1");
-
-        assertTrue(result.isPassed());
-        assertEquals(FileFormat.PDF, result.getFormat());
-        assertEquals(sha256(bytes), result.getSha256());
     }
 }

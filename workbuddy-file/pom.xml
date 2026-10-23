@@ -36,6 +36,18 @@
             <artifactId>workbuddy-infra</artifactId>
         </dependency>
 
+        <!-- 魔数识别（上传/提交校验链路共用，Tika 真实格式识别；与解析环节同版本） -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parsers-standard-package</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
         <!-- MyBatis-Plus（档案表持久化；版本与根 pom mybatis-plus.version 对齐） -->
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -76,6 +88,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- PDFBox（校验链测试现场生成合法 PDF；版本由根 pom 钉版，与解析环节同源） -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -2,7 +2,6 @@ package com.workbuddy.biz.controller.file;
 
 import com.workbuddy.common.web.R;
 import com.workbuddy.filecenter.service.FileService;
-import com.workbuddy.filecenter.storage.FileStorage;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +22,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class FileController {
 
-    private final FileStorage fileStorage;
     private final FileService fileService;
 
     /**
@@ -34,7 +32,7 @@ public class FileController {
      */
     @PostMapping
     public R<String> upload(@RequestParam("file") MultipartFile file) {
-        return R.ok(fileStorage.putFile(file));
+        return R.ok(fileService.upload(file));
     }
 
     /**

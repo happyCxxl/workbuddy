@@ -1,7 +1,6 @@
 package com.workbuddy.biz.controller.file;
 
 import com.workbuddy.filecenter.service.FileService;
-import com.workbuddy.filecenter.storage.FileStorage;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,30 +27,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class FileControllerRoutingTest {
 
-    private FileStorage fileStorage;
-
     private FileService fileService;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        fileStorage = mock(FileStorage.class);
         fileService = mock(FileService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new FileController(fileStorage, fileService)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new FileController(fileService)).build();
     }
 
     /**
-     * 守护 {@code uploadPathShouldBindMultipartFileAndRouteToStorage}：该场景行为改动即失败。
+     * 守护 {@code uploadPathShouldBindMultipartFileAndRouteToFileService}：该场景行为改动即失败。
      */
     @Test
-    void uploadPathShouldBindMultipartFileAndRouteToStorage() throws Exception {
+    void uploadPathShouldBindMultipartFileAndRouteToFileService() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "a.pdf", "application/pdf", new byte[] {1, 2});
 
         mockMvc.perform(multipart("/files").file(file)).andExpect(status().isOk());
 
-        verify(fileStorage).putFile(any());
-        verifyNoInteractions(fileService);
+        verify(fileService).upload(any());
     }
 
     /**
@@ -62,7 +57,7 @@ class FileControllerRoutingTest {
         mockMvc.perform(get("/files/F-88")).andExpect(status().isOk());
 
         verify(fileService).download(eq("F-88"), any());
-        verify(fileStorage, never()).putFile(any());
+        verify(fileService, never()).upload(any());
     }
 
     /**
@@ -77,6 +72,6 @@ class FileControllerRoutingTest {
         // 上传只收 multipart：URL 编码表单进不了收参绑定，由 Spring 在派发期抛异常
         assertThrows(ServletException.class, () -> mockMvc.perform(post("/files").param("file", "F-88")));
 
-        verifyNoInteractions(fileStorage);
+        verifyNoInteractions(fileService);
     }
 }

@@ -6,7 +6,7 @@ import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.startup.StartupCheck;
 import com.workbuddy.common.startup.StartupCheckChain;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.worker.input.FileValidationProperties;
+import com.workbuddy.filecenter.config.FileProperties;
 import com.workbuddy.worker.parser.DocumentParserPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,7 +26,7 @@ import java.util.List;
 public class ParserWhitelistChecker implements StartupCheck {
 
     private final List<DocumentParserPort> parsers;
-    private final FileValidationProperties properties;
+    private final FileProperties properties;
 
     /**
      * 构造校验项：登记全部解析器并读取白名单配置。
@@ -34,7 +34,7 @@ public class ParserWhitelistChecker implements StartupCheck {
      * @param parsers    解析器实现
      * @param properties 文件校验配置
      */
-    public ParserWhitelistChecker(List<DocumentParserPort> parsers, FileValidationProperties properties) {
+    public ParserWhitelistChecker(List<DocumentParserPort> parsers, FileProperties properties) {
         this.parsers = parsers;
         this.properties = properties;
     }

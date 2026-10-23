@@ -118,6 +118,7 @@
 | 40410 | `FILE_NOT_FOUND`                       | 文件不存在                                           |
 | 40420 | `REQUEST_ID_MISSING`                   | 缺少幂等键                                           |
 | 40421 | `KB_NOT_ACTIVE`                        | 知识库未启用，不可提交文档                           |
+| 40422 | `FILE_UPLOAD_REJECTED`                 | 文件上传校验未通过（具体原因在响应 detail）          |
 | 40431 | `TASK_ALREADY_PENDING`                 | 任务进行中，请勿重复触发                             |
 | 40432 | `FILE_RESULT_NOT_FOUND`                | 文件结果不存在                                       |
 | 40433 | `STRATEGY_VERSION_NOT_FOUND`           | 策略版本不存在或未启用                               |

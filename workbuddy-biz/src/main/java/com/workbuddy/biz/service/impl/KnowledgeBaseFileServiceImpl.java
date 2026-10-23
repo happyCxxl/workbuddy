@@ -34,8 +34,8 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.provider.StorageRouter;
+import com.workbuddy.filecenter.service.FileService;
 import com.workbuddy.filecenter.storage.FileStorage;
-import com.workbuddy.worker.input.FileValidatorPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -79,9 +79,9 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
 
     private final WbPipelineTaskDbService pipelineTaskDbService;
 
-    private final FileValidatorPort fileValidator;
-
     private final FileStorage fileStorage;
+
+    private final FileService fileService;
 
     private final StorageRouter storageRouter;
 
@@ -124,7 +124,7 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
 
         // ③ 文件校验：读对象存储，必须在事务外；失败只记 FAIL 日志，不建结果、不建任务
         long validationStart = System.currentTimeMillis();
-        FileValidationResult validationResult = fileValidator.validate(request.getFileId());
+        FileValidationResult validationResult = fileService.validate(request.getFileId());
         if (!validationResult.isPassed()) {
             return recordFailAndReturn(knowledgeBaseId, request, validationResult.getFailReason().name(),
                     metadataFileName(request.getFileId()));

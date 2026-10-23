@@ -1,5 +1,6 @@
 package com.workbuddy.common.enums.input;
 
+import com.workbuddy.common.utils.NullUtil;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -61,5 +62,30 @@ public enum FileFormat {
                 .filter(f -> f.mimeType.equals(mimeType))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * 按扩展名查找格式（上传链路扩展名白名单用；不区分大小写，不带点）。
+     *
+     * @param extension 扩展名（如 "pdf"）
+     * @return 命中的格式；未知扩展名为 null
+     */
+    public static FileFormat ofExtension(String extension) {
+        if (NullUtil.isNull(extension)) {
+            return null;
+        }
+        return switch (extension.toLowerCase()) {
+            case "pdf" -> PDF;
+            case "doc" -> DOC;
+            case "docx" -> DOCX;
+            case "xls" -> XLS;
+            case "xlsx" -> XLSX;
+            case "ppt" -> PPT;
+            case "pptx" -> PPTX;
+            case "txt" -> TXT;
+            case "md" -> MD;
+            case "csv" -> CSV;
+            default -> null;
+        };
     }
 }
