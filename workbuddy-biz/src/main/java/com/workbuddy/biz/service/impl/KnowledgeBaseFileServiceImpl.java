@@ -1,5 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.biz.service.KnowledgeBaseFileService;
@@ -135,6 +136,10 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
                 validationResult.getSize(), validationResult.getSha256(),
                 System.currentTimeMillis() - validationStart);
 
+        // 同知识库内容去重：同一份文件重复上传会拿到新 fileId，仅靠 requestId 防不住；
+        // 按 sha256 找同内容档案，再确认该档案在本库已有文件结果
+        rejectDuplicateInKb(knowledgeBaseId, validationResult.getSha256());
+
         // ④ 元数据读取也在事务外；⑤ 建档三写放进短事务（不登记任务——解析由页面触发）
         long buildStart = System.currentTimeMillis();
         FileMetadata metadata = fileStorage.metadata(request.getFileId());
@@ -160,6 +165,28 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
                         + " 建档耗时={}ms",
                 kb.getId(), request.getFileId(), submitLog.getFileResultId(), System.currentTimeMillis() - buildStart);
         return inputVoAssembler.toSubmitResponse(submitLog, null);
+    }
+
+    /**
+     * 同知识库内容去重：按 sha256 查同内容来源文件，若其已在本库建过文件结果则拒绝。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param sha256          本次文件内容指纹
+     */
+    private void rejectDuplicateInKb(Long knowledgeBaseId, String sha256) {
+        if (StrUtil.isBlank(sha256)) {
+            return;
+        }
+        List<WbSourceFile> sameContent = sourceFileDbService.listBySha256(sha256);
+        if (NullUtil.isNull(sameContent) || sameContent.isEmpty()) {
+            return;
+        }
+        List<Long> sourceIds = sameContent.stream().map(WbSourceFile::getId).toList();
+        boolean duplicated = ObjectUtil.defaultIfNull(kbFileResultDbService.listByKb(knowledgeBaseId),
+                        List.<WbFileResult>of()).stream()
+                .anyMatch(result -> sourceIds.contains(result.getSourceFileId()));
+        ThrowUtil.throwIf(duplicated, ErrorCode.FILE_DUPLICATE,
+                "文件已在当前知识库中：" + sameContent.getFirst().getFileName());
     }
 
     /**

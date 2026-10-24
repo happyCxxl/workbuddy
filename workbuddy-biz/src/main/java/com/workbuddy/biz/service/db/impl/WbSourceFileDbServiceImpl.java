@@ -46,4 +46,20 @@ public class WbSourceFileDbServiceImpl extends InfraDbServiceImpl<WbSourceFileMa
         queryWrapper.in(WbSourceFile::getFileId, fileIds);
         return list(queryWrapper);
     }
+
+    /**
+     * 按内容指纹取档案（同内容多次上传会对应多个 fileId）。
+     *
+     * @param sha256 文件内容 sha256
+     * @return 命中的档案列表；入参为空时返回空列表
+     */
+    @Override
+    public List<WbSourceFile> listBySha256(String sha256) {
+        if (NullUtil.isNull(sha256) || sha256.isBlank()) {
+            return List.of();
+        }
+        LambdaQueryWrapper<WbSourceFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(WbSourceFile::getSha256, sha256);
+        return list(queryWrapper);
+    }
 }

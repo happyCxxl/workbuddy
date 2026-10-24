@@ -26,4 +26,12 @@ public interface WbSourceFileDbService extends InfraDbService<WbSourceFile> {
      * @return 命中的来源文件；集合为空时返回空列表
      */
     List<WbSourceFile> listByFileIds(Collection<String> fileIds);
+
+    /**
+     * 按内容指纹查来源文件（同内容可能因多次上传产生多个 fileId）。
+     *
+     * @param sha256 文件内容 sha256
+     * @return 命中的来源文件；无命中返回空列表
+     */
+    List<WbSourceFile> listBySha256(String sha256);
 }

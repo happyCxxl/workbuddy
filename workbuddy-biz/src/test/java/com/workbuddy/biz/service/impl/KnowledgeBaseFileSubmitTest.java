@@ -15,6 +15,8 @@ import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.enums.input.SubmitStatus;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.user.UserRole;
+import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.service.FileService;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -27,9 +29,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.springframework.dao.DuplicateKeyException;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -139,6 +144,29 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
         externalFirst.verify(fileService).validate("88");
         externalFirst.verify(fileStorage).metadata("88");
         externalFirst.verify(sourceFileDbService).save(any(WbSourceFile.class));
+    }
+
+    /**
+     * 同知识库同内容重复提交：按 sha256 命中已有来源文件且本库已有文件结果时拒绝。
+     */
+    @Test
+    void submitShouldRejectDuplicateContentInSameKb() {
+        when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
+        when(fileService.validate("88")).thenReturn(passResult());
+        WbSourceFile same = new WbSourceFile();
+        same.setId(7L);
+        same.setFileName("招标文件.pdf");
+        when(sourceFileDbService.listBySha256("sha256-abc")).thenReturn(List.of(same));
+        WbFileResult existingResult = new WbFileResult();
+        existingResult.setSourceFileId(7L);
+        when(kbFileResultDbService.listByKb(1L)).thenReturn(List.of(existingResult));
+
+        WorkbuddyException error = assertThrows(WorkbuddyException.class,
+                () -> service.submit(1L, request()));
+
+        assertEquals(ErrorCode.FILE_DUPLICATE, error.getErrorCode());
+        verify(sourceFileDbService, never()).save(any(WbSourceFile.class));
+        verify(kbFileResultDbService, never()).save(any(WbFileResult.class));
     }
 
     /**
