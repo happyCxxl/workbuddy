@@ -13,6 +13,7 @@ import com.workbuddy.worker.parser.pdf.assemble.PageElementIds;
 import com.workbuddy.worker.parser.pdf.assemble.PageTableProvenance;
 import com.workbuddy.worker.parser.pdf.assemble.PdfBodyAssembler;
 import com.workbuddy.worker.parser.pdf.assemble.TableContinuationSupport;
+import com.workbuddy.worker.parser.pdf.assemble.TableDeduplicator;
 import com.workbuddy.worker.parser.pdf.assemble.PdfImageEmitter;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
 import com.workbuddy.worker.parser.pdf.extract.PdfPageExtractor;
@@ -176,6 +177,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
                         capabilityRegistry);
                 PdfImageEmitter.emit(page, elements, source, fileId, properties);
                 List<ParseElement> pageElements = elements.subList(mark, elements.size());
+                TableDeduplicator.mergeInPlace(pageElements, source, page.pageNo());
                 PageElementIds.assign(pageElements, page.pageNo());
                 PageTableProvenance.assign(pageElements, fileId, page.pageNo());
             }
