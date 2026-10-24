@@ -302,6 +302,16 @@
                   只列预览当前页
                 </label>
                 <span v-if="keyword.trim()" class="parse-drawer-hint">只过滤当前页</span>
+                <select
+                  v-if="typeOptions.length > 0"
+                  v-model="typeFilter"
+                  class="parse-drawer-select"
+                >
+                  <option value="">全部类型</option>
+                  <option v-for="type in typeOptions" :key="type" :value="type">
+                    {{ type }}
+                  </option>
+                </select>
                 <span v-if="itemsLoading" class="parse-drawer-hint">加载中…</span>
                 <span v-else-if="itemsError" class="parse-drawer-hint parse-drawer-hint-bad">
                   {{ itemsError }}
@@ -666,12 +676,26 @@
             <!-- 页签：告警（结构化告警优先；旧响应退回纯文案） -->
             <div v-else-if="activeTab === 'warnings'" class="parse-drawer-tabpane">
               <div class="parse-drawer-tabscroll">
+                <select
+                  v-if="warningCodeOptions.length > 0"
+                  v-model="warningCodeFilter"
+                  class="parse-drawer-select"
+                >
+                  <option value="">全部告警类型</option>
+                  <option
+                    v-for="option in warningCodeOptions"
+                    :key="option.code"
+                    :value="option.code"
+                  >
+                    {{ option.code }}（{{ option.count }}）
+                  </option>
+                </select>
                 <h5 v-if="warningItems.length > 0" class="parse-drawer-subtitle">
                   告警 {{ warningItems.length }}
                 </h5>
-                <ul v-if="warningItems.length > 0" class="parse-drawer-warnings">
+                <ul v-if="visibleWarningItems.length > 0" class="parse-drawer-warnings">
                   <li
-                    v-for="(warn, index) in warningItems"
+                    v-for="(warn, index) in visibleWarningItems"
                     :key="`${warn.code}-${index}`"
                     class="parse-drawer-warning"
                   >
@@ -687,6 +711,12 @@
                     </button>
                   </li>
                 </ul>
+                <p
+                  v-if="warningItems.length > 0 && visibleWarningItems.length === 0"
+                  class="parse-drawer-hint"
+                >
+                  没有匹配的告警
+                </p>
                 <h5
                   v-if="warningItems.length === 0 && warnings.length > 0"
                   class="parse-drawer-subtitle"
@@ -929,6 +959,8 @@ const itemsError = ref('');
 let itemsRequestSeq = 0;
 
 const keyword = ref('');
+const typeFilter = ref('');
+const warningCodeFilter = ref('');
 const expanded = ref(new Set<string>());
 
 // ---- 原文预览与双栏联动 ----
@@ -1263,12 +1295,20 @@ const visibleItems = computed(() => {
     })
     .filter(
       (item) =>
-        text === '' ||
-        item.text.toLowerCase().includes(text) ||
-        item.rawType.toLowerCase().includes(text) ||
-        item.typeText.includes(text),
+        (typeFilter.value === '' || item.rawType === typeFilter.value) &&
+        (text === '' ||
+          item.text.toLowerCase().includes(text) ||
+          item.rawType.toLowerCase().includes(text) ||
+          item.typeText.includes(text)),
     );
 });
+
+/** 当前页可选的元素类型（筛选只作用于已取回的当前页） */
+const typeOptions = computed(() =>
+  Array.from(
+    new Set(rawItems.value.map((item) => item.type ?? '').filter((type) => type !== '')),
+  ).sort(),
+);
 
 /** 高亮框：只取有坐标且有页码的元素（Office 元素无坐标，自然不画） */
 const highlights = computed<PreviewHighlight[]>(() =>
@@ -1319,6 +1359,20 @@ const warningItems = computed<ParseWarning[]>(() => {
   const value = detail.value;
   return value !== null && 'warningItems' in value ? (value.warningItems ?? []) : [];
 });
+/** 告警码选项（含条数） */
+const warningCodeOptions = computed(() => {
+  const counts = new Map<string, number>();
+  for (const item of warningItems.value) {
+    const code = item.code ?? 'UNKNOWN';
+    counts.set(code, (counts.get(code) ?? 0) + 1);
+  }
+  return Array.from(counts, ([code, count]) => ({ code, count }));
+});
+const visibleWarningItems = computed(() =>
+  warningCodeFilter.value === ''
+    ? warningItems.value
+    : warningItems.value.filter((item) => (item.code ?? 'UNKNOWN') === warningCodeFilter.value),
+);
 const steps = computed(() => detail.value?.steps ?? []);
 
 /** 组装冲突（仅组装详情有该字段；解析环节恒空） */
@@ -2864,6 +2918,8 @@ watch(
     locatableTotal.value = 0;
     page.value = 1;
     keyword.value = '';
+    typeFilter.value = '';
+    warningCodeFilter.value = '';
     expanded.value = new Set<string>();
     copyHint.value = '';
     followPreview.value = true;
@@ -3412,6 +3468,17 @@ onBeforeUnmount(() => {
 
 .parse-drawer-search::placeholder {
   color: var(--kb-text-4);
+}
+
+.parse-drawer-select {
+  max-width: 240px;
+  padding: 5px 8px;
+  border: 1px solid var(--kb-line-2);
+  border-radius: 8px;
+  background: var(--kb-surface);
+  color: var(--kb-text-1);
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-size: 12px;
 }
 
 .parse-drawer-elements {
