@@ -132,7 +132,7 @@ public class KnowledgeBaseBindingSupport {
     }
 
     /**
-     * 绑定开关是否关闭（null 视为开启，兼容存量数据）。
+     * 绑定开关是否关闭（null 视为开启，兜底未赋值实体）。
      *
      * @param kb 知识库行（可空）
      * @return 开关关闭为 true

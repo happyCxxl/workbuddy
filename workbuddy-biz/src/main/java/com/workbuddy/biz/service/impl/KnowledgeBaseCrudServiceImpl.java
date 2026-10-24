@@ -23,7 +23,6 @@ import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.AuditObjectType;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
-import com.workbuddy.common.enums.knowledge.StrategyBindingSwitch;
 import com.workbuddy.common.convert.knowledge.KnowledgeBaseConverter;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
@@ -78,7 +77,6 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
     public Long create(KnowledgeBaseCreateDTO dto) {
         WbKnowledgeBase kb = knowledgeBaseConverter.toEntity(dto);
         kb.setStatus(KnowledgeBaseStatus.ACTIVE.getCode());
-        kb.setStrategyBindingEnabled(resolveBindingEnabled(dto.getStrategyBindingEnabled()));
         kb.setUserId(accessSupport.requireCurrentUserId());
         knowledgeBaseDbService.save(kb);
         kbAuditLogDbService.saveAudit(AuditActionType.CREATE, AUDIT_OBJECT_TYPE, kb.getId(), null,
@@ -100,7 +98,7 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
         String beforeJson = JsonUtil.toJsonStr(kb);
         kb.setName(dto.getName());
         kb.setDescription(dto.getDescription());
-        kb.setStrategyBindingEnabled(resolveBindingEnabled(dto.getStrategyBindingEnabled()));
+        kb.setStrategyBindingEnabled(dto.getStrategyBindingEnabled());
         knowledgeBaseDbService.updateById(kb);
         kbAuditLogDbService.saveAudit(AuditActionType.UPDATE, AUDIT_OBJECT_TYPE, kb.getId(),
                 beforeJson, JsonUtil.toJsonStr(kb));
@@ -116,7 +114,7 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
      */
     @Override
     public KnowledgeBaseVO detail(Long id) {
-        KnowledgeBaseVO vo = toVO(accessSupport.getAccessibleById(id));
+        KnowledgeBaseVO vo = knowledgeBaseConverter.toVO(accessSupport.getAccessibleById(id));
         bindingSupport.fillStrategyBindings(vo);
         vo.setDocumentCount(kbFileResultDbService.countByKb(id));
         return vo;
@@ -134,7 +132,7 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
         IPage<WbKnowledgeBase> page = knowledgeBaseDbService.pageByCondition(query.currentOrDefault(),
                 query.sizeOrDefault(), query.getName(), query.getStatus(), KnowledgeBaseSort.of(query.getSort()),
                 accessSupport.visibleOwnerId());
-        IPage<KnowledgeBaseVO> voPage = page.convert(this::toVO);
+        IPage<KnowledgeBaseVO> voPage = page.convert(knowledgeBaseConverter::toVO);
         List<KnowledgeBaseVO> records = voPage.getRecords();
         bindingSupport.fillStrategyBindings(records);
         fillDocumentCounts(records);
@@ -267,27 +265,5 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
         for (KnowledgeBaseVO vo : records) {
             vo.setDocumentCount(counts.getOrDefault(vo.getId(), 0L));
         }
-    }
-
-    private KnowledgeBaseVO toVO(WbKnowledgeBase kb) {
-        KnowledgeBaseVO vo = new KnowledgeBaseVO();
-        vo.setId(kb.getId());
-        vo.setName(kb.getName());
-        vo.setDescription(kb.getDescription());
-        vo.setStatus(kb.getStatus());
-        vo.setStrategyBindingEnabled(resolveBindingEnabled(kb.getStrategyBindingEnabled()));
-        vo.setPublishedIndexSetId(kb.getPublishedIndexSetId());
-        vo.setUserId(kb.getUserId());
-        vo.setCreateBy(kb.getCreateBy());
-        vo.setCreateTime(kb.getCreateTime());
-        vo.setUpdateBy(kb.getUpdateBy());
-        vo.setUpdateTime(kb.getUpdateTime());
-        return vo;
-    }
-
-    /** 开关归一化：null/非 0 一律视为开启（1） */
-    private Integer resolveBindingEnabled(Integer value) {
-        return StrategyBindingSwitch.isOn(value)
-                ? StrategyBindingSwitch.ON.getCode() : StrategyBindingSwitch.OFF.getCode();
     }
 }

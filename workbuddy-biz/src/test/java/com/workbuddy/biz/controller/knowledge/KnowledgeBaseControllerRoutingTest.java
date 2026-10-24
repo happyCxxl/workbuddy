@@ -50,7 +50,7 @@ class KnowledgeBaseControllerRoutingTest {
     }
 
     /**
-     * 创建：POST 清单路径带合法请求体，落到 create。
+     * 创建：POST `/knowledge-base/create` 带合法请求体，落到 create。
      *
      * <p>守护 {@code create} 的映射：路径或方法改错即失败。
      */
@@ -58,9 +58,9 @@ class KnowledgeBaseControllerRoutingTest {
     void createShouldRouteToService() throws Exception {
         when(knowledgeBaseService.createKnowledgeBase(any())).thenReturn(1L);
 
-        mockMvc.perform(post("/knowledge-base")
+        mockMvc.perform(post("/knowledge-base/create")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"标书库\"}"))
+                        .content("{\"name\":\"标书库\",\"strategyBindingEnabled\":1}"))
                 .andExpect(status().isOk());
 
         verify(knowledgeBaseService).createKnowledgeBase(any());
@@ -77,7 +77,7 @@ class KnowledgeBaseControllerRoutingTest {
 
         mockMvc.perform(put("/knowledge-base/9")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":9,\"name\":\"新名\"}"))
+                        .content("{\"id\":9,\"name\":\"新名\",\"strategyBindingEnabled\":1}"))
                 .andExpect(status().isOk());
 
         verify(knowledgeBaseService).updateKnowledgeBase(any());

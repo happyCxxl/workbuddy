@@ -34,7 +34,10 @@ public class WbKnowledgeBase extends BaseInfo {
     /** 状态：1 启用（ACTIVE）/ 0 停用（DISABLED），码值定义见 KnowledgeBaseStatus */
     private Integer status;
 
-    /** 策略绑定开关：1 开启（触发默认走 KB 绑定策略）/ 0 关闭（测评模式，触发必须显式选策略）；null 视为开启 */
+    /**
+     * 策略绑定开关：1 开启（触发默认走 KB 绑定策略）/ 0 关闭（测评模式，触发必须显式选策略）。
+     * 列 NOT NULL，判定口径见 StrategyBindingSwitch。
+     */
     private Integer strategyBindingEnabled;
 
     /** 绑定处理策略版本（三件套之一） */

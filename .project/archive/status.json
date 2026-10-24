@@ -50,9 +50,9 @@
     },
     "07": {
       "status": "已复核",
-      "reviewed": "2026-10-21",
-      "baseline": "5cb97c70",
-      "note": "索引构建入口的请求体→命令组装改由命令工厂承担，控制器对外契约未变"
+      "reviewed": "2026-10-24",
+      "baseline": "6d6fc408",
+      "note": "创建知识库端点改为 POST /knowledge-base/create，入参 strategyBindingEnabled 改为必填且只接受 0/1（@NotNull + @Min/@Max）；接口清单口径未变"
     },
     "08": {
       "status": "已复核",
@@ -62,9 +62,9 @@
     },
     "09": {
       "status": "已复核",
-      "reviewed": "2026-10-23",
-      "baseline": "bb69eaad",
-      "note": "metrics 端点移出免认证名单（SEC-04 默认拒绝），仅 health 保留放行；4 份环节文档同步"
+      "reviewed": "2026-10-24",
+      "baseline": "6d6fc408",
+      "note": "策略绑定开关改为入参必填 0/1，删除服务端归一化；support 侧开关判定注释改成「列 NOT NULL，null 仅兜代码内构造的未赋值实体」"
     }
   }
 }

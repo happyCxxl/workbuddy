@@ -54,24 +54,24 @@ public class KnowledgeBaseController {
      * 没有归属的库普通用户谁也看不见，只有管理员能碰。
      *
      * @param dto 创建请求体：name（必填，≤14 字符）、description（≤64 字符）、
-     *            strategyBindingEnabled（1 开启 / 0 关闭；null 视为开启）
+     *            strategyBindingEnabled（必填，只接受 1 开启 / 0 关闭）
      * @return 新知识库 ID（雪花 ID 以字符串返回，避免前端 JS 大整数精度丢失）
      */
-    @PostMapping
-    public R<String> create(@Valid @RequestBody KnowledgeBaseCreateDTO dto) {
+    @PostMapping("/create")
+    public R<Long> create(@Valid @RequestBody KnowledgeBaseCreateDTO dto) {
         log.info("===> KnowledgeBaseController create 创建知识库, name={}", dto.getName());
-        return R.ok(String.valueOf(knowledgeBaseService.createKnowledgeBase(dto)), "创建成功");
+        return R.ok(knowledgeBaseService.createKnowledgeBase(dto), "创建成功");
     }
 
     /**
      * 更新知识库：名称、业务场景说明与策略绑定开关，同事务记 UPDATE 审计（before/after 快照）。
      *
      * <p>路径 id 覆盖请求体 id（`dto.setId(id)`），归属校验只认路径参数；只能改本人可访问的库，
-     * 不可访问按「不存在」处理（40401）。开关口径：null 或非 0 一律归一为开启（1），兼容存量数据。
+     * 不可访问按「不存在」处理（40401）。开关只接受 0/1（入参注解拦截），原样落库。
      *
      * @param id  知识库 ID（路径参数）
      * @param dto 更新请求体：name（必填，≤14 字符）、description（≤64 字符）、
-     *            strategyBindingEnabled（可空，null 视为开启）
+     *            strategyBindingEnabled（必填，只接受 1 开启 / 0 关闭）
      * @return 是否更新成功（恒 true，失败以业务异常表达）
      */
     @PutMapping("/{id}")

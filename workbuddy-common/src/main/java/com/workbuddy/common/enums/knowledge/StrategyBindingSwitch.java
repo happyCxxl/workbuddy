@@ -6,7 +6,8 @@ import lombok.Getter;
 /**
  * 策略绑定开关（wb_knowledge_base.strategy_binding_enabled，TINYINT 码值）。
  *
- * <p>**三态语义**：1 开启 / 0 关闭 / **null 视为开启**（历史数据与新建库都可能不落这一列）。
+ * <p>列是 `NOT NULL DEFAULT 1`，写入侧由收参注解限定 0/1；`isOn` / `isOff` 仍把 null 与未知码值
+ * 按「开启」处理，供实体字段未赋值（代码内构造）的场景兜底。
  * 判断"是否开启"一律走 {@link #isOn(Integer)}，不要在各处自己写 `!Integer.valueOf(0).equals(...)`。
  */
 @Getter

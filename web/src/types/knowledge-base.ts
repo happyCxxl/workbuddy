@@ -95,8 +95,8 @@ export interface KnowledgeBaseCreateRequest {
   name: string;
   /** 业务场景说明，≤512 */
   description?: string;
-  /** 策略绑定开关：1 开启（默认）/ 0 关闭 */
-  strategyBindingEnabled?: number;
+  /** 策略绑定开关：必填，1 开启 / 0 关闭 */
+  strategyBindingEnabled: number;
 }
 
 /** 更新知识库入参（仅名称/说明/策略绑定开关；停用启用有独立接口） */

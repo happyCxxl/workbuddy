@@ -99,6 +99,7 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
         KnowledgeBaseCreateDTO dto = new KnowledgeBaseCreateDTO();
         dto.setName("招投标知识库");
         dto.setDescription("招投标场景");
+        dto.setStrategyBindingEnabled(1);
         doAnswer(inv -> {
             WbKnowledgeBase k = inv.getArgument(0);
             k.setId(1L);
@@ -113,7 +114,6 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
         assertEquals(KnowledgeBaseStatus.ACTIVE.getCode(), kbCaptor.getValue().getStatus());
         assertEquals("招投标知识库", kbCaptor.getValue().getName());
         assertEquals("招投标场景", kbCaptor.getValue().getDescription());
-        // 未传开关 = 存量口径的「开启」（1），不是 0
         assertEquals(1, kbCaptor.getValue().getStrategyBindingEnabled());
         verify(kbAuditLogDbService).saveAudit(
                 eq(AuditActionType.CREATE), eq("KNOWLEDGE_BASE"), eq(1L), isNull(), anyString());
@@ -122,7 +122,7 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
     /**
      * 新建时显式关闭策略绑定，落库必须是 0。
      *
-     * <p>守护 {@code resolveBindingEnabled} 的开关归一：关成 0 写成 1 会让测评库被绑定策略。
+     * <p>守护开关原样落库：关成 0 写成 1 会让测评库被绑定策略。
      */
     @Test
     void createWithSwitchOffShouldPersistZero() {

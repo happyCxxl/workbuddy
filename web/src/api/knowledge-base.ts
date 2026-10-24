@@ -32,7 +32,7 @@ export async function getKnowledgeBaseDetail(id: string): Promise<KnowledgeBase>
 
 /** 创建知识库（一律落普通库并默认启用），返回新建 ID */
 export async function addKnowledgeBase(request: KnowledgeBaseCreateRequest): Promise<string> {
-  const response = await http.post<string>('/knowledge-base', request);
+  const response = await http.post<string>('/knowledge-base/create', request);
   return response.data;
 }
 
