@@ -348,6 +348,12 @@
                         item.font
                       }}</span>
                       <span v-if="item.tocCandidate" class="parse-drawer-element-meta">目录</span>
+                      <span
+                        v-if="item.degraded"
+                        class="parse-drawer-element-meta is-warn"
+                        :title="item.degradeReason"
+                        >降级</span
+                      >
                       <span v-if="item.grid" class="parse-drawer-element-meta">{{
                         item.grid
                       }}</span>
@@ -1249,6 +1255,8 @@ const visibleItems = computed(() => {
         font: typeof extra.font === 'string' ? extra.font : '',
         tocCandidate: extra.tocCandidate === true,
         provenance: typeof extra.provenance === 'string' ? extra.provenance : '',
+        degraded: extra.degraded === true,
+        degradeReason: typeof extra.degradeReason === 'string' ? extra.degradeReason : '',
         grid: rows !== null && cols !== null ? `${rows}×${cols}` : '',
         tableGrid: elementTableGrid(item.extra, rows, cols),
       };
@@ -3515,6 +3523,11 @@ onBeforeUnmount(() => {
   color: var(--kb-text-3);
   font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
   font-size: 10px;
+}
+
+.parse-drawer-element-meta.is-warn {
+  color: var(--kb-warn);
+  font-weight: 650;
 }
 
 .parse-drawer-toggle {

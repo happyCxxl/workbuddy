@@ -81,6 +81,12 @@ public class ParseElement {
     /** 目录行级特征（编号模式 + 点线引导符 + 行尾页码；整页聚合判定归预处理环节） */
     private Boolean tocCandidate;
 
+    /** 是否为规则降级产物（当前用于表格规则失败后转段落） */
+    private Boolean degraded;
+
+    /** 降级原因（表格规则失败说明；未降级为空） */
+    private String degradeReason;
+
     /** 原文定位信息 */
     private Provenance provenance;
 

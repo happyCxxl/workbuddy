@@ -1,6 +1,7 @@
 package com.workbuddy.worker.parser.pdf.assemble;
 
 import com.workbuddy.common.domain.parse.ParseElement;
+import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 段落落地判空：空白文本不产 PARAGRAPH，正常文本保留。
@@ -44,6 +46,24 @@ class PdfBodyAssemblerParagraphTest {
         assertEquals(1, elements.size(), () -> "elements=" + elements);
         assertEquals(ElementType.PARAGRAPH.name(), elements.getFirst().getType());
         assertEquals("Real paragraph text", elements.getFirst().getText());
+    }
+
+    /**
+     * 守护 {@code degradedParagraphShouldCarryReason}：表格规则失败降级的段落要带降级标记与原因。
+     */
+    @Test
+    void degradedParagraphShouldCarryReason() {
+        List<ParseElement> elements = new ArrayList<>();
+        PageLine fallback = line("fallback text");
+        PageContent page = page(List.of(fallback));
+        ParseSource source = ParseSource.nativeSource("test");
+
+        TableSupport.degrade(List.of(fallback), page, elements, source, "F-1", "列对齐聚类失败");
+
+        assertEquals(1, elements.size(), () -> "elements=" + elements);
+        ParseElement paragraph = elements.getFirst();
+        assertTrue(Boolean.TRUE.equals(paragraph.getDegraded()));
+        assertEquals("列对齐聚类失败", paragraph.getDegradeReason());
     }
 
     /** 造一行 */

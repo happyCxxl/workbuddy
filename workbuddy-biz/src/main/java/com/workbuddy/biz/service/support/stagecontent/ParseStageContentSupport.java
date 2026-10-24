@@ -72,6 +72,8 @@ public class ParseStageContentSupport {
         if (NullUtil.isNotNull(element.getProvenance())) {
             extra.setProvenance(element.getProvenance().getPath());
         }
+        extra.setDegraded(element.getDegraded());
+        extra.setDegradeReason(element.getDegradeReason());
         putOfficeAnchor(extra, element);
         // 表格单元格明细（TABLE 元素内嵌）：解析详情按行列渲染网格，单元格与文本原样下发、不做截断
         if (NullUtil.isNotNull(element.getCells()) && !element.getCells().isEmpty()) {

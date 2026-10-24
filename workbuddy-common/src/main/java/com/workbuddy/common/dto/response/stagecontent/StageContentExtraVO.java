@@ -42,6 +42,12 @@ public class StageContentExtraVO {
     /** 解析：产物溯源路径 */
     private String provenance;
 
+    /** 解析：是否为规则降级产物（表格规则失败转段落等） */
+    private Boolean degraded;
+
+    /** 解析：降级原因 */
+    private String degradeReason;
+
     /** 解析：Word 段落样式名（渲染器把样式名写在段落 DOM 上） */
     private String style;
 

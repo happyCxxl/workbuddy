@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-24",
-      "baseline": "3a432cac",
-      "note": "支持包内解析详情只读变更：结构化告警、font/toc/provenance 诊断字段；不涉及鉴权、安全、异常或配置机制"
+      "baseline": "6459f301",
+      "note": "支持包内解析详情只读变更：结构化告警、font/toc/provenance、表格降级标记；不涉及鉴权、安全、异常或配置机制"
     }
   }
 }

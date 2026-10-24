@@ -802,6 +802,10 @@ export interface StageContentExtra {
   tocCandidate?: boolean | null;
   /** 解析：产物溯源路径 */
   provenance?: string | null;
+  /** 解析：是否为规则降级产物（表格规则失败转段落等） */
+  degraded?: boolean | null;
+  /** 解析：降级原因 */
+  degradeReason?: string | null;
   /** 解析：Word 段落样式名 */
   style?: string | null;
   /** 解析：Excel 工作表名 */

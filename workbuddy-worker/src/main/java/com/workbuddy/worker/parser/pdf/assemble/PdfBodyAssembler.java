@@ -236,15 +236,19 @@ public final class PdfBodyAssembler {
      * @param elements 产物元素（追加）
      * @param fileId   文件 ID
      * @param page     单页内容
+     * @return 产出的段落元素；空白文本时为 null
      */
-    static void addParagraph(List<PageLine> lines, List<ParseElement> elements, String fileId, PageContent page) {
+    static ParseElement addParagraph(List<PageLine> lines, List<ParseElement> elements,
+                                     String fileId, PageContent page) {
         if (lines.isEmpty()) {
-            return;
+            return null;
         }
         ParseElement paragraph = toParagraphElement(lines, fileId, page);
         if (paragraph.getText() != null && !paragraph.getText().isBlank()) {
             elements.add(paragraph);
+            return paragraph;
         }
+        return null;
     }
 
     /**

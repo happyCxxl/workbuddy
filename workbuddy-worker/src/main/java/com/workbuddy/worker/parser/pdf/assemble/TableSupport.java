@@ -78,6 +78,10 @@ final class TableSupport {
         fact.setRegion("page " + page.pageNo());
         fact.setEvidence(evidence);
         source.getFacts().add(fact);
-        PdfBodyAssembler.addParagraph(lines, elements, fileId, page);
+        ParseElement paragraph = PdfBodyAssembler.addParagraph(lines, elements, fileId, page);
+        if (paragraph != null) {
+            paragraph.setDegraded(true);
+            paragraph.setDegradeReason(evidence);
+        }
     }
 }
