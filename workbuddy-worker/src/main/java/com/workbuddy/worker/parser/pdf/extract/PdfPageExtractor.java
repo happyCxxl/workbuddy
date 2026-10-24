@@ -113,7 +113,9 @@ public class PdfPageExtractor {
                         context.getProperties()));
             }
         }
-        List<PageLine> lines = PdfLineSupport.orderLines(rawLines, gutters, layoutAnalyzer, pageWidth, pageHeight);
+        List<PageLine> mergedLines = LineFragmentMerger.merge(rawLines, pageWidth,
+                context.getProperties().getLineYTolerance(), lineTextOptions);
+        List<PageLine> lines = PdfLineSupport.orderLines(mergedLines, gutters, layoutAnalyzer, pageWidth, pageHeight);
 
         // 文字占比：行级 bbox 累计（行宽 × 行高，行高取 max(字符高, 字号×1.2)），
         // 字符级小盒子累计会低估占版面积、误伤稀疏页
