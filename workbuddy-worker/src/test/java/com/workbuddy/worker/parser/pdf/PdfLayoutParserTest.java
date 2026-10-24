@@ -271,6 +271,30 @@ class PdfLayoutParserTest {
     }
 
     /**
+     * 守护 {@code multipleNumbersOnOnePageShouldNotAbortOtherPages}：某页多条数字只排除该页，
+     * 其他页的同址页码仍应识别。
+     */
+    @Test
+    void multipleNumbersOnOnePageShouldNotAbortOtherPages() throws Exception {
+        ParseSource source = parser.parse(pages.buildPages(List.of(
+                List.of(PdfLayoutPageFixture.bottomNumber("10", 100),
+                        PdfLayoutPageFixture.bottomNumber("20", 400)),
+                List.of(PdfLayoutPageFixture.bottomNumber("2", 290)),
+                List.of(PdfLayoutPageFixture.bottomNumber("3", 290))), null, "Body text"));
+
+        List<String> footers = source.getElements().stream()
+                .filter(e -> ElementType.FOOTER.name().equals(e.getType()))
+                .map(ParseElement::getText).toList();
+        assertEquals(2, footers.size(), () -> "footers=" + footers);
+        assertTrue(footers.contains("2"));
+        assertTrue(footers.contains("3"));
+        assertTrue(source.getElements().stream()
+                        .filter(e -> ElementType.PARAGRAPH.name().equals(e.getType()))
+                        .anyMatch(e -> e.getText().contains("10") && e.getText().contains("20")),
+                () -> "page1 numbers should stay in body: " + source.getElements());
+    }
+
+    /**
      * 守护 {@code multipleBottomNumbersOnSamePageShouldNotBePageNumbers}：该场景行为改动即失败。
      */
     @Test

@@ -155,17 +155,20 @@ public final class HeaderFooterDetector {
         return line.x() < candidate.x() + candidate.width() && line.x() + line.width() > candidate.x();
     }
 
-    /** 页码模式确认：同页至多一条，跨页中心容差内成组，组内页数达阈值即记该中心 */
+    /** 页码模式确认：同页至多一条，跨页中心容差内成组，组内页数达阈值即记该中心；多条数字页只排除本页 */
     private static List<Double> pageNumberCenters(Map<Integer, TextLine> lineByPage,
                                                   Map<Integer, Integer> countByPage,
                                                   ParseProperties properties) {
         List<Double> centers = new ArrayList<>();
-        if (countByPage.values().stream().anyMatch(count -> count > 1)) {
-            return centers;
-        }
+        Map<Integer, TextLine> singleByPage = new LinkedHashMap<>();
+        lineByPage.forEach((page, line) -> {
+            if (countByPage.getOrDefault(page, 0) == 1) {
+                singleByPage.put(page, line);
+            }
+        });
         int minPages = Math.max(properties.getPageNumberMinPages(), properties.getRunningTextMinPages());
         double xTolerance = properties.getPageNumberXTolerance();
-        List<Map.Entry<Integer, TextLine>> candidates = new ArrayList<>(lineByPage.entrySet());
+        List<Map.Entry<Integer, TextLine>> candidates = new ArrayList<>(singleByPage.entrySet());
         boolean[] used = new boolean[candidates.size()];
         for (int i = 0; i < candidates.size(); i++) {
             if (used[i]) {
