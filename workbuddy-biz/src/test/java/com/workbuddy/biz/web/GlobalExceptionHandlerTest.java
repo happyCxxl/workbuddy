@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -96,6 +97,20 @@ class GlobalExceptionHandlerTest {
     void unreadableBodyShouldFallBackToGenericMessage() {
         assertEquals("请求体解析失败，", handler.handleHttpMessageNotReadable(
                 new HttpMessageNotReadableException("something else")).getMsg());
+    }
+
+    /**
+     * 上传超限回可读的 40422 与配置上限，不落到 40500 通用系统异常。
+     *
+     * <p>守护 {@code handleMaxUploadSizeExceeded}：回到通用 40500 或丢掉上限文案即失败。
+     */
+    @Test
+    void uploadSizeExceededShouldReturnRejectReason() {
+        R<Void> result = handler.handleMaxUploadSizeExceeded(
+                new MaxUploadSizeExceededException(104857600L));
+
+        assertEquals(ErrorCode.FILE_UPLOAD_REJECTED.getCode(), result.getCode());
+        assertEquals("文件超过大小上限（上限 100MB）", result.getMsg());
     }
 
     /**

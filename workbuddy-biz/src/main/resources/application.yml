@@ -25,6 +25,12 @@ spring:
     name: @artifactId@
   main:
     allow-circular-references: true
+  # 上传上限与 workbuddy.file.max-size 对齐（100MB）：Spring 默认仅 1MB，
+  # 不显式覆盖时大于 1MB 的文件会在进入控制器前被拒（对外表现为 40500）。
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/workbuddy?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true

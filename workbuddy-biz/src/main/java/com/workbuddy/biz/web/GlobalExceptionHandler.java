@@ -1,6 +1,7 @@
 package com.workbuddy.biz.web;
 
 import com.workbuddy.common.web.R;
+import com.workbuddy.common.enums.input.FileValidationFailReason;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.NullUtil;
@@ -10,6 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
  * 全局异常处理：
@@ -65,6 +67,22 @@ public class GlobalExceptionHandler {
         }
         log.warn("===> GlobalExceptionHandler 请求体读取失败, type={}", e.getClass().getSimpleName());
         return new R<>(ErrorCode.PARAM_INVALID.getCode(), msg, null, null);
+    }
+
+    /**
+     * 上传超限：multipart 在进入控制器前抛 {@link MaxUploadSizeExceededException}，
+     * 这里回可读的 40422（文件超过大小上限），不落到 40500 通用系统异常。
+     *
+     * @param e 上传超限异常
+     * @return 统一失败响应（带配置上限）
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public R<Void> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
+        long maxBytes = e.getMaxUploadSize();
+        String limit = maxBytes > 0 ? (maxBytes / (1024 * 1024)) + "MB" : "配置上限";
+        log.warn("===> GlobalExceptionHandler 上传超限, maxUploadSize={}", maxBytes);
+        return new R<>(ErrorCode.FILE_UPLOAD_REJECTED.getCode(),
+                FileValidationFailReason.FILE_TOO_LARGE.label() + "（上限 " + limit + "）", null, null);
     }
 
     /**

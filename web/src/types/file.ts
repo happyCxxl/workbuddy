@@ -44,7 +44,7 @@ export interface SubmitLogQuery {
 /** 后端允许的文件格式（knowledge.file.enabled-formats 默认值，识别依据是 Tika 魔数而非扩展名） */
 export const ACCEPTED_FILE_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'] as const;
 
-/** 单文件大小上限（后端 knowledge.file.max-size = 104857600） */
+/** 单文件大小上限（后端 workbuddy.file.max-size = 104857600） */
 export const MAX_UPLOAD_BYTES = 104857600;
 
 /** 文件选择框的 accept 值 */

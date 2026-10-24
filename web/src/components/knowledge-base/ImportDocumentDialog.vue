@@ -320,10 +320,11 @@ async function startImport(): Promise<void> {
         item.state = 'passed';
         passed += 1;
       }
-    } catch {
-      // 接口层已弹过错误提示，这里只标记该项失败
+    } catch (err) {
+      // 接口层已弹过错误提示，这里把后端可读原因落到该项，不再统一显示“请求失败”
+      const message = err instanceof Error ? err.message.trim() : '';
       item.state = 'failed';
-      item.reason = item.reason || '请求失败';
+      item.reason = message && message !== 'Network Error' ? message : '请求失败';
       failed += 1;
     }
   }
