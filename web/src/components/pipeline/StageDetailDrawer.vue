@@ -331,6 +331,7 @@
                       'is-active': item.key === activeKey,
                       'is-picked': item.key === pickedKey,
                     }"
+                    :title="item.provenance || undefined"
                     :data-key="item.key"
                     @click="onElementPick(item.key)"
                   >
@@ -343,6 +344,10 @@
                       <span v-if="item.source" class="parse-drawer-element-meta">{{
                         item.source
                       }}</span>
+                      <span v-if="item.font" class="parse-drawer-element-meta">{{
+                        item.font
+                      }}</span>
+                      <span v-if="item.tocCandidate" class="parse-drawer-element-meta">目录</span>
                       <span v-if="item.grid" class="parse-drawer-element-meta">{{
                         item.grid
                       }}</span>
@@ -652,13 +657,40 @@
               </div>
             </div>
 
-            <!-- 页签：告警（告警与冲突分两类展示） -->
+            <!-- 页签：告警（结构化告警优先；旧响应退回纯文案） -->
             <div v-else-if="activeTab === 'warnings'" class="parse-drawer-tabpane">
               <div class="parse-drawer-tabscroll">
-                <h5 v-if="warnings.length > 0" class="parse-drawer-subtitle">
+                <h5 v-if="warningItems.length > 0" class="parse-drawer-subtitle">
+                  告警 {{ warningItems.length }}
+                </h5>
+                <ul v-if="warningItems.length > 0" class="parse-drawer-warnings">
+                  <li
+                    v-for="(warn, index) in warningItems"
+                    :key="`${warn.code}-${index}`"
+                    class="parse-drawer-warning"
+                  >
+                    <span class="parse-drawer-warning-code">{{ warn.level }} {{ warn.code }}</span>
+                    <span>{{ warn.message }}</span>
+                    <button
+                      v-if="warn.page && canPreview"
+                      class="parse-drawer-page-link"
+                      type="button"
+                      @click="goDocPage(warn.page)"
+                    >
+                      第 {{ warn.page }} 页
+                    </button>
+                  </li>
+                </ul>
+                <h5
+                  v-if="warningItems.length === 0 && warnings.length > 0"
+                  class="parse-drawer-subtitle"
+                >
                   告警 {{ warnings.length }}
                 </h5>
-                <ul v-if="warnings.length > 0" class="parse-drawer-warnings">
+                <ul
+                  v-if="warningItems.length === 0 && warnings.length > 0"
+                  class="parse-drawer-warnings"
+                >
                   <li v-for="(warn, index) in warnings" :key="index" class="parse-drawer-warning">
                     <template v-for="(part, partIndex) in warningParts(warn)" :key="partIndex">
                       <button
@@ -684,7 +716,12 @@
                     {{ item.message ?? '该处两路内容不一致，已按主路保留' }}
                   </li>
                 </ul>
-                <p v-if="warnings.length === 0 && conflicts.length === 0" class="parse-drawer-hint">
+                <p
+                  v-if="
+                    warningItems.length === 0 && warnings.length === 0 && conflicts.length === 0
+                  "
+                  class="parse-drawer-hint"
+                >
                   本次运行没有告警
                 </p>
               </div>
@@ -770,6 +807,7 @@ import type {
   ChunkItem,
   ChunkStats,
   ParseDetail,
+  ParseWarning,
   PreprocessDetail,
   PreprocessElement,
   PreprocessField,
@@ -1208,6 +1246,9 @@ const visibleItems = computed(() => {
         text: item.display ?? '',
         page: pageOf(item.extra),
         source: rowSourceText(item.extra),
+        font: typeof extra.font === 'string' ? extra.font : '',
+        tocCandidate: extra.tocCandidate === true,
+        provenance: typeof extra.provenance === 'string' ? extra.provenance : '',
         grid: rows !== null && cols !== null ? `${rows}×${cols}` : '',
         tableGrid: elementTableGrid(item.extra, rows, cols),
       };
@@ -1264,6 +1305,11 @@ const fullElementTotal = computed(
 const warnings = computed<string[]>(() => {
   const value = detail.value;
   return value !== null && 'warnings' in value ? (value.warnings ?? []) : [];
+});
+/** 结构化告警：后端新字段；旧响应为空时告警页退回纯文案渲染 */
+const warningItems = computed<ParseWarning[]>(() => {
+  const value = detail.value;
+  return value !== null && 'warningItems' in value ? (value.warningItems ?? []) : [];
 });
 const steps = computed(() => detail.value?.steps ?? []);
 
@@ -2312,7 +2358,7 @@ function tabCount(key: ResultTabKey): number {
     return fullElementTotal.value;
   }
   if (key === 'warnings') {
-    return warnings.value.length + conflicts.value.length;
+    return warningItems.value.length || warnings.value.length + conflicts.value.length;
   }
   if (key === 'tree') {
     return treeRows.value.length;
@@ -3239,6 +3285,14 @@ onBeforeUnmount(() => {
   background: rgb(251 191 36 / 8%);
   color: var(--kb-text-2);
   font-size: 12px;
+}
+
+/* 结构化告警的 code/level 前缀：弱化展示，保留可扫读的告警类型 */
+.parse-drawer-warning-code {
+  margin-right: 8px;
+  color: var(--kb-warn);
+  font-size: 11px;
+  font-weight: 650;
 }
 
 /* 告警里的页码范围：点了左右两栏一起跳到该页 */

@@ -33,6 +33,15 @@ public class StageContentExtraVO {
     /** 元素边界框（原文预览按它在页面上画高亮框，单位 pt、左上角原点） */
     private BBoxVO bbox;
 
+    /** 解析：字体摘要（名称 + 字号 + 粗体） */
+    private String font;
+
+    /** 解析：是否目录行候选 */
+    private Boolean tocCandidate;
+
+    /** 解析：产物溯源路径 */
+    private String provenance;
+
     /** 解析：Word 段落样式名（渲染器把样式名写在段落 DOM 上） */
     private String style;
 

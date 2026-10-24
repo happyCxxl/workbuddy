@@ -18,6 +18,9 @@ public class ParseDetailVO extends StageDetailVO<StageStatsVO> {
     /** 质量告警（从产物 JSON 提取；无产物时为空列表） */
     private List<String> warnings;
 
+    /** 结构化质量告警：code/level/message/page/elementId（无产物时为空列表） */
+    private List<ParseWarningVO> warningItems;
+
     /**
      * 解析运行统计（元素构成/问题单元/耗时）：与执行树节点同一份汇总口径。
      *

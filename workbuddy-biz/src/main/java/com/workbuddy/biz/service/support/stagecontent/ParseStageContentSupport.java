@@ -63,6 +63,15 @@ public class ParseStageContentSupport {
         extra.setProvider(source.getProvider());
         knowledgeConverter.putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
         knowledgeConverter.putBbox(extra, element.getBbox());
+        if (NullUtil.isNotNull(element.getFont())) {
+            extra.setFont(StrUtil.blankToDefault(element.getFont().getName(), "?")
+                    + " " + element.getFont().getSize() + "pt"
+                    + (Boolean.TRUE.equals(element.getFont().getBold()) ? " bold" : ""));
+        }
+        extra.setTocCandidate(element.getTocCandidate());
+        if (NullUtil.isNotNull(element.getProvenance())) {
+            extra.setProvenance(element.getProvenance().getPath());
+        }
         putOfficeAnchor(extra, element);
         // 表格单元格明细（TABLE 元素内嵌）：解析详情按行列渲染网格，单元格与文本原样下发、不做截断
         if (NullUtil.isNotNull(element.getCells()) && !element.getCells().isEmpty()) {

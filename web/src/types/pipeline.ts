@@ -557,10 +557,22 @@ export interface StageDetailCommon<TStats extends StageStats = StageStats> {
 export interface ParseDetail extends StageDetailCommon {
   /** 质量告警文案（无产物时为空列表） */
   warnings: string[] | null;
+  /** 结构化质量告警（无产物时为空列表） */
+  warningItems: ParseWarning[] | null;
   /** 解析统计（产物不可读或尚无产物时为 null） */
   parseStats: LineageParseStats | null;
   /** 解析结论文案（统计缺失时为 null） */
   parseSummary: string | null;
+}
+
+/** 结构化质量告警（后端 ParseWarningVO） */
+export interface ParseWarning {
+  code: string | null;
+  level: string | null;
+  message: string | null;
+  /** 从说明中解析出的文档页；解析不到时为空 */
+  page: number | null;
+  elementId: string | null;
 }
 
 /** 组装统计（后端 StructureSummaryVO）：从统一文档产物推导 */
@@ -784,6 +796,12 @@ export interface StageContentExtra {
   cols?: number | null;
   /** 元素边界框（原文预览高亮用） */
   bbox?: ElementBBox | null;
+  /** 解析：字体摘要（名称 + 字号 + 粗体） */
+  font?: string | null;
+  /** 解析：是否目录行候选 */
+  tocCandidate?: boolean | null;
+  /** 解析：产物溯源路径 */
+  provenance?: string | null;
   /** 解析：Word 段落样式名 */
   style?: string | null;
   /** 解析：Excel 工作表名 */

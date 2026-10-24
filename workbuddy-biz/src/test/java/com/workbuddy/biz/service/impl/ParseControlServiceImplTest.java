@@ -274,6 +274,9 @@ class ParseControlServiceImplTest {
         assertEquals(512, detail.getSteps().getFirst().getAvgLen());
         assertEquals(1, detail.getWarnings().size());
         assertTrue(detail.getWarnings().getFirst().contains("SCANNED_PAGE"));
+        assertEquals(1, detail.getWarningItems().size());
+        assertEquals("SCANNED_PAGE", detail.getWarningItems().getFirst().getCode());
+        assertEquals(2, detail.getWarningItems().getFirst().getPage());
     }
 
     /**
