@@ -309,6 +309,9 @@
                 <span v-else-if="pageMatched !== null" class="parse-drawer-hint"
                   >本页命中 {{ pageMatched }}</span
                 >
+                <span v-else class="parse-drawer-hint"
+                  >本页 {{ rawItems.length }} 条 · 全量 {{ fullElementTotal }} 条</span
+                >
               </div>
 
               <div class="parse-drawer-tabscroll">
@@ -871,9 +874,15 @@ const detailError = ref('');
 
 const rawItems = ref<StageContentItem[]>([]);
 const elementTotal = ref(0);
+/** 全量元素数（不随 docPage/筛选变化；页签角标固定用这份） */
+const allElementTotal = ref(0);
+/** 全量中可原文定位的元素数 */
+const locatableTotal = ref(0);
 const page = ref(1);
 const itemsLoading = ref(false);
 const itemsError = ref('');
+/** 元素请求序号：首开全量请求与预览就绪后的按页请求可能并发，只认最后一次 */
+let itemsRequestSeq = 0;
 
 const keyword = ref('');
 const expanded = ref(new Set<string>());
@@ -1233,8 +1242,8 @@ const highlights = computed<PreviewHighlight[]>(() =>
     .filter((box): box is PreviewHighlight => box !== null),
 );
 
-/** 可用坐标定位的元素（画高亮框的条数）与它们覆盖的页数，说明预览联动是否可用 */
-const highlightCount = computed(() => highlights.value.length);
+/** 可定位元素数：全量口径由后端下发；旧响应缺字段时退回当前页高亮数 */
+const highlightCount = computed(() => locatableTotal.value || highlights.value.length);
 
 /**
  * 环节统计（判解析/组装用）：解析有固定的 parseStats 结构，其余环节用通用的 stageStats。
@@ -1246,6 +1255,11 @@ const stats = computed(() => {
   const value = detail.value;
   return value !== null && 'parseStats' in value ? value.parseStats : null;
 });
+
+/** 元素全量角标口径：接口全量优先，旧响应退回解析统计里的元素数，最后才用过滤后总数 */
+const fullElementTotal = computed(
+  () => allElementTotal.value || statNumber(stats.value?.elementCount) || elementTotal.value,
+);
 
 const warnings = computed<string[]>(() => {
   const value = detail.value;
@@ -2294,7 +2308,8 @@ const activeTab = ref<ResultTabKey>(defaultTab.value);
 /** 页签角标数：没有内容的页签不显示数字 */
 function tabCount(key: ResultTabKey): number {
   if (key === 'elements') {
-    return elementTotal.value;
+    // 角标固定全量；过滤/按页只影响列表与分页，不改变产物总数
+    return fullElementTotal.value;
   }
   if (key === 'warnings') {
     return warnings.value.length + conflicts.value.length;
@@ -2416,6 +2431,7 @@ function formatClock(value: string | null | undefined): string {
 
 /** 拉元素某一页；关键字过滤不参与查询（后端按页给），过滤在页内做 */
 async function loadItems(): Promise<void> {
+  const requestSeq = ++itemsRequestSeq;
   itemsLoading.value = true;
   itemsError.value = '';
   try {
@@ -2425,15 +2441,34 @@ async function loadItems(): Promise<void> {
       current: page.value,
       size: PAGE_SIZE,
     });
+    if (requestSeq !== itemsRequestSeq) {
+      return;
+    }
     rawItems.value = data.items ?? [];
     elementTotal.value = data.total ?? 0;
+    // 全量角标与全量可定位数：后端下发优先；旧响应缺字段时只在“当前就是全量请求”时更新
+    const servedAllTotal = data.allTotal ?? null;
+    if (servedAllTotal !== null) {
+      allElementTotal.value = servedAllTotal;
+    } else if (!followPreview.value || !previewReady.value) {
+      allElementTotal.value = data.total ?? 0;
+    }
+    const servedLocatable = data.locatableTotal ?? null;
+    if (servedLocatable !== null) {
+      locatableTotal.value = servedLocatable;
+    }
   } catch {
+    if (requestSeq !== itemsRequestSeq) {
+      return;
+    }
     // 失败提示已由接口层统一拦截处理
     rawItems.value = [];
     elementTotal.value = 0;
     itemsError.value = '元素内容加载失败';
   } finally {
-    itemsLoading.value = false;
+    if (requestSeq === itemsRequestSeq) {
+      itemsLoading.value = false;
+    }
   }
 }
 
@@ -2499,9 +2534,12 @@ function onPreviewPage(pageNo: number): void {
   void loadItems();
 }
 
-/** 预览文档就绪：记下总页数 / 工作表数（工具条展示用） */
+/** 预览文档就绪：记下总页数 / 工作表数，并把首开页上报为第 1 页 */
 function onPreviewLoaded(total: number): void {
   previewTotal.value = total;
+  if (previewPage.value === 0) {
+    previewPage.value = 1;
+  }
 }
 
 /** Word / Excel 预览就绪：这两类没有页概念，栏头只显示文件信息与可定位元素数 */
@@ -2768,6 +2806,8 @@ watch(
     detailError.value = '';
     detailLoading.value = true;
     rawItems.value = [];
+    allElementTotal.value = 0;
+    locatableTotal.value = 0;
     page.value = 1;
     keyword.value = '';
     expanded.value = new Set<string>();

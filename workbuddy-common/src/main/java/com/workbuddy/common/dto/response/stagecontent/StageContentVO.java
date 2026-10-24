@@ -37,6 +37,12 @@ public class StageContentVO {
     /** 该次运行产物内容总条数（不受分页影响；按 docPage 过滤后为该页条数） */
     private Integer total;
 
+    /** 该次运行产物内容总条数（不受 docPage/status 过滤影响；用于页签固定全量角标） */
+    private Integer allTotal;
+
+    /** 全量内容中带页码与边界框、可原文定位的条数（不受 docPage/status 过滤影响） */
+    private Integer locatableTotal;
+
     /** 当前页码（从 1 起） */
     private Integer current;
 

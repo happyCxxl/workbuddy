@@ -143,6 +143,8 @@ class StageContentFilterTest {
 
         assertEquals(3, vo.getDocPage());
         assertEquals(1, vo.getTotal());
+        assertEquals(5, vo.getAllTotal());
+        assertEquals(5, vo.getLocatableTotal());
         assertEquals(1, vo.getItems().size());
         assertEquals("el-3", vo.getItems().get(0).getAlignKey());
         assertFalse(vo.getTruncated());
@@ -151,6 +153,8 @@ class StageContentFilterTest {
         StageContentVO all = service.stageContent(FILE_RESULT_ID, "PARSE", null, null, null, null);
         assertNull(all.getDocPage());
         assertEquals(5, all.getTotal());
+        assertEquals(5, all.getAllTotal());
+        assertEquals(5, all.getLocatableTotal());
     }
 
     /**

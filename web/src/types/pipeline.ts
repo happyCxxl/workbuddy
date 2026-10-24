@@ -884,6 +884,10 @@ export interface StageContentPage {
   items: StageContentItem[] | null;
   /** 该次运行产物内容总条数（不受分页影响；按 docPage 过滤后为该页条数） */
   total: number | null;
+  /** 该次运行产物内容总条数（不受 docPage/status 过滤影响；页签固定全量角标） */
+  allTotal: number | null;
+  /** 全量内容中带页码与边界框、可原文定位的条数 */
+  locatableTotal: number | null;
   current: number | null;
   size: number | null;
   /** 是否还有内容未返回 */

@@ -114,6 +114,8 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
         vo.setDocPage(NullUtil.isNull(docPage) || docPage < 1 ? null : docPage.intValue());
         vo.setItems(new ArrayList<>());
         vo.setTotal(0);
+        vo.setAllTotal(0);
+        vo.setLocatableTotal(0);
         vo.setCurrent(pageNo);
         vo.setSize(pageSize);
         vo.setTruncated(false);
@@ -134,10 +136,14 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
                 // 切片：过滤与分页都下推到 wb_knowledge_chunk（切片集合可能很大），total 按过滤后的口径给
                 chunkStageContentSupport.fillPage(vo, ObjectRef.ofProduct(product), chunkFilter, pageNo, pageSize,
                         chunkSetDbService, chunkDbService);
+                vo.setAllTotal(vo.getTotal());
             } else {
+                List<StageContentItemVO> allItems = buildItems(stage, product);
+                vo.setAllTotal(allItems.size());
+                vo.setLocatableTotal((int) allItems.stream().filter(this::locatable).count());
                 // 页码与状态过滤都先于分页：total 与翻页都按过滤后的口径给
                 List<StageContentItemVO> all = StageContentPaginationSupport.filterByStatus(
-                        StageContentPaginationSupport.filterByDocPage(buildItems(stage, product), docPage), status);
+                        StageContentPaginationSupport.filterByDocPage(allItems, docPage), status);
                 vo.setTotal(all.size());
                 vo.setItems(StageContentPaginationSupport.slice(all, pageNo, pageSize));
             }
@@ -167,6 +173,13 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
             case "EMBED" -> embedStageContentSupport.items(embeddingSetDbService, embeddingRecordDbService, ref);
             default -> List.of();
         };
+    }
+
+    /** 条目是否带页码与边界框（原文预览可定位的判定口径） */
+    private boolean locatable(StageContentItemVO item) {
+        return NullUtil.isNotNull(item.getExtra())
+                && NullUtil.isNotNull(item.getExtra().getPage())
+                && NullUtil.isNotNull(item.getExtra().getBbox());
     }
 
     private PipelineStage stageOf(String stage) {

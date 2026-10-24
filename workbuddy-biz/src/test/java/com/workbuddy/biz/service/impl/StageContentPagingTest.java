@@ -152,6 +152,8 @@ class StageContentPagingTest {
 
         StageContentVO first = service.stageContent(FILE_RESULT_ID, "PARSE", null, null, 1, 2);
         assertEquals(5, first.getTotal());
+        assertEquals(5, first.getAllTotal());
+        assertEquals(0, first.getLocatableTotal());
         assertEquals(2, first.getItems().size());
         assertEquals("el-1", first.getItems().get(0).getAlignKey());
         assertEquals(1, first.getCurrent());
