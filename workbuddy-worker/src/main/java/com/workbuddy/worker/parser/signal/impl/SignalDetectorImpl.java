@@ -108,13 +108,14 @@ public class SignalDetectorImpl implements SignalDetector {
 
     /**
      * 疑似图片单元（两条口径任一成立）：
-     * ① 文字占比低 —— 只有回填了 `textAreaRatio` 的单元才参与（PDF 侧），占比为 0 表示该口径不适用；
+     * ① 文字占比低且有图片覆盖 —— PDF 侧必须同时有图片证据，不能把稀疏文字页/表格页误判为图片页；
      * ② 有内嵌图片且字符极少 —— Office 侧口径（DOC/DOCX/XLS/XLSX/PPT/PPTX 不回填面积类指标，
      *    判定只看「内嵌图片数 + 字符数」组合）。
      */
     private boolean isSuspectImageUnit(PageMetric metric, ParseProperties p) {
         boolean lowTextRatio = metric.getTextAreaRatio() > 0
-                && metric.getTextAreaRatio() < p.getTextAreaRatioThreshold();
+                && metric.getTextAreaRatio() < p.getTextAreaRatioThreshold()
+                && hasImage(metric, p);
         boolean imageWithFewChars = metric.getImageCount() > 0
                 && metric.getCharCount() < p.getScanPageMinChars();
         return lowTextRatio || imageWithFewChars;

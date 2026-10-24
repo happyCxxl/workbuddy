@@ -35,11 +35,12 @@ class SignalDetectorImplTest {
                 () -> "threshold=" + signals.getFirst().getThreshold());
     }
 
-    /** PDF 形态：文字占比低（无内嵌图片）也判疑似图片单元，证据带 textArea 实测值（{@code pdfUnitWithLowTextRatioShouldBeSuspect}）。 */
+    /** PDF 形态：文字占比低且有图片覆盖 → 疑似图片单元，证据带 textArea 实测值（{@code pdfUnitWithLowTextRatioShouldBeSuspect}）。 */
     @Test
     void pdfUnitWithLowTextRatioShouldBeSuspect() {
         PageMetric metric = metric(1, 800);
         metric.setTextAreaRatio(0.02);
+        metric.setImageAreaRatio(0.5);
 
         List<Signal> signals = detect(metric);
 
@@ -47,6 +48,15 @@ class SignalDetectorImplTest {
         assertEquals(SignalSubtype.IMAGE_LOW_RATIO.name(), signals.getFirst().getSubtype());
         assertTrue(signals.getFirst().getThreshold().contains("textArea=0.020"),
                 () -> "threshold=" + signals.getFirst().getThreshold());
+    }
+
+    /** PDF 形态：文字占比低但没有任何图片证据 → 不判图片页（{@code pdfUnitWithLowTextAndNoImageShouldNotBeSuspect}）。 */
+    @Test
+    void pdfUnitWithLowTextAndNoImageShouldNotBeSuspect() {
+        PageMetric metric = metric(1, 800);
+        metric.setTextAreaRatio(0.02);
+
+        assertEquals(List.of(), detect(metric));
     }
 
     /** 有图片但字符数够多：不判疑似图片单元（Office 口径的门槛在字符数上）（{@code officeUnitWithEnoughCharsShouldNotBeSuspect}）。 */

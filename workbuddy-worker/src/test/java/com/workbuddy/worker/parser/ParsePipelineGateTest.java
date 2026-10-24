@@ -242,16 +242,17 @@ class ParsePipelineGateTest {
     }
 
     /**
-     * 守护 {@code suspectedImagePageShouldWarnWithoutFailing}：该场景行为改动即失败。
+     * 守护 {@code suspectedImagePageShouldWarnWithoutFailing}：有文字但文字占比低且有图片覆盖 → 仅告警，不计失败单元。
      */
     @Test
     void suspectedImagePageShouldWarnWithoutFailing() {
-        // 有文字（chars 充足）但文字占比低：疑似图片页 → 仅告警，不计失败单元
         PageMetric sparse = new PageMetric();
         sparse.setPage(1);
         sparse.setCharCount(300);
         sparse.setGarbledRatio(0.01);
         sparse.setTextAreaRatio(0.02);
+        // P2-9：PDF 图片页必须同时有图片覆盖，不能只凭文字占比低
+        sparse.setImageAreaRatio(0.5);
         ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(List.of(sparse), List.of()));
 
         ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
