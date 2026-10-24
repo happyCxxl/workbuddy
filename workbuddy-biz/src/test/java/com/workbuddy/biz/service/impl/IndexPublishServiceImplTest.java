@@ -1,6 +1,5 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
@@ -11,7 +10,6 @@ import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.dto.response.index.IndexVersionVO;
 import com.workbuddy.common.enums.index.IndexShape;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
-import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
@@ -48,7 +46,6 @@ class IndexPublishServiceImplTest {
     private WbKnowledgeBaseDbService knowledgeBaseDbService;
     private WbIndexSetDbService indexSetDbService;
     private WbIndexVersionDbService indexVersionDbService;
-    private WbAuditLogDbService kbAuditLogDbService;
     private IndexPublishServiceImpl service;
 
     @BeforeEach
@@ -56,17 +53,16 @@ class IndexPublishServiceImplTest {
         knowledgeBaseDbService = mock(WbKnowledgeBaseDbService.class);
         indexSetDbService = mock(WbIndexSetDbService.class);
         indexVersionDbService = mock(WbIndexVersionDbService.class);
-        kbAuditLogDbService = mock(WbAuditLogDbService.class);
         IndexVersionStateSupport stateSupport =
                 new IndexVersionStateSupport(indexSetDbService, indexVersionDbService, new PipelineConverterImpl());
         service = new IndexPublishServiceImpl(knowledgeBaseDbService, indexSetDbService,
-                indexVersionDbService, kbAuditLogDbService, stateSupport);
+                indexVersionDbService, stateSupport);
     }
 
     /**
-     * 发布：旧版退役、指针切换、知识库回填、PUBLISH 审计。
+     * 发布：旧版退役、指针切换、知识库回填。
      *
-     * <p>守护 {@code publish}：漏退役或漏审计即失败。
+     * <p>守护 {@code publish}：漏退役或漏切指针即失败。
      */
     @Test
     void publishShouldSwitchPointersAndAudit() {
@@ -91,7 +87,6 @@ class IndexPublishServiceImplTest {
         verify(indexSetDbService).updatePublishedVersion(5L, 20L);
         assertEquals(5L, kb.getPublishedIndexSetId());
         verify(knowledgeBaseDbService).updateById(kb);
-        verify(kbAuditLogDbService).saveAudit(AuditActionType.PUBLISH_INDEX, "INDEX_VERSION", 20L, "v1", "v2");
     }
 
     /**

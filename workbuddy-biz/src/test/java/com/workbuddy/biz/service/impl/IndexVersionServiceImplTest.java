@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.IndexBuildService;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.common.security.audit.AuditEventPublisher;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.support.index.IndexVersionStateSupport;
@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -44,7 +45,7 @@ class IndexVersionServiceImplTest {
 
     private WbIndexSetDbService indexSetDbService;
     private WbIndexVersionDbService indexVersionDbService;
-    private WbAuditLogDbService kbAuditLogDbService;
+    private AuditEventPublisher auditEventPublisher;
     private MilvusIndexPort milvusIndexPort;
     private IndexBuildService buildService;
     private IndexVersionServiceImpl service;
@@ -53,12 +54,12 @@ class IndexVersionServiceImplTest {
     void setUp() {
         indexSetDbService = mock(WbIndexSetDbService.class);
         indexVersionDbService = mock(WbIndexVersionDbService.class);
-        kbAuditLogDbService = mock(WbAuditLogDbService.class);
+        auditEventPublisher = mock(AuditEventPublisher.class);
         milvusIndexPort = mock(MilvusIndexPort.class);
         buildService = mock(IndexBuildService.class);
         IndexVersionStateSupport stateSupport =
                 new IndexVersionStateSupport(indexSetDbService, indexVersionDbService, new PipelineConverterImpl());
-        service = new IndexVersionServiceImpl(indexVersionDbService, kbAuditLogDbService, milvusIndexPort,
+        service = new IndexVersionServiceImpl(indexVersionDbService, auditEventPublisher, milvusIndexPort,
                 buildService, stateSupport, TransactionTestSupport.template());
     }
 
@@ -83,7 +84,6 @@ class IndexVersionServiceImplTest {
         assertEquals(IndexVersionStatus.ONLINE.name(), target.getStatus());
         assertNotNull(target.getPublishedAt());
         verify(indexSetDbService).updatePublishedVersion(5L, 15L);
-        verify(kbAuditLogDbService).saveAudit(AuditActionType.ROLLBACK_INDEX, "INDEX_VERSION", 15L, "v2", "v1");
         verify(buildService).compensate(set, target);
     }
 
@@ -140,7 +140,7 @@ class IndexVersionServiceImplTest {
 
         assertEquals(ErrorCode.INDEX_FROZEN_SCOPE_PUBLISH_FORBIDDEN.getCode(), ex.getCode());
         verify(indexSetDbService, never()).updatePublishedVersion(anyLong(), anyLong());
-        verify(kbAuditLogDbService, never()).saveAudit(any(), any(), anyLong(), any(), any());
+        verify(auditEventPublisher, never()).publish(any(), any(), anyLong(), any());
     }
 
     /**
@@ -234,12 +234,13 @@ class IndexVersionServiceImplTest {
         service.recycle(30L);
 
         verify(milvusIndexPort).drop("kb_1_v3");
-        verify(kbAuditLogDbService).saveAudit(AuditActionType.RECYCLE_INDEX, "INDEX_VERSION", 30L, "v3", null);
+        verify(auditEventPublisher).publish(eq(AuditActionType.RECYCLE_INDEX), eq("INDEX_VERSION"),
+                eq(30L), anyString());
         verify(indexVersionDbService).removeById(30L);
-        InOrder externalFirst = inOrder(milvusIndexPort, kbAuditLogDbService, indexVersionDbService);
+        InOrder externalFirst = inOrder(milvusIndexPort, auditEventPublisher, indexVersionDbService);
         externalFirst.verify(milvusIndexPort).drop("kb_1_v3");
-        externalFirst.verify(kbAuditLogDbService)
-                .saveAudit(AuditActionType.RECYCLE_INDEX, "INDEX_VERSION", 30L, "v3", null);
+        externalFirst.verify(auditEventPublisher)
+                .publish(eq(AuditActionType.RECYCLE_INDEX), eq("INDEX_VERSION"), eq(30L), anyString());
         externalFirst.verify(indexVersionDbService).removeById(30L);
     }
 

@@ -3,13 +3,14 @@ package com.workbuddy.biz.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.biz.service.KnowledgeBaseCrudService;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseAccessSupport;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseBindingSupport;
+import com.workbuddy.common.annotation.Audit;
+import com.workbuddy.common.convert.knowledge.KnowledgeBaseConverter;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
@@ -23,8 +24,6 @@ import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.AuditObjectType;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
-import com.workbuddy.common.convert.knowledge.KnowledgeBaseConverter;
-import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,12 +46,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
 
-    /** 审计对象类型 */
-    private static final String AUDIT_OBJECT_TYPE = AuditObjectType.KNOWLEDGE_BASE.key();
-
     private final WbKnowledgeBaseDbService knowledgeBaseDbService;
-
-    private final WbAuditLogDbService kbAuditLogDbService;
 
     private final WbFileResultDbService kbFileResultDbService;
 
@@ -72,6 +66,7 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
      * @param dto 新建请求
      * @return 新知识库 ID
      */
+    @Audit(action = AuditActionType.CREATE, objectType = AuditObjectType.KNOWLEDGE_BASE, id = "#result")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(KnowledgeBaseCreateDTO dto) {
@@ -79,8 +74,6 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
         kb.setStatus(KnowledgeBaseStatus.ACTIVE.getCode());
         kb.setUserId(accessSupport.requireCurrentUserId());
         knowledgeBaseDbService.save(kb);
-        kbAuditLogDbService.saveAudit(AuditActionType.CREATE, AUDIT_OBJECT_TYPE, kb.getId(), null,
-                JsonUtil.toJsonStr(kb));
         log.info("===> KnowledgeBaseCrudServiceImpl create 创建知识库, id={}, name={}", kb.getId(), kb.getName());
         return kb.getId();
     }
@@ -91,17 +84,15 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
      * @param dto 修改请求
      * @return 更新成功为 true
      */
+    @Audit(action = AuditActionType.UPDATE, objectType = AuditObjectType.KNOWLEDGE_BASE, id = "#p0.id")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(KnowledgeBaseUpdateDTO dto) {
         WbKnowledgeBase kb = accessSupport.getAccessibleById(dto.getId());
-        String beforeJson = JsonUtil.toJsonStr(kb);
         kb.setName(dto.getName());
         kb.setDescription(dto.getDescription());
         kb.setStrategyBindingEnabled(dto.getStrategyBindingEnabled());
         knowledgeBaseDbService.updateById(kb);
-        kbAuditLogDbService.saveAudit(AuditActionType.UPDATE, AUDIT_OBJECT_TYPE, kb.getId(),
-                beforeJson, JsonUtil.toJsonStr(kb));
         log.info("===> KnowledgeBaseCrudServiceImpl update 更新知识库, id={}, name={}", kb.getId(), kb.getName());
         return true;
     }
@@ -165,16 +156,14 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
      * @param id 知识库 ID
      * @return 变更成功为 true
      */
+    @Audit(action = AuditActionType.DISABLE, objectType = AuditObjectType.KNOWLEDGE_BASE, id = "#p0")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean disable(Long id) {
         WbKnowledgeBase kb = accessSupport.getAccessibleById(id);
         KnowledgeBaseRules.checkCanDisable(kb);
-        String beforeJson = JsonUtil.toJsonStr(kb);
         kb.setStatus(KnowledgeBaseStatus.DISABLED.getCode());
         knowledgeBaseDbService.updateById(kb);
-        kbAuditLogDbService.saveAudit(AuditActionType.DISABLE, AUDIT_OBJECT_TYPE, id,
-                beforeJson, JsonUtil.toJsonStr(kb));
         log.info("===> KnowledgeBaseCrudServiceImpl disable 停用知识库, id={}", id);
         return true;
     }
@@ -185,16 +174,14 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
      * @param id 知识库 ID
      * @return 变更成功为 true
      */
+    @Audit(action = AuditActionType.ENABLE, objectType = AuditObjectType.KNOWLEDGE_BASE, id = "#p0")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean enable(Long id) {
         WbKnowledgeBase kb = accessSupport.getAccessibleById(id);
         KnowledgeBaseRules.checkCanEnable(kb);
-        String beforeJson = JsonUtil.toJsonStr(kb);
         kb.setStatus(KnowledgeBaseStatus.ACTIVE.getCode());
         knowledgeBaseDbService.updateById(kb);
-        kbAuditLogDbService.saveAudit(AuditActionType.ENABLE, AUDIT_OBJECT_TYPE, id,
-                beforeJson, JsonUtil.toJsonStr(kb));
         log.info("===> KnowledgeBaseCrudServiceImpl enable 启用知识库, id={}", id);
         return true;
     }
@@ -205,12 +192,12 @@ public class KnowledgeBaseCrudServiceImpl implements KnowledgeBaseCrudService {
      * @param id 知识库 ID
      * @return 删除成功为 true
      */
+    @Audit(action = AuditActionType.DELETE, objectType = AuditObjectType.KNOWLEDGE_BASE, id = "#p0")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long id) {
-        WbKnowledgeBase kb = accessSupport.getAccessibleById(id);
+        accessSupport.getAccessibleById(id);
         knowledgeBaseDbService.removeById(id);
-        kbAuditLogDbService.saveAudit(AuditActionType.DELETE, AUDIT_OBJECT_TYPE, id, JsonUtil.toJsonStr(kb), null);
         log.info("===> KnowledgeBaseCrudServiceImpl delete 逻辑删除知识库, id={}", id);
         return true;
     }

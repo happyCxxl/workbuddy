@@ -15,8 +15,7 @@ public interface WbAuditLogDbService extends InfraDbService<WbAuditLog> {
      * @param action     审计动作
      * @param objectType 对象类型（如 KNOWLEDGE_BASE）
      * @param objectId   对象 ID
-     * @param beforeJson 变更前摘要（JSON 文本，可空）
-     * @param afterJson  变更后摘要（JSON 文本，可空）
+     * @param payload    操作载荷（JSON 文本，可空）
      */
-    void saveAudit(AuditActionType action, String objectType, Long objectId, String beforeJson, String afterJson);
+    void saveAudit(AuditActionType action, String objectType, Long objectId, String payload);
 }

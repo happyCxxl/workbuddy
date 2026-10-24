@@ -199,7 +199,7 @@ class ModelServiceImplTest {
         assertEquals("ENABLED", saved.getStatus());
         assertEquals(List.of("CHAT", "EMBEDDING"), item.getCapabilities());
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_CREATE), eq(AUDIT_OBJECT_TYPE), isNull(),
-                isNull(), anyString());
+                anyString());
         verify(refresher).refreshAfterCommit();
     }
 
@@ -275,7 +275,7 @@ class ModelServiceImplTest {
         assertEquals("CNY", updated.getCurrency());
         assertNull(updated.getPriceInPerM());
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_UPDATE), eq(AUDIT_OBJECT_TYPE), eq(5L),
-                anyString(), anyString());
+                anyString());
     }
 
     /** 编辑不改状态：停用行编辑后保持停用（启停只走专用接口）；币种按收参原样覆盖 */
@@ -329,7 +329,7 @@ class ModelServiceImplTest {
         assertEquals("DISABLED", item.getStatus());
         verify(kbModelDbService).updateStatus(3L, "DISABLED");
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_DISABLE), eq(AUDIT_OBJECT_TYPE), eq(3L),
-                anyString(), anyString());
+                anyString());
     }
 
     /**
@@ -351,7 +351,7 @@ class ModelServiceImplTest {
         enable.setStatus("enabled");
         assertEquals("ENABLED", service.updateStatus(3L, enable).getStatus());
         verify(auditEventPublisher).publish(eq(AuditActionType.MODEL_ENABLE), eq(AUDIT_OBJECT_TYPE), eq(3L),
-                anyString(), anyString());
+                anyString());
     }
 
     /** 厂商码不在配置里：按 MODEL_VENDOR_UNKNOWN 拒绝且不写库（{@code vendorShouldBeConfigured}）。 */

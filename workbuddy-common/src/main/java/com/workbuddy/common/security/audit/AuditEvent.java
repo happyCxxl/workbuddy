@@ -26,9 +26,6 @@ public class AuditEvent implements Serializable {
     /** 对象 ID */
     private final Long objectId;
 
-    /** 变更前摘要（JSON 文本，可空） */
-    private final String beforeSummary;
-
-    /** 变更后摘要（JSON 文本，可空） */
-    private final String afterSummary;
+    /** 操作载荷（JSON 文本，可空）：注解驱动时为方法入参，显式发布时可含 before/after */
+    private final String payload;
 }

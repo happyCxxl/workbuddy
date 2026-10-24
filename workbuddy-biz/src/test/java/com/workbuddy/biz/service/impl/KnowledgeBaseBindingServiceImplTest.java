@@ -1,6 +1,5 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
@@ -13,7 +12,6 @@ import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDTO;
 import com.workbuddy.common.dto.request.knowledge.StrategyBindingsUpdateDTO;
 import com.workbuddy.common.dto.response.knowledge.StrategyBindingVO;
 import com.workbuddy.common.enums.base.DelFlag;
-import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
@@ -29,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -43,8 +40,6 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
 
     private WbKnowledgeBaseDbService knowledgeBaseDbService;
 
-    private WbAuditLogDbService kbAuditLogDbService;
-
     private WbStrategyBindingDbService strategyBindingDbService;
 
     private WbPipelineStrategyVersionDbService strategyVersionDbService;
@@ -57,10 +52,9 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
     @BeforeEach
     void setUp() {
         knowledgeBaseDbService = mock(WbKnowledgeBaseDbService.class);
-        kbAuditLogDbService = mock(WbAuditLogDbService.class);
         strategyBindingDbService = mock(WbStrategyBindingDbService.class);
         strategyVersionDbService = mock(WbPipelineStrategyVersionDbService.class);
-        service = new KnowledgeBaseBindingServiceImpl(kbAuditLogDbService, strategyBindingDbService,
+        service = new KnowledgeBaseBindingServiceImpl(strategyBindingDbService,
                 strategyVersionDbService, new KnowledgeBaseAccessSupport(knowledgeBaseDbService),
                 new KnowledgeBaseBindingSupport(strategyBindingDbService, strategyVersionDbService));
         login(ME, UserRole.USER);
@@ -186,8 +180,6 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         assertEquals(DelFlag.NORMAL.getCode(), existing.getDelFlag());
         assertEquals(66L, existing.getStrategyVersionId());
         verify(strategyBindingDbService).updateById(existing);
-        verify(kbAuditLogDbService).saveAudit(
-                eq(AuditActionType.BIND), eq("KNOWLEDGE_BASE"), eq(2L), anyString(), anyString());
     }
 
     /**
@@ -209,8 +201,6 @@ class KnowledgeBaseBindingServiceImplTest extends KnowledgeBaseTestFixture {
         ArgumentCaptor<WbStrategyBinding> captor = ArgumentCaptor.forClass(WbStrategyBinding.class);
         verify(strategyBindingDbService).updateById(captor.capture());
         assertEquals(DelFlag.DELETED.getCode(), captor.getValue().getDelFlag());
-        verify(kbAuditLogDbService).saveAudit(
-                eq(AuditActionType.BIND), eq("KNOWLEDGE_BASE"), eq(2L), anyString(), isNull());
     }
 
     /**

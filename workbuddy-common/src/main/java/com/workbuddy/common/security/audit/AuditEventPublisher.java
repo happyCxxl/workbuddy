@@ -19,14 +19,12 @@ public class AuditEventPublisher {
     /**
      * 发布审计事件。
      *
-     * @param action        审计动作
-     * @param objectType    对象类型
-     * @param objectId      对象 ID
-     * @param beforeSummary 变更前摘要（可空）
-     * @param afterSummary  变更后摘要（可空）
+     * @param action     审计动作
+     * @param objectType 对象类型
+     * @param objectId   对象 ID
+     * @param payload    操作载荷（JSON 文本，可空）
      */
-    public void publish(AuditActionType action, String objectType, Long objectId,
-                        String beforeSummary, String afterSummary) {
-        eventPublisher.publishEvent(new AuditEvent(action, objectType, objectId, beforeSummary, afterSummary));
+    public void publish(AuditActionType action, String objectType, Long objectId, String payload) {
+        eventPublisher.publishEvent(new AuditEvent(action, objectType, objectId, payload));
     }
 }

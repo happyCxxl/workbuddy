@@ -2,11 +2,11 @@ package com.workbuddy.biz.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.IndexPublishService;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.support.index.IndexVersionStateSupport;
+import com.workbuddy.common.annotation.Audit;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
@@ -36,12 +36,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class IndexPublishServiceImpl implements IndexPublishService {
 
-    private static final String AUDIT_OBJECT_TYPE = AuditObjectType.INDEX_VERSION.key();
-
     private final WbKnowledgeBaseDbService knowledgeBaseDbService;
     private final WbIndexSetDbService indexSetDbService;
     private final WbIndexVersionDbService indexVersionDbService;
-    private final WbAuditLogDbService kbAuditLogDbService;
     private final IndexVersionStateSupport stateSupport;
 
     /**
@@ -49,6 +46,7 @@ public class IndexPublishServiceImpl implements IndexPublishService {
      *
      * @param versionId 版本 ID
      */
+    @Audit(action = AuditActionType.PUBLISH_INDEX, objectType = AuditObjectType.INDEX_VERSION, id = "#p0")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publish(Long versionId) {
@@ -75,8 +73,6 @@ public class IndexPublishServiceImpl implements IndexPublishService {
             knowledgeBaseDbService.updateById(kb);
         }
 
-        kbAuditLogDbService.saveAudit(AuditActionType.PUBLISH_INDEX, AUDIT_OBJECT_TYPE, versionId,
-                NullUtil.isNull(old) ? null : old.getVersionNo(), version.getVersionNo());
         log.info("===> IndexPublishServiceImpl 索引发布完成, kbId={}, versionId={}, versionNo={}, oldVersionNo={}",
                 set.getKnowledgeBaseId(), versionId, version.getVersionNo(),
                 NullUtil.isNull(old) ? null : old.getVersionNo());

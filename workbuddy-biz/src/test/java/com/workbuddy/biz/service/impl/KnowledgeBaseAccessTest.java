@@ -1,7 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
@@ -47,8 +46,6 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
 
     private WbKnowledgeBaseDbService knowledgeBaseDbService;
 
-    private WbAuditLogDbService kbAuditLogDbService;
-
     private WbFileResultDbService kbFileResultDbService;
 
     private WbStrategyBindingDbService strategyBindingDbService;
@@ -65,17 +62,16 @@ class KnowledgeBaseAccessTest extends KnowledgeBaseTestFixture {
     @BeforeEach
     void setUp() {
         knowledgeBaseDbService = mock(WbKnowledgeBaseDbService.class);
-        kbAuditLogDbService = mock(WbAuditLogDbService.class);
         kbFileResultDbService = mock(WbFileResultDbService.class);
         strategyBindingDbService = mock(WbStrategyBindingDbService.class);
         strategyVersionDbService = mock(WbPipelineStrategyVersionDbService.class);
         KnowledgeBaseAccessSupport accessSupport = new KnowledgeBaseAccessSupport(knowledgeBaseDbService);
         KnowledgeBaseBindingSupport bindingSupport =
                 new KnowledgeBaseBindingSupport(strategyBindingDbService, strategyVersionDbService);
-        crudService = new KnowledgeBaseCrudServiceImpl(knowledgeBaseDbService, kbAuditLogDbService,
+        crudService = new KnowledgeBaseCrudServiceImpl(knowledgeBaseDbService,
                 kbFileResultDbService, mock(WbIndexSetDbService.class), mock(WbIndexVersionDbService.class),
                 accessSupport, bindingSupport, new KnowledgeBaseConverterImpl());
-        bindingService = new KnowledgeBaseBindingServiceImpl(kbAuditLogDbService, strategyBindingDbService,
+        bindingService = new KnowledgeBaseBindingServiceImpl(strategyBindingDbService,
                 strategyVersionDbService, accessSupport, bindingSupport);
         login(ME, UserRole.USER);
     }

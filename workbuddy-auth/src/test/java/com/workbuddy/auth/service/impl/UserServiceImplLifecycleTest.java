@@ -17,7 +17,6 @@ import java.io.Serializable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -183,12 +182,11 @@ class UserServiceImplLifecycleTest {
         AuditEvent event = fixture.captureAudit();
         assertEquals(AuditActionType.USER_CREATE, event.getAction());
         assertEquals("KB_USER", event.getObjectType());
-        assertNull(event.getBeforeSummary());
-        assertTrue(event.getAfterSummary().contains("newbie"), "摘要应含用户名");
-        assertTrue(event.getAfterSummary().contains("ADMIN"), "摘要应含角色");
-        assertFalse(event.getAfterSummary().contains("secret123"), "审计摘要不得含明文密码");
-        assertFalse(event.getAfterSummary().contains("encoded"), "审计摘要不得含密码哈希");
-    }
+        assertNotNull(event.getPayload(), "创建审计必须带载荷");
+        assertTrue(event.getPayload().contains("newbie"), "载荷应含用户名");
+        assertTrue(event.getPayload().contains("ADMIN"), "载荷应含角色");
+        assertFalse(event.getPayload().contains("secret123"), "审计载荷不得含明文密码");
+        assertFalse(event.getPayload().contains("encoded"), "审计载荷不得含密码哈希");    }
 
     /**
      * 守护 {@code updateUserShouldPublishUpdateAuditWithBeforeAndAfter}：该场景行为改动即失败。
@@ -207,9 +205,9 @@ class UserServiceImplLifecycleTest {
 
         AuditEvent event = fixture.captureAudit();
         assertEquals(AuditActionType.USER_UPDATE, event.getAction());
-        assertNotNull(event.getBeforeSummary(), "更新审计必须有变更前摘要");
-        assertTrue(event.getBeforeSummary().contains("USER"));
-        assertTrue(event.getAfterSummary().contains("ADMIN"));
+        assertNotNull(event.getPayload(), "更新审计必须带载荷");
+        assertTrue(event.getPayload().contains("USER"), "载荷应含变更前角色");
+        assertTrue(event.getPayload().contains("ADMIN"), "载荷应含变更后角色");
     }
 
     /**
@@ -240,8 +238,7 @@ class UserServiceImplLifecycleTest {
 
         AuditEvent event = fixture.captureAudit();
         assertEquals(AuditActionType.USER_DELETE, event.getAction());
-        assertNotNull(event.getBeforeSummary());
-        assertNull(event.getAfterSummary());
+        assertNotNull(event.getPayload(), "删除审计必须带载荷");
     }
 
     /**

@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -32,42 +33,36 @@ class AuditEventListenerTest {
     @Test
     void shouldForwardEventFieldsToAuditService() {
         AuditEvent event = new AuditEvent(AuditActionType.USER_UPDATE, "KB_USER", 1001L,
-                "{\"role\":\"USER\"}", "{\"role\":\"ADMIN\"}");
+                "{\"after\":{\"role\":\"ADMIN\"}}");
 
         auditEventListener.onAuditEvent(event);
 
         verify(kbAuditLogDbService).saveAudit(AuditActionType.USER_UPDATE, "KB_USER", 1001L,
-                "{\"role\":\"USER\"}", "{\"role\":\"ADMIN\"}");
+                "{\"after\":{\"role\":\"ADMIN\"}}");
 
         org.mockito.ArgumentCaptor<AuditActionType> action = org.mockito.ArgumentCaptor.forClass(AuditActionType.class);
         org.mockito.ArgumentCaptor<Long> objectId = org.mockito.ArgumentCaptor.forClass(Long.class);
-        org.mockito.ArgumentCaptor<String> before = org.mockito.ArgumentCaptor.forClass(String.class);
-        org.mockito.ArgumentCaptor<String> after = org.mockito.ArgumentCaptor.forClass(String.class);
-        verify(kbAuditLogDbService).saveAudit(action.capture(), anyString(), objectId.capture(),
-                before.capture(), after.capture());
+        org.mockito.ArgumentCaptor<String> payload = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(kbAuditLogDbService).saveAudit(action.capture(), anyString(), objectId.capture(), payload.capture());
         assertEquals(AuditActionType.USER_UPDATE, action.getValue());
         assertEquals(1001L, objectId.getValue());
-        assertEquals("{\"role\":\"USER\"}", before.getValue());
-        assertEquals("{\"role\":\"ADMIN\"}", after.getValue());
+        assertEquals("{\"after\":{\"role\":\"ADMIN\"}}", payload.getValue());
     }
 
     /**
-     * 守护 {@code shouldForwardNullSummariesAsIs}：该场景行为改动即失败。
+     * 守护 {@code shouldForwardNullPayloadAsIs}：无载荷的事件必须原样透传 null。
      */
     @Test
-    void shouldForwardNullSummariesAsIs() {
-        // 删除场景 after 为空、创建场景 before 为空，都要求原样透传
-        AuditEvent event = new AuditEvent(AuditActionType.USER_CREATE, "KB_USER", 1002L, null, "{}");
+    void shouldForwardNullPayloadAsIs() {
+        AuditEvent event = new AuditEvent(AuditActionType.USER_PASSWORD_CHANGE, "KB_USER", 1002L, null);
 
         auditEventListener.onAuditEvent(event);
 
-        verify(kbAuditLogDbService).saveAudit(AuditActionType.USER_CREATE, "KB_USER", 1002L, null, "{}");
+        verify(kbAuditLogDbService).saveAudit(AuditActionType.USER_PASSWORD_CHANGE, "KB_USER", 1002L, null);
 
-        org.mockito.ArgumentCaptor<String> before = org.mockito.ArgumentCaptor.forClass(String.class);
-        org.mockito.ArgumentCaptor<String> after = org.mockito.ArgumentCaptor.forClass(String.class);
-        verify(kbAuditLogDbService).saveAudit(eq(AuditActionType.USER_CREATE), eq("KB_USER"),
-                eq(1002L), before.capture(), after.capture());
-        org.junit.jupiter.api.Assertions.assertNull(before.getValue());
-        assertEquals("{}", after.getValue());
+        org.mockito.ArgumentCaptor<String> payload = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(kbAuditLogDbService).saveAudit(eq(AuditActionType.USER_PASSWORD_CHANGE), eq("KB_USER"),
+                eq(1002L), payload.capture());
+        assertNull(payload.getValue());
     }
 }

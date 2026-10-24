@@ -53,7 +53,7 @@ class WbAuditLogDbServiceImplTest {
             return 1;
         }).when(mapper).insert(any(WbAuditLog.class));
 
-        impl.saveAudit(AuditActionType.DISABLE, "KNOWLEDGE_BASE", 4L, "{\"status\":1}", "{\"status\":0}");
+        impl.saveAudit(AuditActionType.DISABLE, "KNOWLEDGE_BASE", 4L, "{\"status\":0}");
 
         ArgumentCaptor<WbAuditLog> cap = ArgumentCaptor.forClass(WbAuditLog.class);
         verify(mapper).insert(cap.capture());
@@ -61,8 +61,7 @@ class WbAuditLogDbServiceImplTest {
         assertEquals("DISABLE", audit.getActionType());
         assertEquals("KNOWLEDGE_BASE", audit.getObjectType());
         assertEquals("4", audit.getObjectId());
-        assertEquals("{\"status\":1}", audit.getBeforeSummary());
-        assertEquals("{\"status\":0}", audit.getAfterSummary());
+        assertEquals("{\"status\":0}", audit.getPayload());
     }
 
     /**
@@ -77,7 +76,7 @@ class WbAuditLogDbServiceImplTest {
             return 1;
         }).when(mapper).insert(any(WbAuditLog.class));
 
-        impl.saveAudit(AuditActionType.CREATE, "KNOWLEDGE_BASE", 5L, null, "{\"name\":\"招标知识库\"}");
+        impl.saveAudit(AuditActionType.CREATE, "KNOWLEDGE_BASE", 5L, "{\"name\":\"招标知识库\"}");
 
         ArgumentCaptor<WbAuditLog> cap = ArgumentCaptor.forClass(WbAuditLog.class);
         verify(mapper).insert(cap.capture());
@@ -97,7 +96,7 @@ class WbAuditLogDbServiceImplTest {
             return 1;
         }).when(mapper).insert(any(WbAuditLog.class));
 
-        impl.saveAudit(AuditActionType.DELETE, "KNOWLEDGE_BASE", 6L, "{\"name\":\"旧库\"}", null);
+        impl.saveAudit(AuditActionType.DELETE, "KNOWLEDGE_BASE", 6L, "{\"name\":\"旧库\"}");
 
         ArgumentCaptor<WbAuditLog> cap = ArgumentCaptor.forClass(WbAuditLog.class);
         verify(mapper).insert(cap.capture());

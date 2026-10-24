@@ -3,11 +3,11 @@ package com.workbuddy.biz.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.biz.service.KnowledgeBaseBindingService;
 import com.workbuddy.biz.service.StrategyVersionService;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseAccessSupport;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseBindingSupport;
+import com.workbuddy.common.annotation.Audit;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.domain.entity.WbStrategyBinding;
@@ -40,11 +40,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class KnowledgeBaseBindingServiceImpl implements KnowledgeBaseBindingService {
-
-    /** 审计对象类型 */
-    private static final String AUDIT_OBJECT_TYPE = AuditObjectType.KNOWLEDGE_BASE.key();
-
-    private final WbAuditLogDbService kbAuditLogDbService;
 
     private final WbStrategyBindingDbService strategyBindingDbService;
 
@@ -91,6 +86,7 @@ public class KnowledgeBaseBindingServiceImpl implements KnowledgeBaseBindingServ
      * @param dto 绑定请求
      * @return 成功为 true
      */
+    @Audit(action = AuditActionType.BIND, objectType = AuditObjectType.KNOWLEDGE_BASE, id = "#p0")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean bindStrategy(Long id, StrategyBindingUpdateDTO dto) {
@@ -106,6 +102,7 @@ public class KnowledgeBaseBindingServiceImpl implements KnowledgeBaseBindingServ
      * @param request 批量绑定请求
      * @return 成功为 true
      */
+    @Audit(action = AuditActionType.BIND, objectType = AuditObjectType.KNOWLEDGE_BASE, id = "#p0")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean bindStrategies(Long id, StrategyBindingsUpdateDTO request) {
@@ -151,7 +148,7 @@ public class KnowledgeBaseBindingServiceImpl implements KnowledgeBaseBindingServ
     }
 
     /**
-     * 单类型绑定的公共实现：类型白名单、解绑 / 版本校验 / upsert / 审计 / 日志。
+     * 单类型绑定的公共实现：类型白名单、解绑 / 版本校验 / upsert / 日志。
      *
      * @param id        知识库 ID
      * @param type      策略类型
@@ -164,13 +161,10 @@ public class KnowledgeBaseBindingServiceImpl implements KnowledgeBaseBindingServ
         // 解绑：绑定行逻辑删除（无绑定行时幂等成功）
         if (NullUtil.isNull(versionId)) {
             WbStrategyBinding existing = strategyBindingDbService.getByKbAndType(id, type);
-            String before = bindingSupport.bindingSummary(existing);
             if (NullUtil.isNotNull(existing)) {
                 existing.setDelFlag(DelFlag.DELETED.getCode());
                 strategyBindingDbService.updateById(existing);
             }
-            kbAuditLogDbService.saveAudit(AuditActionType.BIND, AUDIT_OBJECT_TYPE, id,
-                    type + "=" + before, null);
             log.info("===> KnowledgeBaseBindingServiceImpl bindStrategy 解绑知识库策略, id={}, type={}", id, type);
             return;
         }
@@ -183,7 +177,6 @@ public class KnowledgeBaseBindingServiceImpl implements KnowledgeBaseBindingServ
 
         // 绑定/重绑：复用原行（含已逻辑删除行），uk 不被占用
         WbStrategyBinding existing = strategyBindingDbService.getAnyByKbAndType(id, type);
-        String before = bindingSupport.bindingSummary(existing);
         if (NullUtil.isNull(existing)) {
             WbStrategyBinding binding = new WbStrategyBinding();
             binding.setKnowledgeBaseId(id);
@@ -195,9 +188,6 @@ public class KnowledgeBaseBindingServiceImpl implements KnowledgeBaseBindingServ
             existing.setStrategyVersionId(versionId);
             strategyBindingDbService.updateById(existing);
         }
-        String after = version.getName() + "-" + version.getVersion();
-        kbAuditLogDbService.saveAudit(AuditActionType.BIND, AUDIT_OBJECT_TYPE, id,
-                type + "=" + before, type + "=" + after);
         log.info("===> KnowledgeBaseBindingServiceImpl bindStrategy 绑定知识库策略, id={}, type={}, versionId={}",
                 id, type, versionId);
     }

@@ -1,7 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
@@ -13,10 +12,7 @@ import com.workbuddy.common.convert.knowledge.KnowledgeBaseConverterImpl;
 import com.workbuddy.biz.service.support.access.KnowledgeBaseBindingSupport;
 import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbStrategyBinding;
-import com.workbuddy.common.dto.request.knowledge.StrategyBindingUpdateDTO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
-import com.workbuddy.common.enums.base.DelFlag;
-import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,12 +23,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,8 +38,6 @@ import static org.mockito.Mockito.when;
 class KnowledgeBaseBindingSummaryTest extends KnowledgeBaseTestFixture {
 
     private WbKnowledgeBaseDbService knowledgeBaseDbService;
-
-    private WbAuditLogDbService kbAuditLogDbService;
 
     private WbFileResultDbService kbFileResultDbService;
 
@@ -64,67 +55,18 @@ class KnowledgeBaseBindingSummaryTest extends KnowledgeBaseTestFixture {
     @BeforeEach
     void setUp() {
         knowledgeBaseDbService = mock(WbKnowledgeBaseDbService.class);
-        kbAuditLogDbService = mock(WbAuditLogDbService.class);
         kbFileResultDbService = mock(WbFileResultDbService.class);
         strategyBindingDbService = mock(WbStrategyBindingDbService.class);
         strategyVersionDbService = mock(WbPipelineStrategyVersionDbService.class);
         KnowledgeBaseAccessSupport accessSupport = new KnowledgeBaseAccessSupport(knowledgeBaseDbService);
         KnowledgeBaseBindingSupport bindingSupport =
                 new KnowledgeBaseBindingSupport(strategyBindingDbService, strategyVersionDbService);
-        crudService = new KnowledgeBaseCrudServiceImpl(knowledgeBaseDbService, kbAuditLogDbService,
+        crudService = new KnowledgeBaseCrudServiceImpl(knowledgeBaseDbService,
                 kbFileResultDbService, mock(WbIndexSetDbService.class), mock(WbIndexVersionDbService.class),
                 accessSupport, bindingSupport, new KnowledgeBaseConverterImpl());
-        bindingService = new KnowledgeBaseBindingServiceImpl(kbAuditLogDbService, strategyBindingDbService,
+        bindingService = new KnowledgeBaseBindingServiceImpl(strategyBindingDbService,
                 strategyVersionDbService, accessSupport, bindingSupport);
         login(ME, UserRole.USER);
-    }
-
-    /**
-     * 审计里的「变更前」摘要：无绑定与已删行都渲染成「无」。
-     *
-     * <p>守护 {@code bindingSummary}：摘要写成空串或把已删行当有效绑定即失败。
-     */
-    @Test
-    void bindStrategyAuditShouldRenderMissingAndDeletedBeforeAsNone() {
-        when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
-        when(strategyVersionDbService.getById(66L)).thenReturn(chunkVersion());
-        StrategyBindingUpdateDTO dto = new StrategyBindingUpdateDTO();
-        dto.setStrategyType("CHUNK");
-        dto.setStrategyVersionId(66L);
-        // ① 无现有绑定 → 「无」
-        when(strategyBindingDbService.getAnyByKbAndType(2L, "CHUNK")).thenReturn(null);
-        assertTrue(bindingService.bindStrategy(2L, dto));
-
-        // ② 现有行已逻辑删除 → 仍按「无」
-        WbStrategyBinding deleted = binding(55L);
-        deleted.setDelFlag(DelFlag.DELETED.getCode());
-        when(strategyBindingDbService.getAnyByKbAndType(2L, "CHUNK")).thenReturn(deleted);
-        assertTrue(bindingService.bindStrategy(2L, dto));
-
-        verify(kbAuditLogDbService, times(2)).saveAudit(eq(AuditActionType.BIND), eq("KNOWLEDGE_BASE"),
-                eq(2L), eq("CHUNK=无"), eq("CHUNK=chunk-hybrid-v1"));
-    }
-
-    /**
-     * 审计里的「变更前」摘要：绑定指向的版本已不存在时渲染成「失效」。
-     *
-     * <p>守护 {@code bindingSummary}：跟随失效版本取名字会得到半截摘要。
-     */
-    @Test
-    void bindStrategyAuditShouldRenderInvalidBeforeState() {
-        when(knowledgeBaseDbService.getActiveById(2L)).thenReturn(kb(2L, 1));
-        when(strategyVersionDbService.getById(66L)).thenReturn(chunkVersion());
-        WbStrategyBinding orphan = binding(999L);
-        when(strategyBindingDbService.getAnyByKbAndType(2L, "CHUNK")).thenReturn(orphan);
-        when(strategyVersionDbService.getById(999L)).thenReturn(null);
-        StrategyBindingUpdateDTO dto = new StrategyBindingUpdateDTO();
-        dto.setStrategyType("CHUNK");
-        dto.setStrategyVersionId(66L);
-
-        assertTrue(bindingService.bindStrategy(2L, dto));
-
-        verify(kbAuditLogDbService).saveAudit(eq(AuditActionType.BIND), eq("KNOWLEDGE_BASE"), eq(2L),
-                eq("CHUNK=失效"), eq("CHUNK=chunk-hybrid-v1"));
     }
 
     /**

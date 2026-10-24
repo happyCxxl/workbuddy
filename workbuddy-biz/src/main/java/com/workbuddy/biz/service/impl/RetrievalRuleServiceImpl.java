@@ -2,10 +2,10 @@ package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.RetrievalRuleService;
 import com.workbuddy.biz.service.StrategyVersionService;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
+import com.workbuddy.common.annotation.Audit;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
@@ -34,8 +34,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class RetrievalRuleServiceImpl implements RetrievalRuleService {
 
-    private static final String AUDIT_OBJECT_TYPE = AuditObjectType.INDEX_VERSION.key();
-
     private final StrategyVersionService strategyVersionService;
 
     private final WbPipelineStrategyVersionDbService strategyVersionDbService;
@@ -43,8 +41,6 @@ public class RetrievalRuleServiceImpl implements RetrievalRuleService {
     private final WbIndexVersionDbService indexVersionDbService;
 
     private final WbIndexSetDbService indexSetDbService;
-
-    private final WbAuditLogDbService kbAuditLogDbService;
 
     /**
      * 规则列表（type=RETRIEVAL）。
@@ -63,6 +59,8 @@ public class RetrievalRuleServiceImpl implements RetrievalRuleService {
      * @param dto             规则发布请求
      * @return 发布结果
      */
+    @Audit(action = AuditActionType.RETRIEVAL_RULE_PUBLISH, objectType = AuditObjectType.INDEX_VERSION,
+            id = "#p1.versionId")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public RetrievalRulePublishVO publishDefaultRule(Long knowledgeBaseId, RetrievalRulePublishDTO dto) {
@@ -80,9 +78,6 @@ public class RetrievalRuleServiceImpl implements RetrievalRuleService {
         Long oldRuleId = version.getDefaultRuleId();
         version.setDefaultRuleId(rule.getId());
         indexVersionDbService.updateById(version);
-        kbAuditLogDbService.saveAudit(AuditActionType.RETRIEVAL_RULE_PUBLISH, AUDIT_OBJECT_TYPE,
-                version.getId(), NullUtil.isNull(oldRuleId) ? null : String.valueOf(oldRuleId),
-                String.valueOf(rule.getId()));
         log.info("===> RetrievalRuleServiceImpl 选优发布完成, kbId={}, versionId={}, versionNo={}, rule={}-{}, oldRuleId={}",
                 knowledgeBaseId, version.getId(), version.getVersionNo(), rule.getName(), rule.getVersion(), oldRuleId);
 

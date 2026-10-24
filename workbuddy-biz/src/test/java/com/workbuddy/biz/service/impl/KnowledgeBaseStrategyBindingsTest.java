@@ -1,6 +1,5 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
 import com.workbuddy.biz.service.db.WbStrategyBindingDbService;
@@ -47,7 +46,7 @@ class KnowledgeBaseStrategyBindingsTest extends KnowledgeBaseTestFixture {
         knowledgeBaseDbService = mock(WbKnowledgeBaseDbService.class);
         strategyBindingDbService = mock(WbStrategyBindingDbService.class);
         strategyVersionDbService = mock(WbPipelineStrategyVersionDbService.class);
-        service = new KnowledgeBaseBindingServiceImpl(mock(WbAuditLogDbService.class), strategyBindingDbService,
+        service = new KnowledgeBaseBindingServiceImpl(strategyBindingDbService,
                 strategyVersionDbService, new KnowledgeBaseAccessSupport(knowledgeBaseDbService),
                 new KnowledgeBaseBindingSupport(strategyBindingDbService, strategyVersionDbService));
     }

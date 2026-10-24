@@ -33,11 +33,8 @@ public class WbAuditLog extends BaseInfo {
     /** 对象 ID */
     private String objectId;
 
-    /** 变更前摘要（JSON 文本） */
-    private String beforeSummary;
-
-    /** 变更后摘要（JSON 文本） */
-    private String afterSummary;
+    /** 操作载荷（JSON 文本）：注解驱动时为方法入参，显式发布时可含 before/after */
+    private String payload;
 
     /** 操作用户 ID（无认证上下文为 null） */
     private Long userId;

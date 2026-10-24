@@ -83,7 +83,7 @@ public class ModelServiceImpl implements ModelService {
         row.setStatus(ModelStatus.ENABLED.name());
         ensureUnique(row.getVendorCode(), row.getModelKey(), null);
         wbModelDbService.save(row);
-        auditEventPublisher.publish(AuditActionType.MODEL_CREATE, AuditObjectType.MODEL.key(), row.getId(), null,
+        auditEventPublisher.publish(AuditActionType.MODEL_CREATE, AuditObjectType.MODEL.key(), row.getId(),
                 JsonUtil.toJsonStr(row));
         log.info("===> ModelServiceImpl create 新增模型, id={}, vendor={}, model={}",
                 row.getId(), row.getVendorCode(), row.getModelKey());
@@ -102,15 +102,14 @@ public class ModelServiceImpl implements ModelService {
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO update(Long id, ModelUpdateDTO dto) {
         WbModel before = requireRow(id);
-        String beforeJson = JsonUtil.toJsonStr(before);
         WbModel after = modelConverter.toModel(dto);
         after.setId(id);
         applyBusinessColumns(after, dto);
         after.setStatus(before.getStatus());
         ensureUnique(after.getVendorCode(), after.getModelKey(), id);
         wbModelDbService.updateModel(after);
-        auditEventPublisher.publish(AuditActionType.MODEL_UPDATE, AuditObjectType.MODEL.key(), id, beforeJson,
-                JsonUtil.toJsonStr(after));
+        auditEventPublisher.publish(AuditActionType.MODEL_UPDATE, AuditObjectType.MODEL.key(), id,
+                JsonUtil.toJsonStr(Map.of("before", before, "after", after)));
         log.info("===> ModelServiceImpl update 修改模型, id={}, vendor={}, model={}",
                 id, after.getVendorCode(), after.getModelKey());
         modelRegistryRefresher.refreshAfterCommit();
@@ -128,14 +127,13 @@ public class ModelServiceImpl implements ModelService {
     @Transactional(rollbackFor = Exception.class)
     public ModelItemVO updateStatus(Long id, ModelStatusDTO dto) {
         WbModel row = requireRow(id);
-        String beforeJson = JsonUtil.toJsonStr(row);
         String status = StrUtil.trimToNull(NullUtil.isNull(dto) ? null : dto.getStatus());
         ThrowUtil.throwIf(NullUtil.isNull(status), ErrorCode.PARAM_INVALID, "状态不能为空（取值 ENABLED / DISABLED）");
         String target = status.toUpperCase(Locale.ROOT);
         wbModelDbService.updateStatus(id, target);
         row.setStatus(target);
         auditEventPublisher.publish(isEnabled(target) ? AuditActionType.MODEL_ENABLE : AuditActionType.MODEL_DISABLE,
-                AuditObjectType.MODEL.key(), id, beforeJson, JsonUtil.toJsonStr(row));
+                AuditObjectType.MODEL.key(), id, JsonUtil.toJsonStr(Map.of("status", target)));
         log.info("===> ModelServiceImpl updateStatus 模型启停, id={}, status={}", id, target);
         modelRegistryRefresher.refreshAfterCommit();
         return toItem(row);

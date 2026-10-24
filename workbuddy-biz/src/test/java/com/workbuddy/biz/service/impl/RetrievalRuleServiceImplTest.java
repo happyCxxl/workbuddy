@@ -1,7 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.StrategyVersionService;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.db.WbPipelineStrategyVersionDbService;
@@ -11,7 +10,6 @@ import com.workbuddy.common.domain.entity.WbPipelineStrategyVersion;
 import com.workbuddy.common.dto.request.retrieval.RetrievalRulePublishDTO;
 import com.workbuddy.common.dto.response.retrieval.RetrievalRulePublishVO;
 import com.workbuddy.common.dto.response.strategy.StrategyVersionVO;
-import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,15 +41,13 @@ class RetrievalRuleServiceImplTest {
     private WbIndexVersionDbService indexVersionDbService;
     @Mock
     private WbIndexSetDbService indexSetDbService;
-    @Mock
-    private WbAuditLogDbService kbAuditLogDbService;
 
     private RetrievalRuleServiceImpl service;
 
     @BeforeEach
     void setUp() {
         service = new RetrievalRuleServiceImpl(strategyVersionService, strategyVersionDbService,
-                indexVersionDbService, indexSetDbService, kbAuditLogDbService);
+                indexVersionDbService, indexSetDbService);
     }
 
     private WbIndexVersion versionRow() {
@@ -119,8 +115,6 @@ class RetrievalRuleServiceImplTest {
 
         assertEquals(500L, version.getDefaultRuleId());
         verify(indexVersionDbService).updateById(version);
-        verify(kbAuditLogDbService).saveAudit(AuditActionType.RETRIEVAL_RULE_PUBLISH,
-                "INDEX_VERSION", 20L, null, "500");
         assertEquals("hybrid-rrf-k60-top10-v1", vo.getRuleNameVersion());
         assertEquals("v2", vo.getVersionNo());
         // 发布结果必须带规则与版本主键（漏搬会让前端无法回显）

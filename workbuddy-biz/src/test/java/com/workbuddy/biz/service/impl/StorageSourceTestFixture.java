@@ -1,6 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
+import com.workbuddy.common.security.audit.AuditEventPublisher;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbStorageSourceDbService;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
@@ -41,7 +41,7 @@ final class StorageSourceTestFixture {
 
     final WbStorageSourceDbService storageSourceDbService = mock(WbStorageSourceDbService.class);
     final WbPipelineTaskDbService pipelineTaskDbService = mock(WbPipelineTaskDbService.class);
-    final WbAuditLogDbService kbAuditLogDbService = mock(WbAuditLogDbService.class);
+    final AuditEventPublisher auditEventPublisher = mock(AuditEventPublisher.class);
     final StorageRouter storageRouter = mock(StorageRouter.class);
     final ChainStorageSupport chainStorageSupport = mock(ChainStorageSupport.class);
 
@@ -52,7 +52,7 @@ final class StorageSourceTestFixture {
     StorageSourceTestFixture(Path root) {
         this.root = root;
         service = new StorageSourceServiceImpl(storageSourceDbService, pipelineTaskDbService,
-                kbAuditLogDbService, storageRouter, TransactionTestSupport.template(),
+                auditEventPublisher, storageRouter, TransactionTestSupport.template(),
                 chainStorageSupport);
         lenient().when(chainStorageSupport.sourceName(any())).thenAnswer(inv -> {
             Object sourceId = inv.getArgument(0);

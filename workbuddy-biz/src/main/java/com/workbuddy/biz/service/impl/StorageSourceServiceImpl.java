@@ -1,7 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.StorageSourceService;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbStorageSourceDbService;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
@@ -18,6 +17,7 @@ import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.exception.ThrowUtil;
+import com.workbuddy.common.security.audit.AuditEventPublisher;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.infra.storage.StorageProviderFactory;
@@ -58,7 +58,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
 
     private final WbStorageSourceDbService storageSourceDbService;
     private final WbPipelineTaskDbService pipelineTaskDbService;
-    private final WbAuditLogDbService kbAuditLogDbService;
+    private final AuditEventPublisher auditEventPublisher;
     private final StorageRouter storageRouter;
     private final TransactionTemplate transactionTemplate;
     private final ChainStorageSupport chainStorageSupport;
@@ -356,7 +356,8 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     }
 
     private void audit(Long sourceId, String before, String after) {
-        kbAuditLogDbService.saveAudit(AuditActionType.STORAGE_SWITCH, AUDIT_OBJECT_TYPE, sourceId, before, after);
+        auditEventPublisher.publish(AuditActionType.STORAGE_SWITCH, AUDIT_OBJECT_TYPE, sourceId,
+                JsonUtil.toJsonStr(Map.of("before", before, "after", after)));
     }
 
     private boolean isEnabled(WbStorageSource row) {

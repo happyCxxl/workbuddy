@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-24",
-      "baseline": "6d6fc408",
-      "note": "策略绑定开关改为入参必填 0/1，删除服务端归一化；support 侧开关判定注释改成「列 NOT NULL，null 仅兜代码内构造的未赋值实体」"
+      "baseline": "ca79be7b",
+      "note": "策略绑定开关改为入参必填 0/1；审计改为 @Audit 注解 + 入参载荷（AuditAspect 在 infra、表达式求值在 common），事务增强显式排到切面外层，recycle/switchCurrent 保留事务内显式发布"
     }
   }
 }

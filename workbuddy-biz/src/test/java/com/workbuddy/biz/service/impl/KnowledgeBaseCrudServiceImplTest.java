@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbIndexSetDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
@@ -20,7 +19,6 @@ import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseCreateDTO;
 import com.workbuddy.common.dto.request.knowledge.KnowledgeBaseUpdateDTO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseStatsVO;
 import com.workbuddy.common.dto.response.knowledge.KnowledgeBaseVO;
-import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseSort;
 import com.workbuddy.common.enums.knowledge.KnowledgeBaseStatus;
 import com.workbuddy.common.enums.user.UserRole;
@@ -39,9 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
@@ -59,8 +54,6 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
 
     private WbKnowledgeBaseDbService knowledgeBaseDbService;
 
-    private WbAuditLogDbService kbAuditLogDbService;
-
     private WbFileResultDbService kbFileResultDbService;
 
     private WbIndexSetDbService indexSetDbService;
@@ -77,12 +70,11 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
     @BeforeEach
     void setUp() {
         knowledgeBaseDbService = mock(WbKnowledgeBaseDbService.class);
-        kbAuditLogDbService = mock(WbAuditLogDbService.class);
         kbFileResultDbService = mock(WbFileResultDbService.class);
         indexSetDbService = mock(WbIndexSetDbService.class);
         indexVersionDbService = mock(WbIndexVersionDbService.class);
         bindingSupport = mock(KnowledgeBaseBindingSupport.class);
-        service = new KnowledgeBaseCrudServiceImpl(knowledgeBaseDbService, kbAuditLogDbService,
+        service = new KnowledgeBaseCrudServiceImpl(knowledgeBaseDbService,
                 kbFileResultDbService, indexSetDbService, indexVersionDbService,
                 new KnowledgeBaseAccessSupport(knowledgeBaseDbService), bindingSupport,
                 new KnowledgeBaseConverterImpl());
@@ -115,14 +107,12 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
         assertEquals("招投标知识库", kbCaptor.getValue().getName());
         assertEquals("招投标场景", kbCaptor.getValue().getDescription());
         assertEquals(1, kbCaptor.getValue().getStrategyBindingEnabled());
-        verify(kbAuditLogDbService).saveAudit(
-                eq(AuditActionType.CREATE), eq("KNOWLEDGE_BASE"), eq(1L), isNull(), anyString());
     }
 
     /**
      * 新建时显式关闭策略绑定，落库必须是 0。
      *
-     * <p>守护开关原样落库：关成 0 写成 1 会让测评库被绑定策略。
+     * <p>守护 {@code strategyBindingEnabled} 原样落库：关成 0 写成 1 会让测评库被绑定策略。
      */
     @Test
     void createWithSwitchOffShouldPersistZero() {
@@ -210,8 +200,6 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
         assertEquals("新名称", cap.getValue().getName());
         assertEquals("新描述", cap.getValue().getDescription());
         assertEquals(0, cap.getValue().getStrategyBindingEnabled());
-        verify(kbAuditLogDbService).saveAudit(
-                eq(AuditActionType.UPDATE), eq("KNOWLEDGE_BASE"), eq(3L), anyString(), anyString());
     }
 
     /**
@@ -228,8 +216,6 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
         ArgumentCaptor<WbKnowledgeBase> cap = ArgumentCaptor.forClass(WbKnowledgeBase.class);
         verify(knowledgeBaseDbService).updateById(cap.capture());
         assertEquals(0, cap.getValue().getStatus());
-        verify(kbAuditLogDbService).saveAudit(
-                eq(AuditActionType.DISABLE), eq("KNOWLEDGE_BASE"), eq(4L), anyString(), anyString());
     }
 
     /**
@@ -261,8 +247,6 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
         ArgumentCaptor<WbKnowledgeBase> cap = ArgumentCaptor.forClass(WbKnowledgeBase.class);
         verify(knowledgeBaseDbService).updateById(cap.capture());
         assertEquals(1, cap.getValue().getStatus());
-        verify(kbAuditLogDbService).saveAudit(
-                eq(AuditActionType.ENABLE), eq("KNOWLEDGE_BASE"), eq(5L), anyString(), anyString());
     }
 
     /**
@@ -292,8 +276,6 @@ class KnowledgeBaseCrudServiceImplTest extends KnowledgeBaseTestFixture {
         assertTrue(service.delete(6L));
 
         verify(knowledgeBaseDbService).removeById(6L);
-        verify(kbAuditLogDbService).saveAudit(
-                eq(AuditActionType.DELETE), eq("KNOWLEDGE_BASE"), eq(6L), anyString(), isNull());
     }
 
     /**

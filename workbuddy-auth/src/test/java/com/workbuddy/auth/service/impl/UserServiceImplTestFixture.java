@@ -69,12 +69,11 @@ final class UserServiceImplTestFixture implements BeforeEachCallback, AfterEachC
         ArgumentCaptor<AuditActionType> actionCaptor = ArgumentCaptor.forClass(AuditActionType.class);
         ArgumentCaptor<String> objectTypeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Long> objectIdCaptor = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<String> beforeCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> afterCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> payloadCaptor = ArgumentCaptor.forClass(String.class);
         verify(auditEventPublisher).publish(actionCaptor.capture(), objectTypeCaptor.capture(),
-                objectIdCaptor.capture(), beforeCaptor.capture(), afterCaptor.capture());
+                objectIdCaptor.capture(), payloadCaptor.capture());
         return new AuditEvent(actionCaptor.getValue(), objectTypeCaptor.getValue(),
-                objectIdCaptor.getValue(), beforeCaptor.getValue(), afterCaptor.getValue());
+                objectIdCaptor.getValue(), payloadCaptor.getValue());
     }
 
     /** 改密请求夹具 */

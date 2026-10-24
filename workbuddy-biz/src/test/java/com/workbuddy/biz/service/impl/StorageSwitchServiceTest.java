@@ -94,7 +94,7 @@ class StorageSwitchServiceTest {
         verify(fixture.storageSourceDbService, never()).markCurrent(any());
         verify(fixture.storageSourceDbService, never()).updateById(any());
         verify(fixture.storageRouter, never()).markCurrent(any());
-        verify(fixture.kbAuditLogDbService, never()).saveAudit(any(), anyString(), any(), any(), any());
+        verify(fixture.auditEventPublisher, never()).publish(any(), anyString(), any(), any());
     }
 
     /**
@@ -211,12 +211,12 @@ class StorageSwitchServiceTest {
         externalFirst.verify(fixture.storageRouter).markCurrent(StorageSourceTestFixture.LOCAL_ID);
         verify(fixture.storageSourceDbService).recordProbe(eq(StorageSourceTestFixture.LOCAL_ID), eq(true), any());
         verify(fixture.storageRouter).markCurrent(StorageSourceTestFixture.LOCAL_ID);
-        ArgumentCaptor<String> after = ArgumentCaptor.forClass(String.class);
-        verify(fixture.kbAuditLogDbService).saveAudit(eq(AuditActionType.STORAGE_SWITCH),
-                eq(AuditObjectType.STORAGE_SOURCE.key()), eq(StorageSourceTestFixture.LOCAL_ID), anyString(),
-                after.capture());
-        assertTrue(after.getValue().contains("本地磁盘"), after.getValue());
-        assertTrue(after.getValue().contains("排队中 1"), after.getValue());
+        ArgumentCaptor<String> payload = ArgumentCaptor.forClass(String.class);
+        verify(fixture.auditEventPublisher).publish(eq(AuditActionType.STORAGE_SWITCH),
+                eq(AuditObjectType.STORAGE_SOURCE.key()), eq(StorageSourceTestFixture.LOCAL_ID),
+                payload.capture());
+        assertTrue(payload.getValue().contains("本地磁盘"), payload.getValue());
+        assertTrue(payload.getValue().contains("排队中 1"), payload.getValue());
     }
 
     /**
@@ -262,7 +262,7 @@ class StorageSwitchServiceTest {
         verify(fixture.storageSourceDbService, never()).markCurrent(any());
         // 探活失败整体回滚：探测结论也不落库，不留半截状态
         verify(fixture.storageSourceDbService, never()).recordProbe(any(), anyBoolean(), any());
-        verify(fixture.kbAuditLogDbService, never()).saveAudit(any(), anyString(), any(), any(), any());
+        verify(fixture.auditEventPublisher, never()).publish(any(), anyString(), any(), any());
     }
 
     /**

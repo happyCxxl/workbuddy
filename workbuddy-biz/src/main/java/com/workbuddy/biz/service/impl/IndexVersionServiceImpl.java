@@ -2,9 +2,9 @@ package com.workbuddy.biz.service.impl;
 
 import com.workbuddy.biz.service.IndexBuildService;
 import com.workbuddy.biz.service.IndexVersionService;
-import com.workbuddy.biz.service.db.WbAuditLogDbService;
 import com.workbuddy.biz.service.db.WbIndexVersionDbService;
 import com.workbuddy.biz.service.support.index.IndexVersionStateSupport;
+import com.workbuddy.common.annotation.Audit;
 import com.workbuddy.common.domain.entity.WbIndexSet;
 import com.workbuddy.common.domain.entity.WbIndexVersion;
 import com.workbuddy.common.enums.index.IndexVersionStatus;
@@ -12,6 +12,8 @@ import com.workbuddy.common.enums.knowledge.AuditActionType;
 import com.workbuddy.common.enums.knowledge.AuditObjectType;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
+import com.workbuddy.common.security.audit.AuditEventPublisher;
+import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.indexing.ComboSnapshot;
 import com.workbuddy.worker.indexing.MilvusIndexPort;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -35,7 +38,7 @@ public class IndexVersionServiceImpl implements IndexVersionService {
     private static final String AUDIT_OBJECT_TYPE = AuditObjectType.INDEX_VERSION.key();
 
     private final WbIndexVersionDbService indexVersionDbService;
-    private final WbAuditLogDbService kbAuditLogDbService;
+    private final AuditEventPublisher auditEventPublisher;
     private final MilvusIndexPort milvusIndexPort;
     private final IndexBuildService buildService;
     private final IndexVersionStateSupport stateSupport;
@@ -46,6 +49,7 @@ public class IndexVersionServiceImpl implements IndexVersionService {
      *
      * @param versionId 版本 ID
      */
+    @Audit(action = AuditActionType.ROLLBACK_INDEX, objectType = AuditObjectType.INDEX_VERSION, id = "#p0")
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rollback(Long versionId) {
@@ -64,8 +68,6 @@ public class IndexVersionServiceImpl implements IndexVersionService {
         stateSupport.pointTo(set, versionId);
         stateSupport.markOnline(target, now);
 
-        kbAuditLogDbService.saveAudit(AuditActionType.ROLLBACK_INDEX, AUDIT_OBJECT_TYPE, versionId,
-                NullUtil.isNull(current) ? null : current.getVersionNo(), target.getVersionNo());
         log.info("===> IndexVersionServiceImpl 索引回退完成（指针切回）, kbId={}, targetVersionNo={}, oldVersionNo={}",
                 set.getKnowledgeBaseId(), target.getVersionNo(),
                 NullUtil.isNull(current) ? null : current.getVersionNo());
@@ -92,8 +94,8 @@ public class IndexVersionServiceImpl implements IndexVersionService {
         // 回收成功后再用短事务删版本行并写审计，DB 失败时版本行仍在。
         milvusIndexPort.drop(MilvusIndexPort.collectionName(set.getKnowledgeBaseId(), version.getVersionNo()));
         transactionTemplate.executeWithoutResult(status -> {
-            kbAuditLogDbService.saveAudit(AuditActionType.RECYCLE_INDEX, AUDIT_OBJECT_TYPE, versionId,
-                    version.getVersionNo(), null);
+            auditEventPublisher.publish(AuditActionType.RECYCLE_INDEX, AUDIT_OBJECT_TYPE, versionId,
+                    JsonUtil.toJsonStr(Map.of("versionNo", version.getVersionNo())));
             indexVersionDbService.removeById(versionId);
         });
         log.info("===> IndexVersionServiceImpl 索引候选回收完成, kbId={}, versionId={}, versionNo={}",

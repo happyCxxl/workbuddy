@@ -29,19 +29,16 @@ public class WbAuditLogDbServiceImpl extends InfraDbServiceImpl<WbAuditLogMapper
      * @param action     动作类型
      * @param objectType 对象类型码值
      * @param objectId   对象 ID
-     * @param beforeJson 变更前快照（可空）
-     * @param afterJson  变更后快照（可空）
+     * @param payload    操作载荷（JSON，可空）
      */
     @Override
-    public void saveAudit(AuditActionType action, String objectType, Long objectId, String beforeJson,
-                          String afterJson) {
+    public void saveAudit(AuditActionType action, String objectType, Long objectId, String payload) {
         KnowledgeUser user = currentUser();
         WbAuditLog audit = new WbAuditLog();
         audit.setActionType(action.name());
         audit.setObjectType(objectType);
         audit.setObjectId(String.valueOf(objectId));
-        audit.setBeforeSummary(beforeJson);
-        audit.setAfterSummary(afterJson);
+        audit.setPayload(payload);
         audit.setUserId(NullUtil.isNull(user) ? null : user.getId());
         audit.setCreateBy(operatorOf(user));
         save(audit);

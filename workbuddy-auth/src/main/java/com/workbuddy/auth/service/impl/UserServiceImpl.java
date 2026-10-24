@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
                 ? Integer.valueOf(UserStatus.ENABLED.getCode()) : parseStatus(request.getStatus()));
         userDbService.save(user);
         auditEventPublisher.publish(AuditActionType.USER_CREATE, AUDIT_OBJECT_TYPE, user.getId(),
-                null, auditSummary(user));
+                JsonUtil.toJsonStr(auditSummary(user)));
         return user.getId();
     }
 
@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService {
     public void updateUser(Long id, UserUpdateDTO request) {
         WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
-        String beforeSummary = auditSummary(user);
+        Map<String, String> beforeSummary = auditSummary(user);
         // 自保护：不允许改自己的角色或状态，避免管理员把自己锁在外面
         boolean self = isSelf(id);
         boolean roleChanged = NullUtil.isNotNull(request.getRole());
@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService {
         }
         userDbService.updateById(user);
         auditEventPublisher.publish(resolveUpdateAction(roleChanged, statusChanged, targetStatus),
-                AUDIT_OBJECT_TYPE, id, beforeSummary, auditSummary(user));
+                AUDIT_OBJECT_TYPE, id, diffPayload(beforeSummary, auditSummary(user)));
     }
 
     /**
@@ -174,7 +174,7 @@ public class UserServiceImpl implements UserService {
         }
         userDbService.removeById(id);
         auditEventPublisher.publish(AuditActionType.USER_DELETE, AUDIT_OBJECT_TYPE, id,
-                auditSummary(user), null);
+                JsonUtil.toJsonStr(auditSummary(user)));
     }
 
     /**
@@ -200,13 +200,13 @@ public class UserServiceImpl implements UserService {
     public void updateProfile(Long id, ProfileUpdateDTO request) {
         WbUser user = userDbService.getById(id);
         ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.USER_NOT_FOUND);
-        String beforeSummary = auditSummary(user);
+        Map<String, String> beforeSummary = auditSummary(user);
         user.setDisplayName(request.getDisplayName());
         user.setEmail(StrUtil.trimToNull(request.getEmail()));
         user.setPhone(StrUtil.trimToNull(request.getPhone()));
         userDbService.updateById(user);
         auditEventPublisher.publish(AuditActionType.USER_UPDATE, AUDIT_OBJECT_TYPE, id,
-                beforeSummary, auditSummary(user));
+                diffPayload(beforeSummary, auditSummary(user)));
     }
 
     /**
@@ -228,7 +228,7 @@ public class UserServiceImpl implements UserService {
         // 凭据变更：递增令牌版本，该账号此前签发的令牌（含本次请求用的那张）全部失效
         user.setTokenVersion(nextTokenVersion(user));
         userDbService.updateById(user);
-        auditEventPublisher.publish(AuditActionType.USER_PASSWORD_CHANGE, AUDIT_OBJECT_TYPE, id, null, null);
+        auditEventPublisher.publish(AuditActionType.USER_PASSWORD_CHANGE, AUDIT_OBJECT_TYPE, id, null);
         // 以新版本补签令牌，当前会话不必重新登录；有效期沿用本会话的剩余时长
         return jwtUtil.sign(user.getId(), user.getUsername(), UserRole.of(user.getRole()),
                 user.getTokenVersion(), remainingTtl());
@@ -247,14 +247,19 @@ public class UserServiceImpl implements UserService {
         return AuditActionType.USER_UPDATE;
     }
 
-    /** 审计摘要：只带出 id/用户名/角色/状态与令牌版本，绝不包含密码 */
-    private String auditSummary(WbUser user) {
-        return JsonUtil.toJsonStr(Map.of(
+    /** 审计摘要字段：只带出 id/用户名/角色/状态与令牌版本，绝不包含密码 */
+    private Map<String, String> auditSummary(WbUser user) {
+        return Map.of(
                 "id", NullUtil.isNull(user.getId()) ? "" : String.valueOf(user.getId()),
                 "username", StrUtil.nullToEmpty(user.getUsername()),
                 "role", StrUtil.nullToEmpty(user.getRole()),
                 "status", NullUtil.isNull(user.getStatus()) ? "" : String.valueOf(user.getStatus()),
-                "tokenVersion", NullUtil.isNull(user.getTokenVersion()) ? "" : String.valueOf(user.getTokenVersion())));
+                "tokenVersion", NullUtil.isNull(user.getTokenVersion()) ? "" : String.valueOf(user.getTokenVersion()));
+    }
+
+    /** 修改类审计载荷：把改前/改后摘要合成一个 JSON 对象 */
+    private String diffPayload(Map<String, String> before, Map<String, String> after) {
+        return JsonUtil.toJsonStr(Map.of("before", before, "after", after));
     }
 
     /** 角色解析：非法码值直接拒绝，避免落库脏数据 */

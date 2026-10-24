@@ -167,8 +167,7 @@ class UserProfileServiceImplTest {
         AuditEvent event = fixture.captureAudit();
         assertEquals(AuditActionType.USER_PASSWORD_CHANGE, event.getAction());
         // 审计不落任何密码相关内容
-        assertNull(event.getBeforeSummary());
-        assertNull(event.getAfterSummary());
+        assertNull(event.getPayload(), "改密审计不落载荷");
     }
 
     /**
