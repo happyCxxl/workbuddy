@@ -65,7 +65,7 @@ public final class TextTableBuilder {
                       ParseSource source, String fileId, ParseProperties properties,
                       CapabilityRegistry capabilityRegistry) {
         if (block.size() < 2) {
-            elements.add(PdfBodyAssembler.toParagraphElement(block, fileId, page));
+            PdfBodyAssembler.addParagraph(block, elements, fileId, page);
             return;
         }
         LineTexts.Options lineTextOptions = LineTexts.Options.of(properties);

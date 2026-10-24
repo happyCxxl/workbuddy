@@ -172,7 +172,7 @@ public final class PdfBodyAssembler {
                 // 行距超阈值：先结算段落；表格候选块允许更大行距（表格行距可达数倍行高），
                 // 仅当新行不再具备宽列距（非表格候选）时才结算表格块
                 if (!paragraph.isEmpty()) {
-                    elements.add(toParagraphElement(paragraph, fileId, page));
+                    addParagraph(paragraph, elements, fileId, page);
                     paragraph = new ArrayList<>();
                 }
                 if (!block.isEmpty() && (movedUp || !TableCandidateDetector.isCandidate(line))) {
@@ -182,7 +182,7 @@ public final class PdfBodyAssembler {
             }
             if (TableCandidateDetector.isCandidate(line)) {
                 if (!paragraph.isEmpty()) {
-                    elements.add(toParagraphElement(paragraph, fileId, page));
+                    addParagraph(paragraph, elements, fileId, page);
                     paragraph = new ArrayList<>();
                 }
                 block.add(line);
@@ -199,7 +199,7 @@ public final class PdfBodyAssembler {
             TextTableBuilder.flush(block, page, elements, source, fileId, properties, capabilityRegistry);
         }
         if (!paragraph.isEmpty()) {
-            elements.add(toParagraphElement(paragraph, fileId, page));
+            addParagraph(paragraph, elements, fileId, page);
         }
     }
 
@@ -211,6 +211,24 @@ public final class PdfBodyAssembler {
     /** 段落聚合的行距阈值（字号 × 阈值比例） */
     private static double paragraphGapThreshold(PageLine line, ParseProperties properties) {
         return line.fontSize() * properties.getParagraphGapRatio();
+    }
+
+    /**
+     * 段落落地：文本为空/纯空白时不产 PARAGRAPH，避免详情出现“（无文本）”空段落。
+     *
+     * @param lines    段落行
+     * @param elements 产物元素（追加）
+     * @param fileId   文件 ID
+     * @param page     单页内容
+     */
+    static void addParagraph(List<PageLine> lines, List<ParseElement> elements, String fileId, PageContent page) {
+        if (lines.isEmpty()) {
+            return;
+        }
+        ParseElement paragraph = toParagraphElement(lines, fileId, page);
+        if (paragraph.getText() != null && !paragraph.getText().isBlank()) {
+            elements.add(paragraph);
+        }
     }
 
     /**
