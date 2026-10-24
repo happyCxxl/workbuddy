@@ -82,6 +82,9 @@ public final class ParseStatsSupport {
         stats.setFailedUnitCount(failedUnits.isEmpty() ? null : failedUnits.size());
         stats.setFailedFrom(failedUnits.isEmpty() ? null : failedUnits.getFirst());
         stats.setFailedTo(failedUnits.isEmpty() ? null : failedUnits.getLast());
+        QualityInfo quality = parseResult.getQuality();
+        stats.setWarningCount(quality == null || quality.getWarnings() == null
+                ? 0 : quality.getWarnings().size());
         stats.setDurationMs(StatsSupport.durationMs(startedAt, finishedAt));
         return stats;
     }
@@ -104,11 +107,15 @@ public final class ParseStatsSupport {
             return null;
         }
         Integer failedUnitCount = stats.getFailedUnitCount();
-        if (NullUtil.isNull(failedUnitCount) || failedUnitCount == 0) {
-            return "无异常";
+        if (NullUtil.isNotNull(failedUnitCount) && failedUnitCount > 0) {
+            return failedUnitCount + " 单元未解析出内容（第 " + stats.getFailedFrom()
+                    + "–" + stats.getFailedTo() + "）";
         }
-        return failedUnitCount + " 单元未解析出内容（第 " + stats.getFailedFrom()
-                + "–" + stats.getFailedTo() + "）";
+        Integer warningCount = stats.getWarningCount();
+        if (NullUtil.isNotNull(warningCount) && warningCount > 0) {
+            return warningCount + " 条告警，无问题单元";
+        }
+        return "无异常";
     }
 
     /** 页数：优先解析器回填的判定单元数，缺失时取文件引用里的页数 */

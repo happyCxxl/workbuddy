@@ -5,8 +5,10 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.QualityInfo;
+import com.workbuddy.common.domain.parse.QualityWarning;
 import com.workbuddy.common.dto.response.lineage.LineageParseStatsVO;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.common.enums.parse.QualityWarningCode;
 import com.workbuddy.biz.service.support.stats.ParseStatsSupport;
 import org.junit.jupiter.api.Test;
 
@@ -93,21 +95,44 @@ class ParseStatsSupportTest {
     }
 
     /**
-     * 结论：统计缺失不陈述；无失败单元说「无异常」；有失败单元点名页码范围；失败态回退环节文案。
+     * 统计带告警数：quality.warnings 计数写入 warningCount，供摘要区分“无异常”与“有告警”。
+     */
+    @Test
+    void statsShouldCarryWarningCount() {
+        QualityInfo quality = new QualityInfo();
+        quality.getWarnings().add(QualityWarning.of(QualityWarningCode.NOISE_PAGE, null, "WARN", "噪声页"));
+        quality.getWarnings().add(QualityWarning.of(QualityWarningCode.TABLE_RULE_FALLBACK, null, "WARN", "表格降级"));
+        ParseResult result = result(new ParseSource());
+        result.setQuality(quality);
+
+        LineageParseStatsVO stats = ParseStatsSupport.stats(null, null, result);
+
+        assertEquals(2, stats.getWarningCount());
+        assertEquals("2 条告警，无问题单元", ParseStatsSupport.summary(null, stats, "SUCCESS"));
+    }
+
+    /**
+     * 结论：统计缺失不陈述；无失败单元/无告警说「无异常」；有告警陈述告警数；有失败单元点名页码范围；失败态回退环节文案。
      *
-     * <p>守护 {@code summary}/{@code parseSummaryBody}：空统计仍陈述或漏报失败单元即失败。
+     * <p>守护 {@code summary}/{@code parseSummaryBody}：空统计仍陈述、漏报告警或漏报失败单元即失败。
      */
     @Test
     void summaryShouldStateEachShape() {
         assertNull(ParseStatsSupport.summary(null, null, "SUCCESS"));
 
         LineageParseStatsVO healthy = new LineageParseStatsVO();
+        healthy.setWarningCount(0);
         assertEquals("无异常", ParseStatsSupport.summary(null, healthy, "SUCCESS"));
+
+        LineageParseStatsVO warned = new LineageParseStatsVO();
+        warned.setWarningCount(2);
+        assertEquals("2 条告警，无问题单元", ParseStatsSupport.summary(null, warned, "SUCCESS"));
 
         LineageParseStatsVO failed = new LineageParseStatsVO();
         failed.setFailedUnitCount(2);
         failed.setFailedFrom(3);
         failed.setFailedTo(5);
+        failed.setWarningCount(1);
         assertEquals("2 单元未解析出内容（第 3–5）", ParseStatsSupport.summary(null, failed, "PARTIAL_SUCCESS"));
 
         assertEquals("解析器超时", ParseStatsSupport.summary("解析器超时", null, "FAILED"));

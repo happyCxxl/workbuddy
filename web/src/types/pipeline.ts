@@ -291,6 +291,8 @@ export interface LineageParseStats {
   imageCount: number | null;
   /** 页眉页脚数 */
   headerFooterCount: number | null;
+  /** 质量告警数（后端按产物 quality.warnings 计数） */
+  warningCount: number | null;
   /** 未解析出内容的单元数（无问题时为 null） */
   failedUnitCount: number | null;
   /** 未解析出内容的起始单元号 */

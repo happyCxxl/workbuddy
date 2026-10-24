@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-24",
-      "baseline": "ca79be7b",
-      "note": "策略绑定开关改为入参必填 0/1；审计改为 @Audit 注解 + 入参载荷（AuditAspect 在 infra、表达式求值在 common），事务增强显式排到切面外层，recycle/switchCurrent 保留事务内显式发布"
+      "baseline": "8415dbb9",
+      "note": "支持包内解析统计摘要只读变更：新增 warningCount 与告警摘要文案；不涉及鉴权、安全、异常或配置机制"
     }
   }
 }

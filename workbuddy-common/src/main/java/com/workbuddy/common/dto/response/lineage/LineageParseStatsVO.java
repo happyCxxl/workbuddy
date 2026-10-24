@@ -29,6 +29,9 @@ public class LineageParseStatsVO {
     /** 页眉页脚数 */
     private Integer headerFooterCount;
 
+    /** 质量告警数（产物 quality.warnings 计数） */
+    private Integer warningCount;
+
     /** 未解析出内容的单元数 */
     private Integer failedUnitCount;
 
