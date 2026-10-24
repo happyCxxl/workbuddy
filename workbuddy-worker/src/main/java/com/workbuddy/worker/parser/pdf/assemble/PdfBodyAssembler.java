@@ -180,6 +180,15 @@ public final class PdfBodyAssembler {
                     block = new ArrayList<>();
                 }
             }
+            // 目录行按条独立成段：点线目录的行距小于普通段落阈值，不能与相邻条目聚合；
+            // 只含点线/数字的续行仍并入上一条目，避免把一条目录拆成两段
+            boolean tocContinuation = line.tocCandidate() && NullUtil.isNotNull(prev)
+                    && prev.tocCandidate() && isTocContinuation(line.text());
+            if ((line.tocCandidate() || (NullUtil.isNotNull(prev) && prev.tocCandidate()))
+                    && !tocContinuation && !paragraph.isEmpty()) {
+                addParagraph(paragraph, elements, fileId, page);
+                paragraph = new ArrayList<>();
+            }
             if (TableCandidateDetector.isCandidate(line)) {
                 if (!paragraph.isEmpty()) {
                     addParagraph(paragraph, elements, fileId, page);
@@ -193,14 +202,21 @@ public final class PdfBodyAssembler {
                 }
                 paragraph.add(line);
             }
-            prev = line;
-        }
+            prev = line;        }
         if (!block.isEmpty()) {
             TextTableBuilder.flush(block, page, elements, source, fileId, properties, capabilityRegistry);
         }
         if (!paragraph.isEmpty()) {
             addParagraph(paragraph, elements, fileId, page);
         }
+    }
+
+    /** 目录续行：去掉点线/数字/页码字后没有正文，视为同一条目的续行 */
+    private static boolean isTocContinuation(String text) {
+        if (text == null) {
+            return true;
+        }
+        return text.replaceAll("[.．…·\\s\\d第页\\-–—]+", "").isEmpty();
     }
 
     /** 行间距（下行的上边 - 上行的下边） */
