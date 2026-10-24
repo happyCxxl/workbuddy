@@ -10,7 +10,27 @@
       >
         上一页
       </button>
-      <span class="pdf-preview-info">第 {{ currentPage }} / {{ pageTotal || '—' }} 页</span>
+      <span class="pdf-preview-info"
+        >第
+        <input
+          v-model.number="pageInput"
+          class="pdf-preview-page-input"
+          type="number"
+          min="1"
+          :max="pageTotal || 1"
+          :disabled="pageTotal === 0 || loading"
+          @keyup.enter="jumpToPage"
+        />
+        / {{ pageTotal || '—' }} 页</span
+      >
+      <button
+        class="pdf-preview-btn"
+        type="button"
+        :disabled="pageTotal === 0 || loading"
+        @click="jumpToPage"
+      >
+        跳转
+      </button>
       <button
         class="pdf-preview-btn"
         type="button"
@@ -166,7 +186,14 @@ const loadingTask = shallowRef<PDFDocumentLoadingTask | null>(null);
 const doc = shallowRef<PDFDocumentProxy | null>(null);
 const pageTotal = ref(0);
 const currentPage = ref(1);
+/** 工具条页码输入：显示当前页，回车/跳转后校验范围 */
+const pageInput = ref(1);
 const zoom = ref(1);
+
+// 翻页/滚动后同步输入框显示；输入框只在回车或点“跳转”时反推当前页
+watch(currentPage, (page) => {
+  pageInput.value = page;
+});
 /**
  * 适应宽度档：缩放跟着可用宽度走（分隔条拖宽后内容跟着放大，而不是只多出留白）。
  *
@@ -373,6 +400,18 @@ async function goToPage(pageNo: number, options: { silent?: boolean } = {}): Pro
     emit('pageChange', target);
   }
   await renderVisible();
+}
+
+/** 页码输入跳转：夹到 1..pageTotal，非法输入回落到当前页 */
+function jumpToPage(): void {
+  const target = Math.trunc(Number(pageInput.value));
+  if (!Number.isFinite(target) || pageTotal.value === 0) {
+    pageInput.value = currentPage.value;
+    return;
+  }
+  const clamped = Math.min(Math.max(target, 1), pageTotal.value);
+  pageInput.value = clamped;
+  void goToPage(clamped);
 }
 
 /** 缩放：按前后比例修正滚动位置，视觉上停在原处 */
@@ -631,6 +670,18 @@ defineExpose({ goToPage, revealHighlight, setZoom });
 .pdf-preview-info {
   min-width: 62px;
   color: var(--kb-text-3);
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-size: 12px;
+  text-align: center;
+}
+
+.pdf-preview-page-input {
+  width: 44px;
+  padding: 2px 4px;
+  border: 1px solid var(--kb-line);
+  border-radius: 4px;
+  background: var(--kb-bg-1);
+  color: var(--kb-text-1);
   font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
   font-size: 12px;
   text-align: center;
