@@ -11,7 +11,8 @@
     - separator rows |----|: no spaces, dashes = column width + 2 (minimum 3),
       alignment colons (:---:) are preserved.
   Tables containing emoji are aligned at width 2 and reported with a suggestion to drop them.
-  By default formats every .md under docs/; use -Paths to target files or directories.
+  By default formats the root entry files and .md under governance directories;
+  use -Paths to target files or directories.
   Fenced code blocks (```) are left untouched.
 
   This file is deliberately pure ASCII and carries no BOM. Windows PowerShell 5.1 falls back to
@@ -20,7 +21,7 @@
 
 .EXAMPLE
   powershell .agent/tools/common/format-md.ps1
-  powershell .agent/tools/common/format-md.ps1 -Paths docs
+  powershell .agent/tools/common/format-md.ps1 -Paths .agent/standards
   powershell .agent/tools/common/format-md.ps1 -Paths README.md,.agent/standards/README.md
 
 .EXAMPLE
@@ -29,7 +30,7 @@
 #>
 param(
     [Parameter(Position = 0)]
-    [string[]]$Paths = @('docs'),
+    [string[]]$Paths = @('README.md', 'AGENTS.md', 'CLAUDE.md', '.agent', '.project', '.github', 'web/AGENTS.md'),
 
     [switch]$SelfTest
 )

@@ -76,4 +76,3 @@
 | `AGENTS.md` / `web/AGENTS.md` | AI 代理入口（全局 / 前端就近）                     |
 | `.agent/standards/`           | 项目规范（common / java / vue + 索引）             |
 | `.agent/tools/`               | 规范的手段：common / java / vue 三组检查器与规则集 |
-| `docs/README.md`              | 业务文档根：页面 / 环节 / 调研 / 设计              |

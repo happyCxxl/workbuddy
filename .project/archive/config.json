@@ -15,7 +15,7 @@
       "checks": []
     },
     "04": {
-      "watch": ["docs/design/**"],
+      "watch": [],
       "checks": []
     },
     "05": {
