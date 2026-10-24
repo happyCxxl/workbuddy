@@ -123,7 +123,13 @@
     <template #footer>
       <el-button :disabled="running" @click="visible = false">关闭</el-button>
       <el-button type="primary" :loading="running" :disabled="!canSubmit" @click="startImport">
-        {{ running ? '导入中…' : `开始导入${items.length > 0 ? `（${items.length}）` : ''}` }}
+        {{
+          running
+            ? '导入中…'
+            : allPassed
+              ? '全部已建档'
+              : `开始导入${items.length > 0 ? `（${items.length}）` : ''}`
+        }}
       </el-button>
     </template>
   </el-dialog>
@@ -214,7 +220,16 @@ const enabledKbs = computed(() => kbs.value.filter((kb) => kb.status === KB_STAT
 const pickedKb = computed(() => kbs.value.find((kb) => kb.id === pickedKbId.value) ?? null);
 
 const canSubmit = computed(
-  () => pickedKbId.value !== '' && items.value.length > 0 && !running.value,
+  () =>
+    pickedKbId.value !== '' &&
+    items.value.length > 0 &&
+    !running.value &&
+    items.value.some((item) => item.state !== 'passed'),
+);
+
+/** 本批全部已建档：按钮显示完成态，不再重复提交 */
+const allPassed = computed(
+  () => items.value.length > 0 && items.value.every((item) => item.state === 'passed'),
 );
 
 function describe(item: ImportItem): string {
@@ -331,6 +346,8 @@ async function startImport(): Promise<void> {
 
   running.value = false;
   doneSummary.value = `导入结束：成功 ${passed} 个${failed > 0 ? `，失败 ${failed} 个` : ''}`;
+  // 导入会新增文档：刷新弹窗左栏计数，避免仍显示打开时的旧值
+  await loadKnowledgeBases();
   emit('finished');
 }
 

@@ -762,7 +762,7 @@
             {{ downloading ? '下载中…' : '下载原文件' }}
           </button>
           <button class="parse-drawer-btn parse-drawer-btn-primary" type="button" @click="copyAll">
-            复制全部文本
+            复制当前页文本
           </button>
           <span v-if="copyHint" class="parse-drawer-hint">{{ copyHint }}</span>
         </footer>
@@ -2770,7 +2770,7 @@ function goPage(next: number): void {
   void loadItems();
 }
 
-/** 复制全部文本：只复制当前页已取回的文本，并按实际条数说明 */
+/** 复制当前页文本：只复制右栏当前页已取回的内容，提示语明确范围 */
 async function copyAll(): Promise<void> {
   const text = visibleItems.value
     .map((item) => item.text)
