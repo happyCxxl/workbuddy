@@ -124,6 +124,10 @@ public final class TextTableBuilder {
             TableSupport.degrade(block, page, elements, source, fileId, "空白率过高（疑似框线/表单区域）");
             return;
         }
+        if (TableSupport.formLike(rowTexts)) {
+            TableSupport.degrade(block, page, elements, source, fileId, "短表单元格为标签形态（疑似表单）");
+            return;
+        }
         Integer headerRow = detectHeaderRow(rowTexts, rowFontSizes, properties.getTableHeaderMaxNumericRatio());
         ParseElement table = ParseElement.of(ElementType.TABLE);
         table.setPage(page.pageNo());

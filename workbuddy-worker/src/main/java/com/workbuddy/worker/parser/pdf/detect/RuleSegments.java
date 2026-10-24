@@ -49,7 +49,7 @@ public final class RuleSegments {
         } catch (IOException e) {
             return new Graphics(List.of(), List.of());
         }
-        return new Graphics(collector.segments, collector.imageBoxes);
+        return new Graphics(RuleSegmentMerger.merge(collector.segments), collector.imageBoxes);
     }
 
     /**

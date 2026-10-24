@@ -53,6 +53,10 @@ public final class RuledTableBuilder {
             TableSupport.degrade(run, page, elements, source, fileId, "空白率过高（疑似框线/表单区域）");
             return;
         }
+        if (TableSupport.formLike(rowTexts)) {
+            TableSupport.degrade(run, page, elements, source, fileId, "短表单元格为标签形态（疑似表单）");
+            return;
+        }
         List<Double> rowFontSizes = new ArrayList<>();
         for (int r = 0; r < grid.rowCount(); r++) {
             double top = grid.rows().get(r);
