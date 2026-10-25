@@ -745,8 +745,8 @@ onUnmounted(() => {
 }
 
 .stage-import-btn {
-  width: 100%;
-  justify-content: center;
+  width: auto;
+  justify-content: flex-start;
   gap: 4px;
 }
 
@@ -767,7 +767,14 @@ onUnmounted(() => {
 }
 
 /* 收起后按钮只剩一个居中的加号，文字随宽度收掉 */
+.stage-files-collapsed .stage-panel-head {
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
 .stage-files-collapsed .stage-import-btn {
+  width: 24px;
   padding-right: 0;
   padding-left: 0;
 }
