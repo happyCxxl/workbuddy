@@ -1114,6 +1114,16 @@ onUnmounted(() => {
 }
 
 /*
+ * 收起时文字保持原位，由面板右边界裁掉；最后 60ms 再淡出，
+ * 把右边界裁不干净的 1~2px 字边隐掉，避免终态露出文字碎片。
+ */
+.stage-file-list-icons .stage-file-main {
+  opacity: 0;
+  transition: opacity 0.06s ease 0.16s;
+  pointer-events: none;
+}
+
+/*
  * 收起态的空态文字：与文件行同一套处理（淡出而不是收窄），
  * 78px 宽放不下「该知识库还没有文件」，折行后会压到右边界外。
  */
