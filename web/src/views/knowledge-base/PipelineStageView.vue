@@ -29,7 +29,10 @@
         <div
           v-if="files.length > 0"
           class="stage-file-list"
-          :class="{ 'stage-file-list-icons': filesCollapsed }"
+          :class="{
+            'stage-file-list-icons': filesCollapsed,
+            'stage-file-list-full': files.length === FILE_PAGE_SIZE,
+          }"
         >
           <!--
             文件栏是**纯文件信息展示**：不反映处理进度与成败，那些在右侧链图看。
@@ -1119,5 +1122,18 @@ onUnmounted(() => {
  */
 .stage-files-collapsed > .stage-empty {
   opacity: 0;
+}
+
+/*
+ * 满页（8 条）时把列表剩余高度均分给文件卡：
+ * 卡片本身仍按内容排版，只拉伸行高，底部不再留一块空白。
+ */
+.stage-file-list-full {
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-file-list-full .stage-file {
+  flex: 1 1 0;
 }
 </style>
