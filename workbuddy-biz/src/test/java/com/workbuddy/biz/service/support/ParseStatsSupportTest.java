@@ -96,6 +96,8 @@ class ParseStatsSupportTest {
 
     /**
      * 统计带告警数：quality.warnings 计数写入 warningCount，供摘要区分“无异常”与“有告警”。
+     *
+     * <p>守护 {@code ParseStatsSupport.stats} 的 {@code warningCount} 与摘要文案。
      */
     @Test
     void statsShouldCarryWarningCount() {

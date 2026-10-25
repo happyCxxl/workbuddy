@@ -148,6 +148,8 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
 
     /**
      * 同知识库同内容重复提交：按 sha256 命中已有来源文件且本库已有文件结果时拒绝。
+     *
+     * <p>守护 {@link ErrorCode#FILE_DUPLICATE}（40423）：重复内容不能再次建档。
      */
     @Test
     void submitShouldRejectDuplicateContentInSameKb() {

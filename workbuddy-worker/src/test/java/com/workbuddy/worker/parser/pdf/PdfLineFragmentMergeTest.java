@@ -1,6 +1,5 @@
 package com.workbuddy.worker.parser.pdf;
 
-import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.ElementType;
 import org.apache.pdfbox.pdmodel.PDDocument;
