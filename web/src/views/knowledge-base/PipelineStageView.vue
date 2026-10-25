@@ -742,12 +742,18 @@ onUnmounted(() => {
   overflow: hidden;
   white-space: nowrap;
   border-bottom: 1px solid var(--kb-line);
+  transition: padding 0.22s ease;
 }
 
 .stage-import-btn {
   width: auto;
-  justify-content: flex-start;
+  max-width: 120px;
+  overflow: hidden;
+  justify-content: center;
   gap: 4px;
+  transition:
+    max-width 0.22s ease,
+    padding 0.22s ease;
 }
 
 .stage-import-plus {
@@ -766,15 +772,14 @@ onUnmounted(() => {
     opacity 0.12s ease;
 }
 
-/* 收起后按钮只剩一个居中的加号，文字随宽度收掉 */
+/* 收起后按钮只剩一个居中的加号：宽度随文字一起收，加号位置由 padding 过渡到面板中心 */
 .stage-files-collapsed .stage-panel-head {
-  justify-content: center;
+  padding-left: 29px;
   padding-right: 0;
-  padding-left: 0;
 }
 
 .stage-files-collapsed .stage-import-btn {
-  width: 24px;
+  max-width: 24px;
   padding-right: 0;
   padding-left: 0;
 }

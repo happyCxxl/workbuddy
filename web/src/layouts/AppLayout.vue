@@ -343,14 +343,6 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    kind: 'leaf',
-    label: '用户管理',
-    path: '/user',
-    iconPaths: ['M2.8 13.6c0-2.4 2.3-3.8 5.2-3.8s5.2 1.4 5.2 3.8'],
-    iconCircle: true,
-    adminOnly: true,
-  },
-  {
     kind: 'group',
     // 模型管理：模型目录维护；页面与接口对所有登录用户开放
     label: '模型管理',
@@ -363,6 +355,14 @@ const navItems: NavItem[] = [
         iconPaths: ['M3.2 4.6h9.6M3.2 8h9.6M3.2 11.4h9.6', 'M5.6 3.2v10.8'],
       },
     ],
+  },
+  {
+    kind: 'leaf',
+    label: '用户管理',
+    path: '/user',
+    iconPaths: ['M2.8 13.6c0-2.4 2.3-3.8 5.2-3.8s5.2 1.4 5.2 3.8'],
+    iconCircle: true,
+    adminOnly: true,
   },
   {
     kind: 'leaf',
