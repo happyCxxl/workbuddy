@@ -1,5 +1,6 @@
 package com.workbuddy.worker.parser.pdf.assemble;
 
+import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.FontInfo;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
@@ -295,6 +296,10 @@ public final class PdfBodyAssembler {
         double maxX = lines.stream().mapToDouble(l -> l.x() + l.width()).max().orElse(0);
         double maxY = last.y() + last.height();
         element.setBbox(page.geometry().toViewport(x, y, maxX - x, maxY - y));
+        element.setLineBoxes(lines.stream()
+                .map(line -> page.geometry().toViewport(
+                        line.x(), line.y(), line.width(), line.height()))
+                .toList());
         FontInfo font = new FontInfo();
         font.setName(first.fontName());
         font.setSize(first.fontSize());
@@ -350,6 +355,13 @@ public final class PdfBodyAssembler {
         element.setText(text);
         element.setPage(pageNo);
         element.setBbox(geometry.toViewport(line.x(), line.y(), line.width(), line.height()));
+        element.setLineBoxes(List.of(
+                geometry.toViewport(line.x(), line.y(), line.width(), line.height())));
+        FontInfo font = new FontInfo();
+        font.setName(line.fontName());
+        font.setSize(line.fontSize());
+        font.setBold(line.bold());
+        element.setFont(font);
         element.setProvenance(new Provenance(fileId, area));
         return element;
     }

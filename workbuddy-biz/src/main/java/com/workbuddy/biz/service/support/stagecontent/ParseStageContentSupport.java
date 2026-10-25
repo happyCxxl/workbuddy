@@ -6,6 +6,7 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.storage.ObjectRef;
+import com.workbuddy.common.dto.response.stagecontent.BBoxVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentExtraVO;
 import com.workbuddy.common.dto.response.stagecontent.StageContentItemVO;
 import com.workbuddy.common.utils.JsonUtil;
@@ -63,6 +64,16 @@ public class ParseStageContentSupport {
         extra.setProvider(source.getProvider());
         knowledgeConverter.putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
         knowledgeConverter.putBbox(extra, element.getBbox());
+        if (NullUtil.isNotNull(element.getLineBoxes()) && !element.getLineBoxes().isEmpty()) {
+            extra.setLineBoxes(element.getLineBoxes().stream().map(bbox -> {
+                BBoxVO line = new BBoxVO();
+                line.setX(bbox.getX());
+                line.setY(bbox.getY());
+                line.setWidth(bbox.getWidth());
+                line.setHeight(bbox.getHeight());
+                return line;
+            }).toList());
+        }
         if (NullUtil.isNotNull(element.getFont())) {
             extra.setFont(StrUtil.blankToDefault(element.getFont().getName(), "?")
                     + " " + element.getFont().getSize() + "pt"

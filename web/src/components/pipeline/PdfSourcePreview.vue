@@ -85,14 +85,16 @@
         >
           <canvas :ref="(el) => setCanvasRef(pageNo, el)" class="pdf-preview-canvas"></canvas>
           <div class="pdf-preview-overlay" @click="onPageClick(pageNo, $event)">
-            <span
-              v-for="box in activeBoxesOfPage(pageNo)"
-              :key="box.key"
-              class="pdf-preview-box"
-              :class="{ 'is-active': box.key === activeKey }"
-              :style="boxStyle(box)"
-              :title="box.title"
-            ></span>
+            <template v-for="box in activeBoxesOfPage(pageNo)" :key="box.key">
+              <span
+                v-for="(rect, rectIndex) in rectsOf(box)"
+                :key="`${box.key}-${rectIndex}`"
+                class="pdf-preview-box"
+                :class="{ 'is-active': box.key === activeKey }"
+                :style="rectStyle(rect, box.fontSize)"
+                :title="box.title"
+              ></span>
+            </template>
           </div>
         </div>
       </div>
@@ -132,6 +134,10 @@ export interface PreviewHighlight {
   /** 所属文档页 */
   page: number;
   bbox: ElementBBox;
+  /** 逐行边界框（空时退回整块 bbox） */
+  lineBoxes: ElementBBox[];
+  /** 字号（pt）：仅用于把字形紧框补到可读行高；0 表示不补 */
+  fontSize: number;
   /** 悬停说明（类型 + 摘录） */
   title: string;
 }
@@ -225,12 +231,20 @@ function pageStyle(pageNo: number): Record<string, string> {
   };
 }
 
-function boxStyle(box: PreviewHighlight): Record<string, string> {
+/** 一个元素的显示矩形：逐行框优先，旧产物/表格退回整块 bbox */
+function rectsOf(box: PreviewHighlight): ElementBBox[] {
+  return box.lineBoxes.length > 0 ? box.lineBoxes : [box.bbox];
+}
+
+function rectStyle(rect: ElementBBox, fontSize: number): Record<string, string> {
+  // 解析 bbox 是字形紧框（height 通常小于字号），直接铺会切掉上下沿；
+  // 按字号补到近似行高，仅影响展示，不改动语义 bbox / 命中范围
+  const pad = fontSize > 0 ? fontSize * 0.3 : 0;
   return {
-    left: `${box.bbox.x}px`,
-    top: `${box.bbox.y}px`,
-    width: `${box.bbox.width}px`,
-    height: `${box.bbox.height}px`,
+    left: `${rect.x}px`,
+    top: `${rect.y - pad}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height + pad * 2}px`,
   };
 }
 
@@ -509,18 +523,18 @@ function onPageClick(pageNo: number, event: MouseEvent): void {
   const rect = overlay.getBoundingClientRect();
   const x = (event.clientX - rect.left) / zoom.value;
   const y = (event.clientY - rect.top) / zoom.value;
-  const candidates = boxesOfPage(pageNo).filter(
-    (box) =>
-      x >= box.bbox.x &&
-      x <= box.bbox.x + box.bbox.width &&
-      y >= box.bbox.y &&
-      y <= box.bbox.y + box.bbox.height,
+  const candidates = boxesOfPage(pageNo).filter((box) =>
+    rectsOf(box).some(
+      (rect) => x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height,
+    ),
   );
   if (candidates.length === 0) {
     emit('pick', null);
     return;
   }
-  candidates.sort((a, b) => a.bbox.width * a.bbox.height - b.bbox.width * b.bbox.height);
+  const areaOf = (box: PreviewHighlight): number =>
+    rectsOf(box).reduce((sum, rect) => sum + rect.width * rect.height, 0);
+  candidates.sort((a, b) => areaOf(a) - areaOf(b));
   emit('pick', candidates[0].key);
 }
 

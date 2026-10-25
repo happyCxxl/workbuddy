@@ -55,6 +55,12 @@ class PdfParagraphBoundaryTest {
         assertTrue(paragraphs.get(0).contains("continuation of clause five"),
                 () -> "paragraphs=" + paragraphs);
         assertTrue(paragraphs.get(1).startsWith("6."), () -> "paragraphs=" + paragraphs);
+
+        List<ParseElement> elements = source.getElements().stream()
+                .filter(element -> ElementType.PARAGRAPH.name().equals(element.getType()))
+                .toList();
+        assertEquals(2, elements.get(0).getLineBoxes().size(),
+                () -> "lineBoxes=" + elements.get(0).getLineBoxes());
     }
 
     private List<String> paragraphTexts(ParseSource source) {
