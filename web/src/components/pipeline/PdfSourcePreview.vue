@@ -538,8 +538,11 @@ async function revealHighlight(key: string): Promise<void> {
   if (element === null) {
     return;
   }
+  const pageTop = offsetBefore(box.page) * zoom.value;
   const target = (offsetBefore(box.page) + box.bbox.y) * zoom.value - element.clientHeight / 3;
-  element.scrollTo({ top: Math.max(target, 0), behavior: 'smooth' });
+  // 首个元素靠近页顶时，减三分之一视口会把滚动位置推到上一页；
+  // 定位最低只能停在目标页页顶，避免 onScroll 把当前页判回上一页并触发右栏重取
+  element.scrollTo({ top: Math.max(pageTop, target, 0), behavior: 'smooth' });
 }
 
 function destroyDoc(): void {

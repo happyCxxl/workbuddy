@@ -368,7 +368,7 @@
                         item.grid
                       }}</span>
                       <button
-                        v-if="item.text"
+                        v-if="item.text && isExpandable(item.key)"
                         class="parse-drawer-toggle"
                         type="button"
                         @click.stop="toggleExpand(item.key)"
@@ -378,6 +378,7 @@
                     </div>
                     <pre
                       v-if="item.text"
+                      :ref="(el) => bindTextRef(item.key, el)"
                       class="parse-drawer-element-text"
                       :class="{ 'is-expanded': expanded.has(item.key) }"
                       :title="item.text"
@@ -457,7 +458,7 @@
                       >
                       <span v-if="row.grid" class="parse-drawer-element-meta">{{ row.grid }}</span>
                       <button
-                        v-if="row.expandable"
+                        v-if="row.text && isExpandable(row.key)"
                         class="parse-drawer-toggle"
                         type="button"
                         @click.stop="toggleExpand(row.key)"
@@ -467,6 +468,7 @@
                     </div>
                     <pre
                       v-if="row.text"
+                      :ref="(el) => bindTextRef(row.key, el)"
                       class="parse-drawer-tree-text"
                       :class="{ 'is-expanded': expanded.has(row.key) }"
                       :title="row.text"
@@ -1040,6 +1042,7 @@ function applyWidth(width: number, persist: boolean): void {
   if (persist) {
     writeSplitRatio(props.fileResultId, props.taskId, next / Math.max(bodyWidth(), 1));
   }
+  void nextTick(measureRenderedTexts);
 }
 
 /** 按默认比例设置左栏宽 */
@@ -1135,9 +1138,11 @@ function onWindowResize(): void {
   }
   if (sourceWidth.value === null) {
     measureSplit();
+    void nextTick(measureRenderedTexts);
     return;
   }
   applyWidth(sourceWidth.value, false);
+  void nextTick(measureRenderedTexts);
 }
 /** 预览当前页（0 = 预览还没就绪） */
 const previewPage = ref(0);
@@ -2526,11 +2531,67 @@ function toggleExpand(key: string): void {
   const next = new Set(expanded.value);
   if (next.has(key)) {
     next.delete(key);
+    // 收起后重新判断是否仍然溢出（窗口宽度可能已经变化）
+    void nextTick(() => measureTextByKey(key));
   } else {
     next.add(key);
   }
   expanded.value = next;
 }
+
+/** 行文本节点：用于判断折叠态是否真的被截断 */
+const textEls = new Map<string, HTMLElement>();
+/** 当前确实溢出的行（只有这些行显示展开按钮） */
+const expandableKeys = ref(new Set<string>());
+
+/** 记录行文本节点，并在 DOM 布局完成后量一次溢出 */
+function bindTextRef(key: string, el: unknown): void {
+  if (!(el instanceof HTMLElement)) {
+    textEls.delete(key);
+    return;
+  }
+  textEls.set(key, el);
+  void nextTick(() => measureTextByKey(key));
+}
+
+/** 量单行：折叠态 scrollHeight 超过 clientHeight 才需要展开 */
+function measureTextByKey(key: string): void {
+  const el = textEls.get(key);
+  if (el === undefined || expanded.value.has(key) || el.clientHeight <= 0) {
+    return;
+  }
+  const overflowing = el.scrollHeight > el.clientHeight + 1;
+  if (overflowing === expandableKeys.value.has(key)) {
+    return;
+  }
+  const next = new Set(expandableKeys.value);
+  if (overflowing) {
+    next.add(key);
+  } else {
+    next.delete(key);
+  }
+  expandableKeys.value = next;
+}
+
+/** 量当前已渲染的所有行（换页/换页签/过滤后调用） */
+function measureRenderedTexts(): void {
+  for (const key of textEls.keys()) {
+    measureTextByKey(key);
+  }
+}
+
+function isExpandable(key: string): boolean {
+  return expandableKeys.value.has(key);
+}
+
+// 换页、切页签、改过滤条件后，行 DOM 会重建：等渲染完再判断按钮显隐
+watch(
+  [visibleItems, treeRows, activeTab],
+  () => {
+    void nextTick(measureRenderedTexts);
+  },
+  { flush: 'post' },
+);
 
 /** 时间戳取到分钟（YYYY-MM-DD HH:mm） */
 function formatClock(value: string | null | undefined): string {
