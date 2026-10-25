@@ -837,7 +837,7 @@ onUnmounted(() => {
 .stage-file {
   position: relative;
   display: flex;
-  gap: 9px;
+  gap: 6px;
   align-items: center;
   padding: 5px 11px;
   border: 1px solid transparent;
@@ -846,14 +846,14 @@ onUnmounted(() => {
 }
 
 /*
- * 收起态图标放大：行高由满页均分决定，图标仍保持 56px，
- * 避免 40px 图标在大行高里留下过大的上下空隙。
+ * 徽标两态同尺寸：展开/收起都用 48px，收缩时图标不跳变。
+ * 行内容宽度同步让出 8px，文件名仍在栏内换行。
  */
-.stage-file-list-icons .stage-file-badge {
-  width: 56px;
-  height: 56px;
+.stage-file-badge {
+  width: 48px;
+  height: 48px;
   border-radius: 14px;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .stage-file:hover {
@@ -871,7 +871,7 @@ onUnmounted(() => {
  * 行悬停时让徽标弹一下。徽标是独立 scoped 组件、内部类名选不中，父组件在模板里
  * 给它挂一个自己的类（stage-file-badge，落在子组件根元素上），选它即可；
  * 只置一个可继承的自定义属性，动画细节仍由徽标组件自己定义。
- * 鼠标停在整行任意处都有反馈，不必精确停在 40px 的徽标上。
+ * 鼠标停在整行任意处都有反馈，不必精确停在 48px 的徽标上。
  */
 .stage-file:hover .stage-file-badge {
   --ext-hover: 1;
@@ -880,8 +880,8 @@ onUnmounted(() => {
 /*
  * 主内容两行：文件名在上、大小与时间在下。
  *
- * <p>宽度按“栏宽 − 边框/内边距/徽标/间距 − 右侧滚动条留白”钉死：
- * 262 − 2 − 18 − 22 − 42 − 9 − 3 ≈ 166px。旧值 210px 会把内容顶到滚动条下面。
+ * <p>宽度按“栏宽 − 边框/内边距/徽标/间距 − 右侧留白”钉死：
+ * 262 − 2 − 18 − 22 − 48 − 6 = 166px。展开/收起都用 48px 徽标。
  */
 .stage-file-main {
   display: flex;
@@ -1084,7 +1084,7 @@ onUnmounted(() => {
 /* ==================== 收起态：同一套 DOM，只把文字收掉 ==================== */
 
 /*
- * 收起态**不换 DOM**：文字块移出文档流并淡出，只保留 56px 格式徽标；
+ * 收起态**不换 DOM**：文字块移出文档流并淡出，只保留 48px 格式徽标；
  * 满页时行高由列表剩余高度均分，徽标始终落在行中心。
  */
 .stage-file-list-icons {
@@ -1099,7 +1099,7 @@ onUnmounted(() => {
   border-color: transparent;
 }
 
-/* 选中态：比 56px 徽标大一圈，框与图标同中心 */
+/* 选中态：比 48px 徽标大一圈，框与图标同中心 */
 .stage-file-list-icons .stage-file-on::before {
   position: absolute;
   top: 50%;
@@ -1109,7 +1109,7 @@ onUnmounted(() => {
   border-radius: 16px;
   background: var(--kb-tint);
 
-  /* 双向回退半个尺寸：框与行同中心，56px 徽标落在框正中 */
+  /* 双向回退半个尺寸：框与行同中心，48px 徽标落在框正中 */
   transform: translate(-50%, -50%);
   content: '';
 }
