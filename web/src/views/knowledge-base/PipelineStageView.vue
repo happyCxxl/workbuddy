@@ -212,7 +212,9 @@ const kbName = ref('');
 const files = ref<FileResult[]>([]);
 const total = ref(0);
 const filesLoading = ref(false);
-const fileQuery = ref({ current: 1, size: 10 });
+/** 文件栏每页条数：按栏内可用高度取 8，整页展示、翻页取剩余文件，不出现纵向滚动条 */
+const FILE_PAGE_SIZE = 8;
+const fileQuery = ref({ current: 1, size: FILE_PAGE_SIZE });
 
 /** 文件栏折叠状态：收起后宽度全给右侧链图。偏好持久化，刷新后保持 */
 const filesCollapsed = ref(readCollapsed('stage-files'));
@@ -704,9 +706,9 @@ onUnmounted(() => {
   gap: 9px;
   align-items: center;
 
-  /* 定高：标题行高度不随内容（标题 + 计数）浮动 */
-  min-height: 49px;
-  padding: 12px 15px;
+  /* 定高：标题行只占标题本身的高度，把纵向空间让给文件列表 */
+  min-height: 32px;
+  padding: 5px 15px;
 
   /* 自己裁剪 + 禁止换行："文件"在栏收窄时被切掉，而不是被挤成竖排两行 */
   overflow: hidden;
@@ -827,7 +829,6 @@ onUnmounted(() => {
    */
   overflow: hidden auto;
   padding: 6px 12px 6px 6px;
-  scrollbar-gutter: stable;
 }
 
 .stage-file {
@@ -835,7 +836,7 @@ onUnmounted(() => {
   display: flex;
   gap: 9px;
   align-items: center;
-  padding: 9px 11px;
+  padding: 5px 11px;
   border: 1px solid transparent;
   border-radius: 10px;
   cursor: pointer;
@@ -873,7 +874,7 @@ onUnmounted(() => {
   width: 166px;
   flex: none;
   flex-direction: column;
-  gap: 3px;
+  gap: 1px;
   overflow: hidden;
   opacity: 1;
   transition: opacity 0.22s ease;
