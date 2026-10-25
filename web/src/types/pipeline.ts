@@ -796,6 +796,8 @@ export interface StageContentExtra {
   cols?: number | null;
   /** 元素边界框（原文预览高亮用） */
   bbox?: ElementBBox | null;
+  /** 解析：原文预览显示框（字形上沿口径；缺省回退 bbox） */
+  displayBBox?: ElementBBox | null;
   /** 解析：字体摘要（名称 + 字号 + 粗体） */
   font?: string | null;
   /** 解析：是否目录行候选 */
@@ -873,7 +875,7 @@ export interface StageContentItem {
 
 /** 从 extra 里取边界框：字段缺失或数值非法时返回 null（不画高亮） */
 export function bboxOf(extra: StageContentExtra | null): ElementBBox | null {
-  const raw = extra?.bbox;
+  const raw = extra?.displayBBox ?? extra?.bbox;
   if (raw === null || raw === undefined) {
     return null;
   }

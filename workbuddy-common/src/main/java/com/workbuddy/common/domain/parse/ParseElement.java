@@ -33,8 +33,11 @@ public class ParseElement {
     /** 页码（PDF 元素；Office 结构路径元素为空；Excel 为 sheet 序号） */
     private Integer page;
 
-    /** 边界框（pt；Office 元素可空） */
+    /** 边界框（pt；Office 元素可空；文本元素沿用字符基线口径） */
     private BBox bbox;
+
+    /** 显示边界框（pt；文本元素按字形上沿收紧，仅供原文预览高亮，缺省时回退 bbox） */
+    private BBox displayBBox;
 
     /** 字体事实（字号/加粗/字体名；无样式标题也输出，层级归组装环节） */
     private FontInfo font;

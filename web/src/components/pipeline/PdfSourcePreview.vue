@@ -90,7 +90,7 @@
               :key="box.key"
               class="pdf-preview-box"
               :class="{ 'is-active': box.key === activeKey }"
-              :style="rectStyle(box.bbox, box.fontSize)"
+              :style="rectStyle(box.bbox)"
               :title="box.title"
             ></span>
           </div>
@@ -132,8 +132,6 @@ export interface PreviewHighlight {
   /** 所属文档页 */
   page: number;
   bbox: ElementBBox;
-  /** 字号（pt）：仅用于把字形紧框补到可读行高；0 表示不补 */
-  fontSize: number;
   /** 悬停说明（类型 + 摘录） */
   title: string;
 }
@@ -228,15 +226,12 @@ function pageStyle(pageNo: number): Record<string, string> {
 }
 
 /** 一个元素的显示矩形：逐行框优先，旧产物/表格退回整块 bbox */
-function rectStyle(rect: ElementBBox, fontSize: number): Record<string, string> {
-  // 解析 bbox 是字形紧框（height 通常小于字号），直接铺会切掉上下沿；
-  // 按字号补到近似行高，仅影响展示，不改动语义 bbox / 命中范围
-  const pad = fontSize > 0 ? fontSize * 0.3 : 0;
+function rectStyle(rect: ElementBBox): Record<string, string> {
   return {
     left: `${rect.x}px`,
-    top: `${rect.y - pad}px`,
+    top: `${rect.y}px`,
     width: `${rect.width}px`,
-    height: `${rect.height + pad * 2}px`,
+    height: `${rect.height}px`,
   };
 }
 
