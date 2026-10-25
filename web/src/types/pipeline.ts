@@ -796,8 +796,6 @@ export interface StageContentExtra {
   cols?: number | null;
   /** 元素边界框（原文预览高亮用） */
   bbox?: ElementBBox | null;
-  /** 解析：文本元素逐行边界框（逐行贴合高亮；表格/图片为空） */
-  lineBoxes?: ElementBBox[] | null;
   /** 解析：字体摘要（名称 + 字号 + 粗体） */
   font?: string | null;
   /** 解析：是否目录行候选 */

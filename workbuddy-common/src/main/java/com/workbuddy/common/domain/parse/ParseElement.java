@@ -36,9 +36,6 @@ public class ParseElement {
     /** 边界框（pt；Office 元素可空） */
     private BBox bbox;
 
-    /** 文本元素逐行边界框（原文预览逐行贴合；表格/图片可空） */
-    private List<BBox> lineBoxes;
-
     /** 字体事实（字号/加粗/字体名；无样式标题也输出，层级归组装环节） */
     private FontInfo font;
 

@@ -15,6 +15,7 @@ import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
 import com.workbuddy.worker.parser.pdf.detect.RuleRegions;
 import com.workbuddy.worker.parser.pdf.detect.TableCandidateDetector;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
+import com.workbuddy.worker.parser.pdf.model.CharInfo;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.model.PageLines;
@@ -278,7 +279,6 @@ public final class PdfBodyAssembler {
      */
     static ParseElement toParagraphElement(List<PageLine> lines, String fileId, PageContent page) {
         PageLine first = lines.getFirst();
-        PageLine last = lines.getLast();
         ParseElement element = ParseElement.of(ElementType.PARAGRAPH);
         StringBuilder paragraph = new StringBuilder();
         PageLine prevLine = null;
@@ -291,15 +291,10 @@ public final class PdfBodyAssembler {
         }
         element.setText(paragraph.toString());
         element.setPage(first.page());
-        double x = lines.stream().mapToDouble(PageLine::x).min().orElse(0);
-        double y = first.y();
-        double maxX = lines.stream().mapToDouble(l -> l.x() + l.width()).max().orElse(0);
-        double maxY = last.y() + last.height();
-        element.setBbox(page.geometry().toViewport(x, y, maxX - x, maxY - y));
-        element.setLineBoxes(lines.stream()
-                .map(line -> page.geometry().toViewport(
-                        line.x(), line.y(), line.width(), line.height()))
-                .toList());
+        List<BBox> lineBoxes = lines.stream()
+                .map(line -> visibleLineBBox(line, page.geometry()))
+                .toList();
+        element.setBbox(union(lineBoxes));
         FontInfo font = new FontInfo();
         font.setName(first.fontName());
         font.setSize(first.fontSize());
@@ -311,9 +306,34 @@ public final class PdfBodyAssembler {
     }
 
     /**
-     * 段落的溯源路径：页码 + 本页字符流区间（`pdf#page(n)/chars[i..j]`）。
-     * 字符流按页内阅读顺序累计行内字符数（行间不计分隔符），区间取首行行首到末行行尾。
+     * 可见字形行框：过滤行首/行尾空白字符，只取实际字符的包围盒。
+     * 字符前进宽度会把缩进空格和尾部空白算进高亮，逐行贴合必须收紧到字形范围。
      */
+    private static BBox visibleLineBBox(PageLine line, PdfPageGeometry geometry) {
+        List<CharInfo> visible = line.chars().stream()
+                .filter(ch -> !Character.isWhitespace(ch.codePoint()))
+                .toList();
+        if (visible.isEmpty()) {
+            return geometry.toViewport(line.x(), line.y(), line.width(), line.height());
+        }
+        double minX = visible.stream().mapToDouble(CharInfo::x).min().orElse(line.x());
+        double maxX = visible.stream().mapToDouble(ch -> ch.x() + ch.width()).max()
+                .orElse(line.x() + line.width());
+        double minY = visible.stream().mapToDouble(CharInfo::y).min().orElse(line.y());
+        double maxY = visible.stream().mapToDouble(ch -> ch.y() + ch.height()).max()
+                .orElse(line.y() + line.height());
+        return geometry.toViewport(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    /** 多个视口矩形取并集 */
+    private static BBox union(List<BBox> boxes) {
+        double minX = boxes.stream().mapToDouble(BBox::getX).min().orElse(0);
+        double minY = boxes.stream().mapToDouble(BBox::getY).min().orElse(0);
+        double maxX = boxes.stream().mapToDouble(box -> box.getX() + box.getWidth()).max().orElse(0);
+        double maxY = boxes.stream().mapToDouble(box -> box.getY() + box.getHeight()).max().orElse(0);
+        return new BBox(minX, minY, maxX - minX, maxY - minY);
+    }
+
     private static String charRangePath(PageContent page, List<PageLine> lines) {
         String head = "pdf#page(" + page.pageNo() + ")";
         PageLine last = lines.getLast();
@@ -354,9 +374,8 @@ public final class PdfBodyAssembler {
         ParseElement element = ParseElement.of(type);
         element.setText(text);
         element.setPage(pageNo);
-        element.setBbox(geometry.toViewport(line.x(), line.y(), line.width(), line.height()));
-        element.setLineBoxes(List.of(
-                geometry.toViewport(line.x(), line.y(), line.width(), line.height())));
+        BBox lineBox = visibleLineBBox(line, geometry);
+        element.setBbox(lineBox);
         FontInfo font = new FontInfo();
         font.setName(line.fontName());
         font.setSize(line.fontSize());

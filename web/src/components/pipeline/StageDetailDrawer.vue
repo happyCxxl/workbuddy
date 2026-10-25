@@ -1323,12 +1323,10 @@ const highlights = computed<PreviewHighlight[]>(() =>
       const excerpt = (item.display ?? '').replace(/\s+/g, ' ').slice(0, 40);
       const fontMatch =
         typeof item.extra?.font === 'string' ? /(\d+(?:\.\d+)?)pt/.exec(item.extra.font) : null;
-      const lineBoxes = Array.isArray(item.extra?.lineBoxes) ? item.extra.lineBoxes : [];
       return {
         key,
         page,
         bbox,
-        lineBoxes,
         fontSize: fontMatch ? Number(fontMatch[1]) : 0,
         title: `${elementTypeLabel(item.type)}${excerpt ? `：${excerpt}` : ''}`,
       };
