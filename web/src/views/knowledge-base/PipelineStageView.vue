@@ -843,6 +843,7 @@ onUnmounted(() => {
   border: 1px solid transparent;
   border-radius: 10px;
   cursor: pointer;
+  transition: padding 0.22s ease;
 }
 
 /*
@@ -1093,8 +1094,9 @@ onUnmounted(() => {
 
 /* 收起时行不需要悬停底色与选中描边：那里没有内容承载它们 */
 .stage-file-list-icons .stage-file {
-  justify-content: center;
-  padding: 6px 0;
+  /* 不能用 center：收起瞬间面板仍是宽态，图标会先跳到整行中心再随宽度收回。
+     保持左对齐，只把 padding-left 从 11px 过渡到 8px，图标才连续移动。 */
+  padding: 6px 0 6px 8px;
   background: none;
   border-color: transparent;
 }
@@ -1103,13 +1105,13 @@ onUnmounted(() => {
 .stage-file-list-icons .stage-file-on::before {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 32px;
   width: 60px;
   height: 60px;
   border-radius: 16px;
   background: var(--kb-tint);
 
-  /* 双向回退半个尺寸：框与行同中心，48px 徽标落在框正中 */
+  /* 32px = padding-left 8 + 48px 徽标的一半；框与图标同中心 */
   transform: translate(-50%, -50%);
   content: '';
 }
