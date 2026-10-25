@@ -845,6 +845,17 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+/*
+ * 收起态图标放大：行高由满页均分决定，图标仍保持 56px，
+ * 避免 40px 图标在大行高里留下过大的上下空隙。
+ */
+.stage-file-list-icons .stage-file-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  font-size: 12px;
+}
+
 .stage-file:hover {
   background: rgb(255 255 255 / 4%);
 }
@@ -1073,25 +1084,22 @@ onUnmounted(() => {
 /* ==================== 收起态：同一套 DOM，只把文字收掉 ==================== */
 
 /*
- * 收起态**不换 DOM**，只做两件事：
- * ① 行内的文字块收成 0 宽并淡出
- * ② 行的悬停底色与选中描边隐去（那里已经没有内容承载它们）
- *
- * <p>**列表的内边距全程不变**（展开态与收起态都是 6px）：徽标是行的第一个 flex 子项，
- * 行的 `padding-left` 也固定 11px，徽标左缘只由"面板左缘 + 面板边框 + 列表内边距
- * + 行内边距"决定 —— 四项在两态都相同，徽标就钉死在同一处，不随栏宽左右挪。
+ * 收起态**不换 DOM**：文字块移出文档流并淡出，只保留 56px 格式徽标；
+ * 满页时行高由列表剩余高度均分，徽标始终落在行中心。
  */
 .stage-file-list-icons {
-  padding-left: 6px;
+  padding: 6px 8px 6px 6px;
 }
 
 /* 收起时行不需要悬停底色与选中描边：那里没有内容承载它们 */
 .stage-file-list-icons .stage-file {
+  justify-content: center;
+  padding: 6px 0;
   background: none;
   border-color: transparent;
 }
 
-/* 选中态：徽标周围一层淡青绿底，比徽标大一圈（不铺满整行） */
+/* 选中态：比 56px 徽标大一圈，框与图标同中心 */
 .stage-file-list-icons .stage-file-on::before {
   position: absolute;
   top: 50%;
@@ -1101,19 +1109,19 @@ onUnmounted(() => {
   border-radius: 16px;
   background: var(--kb-tint);
 
-  /* 双向回退半个尺寸：框与行同中心，徽标（行的内容盒正好 40px 宽）落在框正中 */
+  /* 双向回退半个尺寸：框与行同中心，56px 徽标落在框正中 */
   transform: translate(-50%, -50%);
   content: '';
 }
 
 /*
- * 收起时的文字块：**只淡出，宽度不变**。
- *
- * <p>宽度若在这里改成 0，就回到了"中间帧疯狂换行"的老问题（见 `.stage-file-main` 的注释）。
- * 保持 210px 后，文字是被列表的 `overflow-x: hidden` 裁掉的 —— 行高全程恒定。
+ * 收起时的文字块移出文档流：只淡出但保留高度会把每一行撑到文字高度，
+ * 图标之间因此出现大空隙；绝对定位后行高只由徽标与内边距决定。
  */
 .stage-file-list-icons .stage-file-main {
+  position: absolute;
   opacity: 0;
+  pointer-events: none;
 }
 
 /*
