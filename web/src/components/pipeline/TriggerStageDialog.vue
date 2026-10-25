@@ -1,83 +1,91 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="`触发${stageText}`"
-    width="460px"
-    :close-on-click-modal="false"
-    @closed="onClosed"
-  >
-    <div v-if="upstream" class="trigger-upstream">
-      <div class="trigger-row">
-        <span class="trigger-key">从哪个产物分叉</span>
-        <span class="trigger-val">{{ upstreamText }}</span>
+  <div v-if="visible" class="trigger-mask">
+    <section
+      class="trigger-dialog"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="`触发${stageText}`"
+    >
+      <header class="trigger-head">
+        <h3 class="trigger-title">触发{{ stageText }}</h3>
+        <button class="trigger-close" type="button" aria-label="关闭" @click="visible = false">
+          ×
+        </button>
+      </header>
+      <div class="trigger-body">
+        <div v-if="upstream" class="trigger-upstream">
+          <div class="trigger-row">
+            <span class="trigger-key">从哪个产物分叉</span>
+            <span class="trigger-val">{{ upstreamText }}</span>
+          </div>
+          <div class="trigger-row">
+            <span class="trigger-key">上游状态</span>
+            <span class="trigger-val">
+              <i
+                class="trigger-dot"
+                :class="{
+                  'tone-ok': upstreamTone === 'ok',
+                  'tone-partial': upstreamTone === 'partial',
+                  'tone-run': upstreamTone === 'run',
+                  'tone-wait': upstreamTone === 'wait',
+                  'tone-fail': upstreamTone === 'fail',
+                }"
+              ></i>
+              {{ upstreamStatusText }}
+            </span>
+          </div>
+        </div>
+        <div v-else class="trigger-upstream trigger-warn">
+          未选中路径末端，无法确定从哪个产物触发下游
+        </div>
+
+        <!-- 存储类型不一致：与上面的空态并列显示，确认按钮同时置灰 -->
+        <div v-if="blockReason" class="trigger-block">{{ blockReason }}</div>
+
+        <!-- 上游运行未成功：与卡片按钮、后端下游门禁同一口径，确认按钮同时置灰 -->
+        <div v-if="upstream && !upstreamConsumable" class="trigger-block">
+          上游运行未成功，请重新触发上游环节
+        </div>
+
+        <!-- 有策略的环节才需要选策略；解析/组装无策略 -->
+        <div v-if="strategyRequired" class="trigger-strategy">
+          <div class="trigger-row">
+            <span class="trigger-key">使用策略</span>
+            <span class="trigger-val">{{ strategyHint }}</span>
+          </div>
+          <el-select
+            v-model="pickedStrategyId"
+            class="trigger-select"
+            placeholder="选择策略版本"
+            :loading="strategiesLoading"
+            clearable
+          >
+            <el-option
+              v-for="item in strategies"
+              :key="item.id"
+              :label="strategyDisplayName(item)"
+              :value="item.id"
+            >
+              <span class="trigger-option">
+                <span>{{ strategyDisplayName(item) }}</span>
+                <span class="trigger-option-status">{{ item.status }}</span>
+              </span>
+            </el-option>
+          </el-select>
+          <p class="trigger-note">{{ strategyHint }}</p>
+          <p v-if="!hasBoundStrategy && strategies.length === 0" class="trigger-note">
+            该环节暂无可用策略，请先在策略页创建并启用后再触发
+          </p>
+        </div>
       </div>
-      <div class="trigger-row">
-        <span class="trigger-key">上游状态</span>
-        <span class="trigger-val">
-          <i
-            class="trigger-dot"
-            :class="{
-              'tone-ok': upstreamTone === 'ok',
-              'tone-partial': upstreamTone === 'partial',
-              'tone-run': upstreamTone === 'run',
-              'tone-wait': upstreamTone === 'wait',
-              'tone-fail': upstreamTone === 'fail',
-            }"
-          ></i>
-          {{ upstreamStatusText }}
-        </span>
-      </div>
-    </div>
-    <div v-else class="trigger-upstream trigger-warn">
-      未选中路径末端，无法确定从哪个产物触发下游
-    </div>
-
-    <!-- 存储类型不一致：与上面的空态并列显示，确认按钮同时置灰 -->
-    <div v-if="blockReason" class="trigger-block">{{ blockReason }}</div>
-
-    <!-- 上游运行未成功：与卡片按钮、后端下游门禁同一口径，确认按钮同时置灰 -->
-    <div v-if="upstream && !upstreamConsumable" class="trigger-block">
-      上游运行未成功，请重新触发上游环节
-    </div>
-
-    <!-- 有策略的环节才需要选策略；解析/组装无策略 -->
-    <div v-if="strategyRequired" class="trigger-strategy">
-      <div class="trigger-row">
-        <span class="trigger-key">使用策略</span>
-        <span class="trigger-val">{{ strategyHint }}</span>
-      </div>
-      <el-select
-        v-model="pickedStrategyId"
-        class="trigger-select"
-        placeholder="选择策略版本"
-        :loading="strategiesLoading"
-        clearable
-      >
-        <el-option
-          v-for="item in strategies"
-          :key="item.id"
-          :label="strategyDisplayName(item)"
-          :value="item.id"
-        >
-          <span class="trigger-option">
-            <span>{{ strategyDisplayName(item) }}</span>
-            <span class="trigger-option-status">{{ item.status }}</span>
-          </span>
-        </el-option>
-      </el-select>
-      <p class="trigger-note">{{ strategyHint }}</p>
-      <p v-if="!hasBoundStrategy && strategies.length === 0" class="trigger-note">
-        该环节暂无可用策略，请先在策略页创建并启用后再触发
-      </p>
-    </div>
-
-    <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" :loading="submitting" :disabled="!canConfirm" @click="onConfirm">
-        触发执行
-      </el-button>
-    </template>
-  </el-dialog>
+      <footer class="trigger-footer">
+        <el-button @click="visible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" :disabled="!canConfirm" @click="onConfirm">
+          触发执行
+        </el-button>
+      </footer>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -164,10 +172,13 @@ const upstreamConsumable = computed(
   () => props.upstream?.status === 'SUCCESS' || props.upstream?.status === 'PARTIAL_SUCCESS',
 );
 
-/** 能否触发：有上游、无阻塞原因、上游运行已成功或部分成功；没有绑定策略时必须选了策略 */
+/** 能否触发：有上游、无阻塞原因、上游运行已成功或部分成功；需要策略的环节必须选中或已有绑定 */
 const canConfirm = computed(() => {
   if (!props.upstream || props.blockReason !== '' || !upstreamConsumable.value) {
     return false;
+  }
+  if (!strategyRequired.value) {
+    return true;
   }
   return props.hasBoundStrategy || pickedStrategyId.value !== '';
 });
@@ -195,19 +206,89 @@ function onClosed(): void {
   pickedStrategyId.value = '';
 }
 
-// 每次打开（或换环节）都重新拉策略，避免拿到过期的 ACTIVE 列表
+// 每次打开（或换环节）都重新拉策略，避免拿到过期的 ACTIVE 列表；关闭时清空本次选择
 watch(
   () => [visible.value, props.stage],
   ([open]) => {
     if (open) {
       pickedStrategyId.value = '';
       void loadStrategies();
+    } else {
+      onClosed();
     }
   },
 );
 </script>
 
 <style scoped lang="css">
+.trigger-mask {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgb(0 0 0 / 52%);
+  inset: 0;
+}
+
+.trigger-dialog {
+  display: flex;
+  width: 460px;
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 32px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--kb-line-2);
+  border-radius: 12px;
+  background: var(--kb-bg-1);
+  box-shadow: 0 18px 60px rgb(0 0 0 / 45%);
+}
+
+.trigger-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--kb-line);
+}
+
+.trigger-title {
+  margin: 0;
+  color: var(--kb-text-1);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.trigger-close {
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--kb-text-3);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.trigger-close:hover {
+  color: var(--kb-text-1);
+}
+
+.trigger-body {
+  padding: 18px 20px;
+  overflow: auto;
+}
+
+.trigger-footer {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--kb-line);
+}
+
 .trigger-upstream {
   padding: 12px 14px;
   border: 1px solid var(--kb-line);

@@ -145,19 +145,20 @@
             ><i class="stage-nd tone-hit"></i>金色标记 = 命中知识库策略</span
           >
         </div>
+
+        <!-- 触发弹窗挂右侧容器内：遮罩与居中都以链图区为参照，不落到整页视口 -->
+        <TriggerStageDialog
+          v-model="triggerVisible"
+          :stage="triggerStage"
+          :upstream="triggerSource"
+          :submitting="triggering"
+          :block-reason="storageBlockReason"
+          :has-bound-strategy="triggerHasBoundStrategy"
+          :bound-strategy-label="triggerBoundStrategyLabel"
+          @confirm="onTriggerConfirm"
+        />
       </section>
     </div>
-
-    <TriggerStageDialog
-      v-model="triggerVisible"
-      :stage="triggerStage"
-      :upstream="triggerSource"
-      :submitting="triggering"
-      :block-reason="storageBlockReason"
-      :has-bound-strategy="triggerHasBoundStrategy"
-      :bound-strategy-label="triggerBoundStrategyLabel"
-      @confirm="onTriggerConfirm"
-    />
 
     <!-- 环节详情抽屉：只看不改，打开与关闭都不影响链图的选中与轮询 -->
     <StageDetailDrawer
@@ -825,7 +826,8 @@ onUnmounted(() => {
    * 就会冒出横向滚动条。这里明确 x 方向裁掉、只留纵向滚动。
    */
   overflow: hidden auto;
-  padding: 6px;
+  padding: 6px 12px 6px 6px;
+  scrollbar-gutter: stable;
 }
 
 .stage-file {
@@ -860,25 +862,15 @@ onUnmounted(() => {
   --ext-hover: 1;
 }
 
-/* 主内容两行：文件名在上、大小与时间在下 */
-
 /*
  * 主内容两行：文件名在上、大小与时间在下。
  *
- * <p>**宽度全程恒定 210px、不参与折叠动画** —— 这是唯一能让行高稳定的做法。
- *
- * <p>宽度过渡到 0 不行：中间任意一帧只要允许换行，文件名就折成多行把行高顶起来
- * （正常一行 72px，折行后 470px），整列像被重排；只在收起侧加 `white-space: nowrap`
- * 也只修好一个方向 —— 展开时 nowrap 在动画一开始就被移除，中间帧照样换行。
- *
- * <p>做法：宽度钉死 210px、只淡出，超出部分由 `.stage-file-list` 的
- * `overflow-x: hidden` 裁掉，行高从头到尾不变。
- *
- * <p>不能加 `white-space: nowrap`：文件名要能折行才显示得完整（那是明确需求）。
+ * <p>宽度按“栏宽 − 边框/内边距/徽标/间距 − 右侧滚动条留白”钉死：
+ * 262 − 2 − 18 − 22 − 42 − 9 − 3 ≈ 166px。旧值 210px 会把内容顶到滚动条下面。
  */
 .stage-file-main {
   display: flex;
-  width: 210px;
+  width: 166px;
   flex: none;
   flex-direction: column;
   gap: 3px;
@@ -942,6 +934,7 @@ onUnmounted(() => {
 .stage-chain-wrap {
   flex: 1;
   min-width: 0;
+  position: relative;
 }
 
 .stage-canvas {
@@ -1126,9 +1119,4 @@ onUnmounted(() => {
 .stage-files-collapsed > .stage-empty {
   opacity: 0;
 }
-
-/*
- * 收起态的分页只留两枚箭头：当前页那格占 24px + 左右各 4px 外边距 = 32px，
- * 与两枚箭头合计 80px，超过栏内容宽（78px − 2px 边框 = 76px），会溢出到面板外。
- */
 </style>
