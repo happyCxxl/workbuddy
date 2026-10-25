@@ -5,7 +5,11 @@ import com.workbuddy.worker.parser.pdf.model.PageLine;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 行片段合并：把同一页、同一 y 带、同字号、被栏沟切断的相邻行片段合并回一条视觉行。
@@ -53,9 +57,18 @@ public final class LineFragmentMerger {
                 .thenComparingDouble(PageLine::y)
                 .thenComparingDouble(PageLine::x));
         double medianFontSize = medianFontSize(ordered);
+        // 同一 x 在多行重复出现 = 栏起点；跨栏片段即使文本重叠/间隙极小也不能合并
+        Map<Long, Integer> xCounts = new HashMap<>();
+        for (PageLine line : ordered) {
+            xCounts.merge(Math.round(line.x()), 1, Integer::sum);
+        }
+        Set<Long> columnStarts = xCounts.entrySet().stream()
+                .filter(entry -> entry.getValue() >= 2)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
         List<PageLine> result = new ArrayList<>();
         for (PageLine line : ordered) {
-            if (!tryMergeInto(result, line, pageWidth, yTolerance, medianFontSize, options)) {
+            if (!tryMergeInto(result, line, pageWidth, yTolerance, medianFontSize, columnStarts, options)) {
                 result.add(line);
             }
         }
@@ -70,12 +83,13 @@ public final class LineFragmentMerger {
      * @param pageWidth     页宽
      * @param yTolerance    同 y 带容差
      * @param medianFontSize 本页字号中位数
+     * @param columnStarts   本页重复出现的栏起点 x
      * @param options       行文本重建口径
      * @return 发生合并返回 true
      */
     private static boolean tryMergeInto(List<PageLine> result, PageLine line, double pageWidth,
                                         double yTolerance, double medianFontSize,
-                                        LineTexts.Options options) {
+                                        Set<Long> columnStarts, LineTexts.Options options) {
         String currentText = textOf(line);
         for (int i = result.size() - 1; i >= 0; i--) {
             PageLine previous = result.get(i);
@@ -93,7 +107,17 @@ public final class LineFragmentMerger {
             double allowedGap = fontSize >= medianFontSize * HEADING_FONT_FACTOR ? largeGap : smallGap;
             double left = Math.min(previous.x(), line.x());
             double right = Math.max(previous.x() + previous.width(), line.x() + line.width());
-            if (gap > allowedGap || right - left > pageWidth * MAX_COMBINED_WIDTH_RATIO) {
+            if (gap > allowedGap) {
+                continue;
+            }
+            boolean wide = right - left > pageWidth * MAX_COMBINED_WIDTH_RATIO;
+            // 只有“大字号大间距”的标题才需要宽度上限防止跨栏；相邻/重叠的小间隙片段
+            // 本来就是同一视觉行，不能因为整行接近页宽而拒绝合并
+            if (gap > smallGap && wide) {
+                continue;
+            }
+            // 宽行才可能是跨栏；窄的页脚/页码片段即使 x 与正文栏起点重合也必须合并
+            if (wide && columnStarts.contains(Math.round(line.x()))) {
                 continue;
             }
             List<CharInfo> chars = new ArrayList<>(previous.chars());

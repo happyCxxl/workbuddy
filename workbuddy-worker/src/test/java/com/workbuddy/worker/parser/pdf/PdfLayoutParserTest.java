@@ -109,7 +109,29 @@ class PdfLayoutParserTest {
                     .filter(e -> ElementType.PARAGRAPH.name().equals(e.getType()))
                     .toList();
             assertTrue(paragraphs.stream().noneMatch(p -> p.getText().contains("XXProjectFooter")));
+            // 元素顺序按文档位置：页眉 → 正文 → 页脚（页脚不能排在正文前）
+            List<ParseElement> pageOne = source.getElements().stream()
+                    .filter(e -> Integer.valueOf(1).equals(e.getPage()))
+                    .toList();
+            int headerIndex = indexOfType(pageOne, ElementType.HEADER);
+            int bodyIndex = indexOfType(pageOne, ElementType.PARAGRAPH);
+            int footerIndex = indexOfType(pageOne, ElementType.FOOTER);
+            assertTrue(bodyIndex >= 0 && footerIndex >= 0, () -> "pageOne=" + pageOne);
+            if (headerIndex >= 0) {
+                assertTrue(headerIndex < bodyIndex, () -> "pageOne order=" + pageOne);
+            }
+            assertTrue(bodyIndex < footerIndex, () -> "pageOne order=" + pageOne);
         }
+    }
+
+    /** 某页第一个指定类型元素的下标；没有返回 -1 */
+    private static int indexOfType(List<ParseElement> elements, ElementType type) {
+        for (int i = 0; i < elements.size(); i++) {
+            if (type.name().equals(elements.get(i).getType())) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**

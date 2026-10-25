@@ -24,12 +24,19 @@ import com.workbuddy.worker.parser.pdf.model.TextLine;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * 单页正文装配：页眉/页脚元素（每页各一条）→ 线框区域分段 → 段落聚合与表格候选块结算；
  * 表格结算委托 {@link TextTableBuilder}（无边框）与 {@link RuledTableBuilder}（有边框）。
  */
 public final class PdfBodyAssembler {
+
+    /** 段落起始标记：编号条款/中文序号/括号序号/章节/注；命中即与上一段断开 */
+    private static final Pattern PARAGRAPH_START = Pattern.compile(
+            "^\\s*(?:\\d{1,3}(?:\\.\\d{1,3})+|\\d{1,3}[.、．](?!\\d)|"
+                    + "[一二三四五六七八九十]{1,4}、|[（(][一二三四五六七八九十0-9]{1,4}[）)]|"
+                    + "第[一二三四五六七八九十0-9]{1,4}[章节部分]|注[：:])");
 
     private PdfBodyAssembler() {
     }
@@ -87,14 +94,16 @@ public final class PdfBodyAssembler {
             }
         }
 
-        // 页底 FOOTER 元素：本页页底带内命中页脚键或页码位置的行各产一条（文本取原行）
+        // 页底 FOOTER 元素：本页页底带内命中页脚键或页码位置的行各产一条（文本取原行）；
+        // 先暂存，正文结算后追加，保证元素顺序是页眉 → 正文 → 页脚
+        List<ParseElement> footerElements = new ArrayList<>();
         for (PageLine line : page.lines()) {
             if (line.y() + line.height() < footerBandY) {
                 continue;
             }
             String footerKey = HeaderFooterDetector.footerBase(HeaderFooterDetector.normalizeKey(line.text()));
             if (footers.matches(footerKey, TextLine.of(line), pageLines, properties)) {
-                elements.add(bandElement(
+                footerElements.add(bandElement(
                         ElementType.FOOTER, line.text().trim(), "pdf#bottom-area", page.pageNo(), line, fileId,
                         page.geometry()));
             }
@@ -129,6 +138,7 @@ public final class PdfBodyAssembler {
             run.add(line);
         }
         flushRun(run, runRegion, page, elements, source, fileId, properties, capabilityRegistry);
+        elements.addAll(footerElements);
     }
 
     /** 行归属的线框区域：行中心落在区域内即归属；无归属返回 null */
@@ -180,6 +190,11 @@ public final class PdfBodyAssembler {
                     block = new ArrayList<>();
                 }
             }
+            // 编号/章节/注等段落起始标记：即使行距未超阈值，也在这里断段
+            if (!paragraph.isEmpty() && startsParagraphBlock(line.text())) {
+                addParagraph(paragraph, elements, fileId, page);
+                paragraph = new ArrayList<>();
+            }
             // 目录行按条独立成段：点线目录的行距小于普通段落阈值，不能与相邻条目聚合；
             // 只含点线/数字的续行仍并入上一条目，避免把一条目录拆成两段
             boolean tocContinuation = line.tocCandidate() && NullUtil.isNotNull(prev)
@@ -209,6 +224,11 @@ public final class PdfBodyAssembler {
         if (!paragraph.isEmpty()) {
             addParagraph(paragraph, elements, fileId, page);
         }
+    }
+
+    /** 是否段落起始标记：编号/章节/注等，行距不足时也用于断段 */
+    private static boolean startsParagraphBlock(String text) {
+        return text != null && PARAGRAPH_START.matcher(text.trim()).find();
     }
 
     /** 目录续行：去掉点线/数字/页码字后没有正文，视为同一条目的续行 */
