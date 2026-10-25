@@ -18,7 +18,17 @@
         ></button>
 
         <div class="stage-panel-head">
-          <span class="stage-panel-title">文件</span>
+          <el-button
+            class="stage-import-btn"
+            size="small"
+            plain
+            title="导入文档"
+            aria-label="导入文档"
+            @click="importVisible = true"
+          >
+            <span class="stage-import-plus">＋</span>
+            <span class="stage-import-text">导入文档</span>
+          </el-button>
         </div>
 
         <!--
@@ -174,6 +184,13 @@
       :source-file-id="selectedFileObjectId"
       @close="detailVisible = false"
     />
+
+    <!-- 导入文档：复用知识库页的弹窗，预选当前知识库，完成后刷新文件栏 -->
+    <ImportDocumentDialog
+      v-model="importVisible"
+      :preset-kb-id="knowledgeBaseId"
+      @finished="onImported"
+    />
   </div>
 </template>
 
@@ -187,6 +204,7 @@ import ChainGraph from '@/components/pipeline/ChainGraph.vue';
 import StageDetailDrawer from '@/components/pipeline/StageDetailDrawer.vue';
 import TriggerStageDialog from '@/components/pipeline/TriggerStageDialog.vue';
 import FileExtBadge from '@/components/knowledge-base/FileExtBadge.vue';
+import ImportDocumentDialog from '@/components/knowledge-base/ImportDocumentDialog.vue';
 import { prunePositions, readPositions } from '@/utils/chain-layout-storage';
 import { readCollapsed, writeCollapsed } from '@/utils/ui-state-storage';
 import {
@@ -218,6 +236,7 @@ const filesLoading = ref(false);
 /** 文件栏每页条数：按栏内可用高度取 8，整页展示、翻页取剩余文件，不出现纵向滚动条 */
 const FILE_PAGE_SIZE = 8;
 const fileQuery = ref({ current: 1, size: FILE_PAGE_SIZE });
+const importVisible = ref(false);
 
 /** 文件栏折叠状态：收起后宽度全给右侧链图。偏好持久化，刷新后保持 */
 const filesCollapsed = ref(readCollapsed('stage-files'));
@@ -379,6 +398,12 @@ async function loadFiles(): Promise<void> {
   } finally {
     filesLoading.value = false;
   }
+}
+
+/** 导入完成回到第一页刷新：新文件按提交时间排在前面 */
+function onImported(): void {
+  fileQuery.value.current = 1;
+  void loadFiles();
 }
 
 async function selectFile(file: FileResult): Promise<void> {
@@ -709,21 +734,47 @@ onUnmounted(() => {
   gap: 9px;
   align-items: center;
 
-  /* 定高：标题行只占标题本身的高度，把纵向空间让给文件列表 */
+  /* 定高：标题行只占按钮本身的高度，把纵向空间让给文件列表 */
   min-height: 32px;
-  padding: 5px 15px;
+  padding: 4px 12px;
 
-  /* 自己裁剪 + 禁止换行："文件"在栏收窄时被切掉，而不是被挤成竖排两行 */
+  /* 自己裁剪 + 禁止换行：栏收窄时按钮文字被裁掉，而不是挤成多行 */
   overflow: hidden;
   white-space: nowrap;
   border-bottom: 1px solid var(--kb-line);
 }
 
-.stage-panel-title {
-  /* 不参与收缩：不然窄栏下文字会被压着一字一行 */
+.stage-import-btn {
+  width: 100%;
+  justify-content: center;
+  gap: 4px;
+}
+
+.stage-import-plus {
   flex: none;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.stage-import-text {
+  max-width: 90px;
+  overflow: hidden;
+  opacity: 1;
+  white-space: nowrap;
+  transition:
+    max-width 0.22s ease,
+    opacity 0.12s ease;
+}
+
+/* 收起后按钮只剩一个居中的加号，文字随宽度收掉 */
+.stage-files-collapsed .stage-import-btn {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.stage-files-collapsed .stage-import-text {
+  max-width: 0;
+  opacity: 0;
 }
 
 /* 左：文件列表 */
