@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-25",
-      "baseline": "7c9e2664",
-      "note": "支持包内解析详情只读变更：新增 displayBBox（字形上沿口径）供原文高亮，bbox 保持原基线契约；不涉及鉴权、安全、异常或配置机制"
+      "baseline": "fc9d2b13",
+      "note": "支持包内解析详情只读变更：displayBBox 按字体 ascent 收紧高亮上沿，bbox 保持原基线契约；不涉及鉴权、安全、异常或配置机制"
     }
   }
 }

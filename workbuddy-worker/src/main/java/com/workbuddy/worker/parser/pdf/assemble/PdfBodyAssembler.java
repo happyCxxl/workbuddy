@@ -312,7 +312,8 @@ public final class PdfBodyAssembler {
 
     /**
      * 可见字形行框：过滤行首/行尾空白字符，只取实际字符的包围盒。
-     * CharInfo.y 是 PDFBox 的基线（YDirAdj），上沿要减去字符高度；
+     * CharInfo.y 是 PDFBox 的基线（YDirAdj），上沿要减去字形 ascent；
+     * 字高通常只有字号的一半，直接用 height 会仍偏低，按字号 0.8 估算 ascent。
      * 字符前进宽度也会把缩进/尾部空白算进高亮，逐行贴合必须收紧到字形范围。
      */
     private static BBox visibleLineBBox(PageLine line, PdfPageGeometry geometry) {
@@ -320,13 +321,15 @@ public final class PdfBodyAssembler {
                 .filter(ch -> !Character.isWhitespace(ch.codePoint()))
                 .toList();
         if (visible.isEmpty()) {
-            return geometry.toViewport(line.x(), line.y() - line.height(),
-                    line.width(), line.height());
+            double ascent = Math.max(line.height(), line.fontSize() * 0.8);
+            return geometry.toViewport(line.x(), line.y() - ascent,
+                    line.width(), ascent);
         }
         double minX = visible.stream().mapToDouble(CharInfo::x).min().orElse(line.x());
         double maxX = visible.stream().mapToDouble(ch -> ch.x() + ch.width()).max()
                 .orElse(line.x() + line.width());
-        double minY = visible.stream().mapToDouble(ch -> ch.y() - ch.height()).min().orElse(line.y());
+        double ascent = Math.max(line.height(), line.fontSize() * 0.8);
+        double minY = visible.stream().mapToDouble(CharInfo::y).min().orElse(line.y()) - ascent;
         double maxY = visible.stream().mapToDouble(CharInfo::y).max()
                 .orElse(line.y() + line.height());
         return geometry.toViewport(minX, minY, maxX - minX, maxY - minY);
