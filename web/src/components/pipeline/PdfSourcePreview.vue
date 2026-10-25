@@ -379,13 +379,34 @@ async function renderVisible(): Promise<void> {
   }
 }
 
+/** 当前页判定：视口中心落在哪一页，而不是第一个露出 1px 的页 */
+function pageAtViewportCenter(): number {
+  const element = scroller.value;
+  if (element === null) {
+    return 1;
+  }
+  const center = (element.scrollTop + element.clientHeight / 2) / zoom.value;
+  let offset = 0;
+  let best = 1;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const pageNo of renderPages.value) {
+    const pageCenter = offset + pageHeight(pageNo) / 2;
+    const distance = Math.abs(center - pageCenter);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = pageNo;
+    }
+    offset += pageHeight(pageNo) + PAGE_GAP;
+  }
+  return best;
+}
+
 /** 滚动时同步当前页并补渲染新进入视野的页 */
 function onScroll(): void {
-  const hits = visiblePageNumbers();
-  const first = hits[0];
-  if (first !== currentPage.value) {
-    currentPage.value = first;
-    emit('pageChange', first);
+  const page = pageAtViewportCenter();
+  if (page !== currentPage.value) {
+    currentPage.value = page;
+    emit('pageChange', page);
   }
   void renderVisible();
 }
