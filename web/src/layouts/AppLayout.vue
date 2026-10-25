@@ -457,8 +457,19 @@ const BACK_TARGETS: Record<string, { path: string; label: string }> = {
 const routeName = computed(() => String(route.name ?? ''));
 const backTarget = computed(() => BACK_TARGETS[routeName.value] ?? null);
 
-/** 返回上一层：按钮仅在 backTarget 非空时渲染，故此处无需再判空 */
+/** 返回上一层：优先回本次实际来源页；来源是首页/外部或与当前页相同才按层级表回退 */
 function goBack(): void {
+  const previous = router.options.history.state.back;
+  if (
+    typeof previous === 'string' &&
+    previous.startsWith('/') &&
+    previous !== '/login' &&
+    previous !== '/home' &&
+    previous !== route.fullPath
+  ) {
+    void router.push(previous);
+    return;
+  }
   void router.push(backTarget.value.path);
 }
 
