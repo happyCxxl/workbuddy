@@ -738,11 +738,12 @@ onUnmounted(() => {
 }
 
 /*
- * 收起：宽度要放得下"列表左偏移 + 徽标 + 右侧留白"。
- * 徽标 42px + 列表 padding-left 12px + 行 padding-left 11px = 65px，加右侧留白与边框 ≈ 78px。
+ * 收起：只缩面板宽度，行内布局完全不动，让右边界向左裁掉文件名。
+ * 85px = 边框 + 列表左内边距 + 行左内边距 + 48px 徽标 + 右侧留白，
+ * 徽标位置与展开态一致，动画中不会横向跳动。
  */
 .stage-files-collapsed {
-  width: 78px;
+  width: 85px;
 }
 
 /*
@@ -843,7 +844,6 @@ onUnmounted(() => {
   border: 1px solid transparent;
   border-radius: 10px;
   cursor: pointer;
-  transition: padding 0.22s ease;
 }
 
 /*
@@ -1085,18 +1085,15 @@ onUnmounted(() => {
 /* ==================== 收起态：同一套 DOM，只把文字收掉 ==================== */
 
 /*
- * 收起态**不换 DOM**：文字块移出文档流并淡出，只保留 48px 格式徽标；
- * 满页时行高由列表剩余高度均分，徽标始终落在行中心。
+ * 收起态**不换 DOM、不改行内布局**：只靠面板右边界向左移动，
+ * 把文件名按宽度裁掉；图标与文字都不移动，动画只有右边界的收缩。
  */
 .stage-file-list-icons {
-  padding: 6px 8px 6px 6px;
+  padding: 6px 11px 6px 6px;
 }
 
 /* 收起时行不需要悬停底色与选中描边：那里没有内容承载它们 */
 .stage-file-list-icons .stage-file {
-  /* 不能用 center：收起瞬间面板仍是宽态，图标会先跳到整行中心再随宽度收回。
-     保持左对齐，只把 padding-left 从 11px 过渡到 8px，图标才连续移动。 */
-  padding: 6px 0 6px 8px;
   background: none;
   border-color: transparent;
 }
@@ -1105,25 +1102,15 @@ onUnmounted(() => {
 .stage-file-list-icons .stage-file-on::before {
   position: absolute;
   top: 50%;
-  left: 32px;
+  left: 35px;
   width: 60px;
   height: 60px;
   border-radius: 16px;
   background: var(--kb-tint);
 
-  /* 32px = padding-left 8 + 48px 徽标的一半；框与图标同中心 */
+  /* 35px = 行 padding-left 11 + 48px 徽标的一半；框与图标同中心 */
   transform: translate(-50%, -50%);
   content: '';
-}
-
-/*
- * 收起时的文字块移出文档流：只淡出但保留高度会把每一行撑到文字高度，
- * 图标之间因此出现大空隙；绝对定位后行高只由徽标与内边距决定。
- */
-.stage-file-list-icons .stage-file-main {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
 }
 
 /*
