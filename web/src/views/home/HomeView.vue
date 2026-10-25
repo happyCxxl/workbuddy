@@ -59,27 +59,27 @@
           :border="false"
           height="100%"
         >
-          <el-table-column label="文件名" min-width="200" align="center">
+          <el-table-column label="文件名" min-width="120" align="center">
             <template #default="{ row }">
               <span class="home-file home-ellipsis" :title="row.fileName">{{
                 row.fileName || '（文件名不可得）'
               }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="文件类型" min-width="200" align="center">
+          <el-table-column label="文件类型" min-width="120" align="center">
             <template #default="{ row }">
               <!-- 类型来自来源文件的 MIME（不按扩展名猜）；校验失败的行取不到，显示占位符 -->
               <span class="home-mono home-dim">{{ row.fileType ?? '—' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="知识库" min-width="200" align="center">
+          <el-table-column label="知识库" min-width="120" align="center">
             <template #default="{ row }">
               <span class="home-dim home-ellipsis" :title="row.knowledgeBaseName">{{
                 row.knowledgeBaseName
               }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="结果" min-width="200" align="center">
+          <el-table-column label="结果" min-width="120" align="center">
             <template #default="{ row }">
               <span
                 class="home-act"
@@ -90,7 +90,7 @@
               <span v-if="row.failReasonLabel" class="home-reason">{{ row.failReasonLabel }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="提交时间" min-width="200" align="center">
+          <el-table-column label="提交时间" min-width="120" align="center">
             <template #default="{ row }">
               <span class="home-mono home-dim">{{ formatSubmitTime(row.createTime) }}</span>
             </template>
