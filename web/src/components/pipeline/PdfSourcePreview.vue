@@ -86,7 +86,7 @@
           <canvas :ref="(el) => setCanvasRef(pageNo, el)" class="pdf-preview-canvas"></canvas>
           <div class="pdf-preview-overlay" @click="onPageClick(pageNo, $event)">
             <span
-              v-for="box in boxesOfPage(pageNo)"
+              v-for="box in activeBoxesOfPage(pageNo)"
               :key="box.key"
               class="pdf-preview-box"
               :class="{ 'is-active': box.key === activeKey }"
@@ -256,9 +256,17 @@ function setCanvasRef(pageNo: number, el: unknown): void {
   }
 }
 
-/** 该页要画的高亮框 */
+/** 该页要画的高亮框（全部，供点击命中使用） */
 function boxesOfPage(pageNo: number): PreviewHighlight[] {
   return props.highlights.filter((item) => item.page === pageNo);
+}
+
+/** 只渲染当前选中元素的框：未点击时不铺满绿色默认框，点击后只出现一个黄色框 */
+function activeBoxesOfPage(pageNo: number): PreviewHighlight[] {
+  if (props.activeKey === '') {
+    return [];
+  }
+  return boxesOfPage(pageNo).filter((item) => item.key === props.activeKey);
 }
 
 /** 某页的总高（未就绪按 0 计） */
@@ -746,14 +754,13 @@ defineExpose({ goToPage, revealHighlight, setZoom });
 
 .pdf-preview-box {
   position: absolute;
-  border: 1px solid var(--kb-primary);
+  border: 2px solid var(--kb-warn);
   border-radius: 2px;
-  background: color-mix(in srgb, var(--kb-primary) 18%, transparent);
+  background: color-mix(in srgb, var(--kb-warn) 26%, transparent);
   pointer-events: none;
 }
 
 .pdf-preview-box.is-active {
-  border-width: 2px;
   border-color: var(--kb-warn);
   background: color-mix(in srgb, var(--kb-warn) 26%, transparent);
 }
