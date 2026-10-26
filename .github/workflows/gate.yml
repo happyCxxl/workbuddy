@@ -68,5 +68,19 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm lint
 
+      - name: 安装 uv 与 Python 3.12
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: '3.12'
+
+      - name: Python 全量校验（ruff + pyright + pytest）
+        working-directory: lingxi
+        run: |
+          uv sync --frozen
+          uv run ruff check
+          uv run ruff format --check
+          uv run pyright
+          uv run pytest
+
       - name: 后端全量门禁（Checkstyle + PMD + CPD + SpotBugs + 单测 + JaCoCo）
         run: mvn -B verify

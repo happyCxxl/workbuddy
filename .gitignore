@@ -49,3 +49,13 @@ application-local.*
 # AI 代理的个人本地偏好（团队共享规范在 AGENTS.md / web/AGENTS.md，个人偏好不入库）
 AGENTS.local.md
 CLAUDE.local.md
+
+# Python 项目（虚拟环境、字节码与构建产物，任何层级）
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/

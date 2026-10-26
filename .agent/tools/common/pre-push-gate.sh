@@ -29,7 +29,7 @@ fi
 
 step=0
 total=0
-has_text=$(printf '%s\n' "$changed" | grep -cE '\.(java|kt|ts|tsx|js|mjs|cjs|vue|css|scss|md|yml|yaml|json|xml|sql|sh|ps1|properties|html)$' || true)
+has_text=$(printf '%s\n' "$changed" | grep -cE '\.(java|kt|ts|tsx|js|mjs|cjs|vue|css|scss|md|yml|yaml|json|xml|sql|sh|ps1|properties|html|py|toml)$' || true)
 has_java=$(printf '%s\n' "$changed" | grep -cE '\.java$' || true)
 has_md=$(printf '%s\n' "$changed" | grep -cE '\.md$' || true)
 has_agents=$(printf '%s\n' "$changed" | grep -cE 'AGENTS\.md$' || true)
@@ -45,6 +45,20 @@ has_web_chg=0
 if [ "$has_web" -gt 0 ] || printf '%s\n' "$changed" | grep -qE '(^|/)package\.json$'; then
   has_web_chg=1
 fi
+has_py=$(printf '%s\n' "$changed" | grep -cE '\.py$' || true)
+has_pytoml=$(printf '%s\n' "$changed" | grep -cE '(^|/)pyproject\.toml$' || true)
+# Python 项目目录：优先取改动里 pyproject.toml / uv.lock 所在目录，否则取 .py 文件首段目录。
+py_dir=$(printf '%s\n' "$changed" | grep -E '(^|/)pyproject\.toml$' | head -n 1 | sed 's#/pyproject\.toml$##')
+if [ -z "$py_dir" ]; then
+  py_dir=$(printf '%s\n' "$changed" | grep -E '(^|/)uv\.lock$' | head -n 1 | sed 's#/uv\.lock$##')
+fi
+if [ -z "$py_dir" ]; then
+  py_dir=$(printf '%s\n' "$changed" | grep -E '\.py$' | head -n 1 | sed -E 's#^([^/]+)/.*$#\1#')
+fi
+has_py_chg=0
+if [ "$has_py" -gt 0 ] || [ "$has_pytoml" -gt 0 ]; then
+  has_py_chg=1
+fi
 has_test=$(printf '%s\n' "$changed" | grep -cE '/src/test/.*\.java$' || true)
 
 [ "$has_text" -gt 0 ] && total=$((total + 1))
@@ -57,6 +71,7 @@ if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
   [ -f "$root/pom.xml" ] && total=$((total + 1))
 fi
 [ "$has_web_chg" -eq 1 ] && total=$((total + 1))
+[ "$has_py_chg" -eq 1 ] && total=$((total + 1))
 # 无条件步骤（与改动范围无关，每次推送都跑）也在此处一并计数：
 # total 必须在首个 run_step 之前定稿，进度条全程显示同一个分母。
 total=$((total + 1)) # 中间产物
@@ -172,6 +187,16 @@ if [ "$has_web_chg" -eq 1 ]; then
   run_step "前端校验：包管理器 lint（${web_dir}/）"
   if (cd "$root/$web_dir" && (command -v pnpm >/dev/null 2>&1 && pnpm lint || npm run lint)); then :; else
     report_fail "$step" "前端校验失败" "cd $web_dir && pnpm lint"
+  fi
+fi
+
+if [ "$has_py_chg" -eq 1 ]; then
+  if [ -z "$py_dir" ] || [ ! -f "$root/$py_dir/pyproject.toml" ]; then
+    report_fail "$step" "Python 目录缺少 pyproject.toml（${py_dir:-未定位}）" "在 ${py_dir:-Python 目录} 补 pyproject.toml 后复跑门禁"
+  fi
+  run_step "Python 校验：ruff + pyright + pytest（${py_dir}/）"
+  if (cd "$root/$py_dir" && command -v uv >/dev/null 2>&1 && uv sync --frozen --quiet && uv run ruff check && uv run ruff format --check && uv run pyright && uv run pytest); then :; else
+    report_fail "$step" "Python 校验失败（需要 uv；改动依赖后先本地 uv sync 更新锁文件）" "cd $py_dir && uv sync && uv run ruff check && uv run ruff format --check && uv run pyright && uv run pytest"
   fi
 fi
 
