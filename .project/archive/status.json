@@ -9,8 +9,8 @@
     "11": {
       "status": "已复核",
       "reviewed": "2026-10-28",
-      "baseline": "63a05eaf",
-      "note": "门禁脚本改为自动定位 Maven 与前端根（目录名不再写死）；检查器快照与债务条目未变"
+      "baseline": "c3bedd7a",
+      "note": "门禁脚本改为自动定位 Maven 与前端根（目录名不再写死）；父工程坐标改名，依赖守卫用例改为只扫依赖块；快照与债务条目未变"
     },
     "01": {
       "status": "已复核",
@@ -39,8 +39,8 @@
     "05": {
       "status": "已复核",
       "reviewed": "2026-10-28",
-      "baseline": "63a05eaf",
-      "note": "三个工程各归一个目录（workbuddy-server / workbuddy-web / workbuddy-lingxi）；模块清单与依赖边未变"
+      "baseline": "c3bedd7a",
+      "note": "父工程坐标改为 workbuddy-server（artifactId 与 name）；模块清单与依赖边未变"
     },
     "06": {
       "status": "已复核",

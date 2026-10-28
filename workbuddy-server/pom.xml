@@ -13,9 +13,9 @@
   </parent>
 
   <groupId>com.workbuddy</groupId>
-  <artifactId>workbuddy</artifactId>
+  <artifactId>workbuddy-server</artifactId>
   <version>5.1.0</version>
-  <name>workbuddy</name>
+  <name>workbuddy-server</name>
   <packaging>pom</packaging>
 
   <properties>

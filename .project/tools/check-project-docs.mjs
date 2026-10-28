@@ -153,7 +153,9 @@ function pomEdges(rootPom, modulePrefix) {
   for (const m of mods) {
     const p = join(ROOT, base, m, 'pom.xml');
     if (!existsSync(p)) continue;
-    const deps = [...read(p).matchAll(new RegExp('<artifactId>(' + modulePrefix + '[a-z-]+)</artifactId>', 'g'))]
+    // 父工程坐标在 <parent> 块里，不是模块依赖：先剥掉，再取依赖块里的模块名
+    const xml = read(p).replace(/<parent>[\s\S]*?<\/parent>/, '');
+    const deps = [...xml.matchAll(new RegExp('<artifactId>(' + modulePrefix + '[a-z-]+)</artifactId>', 'g'))]
       .map((x) => x[1])
       .filter((d) => d !== m);
     edges.set(m.replace(modulePrefix, ''), [...new Set(deps.map((d) => d.replace(modulePrefix, '')))].sort());
