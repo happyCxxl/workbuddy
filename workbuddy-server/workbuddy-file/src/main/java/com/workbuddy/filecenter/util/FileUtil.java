@@ -89,7 +89,12 @@ public final class FileUtil {
         return total;
     }
 
-    /** 空文件判定：字节数为 0 视为损坏（空文件无可解析内容）。 */
+    /**
+     * 空文件判定：字节数为 0 视为损坏（空文件无可解析内容）。
+     *
+     * @param size 文件字节数
+     * @return 字节数为 0 时 true；null 或其他值 false
+     */
     public static boolean isEmpty(Long size) {
         return NullUtil.isNotNull(size) && size == 0;
     }
@@ -121,12 +126,22 @@ public final class FileUtil {
         }
     }
 
-    /** Office OOXML 受保护文档判定（Tika detect 返回 x-tika-ooxml-protected）。 */
+    /**
+     * Office OOXML 受保护文档判定（Tika detect 返回 x-tika-ooxml-protected）。
+     *
+     * @param mediaType 媒体类型
+     * @return 媒体类型含 ooxml-protected 时 true
+     */
     public static boolean isProtected(String mediaType) {
         return NullUtil.isNotNull(mediaType) && mediaType.contains("ooxml-protected");
     }
 
-    /** JPG/PNG/TIFF/BMP 可识别但 OCR 未开放。 */
+    /**
+     * JPG/PNG/TIFF/BMP 可识别但 OCR 未开放。
+     *
+     * @param mediaType 媒体类型
+     * @return 属于保留图片类型时 true
+     */
     public static boolean isReservedImage(String mediaType) {
         if (NullUtil.isNull(mediaType)) {
             return false;
@@ -137,7 +152,12 @@ public final class FileUtil {
         };
     }
 
-    /** Tika 媒体类型 → FileFormat 字典映射（魔数真实识别结果）；未知类型返回 null。 */
+    /**
+     * Tika 媒体类型 → FileFormat 字典映射（魔数真实识别结果）。
+     *
+     * @param mediaType 媒体类型
+     * @return 对应格式；未知类型或 null 入参为 null
+     */
     public static FileFormat ofFormat(String mediaType) {
         if (NullUtil.isNull(mediaType)) {
             return null;
@@ -145,13 +165,24 @@ public final class FileUtil {
         return FileFormat.ofMimeType(mediaType);
     }
 
-    /** 白名单判定：FileFormat 枚举名在启用清单内。 */
+    /**
+     * 白名单判定：FileFormat 枚举名在启用清单内。
+     *
+     * @param format  文件格式
+     * @param enabled 启用的格式名清单；null 视为空清单
+     * @return 枚举名在清单内时 true
+     */
     public static boolean whitelisted(FileFormat format, List<String> enabled) {
         Set<String> whitelist = new HashSet<>(ObjectUtil.defaultIfNull(enabled, List.of()));
         return whitelist.contains(format.name());
     }
 
-    /** 取文件名后缀（不含点，保留原大小写；大小写归一由 {@link FileFormat#ofExtension} 处理）；文件名无点或为空时返回 null */
+    /**
+     * 取文件名后缀（不含点，保留原大小写；大小写归一由 {@link FileFormat#ofExtension} 处理）。
+     *
+     * @param fileName 文件名
+     * @return 后缀；文件名无点或为空时为 null
+     */
     public static String extensionOf(String fileName) {
         if (StrUtil.isBlank(fileName)) {
             return null;
