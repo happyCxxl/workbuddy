@@ -59,3 +59,6 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# 本地环境配置（真实密钥与口令不入库；等价于 Java 侧 application-local 的本地配置文件）
+.env

@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from lingxi.api import health
 from lingxi.app.config import Settings
-from lingxi.app.lifespan import lifespan
+from lingxi.app.lifespan import make_lifespan
 from lingxi.contract import REQUEST_ID, ApiError, R
 
 
@@ -17,7 +17,7 @@ def create_app(settings: Settings) -> FastAPI:
     """构建应用：中间件 + 路由；业务组件随实现顺序逐步接入。"""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
-    app = FastAPI(title="灵犀", lifespan=lifespan)
+    app = FastAPI(title="灵犀", lifespan=make_lifespan(settings))
 
     @app.middleware("http")
     async def trace_request(request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]) -> JSONResponse:
@@ -28,10 +28,10 @@ def create_app(settings: Settings) -> FastAPI:
         response.headers["X-Request-Id"] = request_id
         return response
 
+    # noinspection PyUnusedLocal —— 签名由框架固定（FastAPI 异常出口必须接收 request 与 exc），当前逻辑不用请求体
     @app.exception_handler(ApiError)
-    async def handle_api_error(request: Request, exc: ApiError) -> JSONResponse:
+    async def handle_api_error(_request: Request, exc: ApiError) -> JSONResponse:
         """业务失败统一出口：HTTP 恒 200 + 信封（PY-DTO-005）。"""
-        del request  # 出口统一处理，不使用请求体
         return JSONResponse(status_code=200, content=R.fail(exc.error, str(exc)).to_dict())
 
     app.include_router(health.router)

@@ -7,6 +7,9 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn>=0.30.0",
     "pydantic-settings>=2.5.0",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29.0",
+    "pgvector>=0.3.0",
 ]
 
 [dependency-groups]
@@ -18,6 +21,7 @@ dev = [
     "pytest-cov>=6.0.0",
     "pytest-asyncio>=0.25.0",
     "httpx2>=0.1.0",
+    "alembic>=1.13.0",
 ]
 
 [tool.uv]
@@ -42,3 +46,4 @@ typeCheckingMode = "strict"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --cov=lingxi --cov-fail-under=70"
+asyncio_mode = "auto"

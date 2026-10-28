@@ -12,6 +12,20 @@ on:
 jobs:
   gate:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: lingxi
+          POSTGRES_USER: lingxi
+          POSTGRES_PASSWORD: lingxi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lingxi -d lingxi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
 
@@ -77,6 +91,7 @@ jobs:
         working-directory: lingxi
         run: |
           uv sync --frozen
+          uv run alembic upgrade head
           uv run ruff check
           uv run ruff format --check
           uv run pyright
