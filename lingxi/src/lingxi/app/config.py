@@ -44,6 +44,7 @@ class ToolsConfig(BaseModel):
     shell_output_cap_chars: int
     web_fetch_output_cap_chars: int
     web_timeout_seconds: int
+    web_search_count: int
 
 
 class LlmConfig(BaseModel):

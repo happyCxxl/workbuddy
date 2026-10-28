@@ -21,6 +21,7 @@ from lingxi.app.main import create_app
 from lingxi.db.engine import dispose_engine, init_engine, session_scope
 from lingxi.db.models import AiSession
 from lingxi.db.repo.memory_repo import MemoryRepo
+from lingxi.db.repo.permission_repo import PermissionRepo
 from lingxi.domain.memory.embedding import Embedder
 
 
@@ -46,6 +47,8 @@ def _tool_call_for(content: str) -> tuple[str, str]:
         return "fs_write", json.dumps({"path": "out.txt", "content": "可乐写入"})
     if content.startswith("tool_delete"):
         return "fs_delete", json.dumps({"path": "hello.txt"})
+    if content.startswith("tool_web"):
+        return "web_search", json.dumps({"query": "可乐"})
     if content.startswith("tool_unknown"):
         return "no_such", "{}"
     return "fs_read", json.dumps({"path": "x"})
@@ -311,6 +314,21 @@ async def make_session(title: str) -> int:
         s.add(row)
         await s.commit()
         return row.id
+
+
+async def wipe_rules() -> None:
+    """清空权限规则表：保证用例可重复执行、规则不跨用例污染。"""
+    async with session_scope() as s:
+        repo = PermissionRepo(s)
+        for rule in await repo.list_all():
+            await repo.delete(rule.id)
+        await s.commit()
+
+
+@pytest.fixture
+async def clean_rules(engine_fixture: None) -> None:
+    """清空权限规则表。"""
+    await wipe_rules()
 
 
 @pytest.fixture

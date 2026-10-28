@@ -100,7 +100,10 @@ async def test_loop_read_tool_end_to_end(
 
 
 async def test_loop_write_asks_and_pauses(
-    fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None, tmp_path: Path
+    fake_server: tuple[Settings, list[dict[str, object]]],
+    engine_fixture: None,
+    clean_rules: None,
+    tmp_path: Path,
 ) -> None:
     """写工具触发询问：permission.required + 回合 pending_stop 停车，未落盘。"""
     if not await db_up():

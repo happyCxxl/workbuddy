@@ -19,6 +19,7 @@ from lingxi.domain.memory.hook import make_memory_hook
 from lingxi.domain.permission.gate import PermissionGate
 from lingxi.domain.tools.fs import register_fs_tools
 from lingxi.domain.tools.registry import ToolRegistry
+from lingxi.domain.tools.web import register_web_tools
 
 
 def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
@@ -30,6 +31,7 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
     effective_embedder = embedder or OpenAICompatibleEmbedder(settings.memory)
     tools = ToolRegistry()
     register_fs_tools(tools)
+    register_web_tools(tools, settings)
     permission = PermissionGate()
     hooks = HookRegistry()
     hooks.register("post_execute", make_memory_hook(gateway, effective_embedder))

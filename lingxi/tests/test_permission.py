@@ -48,21 +48,6 @@ async def add_rule(tool: str, action: str, level: str = "dir", work_dir: str = "
         return rule.id
 
 
-async def wipe_rules() -> None:
-    """清空规则表：保证用例可重复执行。"""
-    async with session_scope() as s:
-        repo = PermissionRepo(s)
-        for rule in await repo.list_all():
-            await repo.delete(rule.id)
-        await s.commit()
-
-
-@pytest.fixture
-async def clean_rules(engine_fixture: None) -> None:
-    """清空规则表。"""
-    await wipe_rules()
-
-
 async def test_preset_strict_asks_read(clean_rules: None) -> None:
     """严格档：只读工具也询问。"""
     if not await db_up():

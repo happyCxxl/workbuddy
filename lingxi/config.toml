@@ -17,6 +17,7 @@ shell_timeout_seconds = 120
 shell_output_cap_chars = 8000
 web_fetch_output_cap_chars = 200000
 web_timeout_seconds = 30
+web_search_count = 5
 
 [llm]
 provider = "deepseek"
