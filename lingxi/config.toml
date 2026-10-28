@@ -22,4 +22,5 @@ provider = "deepseek"
 base_url = "https://api.deepseek.com"
 chat_model = "deepseek-flash"
 reasoner_model = "deepseek-v4-pro"
+structured_max_retries = 3
 api_key = ""

@@ -16,6 +16,7 @@ class ErrorCode(Enum):
     NOT_FOUND = (60002, "资源不存在")
     UNAUTHORIZED = (60003, "未认证")
     FORBIDDEN = (60004, "无权限")
+    STRUCTURED_OUTPUT_INVALID = (60101, "结构化输出解析失败")
 
     def __init__(self, code: int, default_message: str) -> None:
         self.code = code

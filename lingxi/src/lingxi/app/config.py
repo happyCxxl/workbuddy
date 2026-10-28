@@ -52,6 +52,7 @@ class LlmConfig(BaseModel):
     base_url: str
     chat_model: str
     reasoner_model: str
+    structured_max_retries: int
     api_key: str
 
 
