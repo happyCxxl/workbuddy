@@ -30,6 +30,13 @@ dev = [
 [tool.uv]
 package = true
 
+# 依赖索引：默认走阿里云 PyPI 镜像（本机与 CI 同一口径；镜像文件与官方同源，锁文件仍做哈希校验）。
+# 换回官方源时删掉这三行并重跑 uv lock。
+[[tool.uv.index]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple"
+default = true
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"
