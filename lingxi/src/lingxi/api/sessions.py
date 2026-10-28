@@ -1,4 +1,4 @@
-"""会话接口：创建（默认权限档）、查询、权限档切换与事件重放。"""
+"""会话接口：创建（默认权限档）、查询、权限档切换、事件重放与后台任务。"""
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from lingxi.app.config import Settings
 from lingxi.contract import ApiError, ErrorCode, R
 from lingxi.core.log import read_events
+from lingxi.core.sub_sessions import SubSessionManager
 from lingxi.domain.permission.gate import PRESETS
 from lingxi.domain.session.service import (
     create_session,
@@ -14,6 +15,7 @@ from lingxi.domain.session.service import (
     session_usage,
     set_session_preset,
 )
+from lingxi.domain.sub_session.service import create_sub_session, get_sub_session, list_sub_sessions
 
 
 class CreateSessionRequest(BaseModel):
@@ -29,8 +31,32 @@ class PresetRequest(BaseModel):
     preset: str
 
 
-def make_router(settings: Settings) -> APIRouter:
-    """构造会话路由：闭包持有默认权限档配置。"""
+class SubSessionRequest(BaseModel):
+    """后台任务请求：任务必填，标题可选。"""
+
+    task: str
+    title: str = ""
+
+
+def _serialize_sub(row: object) -> dict[str, object]:
+    """后台任务序列化：ID 一律字符串。"""
+    from lingxi.db.models import SubSession
+
+    assert isinstance(row, SubSession)
+    return {
+        "id": str(row.id),
+        "parent_session_id": str(row.parent_session_id),
+        "child_session_id": str(row.child_session_id),
+        "title": row.title,
+        "task": row.task,
+        "status": row.status,
+        "result": row.result,
+        "created_at": row.created_at.isoformat(),
+    }
+
+
+def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
+    """构造会话路由：闭包持有默认权限档配置与后台任务管理器。"""
 
     router = APIRouter()
 
@@ -96,5 +122,26 @@ def make_router(settings: Settings) -> APIRouter:
         """会话用量：调用次数与 token 汇总（来自模型调用明细）。"""
         calls, prompt_tokens, completion_tokens = await session_usage(session_id)
         return R.ok({"calls": calls, "prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens}).to_dict()
+
+    @router.post("/sessions/{session_id}/subsessions")
+    async def create_sub(session_id: int, request: SubSessionRequest) -> dict[str, object]:
+        """提交后台任务：立即返回，结果通过列表与父会话事件查看。"""
+        if not request.task.strip():
+            raise ApiError(ErrorCode.INVALID_ARGUMENT, "任务不能为空")
+        row = await create_sub_session(session_id, request.title, request.task.strip())
+        manager.start(session_id, row.id, row.child_session_id, row.title, row.task)
+        return R.ok({"id": str(row.id), "child_session_id": str(row.child_session_id)}).to_dict()
+
+    @router.get("/sessions/{session_id}/subsessions")
+    async def list_subs(session_id: int) -> dict[str, object]:
+        """父会话的后台任务列表：新建在前。"""
+        rows = await list_sub_sessions(session_id)
+        return R.ok({"subsessions": [_serialize_sub(row) for row in rows]}).to_dict()
+
+    @router.get("/subsessions/{sub_session_id}")
+    async def sub_detail(sub_session_id: int) -> dict[str, object]:
+        """单个后台任务：状态与结果摘要。"""
+        row = await get_sub_session(sub_session_id)
+        return R.ok(_serialize_sub(row)).to_dict()
 
     return router

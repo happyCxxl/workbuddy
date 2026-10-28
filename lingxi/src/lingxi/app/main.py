@@ -13,10 +13,12 @@ from lingxi.app.lifespan import make_lifespan
 from lingxi.contract import REQUEST_ID, ApiError, R
 from lingxi.core.hooks import HookRegistry
 from lingxi.core.loop import TurnRunner
+from lingxi.core.sub_sessions import SubSessionManager
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.memory.embedding import Embedder, OpenAICompatibleEmbedder
 from lingxi.domain.memory.hook import make_memory_hook
 from lingxi.domain.permission.gate import PermissionGate
+from lingxi.domain.sub_session.service import mark_stale_running
 from lingxi.domain.tools.fs import register_fs_tools
 from lingxi.domain.tools.registry import ToolRegistry
 from lingxi.domain.tools.shell import register_shell_tools
@@ -27,7 +29,7 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
     """构建应用：中间件 + 路由 + 回合执行器装配；embedder 可注入（测试用假向量，缺省用配置的 embedding API）。"""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
-    app = FastAPI(title="灵犀", lifespan=make_lifespan(settings))
+    app = FastAPI(title="灵犀", lifespan=make_lifespan(settings, startup=mark_stale_running))
     gateway = LlmGateway(settings)
     effective_embedder = embedder or OpenAICompatibleEmbedder(settings.memory)
     tools = ToolRegistry()
@@ -38,6 +40,7 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
     hooks = HookRegistry()
     hooks.register("post_execute", make_memory_hook(gateway, effective_embedder))
     runner = TurnRunner(settings, gateway, hooks, effective_embedder, tools, permission)
+    sub_sessions = SubSessionManager(runner)
 
     @app.middleware("http")
     async def trace_request(request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]) -> JSONResponse:
@@ -55,7 +58,7 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
         return JSONResponse(status_code=200, content=R.fail(exc.error, str(exc)).to_dict())
 
     app.include_router(health.router)
-    app.include_router(sessions.make_router(settings))
+    app.include_router(sessions.make_router(settings, sub_sessions))
     app.include_router(memories.router)
     app.include_router(persona.router)
     app.include_router(permissions.router)

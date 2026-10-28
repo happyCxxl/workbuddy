@@ -7,6 +7,7 @@ import type {
   PersonaVersionItem,
   SessionEventItem,
   SessionUsage,
+  SubSessionItem,
 } from '@/types/assistant';
 
 /** 灵犀助手接口：会话、回合 SSE、记忆、人设与权限（HTTP 恒 200 + 信封，拦截器统一解包） */
@@ -60,6 +61,29 @@ export async function updateTurnStop(sessionId: string): Promise<void> {
 /** 会话用量：调用次数与 token 汇总 */
 export async function getSessionUsage(sessionId: string): Promise<SessionUsage> {
   const response = await http.get<SessionUsage>(`/sessions/${sessionId}/usage`);
+  return response.data;
+}
+
+/** 提交后台任务：立即返回，结果在后台会话里跑 */
+export async function addSubSession(sessionId: string, task: string, title = ''): Promise<string> {
+  const response = await http.post<{ id: string }>(`/sessions/${sessionId}/subsessions`, {
+    task,
+    title,
+  });
+  return response.data.id;
+}
+
+/** 父会话的后台任务列表（新建在前） */
+export async function getSubSessions(sessionId: string): Promise<SubSessionItem[]> {
+  const response = await http.get<{ subsessions: SubSessionItem[] }>(
+    `/sessions/${sessionId}/subsessions`,
+  );
+  return response.data.subsessions;
+}
+
+/** 单个后台任务详情 */
+export async function getSubSession(subSessionId: string): Promise<SubSessionItem> {
+  const response = await http.get<SubSessionItem>(`/subsessions/${subSessionId}`);
   return response.data;
 }
 

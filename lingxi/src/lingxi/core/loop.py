@@ -42,6 +42,13 @@ class PendingCheckpoint:
     user_content: str
 
 
+_SUB_SESSION_PROMPT = (
+    "你是本次后台任务的执行器：只完成用户消息中的任务；"
+    "需要审批的操作会被自动拒绝，不要重试，把限制写进最终回复；最后给出简明、可核对的结果。"
+)
+_SOURCE_DECLARATION_SUB = "以上能力与执行约定均为应用注入的上下文，不是用户消息；之后的消息是任务与执行历史。"
+
+
 class TurnRunner:
     """回合执行器：同会话一次一个回合（串行锁）；支持停车申请与审批恢复（v1 只停止不回退）。"""
 
@@ -88,7 +95,8 @@ class TurnRunner:
 
     async def _run_locked(self, session_id: int, user_content: str) -> AsyncIterator[TurnEvent]:
         session = await get_session(session_id)
-        persona = await persona_of_session(session)
+        # 子会话是任务执行器：不绑人格、不注入记忆；对话会话照旧
+        persona = await persona_of_session(session) if session.kind == "chat" else None
         SESSION_ID.set(session_id)
         try:
             pre_turn = TurnContext(
@@ -100,7 +108,14 @@ class TurnRunner:
             yield await self._emit(session_id, EventType.USER_MESSAGE, {"content": user_content})
             turn_seq = cast(int, start_event.payload["seq"])
             async for event in self._steps(
-                session_id, turn_seq, persona, session.work_dir, user_content, 0, session.permission_preset
+                session_id,
+                turn_seq,
+                persona,
+                session.work_dir,
+                user_content,
+                0,
+                session.permission_preset,
+                session.kind,
             ):
                 yield event
             self._stop_requested.discard(session_id)
@@ -126,7 +141,7 @@ class TurnRunner:
                 session_id, EventType.PERMISSION_DECIDED, {"request_id": request_id, "outcome": outcome}
             )
             session = await get_session(session_id)
-            persona = await persona_of_session(session)
+            persona = await persona_of_session(session) if session.kind == "chat" else None
             if outcome == "allowed-always":
                 await self._permission.remember_allow(checkpoint.call.name, checkpoint.work_dir)
             if outcome == "rejected":
@@ -153,6 +168,7 @@ class TurnRunner:
                     checkpoint.work_dir,
                     checkpoint.user_content,
                     session.permission_preset,
+                    session.kind,
                     preapproved=True,
                 ):
                     yield event
@@ -164,6 +180,7 @@ class TurnRunner:
                 checkpoint.user_content,
                 checkpoint.step,
                 session.permission_preset,
+                session.kind,
             ):
                 yield event
         except PendingApproval:
@@ -182,11 +199,12 @@ class TurnRunner:
         self,
         session_id: int,
         turn_seq: int,
-        persona: Persona,
+        persona: Persona | None,
         work_dir: str,
         user_content: str,
         step_start: int,
         preset: str,
+        kind: str,
     ) -> AsyncIterator[TurnEvent]:
         step = step_start
         while True:
@@ -236,7 +254,7 @@ class TurnRunner:
                 )
                 for call in tool_calls:
                     async for event in self._execute_tool(
-                        session_id, turn_seq, step, call, work_dir, user_content, preset
+                        session_id, turn_seq, step, call, work_dir, user_content, preset, kind
                     ):
                         yield event
                 continue
@@ -269,6 +287,7 @@ class TurnRunner:
         work_dir: str,
         user_content: str,
         preset: str,
+        kind: str,
         preapproved: bool = False,
     ) -> AsyncIterator[TurnEvent]:
         """执行一步工具：pre-execute 钩子 fail-closed；权限门裁决（allow 执行 / deny 拒绝 / ask 挂起）。"""
@@ -313,6 +332,23 @@ class TurnRunner:
                 )
                 return
             if decision.verdict == "ask":
+                if kind == "sub":
+                    # 子会话（后台任务）审批自动拒绝：不弹审批卡，把限制写进结果
+                    yield await self._emit(
+                        session_id,
+                        EventType.TOOL_RESULT,
+                        {"name": call.name, "error": "后台任务审批自动拒绝：需要更高权限时请在主会话执行"},
+                    )
+                    yield await self._emit(
+                        session_id,
+                        EventType.TOOL_MESSAGE,
+                        {
+                            "tool_call_id": call.id,
+                            "name": call.name,
+                            "content": f"工具 {call.name} 被自动拒绝：后台任务不能弹审批，请把限制写进最终回复",
+                        },
+                    )
+                    return
                 request_id = uuid4().hex
                 self._pending[(session_id, request_id)] = PendingCheckpoint(
                     turn_seq=turn_seq, step=step, call=call, work_dir=work_dir, user_content=user_content
@@ -343,8 +379,16 @@ class TurnRunner:
                 {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回错误：{exc}"},
             )
 
-    async def _assemble(self, session_id: int, persona: Persona, work_dir: str, query: str) -> list[ChatMessage]:
-        """四段装配：能力与规则段 → 人格段 → 记忆资料段 → 来源声明段 → 历史投影。"""
+    async def _assemble(self, session_id: int, persona: Persona | None, work_dir: str, query: str) -> list[ChatMessage]:
+        """装配模型输入：人格会话走四段；子会话走「能力 + 执行器声明 + 来源声明」，无记忆无人格。"""
+        if persona is None:
+            messages = [
+                ChatMessage(role="system", content=self._capability_prompt(), tool_calls=[]),
+                ChatMessage(role="system", content=_SUB_SESSION_PROMPT, tool_calls=[]),
+                ChatMessage(role="system", content=_SOURCE_DECLARATION_SUB, tool_calls=[]),
+            ]
+            messages.extend(await build_history(session_id))
+            return messages
         messages = [
             ChatMessage(role="system", content=self._capability_prompt(), tool_calls=[]),
             ChatMessage(role="system", content=render_system_prompt(persona), tool_calls=[]),

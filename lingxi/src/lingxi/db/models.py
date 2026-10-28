@@ -47,7 +47,27 @@ class AiSession(Base):
     persona_version_id: Mapped[int | None] = mapped_column(ForeignKey("persona_version.id"), nullable=True)
     permission_preset: Mapped[str] = mapped_column(String(16), nullable=False, server_default="standard")
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("ai_session.id"), nullable=True)
+    # chat = 用户对话；sub = 后台任务执行器（无记忆、无人格段）
+    kind: Mapped[str] = mapped_column(String(8), nullable=False, server_default="chat")
     status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class SubSession(Base):
+    """后台任务：父会话派生的一次性执行任务，记录任务、状态与结果摘要。"""
+
+    __tablename__ = "sub_session"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    parent_session_id: Mapped[int] = mapped_column(ForeignKey("ai_session.id"), index=True, nullable=False)
+    child_session_id: Mapped[int] = mapped_column(ForeignKey("ai_session.id"), unique=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
+    task: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="running")
+    result: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False

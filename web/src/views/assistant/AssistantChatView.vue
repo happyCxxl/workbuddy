@@ -50,6 +50,10 @@
             {{ usage.calls }} 次调用 · {{ totalTokens }} tokens
           </span>
           <el-button v-if="current" size="small" text @click="openTrajectory">轨迹</el-button>
+          <el-button v-if="current" size="small" text @click="openSubSessions">
+            后台任务
+            <span v-if="runningSubCount > 0" class="sub-count">{{ runningSubCount }}</span>
+          </el-button>
           <span v-if="running" class="chat-status">执行中 · 第 {{ stepLabel }} 步</span>
         </div>
 
@@ -140,6 +144,15 @@
             <el-button v-if="running" type="danger" plain @click="handleStop">■ 停止</el-button>
             <el-button
               v-else
+              size="small"
+              plain
+              :disabled="!current || !input.trim()"
+              @click="handleBackground"
+            >
+              转后台
+            </el-button>
+            <el-button
+              v-if="!running"
               type="primary"
               :disabled="!current || !input.trim()"
               @click="handleSend"
@@ -178,20 +191,42 @@
         </div>
       </div>
     </el-drawer>
+
+    <el-drawer v-model="subVisible" title="后台任务" size="46%">
+      <div class="subs">
+        <p class="subs-hint">
+          子会话只完成给定任务：干净上下文（无人格、无记忆），权限沿用本会话，审批自动拒绝。
+        </p>
+        <p v-if="subSessions.length === 0" class="trajectory-empty">还没有后台任务。</p>
+        <div v-for="item in subSessions" :key="item.id" class="sub-item">
+          <div class="sub-head">
+            <span class="sub-title">{{ item.title || '未命名任务' }}</span>
+            <el-tag :type="subTagType(item.status)" effect="plain" size="small">
+              {{ subStatusLabel(item.status) }}
+            </el-tag>
+            <span class="sub-time">{{ formatTime(item.created_at) }}</span>
+          </div>
+          <p class="sub-task">{{ item.task }}</p>
+          <pre v-if="item.result" class="sub-result">{{ item.result }}</pre>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 import {
   addAssistantSession,
+  addSubSession,
   addTurnResume,
   addTurnStream,
   getAssistantSessions,
   getSessionEvents,
   getSessionUsage,
+  getSubSessions,
   updateSessionPermission,
   updateTurnStop,
 } from '@/api/assistant';
@@ -200,6 +235,7 @@ import type {
   PermissionPreset,
   SessionEventItem,
   SessionUsage,
+  SubSessionItem,
 } from '@/types/assistant';
 import { formatDateTime } from '@/utils/date';
 
@@ -242,12 +278,39 @@ const newTitle = ref('');
 const usage = ref<SessionUsage | null>(null);
 const trajectoryVisible = ref(false);
 const trajectoryEvents = ref<SessionEventItem[]>([]);
+const subVisible = ref(false);
+const subSessions = ref<SubSessionItem[]>([]);
+let subTimer: number | null = null;
+
+/** 运行中的后台任务数（抽屉按钮角标） */
+const runningSubCount = computed(
+  () => subSessions.value.filter((item) => item.status === 'running').length,
+);
 
 /** 会话总 token：输入 + 输出 */
 const totalTokens = computed(
   () => (usage.value?.prompt_tokens ?? 0) + (usage.value?.completion_tokens ?? 0),
 );
 let abortController: AbortController | null = null;
+
+/** 后台任务状态中文名 */
+function subStatusLabel(status: string): string {
+  if (status === 'running') {
+    return '运行中';
+  }
+  if (status === 'completed') {
+    return '已完成';
+  }
+  return '失败';
+}
+
+/** 后台任务状态标签色 */
+function subTagType(status: string): 'success' | 'danger' | 'info' {
+  if (status === 'running') {
+    return 'info';
+  }
+  return status === 'completed' ? 'success' : 'danger';
+}
 
 /** 档位中文名 */
 function presetLabel(preset: string): string {
@@ -283,6 +346,10 @@ async function selectSession(item: AssistantSession): Promise<void> {
   trajectoryEvents.value = events;
   applyReplay(events);
   await loadUsage();
+  await loadSubSessions();
+  if (subVisible.value) {
+    startSubPolling();
+  }
   await scrollToBottom();
 }
 
@@ -450,6 +517,58 @@ async function handleStop(): Promise<void> {
   await loadUsage();
 }
 
+/** 提交后台任务：当前输入内容交给子会话执行（干净上下文） */
+async function handleBackground(): Promise<void> {
+  if (!current.value || !input.value.trim() || running.value) {
+    return;
+  }
+  const task = input.value.trim();
+  input.value = '';
+  await addSubSession(currentId.value, task);
+  ElMessage.success('已转后台执行，结果可在「后台任务」查看');
+  await loadSubSessions();
+  subVisible.value = true;
+  startSubPolling();
+}
+
+/** 打开后台任务抽屉：拉列表并开始轮询 */
+async function openSubSessions(): Promise<void> {
+  await loadSubSessions();
+  subVisible.value = true;
+  startSubPolling();
+}
+
+/** 载入后台任务列表 */
+async function loadSubSessions(): Promise<void> {
+  if (!currentId.value) {
+    return;
+  }
+  subSessions.value = await getSubSessions(currentId.value);
+}
+
+/** 轮询：抽屉打开且有运行中任务时每 3 秒刷新 */
+function startSubPolling(): void {
+  stopSubPolling();
+  subTimer = window.setInterval(() => {
+    if (!subVisible.value) {
+      stopSubPolling();
+      return;
+    }
+    void loadSubSessions();
+    if (runningSubCount.value === 0) {
+      stopSubPolling();
+    }
+  }, 3000);
+}
+
+/** 停止轮询 */
+function stopSubPolling(): void {
+  if (subTimer !== null) {
+    window.clearInterval(subTimer);
+    subTimer = null;
+  }
+}
+
 /** 裁决后恢复重放 */
 function decidePermission(
   item: ChatMessage,
@@ -498,12 +617,81 @@ async function handleCreate(): Promise<void> {
 
 onMounted(async () => {
   await loadSessions();
+  if (currentId.value) {
+    await loadSubSessions();
+  }
+});
+
+onUnmounted(() => {
+  stopSubPolling();
 });
 </script>
 
 <style scoped lang="css">
 .assistant-page {
   gap: 14px;
+}
+
+.sub-count {
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--kb-primary);
+  color: #06231a;
+  font-size: 10px;
+}
+
+.subs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subs-hint {
+  margin: 0;
+  color: var(--kb-text-3);
+  font-size: 12px;
+}
+
+.sub-item {
+  padding: 10px 12px;
+  border: 1px solid var(--kb-line);
+  border-radius: 10px;
+  background: var(--kb-surface);
+}
+
+.sub-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sub-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sub-time {
+  margin-left: auto;
+  color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.sub-task {
+  margin: 6px 0;
+  color: var(--kb-text-2);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.sub-result {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .chat-wrap {

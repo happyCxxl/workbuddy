@@ -1,7 +1,7 @@
 """应用生命周期：启动与关闭钩子，随实现顺序逐步接入组件。"""
 
 import logging
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,14 +12,18 @@ from lingxi.db.engine import dispose_engine, init_engine
 logger = logging.getLogger(__name__)
 
 
-def make_lifespan(settings: Settings) -> Callable[[FastAPI], AbstractAsyncContextManager[None]]:
-    """构造生命周期钩子：闭包持有配置，不依赖框架实例属性。"""
+def make_lifespan(
+    settings: Settings, startup: Callable[[], Awaitable[object]] | None = None
+) -> Callable[[FastAPI], AbstractAsyncContextManager[None]]:
+    """构造生命周期钩子：闭包持有配置与可选启动清理（不依赖框架实例属性）。"""
 
     # noinspection PyUnusedLocal —— 签名由框架固定（starlette 会传 app 实例），当前逻辑不使用
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
-        """启动：初始化数据库引擎（连接懒加载，不阻塞启动）；关闭：释放引擎。"""
+        """启动：初始化数据库引擎并跑启动清理；关闭：释放引擎。"""
         init_engine(settings.database.url)
+        if startup is not None:
+            await startup()
         logger.info("应用启动：数据库引擎已初始化")
         try:
             yield

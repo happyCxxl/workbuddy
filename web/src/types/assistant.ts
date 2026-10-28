@@ -56,3 +56,15 @@ export interface SessionUsage {
   prompt_tokens: number;
   completion_tokens: number;
 }
+
+// 后台任务：子会话（干净上下文的任务执行器）
+export interface SubSessionItem {
+  id: string;
+  parent_session_id: string;
+  child_session_id: string;
+  title: string;
+  task: string;
+  status: string;
+  result: string | null;
+  created_at: string;
+}
