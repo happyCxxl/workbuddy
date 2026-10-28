@@ -68,6 +68,8 @@ class PermissionGate:
             return Decision(verdict=best.action, reason=f"规则命中（{best.action}）")
         if tool.risk == RISK_HIGH:
             return Decision(verdict="ask", reason="高危工具恒询问")
+        if tool.high_risk_args is not None and tool.high_risk_args(args):
+            return Decision(verdict="ask", reason="高危命令恒询问")
         path = _path_of(tool, args)
         if path is not None:
             if _escapes(work_dir, path):

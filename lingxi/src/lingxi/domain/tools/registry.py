@@ -30,6 +30,8 @@ class ToolDefinition:
     risk: str
     handler: Handler
     path_fields: tuple[str, ...] = ()
+    # 参数级高危判定：命中即恒询问（例如 shell 的危险命令），优先于会话预设
+    high_risk_args: Callable[[dict[str, object]], bool] | None = None
 
 
 class ToolRegistry:
