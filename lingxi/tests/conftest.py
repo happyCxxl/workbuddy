@@ -9,8 +9,11 @@ import pytest
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
+from sqlalchemy import text
 
 from lingxi.app.config import Settings
+from lingxi.db.engine import dispose_engine, init_engine, session_scope
+from lingxi.db.models import AiSession
 
 VALID_JSON = '{"name": "可乐", "score": 1}'
 INVALID_JSON = "not-json"
@@ -200,3 +203,30 @@ async def fake_server() -> AsyncIterator[tuple[Settings, list[dict[str, object]]
     finally:
         server.should_exit = True
         thread.join(timeout=5)
+
+
+@pytest.fixture
+async def engine_fixture() -> None:
+    """测试期引擎：初始化并随用例结束释放。"""
+    init_engine(Settings(**{}).database.url)
+    yield
+    await dispose_engine()
+
+
+async def db_up() -> bool:
+    """数据库可达性探测：不可达时用例跳过并提示起库。"""
+    try:
+        async with session_scope() as s:
+            await s.execute(text("select 1"))
+        return True
+    except Exception:
+        return False
+
+
+async def make_session(title: str) -> int:
+    """造一个会话并返回主键。"""
+    async with session_scope() as s:
+        row = AiSession(work_dir="D:\\tmp", title=title)
+        s.add(row)
+        await s.commit()
+        return row.id

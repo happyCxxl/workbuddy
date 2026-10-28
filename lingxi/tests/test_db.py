@@ -1,32 +1,14 @@
 """数据库接入：六表存在性与基本读写（依赖 docker compose 起 postgres）。"""
 
 import pytest
-from sqlalchemy import inspect, text
+from conftest import db_up
+from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
 
-from lingxi.app.config import Settings
-from lingxi.db.engine import dispose_engine, init_engine, session_scope
+from lingxi.db.engine import session_scope
 from lingxi.db.models import AiSession, SessionEvent
 
 TABLE_NAMES = {"ai_session", "memory", "model_call", "permission_rule", "persona_version", "session_event"}
-
-
-@pytest.fixture
-async def engine_fixture() -> None:
-    """测试期引擎：初始化并随用例结束释放。"""
-    init_engine(Settings(**{}).database.url)
-    yield
-    await dispose_engine()
-
-
-async def db_up() -> bool:
-    """数据库可达性探测：不可达时用例跳过并提示起库。"""
-    try:
-        async with session_scope() as s:
-            await s.execute(text("select 1"))
-        return True
-    except Exception:
-        return False
 
 
 async def test_six_tables_exist(engine_fixture: None) -> None:

@@ -3,12 +3,13 @@
 import uuid
 
 import pytest
+from conftest import db_up
 from pydantic import BaseModel
-from sqlalchemy import select, text
+from sqlalchemy import select
 
 from lingxi.app.config import Settings
 from lingxi.contract import REQUEST_ID, ApiError
-from lingxi.db.engine import dispose_engine, init_engine, session_scope
+from lingxi.db.engine import session_scope
 from lingxi.db.models import ModelCall
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.ports import ChatMessage, ChatRequest
@@ -19,14 +20,6 @@ class Sample(BaseModel):
 
     name: str
     score: int
-
-
-@pytest.fixture
-async def engine_fixture() -> None:
-    """测试期引擎：明细落库用例依赖。"""
-    init_engine(Settings(**{}).database.url)
-    yield
-    await dispose_engine()
 
 
 async def collect_stream(gateway: LlmGateway, content: str) -> list[object]:
@@ -70,6 +63,8 @@ async def test_structured_degrades_to_flash(fake_server: tuple[Settings, list[di
 
 async def test_model_call_recorded(fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None) -> None:
     """调用明细落库：成功记用量，失败记错误码。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
     rid = f"gw-record-{uuid.uuid4().hex[:8]}"
     REQUEST_ID.set(rid)
@@ -78,7 +73,6 @@ async def test_model_call_recorded(fake_server: tuple[Settings, list[dict[str, o
     with pytest.raises(ApiError):
         await collect_stream(gateway, "fail_both")
     async with session_scope() as s:
-        await s.execute(text("select 1"))
         rows = list((await s.scalars(select(ModelCall).where(ModelCall.request_id == rid))).all())
     ok_rows = [r for r in rows if r.error_code is None]
     err_rows = [r for r in rows if r.error_code is not None]

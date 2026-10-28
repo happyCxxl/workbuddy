@@ -1,41 +1,11 @@
 """事件日志：追加单调 seq、按 seq 读、重放与失败语义。"""
 
 import pytest
-from sqlalchemy import text
+from conftest import db_up, make_session
 from sqlalchemy.exc import IntegrityError
 
-from lingxi.app.config import Settings
 from lingxi.core import log as log_module
 from lingxi.core.log import EventType, append_event, read_events, replay_events
-from lingxi.db.engine import dispose_engine, init_engine, session_scope
-from lingxi.db.models import AiSession
-
-
-@pytest.fixture
-async def engine_fixture() -> None:
-    """测试期引擎：初始化并随用例结束释放。"""
-    init_engine(Settings(**{}).database.url)
-    yield
-    await dispose_engine()
-
-
-async def db_up() -> bool:
-    """数据库可达性探测：不可达时用例跳过。"""
-    try:
-        async with session_scope() as s:
-            await s.execute(text("select 1"))
-        return True
-    except Exception:
-        return False
-
-
-async def make_session(title: str) -> int:
-    """造一个会话并返回主键。"""
-    async with session_scope() as s:
-        row = AiSession(work_dir="D:\\tmp", title=title)
-        s.add(row)
-        await s.commit()
-        return row.id
 
 
 async def test_append_assigns_monotonic_seq(engine_fixture: None) -> None:
