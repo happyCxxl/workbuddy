@@ -49,3 +49,10 @@ export interface PersonaVersionItem {
   created_at: string;
   fields: PersonaFields;
 }
+
+// 会话用量：调用次数与 token 汇总
+export interface SessionUsage {
+  calls: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+}

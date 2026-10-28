@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator
 from openai import APIStatusError
 
 from lingxi.app.config import Settings
-from lingxi.contract import REQUEST_ID, ApiError, ErrorCode
+from lingxi.contract import REQUEST_ID, SESSION_ID, ApiError, ErrorCode
 from lingxi.db.engine import session_scope
 from lingxi.db.models import ModelCall
 from lingxi.db.repo.model_call_repo import ModelCallRepo
@@ -120,6 +120,7 @@ class LlmGateway:
                 await ModelCallRepo(s).insert(
                     ModelCall(
                         request_id=REQUEST_ID.get(),
+                        session_id=SESSION_ID.get(),
                         model=model,
                         prompt_tokens=usage.prompt_tokens if usage else None,
                         completion_tokens=usage.completion_tokens if usage else None,

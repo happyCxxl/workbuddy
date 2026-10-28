@@ -7,7 +7,13 @@ from lingxi.app.config import Settings
 from lingxi.contract import ApiError, ErrorCode, R
 from lingxi.core.log import read_events
 from lingxi.domain.permission.gate import PRESETS
-from lingxi.domain.session.service import create_session, get_session, list_sessions, set_session_preset
+from lingxi.domain.session.service import (
+    create_session,
+    get_session,
+    list_sessions,
+    session_usage,
+    set_session_preset,
+)
 
 
 class CreateSessionRequest(BaseModel):
@@ -84,5 +90,11 @@ def make_router(settings: Settings) -> APIRouter:
         """事件重放：after_seq 之后的事件（界面重建 = after_seq 0；断线补齐 = 客户端游标）。"""
         rows = await read_events(session_id, after_seq, limit)
         return R.ok({"events": [{"seq": e.seq, "type": e.type, "payload": e.payload} for e in rows]}).to_dict()
+
+    @router.get("/sessions/{session_id}/usage")
+    async def usage(session_id: int) -> dict[str, object]:
+        """会话用量：调用次数与 token 汇总（来自模型调用明细）。"""
+        calls, prompt_tokens, completion_tokens = await session_usage(session_id)
+        return R.ok({"calls": calls, "prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens}).to_dict()
 
     return router

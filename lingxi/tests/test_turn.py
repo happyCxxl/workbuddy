@@ -36,10 +36,10 @@ async def collect(runner: TurnRunner, session_id: int, content: str) -> list[Tur
 async def test_full_turn_events_and_projection(
     fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
 ) -> None:
-    """整轮事件序列完整，历史投影还原对话。"""
+    """整轮事件序列完整，历史投影还原对话；装配含能力段与来源声明段。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
-    settings, _ = fake_server
+    settings, captured = fake_server
     runner = make_runner(settings, LlmGateway(settings), HookRegistry())
     sid = await create_session("D:\\tmp", "回合测试")
     yielded = await collect(runner, sid, "hi")
@@ -57,6 +57,9 @@ async def test_full_turn_events_and_projection(
     history = await build_history(sid)
     assert [m.role for m in history] == ["user", "assistant"]
     assert history[1].content == "你好"
+    sent_messages = [m for c in captured if isinstance(c.get("messages"), list) for m in c["messages"]]
+    assert any("【能力与规则】" in str(m.get("content")) for m in sent_messages)
+    assert any("应用注入的上下文" in str(m.get("content")) for m in sent_messages)
 
 
 async def test_hook_fail_closed(fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None) -> None:

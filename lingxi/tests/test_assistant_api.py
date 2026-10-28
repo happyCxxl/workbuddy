@@ -71,6 +71,21 @@ async def test_turn_stop_api(client: AsyncClient, engine_fixture: None) -> None:
     assert resp["code"] == 0
 
 
+async def test_session_usage_after_turn(client: AsyncClient, engine_fixture: None) -> None:
+    """用量汇总：回合完成后调用明细归集到会话（次数与 token）。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    created = (await client.post("/sessions", json={"work_dir": "D:\\tmp", "title": "用量"})).json()
+    sid = int(created["data"]["id"])
+    async with client.stream("POST", f"/sessions/{sid}/turns", json={"content": "hi"}) as stream:
+        async for _line in stream.aiter_lines():
+            pass
+    usage = (await client.get(f"/sessions/{sid}/usage")).json()["data"]
+    assert usage["calls"] >= 1
+    assert usage["prompt_tokens"] >= 9
+    assert usage["completion_tokens"] >= 4
+
+
 def test_persona_fields_model_shape() -> None:
     """八字段模型可直接由接口入参构造。"""
     fields = PersonaFields(**FIELDS)

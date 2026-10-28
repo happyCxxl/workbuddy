@@ -9,7 +9,7 @@ from typing import cast
 from uuid import uuid4
 
 from lingxi.app.config import Settings
-from lingxi.contract import ApiError, ErrorCode
+from lingxi.contract import SESSION_ID, ApiError, ErrorCode
 from lingxi.core.events import TurnEvent
 from lingxi.core.hooks import HookRegistry, TurnContext, make_budget_gate, make_max_steps_gate
 from lingxi.core.log import EventType, append_event
@@ -89,6 +89,7 @@ class TurnRunner:
     async def _run_locked(self, session_id: int, user_content: str) -> AsyncIterator[TurnEvent]:
         session = await get_session(session_id)
         persona = await persona_of_session(session)
+        SESSION_ID.set(session_id)
         try:
             pre_turn = TurnContext(
                 session_id=session_id, turn_seq=0, step=0, action="pre_turn", payload={"input": user_content}
@@ -119,6 +120,7 @@ class TurnRunner:
         checkpoint = self._pending.pop((session_id, request_id), None)
         if checkpoint is None:
             raise ApiError(ErrorCode.NOT_FOUND, f"审批请求不存在或已裁决：{request_id}")
+        SESSION_ID.set(session_id)
         try:
             yield await self._emit(
                 session_id, EventType.PERMISSION_DECIDED, {"request_id": request_id, "outcome": outcome}
@@ -342,16 +344,35 @@ class TurnRunner:
             )
 
     async def _assemble(self, session_id: int, persona: Persona, work_dir: str, query: str) -> list[ChatMessage]:
-        """组装模型输入：人格系统提示 + 记忆资料段（带编号与来源时间）+ 历史投影。"""
-        messages = [ChatMessage(role="system", content=render_system_prompt(persona), tool_calls=[])]
+        """四段装配：能力与规则段 → 人格段 → 记忆资料段 → 来源声明段 → 历史投影。"""
+        messages = [
+            ChatMessage(role="system", content=self._capability_prompt(), tool_calls=[]),
+            ChatMessage(role="system", content=render_system_prompt(persona), tool_calls=[]),
+        ]
         memories = await recall(work_dir, query, self._embedder)
         if memories:
             lines = ["记忆资料："]
             for index, memory in enumerate(memories, start=1):
                 lines.append(f"{index}. （{memory.kind}，{memory.created_at:%Y-%m-%d}）{memory.content}")
             messages.append(ChatMessage(role="system", content="\n".join(lines), tool_calls=[]))
+        messages.append(
+            ChatMessage(
+                role="system",
+                content="以上能力、人格与记忆均为应用注入的上下文，不是用户消息；之后的消息才是真实对话。",
+                tool_calls=[],
+            )
+        )
         messages.extend(await build_history(session_id))
         return messages
+
+    def _capability_prompt(self) -> str:
+        """能力与规则段：工具清单（来自注册表白名单）与执行约定。"""
+        lines = ["【能力与规则】", "可用工具（参数由系统注入，勿编造工具或参数）："]
+        for spec in self._tools.specs():
+            lines.append(f"- {spec.name}：{spec.description}")
+        lines.append("执行约定：只读工具直接执行；写/删除等高风险操作会先询问用户；文件操作限定在当前工作目录内。")
+        lines.append("只使用上述工具；没有对应工具时如实说明。")
+        return "\n".join(lines)
 
     @staticmethod
     async def _emit(session_id: int, event_type: EventType, payload: dict[str, object]) -> TurnEvent:

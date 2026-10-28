@@ -6,6 +6,9 @@ from enum import Enum
 # 请求追踪 ID：由中间件写入，贯穿日志与模型调用明细（PY-DTO-009）
 REQUEST_ID: ContextVar[str] = ContextVar("request_id", default="-")
 
+# 当前回合所属会话：由回合执行器写入，模型调用明细据此归集到会话（用量统计用）
+SESSION_ID: ContextVar[int | None] = ContextVar("session_id", default=None)
+
 
 class ErrorCode(Enum):
     """错误码集中登记：AI 域 60xxx 段；新增先登记后使用（PY-ERR-004）。"""

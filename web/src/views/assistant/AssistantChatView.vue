@@ -46,6 +46,10 @@
           <span class="chat-title">{{ current?.title || '选择或新建一个会话' }}</span>
           <span v-if="current" class="chat-dir">{{ current.work_dir }}</span>
           <span class="page-spacer"></span>
+          <span v-if="usage" class="chat-usage">
+            {{ usage.calls }} 次调用 · {{ totalTokens }} tokens
+          </span>
+          <el-button v-if="current" size="small" text @click="openTrajectory">轨迹</el-button>
           <span v-if="running" class="chat-status">执行中 · 第 {{ stepLabel }} 步</span>
         </div>
 
@@ -163,12 +167,23 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <el-drawer v-model="trajectoryVisible" title="会话轨迹" size="46%">
+      <div class="trajectory">
+        <p v-if="trajectoryEvents.length === 0" class="trajectory-empty">还没有事件。</p>
+        <div v-for="event in trajectoryEvents" :key="event.seq" class="trajectory-item">
+          <span class="trajectory-seq">#{{ event.seq }}</span>
+          <span class="trajectory-type">{{ event.type }}</span>
+          <pre class="trajectory-payload">{{ shortPayload(event) }}</pre>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 
 import {
   addAssistantSession,
@@ -176,10 +191,16 @@ import {
   addTurnStream,
   getAssistantSessions,
   getSessionEvents,
+  getSessionUsage,
   updateSessionPermission,
   updateTurnStop,
 } from '@/api/assistant';
-import type { AssistantSession, PermissionPreset, SessionEventItem } from '@/types/assistant';
+import type {
+  AssistantSession,
+  PermissionPreset,
+  SessionEventItem,
+  SessionUsage,
+} from '@/types/assistant';
 import { formatDateTime } from '@/utils/date';
 
 /** 工具调用行：名称、参数与结果 */
@@ -218,6 +239,14 @@ const messageBox = ref<HTMLElement | null>(null);
 const newDialogVisible = ref(false);
 const newWorkDir = ref('');
 const newTitle = ref('');
+const usage = ref<SessionUsage | null>(null);
+const trajectoryVisible = ref(false);
+const trajectoryEvents = ref<SessionEventItem[]>([]);
+
+/** 会话总 token：输入 + 输出 */
+const totalTokens = computed(
+  () => (usage.value?.prompt_tokens ?? 0) + (usage.value?.completion_tokens ?? 0),
+);
 let abortController: AbortController | null = null;
 
 /** 档位中文名 */
@@ -251,8 +280,33 @@ async function selectSession(item: AssistantSession): Promise<void> {
   current.value = item;
   messages.value = [];
   const events = await getSessionEvents(item.id);
+  trajectoryEvents.value = events;
   applyReplay(events);
+  await loadUsage();
   await scrollToBottom();
+}
+
+/** 刷新会话用量 */
+async function loadUsage(): Promise<void> {
+  if (!currentId.value) {
+    return;
+  }
+  usage.value = await getSessionUsage(currentId.value);
+}
+
+/** 打开轨迹抽屉：按最新事件刷新 */
+async function openTrajectory(): Promise<void> {
+  if (!currentId.value) {
+    return;
+  }
+  trajectoryEvents.value = await getSessionEvents(currentId.value);
+  trajectoryVisible.value = true;
+}
+
+/** 轨迹载荷剪裁：单行 200 字符 */
+function shortPayload(event: SessionEventItem): string {
+  const text = JSON.stringify(event.payload);
+  return text.length > 200 ? `${text.slice(0, 200)}…` : text;
 }
 
 /** 从 assistant/message 载荷里还原工具调用行 */
@@ -378,6 +432,7 @@ function handleSend(): void {
     onEvent: applyEvent,
     onDone: () => {
       running.value = false;
+      void loadUsage();
     },
     onError: (message) => {
       running.value = false;
@@ -392,6 +447,7 @@ async function handleStop(): Promise<void> {
   abortController = null;
   running.value = false;
   await updateTurnStop(currentId.value);
+  await loadUsage();
 }
 
 /** 裁决后恢复重放 */
@@ -409,6 +465,7 @@ function decidePermission(
     onEvent: applyEvent,
     onDone: () => {
       running.value = false;
+      void loadUsage();
     },
     onError: (message) => {
       running.value = false;
@@ -559,6 +616,61 @@ onMounted(async () => {
 .chat-status {
   color: var(--kb-text-3);
   font-size: 12px;
+}
+
+.chat-usage {
+  padding: 2px 8px;
+  border: 1px solid var(--kb-line);
+  border-radius: 999px;
+  background: var(--kb-surface);
+  color: var(--kb-text-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+
+.trajectory {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trajectory-empty {
+  color: var(--kb-text-3);
+  font-size: 13px;
+}
+
+.trajectory-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border: 1px solid var(--kb-line);
+  border-radius: 8px;
+  background: var(--kb-surface);
+}
+
+.trajectory-seq {
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+
+.trajectory-type {
+  color: var(--kb-primary-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+}
+
+.trajectory-payload {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .messages {

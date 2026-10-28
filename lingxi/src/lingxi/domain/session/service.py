@@ -6,6 +6,7 @@ from lingxi.contract import ApiError, ErrorCode
 from lingxi.core.log import EventType, append_event, replay_events
 from lingxi.db.engine import session_scope
 from lingxi.db.models import AiSession, PersonaVersion
+from lingxi.db.repo.model_call_repo import ModelCallRepo
 from lingxi.db.repo.persona_repo import PersonaRepo
 from lingxi.db.repo.session_repo import SessionRepo
 from lingxi.domain.persona.models import Persona, PersonaFields
@@ -48,6 +49,12 @@ async def list_sessions(limit: int = 50) -> list[AiSession]:
     """最近会话列表：按更新时间倒序。"""
     async with session_scope() as s:
         return await SessionRepo(s).list_recent(limit)
+
+
+async def session_usage(session_id: int) -> tuple[int, int, int]:
+    """会话用量：调用次数、输入 token、输出 token。"""
+    async with session_scope() as s:
+        return await ModelCallRepo(s).usage_summary(session_id)
 
 
 async def persona_of_session(session: AiSession) -> Persona:

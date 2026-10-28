@@ -6,6 +6,7 @@ import type {
   PersonaFields,
   PersonaVersionItem,
   SessionEventItem,
+  SessionUsage,
 } from '@/types/assistant';
 
 /** 灵犀助手接口：会话、回合 SSE、记忆、人设与权限（HTTP 恒 200 + 信封，拦截器统一解包） */
@@ -54,6 +55,12 @@ export async function getSessionEvents(
 /** 申请停止：当前回合在下一步或流式块边界停止 */
 export async function updateTurnStop(sessionId: string): Promise<void> {
   await http.post(`/sessions/${sessionId}/turns/stop`);
+}
+
+/** 会话用量：调用次数与 token 汇总 */
+export async function getSessionUsage(sessionId: string): Promise<SessionUsage> {
+  const response = await http.get<SessionUsage>(`/sessions/${sessionId}/usage`);
+  return response.data;
 }
 
 /** 记忆列表：传 workDir 查可见范围（全局 + 该目录） */
