@@ -5,6 +5,7 @@ from conftest import db_up
 
 from lingxi.app.config import Settings
 from lingxi.contract import ApiError, ErrorCode
+from lingxi.core.events import TurnEvent
 from lingxi.core.hooks import HookRegistry, TurnContext
 from lingxi.core.log import EventType, append_event, replay_events
 from lingxi.core.loop import TurnRunner
@@ -12,9 +13,9 @@ from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.session.service import build_history, create_session
 
 
-async def collect(runner: TurnRunner, session_id: int, content: str) -> list[object]:
-    """跑一个回合并收集全部 chunk。"""
-    return [chunk async for chunk in runner.run(session_id, content)]
+async def collect(runner: TurnRunner, session_id: int, content: str) -> list[TurnEvent]:
+    """跑一个回合并收集全部事件。"""
+    return [event async for event in runner.run(session_id, content)]
 
 
 async def test_full_turn_events_and_projection(
@@ -26,8 +27,11 @@ async def test_full_turn_events_and_projection(
     settings, _ = fake_server
     runner = TurnRunner(settings, LlmGateway(settings), HookRegistry())
     sid = await create_session("D:\\tmp", "回合测试")
-    chunks = await collect(runner, sid, "hi")
-    assert chunks[-1].kind == "usage"
+    yielded = await collect(runner, sid, "hi")
+    yield_types = [e.type for e in yielded]
+    assert yield_types[0] == "turn/start"
+    assert yield_types[-1] == "turn.end"
+    assert yield_types.count("text.delta") == 2
     events = await replay_events(sid)
     types = [e.type for e in events]
     assert types[0] == "turn/start"

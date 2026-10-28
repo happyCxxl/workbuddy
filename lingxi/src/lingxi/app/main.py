@@ -7,17 +7,21 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from lingxi.api import health
+from lingxi.api import health, sessions, turns
 from lingxi.app.config import Settings
 from lingxi.app.lifespan import make_lifespan
 from lingxi.contract import REQUEST_ID, ApiError, R
+from lingxi.core.hooks import HookRegistry
+from lingxi.core.loop import TurnRunner
+from lingxi.domain.llm.gateway import LlmGateway
 
 
 def create_app(settings: Settings) -> FastAPI:
-    """构建应用：中间件 + 路由；业务组件随实现顺序逐步接入。"""
+    """构建应用：中间件 + 路由 + 回合执行器装配。"""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
     app = FastAPI(title="灵犀", lifespan=make_lifespan(settings))
+    runner = TurnRunner(settings, LlmGateway(settings), HookRegistry())
 
     @app.middleware("http")
     async def trace_request(request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]) -> JSONResponse:
@@ -35,4 +39,6 @@ def create_app(settings: Settings) -> FastAPI:
         return JSONResponse(status_code=200, content=R.fail(exc.error, str(exc)).to_dict())
 
     app.include_router(health.router)
+    app.include_router(sessions.router)
+    app.include_router(turns.make_router(runner))
     return app
