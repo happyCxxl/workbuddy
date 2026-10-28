@@ -126,6 +126,7 @@ def register_fs_tools(registry: ToolRegistry) -> None:
             parameters=ReadArgs.model_json_schema(),
             risk=RISK_READ,
             handler=_fs_read,
+            path_fields=("path",),
         )
     )
     registry.register(
@@ -135,6 +136,7 @@ def register_fs_tools(registry: ToolRegistry) -> None:
             parameters=ListArgs.model_json_schema(),
             risk=RISK_READ,
             handler=_fs_list,
+            path_fields=("path",),
         )
     )
     registry.register(
@@ -144,6 +146,7 @@ def register_fs_tools(registry: ToolRegistry) -> None:
             parameters=SearchArgs.model_json_schema(),
             risk=RISK_READ,
             handler=_fs_search,
+            path_fields=("path",),
         )
     )
     registry.register(
@@ -153,6 +156,7 @@ def register_fs_tools(registry: ToolRegistry) -> None:
             parameters=WriteArgs.model_json_schema(),
             risk=RISK_WRITE,
             handler=_fs_write,
+            path_fields=("path",),
         )
     )
     registry.register(
@@ -162,5 +166,6 @@ def register_fs_tools(registry: ToolRegistry) -> None:
             parameters=DeleteArgs.model_json_schema(),
             risk=RISK_HIGH,
             handler=_fs_delete,
+            path_fields=("path",),
         )
     )

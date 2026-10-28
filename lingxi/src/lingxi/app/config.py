@@ -69,6 +69,12 @@ class MemoryConfig(BaseModel):
     embedding_api_key: str
 
 
+class PermissionConfig(BaseModel):
+    """权限预设档位。"""
+
+    preset: str
+
+
 def _read_toml(path: str) -> dict[str, object]:
     """读取 TOML 配置；文件不存在返回空。"""
     if not os.path.exists(path):
@@ -107,6 +113,7 @@ class Settings(BaseSettings):
     tools: ToolsConfig
     llm: LlmConfig
     memory: MemoryConfig
+    permission: PermissionConfig
 
     @classmethod
     def settings_customise_sources(

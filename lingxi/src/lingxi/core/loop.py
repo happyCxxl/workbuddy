@@ -4,21 +4,24 @@ import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator
+from dataclasses import dataclass
 from typing import cast
+from uuid import uuid4
 
 from lingxi.app.config import Settings
-from lingxi.contract import ApiError
+from lingxi.contract import ApiError, ErrorCode
 from lingxi.core.events import TurnEvent
 from lingxi.core.hooks import HookRegistry, TurnContext, make_budget_gate, make_max_steps_gate
 from lingxi.core.log import EventType, append_event
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.memory.embedding import Embedder
 from lingxi.domain.memory.service import recall
+from lingxi.domain.permission.gate import PendingApproval, PermissionGate
 from lingxi.domain.persona.engine import render_system_prompt
 from lingxi.domain.persona.models import Persona
 from lingxi.domain.ports import ChatMessage, ChatRequest, ToolCall
 from lingxi.domain.session.service import build_history, compact_history, get_session, persona_of_session
-from lingxi.domain.tools.registry import RISK_READ, ToolContext, ToolRegistry
+from lingxi.domain.tools.registry import ToolContext, ToolRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +31,19 @@ def _estimate_tokens(messages: list[ChatMessage]) -> int:
     return sum(len(m.content) for m in messages) // 4
 
 
+@dataclass
+class PendingCheckpoint:
+    """审批挂起检查点：用户裁决后据此恢复重放。"""
+
+    turn_seq: int
+    step: int
+    call: ToolCall
+    work_dir: str
+    user_content: str
+
+
 class TurnRunner:
-    """回合执行器：同会话一次一个回合（串行锁）；支持停车申请（v1 只停止不回退）。"""
+    """回合执行器：同会话一次一个回合（串行锁）；支持停车申请与审批恢复（v1 只停止不回退）。"""
 
     def __init__(
         self,
@@ -38,14 +52,17 @@ class TurnRunner:
         hooks: HookRegistry,
         embedder: Embedder,
         tools: ToolRegistry,
+        permission: PermissionGate,
     ) -> None:
         self._settings = settings
         self._gateway = gateway
         self._hooks = hooks
         self._embedder = embedder
         self._tools = tools
+        self._permission = permission
         self._locks: dict[int, asyncio.Lock] = {}
         self._stop_requested: set[int] = set()
+        self._pending: dict[tuple[int, str], PendingCheckpoint] = {}
         self._hooks.register(
             "pre_step", make_budget_gate(settings.loop.input_token_budget, settings.loop.context_budget_ratio)
         )
@@ -62,6 +79,13 @@ class TurnRunner:
             async for event in self._run_locked(session_id, user_content):
                 yield event
 
+    async def resume(self, session_id: int, request_id: str, outcome: str) -> AsyncIterator[TurnEvent]:
+        """审批裁决后恢复重放：allowed-once/allowed-always 执行该工具，rejected 记拒绝结果，然后继续循环。"""
+        lock = self._locks.setdefault(session_id, asyncio.Lock())
+        async with lock:
+            async for event in self._resume_locked(session_id, request_id, outcome):
+                yield event
+
     async def _run_locked(self, session_id: int, user_content: str) -> AsyncIterator[TurnEvent]:
         session = await get_session(session_id)
         persona = await persona_of_session(session)
@@ -74,9 +98,11 @@ class TurnRunner:
             yield start_event
             yield await self._emit(session_id, EventType.USER_MESSAGE, {"content": user_content})
             turn_seq = cast(int, start_event.payload["seq"])
-            async for event in self._steps(session_id, turn_seq, persona, session.work_dir, user_content):
+            async for event in self._steps(session_id, turn_seq, persona, session.work_dir, user_content, 0):
                 yield event
             self._stop_requested.discard(session_id)
+        except PendingApproval:
+            yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
         except ApiError as exc:
             yield await self._emit(session_id, EventType.ERROR, {"code": exc.error.code, "message": str(exc)})
             yield await self._emit(session_id, EventType.TURN_END, {"status": "aborted"})
@@ -87,10 +113,75 @@ class TurnRunner:
             yield await self._emit(session_id, EventType.TURN_END, {"status": "error"})
             raise
 
+    async def _resume_locked(self, session_id: int, request_id: str, outcome: str) -> AsyncIterator[TurnEvent]:
+        checkpoint = self._pending.pop((session_id, request_id), None)
+        if checkpoint is None:
+            raise ApiError(ErrorCode.NOT_FOUND, f"审批请求不存在或已裁决：{request_id}")
+        try:
+            yield await self._emit(
+                session_id, EventType.PERMISSION_DECIDED, {"request_id": request_id, "outcome": outcome}
+            )
+            session = await get_session(session_id)
+            persona = await persona_of_session(session)
+            if outcome == "allowed-always":
+                await self._permission.remember_allow(checkpoint.call.name, checkpoint.work_dir)
+            if outcome == "rejected":
+                yield await self._emit(
+                    session_id,
+                    EventType.TOOL_RESULT,
+                    {"name": checkpoint.call.name, "error": "用户拒绝"},
+                )
+                yield await self._emit(
+                    session_id,
+                    EventType.TOOL_MESSAGE,
+                    {
+                        "tool_call_id": checkpoint.call.id,
+                        "name": checkpoint.call.name,
+                        "content": f"工具 {checkpoint.call.name} 被用户拒绝",
+                    },
+                )
+            else:
+                async for event in self._execute_tool(
+                    session_id,
+                    checkpoint.turn_seq,
+                    checkpoint.step,
+                    checkpoint.call,
+                    checkpoint.work_dir,
+                    checkpoint.user_content,
+                    preapproved=True,
+                ):
+                    yield event
+            async for event in self._steps(
+                session_id,
+                checkpoint.turn_seq,
+                persona,
+                checkpoint.work_dir,
+                checkpoint.user_content,
+                checkpoint.step,
+            ):
+                yield event
+        except PendingApproval:
+            yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
+        except ApiError as exc:
+            yield await self._emit(session_id, EventType.ERROR, {"code": exc.error.code, "message": str(exc)})
+            yield await self._emit(session_id, EventType.TURN_END, {"status": "aborted"})
+            raise
+        except Exception as exc:
+            logger.exception("回合恢复异常")
+            yield await self._emit(session_id, EventType.ERROR, {"message": str(exc)})
+            yield await self._emit(session_id, EventType.TURN_END, {"status": "error"})
+            raise
+
     async def _steps(
-        self, session_id: int, turn_seq: int, persona: Persona, work_dir: str, user_content: str
+        self,
+        session_id: int,
+        turn_seq: int,
+        persona: Persona,
+        work_dir: str,
+        user_content: str,
+        step_start: int,
     ) -> AsyncIterator[TurnEvent]:
-        step = 0
+        step = step_start
         while True:
             step += 1
             messages = await self._assemble(session_id, persona, work_dir, user_content)
@@ -132,7 +223,7 @@ class TurnRunner:
                     },
                 )
                 for call in tool_calls:
-                    async for event in self._execute_tool(session_id, turn_seq, step, call, work_dir):
+                    async for event in self._execute_tool(session_id, turn_seq, step, call, work_dir, user_content):
                         yield event
                 continue
             yield await self._emit(
@@ -156,9 +247,16 @@ class TurnRunner:
             return
 
     async def _execute_tool(
-        self, session_id: int, turn_seq: int, step: int, call: ToolCall, work_dir: str
+        self,
+        session_id: int,
+        turn_seq: int,
+        step: int,
+        call: ToolCall,
+        work_dir: str,
+        user_content: str,
+        preapproved: bool = False,
     ) -> AsyncIterator[TurnEvent]:
-        """执行一步工具：pre-execute 钩子 fail-closed；只读放行，写/删除高危经权限门（S12 接入询问流）。"""
+        """执行一步工具：pre-execute 钩子 fail-closed；权限门裁决（allow 执行 / deny 拒绝 / ask 挂起）。"""
         ctx = TurnContext(
             session_id=session_id,
             turn_seq=turn_seq,
@@ -178,19 +276,38 @@ class TurnRunner:
                 {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回：未知工具"},
             )
             return
-        if tool.risk != RISK_READ:
-            yield await self._emit(
-                session_id,
-                EventType.PERMISSION_REQUIRED,
-                {"name": call.name, "reason": "写/删除类工具需授权（权限门 S12 接入）"},
+        if not preapproved:
+            raw_args = (
+                cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
             )
-            yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "error": "权限未授权"})
-            yield await self._emit(
-                session_id,
-                EventType.TOOL_MESSAGE,
-                {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回：权限未授权"},
-            )
-            return
+            decision = await self._permission.decide(tool, work_dir, raw_args)
+            if decision.verdict == "deny":
+                yield await self._emit(
+                    session_id,
+                    EventType.TOOL_RESULT,
+                    {"name": call.name, "error": f"已拒绝：{decision.reason}"},
+                )
+                yield await self._emit(
+                    session_id,
+                    EventType.TOOL_MESSAGE,
+                    {
+                        "tool_call_id": call.id,
+                        "name": call.name,
+                        "content": f"工具 {call.name} 被拒绝：{decision.reason}",
+                    },
+                )
+                return
+            if decision.verdict == "ask":
+                request_id = uuid4().hex
+                self._pending[(session_id, request_id)] = PendingCheckpoint(
+                    turn_seq=turn_seq, step=step, call=call, work_dir=work_dir, user_content=user_content
+                )
+                yield await self._emit(
+                    session_id,
+                    EventType.PERMISSION_REQUIRED,
+                    {"request_id": request_id, "name": call.name, "reason": decision.reason},
+                )
+                raise PendingApproval(request_id)
         try:
             raw_args = (
                 cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})

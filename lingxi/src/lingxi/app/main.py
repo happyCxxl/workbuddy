@@ -7,7 +7,7 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from lingxi.api import health, memories, sessions, turns
+from lingxi.api import health, memories, permissions, sessions, turns
 from lingxi.app.config import Settings
 from lingxi.app.lifespan import make_lifespan
 from lingxi.contract import REQUEST_ID, ApiError, R
@@ -16,6 +16,7 @@ from lingxi.core.loop import TurnRunner
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.memory.embedding import Embedder, OpenAICompatibleEmbedder
 from lingxi.domain.memory.hook import make_memory_hook
+from lingxi.domain.permission.gate import PermissionGate
 from lingxi.domain.tools.fs import register_fs_tools
 from lingxi.domain.tools.registry import ToolRegistry
 
@@ -29,9 +30,10 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
     effective_embedder = embedder or OpenAICompatibleEmbedder(settings.memory)
     tools = ToolRegistry()
     register_fs_tools(tools)
+    permission = PermissionGate(settings.permission.preset)
     hooks = HookRegistry()
     hooks.register("post_execute", make_memory_hook(gateway, effective_embedder))
-    runner = TurnRunner(settings, gateway, hooks, effective_embedder, tools)
+    runner = TurnRunner(settings, gateway, hooks, effective_embedder, tools, permission)
 
     @app.middleware("http")
     async def trace_request(request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]) -> JSONResponse:
@@ -51,5 +53,6 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(sessions.router)
     app.include_router(memories.router)
+    app.include_router(permissions.make_router(permission))
     app.include_router(turns.make_router(runner))
     return app

@@ -27,6 +27,8 @@ class EventType(StrEnum):
     USER_MESSAGE = "user/message"
     ASSISTANT_MESSAGE = "assistant/message"
     TOOL_MESSAGE = "tool/message"
+    PERMISSION_DECIDED = "permission/decided"
+    PERMISSION_POLICY = "permission/policy"
 
 
 async def append_event(session_id: int, event_type: EventType, payload: dict[str, object]) -> int:

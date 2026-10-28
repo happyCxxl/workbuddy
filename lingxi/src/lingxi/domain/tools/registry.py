@@ -22,13 +22,14 @@ Handler = Callable[[dict[str, object], ToolContext], Awaitable[str]]
 
 @dataclass
 class ToolDefinition:
-    """工具定义：名称、说明、参数 schema、风险级与执行函数。"""
+    """工具定义：名称、说明、参数 schema、风险级、路径参数与执行函数。"""
 
     name: str
     description: str
     parameters: dict[str, object]
     risk: str
     handler: Handler
+    path_fields: tuple[str, ...] = ()
 
 
 class ToolRegistry:

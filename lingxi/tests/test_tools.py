@@ -11,6 +11,7 @@ from lingxi.core.hooks import HookRegistry
 from lingxi.core.log import replay_events
 from lingxi.core.loop import TurnRunner
 from lingxi.domain.llm.gateway import LlmGateway
+from lingxi.domain.permission.gate import PermissionGate
 from lingxi.domain.session.service import create_session
 from lingxi.domain.tools.fs import register_fs_tools
 from lingxi.domain.tools.registry import RISK_READ, RISK_WRITE, ToolContext, ToolRegistry
@@ -81,9 +82,12 @@ async def test_loop_read_tool_end_to_end(
         tools={},
         memory=settings.memory.model_dump(),
         llm=settings.llm.model_dump(),
+        permission={"preset": "standard"},
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
     )
-    runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry())
+    runner = TurnRunner(
+        small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate("standard")
+    )
     sid = await create_session(work_dir, "工具集成")
     with pytest.raises(ApiError):
         async for _event in runner.run(sid, "tool_read"):
@@ -97,10 +101,10 @@ async def test_loop_read_tool_end_to_end(
     assert any("你好，可乐" in str(r.payload.get("result")) for r in results)
 
 
-async def test_loop_write_denied_until_permission_gate(
+async def test_loop_write_asks_and_pauses(
     fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None, tmp_path: Path
 ) -> None:
-    """写工具被权限门拦截：permission.required 事件 + 未落盘。"""
+    """写工具触发询问：permission.required + 回合 pending_stop 停车，未落盘。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
@@ -111,15 +115,15 @@ async def test_loop_write_denied_until_permission_gate(
         tools={},
         memory=settings.memory.model_dump(),
         llm=settings.llm.model_dump(),
+        permission={"preset": "standard"},
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
     )
-    runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry())
-    sid = await create_session(work_dir, "写工具拦截")
-    with pytest.raises(ApiError):
-        async for _event in runner.run(sid, "tool_write"):
-            pass
-    events = await replay_events(sid)
+    runner = TurnRunner(
+        small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate("standard")
+    )
+    sid = await create_session(work_dir, "写工具询问")
+    events = [event async for event in runner.run(sid, "tool_write")]
     assert any(e.type == "permission.required" for e in events)
-    results = [e for e in events if e.type == "tool.result"]
-    assert any("权限未授权" in str(r.payload.get("error")) for r in results)
+    assert events[-1].type == "turn.end"
+    assert events[-1].payload.get("status") == "pending_stop"
     assert not (tmp_path / "out.txt").exists()

@@ -10,6 +10,7 @@ from lingxi.core.hooks import HookRegistry, TurnContext
 from lingxi.core.log import EventType, append_event, replay_events
 from lingxi.core.loop import TurnRunner
 from lingxi.domain.llm.gateway import LlmGateway
+from lingxi.domain.permission.gate import PermissionGate
 from lingxi.domain.session.service import build_history, create_session
 from lingxi.domain.tools.fs import register_fs_tools
 from lingxi.domain.tools.registry import ToolRegistry
@@ -20,6 +21,11 @@ def make_registry() -> ToolRegistry:
     registry = ToolRegistry()
     register_fs_tools(registry)
     return registry
+
+
+def make_runner(settings: Settings, gateway: LlmGateway, hooks: HookRegistry) -> TurnRunner:
+    """标准回合执行器。"""
+    return TurnRunner(settings, gateway, hooks, FakeEmbedder(), make_registry(), PermissionGate("standard"))
 
 
 async def collect(runner: TurnRunner, session_id: int, content: str) -> list[TurnEvent]:
@@ -34,7 +40,7 @@ async def test_full_turn_events_and_projection(
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
-    runner = TurnRunner(settings, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry())
+    runner = make_runner(settings, LlmGateway(settings), HookRegistry())
     sid = await create_session("D:\\tmp", "回合测试")
     yielded = await collect(runner, sid, "hi")
     yield_types = [e.type for e in yielded]
@@ -64,7 +70,7 @@ async def test_hook_fail_closed(fake_server: tuple[Settings, list[dict[str, obje
         raise ApiError(ErrorCode.INVALID_ARGUMENT, "钩子失败")
 
     hooks.register("pre_turn", boom)
-    runner = TurnRunner(settings, LlmGateway(settings), hooks, FakeEmbedder(), make_registry())
+    runner = make_runner(settings, LlmGateway(settings), hooks)
     sid = await create_session("D:\\tmp", "钩子测试")
     with pytest.raises(ApiError) as exc_info:
         await collect(runner, sid, "hi")
@@ -88,7 +94,7 @@ async def test_budget_overflow_triggers_compaction(
         llm=settings.llm.model_dump(),
         loop={"input_token_budget": 1000, "context_budget_ratio": 0.8, "max_steps": 25},
     )
-    runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry())
+    runner = make_runner(small, LlmGateway(settings), HookRegistry())
     sid = await create_session("D:\\tmp", "压缩测试")
     for i in range(80):
         await append_event(sid, EventType.USER_MESSAGE, {"content": f"用户第{i}条消息，内容长度用来占预算。"})
@@ -114,7 +120,7 @@ async def test_max_steps_aborts_turn(
         llm=settings.llm.model_dump(),
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
     )
-    runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry())
+    runner = make_runner(small, LlmGateway(settings), HookRegistry())
     sid = await create_session("D:\\tmp", "步数测试")
     with pytest.raises(ApiError) as exc_info:
         await collect(runner, sid, "tool")

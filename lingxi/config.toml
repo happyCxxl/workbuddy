@@ -34,3 +34,6 @@ embedding_provider = "siliconflow"
 embedding_base_url = "https://api.siliconflow.cn/v1"
 embedding_model = "BAAI/bge-m3"
 embedding_api_key = ""
+
+[permission]
+preset = "standard"
