@@ -1,7 +1,11 @@
 """共享测试基建：本地 fake OpenAI 兼容服务器（禁真实模型调用）。"""
 
 import asyncio
+import hashlib
 import json
+import math
+import random
+import re
 import threading
 from collections.abc import AsyncIterator
 
@@ -9,14 +13,46 @@ import pytest
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
+from httpx2 import ASGITransport, AsyncClient
 from sqlalchemy import text
 
 from lingxi.app.config import Settings
+from lingxi.app.main import create_app
 from lingxi.db.engine import dispose_engine, init_engine, session_scope
 from lingxi.db.models import AiSession
+from lingxi.db.repo.memory_repo import MemoryRepo
+from lingxi.domain.memory.embedding import Embedder
+
+
+class FakeEmbedder(Embedder):
+    """确定性假向量：测试不调真实 embedding API；同文本稳定，不同文本近似正交。"""
+
+    async def embed(self, text: str) -> list[float]:
+        rng = random.Random(hashlib.sha256(text.encode("utf-8")).digest())
+        vector = [rng.gauss(0.0, 1.0) for _ in range(1024)]
+        norm = math.sqrt(sum(value * value for value in vector))
+        return [value / norm for value in vector]
+
 
 VALID_JSON = '{"name": "可乐", "score": 1}'
 INVALID_JSON = "not-json"
+
+
+def _responses_json(payload: str | dict[str, object]) -> JSONResponse:
+    """Responses 协议响应：output_text 携带给定文本。"""
+    text_content = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False)
+    return JSONResponse(
+        content={
+            "id": "resp_fake",
+            "object": "response",
+            "created": 1,
+            "model": "deepseek-flash",
+            "status": "completed",
+            "output": [
+                {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": text_content}]}
+            ],
+        }
+    )
 
 
 def _chunk(
@@ -52,24 +88,46 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
             return JSONResponse(status_code=500, content={"error": {"message": "boom"}})
         if "fail_pro" in prompt and model == "deepseek-v4-pro":
             return JSONResponse(status_code=500, content={"error": {"message": "boom"}})
+        # 记忆分支只看“用户消息”行：现有记忆列表可能含相同字样，不能参与匹配
+        user_line = ""
+        for line in prompt.splitlines():
+            if line.startswith("用户消息："):
+                user_line = line.removeprefix("用户消息：")
+                break
+        if "忘掉" in user_line:
+            return _responses_json({"action": "forget", "forget_topics": ["甜品"], "items": [], "updates": []})
+        if "低置信" in user_line:
+            return _responses_json(
+                {
+                    "action": "remember",
+                    "forget_topics": [],
+                    "items": [{"kind": "preference", "scope": "global", "content": "低置信内容", "confidence": 0.3}],
+                    "updates": [],
+                }
+            )
+        if "更新" in user_line:
+            match = re.search(r"\[记忆(\d+)]", prompt)
+            memory_id = int(match.group(1)) if match else 1
+            return _responses_json(
+                {
+                    "action": "remember",
+                    "forget_topics": [],
+                    "items": [],
+                    "updates": [{"memory_id": memory_id, "content": "改为喜欢咸的"}],
+                }
+            )
+        if "记住" in user_line:
+            return _responses_json(
+                {
+                    "action": "remember",
+                    "forget_topics": [],
+                    "items": [{"kind": "preference", "scope": "global", "content": "喜欢甜品", "confidence": 0.9}],
+                    "updates": [],
+                }
+            )
         if any(marker in prompt for marker in ("no_strict", "bad_once", "always_bad")):
             return JSONResponse(status_code=400, content={"error": {"message": "unsupported"}})
-        return JSONResponse(
-            content={
-                "id": "resp_fake",
-                "object": "response",
-                "created": 1,
-                "model": "deepseek-flash",
-                "status": "completed",
-                "output": [
-                    {
-                        "type": "message",
-                        "role": "assistant",
-                        "content": [{"type": "output_text", "text": VALID_JSON}],
-                    }
-                ],
-            }
-        )
+        return _responses_json(VALID_JSON)
 
     @app.post("/chat/completions")
     async def chat_completions(request: Request) -> Response:
@@ -223,6 +281,15 @@ async def db_up() -> bool:
         return False
 
 
+async def wipe_memories() -> None:
+    """清空记忆表：保证记忆用例可重复执行。"""
+    async with session_scope() as s:
+        repo = MemoryRepo(s)
+        for row in await repo.list_all():
+            await repo.delete(row.id)
+        await s.commit()
+
+
 async def make_session(title: str) -> int:
     """造一个会话并返回主键。"""
     async with session_scope() as s:
@@ -230,3 +297,12 @@ async def make_session(title: str) -> int:
         s.add(row)
         await s.commit()
         return row.id
+
+
+@pytest.fixture
+async def client(fake_server: tuple[Settings, list[dict[str, object]]]) -> AsyncIterator[AsyncClient]:
+    """应用内嵌客户端：ASGI 传输跑在测试回路，与引擎同回路；注入假嵌入器避免下载模型。"""
+    settings, _ = fake_server
+    app = create_app(settings, embedder=FakeEmbedder())
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        yield c

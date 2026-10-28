@@ -60,6 +60,15 @@ class LlmConfig(BaseModel):
     api_key: str
 
 
+class MemoryConfig(BaseModel):
+    """记忆向量化：OpenAI 兼容 embedding API（与模型出口同款接入模式）。"""
+
+    embedding_provider: str
+    embedding_base_url: str
+    embedding_model: str
+    embedding_api_key: str
+
+
 def _read_toml(path: str) -> dict[str, object]:
     """读取 TOML 配置；文件不存在返回空。"""
     if not os.path.exists(path):
@@ -97,6 +106,7 @@ class Settings(BaseSettings):
     loop: LoopConfig
     tools: ToolsConfig
     llm: LlmConfig
+    memory: MemoryConfig
 
     @classmethod
     def settings_customise_sources(

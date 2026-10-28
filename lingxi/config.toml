@@ -28,3 +28,9 @@ failure_rate_threshold = 0.5
 cooldown_seconds = 30
 retry_budget = 2
 api_key = ""
+
+[memory]
+embedding_provider = "siliconflow"
+embedding_base_url = "https://api.siliconflow.cn/v1"
+embedding_model = "BAAI/bge-m3"
+embedding_api_key = ""

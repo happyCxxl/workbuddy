@@ -1,7 +1,7 @@
 """回合执行：整轮事件序列、投影、钩子 fail-closed、预算压缩、步数超限。"""
 
 import pytest
-from conftest import db_up
+from conftest import FakeEmbedder, db_up
 
 from lingxi.app.config import Settings
 from lingxi.contract import ApiError, ErrorCode
@@ -25,7 +25,7 @@ async def test_full_turn_events_and_projection(
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
-    runner = TurnRunner(settings, LlmGateway(settings), HookRegistry())
+    runner = TurnRunner(settings, LlmGateway(settings), HookRegistry(), FakeEmbedder())
     sid = await create_session("D:\\tmp", "回合测试")
     yielded = await collect(runner, sid, "hi")
     yield_types = [e.type for e in yielded]
@@ -55,7 +55,7 @@ async def test_hook_fail_closed(fake_server: tuple[Settings, list[dict[str, obje
         raise ApiError(ErrorCode.INVALID_ARGUMENT, "钩子失败")
 
     hooks.register("pre_turn", boom)
-    runner = TurnRunner(settings, LlmGateway(settings), hooks)
+    runner = TurnRunner(settings, LlmGateway(settings), hooks, FakeEmbedder())
     sid = await create_session("D:\\tmp", "钩子测试")
     with pytest.raises(ApiError) as exc_info:
         await collect(runner, sid, "hi")
@@ -79,7 +79,7 @@ async def test_budget_overflow_triggers_compaction(
         llm=settings.llm.model_dump(),
         loop={"input_token_budget": 1000, "context_budget_ratio": 0.8, "max_steps": 25},
     )
-    runner = TurnRunner(small, LlmGateway(settings), HookRegistry())
+    runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder())
     sid = await create_session("D:\\tmp", "压缩测试")
     for i in range(80):
         await append_event(sid, EventType.USER_MESSAGE, {"content": f"用户第{i}条消息，内容长度用来占预算。"})
@@ -105,7 +105,7 @@ async def test_max_steps_aborts_turn(
         llm=settings.llm.model_dump(),
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
     )
-    runner = TurnRunner(small, LlmGateway(settings), HookRegistry())
+    runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder())
     sid = await create_session("D:\\tmp", "步数测试")
     with pytest.raises(ApiError) as exc_info:
         await collect(runner, sid, "tool")

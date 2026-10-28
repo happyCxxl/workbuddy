@@ -11,6 +11,8 @@ from lingxi.core.events import TurnEvent
 from lingxi.core.hooks import HookRegistry, TurnContext, make_budget_gate, make_max_steps_gate
 from lingxi.core.log import EventType, append_event
 from lingxi.domain.llm.gateway import LlmGateway
+from lingxi.domain.memory.embedding import Embedder
+from lingxi.domain.memory.service import recall
 from lingxi.domain.persona.engine import render_system_prompt
 from lingxi.domain.persona.models import Persona
 from lingxi.domain.ports import ChatMessage, ChatRequest, ToolCall
@@ -27,10 +29,11 @@ def _estimate_tokens(messages: list[ChatMessage]) -> int:
 class TurnRunner:
     """回合执行器：同会话一次一个回合（串行锁）；支持停车申请（v1 只停止不回退）。"""
 
-    def __init__(self, settings: Settings, gateway: LlmGateway, hooks: HookRegistry) -> None:
+    def __init__(self, settings: Settings, gateway: LlmGateway, hooks: HookRegistry, embedder: Embedder) -> None:
         self._settings = settings
         self._gateway = gateway
         self._hooks = hooks
+        self._embedder = embedder
         self._locks: dict[int, asyncio.Lock] = {}
         self._stop_requested: set[int] = set()
         self._hooks.register(
@@ -61,7 +64,7 @@ class TurnRunner:
             yield start_event
             yield await self._emit(session_id, EventType.USER_MESSAGE, {"content": user_content})
             turn_seq = cast(int, start_event.payload["seq"])
-            async for event in self._steps(session_id, turn_seq, persona):
+            async for event in self._steps(session_id, turn_seq, persona, session.work_dir, user_content):
                 yield event
             self._stop_requested.discard(session_id)
         except ApiError as exc:
@@ -74,11 +77,13 @@ class TurnRunner:
             yield await self._emit(session_id, EventType.TURN_END, {"status": "error"})
             raise
 
-    async def _steps(self, session_id: int, turn_seq: int, persona: Persona) -> AsyncIterator[TurnEvent]:
+    async def _steps(
+        self, session_id: int, turn_seq: int, persona: Persona, work_dir: str, user_content: str
+    ) -> AsyncIterator[TurnEvent]:
         step = 0
         while True:
             step += 1
-            messages = await self._assemble(session_id, persona)
+            messages = await self._assemble(session_id, persona, work_dir, user_content)
             ctx = TurnContext(
                 session_id=session_id,
                 turn_seq=turn_seq,
@@ -89,7 +94,7 @@ class TurnRunner:
             await self._hooks.run("pre_step", ctx)  # fail-closed：闸门异常在此上抛
             if ctx.payload.get("compact"):
                 await compact_history(session_id)
-                messages = await self._assemble(session_id, persona)
+                messages = await self._assemble(session_id, persona, work_dir, user_content)
             if session_id in self._stop_requested:
                 yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
                 return
@@ -115,7 +120,17 @@ class TurnRunner:
                 EventType.ASSISTANT_MESSAGE,
                 {"content": "".join(content_parts), "reasoning_content": "".join(reasoning_parts) or None},
             )
-            post = TurnContext(session_id=session_id, turn_seq=turn_seq, step=step, action="post_execute")
+            post = TurnContext(
+                session_id=session_id,
+                turn_seq=turn_seq,
+                step=step,
+                action="post_execute",
+                payload={
+                    "work_dir": work_dir,
+                    "user_content": user_content,
+                    "assistant_content": "".join(content_parts),
+                },
+            )
             await self._hooks.run("post_execute", post)
             yield await self._emit(session_id, EventType.TURN_END, {"status": "completed"})
             return
@@ -137,13 +152,20 @@ class TurnRunner:
         yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": name, "error": "工具未接入"})
         yield await self._emit(session_id, EventType.USER_MESSAGE, {"content": f"工具 {name} 返回：未接入"})
 
-    async def _assemble(self, session_id: int, persona: Persona) -> list[ChatMessage]:
-        """组装模型输入：人格系统提示 + 历史投影；记忆 top-8 自 S11 接入。"""
+    async def _assemble(self, session_id: int, persona: Persona, work_dir: str, query: str) -> list[ChatMessage]:
+        """组装模型输入：人格系统提示 + 记忆资料段（带编号与来源时间）+ 历史投影。"""
         messages = [ChatMessage(role="system", content=render_system_prompt(persona))]
+        memories = await recall(work_dir, query, self._embedder)
+        if memories:
+            lines = ["记忆资料："]
+            for index, memory in enumerate(memories, start=1):
+                lines.append(f"{index}. （{memory.kind}，{memory.created_at:%Y-%m-%d}）{memory.content}")
+            messages.append(ChatMessage(role="system", content="\n".join(lines)))
         messages.extend(await build_history(session_id))
         return messages
 
-    async def _emit(self, session_id: int, event_type: EventType, payload: dict[str, object]) -> TurnEvent:
+    @staticmethod
+    async def _emit(session_id: int, event_type: EventType, payload: dict[str, object]) -> TurnEvent:
         """落日志并产出同构回合事件：日志是唯一事实源，产出流是其投影。"""
         seq = await append_event(session_id, event_type, payload)
         payload["seq"] = seq

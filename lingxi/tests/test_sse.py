@@ -1,22 +1,12 @@
 """SSE 接口：会话创建、回合流式事件与 after_seq 重放。"""
 
 import json
-from collections.abc import AsyncIterator
 
 import pytest
 from conftest import db_up
-from httpx2 import ASGITransport, AsyncClient
+from httpx2 import AsyncClient
 
 from lingxi.app.config import Settings
-from lingxi.app.main import create_app
-
-
-@pytest.fixture
-async def client(fake_server: tuple[Settings, list[dict[str, object]]]) -> AsyncIterator[AsyncClient]:
-    """应用内嵌客户端：ASGI 传输跑在测试回路，与引擎同回路。"""
-    settings, _ = fake_server
-    async with AsyncClient(transport=ASGITransport(app=create_app(settings)), base_url="http://test") as c:
-        yield c
 
 
 async def create_session_via_api(client: AsyncClient) -> int:

@@ -7,21 +7,27 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from lingxi.api import health, sessions, turns
+from lingxi.api import health, memories, sessions, turns
 from lingxi.app.config import Settings
 from lingxi.app.lifespan import make_lifespan
 from lingxi.contract import REQUEST_ID, ApiError, R
 from lingxi.core.hooks import HookRegistry
 from lingxi.core.loop import TurnRunner
 from lingxi.domain.llm.gateway import LlmGateway
+from lingxi.domain.memory.embedding import Embedder, OpenAICompatibleEmbedder
+from lingxi.domain.memory.hook import make_memory_hook
 
 
-def create_app(settings: Settings) -> FastAPI:
-    """构建应用：中间件 + 路由 + 回合执行器装配。"""
+def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
+    """构建应用：中间件 + 路由 + 回合执行器装配；embedder 可注入（测试用假向量，缺省用配置的 embedding API）。"""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
     app = FastAPI(title="灵犀", lifespan=make_lifespan(settings))
-    runner = TurnRunner(settings, LlmGateway(settings), HookRegistry())
+    gateway = LlmGateway(settings)
+    effective_embedder = embedder or OpenAICompatibleEmbedder(settings.memory)
+    hooks = HookRegistry()
+    hooks.register("post_execute", make_memory_hook(gateway, effective_embedder))
+    runner = TurnRunner(settings, gateway, hooks, effective_embedder)
 
     @app.middleware("http")
     async def trace_request(request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]) -> JSONResponse:
@@ -40,5 +46,6 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(sessions.router)
+    app.include_router(memories.router)
     app.include_router(turns.make_router(runner))
     return app
