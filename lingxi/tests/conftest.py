@@ -38,6 +38,19 @@ VALID_JSON = '{"name": "可乐", "score": 1}'
 INVALID_JSON = "not-json"
 
 
+def _tool_call_for(content: str) -> tuple[str, str]:
+    """按用户消息选择工具分支。"""
+    if content.startswith("tool_read"):
+        return "fs_read", json.dumps({"path": "hello.txt"})
+    if content.startswith("tool_write"):
+        return "fs_write", json.dumps({"path": "out.txt", "content": "可乐写入"})
+    if content.startswith("tool_delete"):
+        return "fs_delete", json.dumps({"path": "hello.txt"})
+    if content.startswith("tool_unknown"):
+        return "no_such", "{}"
+    return "fs_read", json.dumps({"path": "x"})
+
+
 def _responses_json(payload: str | dict[str, object]) -> JSONResponse:
     """Responses 协议响应：output_text 携带给定文本。"""
     text_content = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False)
@@ -165,7 +178,8 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
                 }
             )
 
-        if content == "tool" or "工具" in content:
+        if content == "tool" or "工具" in content or content.startswith("tool_"):
+            tool_name, tool_arguments = _tool_call_for(content)
 
             async def tool_gen() -> AsyncIterator[str]:
                 data = _chunk()
@@ -178,7 +192,7 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
                                     "index": 0,
                                     "id": "call_1",
                                     "type": "function",
-                                    "function": {"name": "fs_read", "arguments": ""},
+                                    "function": {"name": tool_name, "arguments": ""},
                                 }
                             ]
                         },
@@ -192,7 +206,7 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
                 data["choices"] = [
                     {
                         "index": 0,
-                        "delta": {"tool_calls": [{"index": 0, "function": {"arguments": '{"path": "x"}'}}]},
+                        "delta": {"tool_calls": [{"index": 0, "function": {"arguments": tool_arguments}}]},
                         "finish_reason": "stop",
                     }
                 ]

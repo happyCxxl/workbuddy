@@ -1,6 +1,7 @@
 """单 ReAct 循环：一条用户消息跑一个回合；事件日志全程唯一事实源。"""
 
 import asyncio
+import json
 import logging
 from collections.abc import AsyncIterator
 from typing import cast
@@ -17,6 +18,7 @@ from lingxi.domain.persona.engine import render_system_prompt
 from lingxi.domain.persona.models import Persona
 from lingxi.domain.ports import ChatMessage, ChatRequest, ToolCall
 from lingxi.domain.session.service import build_history, compact_history, get_session, persona_of_session
+from lingxi.domain.tools.registry import RISK_READ, ToolContext, ToolRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -29,11 +31,19 @@ def _estimate_tokens(messages: list[ChatMessage]) -> int:
 class TurnRunner:
     """回合执行器：同会话一次一个回合（串行锁）；支持停车申请（v1 只停止不回退）。"""
 
-    def __init__(self, settings: Settings, gateway: LlmGateway, hooks: HookRegistry, embedder: Embedder) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        gateway: LlmGateway,
+        hooks: HookRegistry,
+        embedder: Embedder,
+        tools: ToolRegistry,
+    ) -> None:
         self._settings = settings
         self._gateway = gateway
         self._hooks = hooks
         self._embedder = embedder
+        self._tools = tools
         self._locks: dict[int, asyncio.Lock] = {}
         self._stop_requested: set[int] = set()
         self._hooks.register(
@@ -101,7 +111,8 @@ class TurnRunner:
             tool_calls: list[ToolCall] = []
             content_parts: list[str] = []
             reasoning_parts: list[str] = []
-            async for chunk in self._gateway.stream(ChatRequest(messages=messages)):
+            request = ChatRequest(messages=messages, tools=self._tools.specs())
+            async for chunk in self._gateway.stream(request):
                 if chunk.kind == "text":
                     content_parts.append(chunk.text)
                     yield await self._emit(session_id, EventType.TEXT_DELTA, {"text": chunk.text})
@@ -111,8 +122,17 @@ class TurnRunner:
                 elif chunk.kind == "tool_calls":
                     tool_calls.extend(chunk.tool_calls)
             if tool_calls:
+                yield await self._emit(
+                    session_id,
+                    EventType.ASSISTANT_MESSAGE,
+                    {
+                        "content": "".join(content_parts),
+                        "reasoning_content": "".join(reasoning_parts) or None,
+                        "tool_calls": [{"id": c.id, "name": c.name, "arguments": c.arguments} for c in tool_calls],
+                    },
+                )
                 for call in tool_calls:
-                    async for event in self._execute_tool(session_id, turn_seq, step, call.name, call.arguments):
+                    async for event in self._execute_tool(session_id, turn_seq, step, call, work_dir):
                         yield event
                 continue
             yield await self._emit(
@@ -136,31 +156,70 @@ class TurnRunner:
             return
 
     async def _execute_tool(
-        self, session_id: int, turn_seq: int, step: int, name: str, arguments: str
+        self, session_id: int, turn_seq: int, step: int, call: ToolCall, work_dir: str
     ) -> AsyncIterator[TurnEvent]:
-        """执行一步工具：pre-execute 钩子 fail-closed；S8 为工具壳，真执行自 S12 起接入。"""
+        """执行一步工具：pre-execute 钩子 fail-closed；只读放行，写/删除高危经权限门（S12 接入询问流）。"""
         ctx = TurnContext(
             session_id=session_id,
             turn_seq=turn_seq,
             step=step,
             action="pre_execute",
-            tool_name=name,
-            payload={"arguments": arguments},
+            tool_name=call.name,
+            payload={"arguments": call.arguments},
         )
         await self._hooks.run("pre_execute", ctx)
-        yield await self._emit(session_id, EventType.TOOL_CALL, {"name": name, "arguments": arguments})
-        yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": name, "error": "工具未接入"})
-        yield await self._emit(session_id, EventType.USER_MESSAGE, {"content": f"工具 {name} 返回：未接入"})
+        yield await self._emit(session_id, EventType.TOOL_CALL, {"name": call.name, "arguments": call.arguments})
+        tool = self._tools.get(call.name)
+        if tool is None:
+            yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "error": "未知工具"})
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_MESSAGE,
+                {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回：未知工具"},
+            )
+            return
+        if tool.risk != RISK_READ:
+            yield await self._emit(
+                session_id,
+                EventType.PERMISSION_REQUIRED,
+                {"name": call.name, "reason": "写/删除类工具需授权（权限门 S12 接入）"},
+            )
+            yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "error": "权限未授权"})
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_MESSAGE,
+                {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回：权限未授权"},
+            )
+            return
+        try:
+            raw_args = (
+                cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
+            )
+            output = await tool.handler(raw_args, ToolContext(work_dir))
+            yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "result": output})
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_MESSAGE,
+                {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回：{output}"},
+            )
+        except Exception as exc:
+            logger.warning("工具执行失败：%s %s", call.name, exc)
+            yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "error": str(exc)})
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_MESSAGE,
+                {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回错误：{exc}"},
+            )
 
     async def _assemble(self, session_id: int, persona: Persona, work_dir: str, query: str) -> list[ChatMessage]:
         """组装模型输入：人格系统提示 + 记忆资料段（带编号与来源时间）+ 历史投影。"""
-        messages = [ChatMessage(role="system", content=render_system_prompt(persona))]
+        messages = [ChatMessage(role="system", content=render_system_prompt(persona), tool_calls=[])]
         memories = await recall(work_dir, query, self._embedder)
         if memories:
             lines = ["记忆资料："]
             for index, memory in enumerate(memories, start=1):
                 lines.append(f"{index}. （{memory.kind}，{memory.created_at:%Y-%m-%d}）{memory.content}")
-            messages.append(ChatMessage(role="system", content="\n".join(lines)))
+            messages.append(ChatMessage(role="system", content="\n".join(lines), tool_calls=[]))
         messages.extend(await build_history(session_id))
         return messages
 

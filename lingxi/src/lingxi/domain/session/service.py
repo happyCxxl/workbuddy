@@ -9,7 +9,7 @@ from lingxi.db.models import AiSession, PersonaVersion
 from lingxi.db.repo.persona_repo import PersonaRepo
 from lingxi.db.repo.session_repo import SessionRepo
 from lingxi.domain.persona.models import Persona, PersonaFields
-from lingxi.domain.ports import ChatMessage
+from lingxi.domain.ports import ChatMessage, ToolCall
 
 
 async def create_session(work_dir: str, title: str) -> int:
@@ -56,14 +56,32 @@ async def build_history(session_id: int) -> list[ChatMessage]:
         if event.seq <= cutoff:
             continue
         if event.type == EventType.USER_MESSAGE:
-            messages.append(ChatMessage(role="user", content=str(event.payload.get("content", ""))))
+            messages.append(ChatMessage(role="user", content=str(event.payload.get("content", "")), tool_calls=[]))
         elif event.type == EventType.ASSISTANT_MESSAGE:
             reasoning = event.payload.get("reasoning_content")
+            raw_calls = cast(list[dict[str, object]], event.payload.get("tool_calls") or [])
             messages.append(
                 ChatMessage(
                     role="assistant",
                     content=str(event.payload.get("content", "")),
                     reasoning_content=str(reasoning) if reasoning else None,
+                    tool_calls=[
+                        ToolCall(
+                            id=str(item.get("id", "")),
+                            name=str(item.get("name", "")),
+                            arguments=str(item.get("arguments", "")),
+                        )
+                        for item in raw_calls
+                    ],
+                )
+            )
+        elif event.type == EventType.TOOL_MESSAGE:
+            messages.append(
+                ChatMessage(
+                    role="tool",
+                    content=str(event.payload.get("content", "")),
+                    tool_call_id=str(event.payload.get("tool_call_id") or ""),
+                    tool_calls=[],
                 )
             )
     return messages

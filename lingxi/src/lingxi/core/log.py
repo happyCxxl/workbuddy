@@ -26,6 +26,7 @@ class EventType(StrEnum):
     TURN_START = "turn/start"
     USER_MESSAGE = "user/message"
     ASSISTANT_MESSAGE = "assistant/message"
+    TOOL_MESSAGE = "tool/message"
 
 
 async def append_event(session_id: int, event_type: EventType, payload: dict[str, object]) -> int:

@@ -8,26 +8,37 @@ from pydantic import BaseModel
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
-class ChatMessage(BaseModel):
-    """一条对话消息；assistant 消息可携带思考内容（协议外字段，思考模型要求回传）。"""
-
-    role: Literal["system", "user", "assistant"]
-    content: str
-    reasoning_content: str | None = None
-
-
-class ChatRequest(BaseModel):
-    """对话请求：消息列表。模型选择由出口内部路由决定，不在请求中指定。"""
-
-    messages: list[ChatMessage]
-
-
 class ToolCall(BaseModel):
     """一次工具调用：参数为 JSON 字符串（协议形态）。"""
 
     id: str
     name: str
     arguments: str
+
+
+class ToolSpec(BaseModel):
+    """工具规格：schema 白名单条目，模型侧工具清单只从注册表生成。"""
+
+    name: str
+    description: str
+    parameters: dict[str, object]
+
+
+class ChatMessage(BaseModel):
+    """一条对话消息；assistant 可携带思考内容与工具调用，tool 消息携带调用回执。"""
+
+    role: Literal["system", "user", "assistant", "tool"]
+    content: str
+    reasoning_content: str | None = None
+    tool_call_id: str | None = None
+    tool_calls: list[ToolCall]
+
+
+class ChatRequest(BaseModel):
+    """对话请求：消息列表 + 工具清单。模型选择由出口内部路由决定，不在请求中指定。"""
+
+    messages: list[ChatMessage]
+    tools: list[ToolSpec]
 
 
 class Usage(BaseModel):

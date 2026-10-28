@@ -16,6 +16,8 @@ from lingxi.core.loop import TurnRunner
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.memory.embedding import Embedder, OpenAICompatibleEmbedder
 from lingxi.domain.memory.hook import make_memory_hook
+from lingxi.domain.tools.fs import register_fs_tools
+from lingxi.domain.tools.registry import ToolRegistry
 
 
 def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
@@ -25,9 +27,11 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
     app = FastAPI(title="灵犀", lifespan=make_lifespan(settings))
     gateway = LlmGateway(settings)
     effective_embedder = embedder or OpenAICompatibleEmbedder(settings.memory)
+    tools = ToolRegistry()
+    register_fs_tools(tools)
     hooks = HookRegistry()
     hooks.register("post_execute", make_memory_hook(gateway, effective_embedder))
-    runner = TurnRunner(settings, gateway, hooks, effective_embedder)
+    runner = TurnRunner(settings, gateway, hooks, effective_embedder, tools)
 
     @app.middleware("http")
     async def trace_request(request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]) -> JSONResponse:

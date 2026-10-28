@@ -24,7 +24,7 @@ class Sample(BaseModel):
 
 async def collect_stream(gateway: LlmGateway, content: str) -> list[object]:
     """跑一次流式调用并收集全部 chunk。"""
-    request = ChatRequest(messages=[ChatMessage(role="user", content=content)])
+    request = ChatRequest(messages=[ChatMessage(role="user", content=content, tool_calls=[])], tools=[])
     return [chunk async for chunk in gateway.stream(request)]
 
 
