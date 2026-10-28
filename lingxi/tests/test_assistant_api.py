@@ -1,0 +1,78 @@
+"""助手 API：人格版本、会话权限档与停止。"""
+
+import pytest
+from conftest import db_up
+from httpx2 import AsyncClient
+
+from lingxi.core.log import replay_events
+from lingxi.domain.persona.models import PersonaFields
+
+FIELDS = {
+    "name": "可乐",
+    "opening": "你好，我是可乐。",
+    "catchphrases": ["明白"],
+    "tone": "轻松直接",
+    "style": "先结论后细节",
+    "boundaries": "先问再动",
+    "user_name": "老板",
+    "user_profile": "后端开发",
+}
+
+
+async def test_persona_versions_api(client: AsyncClient, engine_fixture: None) -> None:
+    """保存=新版本自动启用；启用旧版本切换默认；版本详情可读。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    current = (await client.get("/persona")).json()
+    assert current["code"] == 0
+    versions_before = (await client.get("/persona/versions")).json()["data"]["versions"]
+    max_before = max(int(v["version"]) for v in versions_before)
+    base_version = int(current["data"]["version"])
+    saved = (await client.put("/persona", json={"fields": FIELDS})).json()
+    assert saved["code"] == 0
+    new_version = int(saved["data"]["version"])
+    assert new_version == max_before + 1
+    versions = (await client.get("/persona/versions")).json()["data"]["versions"]
+    active = [v["version"] for v in versions if v["active"]]
+    assert active == [new_version]
+    detail = (await client.get(f"/persona/versions/{base_version}")).json()
+    assert detail["data"]["version"] == base_version
+    activated = (await client.post(f"/persona/versions/{base_version}/activate")).json()
+    assert activated["code"] == 0
+    again = (await client.get("/persona")).json()["data"]["version"]
+    assert again == base_version
+
+
+async def test_session_permission_preset(client: AsyncClient, engine_fixture: None) -> None:
+    """建会话带默认档；切换只影响本会话并落 permission/policy 事件。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    created = (await client.post("/sessions", json={"work_dir": "D:\\tmp", "title": "档位"})).json()
+    sid = int(created["data"]["id"])
+    got = (await client.get(f"/sessions/{sid}")).json()["data"]
+    assert got["permission_preset"] == "standard"
+    changed = (await client.put(f"/sessions/{sid}/permission", json={"preset": "loose"})).json()
+    assert changed["code"] == 0
+    got2 = (await client.get(f"/sessions/{sid}")).json()["data"]
+    assert got2["permission_preset"] == "loose"
+    policies = [e for e in await replay_events(sid) if e.type == "permission/policy"]
+    assert policies and policies[-1].payload["preset"] == "loose"
+    bad = (await client.put(f"/sessions/{sid}/permission", json={"preset": "nonsense"})).json()
+    assert bad["code"] == 60001
+
+
+async def test_turn_stop_api(client: AsyncClient, engine_fixture: None) -> None:
+    """停止接口：无进行中回合时安全返回成功。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    created = (await client.post("/sessions", json={"work_dir": "D:\\tmp", "title": "停止"})).json()
+    sid = int(created["data"]["id"])
+    resp = (await client.post(f"/sessions/{sid}/turns/stop")).json()
+    assert resp["code"] == 0
+
+
+def test_persona_fields_model_shape() -> None:
+    """八字段模型可直接由接口入参构造。"""
+    fields = PersonaFields(**FIELDS)
+    assert fields.name == "可乐"
+    assert len(PersonaFields.model_fields) == 8

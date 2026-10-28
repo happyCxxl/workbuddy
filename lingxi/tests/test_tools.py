@@ -85,9 +85,7 @@ async def test_loop_read_tool_end_to_end(
         permission={"preset": "standard"},
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
     )
-    runner = TurnRunner(
-        small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate("standard")
-    )
+    runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate())
     sid = await create_session(work_dir, "工具集成")
     with pytest.raises(ApiError):
         async for _event in runner.run(sid, "tool_read"):
@@ -118,9 +116,7 @@ async def test_loop_write_asks_and_pauses(
         permission={"preset": "standard"},
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
     )
-    runner = TurnRunner(
-        small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate("standard")
-    )
+    runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate())
     sid = await create_session(work_dir, "写工具询问")
     events = [event async for event in runner.run(sid, "tool_write")]
     assert any(e.type == "permission.required" for e in events)

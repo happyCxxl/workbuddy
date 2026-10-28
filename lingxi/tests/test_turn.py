@@ -25,7 +25,7 @@ def make_registry() -> ToolRegistry:
 
 def make_runner(settings: Settings, gateway: LlmGateway, hooks: HookRegistry) -> TurnRunner:
     """标准回合执行器。"""
-    return TurnRunner(settings, gateway, hooks, FakeEmbedder(), make_registry(), PermissionGate("standard"))
+    return TurnRunner(settings, gateway, hooks, FakeEmbedder(), make_registry(), PermissionGate())
 
 
 async def collect(runner: TurnRunner, session_id: int, content: str) -> list[TurnEvent]:

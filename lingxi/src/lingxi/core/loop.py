@@ -98,7 +98,9 @@ class TurnRunner:
             yield start_event
             yield await self._emit(session_id, EventType.USER_MESSAGE, {"content": user_content})
             turn_seq = cast(int, start_event.payload["seq"])
-            async for event in self._steps(session_id, turn_seq, persona, session.work_dir, user_content, 0):
+            async for event in self._steps(
+                session_id, turn_seq, persona, session.work_dir, user_content, 0, session.permission_preset
+            ):
                 yield event
             self._stop_requested.discard(session_id)
         except PendingApproval:
@@ -148,6 +150,7 @@ class TurnRunner:
                     checkpoint.call,
                     checkpoint.work_dir,
                     checkpoint.user_content,
+                    session.permission_preset,
                     preapproved=True,
                 ):
                     yield event
@@ -158,6 +161,7 @@ class TurnRunner:
                 checkpoint.work_dir,
                 checkpoint.user_content,
                 checkpoint.step,
+                session.permission_preset,
             ):
                 yield event
         except PendingApproval:
@@ -180,6 +184,7 @@ class TurnRunner:
         work_dir: str,
         user_content: str,
         step_start: int,
+        preset: str,
     ) -> AsyncIterator[TurnEvent]:
         step = step_start
         while True:
@@ -204,6 +209,8 @@ class TurnRunner:
             reasoning_parts: list[str] = []
             request = ChatRequest(messages=messages, tools=self._tools.specs())
             async for chunk in self._gateway.stream(request):
+                if session_id in self._stop_requested:
+                    break
                 if chunk.kind == "text":
                     content_parts.append(chunk.text)
                     yield await self._emit(session_id, EventType.TEXT_DELTA, {"text": chunk.text})
@@ -212,6 +219,9 @@ class TurnRunner:
                     yield await self._emit(session_id, EventType.THINKING_DELTA, {"text": chunk.text})
                 elif chunk.kind == "tool_calls":
                     tool_calls.extend(chunk.tool_calls)
+            if session_id in self._stop_requested:
+                yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
+                return
             if tool_calls:
                 yield await self._emit(
                     session_id,
@@ -223,7 +233,9 @@ class TurnRunner:
                     },
                 )
                 for call in tool_calls:
-                    async for event in self._execute_tool(session_id, turn_seq, step, call, work_dir, user_content):
+                    async for event in self._execute_tool(
+                        session_id, turn_seq, step, call, work_dir, user_content, preset
+                    ):
                         yield event
                 continue
             yield await self._emit(
@@ -254,6 +266,7 @@ class TurnRunner:
         call: ToolCall,
         work_dir: str,
         user_content: str,
+        preset: str,
         preapproved: bool = False,
     ) -> AsyncIterator[TurnEvent]:
         """执行一步工具：pre-execute 钩子 fail-closed；权限门裁决（allow 执行 / deny 拒绝 / ask 挂起）。"""
@@ -280,7 +293,7 @@ class TurnRunner:
             raw_args = (
                 cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
             )
-            decision = await self._permission.decide(tool, work_dir, raw_args)
+            decision = await self._permission.decide(tool, work_dir, raw_args, preset)
             if decision.verdict == "deny":
                 yield await self._emit(
                     session_id,

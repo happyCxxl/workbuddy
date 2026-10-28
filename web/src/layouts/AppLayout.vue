@@ -357,6 +357,35 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    kind: 'group',
+    // 个人助手：灵犀（Python 服务）的对话、记忆与人设
+    label: '个人助手',
+    iconPaths: [
+      'M8 2.4a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4Z',
+      'M2.8 13.8c0-2.5 2.3-4 5.2-4s5.2 1.5 5.2 4',
+    ],
+    children: [
+      {
+        label: '对话',
+        path: '/assistant/chat',
+        iconPaths: ['M2.6 3.4h10.8v7.2H7.4L4.2 13.2v-2.6H2.6z'],
+      },
+      {
+        label: '记忆',
+        path: '/assistant/memory',
+        iconPaths: ['M8 2.2a5.8 5.8 0 1 1 0 11.6A5.8 5.8 0 0 1 8 2.2', 'M8 5.2v3.2l2.2 1.4'],
+      },
+      {
+        label: '人设',
+        path: '/assistant/persona',
+        iconPaths: [
+          'M8 2.2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z',
+          'M3 13.6c0-2.2 2.2-3.4 5-3.4s5 1.2 5 3.4',
+        ],
+      },
+    ],
+  },
+  {
     kind: 'leaf',
     label: '用户管理',
     path: '/user',
@@ -452,6 +481,9 @@ const BACK_TARGETS: Record<string, { path: string; label: string }> = {
   ModelList: { path: '/home', label: '首页' },
   SystemSetting: { path: '/home', label: '首页' },
   Profile: { path: '/home', label: '首页' },
+  AssistantChat: { path: '/home', label: '首页' },
+  AssistantMemory: { path: '/home', label: '首页' },
+  AssistantPersona: { path: '/home', label: '首页' },
 };
 
 const routeName = computed(() => String(route.name ?? ''));

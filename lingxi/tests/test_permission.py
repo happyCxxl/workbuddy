@@ -67,10 +67,10 @@ async def test_preset_strict_asks_read(clean_rules: None) -> None:
     """严格档：只读工具也询问。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
-    gate = PermissionGate("strict")
+    gate = PermissionGate()
     tool = make_registry().get("fs_read")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "x.txt"})
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "x.txt"}, "strict")
     assert decision.verdict == "ask"
 
 
@@ -78,10 +78,10 @@ async def test_preset_loose_allows_write(clean_rules: None) -> None:
     """宽松档：写工具（非覆盖）放行。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
-    gate = PermissionGate("loose")
+    gate = PermissionGate()
     tool = make_registry().get("fs_write")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"})
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "loose")
     assert decision.verdict == "allow"
 
 
@@ -89,10 +89,10 @@ async def test_high_risk_always_asks_even_loose(clean_rules: None) -> None:
     """高危恒询问：宽松档下删除也问。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
-    gate = PermissionGate("loose")
+    gate = PermissionGate()
     tool = make_registry().get("fs_delete")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "x.txt"})
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "x.txt"}, "loose")
     assert decision.verdict == "ask"
 
 
@@ -101,10 +101,10 @@ async def test_deny_rule_wins(clean_rules: None) -> None:
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     await add_rule("fs_write", "deny")
-    gate = PermissionGate("loose")
+    gate = PermissionGate()
     tool = make_registry().get("fs_write")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"})
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "loose")
     assert decision.verdict == "deny"
 
 
@@ -114,10 +114,10 @@ async def test_most_specific_rule_wins(clean_rules: None) -> None:
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     await add_rule("*", "allow", level="global", work_dir="D:\\other")
     await add_rule("fs_write", "ask")
-    gate = PermissionGate("loose")
+    gate = PermissionGate()
     tool = make_registry().get("fs_write")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"})
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "loose")
     assert decision.verdict == "ask"
 
 
@@ -129,7 +129,7 @@ async def test_ask_pause_and_resume_allowed_once(
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
     work_dir = str(tmp_path)
-    gate = PermissionGate("standard")
+    gate = PermissionGate()
     runner = TurnRunner(
         small_settings(settings, "standard"),
         LlmGateway(settings),
@@ -138,7 +138,7 @@ async def test_ask_pause_and_resume_allowed_once(
         make_registry(),
         gate,
     )
-    sid = await create_session(work_dir, "审批恢复")
+    sid = await create_session(work_dir, "审批恢复", "standard")
     events = [event async for event in runner.run(sid, "tool_write")]
     required = [e for e in events if e.type == "permission.required"][0]
     request_id = str(required.payload["request_id"])
@@ -163,7 +163,7 @@ async def test_resume_rejected(
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
     work_dir = str(tmp_path)
-    gate = PermissionGate("standard")
+    gate = PermissionGate()
     runner = TurnRunner(
         small_settings(settings, "standard"),
         LlmGateway(settings),
@@ -172,7 +172,7 @@ async def test_resume_rejected(
         make_registry(),
         gate,
     )
-    sid = await create_session(work_dir, "裁决拒绝")
+    sid = await create_session(work_dir, "裁决拒绝", "standard")
     events = [event async for event in runner.run(sid, "tool_write")]
     request_id = str([e for e in events if e.type == "permission.required"][0].payload["request_id"])
     resumed: list[object] = []
@@ -192,7 +192,7 @@ async def test_allowed_always_persists_rule(
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
     work_dir = str(tmp_path)
-    gate = PermissionGate("standard")
+    gate = PermissionGate()
     runner = TurnRunner(
         small_settings(settings, "standard"),
         LlmGateway(settings),
@@ -201,7 +201,7 @@ async def test_allowed_always_persists_rule(
         make_registry(),
         gate,
     )
-    sid = await create_session(work_dir, "始终允许")
+    sid = await create_session(work_dir, "始终允许", "standard")
     events = [event async for event in runner.run(sid, "tool_write")]
     request_id = str([e for e in events if e.type == "permission.required"][0].payload["request_id"])
     async for event in runner.resume(sid, request_id, "allowed-always"):
@@ -210,7 +210,7 @@ async def test_allowed_always_persists_rule(
     assert (tmp_path / "out.txt").exists()
     tool = make_registry().get("fs_write")
     assert tool is not None
-    decision = await gate.decide(tool, work_dir, {"path": "again.txt", "content": "x"})
+    decision = await gate.decide(tool, work_dir, {"path": "again.txt", "content": "x"}, "standard")
     assert decision.verdict == "allow"
 
 
@@ -228,9 +228,9 @@ async def test_resume_unknown_request(
         HookRegistry(),
         FakeEmbedder(),
         make_registry(),
-        PermissionGate("standard"),
+        PermissionGate(),
     )
-    sid = await create_session(work_dir, "未知审批")
+    sid = await create_session(work_dir, "未知审批", "standard")
     with pytest.raises(ApiError) as exc_info:
         async for _event in runner.resume(sid, "no-such-id", "allowed-once"):
             pass

@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from lingxi.contract import ApiError
+from lingxi.contract import ApiError, R
 from lingxi.core.events import DONE_FRAME, TurnEvent, sse_frame
 from lingxi.core.loop import TurnRunner
 
@@ -55,5 +55,11 @@ def make_router(runner: TurnRunner) -> APIRouter:
     async def resume_turn(session_id: int, request: ResumeRequest) -> StreamingResponse:
         """审批裁决后恢复重放：SSE 续流，末尾 DONE。"""
         return _sse(runner.resume(session_id, request.request_id, request.outcome))
+
+    @router.post("/sessions/{session_id}/turns/stop")
+    async def stop_turn(session_id: int) -> dict[str, object]:
+        """申请停止：当前回合在下一步前或流式块边界停止（v1 只停止不回退）。"""
+        runner.request_stop(session_id)
+        return R.ok(None).to_dict()
 
     return router

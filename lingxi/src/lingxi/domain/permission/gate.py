@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from lingxi.contract import ApiError, ErrorCode
 from lingxi.db.engine import session_scope
 from lingxi.db.models import PermissionRule
 from lingxi.db.repo.permission_repo import PermissionRepo
@@ -56,24 +55,11 @@ def _exists(work_dir: str, path: str) -> bool:
 
 
 class PermissionGate:
-    """权限裁决：规则命中即定；否则高危恒询问；否则按预设兜底。"""
+    """权限裁决：规则命中即定；否则高危恒询问；否则按会话档位兜底（无状态）。"""
 
-    def __init__(self, preset: str) -> None:
-        self._preset = preset
-
-    @property
-    def preset(self) -> str:
-        """当前档位。"""
-        return self._preset
-
-    def set_preset(self, preset: str) -> None:
-        """切换档位：词表封闭。"""
-        if preset not in PRESETS:
-            raise ApiError(ErrorCode.INVALID_ARGUMENT, f"未知预设档位：{preset}")
-        self._preset = preset
-
-    async def decide(self, tool: ToolDefinition, work_dir: str, args: dict[str, object]) -> Decision:
-        """裁决顺序：显式规则 → 高危恒询问 → 预设。"""
+    @staticmethod
+    async def decide(tool: ToolDefinition, work_dir: str, args: dict[str, object], preset: str) -> Decision:
+        """裁决顺序：显式规则 → 高危恒询问 → 会话预设。"""
         async with session_scope() as s:
             rules = await PermissionRepo(s).list_matching(tool.name, work_dir)
         scoped = [r for r in rules if r.scope is None or r.scope == tool.risk or r.scope == "any"]
@@ -88,9 +74,9 @@ class PermissionGate:
                 return Decision(verdict="ask", reason="路径越出工作目录")
             if tool.name == "fs_write" and _exists(work_dir, path):
                 return Decision(verdict="ask", reason="覆盖已有文件需确认")
-        if self._preset == "strict":
+        if preset == "strict":
             return Decision(verdict="ask", reason="严格档：每步询问")
-        if self._preset == "loose":
+        if preset == "loose":
             return Decision(verdict="allow", reason="宽松档放行")
         if tool.risk == RISK_WRITE:
             return Decision(verdict="ask", reason="标准档：写操作询问")

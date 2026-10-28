@@ -12,16 +12,27 @@ from lingxi.domain.persona.models import Persona, PersonaFields
 from lingxi.domain.ports import ChatMessage, ToolCall
 
 
-async def create_session(work_dir: str, title: str) -> int:
-    """创建会话：绑定当前人格版本，此后人格编辑不影响本会话。"""
+async def create_session(work_dir: str, title: str, preset: str = "standard") -> int:
+    """创建会话：绑定当前启用的人格版本与权限档，此后人格编辑不影响本会话。"""
     async with session_scope() as s:
-        persona = await PersonaRepo(s).latest()
+        persona = await PersonaRepo(s).current()
         if persona is None:
             raise ApiError(ErrorCode.NOT_FOUND, "人格未初始化：先执行 alembic upgrade head")
-        row = AiSession(work_dir=work_dir, title=title, persona_version_id=persona.id)
+        row = AiSession(work_dir=work_dir, title=title, persona_version_id=persona.id, permission_preset=preset)
         await SessionRepo(s).insert(row)
         await s.commit()
         return row.id
+
+
+async def set_session_preset(session_id: int, preset: str) -> None:
+    """切换本会话权限档：落 permission/policy 审计事件。"""
+    async with session_scope() as s:
+        row = await SessionRepo(s).get(session_id)
+        if row is None:
+            raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
+        row.permission_preset = preset
+        await s.commit()
+    await append_event(session_id, EventType.PERMISSION_POLICY, {"preset": preset})
 
 
 async def get_session(session_id: int) -> AiSession:
@@ -31,6 +42,12 @@ async def get_session(session_id: int) -> AiSession:
     if row is None:
         raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
     return row
+
+
+async def list_sessions(limit: int = 50) -> list[AiSession]:
+    """最近会话列表：按更新时间倒序。"""
+    async with session_scope() as s:
+        return await SessionRepo(s).list_recent(limit)
 
 
 async def persona_of_session(session: AiSession) -> Persona:

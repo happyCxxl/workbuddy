@@ -5,6 +5,8 @@ import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
 
 const BACKEND = 'http://localhost:4388';
+// 灵犀（个人助手）为独立 Python 服务：会话、记忆、人设、权限与 SSE 都转发到它
+const ASSISTANT_BACKEND = 'http://127.0.0.1:8000';
 
 /**
  * 浏览器页面导航（要 HTML）不走后端代理，交回 Vite 的 SPA 回退。
@@ -71,6 +73,12 @@ export default defineConfig({
       // 模型管理接口（/model/models 与 /model/models/{id}/status、/model/usage/*）：/model 同时是
       // SPA 路由，这里只代理带子路径的接口，并靠 bypass 按 Accept 头区分导航与接口
       '^/model/': { target: BACKEND, bypass: bypassNavigation },
+      // 灵犀助手接口：会话 / 回合 SSE / 记忆 / 人设 / 权限规则，走独立 Python 服务
+      '^/sessions': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
+      '^/memories': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
+      '^/persona': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
+      '^/permissions': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
+      '^/health$': { target: ASSISTANT_BACKEND },
     },
   },
 });

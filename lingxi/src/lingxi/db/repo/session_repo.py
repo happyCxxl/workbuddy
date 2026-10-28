@@ -1,5 +1,6 @@
 """会话数据访问：只查写，不含业务规则（PY-DATA-002）。"""
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lingxi.db.models import AiSession
@@ -19,3 +20,8 @@ class SessionRepo:
     async def get(self, session_id: int) -> AiSession | None:
         """按主键读会话。"""
         return await self._session.get(AiSession, session_id)
+
+    async def list_recent(self, limit: int = 50) -> list[AiSession]:
+        """最近会话：按更新时间倒序（状态未删除的会话）。"""
+        stmt = select(AiSession).where(AiSession.status == "active").order_by(AiSession.updated_at.desc()).limit(limit)
+        return list((await self._session.scalars(stmt)).all())

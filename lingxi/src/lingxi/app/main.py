@@ -7,7 +7,7 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from lingxi.api import health, memories, permissions, sessions, turns
+from lingxi.api import health, memories, permissions, persona, sessions, turns
 from lingxi.app.config import Settings
 from lingxi.app.lifespan import make_lifespan
 from lingxi.contract import REQUEST_ID, ApiError, R
@@ -30,7 +30,7 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
     effective_embedder = embedder or OpenAICompatibleEmbedder(settings.memory)
     tools = ToolRegistry()
     register_fs_tools(tools)
-    permission = PermissionGate(settings.permission.preset)
+    permission = PermissionGate()
     hooks = HookRegistry()
     hooks.register("post_execute", make_memory_hook(gateway, effective_embedder))
     runner = TurnRunner(settings, gateway, hooks, effective_embedder, tools, permission)
@@ -51,8 +51,9 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
         return JSONResponse(status_code=200, content=R.fail(exc.error, str(exc)).to_dict())
 
     app.include_router(health.router)
-    app.include_router(sessions.router)
+    app.include_router(sessions.make_router(settings))
     app.include_router(memories.router)
-    app.include_router(permissions.make_router(permission))
+    app.include_router(persona.router)
+    app.include_router(permissions.router)
     app.include_router(turns.make_router(runner))
     return app

@@ -46,5 +46,5 @@ def test_api_error_exits_as_envelope_with_200() -> None:
         assert resp.status_code == 200
         body = resp.json()
         assert body["code"] == 60001
-        assert body["message"] == "参数不对"
+        assert body["msg"] == "参数不对"
         assert body["data"] is None

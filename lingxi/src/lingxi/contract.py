@@ -42,10 +42,10 @@ class R:
         self.data = data
 
     def to_dict(self) -> dict[str, object]:
-        """渲染为响应体：回带请求追踪 ID。"""
+        """渲染为响应体（与 Java 侧 R 对齐：code/msg/data）：回带请求追踪 ID。"""
         return {
             "code": self.code,
-            "message": self.message,
+            "msg": self.message,
             "data": self.data,
             "requestId": REQUEST_ID.get(),
         }

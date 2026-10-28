@@ -81,6 +81,27 @@ export const router = createRouter({
           meta: { title: '模型清单' },
         },
         {
+          // 个人助手 · 对话：会话列表 + SSE 流式对话 + 权限裁决
+          path: 'assistant/chat',
+          name: 'AssistantChat',
+          component: () => import('@/views/assistant/AssistantChatView.vue'),
+          meta: { title: '对话' },
+        },
+        {
+          // 个人助手 · 记忆：直查记忆表，可删除（物理移除）
+          path: 'assistant/memory',
+          name: 'AssistantMemory',
+          component: () => import('@/views/assistant/AssistantMemoryView.vue'),
+          meta: { title: '记忆' },
+        },
+        {
+          // 个人助手 · 人设：人格版本列表、内容查看、启用与另存新版本
+          path: 'assistant/persona',
+          name: 'AssistantPersona',
+          component: () => import('@/views/assistant/AssistantPersonaView.vue'),
+          meta: { title: '人设' },
+        },
+        {
           // 系统设置：平台级开关，登录用户都能进；页面内各设置卡按权限自行决定是否渲染
           path: 'settings',
           name: 'SystemSetting',

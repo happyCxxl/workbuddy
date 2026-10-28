@@ -3,7 +3,19 @@
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Identity, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Identity,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -13,13 +25,14 @@ class Base(DeclarativeBase):
 
 
 class PersonaVersion(Base):
-    """人格版本：八字段快照，版本递增、内容不可变。"""
+    """人格版本：八字段快照，版本递增、内容不可变；active 标记新会话默认使用的版本。"""
 
     __tablename__ = "persona_version"
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     version: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
     fields: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
@@ -32,6 +45,7 @@ class AiSession(Base):
     work_dir: Mapped[str] = mapped_column(Text, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
     persona_version_id: Mapped[int | None] = mapped_column(ForeignKey("persona_version.id"), nullable=True)
+    permission_preset: Mapped[str] = mapped_column(String(16), nullable=False, server_default="standard")
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("ai_session.id"), nullable=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
