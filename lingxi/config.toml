@@ -23,4 +23,7 @@ base_url = "https://api.deepseek.com"
 chat_model = "deepseek-flash"
 reasoner_model = "deepseek-v4-pro"
 structured_max_retries = 3
+failure_rate_threshold = 0.5
+cooldown_seconds = 30
+retry_budget = 2
 api_key = ""

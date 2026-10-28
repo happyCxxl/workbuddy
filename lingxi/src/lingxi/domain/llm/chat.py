@@ -14,8 +14,8 @@ _PROVIDER_EXTRA = "reasoning_content"
 class DeepSeekAdapter:
     """对话通道实现：业务不感知供应商协议差异（PY-AI-001）。"""
 
-    def __init__(self, settings: Settings) -> None:
-        self._model = settings.llm.chat_model
+    def __init__(self, settings: Settings, model: str | None = None) -> None:
+        self._model = model or settings.llm.chat_model
         self._client = AsyncOpenAI(api_key=settings.llm.api_key or "unset", base_url=settings.llm.base_url)
 
     @staticmethod

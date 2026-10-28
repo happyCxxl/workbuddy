@@ -37,12 +37,18 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
 
     app = FastAPI()
     json_object_calls: list[int] = [0]
+    fail_counts: dict[str, int] = {}
 
     @app.post("/responses")
     async def responses(request: Request) -> Response:
         body = await request.json()
         captured.append(body)
         prompt = str(body.get("input", ""))
+        model = str(body.get("model", ""))
+        if "fail_both" in prompt:
+            return JSONResponse(status_code=500, content={"error": {"message": "boom"}})
+        if "fail_pro" in prompt and model == "deepseek-v4-pro":
+            return JSONResponse(status_code=500, content={"error": {"message": "boom"}})
         if any(marker in prompt for marker in ("no_strict", "bad_once", "always_bad")):
             return JSONResponse(status_code=400, content={"error": {"message": "unsupported"}})
         return JSONResponse(
@@ -68,6 +74,17 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
         captured.append(body)
         last = body.get("messages", [{}])[-1]
         content = str(last.get("content", ""))
+        model = str(body.get("model", ""))
+
+        if "fail_both" in content:
+            return JSONResponse(status_code=500, content={"error": {"message": "boom"}})
+        if "fail_always" in content and model == "deepseek-flash":
+            return JSONResponse(status_code=500, content={"error": {"message": "boom"}})
+        if "fail_twice" in content:
+            count = fail_counts.setdefault("fail_twice", 0)
+            fail_counts["fail_twice"] = count + 1
+            if count < 2:
+                return JSONResponse(status_code=500, content={"error": {"message": "boom"}})
 
         if body.get("response_format") == {"type": "json_object"}:
             json_object_calls[0] += 1
@@ -170,7 +187,14 @@ async def fake_server() -> AsyncIterator[tuple[Settings, list[dict[str, object]]
     while not server.started:  # noqa: ASYNC110 线程内服务启动无事件可等
         await asyncio.sleep(0.05)
     port = server.servers[0].sockets[0].getsockname()[1]
-    settings = Settings(llm={"base_url": f"http://127.0.0.1:{port}", "api_key": "fake"})
+    # 其余分节传空字典：pydantic-settings 与配置文件深度合并取值；显式键只为静态检查器放行
+    settings = Settings(
+        server={},
+        database={},
+        loop={},
+        tools={},
+        llm={"base_url": f"http://127.0.0.1:{port}", "api_key": "fake"},
+    )
     try:
         yield settings, captured
     finally:

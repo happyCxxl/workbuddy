@@ -53,6 +53,9 @@ class LlmConfig(BaseModel):
     chat_model: str
     reasoner_model: str
     structured_max_retries: int
+    failure_rate_threshold: float
+    cooldown_seconds: int
+    retry_budget: int
     api_key: str
 
 
