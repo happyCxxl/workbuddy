@@ -46,7 +46,7 @@ Thumbs.db
 # 由 config/workbuddy-model.yml 的 ${ENV_VAR:} 空默认回落，交给启动期校验报错）
 application-local.*
 
-# AI 代理的个人本地偏好（团队共享规范在 AGENTS.md / web/AGENTS.md，个人偏好不入库）
+# AI 代理的个人本地偏好（团队共享规范在 AGENTS.md / workbuddy-web/AGENTS.md，个人偏好不入库）
 AGENTS.local.md
 CLAUDE.local.md
 

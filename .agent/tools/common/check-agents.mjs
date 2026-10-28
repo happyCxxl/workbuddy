@@ -29,7 +29,7 @@ for (const entry of ENTRIES) {
   }
   const base = dirname(file);
   for (const p of backtickPaths(text)) {
-    // 双基准解析：先按入口文件所在目录，再回退仓库根（嵌套入口常引用根级目录，如 web/AGENTS.md 提到 `docker/`）
+    // 双基准解析：先按入口文件所在目录，再回退仓库根（嵌套入口常引用根级目录，如前端入口提到 `docker/`）
     const local = join(base, ...p.split('/'));
     const fromRoot = join(ROOT, ...p.split('/'));
     if (!existsSync(local) && !existsSync(fromRoot)) {

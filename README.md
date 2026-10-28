@@ -5,18 +5,31 @@
 ## 项目定位
 
 - **工作台**：知识库为首个功能域，后续功能域陆续接入（可能引入 Java 之外的语言与技术栈）。
-- **单体应用**：后端单进程；前端 `web` 配套建设。
+- **单体应用**：后端单进程；前端 `workbuddy-web` 配套建设。
 - **登录 / 鉴权自建**：用户、令牌、安全配置均在本项目内实现，不假设平台共享能力。
 - **无租户概念**：数据模型不含 tenant 语义。
 - **不调用外部业务服务**：文件存储、向量库等均为项目自管组件；外部能力仅限开源基础设施（MySQL / Redis / MinIO / Milvus）。
-- **按模块拆分，而非分项目**：模块间为工程分层关系，同一构建与部署单元。
+- **后端按模块拆分，而非分项目**：Java 模块间为工程分层关系，同一构建与部署单元；前端与灵犀各是独立工程。
 
 ## 技术栈
 
-- 后端：Java 21 / Spring Boot 3.2.5 / Maven 多模块
+- 后端：Java 21 / Spring Boot 3.2.5 / Maven 多模块（`workbuddy-server/`）
 - 存储：MyBatis-Plus 3.5.5 / MySQL 8 / Redis 7 / MinIO / Milvus 2.5.5
-- 前端：Vue 3 / Element Plus / Vite（`web/`）
+- 前端：Vue 3 / Element Plus / Vite（`workbuddy-web/`）
+- AI 服务：灵犀，Python 3.12（`workbuddy-lingxi/`）
 - 基础设施编排：Docker Compose（MySQL + Redis + Milvus standalone + etcd + MinIO），见 `docker/README.md`
+
+## 工程目录
+
+三个工程各占一个顶层目录，公共设施留在仓库根：
+
+| 目录                   | 内容                                                                   |
+|------------------------|------------------------------------------------------------------------|
+| `workbuddy-server/`    | Java 21 + Spring Boot 3.2.5 多模块后端；`pom.xml` 在此，`mvn` 在此执行 |
+| `workbuddy-web/`       | Vue 3 + TypeScript + Vite 前端 SPA                                     |
+| `workbuddy-lingxi/`    | 灵犀：Python 3.12 AI 服务                                              |
+| `docker/`              | 本地中间件编排（MySQL / Redis / MinIO / Milvus / etcd）                |
+| `.agent/`、`.project/` | 规范与检查器、项目档案                                                 |
 
 ## 模块与依赖方向
 
@@ -46,6 +59,7 @@
 2. 构建并启动应用（端口 4388）：
 
    ```powershell
+   cd workbuddy-server
    mvn verify -DskipTests
    java -jar workbuddy-biz\target\workbuddy-biz-5.1.0.jar
    ```
@@ -71,8 +85,8 @@
 
 ## 文档
 
-| 文档                          | 内容                                               |
-|-------------------------------|----------------------------------------------------|
-| `AGENTS.md` / `web/AGENTS.md` | AI 代理入口（全局 / 前端就近）                     |
-| `.agent/standards/`           | 项目规范（common / java / vue + 索引）             |
-| `.agent/tools/`               | 规范的手段：common / java / vue 三组检查器与规则集 |
+| 文档                                    | 内容                                               |
+|-----------------------------------------|----------------------------------------------------|
+| `AGENTS.md` / `workbuddy-web/AGENTS.md` | AI 代理入口（全局 / 前端就近）                     |
+| `.agent/standards/`                     | 项目规范（common / java / vue + 索引）             |
+| `.agent/tools/`                         | 规范的手段：common / java / vue 三组检查器与规则集 |

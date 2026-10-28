@@ -34,16 +34,49 @@ has_java=$(printf '%s\n' "$changed" | grep -cE '\.java$' || true)
 has_md=$(printf '%s\n' "$changed" | grep -cE '\.md$' || true)
 has_agents=$(printf '%s\n' "$changed" | grep -cE 'AGENTS\.md$' || true)
 has_pom=$(printf '%s\n' "$changed" | grep -cE '(^|/)pom\.xml$' || true)
-has_web=$(printf '%s\n' "$changed" | grep -cE '^(web|frontend|ui)/' || true)
-# 前端目录：优先取改动文件首段的 web|frontend|ui；否则取 package.json 所在目录（前端在仓库根的场景）。
-# 计数与执行条件同源：都只看 has_web_chg，避免「算了但没跑」的静默漏检。
-web_dir=$(printf '%s\n' "$changed" | grep -oE '^(web|frontend|ui)/' | head -n 1 | sed 's#/$##')
-if [ -z "$web_dir" ] && printf '%s\n' "$changed" | grep -qE '(^|/)package\.json$'; then
-  web_dir=$(printf '%s\n' "$changed" | grep -E '(^|/)package\.json$' | head -n 1 | sed 's#/package\.json$##')
+# 工程根定位：按构建文件特征探测，不写死目录名；探测不到或歧义就显式失败，不静默跳过。
+#   Maven 根：仓库根有 pom.xml 用它；否则取唯一的一级子目录 pom.xml。
+mvn_root=''
+if [ -f "$root/pom.xml" ]; then
+  mvn_root='.'
+else
+  for p in "$root"/*/pom.xml; do
+    [ -f "$p" ] || continue
+    if [ -n "$mvn_root" ]; then
+      echo "推送前门禁：存在多个 Maven 工程根（${mvn_root%/pom.xml}、${p%/pom.xml}），无法自动定位"
+      exit 1
+    fi
+    mvn_root=${p%/pom.xml}
+    mvn_root=${mvn_root#"$root"/}
+  done
 fi
+# 前端目录：改动落在哪个含 package.json 的目录，就在哪个目录跑 lint（仓库根或一级子目录）。
+# 与旧口径的差别只是「目录名不再写死」；package.json 缺 lint 脚本时仍在执行处显式失败。
+web_dir=''
+for pkg in "$root/package.json" "$root"/*/package.json; do
+  [ -f "$pkg" ] || continue
+  d=${pkg%/package.json}
+  d=${d#"$root"}
+  d=${d#/}
+  [ -n "$d" ] || d='.'
+  if [ "$d" = '.' ]; then
+    hits=$(printf '%s\n' "$changed" | grep -cE '(^|/)(package\.json|index\.html)$|\.(vue|tsx?|jsx?|css|scss|less)$' || true)
+  else
+    hits=$(printf '%s\n' "$changed" | grep -cE "^$d/" || true)
+  fi
+  if [ "$hits" -gt 0 ]; then
+    web_dir=$d
+    break
+  fi
+done
 has_web_chg=0
-if [ "$has_web" -gt 0 ] || printf '%s\n' "$changed" | grep -qE '(^|/)package\.json$'; then
+if [ -n "$web_dir" ]; then
   has_web_chg=1
+fi
+# .vue 只可能出现在前端：改动含 .vue 却没定位到前端目录时显式失败，避免「改了前端但门禁没跑」。
+if [ -z "$web_dir" ] && printf '%s\n' "$changed" | grep -qE '\.vue$'; then
+  echo "推送前门禁：改动含 .vue 文件，但未定位到含 package.json 的前端目录"
+  exit 1
 fi
 has_py=$(printf '%s\n' "$changed" | grep -cE '\.py$' || true)
 has_pytoml=$(printf '%s\n' "$changed" | grep -cE '(^|/)pyproject\.toml$' || true)
@@ -68,7 +101,7 @@ has_test=$(printf '%s\n' "$changed" | grep -cE '/src/test/.*\.java$' || true)
 [ "$has_test" -gt 0 ] && total=$((total + 1))
 [ "$has_pom" -gt 0 ] && total=$((total + 1))
 if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
-  [ -f "$root/pom.xml" ] && total=$((total + 1))
+  total=$((total + 1))
 fi
 [ "$has_web_chg" -eq 1 ] && total=$((total + 1))
 [ "$has_py_chg" -eq 1 ] && total=$((total + 1))
@@ -172,17 +205,19 @@ if [ "$has_pom" -gt 0 ]; then
 fi
 
 if [ "$has_java" -gt 0 ] || [ "$has_pom" -gt 0 ]; then
-  if [ -f "$root/pom.xml" ]; then
-    run_step "后端全量门禁：mvn -o verify"
-    if (cd "$root" && mvn -o -q verify); then :; else
-      report_fail "$step" "后端门禁失败" "mvn -o verify"
+  if [ -n "$mvn_root" ]; then
+    run_step "后端全量门禁：mvn -o -q verify（$mvn_root/）"
+    if (cd "$root/$mvn_root" && mvn -o -q verify); then :; else
+      report_fail "$step" "后端门禁失败" "cd $mvn_root && mvn -o -q verify"
     fi
+  else
+    report_fail "$step" "未找到 Maven 工程根（pom.xml）" "在仓库根或唯一的一级子目录放 pom.xml 后复跑"
   fi
 fi
 
 if [ "$has_web_chg" -eq 1 ]; then
-  if [ -z "$web_dir" ] || [ ! -f "$root/$web_dir/package.json" ] || ! grep -q '"lint"' "$root/$web_dir/package.json" 2>/dev/null; then
-    report_fail "$step" "前端目录缺少带 lint 脚本的 package.json（${web_dir:-未定位}）" "在 ${web_dir:-前端目录} 补 lint 脚本后复跑门禁"
+  if ! grep -q '"lint"' "$root/$web_dir/package.json" 2>/dev/null; then
+    report_fail "$step" "前端目录缺少带 lint 脚本的 package.json（$web_dir/package.json）" "在 $web_dir 补 lint 脚本后复跑门禁"
   fi
   run_step "前端校验：包管理器 lint（${web_dir}/）"
   if (cd "$root/$web_dir" && (command -v pnpm >/dev/null 2>&1 && pnpm lint || npm run lint)); then :; else

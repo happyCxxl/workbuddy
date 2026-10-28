@@ -18,12 +18,12 @@ tools/**/*.sh text eol=lf
 # `-Dstdout.encoding=UTF-8\r` → JVM 直接 `Unrecognized option`。钩子里调用的正是 shell 版 mvn。
 .mvn/jvm.config text eol=lf
 
-# 前端整棵树钉死 LF：web/.prettierrc.json 里写明 endOfLine=lf，而 core.autocrlf=true 会把
+# 前端整棵树钉死 LF：workbuddy-web/.prettierrc.json 里写明 endOfLine=lf，而 core.autocrlf=true 会把
 # 检出转成 CRLF，于是 `pnpm lint`（pre-push 第 3 步）的 `prettier --check .` 会把整棵前端树
 # 判为格式不符——与改动内容无关，只与检出环境有关。钉死 LF 后索引、工作区与校验口径一致。
-web/** text eol=lf
+workbuddy-web/** text eol=lf
 
-# 二进制资源不做行尾转换：上面的 `web/** text eol=lf` 会把 web/public 下的 PNG / ICO 也当文本，
+# 二进制资源不做行尾转换：上面的 `workbuddy-web/** text eol=lf` 会把 workbuddy-web/public 下的 PNG / ICO 也当文本，
 # core.autocrlf=true 在入库时把恰好出现的 0D 0A 字节对压成 0A —— 索引里的图少一两个字节，
 # 检出后直接打不开（favicon 三件套命中过：1324 → 1323 字节，Pillow 报 UnidentifiedImageError）。
 # 声明为 binary（= -text -diff）后，入库字节与工作区完全一致。

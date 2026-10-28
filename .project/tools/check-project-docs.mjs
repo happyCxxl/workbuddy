@@ -147,9 +147,11 @@ function pomModules(file) {
 function pomEdges(rootPom, modulePrefix) {
   const mods = pomModules(rootPom);
   if (!mods) return null;
+  // 模块目录相对构建文件所在目录解析：构建文件不必在仓库根（多工程仓库常见一级子目录）。
+  const base = dirname(rootPom);
   const edges = new Map();
   for (const m of mods) {
-    const p = join(ROOT, m, 'pom.xml');
+    const p = join(ROOT, base, m, 'pom.xml');
     if (!existsSync(p)) continue;
     const deps = [...read(p).matchAll(new RegExp('<artifactId>(' + modulePrefix + '[a-z-]+)</artifactId>', 'g'))]
       .map((x) => x[1])

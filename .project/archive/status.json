@@ -2,15 +2,15 @@
   "docs": {
     "10": {
       "status": "已复核",
-      "reviewed": "2026-10-20",
-      "baseline": "5c58f55c",
-      "note": "新增模块级技术职责包取舍与项目落点映射"
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "依据位置随目录调整更新为 workbuddy-server/...；取舍结论未变"
     },
     "11": {
       "status": "已复核",
-      "reviewed": "2026-10-24",
-      "baseline": "4aeee3c3",
-      "note": "format-md 默认路径由 docs 改为根入口与治理目录；docs 移出后 check-docs 扫描范围随之缩小（57 篇），检查项与判定不变"
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "门禁脚本改为自动定位 Maven 与前端根（目录名不再写死）；检查器快照与债务条目未变"
     },
     "01": {
       "status": "已复核",
@@ -20,51 +20,51 @@
     },
     "02": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "7d5231e8",
-      "note": ""
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "工程目录调整：后端移入 workbuddy-server，前端改为 workbuddy-web；背景与目标未变"
     },
     "03": {
       "status": "已复核",
-      "reviewed": "2026-10-19",
-      "baseline": "7d5231e8",
-      "note": ""
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "约束来源路径更新为 workbuddy-server/pom.xml、workbuddy-web/package.json；约束本身未变"
     },
     "04": {
       "status": "已复核",
-      "reviewed": "2026-10-24",
-      "baseline": "4aeee3c3",
-      "note": "业务文档目录 docs/ 移出仓库，04 的 watch（docs/design）随之清空"
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "系统上下文的前端路径更新为 workbuddy-web/；分层与取舍未变"
     },
     "05": {
       "status": "已复核",
-      "reviewed": "2026-10-21",
-      "baseline": "5cb97c70",
-      "note": "构建门禁口径调整：checkstyle 只扫 src 源根、CPD 忽略注解块；模块结构与依赖边未变"
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "三个工程各归一个目录（workbuddy-server / workbuddy-web / workbuddy-lingxi）；模块清单与依赖边未变"
     },
     "06": {
       "status": "已复核",
-      "reviewed": "2026-10-23",
-      "baseline": "f700fa4c",
-      "note": "补 WbModelCall，业务表计数修正为 23（wb_system_setting 仅建表、无实体与 Mapper）；sql/README 同步补 wb_model/wb_model_call"
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "模块目录前缀变更；数据模型清单与表结构未变"
     },
     "07": {
       "status": "已复核",
-      "reviewed": "2026-10-24",
-      "baseline": "6d6fc408",
-      "note": "创建知识库端点改为 POST /knowledge-base/create，入参 strategyBindingEnabled 改为必填且只接受 0/1（@NotNull + @Min/@Max）；接口清单口径未变"
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "模块目录前缀变更；对外接口清单未变"
     },
     "08": {
       "status": "已复核",
-      "reviewed": "2026-10-20",
-      "baseline": "b989b87b",
-      "note": "docker compose 给 MySQL 容器补 LANG=C.utf8（entrypoint 的客户端字符集跟随 locale）；服务、端口与部署方式未变"
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "compose 挂载路径改为 ../workbuddy-server/workbuddy-biz/...；运行方式与服务未变"
     },
     "09": {
       "status": "已复核",
-      "reviewed": "2026-10-25",
-      "baseline": "fc9d2b13",
-      "note": "支持包内解析详情只读变更：displayBBox 按字体 ascent 收紧高亮上沿，bbox 保持原基线契约；不涉及鉴权、安全、异常或配置机制"
+      "reviewed": "2026-10-28",
+      "baseline": "63a05eaf",
+      "note": "配置面主文件路径随目录调整更新；横切机制未变"
     }
   }
 }

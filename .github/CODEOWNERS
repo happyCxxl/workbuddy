@@ -6,11 +6,13 @@
 *  @happyCxxl
 
 # ---- 规范与门禁（入口 / 检查器 / CI：改动须过所有者评审）----
-/AGENTS.md          @happyCxxl
-/web/AGENTS.md      @happyCxxl
-/.agent/            @happyCxxl
-/.project/          @happyCxxl
-/.github/           @happyCxxl
+/AGENTS.md              @happyCxxl
+/workbuddy-web/AGENTS.md @happyCxxl
+/.agent/                @happyCxxl
+/.project/              @happyCxxl
+/.github/               @happyCxxl
 
 # ---- 功能域（按目录就近认领）----
-/web/               @happyCxxl
+/workbuddy-web/         @happyCxxl
+/workbuddy-server/      @happyCxxl
+/workbuddy-lingxi/      @happyCxxl

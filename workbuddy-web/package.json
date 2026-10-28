@@ -1,9 +1,9 @@
 {
-  "name": "knowledge-web",
+  "name": "workbuddy-web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "知识库前端（自用单体，界面纯中文）",
+  "description": "工作台前端（自用单体，界面纯中文）",
   "packageManager": "pnpm@11.7.0",
   "engines": {
     "node": ">=20",

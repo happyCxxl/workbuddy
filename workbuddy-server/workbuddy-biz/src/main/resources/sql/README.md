@@ -17,12 +17,12 @@
 
 ```powershell
 # 在仓库根目录执行
-mysql -h localhost -P 3306 -uroot -proot123 < workbuddy-biz/src/main/resources/sql/init.sql
+mysql -h localhost -P 3306 -uroot -proot123 < workbuddy-server/workbuddy-biz/src/main/resources/sql/init.sql
 ```
 
 ```bash
 # Linux / macOS 同款写法
-mysql -h localhost -P 3306 -uroot -proot123 < workbuddy-biz/src/main/resources/sql/init.sql
+mysql -h localhost -P 3306 -uroot -proot123 < workbuddy-server/workbuddy-biz/src/main/resources/sql/init.sql
 ```
 
 > 以上 `-proot123` 是默认密码（仅供本机开发，COMMON-SEC-01 边界）；设置了环境变量 `WORKBUDDY_DB_PASSWORD` 时改用
@@ -63,8 +63,8 @@ docker compose up -d
 | 19 | `wb_user`                                | 用户：登录账号、角色与令牌版本                                                  |
 | 20 | `wb_system_setting`                      | 系统设置：键值形态的单行配置，表留在库里备用                                    |
 | 21 | `wb_storage_source`                      | 存储数据源：一行一个实例（含连接参数），`is_current` 那一行决定新对象的写入位置 |
-| 22 | `wb_model`                              | 模型：供应商、模型键与启停状态，模型池路由与调用账本的基础                       |
-| 23 | `wb_model_call`                         | 模型调用明细：一次尝试一行（成功失败都记），只插不改                              |
+| 22 | `wb_model`                               | 模型：供应商、模型键与启停状态，模型池路由与调用账本的基础                      |
+| 23 | `wb_model_call`                          | 模型调用明细：一次尝试一行（成功失败都记），只插不改                            |
 
 ## 四、初始数据
 

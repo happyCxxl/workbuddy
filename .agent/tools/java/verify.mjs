@@ -4,7 +4,7 @@
 // 只做编排，不改变任何检查器的判定口径，也不提供「跳过某项检查」的开关——
 // 哪一档包含哪些检查，由构建与门禁自身的阶段绑定决定。
 import { spawnSync } from 'node:child_process';
-import { closeSync, existsSync, openSync, readFileSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -32,19 +32,19 @@ function die(message) {
 }
 
 /** 子进程执行；capture 时输出落临时文件（不经管道），只回显尾部。返回退出码（不吞）。 */
-function run(cmd, args, { capture = false, verbose = false } = {}) {
+function run(cmd, args, { capture = false, verbose = false, cwd = ROOT } = {}) {
   const started = Date.now();
   const log = join(tmpdir(), `dsh-verify-${Date.now()}-${process.pid}.log`);
   let res;
   if (capture && !verbose) {
     const fd = openSync(log, 'w');
     try {
-      res = spawnSync(cmd, args, { cwd: ROOT, stdio: ['ignore', fd, fd], shell: IS_WIN });
+      res = spawnSync(cmd, args, { cwd, stdio: ['ignore', fd, fd], shell: IS_WIN });
     } finally {
       closeSync(fd);
     }
   } else {
-    res = spawnSync(cmd, args, { cwd: ROOT, stdio: 'inherit', shell: IS_WIN });
+    res = spawnSync(cmd, args, { cwd, stdio: 'inherit', shell: IS_WIN });
   }
   const sec = ((Date.now() - started) / 1000).toFixed(1);
   const status = res.status === null ? 1 : res.status;
@@ -63,6 +63,33 @@ function chunk(list, size) {
   const out = [];
   for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
   return out;
+}
+
+/**
+ * Maven 工程根（相对仓库根）：根有 pom.xml 用它；否则取唯一的一级子目录 pom.xml。
+ * 找不到或多于一个候选都不猜：返回 null 与原因，由调用方显式失败。
+ */
+function mavenRoot() {
+  if (existsSync(join(ROOT, 'pom.xml'))) return { dir: '.', reason: '' };
+  const candidates = readdirSync(ROOT, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && existsSync(join(ROOT, e.name, 'pom.xml')))
+    .map((e) => e.name);
+  if (candidates.length === 1) return { dir: candidates[0], reason: '' };
+  return {
+    dir: null,
+    reason: candidates.length > 1 ? `一级子目录里有多个 pom.xml：${candidates.join('、')}` : '仓库根与一级子目录都没有 pom.xml',
+  };
+}
+
+/** 前端目录（相对仓库根）：根或一级子目录里第一个带 lint 脚本的 package.json 所在目录。 */
+function frontendDir() {
+  const dirs = ['.', ...readdirSync(ROOT, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)];
+  for (const d of dirs) {
+    const pkg = join(ROOT, d, 'package.json');
+    if (!existsSync(pkg) || !/"lint"\s*:/.test(readFileSync(pkg, 'utf8'))) continue;
+    return d;
+  }
+  return null;
 }
 
 /** 自 HEAD 以来的改动文件：已跟踪的 diff 与未跟踪的新文件。用 -z 取原始路径，避免非 ASCII 路径被转义。 */
@@ -85,8 +112,15 @@ function fast(files, opts) {
   }
   const java = targets.filter((f) => f.endsWith('.java'));
   const docs = targets.filter((f) => f.endsWith('.md'));
-  // 只把 web/ 下的前端产物交给 pnpm lint；.mjs 工具脚本不算前端改动。
-  const web = targets.filter((f) => f.startsWith('web/') && /\.(ts|tsx|js|mjs|cjs|vue|css|scss|less)$/.test(f));
+  // 只把前端目录下的产物交给 pnpm lint（目录按 package.json 的 lint 脚本探测）；.mjs 工具脚本不算前端改动。
+  const fe = frontendDir();
+  const web = fe
+    ? targets.filter(
+        (f) =>
+          (fe === '.' ? !f.startsWith('.agent/') : f.startsWith(`${fe}/`)) &&
+          /\.(ts|tsx|js|mjs|cjs|vue|css|scss|less)$/.test(f),
+      )
+    : [];
   const text = targets.filter((f) => /\.(java|kt|ts|tsx|js|mjs|cjs|vue|css|scss|md|yml|yaml|json|xml|sql|sh|ps1|properties|html)$/.test(f));
 
   const steps = [];
@@ -124,7 +158,7 @@ function fast(files, opts) {
   }
 
   if (web.length) {
-    console.log(`\n前端改动 ${web.length} 个文件：请另跑 pnpm -C web lint（分钟级，属模块档，不在本档内联跑）`);
+    console.log(`\n前端改动 ${web.length} 个文件：请另跑 pnpm -C ${fe} lint（分钟级，属模块档，不在本档内联跑）`);
   }
   console.log(`\n✔ 检查器档通过（${targets.length} 个改动文件）`);
   return 0;
@@ -132,6 +166,12 @@ function fast(files, opts) {
 
 /** Maven 档：tests / module / full 共用同一套参数拼装。 */
 function maven(kind, module, opts, testPattern) {
+  const root = mavenRoot();
+  if (!root.dir) {
+    console.error(`Maven 工程根定位失败（${root.reason}）：在仓库根或唯一的一级子目录放 pom.xml`);
+    return 2;
+  }
+  const cwd = join(ROOT, root.dir);
   const goals = opts.clean ? ['clean'] : [];
   const base = ['-B', '-o', ...(opts.verbose ? [] : ['-q'])];
   // 测试内的应用日志改写到目标目录的 *-output.txt，控制台只留 Maven 与用例结论；
@@ -154,8 +194,8 @@ function maven(kind, module, opts, testPattern) {
   }
 
   const label = { fast: '检查器档', tests: '定向用例档', module: '模块档', full: '全量档' }[kind];
-  console.log(`>>>> ${label}：mvn ${args.join(' ')}`);
-  const { status, sec, log } = run('mvn', args, { capture: true, verbose: opts.verbose });
+  console.log(`>>>> ${label}：mvn ${args.join(' ')}（${root.dir}/）`);
+  const { status, sec, log } = run('mvn', args, { capture: true, verbose: opts.verbose, cwd });
   if (status !== 0) {
     console.error(`\n${label}失败（${sec}s）。按 COMMON-VERIFY-03 只重跑失败所在的那一层，不要整套重来。`);
     return status;

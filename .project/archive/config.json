@@ -19,10 +19,10 @@
       "checks": []
     },
     "05": {
-      "watch": ["pom.xml", "*/pom.xml"],
+      "watch": ["workbuddy-server/pom.xml", "workbuddy-server/*/pom.xml"],
       "checks": [
-        { "type": "modules", "target": "模块", "pom": "pom.xml", "stripPrefix": "workbuddy-" },
-        { "type": "edges", "target": "依赖边", "pom": "pom.xml", "modulePrefix": "workbuddy-" },
+        { "type": "modules", "target": "模块", "pom": "workbuddy-server/pom.xml", "stripPrefix": "workbuddy-" },
+        { "type": "edges", "target": "依赖边", "pom": "workbuddy-server/pom.xml", "modulePrefix": "workbuddy-" },
         {
           "type": "dirs",
           "target": "目录地图",
@@ -31,24 +31,24 @@
       ]
     },
     "06": {
-      "watch": ["*/src/main/java/**/*Mapper.java"],
+      "watch": ["workbuddy-server/*/src/main/java/**/*Mapper.java"],
       "checks": [
         {
           "type": "files",
           "target": "数据模型概览",
-          "glob": "*/src/main/java/**/*Mapper.java",
+          "glob": "workbuddy-server/*/src/main/java/**/*Mapper.java",
           "suffix": "Mapper",
           "ignore": []
         }
       ]
     },
     "07": {
-      "watch": ["*/src/main/java/**/*Controller.java"],
+      "watch": ["workbuddy-server/*/src/main/java/**/*Controller.java"],
       "checks": [
         {
           "type": "annotations",
           "target": "对外接口",
-          "glob": "*/src/main/java/**/*Controller.java",
+          "glob": "workbuddy-server/*/src/main/java/**/*Controller.java",
           "pattern": "@RequestMapping\\(\"([^\"]+)\"\\)",
           "stripSuffix": "/*"
         }
@@ -62,10 +62,10 @@
     },
     "09": {
       "watch": [
-        "*/src/main/java/**/security/**",
-        "*/src/main/java/**/config/**",
-        "*/src/main/java/**/exception/**",
-        "*/src/main/java/**/support/**"
+        "workbuddy-server/*/src/main/java/**/security/**",
+        "workbuddy-server/*/src/main/java/**/config/**",
+        "workbuddy-server/*/src/main/java/**/exception/**",
+        "workbuddy-server/*/src/main/java/**/support/**"
       ],
       "checks": []
     },
@@ -74,7 +74,7 @@
       "checks": []
     },
     "11": {
-      "watch": [".agent/tools/**", "pom.xml"],
+      "watch": [".agent/tools/**", "workbuddy-server/pom.xml"],
       "checks": [
         {
           "type": "count",

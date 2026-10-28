@@ -2,15 +2,15 @@
 
 > 本文件是所有 AI 编码代理（DSH / Claude Code / Cursor / Trae / 通义灵码 / CodeBuddy 等）在本仓库的**全局入口**：
 > 只放跨功能域、跨语言都成立的禁令与路由，细节一律指向对应规范文档——单一事实源，此处不复述。
-> 功能域就近入口：前端 `web/AGENTS.md`。人的协作规范见 `.agent/standards/common/06-协作流程.md`。本文件迭代方式见 §5。
+> 功能域就近入口：前端 `workbuddy-web/AGENTS.md`、灵犀 `workbuddy-lingxi/AGENTS.md`。人的协作规范见 `.agent/standards/common/06-协作流程.md`。本文件迭代方式见 §5。
 
 ## 1. 工作台定位
 
 - **workbuddy 是一个工作台**：知识库（文档输入 → 解析 → 组装 → 预处理 → 切片 → 向量化 → 索引 → 检索评测的流水线）
   是首个功能域；后续功能域陆续接入，**可能引入 Java 之外的语言与技术栈**。
-- 当前实现：后端 Java 21 / Spring Boot 3.2.5 / Maven 多模块（`workbuddy-*`，包根 `com.workbuddy`）；前端 `web/`
-  （Vue 3 + TypeScript + Vite + Element Plus，界面纯中文）；基础设施 MySQL / Redis / MinIO / Milvus（`docker/` 编排）；AI 服务 `lingxi/`（Python，骨架）。
-- 规范分层：**根文件 = 工作台全局口径；功能域入口就近落位，条款正文收口 `.agent/`**（前端入口在 `web/`、条款在 `.agent/standards/vue/`；Java 后端实现形态在 `.agent/standards/java/`，通用约束与 AI 协作在 `.agent/standards/common/`，检查口径在 `.agent/standards/`，引擎配置在 `.agent/tools/`）。
+- 当前实现：后端 Java 21 / Spring Boot 3.2.5 / Maven 多模块（`workbuddy-server/` 的 `workbuddy-*` 模块，包根 `com.workbuddy`）；
+  前端 `workbuddy-web/`（Vue 3 + TypeScript + Vite + Element Plus，界面纯中文）；基础设施 MySQL / Redis / MinIO / Milvus（`docker/` 编排）；AI 服务 `workbuddy-lingxi/`（Python，骨架）。
+- 规范分层：**根文件 = 工作台全局口径；功能域入口就近落位，条款正文收口 `.agent/`**（前端入口在 `workbuddy-web/`、条款在 `.agent/standards/vue/`；Java 后端实现形态在 `.agent/standards/java/`，通用约束与 AI 协作在 `.agent/standards/common/`，检查口径在 `.agent/standards/`，引擎配置在 `.agent/tools/`）。
   新功能域接入前必读 `.agent/standards/common/06-协作流程.md` 的「新功能域接入约定」。
 
 ## 2. 全局 Never（与语言无关，违反即不合规）
@@ -20,22 +20,22 @@
 2. 注释只写契约（做什么、约束、副作用），不写沿革、阶段、人员；格式与覆盖由 `.agent/tools/java/check-javadoc.mjs` 机器拦截。
 3. 提交信息用 Conventional Commits + 中文描述 + scope：`refactor(模型): ...`、`fix(docker): ...`。
 4. 不新增第三方依赖，除非任务明确要求且交付说明里给理由。
-5. 不削弱门禁：`.agent/tools/java/checkstyle.xml` / `.agent/tools/java/pmd-ruleset.xml` / `web/eslint.config.mjs` / 钩子脚本的任何放宽须用户明确批准。
+5. 不削弱门禁：`.agent/tools/java/checkstyle.xml` / `.agent/tools/java/pmd-ruleset.xml` / `workbuddy-web/eslint.config.mjs` / 钩子脚本的任何放宽须用户明确批准。
 6. 禁止用 `--no-verify` 等方式绕过 Git 钩子门禁：门禁修不过就如实报告问题，不绕。
 7. `.agent/standards/` 的规范正文必须自包含：只引用规范目录内路径与通用标准；不得写项目名、模块名、项目目录、项目档案或机器路径。项目事实由项目文档单向引用规范，规范不反向引用事实。
 
 ## 3. 路由表（动什么，先读什么——未读就动手即违规）
 
-| 要动的东西                   | 动手前必读                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-|------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 规范总入口                   | `.agent/standards/00-索引.md`（语言 × 主题地图、规则规模、执行手段；先定位再下钻）                                                                                                                                                                                                                                                                                                                                                                           |
-| 项目现状（是什么、欠什么债） | `.project/archive/01-身份.md` + `.project/archive/11-质量与风险.md`（事实档案：定位、生命周期、检查器快照与债务；先于规范读）                                                                                                                                                                                                                                                                                                                                |
-| Java 后端（`workbuddy-*`）   | `.agent/standards/java/00-总则与规则索引.md`（实现形态：分层、命名、DTO、异常、日志、事务、测试、注释）+ `.agent/standards/java/04-契约.md`（HTTP 恒 200、ID 序列化、幂等键、数据形态、码值）+ `.agent/standards/java/05-异常-日志-事务.md`（错误码集中登记与任务码分列）+ `.agent/standards/common/05-安全.md`（鉴权、限流）+ `.agent/standards/common/03-反模式.md`（判空 `NullUtil`）+ `.agent/standards/common/07-检查手段.md`（检查口径与交付自查清单） |
-| 任何代码（先读这条）         | `.agent/standards/common/02-交付行为约束.md`（先读后写、最小改动、禁止发明、验证闭环）+ `.agent/standards/common/03-反模式.md`（过度抽象、防御性冗余、复制粘贴）+ `.project/archive/05-结构.md`「可复用能力入口」（写新工具类或通用方法前先查）                                                                                                                                                                                                              |
-| 前端（`web/`）               | `web/AGENTS.md`（就近入口，编辑 `web/` 文件时自动加载）                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Python（`lingxi/`）           | `lingxi/AGENTS.md`（就近入口）+ `.agent/standards/python/00-总则与规则索引.md`（风格基底与条款正文）                                                                                                                                                                                                                                                                                                                                                            |
-| 检查器 / 门禁 / 手段         | `.agent/standards/common/07-检查手段.md`（跨语言脚本 + Java/Vue 检查类 + 阻断与豁免口径）                                                                                                                                                                                                                                                                                                                                                                    |
-| 新功能域 / 新语言            | `.agent/standards/common/06-协作流程.md`「新功能域接入约定」                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 要动的东西                       | 动手前必读                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 规范总入口                       | `.agent/standards/00-索引.md`（语言 × 主题地图、规则规模、执行手段；先定位再下钻）                                                                                                                                                                                                                                                                                                                                                                           |
+| 项目现状（是什么、欠什么债）     | `.project/archive/01-身份.md` + `.project/archive/11-质量与风险.md`（事实档案：定位、生命周期、检查器快照与债务；先于规范读）                                                                                                                                                                                                                                                                                                                                |
+| Java 后端（`workbuddy-server/`） | `.agent/standards/java/00-总则与规则索引.md`（实现形态：分层、命名、DTO、异常、日志、事务、测试、注释）+ `.agent/standards/java/04-契约.md`（HTTP 恒 200、ID 序列化、幂等键、数据形态、码值）+ `.agent/standards/java/05-异常-日志-事务.md`（错误码集中登记与任务码分列）+ `.agent/standards/common/05-安全.md`（鉴权、限流）+ `.agent/standards/common/03-反模式.md`（判空 `NullUtil`）+ `.agent/standards/common/07-检查手段.md`（检查口径与交付自查清单） |
+| 任何代码（先读这条）             | `.agent/standards/common/02-交付行为约束.md`（先读后写、最小改动、禁止发明、验证闭环）+ `.agent/standards/common/03-反模式.md`（过度抽象、防御性冗余、复制粘贴）+ `.project/archive/05-结构.md`「可复用能力入口」（写新工具类或通用方法前先查）                                                                                                                                                                                                              |
+| 前端（`workbuddy-web/`）         | `workbuddy-web/AGENTS.md`（就近入口，编辑 `workbuddy-web/` 文件时自动加载）                                                                                                                                                                                                                                                                                                                                                                                  |
+| Python（`workbuddy-lingxi/`）    | `workbuddy-lingxi/AGENTS.md`（就近入口）+ `.agent/standards/python/00-总则与规则索引.md`（风格基底与条款正文）                                                                                                                                                                                                                                                                                                                                               |
+| 检查器 / 门禁 / 手段             | `.agent/standards/common/07-检查手段.md`（跨语言脚本 + Java/Vue 检查类 + 阻断与豁免口径）                                                                                                                                                                                                                                                                                                                                                                    |
+| 新功能域 / 新语言                | `.agent/standards/common/06-协作流程.md`「新功能域接入约定」                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 推送门禁预跑：`sh .agent/tools/common/pre-push-gate.sh`（与 `.husky/pre-push` 同一套，带指纹缓存；`FORCE_GATE=1` 强制重跑）。
 
@@ -43,13 +43,13 @@
 
 开发期按改动范围选档，推送前一律全量；拿不准时取更全的一档。细则见 `.agent/standards/java/06-测试.md` §8。
 
-| 改动                   | 验证命令                                                                               |
-|------------------------|----------------------------------------------------------------------------------------|
-| 文档、注释、规范       | `node .agent/tools/java/check-javadoc.mjs` + `node .agent/tools/common/check-docs.mjs` |
-| 前端                   | `cd web && pnpm lint`                                                                  |
-| 单个 / 跨模块的类      | `mvn -o -pl <模块名> test`（公共模块或跨模块加 `-amd`）                                |
-| `pom.xml`、跨模块重构  | `mvn -o test`                                                                          |
-| 推送前                 | `sh .agent/tools/common/pre-push-gate.sh`（含全量测试）                                |
+| 改动                                               | 验证命令                                                                               |
+|----------------------------------------------------|----------------------------------------------------------------------------------------|
+| 文档、注释、规范                                   | `node .agent/tools/java/check-javadoc.mjs` + `node .agent/tools/common/check-docs.mjs` |
+| 前端                                               | `cd workbuddy-web && pnpm lint`                                                        |
+| 单个 / 跨模块的类                                  | `cd workbuddy-server && mvn -o -pl <模块名> test`（公共模块或跨模块加 `-amd`）         |
+| 构建文件（`workbuddy-server/pom.xml`）、跨模块重构 | `cd workbuddy-server && mvn -o test`                                                   |
+| 推送前                                             | `sh .agent/tools/common/pre-push-gate.sh`（含全量测试）                                |
 
 开发期用档位编排脚本执行上表（脚本只编排、不改判定）：`node .agent/tools/java/verify.mjs fast | tests <模块名> --test=<类名> | module <模块名> | full`；升降档与失败重跑规则见 `.agent/standards/common/08-验证节奏.md`。
 
@@ -69,11 +69,12 @@
 
 ## 6. 演进日志
 
-| 日期       | 变更                                                                                               | 原因                                                                               |
-|------------|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| 首版       | 建立工作台级入口：6 条全局 Never + 路由表；前端细则拆至 `web/AGENTS.md`                            | 从既有规范提炼；README.md 编码损坏事故入禁令；定位由「知识库系统」更正为「工作台」 |
-| 2026-10-17 | 新建 `.agent/standards/` Java 实现规范正典（46 条规则），§3 路由表补一行                           | 后端只有契约口径与检查引擎，缺实现形态条款；跨会话与跨机器的产出形态漂移           |
-| 2026-10-17 | 治理文档收口 `.agent/`：协作指南、前端规范、检查口径全部迁入，§1/§3 指针改新路径                   | 三类治理文档分散在根、web/docs、tools 三层，跨会话查找多跳                         |
-| 2026-10-20 | §2 新增 Never#7：`.agent/standards/` 规范正文自包含                                                | 规范曾反向引用项目名/项目档案；项目事实必须由项目文档单向引用规范                  |
-| 2026-10-21 | §3.1 补档位编排命令；新增 `.agent/standards/common/08-验证节奏.md`、`.agent/tools/java/verify.mjs` | 轨迹统计：验证占开发时间 71%，其中无改动重跑 2 小时；档位缺编排与节奏约束          |
-| 2026-10-26 | 新增 Python 规范正典（`.agent/standards/python/`）与灵犀（`lingxi/`）骨架；工具链、门禁与 CI 接入 | 新功能域按 §7 接入约定；规范先于代码、门禁先于功能 |
+| 日期       | 变更                                                                                                                    | 原因                                                                                       |
+|------------|-------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| 首版       | 建立工作台级入口：6 条全局 Never + 路由表；前端细则拆至 `workbuddy-web/AGENTS.md`                                       | 从既有规范提炼；README.md 编码损坏事故入禁令；定位由「知识库系统」更正为「工作台」         |
+| 2026-10-17 | 新建 `.agent/standards/` Java 实现规范正典（46 条规则），§3 路由表补一行                                                | 后端只有契约口径与检查引擎，缺实现形态条款；跨会话与跨机器的产出形态漂移                   |
+| 2026-10-17 | 治理文档收口 `.agent/`：协作指南、前端规范、检查口径全部迁入，§1/§3 指针改新路径                                        | 三类治理文档分散在根、web/docs、tools 三层，跨会话查找多跳                                 |
+| 2026-10-20 | §2 新增 Never#7：`.agent/standards/` 规范正文自包含                                                                     | 规范曾反向引用项目名/项目档案；项目事实必须由项目文档单向引用规范                          |
+| 2026-10-21 | §3.1 补档位编排命令；新增 `.agent/standards/common/08-验证节奏.md`、`.agent/tools/java/verify.mjs`                      | 轨迹统计：验证占开发时间 71%，其中无改动重跑 2 小时；档位缺编排与节奏约束                  |
+| 2026-10-26 | 新增 Python 规范正典（`.agent/standards/python/`）与灵犀（`workbuddy-lingxi/`）骨架；工具链、门禁与 CI 接入             | 新功能域按 §7 接入约定；规范先于代码、门禁先于功能                                         |
+| 2026-10-28 | 三个工程各归一个目录（`workbuddy-server/`、`workbuddy-web/`、`workbuddy-lingxi/`）；门禁脚本改为自动定位 Maven 与前端根 | 七个 Java 模块直接铺在根目录，工程边界与仓库卫生都差；目录名不写死，避免下次重命名再动门禁 |

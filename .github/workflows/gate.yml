@@ -36,15 +36,17 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: 安装 pnpm（版本读 web/package.json 的 packageManager 字段）
+      - name: 安装 pnpm（版本读 workbuddy-web/package.json 的 packageManager 字段）
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: workbuddy-web/package.json
 
       - name: 安装 Node 24（带 pnpm 依赖缓存）
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: pnpm
-          cache-dependency-path: web/pnpm-lock.yaml
+          cache-dependency-path: workbuddy-web/pnpm-lock.yaml
 
       - name: 文档结构
         run: node .agent/tools/common/check-docs.mjs
@@ -77,7 +79,7 @@ jobs:
         run: node .agent/tools/common/check-modules.mjs
 
       - name: 前端全量检查
-        working-directory: web
+        working-directory: workbuddy-web
         run: |
           pnpm install --frozen-lockfile
           pnpm lint
@@ -88,7 +90,7 @@ jobs:
           python-version: '3.12'
 
       - name: Python 全量校验（ruff + pyright + pytest）
-        working-directory: lingxi
+        working-directory: workbuddy-lingxi
         run: |
           printf '[llm]\napi_key = "fake"\n' > config.local.toml
           uv sync --frozen
@@ -99,4 +101,5 @@ jobs:
           uv run pytest
 
       - name: 后端全量门禁（Checkstyle + PMD + CPD + SpotBugs + 单测 + JaCoCo）
+        working-directory: workbuddy-server
         run: mvn -B verify

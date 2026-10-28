@@ -24,11 +24,30 @@ fi
 
 # 前端组：对暂存文件做自动修复（prettier / eslint / stylelint 的 fix 结果回写索引）。
 # 全量检查（vue-tsc / ls-lint / 命名词表 / 规范合规）在 pre-push。
-if echo "$staged" | grep -qE '^(web|\.agent/tools/vue)/'; then
-  (
-    cd "$(git rev-parse --show-toplevel)/web"
-    pnpm exec lint-staged --concurrent false
-  )
+# 前端目录按「含 lint 脚本的 package.json」自动定位（仓库根或一级子目录），不写死目录名。
+root=$(git rev-parse --show-toplevel)
+frontend=''
+for pkg in "$root"/package.json "$root"/*/package.json; do
+  [ -f "$pkg" ] || continue
+  grep -q '"lint"' "$pkg" 2>/dev/null || continue
+  frontend=${pkg%/package.json}
+  frontend=${frontend#"$root"}
+  frontend=${frontend#/}
+  [ -n "$frontend" ] || frontend='.'
+  break
+done
+if [ -n "$frontend" ]; then
+  if [ "$frontend" = '.' ]; then
+    staged_fe=$(echo "$staged" | grep -E '\.(ts|tsx|js|jsx|mjs|cjs|vue|css|scss|less|html|json)$' || true)
+  else
+    staged_fe=$(echo "$staged" | grep -E "^(${frontend}/|\.agent/tools/vue/)" || true)
+  fi
+  if [ -n "$staged_fe" ]; then
+    (
+      cd "$root/$frontend"
+      pnpm exec lint-staged --concurrent false
+    )
+  fi
 fi
 
 # 档案同步：代码变动必须同提交更新对应档案（配对见 .project/archive/config.json）

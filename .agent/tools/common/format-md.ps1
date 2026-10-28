@@ -30,7 +30,7 @@
 #>
 param(
     [Parameter(Position = 0)]
-    [string[]]$Paths = @('README.md', 'AGENTS.md', 'CLAUDE.md', '.agent', '.project', '.github', 'web/AGENTS.md'),
+    [string[]]$Paths = @('README.md', 'AGENTS.md', 'CLAUDE.md', '.agent', '.project', '.github', 'workbuddy-web/AGENTS.md', 'workbuddy-lingxi/AGENTS.md'),
 
     [switch]$SelfTest
 )

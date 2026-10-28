@@ -1,6 +1,6 @@
-# web/AGENTS.md — 前端功能域入口（knowledge-web）
+# workbuddy-web/AGENTS.md — 前端功能域入口（workbuddy-web）
 
-> 编辑 `web/` 下任何文件时自动加载。全局口径（注释、提交、门禁、依赖、--no-verify 禁令）以根 `AGENTS.md` 为准，此处不重复。
+> 编辑 `workbuddy-web/` 下任何文件时自动加载。全局口径（注释、提交、门禁、依赖、--no-verify 禁令）以根 `AGENTS.md` 为准，此处不重复。
 
 ## 1. 定位与命令
 

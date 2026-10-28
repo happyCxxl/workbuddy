@@ -1,18 +1,18 @@
-# lingxi/AGENTS.md — 灵犀功能域入口
+# workbuddy-lingxi/AGENTS.md — 灵犀功能域入口
 
-> 编辑 `lingxi/` 下任何文件时自动加载。全局口径（注释、提交、门禁、依赖、--no-verify 禁令）以根 `AGENTS.md` 为准，此处不重复。
+> 编辑 `workbuddy-lingxi/` 下任何文件时自动加载。全局口径（注释、提交、门禁、依赖、--no-verify 禁令）以根 `AGENTS.md` 为准，此处不重复。
 
 ## 1. 定位与命令
 
 - 灵犀：带人格与记忆的个人 AI 助手；Python 3.12 + Pydantic + SQLAlchemy + pgvector（规划中），当前为可启动骨架。
 - 与业务后端共用登录体系：只验签、不发令牌、不建用户表；数据独立。
 
-| 场景   | 命令                                                                                   | 要点                    |
-|------|--------------------------------------------------------------------------------------|-----------------------|
+| 场景     | 命令                                                                                 | 要点                                                                     |
+|----------|--------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
 | 安装同步 | `uv sync`                                                                            | 增量安装；`uv.lock` 入库；首次需建 `config.local.toml`（敏感值，不入库） |
-| 启动验证 | `uv run python -m lingxi`                                                            | 打印启动信息                |
-| 全量校验 | `uv run ruff check && uv run ruff format --check && uv run pyright && uv run pytest` | 推送门禁与 CI 同套；覆盖率阈值 70% |
-| 单测   | `uv run pytest`                                                                      | pytest-randomly 随机顺序  |
+| 启动验证 | `uv run python -m lingxi`                                                            | 打印启动信息                                                             |
+| 全量校验 | `uv run ruff check && uv run ruff format --check && uv run pyright && uv run pytest` | 推送门禁与 CI 同套；覆盖率阈值 70%                                       |
+| 单测     | `uv run pytest`                                                                      | pytest-randomly 随机顺序                                                 |
 
 ## 2. 灵犀 Never（违反即不合规；完整条款以规范正典为准）
 
