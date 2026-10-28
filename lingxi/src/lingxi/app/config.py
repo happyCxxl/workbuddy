@@ -34,6 +34,7 @@ class LoopConfig(BaseModel):
 
     max_steps: int
     context_budget_ratio: float
+    input_token_budget: int
 
 
 class ToolsConfig(BaseModel):

@@ -10,6 +10,7 @@ url = "postgresql+asyncpg://lingxi:lingxi@localhost:5432/lingxi"
 [loop]
 max_steps = 25
 context_budget_ratio = 0.8
+input_token_budget = 100000
 
 [tools]
 shell_timeout_seconds = 120

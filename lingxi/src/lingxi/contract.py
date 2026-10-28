@@ -18,6 +18,7 @@ class ErrorCode(Enum):
     FORBIDDEN = (60004, "无权限")
     STRUCTURED_OUTPUT_INVALID = (60101, "结构化输出解析失败")
     MODEL_UNAVAILABLE = (60201, "模型出口全部候选不可用")
+    TURN_ABORTED = (60202, "回合中止")
 
     def __init__(self, code: int, default_message: str) -> None:
         self.code = code

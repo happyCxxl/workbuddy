@@ -10,7 +10,7 @@ from lingxi.db.repo.event_repo import EventRepo
 
 
 class EventType(StrEnum):
-    """事件类型：主文档 §9.2 的十一类，新增类型先在此登记。"""
+    """事件类型：SSE 十一类 + 持久层条目族；新增类型先在此登记。"""
 
     TEXT_DELTA = "text.delta"
     THINKING_DELTA = "thinking.delta"
@@ -23,6 +23,9 @@ class EventType(StrEnum):
     SUBSESSION = "subsession"
     TURN_END = "turn.end"
     ERROR = "error"
+    TURN_START = "turn/start"
+    USER_MESSAGE = "user/message"
+    ASSISTANT_MESSAGE = "assistant/message"
 
 
 async def append_event(session_id: int, event_type: EventType, payload: dict[str, object]) -> int:

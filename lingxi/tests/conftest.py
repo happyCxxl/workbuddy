@@ -107,7 +107,7 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
                 }
             )
 
-        if content == "tool":
+        if content == "tool" or "工具" in content:
 
             async def tool_gen() -> AsyncIterator[str]:
                 data = _chunk()

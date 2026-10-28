@@ -22,6 +22,10 @@ class PersonaRepo:
         stmt = select(PersonaVersion).where(PersonaVersion.version == version)
         return await self._session.scalar(stmt)
 
+    async def get_by_id(self, row_id: int) -> PersonaVersion | None:
+        """按主键读快照。"""
+        return await self._session.get(PersonaVersion, row_id)
+
     async def max_version(self) -> int:
         """当前最大版本号；无数据时为 0。"""
         stmt = select(func.coalesce(func.max(PersonaVersion.version), 0))
