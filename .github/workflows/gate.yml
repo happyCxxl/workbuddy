@@ -90,6 +90,7 @@ jobs:
       - name: Python 全量校验（ruff + pyright + pytest）
         working-directory: lingxi
         run: |
+          printf '[llm]\napi_key = "fake"\n' > config.local.toml
           uv sync --frozen
           uv run alembic upgrade head
           uv run ruff check

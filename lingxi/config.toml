@@ -1,0 +1,25 @@
+# 灵犀配置（入库）：非敏感配置按域分类；敏感值放 config.local.toml（不入库）或环境变量。
+
+[server]
+host = "127.0.0.1"
+port = 8000
+
+[database]
+url = "postgresql+asyncpg://lingxi:lingxi@localhost:5432/lingxi"
+
+[loop]
+max_steps = 25
+context_budget_ratio = 0.8
+
+[tools]
+shell_timeout_seconds = 120
+shell_output_cap_chars = 8000
+web_fetch_output_cap_chars = 200000
+web_timeout_seconds = 30
+
+[llm]
+provider = "deepseek"
+base_url = "https://api.deepseek.com"
+chat_model = "deepseek-flash"
+reasoner_model = "deepseek-v4-pro"
+api_key = ""

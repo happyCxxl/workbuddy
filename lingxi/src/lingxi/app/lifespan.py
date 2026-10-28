@@ -19,7 +19,7 @@ def make_lifespan(settings: Settings) -> Callable[[FastAPI], AbstractAsyncContex
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         """启动：初始化数据库引擎（连接懒加载，不阻塞启动）；关闭：释放引擎。"""
-        init_engine(settings.database_url)
+        init_engine(settings.database.url)
         logger.info("应用启动：数据库引擎已初始化")
         try:
             yield

@@ -14,7 +14,7 @@ TABLE_NAMES = {"ai_session", "memory", "model_call", "permission_rule", "persona
 @pytest.fixture
 async def engine_fixture() -> None:
     """测试期引擎：初始化并随用例结束释放。"""
-    init_engine(Settings().database_url)
+    init_engine(Settings(**{}).database.url)
     yield
     await dispose_engine()
 

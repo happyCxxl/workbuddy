@@ -11,7 +11,8 @@ from lingxi.app.config import Settings
 from lingxi.db.models import Base
 
 config = context.config
-config.set_main_option("sqlalchemy.url", Settings().database_url)
+# 空字典展开：必填字段实际由 pydantic-settings 从配置源填充；空 **kwargs 仅让静态检查器放行
+config.set_main_option("sqlalchemy.url", Settings(**{}).database.url)  # pyright: ignore[reportUnknownArgumentType] 空展开无实际传参，字段由配置源填充
 target_metadata = Base.metadata
 
 

@@ -14,8 +14,9 @@ def main() -> None:
     if isinstance(sys.stdout, io.TextIOWrapper):
         # 固定标准输出为 UTF-8：Windows 控制台默认 GBK，不修则中文变乱码；测试替换 stdout 时跳过
         sys.stdout.reconfigure(encoding="utf-8")  # pyright: ignore[reportUnknownMemberType] 收窄后的流类型无泛型参数，方法本身在运行期存在
-    settings = Settings()
-    uvicorn.run(create_app(settings), host=settings.host, port=settings.port)
+    # 空字典展开：必填字段实际由 pydantic-settings 从配置源填充；空 **kwargs 仅让静态检查器放行
+    settings = Settings(**{})  # pyright: ignore[reportUnknownArgumentType] 空展开无实际传参，字段由配置源填充
+    uvicorn.run(create_app(settings), host=settings.server.host, port=settings.server.port)
 
 
 if __name__ == "__main__":
