@@ -11,6 +11,9 @@
 
 **脚本会删除同名库，库内原有数据全部丢弃；可重复执行，每次执行结果一致。**
 
+> 库结构只在本脚本里维护，应用不做自动迁移、也不提供增量补丁：结构变了就重跑本脚本（已含 DROP/CREATE）。
+> 早于该次变更建出的库，列的增删不会自己发生，会以 `BadSqlGrammarException: Unknown column ...` 的形式暴露。
+
 ## 二、怎么执行
 
 命令行（密码取自 `application.yml` 的 `spring.datasource.password`）：
