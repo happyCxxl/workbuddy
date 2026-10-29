@@ -276,13 +276,19 @@ async def fake_server() -> AsyncIterator[tuple[Settings, list[dict[str, object]]
     while not server.started:  # noqa: ASYNC110 线程内服务启动无事件可等
         await asyncio.sleep(0.05)
     port = server.servers[0].sockets[0].getsockname()[1]
-    # 其余分节传空字典：pydantic-settings 与配置文件深度合并取值；显式键只为静态检查器放行
+    # 其余分节传空字典：pydantic-settings 与配置文件深度合并取值；显式键只为静态检查器放行。
+    # 两个模型名显式给出：降级用例要区分候选，不能依赖生产配置里的模型名。
     settings = Settings(
         server={},
         database={},
         loop={},
         tools={},
-        llm={"base_url": f"http://127.0.0.1:{port}", "api_key": "fake"},
+        llm={
+            "base_url": f"http://127.0.0.1:{port}",
+            "api_key": "fake",
+            "chat_model": "deepseek-flash",
+            "reasoner_model": "deepseek-v4-pro",
+        },
     )
     try:
         yield settings, captured
