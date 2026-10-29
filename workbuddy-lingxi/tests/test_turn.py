@@ -200,3 +200,36 @@ async def test_post_hook_failure_keeps_turn_completed(
     events = await collect(runner, sid, "hi")
     assert events[-1].type == "turn.end"
     assert events[-1].payload["status"] == "completed"
+
+
+async def test_tool_result_feeds_back_into_next_step(
+    fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None, tmp_path
+) -> None:
+    """工具结果回灌：下一步请求带 assistant(tool_calls) 与对应 tool 消息，且用户消息不重复追加。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings, captured = fake_server
+    (tmp_path / "hello.txt").write_text("hi", encoding="utf-8")
+    # 假服务器看到"工具"字样会再回一次工具调用，这里限 2 步，只观察第二步的请求装配
+    small = Settings(
+        server={},
+        database={},
+        tools={},
+        memory=settings.memory.model_dump(),
+        llm=settings.llm.model_dump(),
+        loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
+    )
+    runner = make_runner(small, LlmGateway(settings), HookRegistry())
+    sid = await create_session(str(tmp_path), "工具回灌")
+    with pytest.raises(ApiError):
+        await collect(runner, sid, "tool_read")
+
+    requests = [body for body in captured if isinstance(body.get("messages"), list)]
+    latest = requests[-1]["messages"]
+    assert isinstance(latest, list)
+    roles = [str(message["role"]) for message in latest]
+    assert "tool" in roles
+    tool_index = roles.index("tool")
+    assert roles[tool_index - 1] == "assistant"
+    assert roles[-1] == "tool"
+    assert sum(1 for role in roles if role == "user") == 1

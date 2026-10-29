@@ -110,8 +110,8 @@ async def persona_of_session(session: AiSession) -> Persona:
     return _to_persona(row)
 
 
-async def build_history(session_id: int, max_seq: int | None = None) -> list[ChatMessage]:
-    """事件投影：compaction 截断点之后的消息序列；max_seq 用于排除本轮尚未处理的尾部事件。"""
+async def build_history(session_id: int, max_seq: int | None = None, skip_seq: int | None = None) -> list[ChatMessage]:
+    """事件投影：compaction 截断点之后的消息序列；max_seq 排除尾部事件，skip_seq 跳过指定一条。"""
     events = await replay_events(session_id)
     cutoff = 0
     for event in events:
@@ -122,6 +122,8 @@ async def build_history(session_id: int, max_seq: int | None = None) -> list[Cha
         if event.seq <= cutoff:
             continue
         if max_seq is not None and event.seq > max_seq:
+            continue
+        if skip_seq is not None and event.seq == skip_seq:
             continue
         if event.type == EventType.USER_MESSAGE:
             messages.append(ChatMessage(role="user", content=str(event.payload.get("content", "")), tool_calls=[]))

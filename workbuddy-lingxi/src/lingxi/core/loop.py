@@ -219,7 +219,7 @@ class TurnRunner:
         step = step_start
         while True:
             step += 1
-            messages = await self._assemble(session_id, persona, work_dir, user_content, turn_seq)
+            messages = await self._assemble(session_id, persona, work_dir, user_content, turn_seq, first=step == 1)
             ctx = TurnContext(
                 session_id=session_id,
                 turn_seq=turn_seq,
@@ -230,7 +230,7 @@ class TurnRunner:
             await self._hooks.run("pre_step", ctx)  # fail-closed：闸门异常在此上抛
             if ctx.payload.get("compact"):
                 await compact_history(session_id)
-                messages = await self._assemble(session_id, persona, work_dir, user_content, turn_seq)
+                messages = await self._assemble(session_id, persona, work_dir, user_content, turn_seq, first=step == 1)
             if session_id in self._stop_requested:
                 yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
                 return
@@ -396,12 +396,16 @@ class TurnRunner:
             )
 
     async def _assemble(
-        self, session_id: int, persona: Persona | None, work_dir: str, query: str, turn_seq: int
+        self, session_id: int, persona: Persona | None, work_dir: str, query: str, turn_seq: int, first: bool
     ) -> list[ChatMessage]:
         """缓存友好装配：静态前缀 → 历史 → 动态尾巴（运行时/记忆）→ 本轮用户消息。
 
         静态段逐字节稳定、历史只追加、动态内容全部放尾部：DeepSeek 前缀缓存只匹配
         从首条消息开始的完整相同前缀，动态内容插在历史前会让整段历史每轮 miss。
+
+        首步：历史跳过本轮用户消息（它放在尾部，避免重复），再补运行时/记忆段。
+        后续步：历史已包含本轮的 assistant(tool_calls) 与 tool 结果，不能再追加用户消息，
+        否则模型会把工具结果当成上一轮、反复重发同一次调用。
         """
         static_texts = [
             load_prompt("behavior"),
@@ -413,7 +417,9 @@ class TurnRunner:
             ),
         ]
         messages = [ChatMessage(role="system", content=text, tool_calls=[]) for text in static_texts]
-        messages.extend(await build_history(session_id, max_seq=turn_seq))
+        messages.extend(await build_history(session_id, skip_seq=turn_seq + 1 if first else None))
+        if not first:
+            return messages
         messages.append(ChatMessage(role="system", content=self._runtime_context(work_dir), tool_calls=[]))
         if persona is not None:
             memories = await recall(work_dir, query, self._embedder)

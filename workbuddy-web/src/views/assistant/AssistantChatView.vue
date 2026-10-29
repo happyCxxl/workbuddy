@@ -634,11 +634,11 @@ async function handleDeleteWorkspace(group: SessionGroup): Promise<void> {
 /** 删除单条会话：只删记录，磁盘文件不动 */
 async function handleDeleteSession(item: AssistantSession): Promise<void> {
   try {
-    await ElMessageBox.confirm(
-      `删除会话「${item.title || '未命名会话'}」？只删记录，磁盘文件不动。`,
-      '删除会话',
-      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' },
-    );
+    await ElMessageBox.confirm(`删除会话「${item.title || '未命名会话'}」？`, '删除会话', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+    });
   } catch {
     return;
   }
