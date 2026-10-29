@@ -5,8 +5,17 @@ export interface AssistantSession {
   title: string;
   status: string;
   permission_preset: string;
+  workspace_id: string | null;
   persona_version_id: string | null;
   updated_at: string;
+}
+
+// 工作区：会话归属目录（DSH workspace 语义）
+export interface Workspace {
+  id: string;
+  name: string;
+  path: string;
+  created_at: string;
 }
 
 // 会话事件：seq 单调，type 取值见后端事件登记表

@@ -13,13 +13,19 @@ from lingxi.domain.persona.models import Persona, PersonaFields
 from lingxi.domain.ports import ChatMessage, ToolCall
 
 
-async def create_session(work_dir: str, title: str, preset: str = "standard") -> int:
-    """创建会话：绑定当前启用的人格版本与权限档，此后人格编辑不影响本会话。"""
+async def create_session(work_dir: str, title: str, preset: str = "standard", workspace_id: int | None = None) -> int:
+    """创建会话：绑定当前启用的人格版本与权限档；可归属工作区（工作目录取自工作区）。"""
     async with session_scope() as s:
         persona = await PersonaRepo(s).current()
         if persona is None:
             raise ApiError(ErrorCode.NOT_FOUND, "人格未初始化：先执行 alembic upgrade head")
-        row = AiSession(work_dir=work_dir, title=title, persona_version_id=persona.id, permission_preset=preset)
+        row = AiSession(
+            work_dir=work_dir,
+            title=title,
+            persona_version_id=persona.id,
+            permission_preset=preset,
+            workspace_id=workspace_id,
+        )
         await SessionRepo(s).insert(row)
         await s.commit()
         return row.id

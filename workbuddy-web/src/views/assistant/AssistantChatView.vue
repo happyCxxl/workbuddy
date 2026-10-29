@@ -4,12 +4,12 @@
       <div>
         <h1 class="page-title">对话</h1>
         <p class="page-desc">
-          和可乐一起干活：它会读写你的工作目录、跑命令、查资料，高危操作先问过你。
+          和可乐一起干活：先新增工作区，再在工作区里新建会话；它会读写工作区目录、跑命令、查资料，高危操作先问过你。
         </p>
       </div>
       <div class="page-actions">
-        <el-button class="page-btn-ghost" plain @click="newDialogVisible = true">
-          ＋ 新建会话
+        <el-button class="page-btn-ghost" plain @click="openWorkspaceDialog">
+          ＋ 新增工作区
         </el-button>
       </div>
     </div>
@@ -19,7 +19,7 @@
       <div class="sessions-panel">
         <div class="sessions-head">
           <span class="sessions-title">会话</span>
-          <button class="sessions-refresh" type="button" title="刷新" @click="loadSessions">
+          <button class="sessions-refresh" type="button" title="刷新" @click="loadSidebar">
             <svg
               width="13"
               height="13"
@@ -33,8 +33,8 @@
           </button>
         </div>
         <div class="sessions-list">
-          <div v-for="group in sessionGroups" :key="group.workDir" class="session-group">
-            <div class="group-head" @click="toggleGroup(group.workDir)">
+          <div v-for="group in sessionGroups" :key="group.key" class="session-group">
+            <div class="group-head" @click="toggleGroup(group.key)">
               <span class="group-folder">
                 <svg
                   width="14"
@@ -48,23 +48,32 @@
                   <path d="M2 6h12" />
                 </svg>
               </span>
-              <span
-                class="group-arrow"
-                :class="{ 'group-arrow-open': !collapsedGroups[group.workDir] }"
+              <span class="group-arrow" :class="{ 'group-arrow-open': !collapsedGroups[group.key] }"
                 >▸</span
               >
-              <span class="group-name" :title="group.workDir">{{ baseName(group.workDir) }}</span>
+              <span class="group-name" :title="group.path">{{ group.name }}</span>
               <span class="group-count">{{ group.items.length }}</span>
               <button
+                v-if="group.workspaceId"
+                class="group-new"
+                type="button"
+                title="在该工作区新建会话"
+                @click.stop="handleNewSession(group)"
+              >
+                ＋
+              </button>
+              <button
+                v-if="group.items.length > 0"
                 class="group-del"
                 type="button"
-                title="删除该目录下的会话记录（不动磁盘文件）"
-                @click.stop="handleDeleteGroup(group.workDir)"
+                title="删除该工作区下的会话记录（不动磁盘文件）"
+                @click.stop="handleDeleteGroup(group.path)"
               >
                 ✕
               </button>
             </div>
-            <div v-show="!collapsedGroups[group.workDir]" class="group-items">
+            <div v-show="!collapsedGroups[group.key]" class="group-items">
+              <p v-if="group.items.length === 0" class="group-empty">还没有会话，点「＋」新建。</p>
               <button
                 v-for="item in group.items"
                 :key="item.id"
@@ -81,7 +90,9 @@
               </button>
             </div>
           </div>
-          <p v-if="sessions.length === 0" class="session-empty">还没有会话，点右上角新建。</p>
+          <p v-if="workspaces.length === 0 && sessions.length === 0" class="session-empty">
+            还没有工作区，点右上角「新增工作区」。
+          </p>
         </div>
       </div>
 
@@ -210,11 +221,11 @@
       </div>
     </div>
 
-    <el-dialog v-model="newDialogVisible" title="新建会话" width="520px" destroy-on-close>
+    <el-dialog v-model="workspaceDialogVisible" title="新增工作区" width="520px" destroy-on-close>
       <el-form label-position="top">
-        <el-form-item label="工作目录（会话内的文件操作限定在此目录）">
+        <el-form-item label="工作区目录（会话的文件操作限定在此目录）">
           <div class="workdir-row">
-            <el-input v-model="newWorkDir" placeholder="点击右侧选择目录，或直接输入绝对路径" />
+            <el-input v-model="workspacePath" placeholder="点击右侧选择目录，或直接输入绝对路径" />
             <el-button @click="openDirPicker">选择目录</el-button>
           </div>
           <div v-if="recentDirs.length > 0" class="recent-dirs">
@@ -224,20 +235,25 @@
               :key="dir"
               type="button"
               class="dir-chip"
-              :class="{ 'dir-chip-on': newWorkDir === dir }"
+              :class="{ 'dir-chip-on': workspacePath === dir }"
               :title="dir"
-              @click="newWorkDir = dir"
+              @click="workspacePath = dir"
             >
               {{ baseName(dir) }}
             </button>
           </div>
         </el-form-item>
+        <el-form-item label="名称（可选，默认取目录名）">
+          <el-input v-model="workspaceName" placeholder="例如：workbuddy" />
+        </el-form-item>
       </el-form>
-      <p class="new-hint">标题不用填：首条消息自动取前 10 字，之后可随时重命名。</p>
+      <p class="new-hint">
+        工作区用于归置会话；创建后在左侧工作区点「＋」新建会话，不再每次选择目录。
+      </p>
       <template #footer>
-        <el-button @click="newDialogVisible = false">取消</el-button>
-        <el-button type="primary" :disabled="!newWorkDir.trim()" @click="handleCreate">
-          创建
+        <el-button @click="workspaceDialogVisible = false">取消</el-button>
+        <el-button type="primary" :disabled="!workspacePath.trim()" @click="handleCreateWorkspace">
+          创建工作区
         </el-button>
       </template>
     </el-dialog>
@@ -322,12 +338,14 @@ import {
   addSubSession,
   addTurnResume,
   addTurnStream,
+  addWorkspace,
   deleteWorkspace,
   getAssistantSessions,
   getSessionEvents,
   getSessionUsage,
   getSubSessions,
   getWorkspaceDirs,
+  getWorkspaces,
   updateAssistantSession,
   updateSessionPermission,
   updateTurnStop,
@@ -339,12 +357,16 @@ import type {
   SessionEventItem,
   SessionUsage,
   SubSessionItem,
+  Workspace,
 } from '@/types/assistant';
 import { formatDateTime } from '@/utils/date';
 
-/** 会话分组：按工作目录聚合 */
+/** 会话分组：一个工作区一组（无工作区的旧会话按目录兜底成组） */
 interface SessionGroup {
-  workDir: string;
+  key: string;
+  name: string;
+  path: string;
+  workspaceId: string | null;
   items: AssistantSession[];
 }
 
@@ -381,8 +403,10 @@ const running = ref(false);
 const stepLabel = ref('1');
 const personaLabel = ref('v1');
 const messageBox = ref<HTMLElement | null>(null);
-const newDialogVisible = ref(false);
-const newWorkDir = ref('');
+const workspaceDialogVisible = ref(false);
+const workspacePath = ref('');
+const workspaceName = ref('');
+const workspaces = ref<Workspace[]>([]);
 const usage = ref<SessionUsage | null>(null);
 const trajectoryVisible = ref(false);
 const trajectoryEvents = ref<SessionEventItem[]>([]);
@@ -395,27 +419,49 @@ const dirParent = ref<string | null>(null);
 const dirEntries = ref<DirEntry[]>([]);
 let subTimer: number | null = null;
 
-/** 按工作目录分组的会话：组按最近更新时间倒序，组内同样倒序 */
+/** 工作区分组：已有工作区（含空工作区）+ 旧会话按目录兜底分组 */
 const sessionGroups = computed<SessionGroup[]>(() => {
-  const groups = new Map<string, AssistantSession[]>();
+  const groups: SessionGroup[] = workspaces.value.map((workspace) => ({
+    key: `ws:${workspace.id}`,
+    name: workspace.name,
+    path: workspace.path,
+    workspaceId: workspace.id,
+    items: [],
+  }));
+  const byWorkspace = new Map(groups.map((group) => [group.workspaceId, group]));
+  const legacyGroups = new Map<string, SessionGroup>();
   for (const item of sessions.value) {
-    const bucket = groups.get(item.work_dir) ?? [];
-    bucket.push(item);
-    groups.set(item.work_dir, bucket);
+    const workspaceGroup = item.workspace_id ? byWorkspace.get(item.workspace_id) : undefined;
+    if (workspaceGroup) {
+      workspaceGroup.items.push(item);
+      continue;
+    }
+    const key = `dir:${item.work_dir}`;
+    const legacy = legacyGroups.get(key) ?? {
+      key,
+      name: baseName(item.work_dir),
+      path: item.work_dir,
+      workspaceId: null,
+      items: [],
+    };
+    legacy.items.push(item);
+    legacyGroups.set(key, legacy);
   }
-  return [...groups.entries()]
-    .map(([workDir, items]) => ({
-      workDir,
-      items: [...items].sort((left, right) => right.updated_at.localeCompare(left.updated_at)),
-    }))
-    .sort((left, right) =>
-      (right.items.at(0)?.updated_at ?? '').localeCompare(left.items.at(0)?.updated_at ?? ''),
-    );
+  const all = [...groups, ...legacyGroups.values()];
+  for (const group of all) {
+    group.items.sort((left, right) => right.updated_at.localeCompare(left.updated_at));
+  }
+  return all;
 });
 
-/** 最近使用的工作目录（新建会话快捷选择） */
+/** 最近使用的工作区/目录（新增工作区快捷选择） */
 const recentDirs = computed(() =>
-  [...new Set(sessions.value.map((item) => item.work_dir))].slice(0, 6),
+  [
+    ...new Set([
+      ...workspaces.value.map((workspace) => workspace.path),
+      ...sessions.value.map((item) => item.work_dir),
+    ]),
+  ].slice(0, 6),
 );
 
 /** 目录名：取路径最后一段 */
@@ -425,14 +471,14 @@ function baseName(path: string): string {
 }
 
 /** 展开/收起分组 */
-function toggleGroup(workDir: string): void {
-  collapsedGroups.value = { ...collapsedGroups.value, [workDir]: !collapsedGroups.value[workDir] };
+function toggleGroup(key: string): void {
+  collapsedGroups.value = { ...collapsedGroups.value, [key]: !collapsedGroups.value[key] };
 }
 
 /** 打开目录选择器：优先定位当前输入目录，否则列盘符 */
 async function openDirPicker(): Promise<void> {
   dirDialogVisible.value = true;
-  await loadDir(newWorkDir.value.trim() || undefined);
+  await loadDir(workspacePath.value.trim() || undefined);
 }
 
 /** 载入目录：不传 path 时列盘符 */
@@ -458,7 +504,7 @@ function chooseCurrentDir(): void {
   if (!dirPath.value) {
     return;
   }
-  newWorkDir.value = dirPath.value;
+  workspacePath.value = dirPath.value;
   dirDialogVisible.value = false;
 }
 
@@ -485,11 +531,11 @@ async function handleRename(item: AssistantSession): Promise<void> {
   }
 }
 
-/** 删除某个工作目录下的会话记录：逻辑删除，磁盘文件不动 */
+/** 删除某个工作区下的会话记录：逻辑删除，磁盘文件不动 */
 async function handleDeleteGroup(workDir: string): Promise<void> {
   try {
     await ElMessageBox.confirm(
-      `删除「${baseName(workDir)}」下的全部会话记录？只删数据库记录（逻辑删除），不会删除磁盘文件。`,
+      `删除「${baseName(workDir)}」下的全部会话记录？只删数据库记录（逻辑删除），不会删除磁盘文件或工作区。`,
       '删除会话记录',
       { confirmButtonText: '删除记录', cancelButtonText: '取消', type: 'warning' },
     );
@@ -497,7 +543,7 @@ async function handleDeleteGroup(workDir: string): Promise<void> {
     return;
   }
   const deleted = await deleteWorkspace(workDir);
-  sessions.value = sessions.value.filter((item) => item.work_dir !== workDir);
+  await loadSessions();
   if (current.value?.work_dir === workDir) {
     currentId.value = '';
     current.value = null;
@@ -564,13 +610,25 @@ function formatTime(value: string): string {
   return formatDateTime(value);
 }
 
-/** 载入会话列表 */
-async function loadSessions(): Promise<void> {
-  sessions.value = await getAssistantSessions();
+/** 载入侧栏：工作区 + 会话；首次自动选中最近会话 */
+async function loadSidebar(): Promise<void> {
+  const [sessionList, workspaceList] = await Promise.all([getAssistantSessions(), getWorkspaces()]);
+  sessions.value = sessionList;
+  workspaces.value = workspaceList;
   const first = sessions.value.at(0);
   if (!currentId.value && first !== undefined) {
     await selectSession(first);
   }
+}
+
+/** 只刷新会话（回合结束、标题生成后） */
+async function loadSessions(): Promise<void> {
+  sessions.value = await getAssistantSessions();
+}
+
+/** 只刷新工作区 */
+async function loadWorkspaces(): Promise<void> {
+  workspaces.value = await getWorkspaces();
 }
 
 /** 选择会话：重放事件重建消息 */
@@ -839,15 +897,33 @@ async function changePreset(value: string | number | boolean | undefined): Promi
   current.value = { ...current.value, permission_preset: value };
 }
 
-/** 新建会话 */
-async function handleCreate(): Promise<void> {
-  if (!newWorkDir.value.trim()) {
+/** 打开新增工作区弹窗 */
+function openWorkspaceDialog(): void {
+  workspacePath.value = '';
+  workspaceName.value = '';
+  workspaceDialogVisible.value = true;
+}
+
+/** 新增工作区：目录选一次，之后会话都归属它 */
+async function handleCreateWorkspace(): Promise<void> {
+  if (!workspacePath.value.trim()) {
     return;
   }
-  const created = await addAssistantSession(newWorkDir.value.trim(), '');
+  await addWorkspace(workspacePath.value.trim(), workspaceName.value.trim());
+  workspaceDialogVisible.value = false;
+  workspacePath.value = '';
+  workspaceName.value = '';
+  await loadWorkspaces();
+  ElMessage.success('工作区已创建，点工作区旁的「＋」新建会话');
+}
+
+/** 在工作区下新建会话：不再选目录，直接继承工作区 */
+async function handleNewSession(group: SessionGroup): Promise<void> {
+  if (!group.workspaceId) {
+    return;
+  }
+  const created = await addAssistantSession(group.path, '', group.workspaceId);
   sessions.value.unshift(created);
-  newDialogVisible.value = false;
-  newWorkDir.value = '';
   await selectSession(created);
 }
 
@@ -863,7 +939,7 @@ async function refreshSessions(): Promise<void> {
 }
 
 onMounted(async () => {
-  await loadSessions();
+  await loadSidebar();
   if (currentId.value) {
     await loadSubSessions();
   }
@@ -1089,6 +1165,38 @@ onUnmounted(() => {
 
 .group-head:hover .group-del {
   display: block;
+}
+
+.group-new {
+  display: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--kb-text-3);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.group-new:hover {
+  background: rgb(255 255 255 / 8%);
+  color: var(--kb-primary);
+}
+
+.group-head:hover .group-new {
+  display: block;
+}
+
+.group-empty {
+  margin: 0;
+  padding: 2px 8px 6px;
+  color: var(--kb-text-3);
+  font-size: 12px;
 }
 
 .group-items {

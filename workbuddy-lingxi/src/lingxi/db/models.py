@@ -36,6 +36,17 @@ class PersonaVersion(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
+class Workspace(Base):
+    """工作区：会话的归属目录（路径唯一），独立存在，即使还没有会话。"""
+
+    __tablename__ = "workspace"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    path: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class AiSession(Base):
     """会话：绑定工作目录与人格版本；子会话以 parent_id 表达，删除只改 status。"""
 
@@ -45,6 +56,7 @@ class AiSession(Base):
     work_dir: Mapped[str] = mapped_column(Text, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
     persona_version_id: Mapped[int | None] = mapped_column(ForeignKey("persona_version.id"), nullable=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspace.id"), nullable=True)
     permission_preset: Mapped[str] = mapped_column(String(16), nullable=False, server_default="standard")
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("ai_session.id"), nullable=True)
     # chat = 用户对话；sub = 后台任务执行器（无记忆、无人格段）

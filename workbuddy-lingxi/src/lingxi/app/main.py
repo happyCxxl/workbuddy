@@ -7,7 +7,7 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from lingxi.api import fs, health, memories, permissions, persona, sessions, turns
+from lingxi.api import fs, health, memories, permissions, persona, sessions, turns, workspaces
 from lingxi.app.config import Settings
 from lingxi.app.lifespan import make_lifespan
 from lingxi.contract import REQUEST_ID, ApiError, R
@@ -59,6 +59,7 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(fs.router)
+    app.include_router(workspaces.router)
     app.include_router(sessions.make_router(settings, sub_sessions))
     app.include_router(memories.router)
     app.include_router(persona.router)

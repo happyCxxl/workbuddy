@@ -9,18 +9,36 @@ import type {
   SessionEventItem,
   SessionUsage,
   SubSessionItem,
+  Workspace,
 } from '@/types/assistant';
 
 /** 灵犀助手接口：会话、回合 SSE、记忆、人设与权限（HTTP 恒 200 + 信封，拦截器统一解包） */
 
-/** 建会话：绑定当前启用人格版本与默认权限档 */
+/** 建会话：绑定当前启用人格版本与默认权限档；可按工作区归属 */
 export async function addAssistantSession(
   workDir: string,
   title: string,
+  workspaceId?: string,
 ): Promise<AssistantSession> {
-  const response = await http.post<{ id: string }>('/sessions', { work_dir: workDir, title });
+  const response = await http.post<{ id: string }>('/sessions', {
+    work_dir: workDir,
+    title,
+    workspace_id: workspaceId ?? null,
+  });
   const session = await getAssistantSession(response.data.id);
   return session;
+}
+
+/** 工作区列表：新建在前 */
+export async function getWorkspaces(): Promise<Workspace[]> {
+  const response = await http.get<{ workspaces: Workspace[] }>('/workspaces');
+  return response.data.workspaces;
+}
+
+/** 新增工作区：目录必须存在，名称缺省取目录名 */
+export async function addWorkspace(path: string, name = ''): Promise<Workspace> {
+  const response = await http.post<Workspace>('/workspaces', { path, name });
+  return response.data;
 }
 
 /** 最近会话列表：对话页左栏 */

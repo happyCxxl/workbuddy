@@ -21,13 +21,15 @@ from lingxi.domain.session.service import (
     delete_workspace as soft_delete_workspace,
 )
 from lingxi.domain.sub_session.service import create_sub_session, get_sub_session, list_sub_sessions
+from lingxi.domain.workspace.service import get_workspace
 
 
 class CreateSessionRequest(BaseModel):
-    """建会话请求：工作目录必填；标题缺省由首条消息自动生成。"""
+    """建会话请求：归属工作区（workspace_id）或直接给工作目录；标题缺省由首条消息自动生成。"""
 
-    work_dir: str
+    work_dir: str = ""
     title: str = ""
+    workspace_id: str | None = None
 
 
 class RenameRequest(BaseModel):
@@ -73,8 +75,18 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
 
     @router.post("/sessions")
     async def create(request: CreateSessionRequest) -> dict[str, object]:
-        """建会话：绑定当前启用人格版本与默认权限档（ID 一律字符串）。"""
-        session_id = await create_session(request.work_dir, request.title, settings.permission.preset)
+        """建会话：归属工作区（推荐）或直接给目录；绑定当前人格与默认权限档。"""
+        workspace_id: int | None = None
+        work_dir = request.work_dir.strip()
+        if request.workspace_id:
+            workspace = await get_workspace(int(request.workspace_id))
+            workspace_id = workspace.id
+            work_dir = workspace.path
+        elif not work_dir:
+            raise ApiError(ErrorCode.INVALID_ARGUMENT, "必须提供 workspace_id 或 work_dir")
+        session_id = await create_session(
+            work_dir, request.title, settings.permission.preset, workspace_id=workspace_id
+        )
         return R.ok({"id": str(session_id)}).to_dict()
 
     @router.get("/sessions")
@@ -90,6 +102,7 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
                         "title": row.title,
                         "status": row.status,
                         "permission_preset": row.permission_preset,
+                        "workspace_id": str(row.workspace_id) if row.workspace_id else None,
                         "persona_version_id": str(row.persona_version_id) if row.persona_version_id else None,
                         "updated_at": row.updated_at.isoformat(),
                     }
@@ -109,6 +122,7 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
                 "title": row.title,
                 "status": row.status,
                 "permission_preset": row.permission_preset,
+                "workspace_id": str(row.workspace_id) if row.workspace_id else None,
                 "persona_version_id": str(row.persona_version_id) if row.persona_version_id else None,
                 "updated_at": row.updated_at.isoformat(),
             }
