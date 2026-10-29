@@ -73,12 +73,14 @@ export default defineConfig({
       // 模型管理接口（/model/models 与 /model/models/{id}/status、/model/usage/*）：/model 同时是
       // SPA 路由，这里只代理带子路径的接口，并靠 bypass 按 Accept 头区分导航与接口
       '^/model/': { target: BACKEND, bypass: bypassNavigation },
-      // 灵犀助手接口：会话 / 回合 SSE / 记忆 / 人设 / 权限规则，走独立 Python 服务
+      // 灵犀助手接口：会话 / 回合 SSE / 记忆 / 人设 / 权限规则 / 工作区，走独立 Python 服务
       '^/sessions': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
       '^/memories': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
       '^/persona': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
       '^/permissions': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
-      // 目录浏览（新建会话选工作目录）
+      // 工作区（新增工作区、会话归属工作区）
+      '^/workspaces': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
+      // 目录浏览（新增工作区时选目录）
       '^/fs/': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
       '^/health$': { target: ASSISTANT_BACKEND },
     },

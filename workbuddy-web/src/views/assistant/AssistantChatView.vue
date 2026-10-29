@@ -4,22 +4,24 @@
       <div>
         <h1 class="page-title">对话</h1>
         <p class="page-desc">
-          和可乐一起干活：先新增工作区，再在工作区里新建会话；它会读写工作区目录、跑命令、查资料，高危操作先问过你。
+          先新增工作区，再在工作区里新建会话；可乐会读写工作区目录、跑命令、查资料，高危操作先问过你。
         </p>
-      </div>
-      <div class="page-actions">
-        <el-button class="page-btn-ghost" plain @click="openWorkspaceDialog">
-          ＋ 新增工作区
-        </el-button>
       </div>
     </div>
 
     <div class="chat-wrap">
-      <!-- 会话列表 -->
+      <!-- 工作区列表 -->
       <div class="sessions-panel">
         <div class="sessions-head">
-          <span class="sessions-title">会话</span>
-          <button class="sessions-refresh" type="button" title="刷新" @click="loadSidebar">
+          <span class="sessions-title">工作区</span>
+          <span class="page-spacer"></span>
+          <button
+            class="head-icon"
+            :class="{ 'head-icon-on': searchVisible }"
+            type="button"
+            title="搜索工作区"
+            @click="searchVisible = !searchVisible"
+          >
             <svg
               width="13"
               height="13"
@@ -28,13 +30,57 @@
               stroke="currentColor"
               stroke-width="1.5"
             >
-              <path d="M13.4 8a5.4 5.4 0 1 1-1.6-3.8M13.4 1.9v2.4H11" />
+              <circle cx="7" cy="7" r="4.2" />
+              <path d="m10.2 10.2 3 3" />
+            </svg>
+          </button>
+          <button
+            class="head-icon"
+            :class="{ 'head-icon-on': onlyWithSessions }"
+            type="button"
+            title="仅显示有会话的工作区"
+            @click="onlyWithSessions = !onlyWithSessions"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M2.5 4h11M4.5 8h7M6.5 12h3" />
+            </svg>
+          </button>
+          <button class="head-icon" type="button" title="新增工作区" @click="openWorkspaceDialog">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
+            >
+              <path d="M2 4.5h4l1.3 1.5H13v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
+              <path d="M10 5.6v4.2M7.9 7.7h4.2" />
             </svg>
           </button>
         </div>
+        <div v-if="searchVisible" class="workspace-search">
+          <el-input
+            v-model="workspaceKeyword"
+            size="small"
+            placeholder="搜索工作区名称或路径"
+            clearable
+          />
+        </div>
         <div class="sessions-list">
           <div v-for="group in sessionGroups" :key="group.key" class="session-group">
-            <div class="group-head" @click="toggleGroup(group.key)">
+            <div
+              class="group-head"
+              :class="{ 'group-head-on': isGroupActive(group) }"
+              @click="toggleGroup(group.key)"
+            >
               <span class="group-folder">
                 <svg
                   width="14"
@@ -52,25 +98,27 @@
                 >▸</span
               >
               <span class="group-name" :title="group.path">{{ group.name }}</span>
-              <span class="group-count">{{ group.items.length }}</span>
-              <button
-                v-if="group.workspaceId"
-                class="group-new"
-                type="button"
-                title="在该工作区新建会话"
-                @click.stop="handleNewSession(group)"
-              >
-                ＋
-              </button>
-              <button
-                v-if="group.items.length > 0"
-                class="group-del"
-                type="button"
-                title="删除该工作区下的会话记录（不动磁盘文件）"
-                @click.stop="handleDeleteGroup(group.path)"
-              >
-                ✕
-              </button>
+              <span v-if="group.workspaceId" class="group-actions" @click.stop>
+                <el-dropdown trigger="click" @command="handleGroupCommand($event, group)">
+                  <button class="group-icon" type="button" title="更多">⋯</button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="copy">复制路径</el-dropdown-item>
+                      <el-dropdown-item command="delete" :disabled="group.items.length === 0">
+                        删除会话记录
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+                <button
+                  class="group-icon group-add"
+                  type="button"
+                  title="在该工作区新建会话"
+                  @click.stop="handleNewSession(group)"
+                >
+                  ＋
+                </button>
+              </span>
             </div>
             <div v-show="!collapsedGroups[group.key]" class="group-items">
               <p v-if="group.items.length === 0" class="group-empty">还没有会话，点「＋」新建。</p>
@@ -91,7 +139,7 @@
             </div>
           </div>
           <p v-if="workspaces.length === 0 && sessions.length === 0" class="session-empty">
-            还没有工作区，点右上角「新增工作区」。
+            还没有工作区，点标题旁的文件夹图标新增。
           </p>
         </div>
       </div>
@@ -407,6 +455,9 @@ const workspaceDialogVisible = ref(false);
 const workspacePath = ref('');
 const workspaceName = ref('');
 const workspaces = ref<Workspace[]>([]);
+const searchVisible = ref(false);
+const workspaceKeyword = ref('');
+const onlyWithSessions = ref(false);
 const usage = ref<SessionUsage | null>(null);
 const trajectoryVisible = ref(false);
 const trajectoryEvents = ref<SessionEventItem[]>([]);
@@ -451,7 +502,16 @@ const sessionGroups = computed<SessionGroup[]>(() => {
   for (const group of all) {
     group.items.sort((left, right) => right.updated_at.localeCompare(left.updated_at));
   }
-  return all;
+  const keyword = workspaceKeyword.value.trim().toLowerCase();
+  return all.filter((group) => {
+    if (onlyWithSessions.value && group.items.length === 0) {
+      return false;
+    }
+    if (!keyword) {
+      return true;
+    }
+    return group.name.toLowerCase().includes(keyword) || group.path.toLowerCase().includes(keyword);
+  });
 });
 
 /** 最近使用的工作区/目录（新增工作区快捷选择） */
@@ -897,6 +957,28 @@ async function changePreset(value: string | number | boolean | undefined): Promi
   current.value = { ...current.value, permission_preset: value };
 }
 
+/** 当前会话所在的工作区高亮 */
+function isGroupActive(group: SessionGroup): boolean {
+  return group.items.some((item) => item.id === currentId.value);
+}
+
+/** 工作区行菜单：复制路径 / 删除会话记录 */
+async function handleGroupCommand(command: unknown, group: SessionGroup): Promise<void> {
+  const action = String(command);
+  if (action === 'copy') {
+    try {
+      await navigator.clipboard.writeText(group.path);
+      ElMessage.success('路径已复制');
+    } catch {
+      ElMessage.error('复制失败，请手动选择路径');
+    }
+    return;
+  }
+  if (action === 'delete') {
+    await handleDeleteGroup(group.path);
+  }
+}
+
 /** 打开新增工作区弹窗 */
 function openWorkspaceDialog(): void {
   workspacePath.value = '';
@@ -1039,20 +1121,22 @@ onUnmounted(() => {
 .sessions-head {
   display: flex;
   flex: none;
+  gap: 2px;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
+  padding: 10px 10px 10px 12px;
   border-bottom: 1px solid var(--kb-line);
 }
 
 .sessions-title {
-  color: var(--kb-text-3);
+  color: var(--kb-text-2);
   font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.04em;
 }
 
-.sessions-refresh {
+.head-icon {
   display: inline-flex;
+  flex: none;
   width: 24px;
   height: 24px;
   align-items: center;
@@ -1065,9 +1149,19 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.sessions-refresh:hover {
+.head-icon:hover {
   background: rgb(255 255 255 / 6%);
   color: var(--kb-text-2);
+}
+
+.head-icon-on {
+  color: var(--kb-primary);
+}
+
+.workspace-search {
+  flex: none;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--kb-line);
 }
 
 .sessions-list {
@@ -1077,13 +1171,13 @@ onUnmounted(() => {
   padding: 6px 6px 12px;
 }
 
-/* 工作区行：34px；文件夹图标悬停切换为展开箭头（DSH 同款交互） */
+/* 工作区行：34px；文件夹图标悬停/选中切换为展开箭头（DSH 同款交互） */
 .group-head {
   display: flex;
   height: 34px;
   align-items: center;
   gap: 6px;
-  padding: 0 8px;
+  padding: 0 6px 0 8px;
   border-radius: 8px;
   color: var(--kb-text-2);
   cursor: pointer;
@@ -1092,6 +1186,10 @@ onUnmounted(() => {
 
 .group-head:hover {
   background: rgb(255 255 255 / 5%);
+}
+
+.group-head-on {
+  background: rgb(255 255 255 / 7%);
 }
 
 .group-folder {
@@ -1117,10 +1215,12 @@ onUnmounted(() => {
   transform: rotate(90deg);
 }
 
+.group-head-on .group-folder,
 .group-head:hover .group-folder {
   display: none;
 }
 
+.group-head-on .group-arrow,
 .group-head:hover .group-arrow {
   display: inline-block;
 }
@@ -1130,66 +1230,47 @@ onUnmounted(() => {
   min-width: 0;
   overflow: hidden;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.group-count {
-  flex: none;
-  color: var(--kb-text-3);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 10px;
-}
-
-.group-del {
+.group-actions {
   display: none;
   flex: none;
-  width: 18px;
-  height: 18px;
+  align-items: center;
+  gap: 2px;
+}
+
+.group-head-on .group-actions,
+.group-head:hover .group-actions {
+  display: inline-flex;
+}
+
+.group-icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border: none;
-  border-radius: 4px;
-  background: none;
-  color: var(--kb-text-3);
-  cursor: pointer;
-  font-size: 10px;
-  line-height: 18px;
-  text-align: center;
-}
-
-.group-del:hover {
-  background: rgb(255 255 255 / 8%);
-  color: var(--kb-danger);
-}
-
-.group-head:hover .group-del {
-  display: block;
-}
-
-.group-new {
-  display: none;
-  flex: none;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   background: none;
   color: var(--kb-text-3);
   cursor: pointer;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 20px;
   text-align: center;
 }
 
-.group-new:hover {
-  background: rgb(255 255 255 / 8%);
-  color: var(--kb-primary);
+.group-icon:hover {
+  background: rgb(255 255 255 / 10%);
+  color: var(--kb-text-1);
 }
 
-.group-head:hover .group-new {
-  display: block;
+.group-add:hover {
+  color: var(--kb-primary);
 }
 
 .group-empty {
