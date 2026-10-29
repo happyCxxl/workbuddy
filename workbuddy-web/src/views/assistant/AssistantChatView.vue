@@ -104,6 +104,7 @@
                   <template #dropdown>
                     <el-dropdown-menu>
                       <el-dropdown-item command="copy">复制路径</el-dropdown-item>
+                      <el-dropdown-item command="rename">重命名</el-dropdown-item>
                       <el-dropdown-item command="delete" :disabled="group.items.length === 0">
                         删除会话记录
                       </el-dropdown-item>
@@ -291,9 +292,6 @@
             </button>
           </div>
         </el-form-item>
-        <el-form-item label="名称（可选，默认取目录名）">
-          <el-input v-model="workspaceName" placeholder="例如：workbuddy" />
-        </el-form-item>
       </el-form>
       <p class="new-hint">
         工作区用于归置会话；创建后在左侧工作区点「＋」新建会话，不再每次选择目录。
@@ -397,6 +395,7 @@ import {
   updateAssistantSession,
   updateSessionPermission,
   updateTurnStop,
+  updateWorkspace,
 } from '@/api/assistant';
 import type {
   AssistantSession,
@@ -453,7 +452,6 @@ const personaLabel = ref('v1');
 const messageBox = ref<HTMLElement | null>(null);
 const workspaceDialogVisible = ref(false);
 const workspacePath = ref('');
-const workspaceName = ref('');
 const workspaces = ref<Workspace[]>([]);
 const searchVisible = ref(false);
 const workspaceKeyword = ref('');
@@ -962,7 +960,7 @@ function isGroupActive(group: SessionGroup): boolean {
   return group.items.some((item) => item.id === currentId.value);
 }
 
-/** 工作区行菜单：复制路径 / 删除会话记录 */
+/** 工作区行菜单：复制路径 / 重命名 / 删除会话记录 */
 async function handleGroupCommand(command: unknown, group: SessionGroup): Promise<void> {
   const action = String(command);
   if (action === 'copy') {
@@ -974,27 +972,53 @@ async function handleGroupCommand(command: unknown, group: SessionGroup): Promis
     }
     return;
   }
+  if (action === 'rename') {
+    await handleRenameGroup(group);
+    return;
+  }
   if (action === 'delete') {
     await handleDeleteGroup(group.path);
   }
 }
 
+/** 重命名工作区：只改显示名，不动目录与会话归属 */
+async function handleRenameGroup(group: SessionGroup): Promise<void> {
+  if (!group.workspaceId) {
+    return;
+  }
+  let value = '';
+  try {
+    const result = await ElMessageBox.prompt('输入新的工作区名称', '重命名工作区', {
+      inputValue: group.name,
+      confirmButtonText: '保存',
+      cancelButtonText: '取消',
+    });
+    value = result.value.trim();
+  } catch {
+    return;
+  }
+  if (!value || value === group.name) {
+    return;
+  }
+  await updateWorkspace(group.workspaceId, value);
+  await loadWorkspaces();
+  ElMessage.success('工作区已重命名');
+}
+
 /** 打开新增工作区弹窗 */
 function openWorkspaceDialog(): void {
   workspacePath.value = '';
-  workspaceName.value = '';
   workspaceDialogVisible.value = true;
 }
 
-/** 新增工作区：目录选一次，之后会话都归属它 */
+/** 新增工作区：目录选一次，之后会话都归属它；名称默认取目录名 */
 async function handleCreateWorkspace(): Promise<void> {
   if (!workspacePath.value.trim()) {
     return;
   }
-  await addWorkspace(workspacePath.value.trim(), workspaceName.value.trim());
+  await addWorkspace(workspacePath.value.trim());
   workspaceDialogVisible.value = false;
   workspacePath.value = '';
-  workspaceName.value = '';
   await loadWorkspaces();
   ElMessage.success('工作区已创建，点工作区旁的「＋」新建会话');
 }

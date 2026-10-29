@@ -46,3 +46,17 @@ async def create_workspace(path: str, name: str = "") -> Workspace:
         s.add(row)
         await s.commit()
         return row
+
+
+async def rename_workspace(workspace_id: int, name: str) -> Workspace:
+    """重命名工作区：只改显示名，目录与会话归属不变；空名按参数错误拒绝。"""
+    workspace_name = " ".join(name.split())
+    if not workspace_name:
+        raise ApiError(ErrorCode.INVALID_ARGUMENT, "工作区名称不能为空")
+    async with session_scope() as s:
+        row = await s.get(Workspace, workspace_id)
+        if row is None:
+            raise ApiError(ErrorCode.NOT_FOUND, f"工作区不存在：{workspace_id}")
+        row.name = workspace_name[:255]
+        await s.commit()
+        return row

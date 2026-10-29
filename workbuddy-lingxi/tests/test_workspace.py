@@ -49,3 +49,35 @@ async def test_session_requires_workspace_or_dir(client: AsyncClient, engine_fix
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     resp = (await client.post("/sessions", json={})).json()
     assert resp["code"] == 60001
+
+
+async def test_workspace_rename(client: AsyncClient, engine_fixture: None, tmp_path: Path) -> None:
+    """重命名：只改显示名，路径不变，列表同步可见。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    workspace = (await client.post("/workspaces", json={"path": str(tmp_path)})).json()["data"]
+    renamed = (await client.patch(f"/workspaces/{workspace['id']}", json={"name": "  新 名字 "})).json()
+    assert renamed["code"] == 0
+    assert renamed["data"]["name"] == "新 名字"
+    assert renamed["data"]["path"] == str(tmp_path)
+    listed = (await client.get("/workspaces")).json()["data"]["workspaces"]
+    assert any(item["id"] == workspace["id"] and item["name"] == "新 名字" for item in listed)
+
+
+async def test_workspace_rename_rejects_blank_name(client: AsyncClient, engine_fixture: None, tmp_path: Path) -> None:
+    """纯空白名称按参数错误拒绝，原名保持不变。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    workspace = (await client.post("/workspaces", json={"path": str(tmp_path)})).json()["data"]
+    resp = (await client.patch(f"/workspaces/{workspace['id']}", json={"name": "   "})).json()
+    assert resp["code"] == 60001
+    listed = (await client.get("/workspaces")).json()["data"]["workspaces"]
+    assert any(item["id"] == workspace["id"] and item["name"] == tmp_path.name for item in listed)
+
+
+async def test_workspace_rename_missing(client: AsyncClient, engine_fixture: None) -> None:
+    """不存在的工作区：报 60002。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    resp = (await client.patch("/workspaces/99999999", json={"name": "x"})).json()
+    assert resp["code"] == 60002

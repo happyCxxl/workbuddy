@@ -1,10 +1,10 @@
-"""工作区接口：列表与创建（会话归属工作区，DSH workspace 语义）。"""
+"""工作区接口：列表、创建与重命名（会话归属工作区，DSH workspace 语义）。"""
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from lingxi.contract import R
-from lingxi.domain.workspace.service import create_workspace, list_workspaces
+from lingxi.domain.workspace.service import create_workspace, list_workspaces, rename_workspace
 
 router = APIRouter()
 
@@ -14,6 +14,12 @@ class CreateWorkspaceRequest(BaseModel):
 
     path: str
     name: str = ""
+
+
+class RenameWorkspaceRequest(BaseModel):
+    """重命名工作区请求：只改显示名，路径不变。"""
+
+    name: str
 
 
 def serialize_workspace(row: object) -> dict[str, object]:
@@ -40,4 +46,11 @@ async def workspaces() -> dict[str, object]:
 async def create(request: CreateWorkspaceRequest) -> dict[str, object]:
     """创建工作区：目录必须存在，路径唯一。"""
     row = await create_workspace(request.path, request.name)
+    return R.ok(serialize_workspace(row)).to_dict()
+
+
+@router.patch("/workspaces/{workspace_id}")
+async def rename(workspace_id: int, request: RenameWorkspaceRequest) -> dict[str, object]:
+    """重命名工作区：只改显示名；目录与会话归属不变。"""
+    row = await rename_workspace(workspace_id, request.name)
     return R.ok(serialize_workspace(row)).to_dict()

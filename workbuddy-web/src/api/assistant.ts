@@ -41,6 +41,12 @@ export async function addWorkspace(path: string, name = ''): Promise<Workspace> 
   return response.data;
 }
 
+/** 重命名工作区：只改显示名，不动目录与会话归属 */
+export async function updateWorkspace(workspaceId: string, name: string): Promise<Workspace> {
+  const response = await http.patch<Workspace>(`/workspaces/${workspaceId}`, { name });
+  return response.data;
+}
+
 /** 最近会话列表：对话页左栏 */
 export async function getAssistantSessions(): Promise<AssistantSession[]> {
   const response = await http.get<{ sessions: AssistantSession[] }>('/sessions');
