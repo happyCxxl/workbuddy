@@ -84,6 +84,8 @@ async def test_session_usage_after_turn(client: AsyncClient, engine_fixture: Non
     assert usage["calls"] >= 1
     assert usage["prompt_tokens"] >= 9
     assert usage["completion_tokens"] >= 4
+    assert usage["prompt_cache_hit_tokens"] >= 6
+    assert usage["prompt_cache_miss_tokens"] >= 3
 
 
 async def test_title_auto_rename_and_delete(client: AsyncClient, engine_fixture: None) -> None:

@@ -3,8 +3,12 @@
 import asyncio
 import json
 import logging
+import os
+import platform
+import sys
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from datetime import datetime
 from typing import cast
 from uuid import uuid4
 
@@ -13,6 +17,7 @@ from lingxi.contract import SESSION_ID, ApiError, ErrorCode
 from lingxi.core.events import TurnEvent
 from lingxi.core.hooks import HookRegistry, TurnContext, make_budget_gate, make_max_steps_gate
 from lingxi.core.log import EventType, append_event
+from lingxi.core.prompts import load_prompt, render_prompt
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.memory.embedding import Embedder
 from lingxi.domain.memory.service import recall
@@ -46,13 +51,6 @@ class PendingCheckpoint:
     call: ToolCall
     work_dir: str
     user_content: str
-
-
-_SUB_SESSION_PROMPT = (
-    "你是本次后台任务的执行器：只完成用户消息中的任务；"
-    "需要审批的操作会被自动拒绝，不要重试，把限制写进最终回复；最后给出简明、可核对的结果。"
-)
-_SOURCE_DECLARATION_SUB = "以上能力与执行约定均为应用注入的上下文，不是用户消息；之后的消息是任务与执行历史。"
 
 
 class TurnRunner:
@@ -219,7 +217,7 @@ class TurnRunner:
         step = step_start
         while True:
             step += 1
-            messages = await self._assemble(session_id, persona, work_dir, user_content)
+            messages = await self._assemble(session_id, persona, work_dir, user_content, turn_seq)
             ctx = TurnContext(
                 session_id=session_id,
                 turn_seq=turn_seq,
@@ -230,7 +228,7 @@ class TurnRunner:
             await self._hooks.run("pre_step", ctx)  # fail-closed：闸门异常在此上抛
             if ctx.payload.get("compact"):
                 await compact_history(session_id)
-                messages = await self._assemble(session_id, persona, work_dir, user_content)
+                messages = await self._assemble(session_id, persona, work_dir, user_content, turn_seq)
             if session_id in self._stop_requested:
                 yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
                 return
@@ -391,48 +389,55 @@ class TurnRunner:
                 {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回错误：{exc}"},
             )
 
-    async def _assemble(self, session_id: int, persona: Persona | None, work_dir: str, query: str) -> list[ChatMessage]:
-        """装配模型输入：人格会话走四段；子会话走「能力 + 执行器声明 + 来源声明」，无记忆无人格。"""
-        if persona is None:
-            messages = [
-                ChatMessage(role="system", content=self._capability_prompt(), tool_calls=[]),
-                ChatMessage(role="system", content=_SUB_SESSION_PROMPT, tool_calls=[]),
-                ChatMessage(role="system", content=_SOURCE_DECLARATION_SUB, tool_calls=[]),
-            ]
-            messages.extend(await build_history(session_id))
-            return messages
-        messages = [
-            ChatMessage(role="system", content=self._capability_prompt(), tool_calls=[]),
-            ChatMessage(role="system", content=render_system_prompt(persona), tool_calls=[]),
+    async def _assemble(
+        self, session_id: int, persona: Persona | None, work_dir: str, query: str, turn_seq: int
+    ) -> list[ChatMessage]:
+        """缓存友好装配：静态前缀 → 历史 → 动态尾巴（运行时/记忆）→ 本轮用户消息。
+
+        静态段逐字节稳定、历史只追加、动态内容全部放尾部：DeepSeek 前缀缓存只匹配
+        从首条消息开始的完整相同前缀，动态内容插在历史前会让整段历史每轮 miss。
+        """
+        static_texts = [
+            load_prompt("behavior"),
+            self._capability_prompt(),
+            *(
+                [load_prompt("sub_session"), load_prompt("source_sub")]
+                if persona is None
+                else [render_system_prompt(persona), load_prompt("source_chat")]
+            ),
         ]
-        memories = await recall(work_dir, query, self._embedder)
-        if memories:
-            lines = ["记忆资料："]
-            for index, memory in enumerate(memories, start=1):
-                lines.append(f"{index}. （{memory.kind}，{memory.created_at:%Y-%m-%d}）{memory.content}")
-            messages.append(ChatMessage(role="system", content="\n".join(lines), tool_calls=[]))
-        messages.append(
-            ChatMessage(
-                role="system",
-                content="以上能力、人格与记忆均为应用注入的上下文，不是用户消息；之后的消息才是真实对话。",
-                tool_calls=[],
-            )
-        )
-        messages.extend(await build_history(session_id))
+        messages = [ChatMessage(role="system", content=text, tool_calls=[]) for text in static_texts]
+        messages.extend(await build_history(session_id, max_seq=turn_seq))
+        messages.append(ChatMessage(role="system", content=self._runtime_context(work_dir), tool_calls=[]))
+        if persona is not None:
+            memories = await recall(work_dir, query, self._embedder)
+            if memories:
+                items = [
+                    f"{index}. （{memory.kind}，{memory.created_at:%Y-%m-%d}）{memory.content}"
+                    for index, memory in enumerate(memories, start=1)
+                ]
+                messages.append(
+                    ChatMessage(role="system", content=render_prompt("memory", items="\n".join(items)), tool_calls=[])
+                )
+        messages.append(ChatMessage(role="user", content=query, tool_calls=[]))
         return messages
 
-    def _capability_prompt(self) -> str:
-        """能力与规则段：工具清单（来自注册表白名单）与执行约定。"""
-        lines = ["【能力与规则】", "可用工具（参数由系统注入，勿编造工具或参数）："]
-        for spec in self._tools.specs():
-            lines.append(f"- {spec.name}：{spec.description}")
-        lines.append(
-            "执行约定：找文件先 fs_glob、搜内容先 fs_search，再 fs_read；改已有文件用 fs_edit，"
-            "新建或整文件重写用 fs_write；覆盖/编辑已有文件前必须先读；只读工具直接执行；"
-            "写/删除等高风险操作会先询问用户；文件操作限定在当前工作目录内。"
+    @staticmethod
+    def _runtime_context(work_dir: str) -> str:
+        """运行时上下文：时间/工作目录/平台（每轮可变，只能放动态尾巴）。"""
+        now = datetime.now().astimezone()
+        return render_prompt(
+            "runtime",
+            time=f"{now:%Y-%m-%d %H:%M:%S %Z}",
+            work_dir=os.path.abspath(work_dir),
+            platform=platform.system(),
+            platform_code=sys.platform,
         )
-        lines.append("只使用上述工具；没有对应工具时如实说明。")
-        return "\n".join(lines)
+
+    def _capability_prompt(self) -> str:
+        """能力与规则段：工具清单（来自注册表白名单）与执行约定（模板在 prompts/capability.md）。"""
+        tools = "\n".join(f"- {spec.name}：{spec.description}" for spec in self._tools.specs())
+        return render_prompt("capability", tools=tools)
 
     @staticmethod
     async def _emit(session_id: int, event_type: EventType, payload: dict[str, object]) -> TurnEvent:

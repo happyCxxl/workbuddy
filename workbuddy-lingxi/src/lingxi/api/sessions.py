@@ -130,9 +130,17 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
 
     @router.get("/sessions/{session_id}/usage")
     async def usage(session_id: int) -> dict[str, object]:
-        """会话用量：调用次数与 token 汇总（来自模型调用明细）。"""
-        calls, prompt_tokens, completion_tokens = await session_usage(session_id)
-        return R.ok({"calls": calls, "prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens}).to_dict()
+        """会话用量：调用次数、token 与缓存命中（来自模型调用明细）。"""
+        calls, prompt_tokens, completion_tokens, cache_hit, cache_miss = await session_usage(session_id)
+        return R.ok(
+            {
+                "calls": calls,
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "prompt_cache_hit_tokens": cache_hit,
+                "prompt_cache_miss_tokens": cache_miss,
+            }
+        ).to_dict()
 
     @router.post("/sessions/{session_id}/subsessions")
     async def create_sub(session_id: int, request: SubSessionRequest) -> dict[str, object]:

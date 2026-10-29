@@ -33,6 +33,37 @@ async def collect(runner: TurnRunner, session_id: int, content: str) -> list[Tur
     return [event async for event in runner.run(session_id, content)]
 
 
+async def test_assembly_prefix_is_cache_friendly(
+    fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
+) -> None:
+    """连续两轮：静态前缀逐字节一致；动态段（运行时/记忆）在历史之后、本轮用户消息之前。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings, captured = fake_server
+    runner = make_runner(settings, LlmGateway(settings), HookRegistry())
+    sid = await create_session("D:\\tmp", "缓存布局")
+    await collect(runner, sid, "hi")
+    await collect(runner, sid, "hi")
+    requests = [body for body in captured if isinstance(body.get("messages"), list)]
+    assert len(requests) >= 2
+    first = requests[-2]["messages"]
+    second = requests[-1]["messages"]
+    assert isinstance(first, list) and isinstance(second, list)
+    # 前四条静态段（行为准则/能力/人格/来源声明）完全一致
+    assert [str(m["content"]) for m in first[:4]] == [str(m["content"]) for m in second[:4]]
+    assert all(str(m["role"]) == "system" for m in second[:4])
+    # 历史排在静态段之后：第二条请求第 5 条起是首轮 user/assistant
+    assert str(second[4]["role"]) == "user"
+    contents = [str(m.get("content")) for m in second]
+    user_index = next(index for index, text in enumerate(contents) if text == "hi")
+    runtime_index = next(index for index, text in enumerate(contents) if text.startswith("【运行时上下文】"))
+    assert runtime_index > user_index
+    memory_indexes = [index for index, text in enumerate(contents) if "记忆资料" in text]
+    assert all(index > user_index for index in memory_indexes)
+    assert str(second[-1]["role"]) == "user"
+    assert str(second[-1]["content"]) == "hi"
+
+
 async def test_full_turn_events_and_projection(
     fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
 ) -> None:

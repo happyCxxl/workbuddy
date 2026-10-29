@@ -124,6 +124,8 @@ class LlmGateway:
                         model=model,
                         prompt_tokens=usage.prompt_tokens if usage else None,
                         completion_tokens=usage.completion_tokens if usage else None,
+                        prompt_cache_hit_tokens=usage.prompt_cache_hit_tokens if usage else None,
+                        prompt_cache_miss_tokens=usage.prompt_cache_miss_tokens if usage else None,
                         latency_ms=latency_ms,
                         error_code=error_code,
                     )

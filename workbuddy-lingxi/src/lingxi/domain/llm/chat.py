@@ -9,6 +9,18 @@ from lingxi.app.config import Settings
 from lingxi.domain.ports import ChatMessage, ChatRequest, StreamChunk, ToolCall, Usage
 
 _PROVIDER_EXTRA = "reasoning_content"
+_CACHE_HIT = "prompt_cache_hit_tokens"
+_CACHE_MISS = "prompt_cache_miss_tokens"
+
+
+def _int_extra(obj: object, name: str) -> int:
+    """读取协议扩展字段：DeepSeek 的缓存命中数不在 SDK 类型里，可能落在 model_extra。"""
+    value = getattr(obj, name, None)
+    if value is None:
+        extra = getattr(obj, "model_extra", None)
+        if isinstance(extra, dict):
+            value = cast(dict[str, object], extra).get(name)
+    return int(value) if isinstance(value, int) else 0
 
 
 class DeepSeekAdapter:
@@ -77,6 +89,8 @@ class DeepSeekAdapter:
                 usage = Usage(
                     prompt_tokens=chunk.usage.prompt_tokens,
                     completion_tokens=chunk.usage.completion_tokens,
+                    prompt_cache_hit_tokens=_int_extra(chunk.usage, _CACHE_HIT),
+                    prompt_cache_miss_tokens=_int_extra(chunk.usage, _CACHE_MISS),
                 )
         if tool_calls:
             yield StreamChunk(

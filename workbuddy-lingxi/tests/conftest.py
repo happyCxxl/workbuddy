@@ -237,7 +237,13 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
                 yield f"data: {json.dumps(_chunk(content='好', finish_reason='stop'), ensure_ascii=False)}\n\n"
                 data = _chunk()
                 data["choices"] = []
-                data["usage"] = {"prompt_tokens": 9, "completion_tokens": 4, "total_tokens": 13}
+                data["usage"] = {
+                    "prompt_tokens": 9,
+                    "completion_tokens": 4,
+                    "prompt_cache_hit_tokens": 6,
+                    "prompt_cache_miss_tokens": 3,
+                    "total_tokens": 13,
+                }
                 yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
                 yield "data: [DONE]\n\n"
 
@@ -246,7 +252,7 @@ def make_fake_app(captured: list[dict[str, object]]) -> FastAPI:
         async def text_gen() -> AsyncIterator[str]:
             # DeepSeek 形态：usage 挂在最后一个内容 chunk 上
             yield f"data: {json.dumps(_chunk(content='你'), ensure_ascii=False)}\n\n"
-            yield f"data: {json.dumps(_chunk(content='好', finish_reason='stop', usage={'prompt_tokens': 9, 'completion_tokens': 4, 'total_tokens': 13}), ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps(_chunk(content='好', finish_reason='stop', usage={'prompt_tokens': 9, 'completion_tokens': 4, 'prompt_cache_hit_tokens': 6, 'prompt_cache_miss_tokens': 3, 'total_tokens': 13}), ensure_ascii=False)}\n\n"
             yield "data: [DONE]\n\n"
 
         return StreamingResponse(text_gen(), media_type="text/event-stream")

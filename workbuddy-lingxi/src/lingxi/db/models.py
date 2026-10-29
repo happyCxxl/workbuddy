@@ -136,6 +136,9 @@ class ModelCall(Base):
     model: Mapped[str] = mapped_column(String(128), nullable=False)
     prompt_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     completion_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # 前缀缓存命中/未命中（DeepSeek 自动缓存）：用于核算真实输入成本
+    prompt_cache_hit_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    prompt_cache_miss_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

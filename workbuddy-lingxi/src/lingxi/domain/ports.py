@@ -42,10 +42,12 @@ class ChatRequest(BaseModel):
 
 
 class Usage(BaseModel):
-    """token 用量。"""
+    """token 用量：缓存命中/未命中用于校验前缀缓存效果（DeepSeek 自动前缀缓存）。"""
 
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    prompt_cache_hit_tokens: int = 0
+    prompt_cache_miss_tokens: int = 0
 
 
 class StreamChunk(BaseModel):

@@ -50,11 +50,13 @@ export interface PersonaVersionItem {
   fields: PersonaFields;
 }
 
-// 会话用量：调用次数与 token 汇总
+// 会话用量：调用次数、token 与缓存命中（DeepSeek 自动前缀缓存）
 export interface SessionUsage {
   calls: number;
   prompt_tokens: number;
   completion_tokens: number;
+  prompt_cache_hit_tokens: number;
+  prompt_cache_miss_tokens: number;
 }
 
 // 后台任务：子会话（干净上下文的任务执行器）

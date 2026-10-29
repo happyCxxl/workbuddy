@@ -97,8 +97,8 @@ async def list_sessions(limit: int = 50) -> list[AiSession]:
         return await SessionRepo(s).list_recent(limit)
 
 
-async def session_usage(session_id: int) -> tuple[int, int, int]:
-    """会话用量：调用次数、输入 token、输出 token。"""
+async def session_usage(session_id: int) -> tuple[int, int, int, int, int]:
+    """会话用量：调用次数、输入/输出 token、缓存命中/未命中。"""
     async with session_scope() as s:
         return await ModelCallRepo(s).usage_summary(session_id)
 
@@ -114,8 +114,8 @@ async def persona_of_session(session: AiSession) -> Persona:
     return _to_persona(row)
 
 
-async def build_history(session_id: int) -> list[ChatMessage]:
-    """事件投影：compaction 截断点之后的消息序列，供模型对话组装。"""
+async def build_history(session_id: int, max_seq: int | None = None) -> list[ChatMessage]:
+    """事件投影：compaction 截断点之后的消息序列；max_seq 用于排除本轮尚未处理的尾部事件。"""
     events = await replay_events(session_id)
     cutoff = 0
     for event in events:
@@ -124,6 +124,8 @@ async def build_history(session_id: int) -> list[ChatMessage]:
     messages: list[ChatMessage] = []
     for event in events:
         if event.seq <= cutoff:
+            continue
+        if max_seq is not None and event.seq > max_seq:
             continue
         if event.type == EventType.USER_MESSAGE:
             messages.append(ChatMessage(role="user", content=str(event.payload.get("content", "")), tool_calls=[]))

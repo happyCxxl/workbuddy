@@ -93,6 +93,7 @@
           <span class="page-spacer"></span>
           <span v-if="usage" class="chat-usage">
             {{ usage.calls }} 次调用 · {{ totalTokens }} tokens
+            <template v-if="cacheRate !== null"> · 缓存 {{ cacheRate }}%</template>
           </span>
           <el-button v-if="current" size="small" text @click="openTrajectory">轨迹</el-button>
           <el-button v-if="current" size="small" text @click="openSubSessions">
@@ -516,6 +517,16 @@ const runningSubCount = computed(
 const totalTokens = computed(
   () => (usage.value?.prompt_tokens ?? 0) + (usage.value?.completion_tokens ?? 0),
 );
+
+/** 前缀缓存命中率：命中 /（命中 + 未命中）输入 token；没有数据时为 null */
+const cacheRate = computed(() => {
+  const current = usage.value;
+  if (!current) {
+    return null;
+  }
+  const total = current.prompt_cache_hit_tokens + current.prompt_cache_miss_tokens;
+  return total > 0 ? Math.round((current.prompt_cache_hit_tokens / total) * 100) : null;
+});
 let abortController: AbortController | null = null;
 
 /** 后台任务状态中文名 */

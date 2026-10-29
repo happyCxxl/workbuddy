@@ -17,12 +17,14 @@ class ModelCallRepo:
         self._session.add(call)
         await self._session.flush()
 
-    async def usage_summary(self, session_id: int) -> tuple[int, int, int]:
-        """会话用量：调用次数、输入 token、输出 token。"""
+    async def usage_summary(self, session_id: int) -> tuple[int, int, int, int, int]:
+        """会话用量：调用次数、输入/输出 token、缓存命中/未命中的输入 token。"""
         stmt = select(
             func.count(ModelCall.id),
             func.coalesce(func.sum(ModelCall.prompt_tokens), 0),
             func.coalesce(func.sum(ModelCall.completion_tokens), 0),
+            func.coalesce(func.sum(ModelCall.prompt_cache_hit_tokens), 0),
+            func.coalesce(func.sum(ModelCall.prompt_cache_miss_tokens), 0),
         ).where(ModelCall.session_id == session_id)
         row = (await self._session.execute(stmt)).one()
-        return int(row[0] or 0), int(row[1] or 0), int(row[2] or 0)
+        return int(row[0] or 0), int(row[1] or 0), int(row[2] or 0), int(row[3] or 0), int(row[4] or 0)
