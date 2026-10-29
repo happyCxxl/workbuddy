@@ -122,7 +122,7 @@
               </span>
             </div>
             <div v-show="!collapsedGroups[group.key]" class="group-items">
-              <p v-if="group.items.length === 0" class="group-empty">还没有会话，点「＋」新建。</p>
+              <p v-if="group.items.length === 0" class="group-empty">暂无会话</p>
               <button
                 v-for="item in group.items"
                 :key="item.id"
@@ -140,7 +140,7 @@
             </div>
           </div>
           <p v-if="workspaces.length === 0 && sessions.length === 0" class="session-empty">
-            还没有工作区，点标题旁的文件夹图标新增。
+            暂无工作区 暂无工作区
           </p>
         </div>
       </div>
@@ -274,7 +274,7 @@
       <el-form label-position="top">
         <el-form-item label="工作区目录（会话的文件操作限定在此目录）">
           <div class="workdir-row">
-            <el-input v-model="workspacePath" placeholder="点击右侧选择目录，或直接输入绝对路径" />
+            <el-input v-model="workspacePath" placeholder="请选择目录，或直接输入绝对路径" />
             <el-button @click="openDirPicker">选择目录</el-button>
           </div>
           <div v-if="recentDirs.length > 0" class="recent-dirs">
@@ -294,7 +294,7 @@
         </el-form-item>
       </el-form>
       <p class="new-hint">
-        工作区用于归置会话；创建后在左侧工作区点「＋」新建会话，不再每次选择目录。
+        工作区用于归置会话；创建后会自动打开一个新会话，之后也可在工作区点「＋」再建。
       </p>
       <template #footer>
         <el-button @click="workspaceDialogVisible = false">取消</el-button>
@@ -385,6 +385,7 @@ import {
   addTurnResume,
   addTurnStream,
   addWorkspace,
+  deleteAssistantSession,
   deleteWorkspace,
   getAssistantSessions,
   getSessionEvents,
@@ -444,6 +445,8 @@ interface ChatMessage {
 const sessions = ref<AssistantSession[]>([]);
 const currentId = ref<string>('');
 const current = ref<AssistantSession | null>(null);
+/** 草稿会话：新建工作区/点「＋」时自动创建，未发消息就切走即丢弃（对齐 DSH） */
+const draftSessionId = ref<string | null>(null);
 const messages = ref<ChatMessage[]>([]);
 const input = ref('');
 const running = ref(false);
@@ -583,6 +586,9 @@ async function handleRename(item: AssistantSession): Promise<void> {
     return;
   }
   await updateAssistantSession(item.id, value);
+  if (draftSessionId.value === item.id) {
+    draftSessionId.value = null;
+  }
   item.title = value;
   if (currentId.value === item.id && current.value) {
     current.value = { ...current.value, title: value };
@@ -602,6 +608,9 @@ async function handleDeleteGroup(workDir: string): Promise<void> {
   }
   const deleted = await deleteWorkspace(workDir);
   await loadSessions();
+  if (draftSessionId.value && !sessions.value.some((item) => item.id === draftSessionId.value)) {
+    draftSessionId.value = null;
+  }
   if (current.value?.work_dir === workDir) {
     currentId.value = '';
     current.value = null;
@@ -679,9 +688,15 @@ async function loadSidebar(): Promise<void> {
   }
 }
 
-/** 只刷新会话（回合结束、标题生成后） */
+/** 只刷新会话（回合结束、标题生成后）：无标题的草稿不进入列表 */
 async function loadSessions(): Promise<void> {
-  sessions.value = await getAssistantSessions();
+  sessions.value = await visibleSessions();
+}
+
+/** 会话列表剔除草稿：无标题且不是当前会话的一律不展示 */
+async function visibleSessions(): Promise<AssistantSession[]> {
+  const list = await getAssistantSessions();
+  return list.filter((item) => item.title.trim() !== '' || item.id === currentId.value);
 }
 
 /** 只刷新工作区 */
@@ -689,8 +704,11 @@ async function loadWorkspaces(): Promise<void> {
   workspaces.value = await getWorkspaces();
 }
 
-/** 选择会话：重放事件重建消息 */
+/** 选择会话：重放事件重建消息；先丢弃未使用的草稿会话 */
 async function selectSession(item: AssistantSession): Promise<void> {
+  if (draftSessionId.value && draftSessionId.value !== item.id) {
+    await discardDraft();
+  }
   currentId.value = item.id;
   current.value = item;
   messages.value = [];
@@ -844,6 +862,8 @@ function handleSend(): void {
   }
   const content = input.value.trim();
   input.value = '';
+  // 发出首条消息即转正：不再按草稿丢弃
+  draftSessionId.value = null;
   messages.value.push({ role: 'user', text: content, thinking: '', tools: [] });
   messages.value.push({ role: 'assistant', text: '', thinking: '', tools: [] });
   running.value = true;
@@ -1016,26 +1036,58 @@ async function handleCreateWorkspace(): Promise<void> {
   if (!workspacePath.value.trim()) {
     return;
   }
-  await addWorkspace(workspacePath.value.trim());
+  const workspace = await addWorkspace(workspacePath.value.trim());
   workspaceDialogVisible.value = false;
   workspacePath.value = '';
   await loadWorkspaces();
-  ElMessage.success('工作区已创建，点工作区旁的「＋」新建会话');
+  // 对齐 DSH：新建工作区后直接打开一个可聊的草稿会话
+  await openDraftSession(workspace.id, workspace.path);
+  ElMessage.success('工作区已创建，已打开新会话');
 }
 
 /** 在工作区下新建会话：不再选目录，直接继承工作区 */
 async function handleNewSession(group: SessionGroup): Promise<void> {
-  if (!group.workspaceId) {
+  const workspaceId = group.workspaceId;
+  if (!workspaceId) {
     return;
   }
-  const created = await addAssistantSession(group.path, '', group.workspaceId);
+  await openDraftSession(workspaceId, group.path);
+}
+
+/** 打开草稿会话：未发消息就切走会被丢弃（对齐 DSH） */
+async function openDraftSession(workspaceId: string, path: string): Promise<void> {
+  await discardDraft();
+  const created = await addAssistantSession(path, '', workspaceId);
   sessions.value.unshift(created);
+  draftSessionId.value = created.id;
   await selectSession(created);
+}
+
+/** 丢弃未使用的草稿会话：从列表移除并逻辑删除；清理失败不影响切换 */
+async function discardDraft(): Promise<void> {
+  const id = draftSessionId.value;
+  draftSessionId.value = null;
+  if (!id) {
+    return;
+  }
+  sessions.value = sessions.value.filter((item) => item.id !== id);
+  if (currentId.value === id) {
+    currentId.value = '';
+    current.value = null;
+    messages.value = [];
+    usage.value = null;
+    subSessions.value = [];
+  }
+  try {
+    await deleteAssistantSession(id);
+  } catch {
+    // 草稿可能已被别处删除：忽略清理失败，切换照常进行
+  }
 }
 
 /** 刷新会话列表：首条消息后标题由后端自动生成，同步到列表与当前会话 */
 async function refreshSessions(): Promise<void> {
-  sessions.value = await getAssistantSessions();
+  sessions.value = await visibleSessions();
   if (currentId.value) {
     const latest = sessions.value.find((item) => item.id === currentId.value);
     if (latest) {
