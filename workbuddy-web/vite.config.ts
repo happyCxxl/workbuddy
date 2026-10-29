@@ -78,6 +78,8 @@ export default defineConfig({
       '^/memories': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
       '^/persona': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
       '^/permissions': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
+      // 目录浏览（新建会话选工作目录）
+      '^/fs/': { target: ASSISTANT_BACKEND, bypass: bypassNavigation },
       '^/health$': { target: ASSISTANT_BACKEND },
     },
   },

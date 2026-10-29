@@ -22,6 +22,18 @@ class SessionRepo:
         return await self._session.get(AiSession, session_id)
 
     async def list_recent(self, limit: int = 50) -> list[AiSession]:
-        """最近会话：按更新时间倒序（状态未删除的会话）。"""
-        stmt = select(AiSession).where(AiSession.status == "active").order_by(AiSession.updated_at.desc()).limit(limit)
+        """最近对话会话：排除子会话与逻辑删除，按更新时间倒序。"""
+        stmt = (
+            select(AiSession)
+            .where(AiSession.status == "active", AiSession.kind == "chat")
+            .order_by(AiSession.updated_at.desc())
+            .limit(limit)
+        )
+        return list((await self._session.scalars(stmt)).all())
+
+    async def list_active_by_work_dir(self, work_dir: str) -> list[AiSession]:
+        """某工作目录下的活动对话会话（删除分组用）。"""
+        stmt = select(AiSession).where(
+            AiSession.status == "active", AiSession.kind == "chat", AiSession.work_dir == work_dir
+        )
         return list((await self._session.scalars(stmt)).all())

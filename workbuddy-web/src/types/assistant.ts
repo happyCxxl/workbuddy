@@ -68,3 +68,16 @@ export interface SubSessionItem {
   result: string | null;
   created_at: string;
 }
+
+// 目录浏览：新建会话时选择工作目录
+export interface DirEntry {
+  name: string;
+  path: string;
+}
+
+// 目录列表：path 为空表示「此电脑」盘符层
+export interface DirListing {
+  path: string;
+  parent: string | null;
+  entries: DirEntry[];
+}

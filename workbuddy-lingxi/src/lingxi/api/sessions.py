@@ -10,19 +10,30 @@ from lingxi.core.sub_sessions import SubSessionManager
 from lingxi.domain.permission.gate import PRESETS
 from lingxi.domain.session.service import (
     create_session,
+    delete_session,
     get_session,
     list_sessions,
+    rename_session,
     session_usage,
     set_session_preset,
+)
+from lingxi.domain.session.service import (
+    delete_workspace as soft_delete_workspace,
 )
 from lingxi.domain.sub_session.service import create_sub_session, get_sub_session, list_sub_sessions
 
 
 class CreateSessionRequest(BaseModel):
-    """建会话请求：工作目录必填。"""
+    """建会话请求：工作目录必填；标题缺省由首条消息自动生成。"""
 
     work_dir: str
     title: str = ""
+
+
+class RenameRequest(BaseModel):
+    """重命名请求：标题非空。"""
+
+    title: str
 
 
 class PresetRequest(BaseModel):
@@ -143,5 +154,23 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         """单个后台任务：状态与结果摘要。"""
         row = await get_sub_session(sub_session_id)
         return R.ok(_serialize_sub(row)).to_dict()
+
+    @router.patch("/sessions/{session_id}")
+    async def rename(session_id: int, request: RenameRequest) -> dict[str, object]:
+        """重命名会话（逻辑删除的不可改）。"""
+        await rename_session(session_id, request.title)
+        return R.ok({"title": request.title.strip()}).to_dict()
+
+    @router.delete("/sessions/{session_id}")
+    async def remove(session_id: int) -> dict[str, object]:
+        """逻辑删除单条会话：行与事件保留，只从列表消失。"""
+        await delete_session(session_id)
+        return R.ok(None).to_dict()
+
+    @router.delete("/workspaces")
+    async def remove_workspace(work_dir: str) -> dict[str, object]:
+        """逻辑删除某工作目录下的全部会话记录：绝不触碰磁盘文件。"""
+        deleted = await soft_delete_workspace(work_dir)
+        return R.ok({"deleted": deleted}).to_dict()
 
     return router

@@ -37,12 +37,58 @@ async def set_session_preset(session_id: int, preset: str) -> None:
 
 
 async def get_session(session_id: int) -> AiSession:
-    """读会话：不存在按登记错误码失败。"""
+    """读会话：不存在或已逻辑删除按登记错误码失败。"""
     async with session_scope() as s:
         row = await SessionRepo(s).get(session_id)
-    if row is None:
+    if row is None or row.status == "deleted":
         raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
     return row
+
+
+async def ensure_title(session_id: int, content: str) -> None:
+    """首条消息生成标题：取前 10 字（空白压平），已有标题不覆盖。"""
+    cleaned = " ".join(content.split())[:10]
+    if not cleaned:
+        return
+    async with session_scope() as s:
+        row = await SessionRepo(s).get(session_id)
+        if row is None or row.status != "active" or row.title.strip():
+            return
+        row.title = cleaned
+        await s.commit()
+
+
+async def rename_session(session_id: int, title: str) -> None:
+    """重命名会话：标题非空，逻辑删除的会话不可改。"""
+    cleaned = " ".join(title.split())
+    if not cleaned:
+        raise ApiError(ErrorCode.INVALID_ARGUMENT, "标题不能为空")
+    async with session_scope() as s:
+        row = await SessionRepo(s).get(session_id)
+        if row is None or row.status == "deleted":
+            raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
+        row.title = cleaned[:255]
+        await s.commit()
+
+
+async def delete_session(session_id: int) -> None:
+    """逻辑删除单条会话：行与事件保留（可审计），列表不再显示。"""
+    async with session_scope() as s:
+        row = await SessionRepo(s).get(session_id)
+        if row is None or row.status == "deleted":
+            raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
+        row.status = "deleted"
+        await s.commit()
+
+
+async def delete_workspace(work_dir: str) -> int:
+    """逻辑删除某工作目录下的全部对话会话：只改状态，绝不触碰磁盘文件。"""
+    async with session_scope() as s:
+        rows = await SessionRepo(s).list_active_by_work_dir(work_dir)
+        for row in rows:
+            row.status = "deleted"
+        await s.commit()
+        return len(rows)
 
 
 async def list_sessions(limit: int = 50) -> list[AiSession]:

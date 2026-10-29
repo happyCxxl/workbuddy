@@ -20,7 +20,13 @@ from lingxi.domain.permission.gate import PendingApproval, PermissionGate
 from lingxi.domain.persona.engine import render_system_prompt
 from lingxi.domain.persona.models import Persona
 from lingxi.domain.ports import ChatMessage, ChatRequest, ToolCall
-from lingxi.domain.session.service import build_history, compact_history, get_session, persona_of_session
+from lingxi.domain.session.service import (
+    build_history,
+    compact_history,
+    ensure_title,
+    get_session,
+    persona_of_session,
+)
 from lingxi.domain.tools.registry import ToolContext, ToolRegistry
 
 logger = logging.getLogger(__name__)
@@ -97,6 +103,8 @@ class TurnRunner:
         session = await get_session(session_id)
         # 子会话是任务执行器：不绑人格、不注入记忆；对话会话照旧
         persona = await persona_of_session(session) if session.kind == "chat" else None
+        if session.kind == "chat":
+            await ensure_title(session_id, user_content)
         SESSION_ID.set(session_id)
         try:
             pre_turn = TurnContext(

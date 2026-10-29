@@ -19,23 +19,68 @@
       <div class="sessions-panel">
         <div class="sessions-head">
           <span class="sessions-title">会话</span>
-          <button class="page-refresh" type="button" title="刷新" @click="loadSessions">⟳</button>
+          <button class="sessions-refresh" type="button" title="刷新" @click="loadSessions">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M13.4 8a5.4 5.4 0 1 1-1.6-3.8M13.4 1.9v2.4H11" />
+            </svg>
+          </button>
         </div>
         <div class="sessions-list">
-          <button
-            v-for="item in sessions"
-            :key="item.id"
-            type="button"
-            class="session-item"
-            :class="{ 'session-item-on': item.id === currentId }"
-            @click="selectSession(item)"
-          >
-            <span class="session-title">{{ item.title || '未命名会话' }}</span>
-            <span class="session-dir">{{ item.work_dir }}</span>
-            <span class="session-time"
-              >{{ presetLabel(item.permission_preset) }} · {{ formatTime(item.updated_at) }}</span
-            >
-          </button>
+          <div v-for="group in sessionGroups" :key="group.workDir" class="session-group">
+            <div class="group-head" @click="toggleGroup(group.workDir)">
+              <span class="group-folder">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                >
+                  <path d="M2 4.5h4l1.3 1.5H14v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
+                  <path d="M2 6h12" />
+                </svg>
+              </span>
+              <span
+                class="group-arrow"
+                :class="{ 'group-arrow-open': !collapsedGroups[group.workDir] }"
+                >▸</span
+              >
+              <span class="group-name" :title="group.workDir">{{ baseName(group.workDir) }}</span>
+              <span class="group-count">{{ group.items.length }}</span>
+              <button
+                class="group-del"
+                type="button"
+                title="删除该目录下的会话记录（不动磁盘文件）"
+                @click.stop="handleDeleteGroup(group.workDir)"
+              >
+                ✕
+              </button>
+            </div>
+            <div v-show="!collapsedGroups[group.workDir]" class="group-items">
+              <button
+                v-for="item in group.items"
+                :key="item.id"
+                type="button"
+                class="session-item"
+                :class="{ 'session-item-on': item.id === currentId }"
+                @click="selectSession(item)"
+              >
+                <span class="session-title">{{ item.title || '未命名会话' }}</span>
+                <span class="session-time">{{ formatTime(item.updated_at) }}</span>
+                <span class="session-rename" title="重命名" @click.stop="handleRename(item)"
+                  >✎</span
+                >
+              </button>
+            </div>
+          </div>
           <p v-if="sessions.length === 0" class="session-empty">还没有会话，点右上角新建。</p>
         </div>
       </div>
@@ -164,19 +209,72 @@
       </div>
     </div>
 
-    <el-dialog v-model="newDialogVisible" title="新建会话" width="440px" destroy-on-close>
+    <el-dialog v-model="newDialogVisible" title="新建会话" width="520px" destroy-on-close>
       <el-form label-position="top">
         <el-form-item label="工作目录（会话内的文件操作限定在此目录）">
-          <el-input v-model="newWorkDir" placeholder="D:\projects\workbuddy" />
-        </el-form-item>
-        <el-form-item label="会话标题">
-          <el-input v-model="newTitle" placeholder="例如：修 pom 依赖冲突" />
+          <div class="workdir-row">
+            <el-input v-model="newWorkDir" placeholder="点击右侧选择目录，或直接输入绝对路径" />
+            <el-button @click="openDirPicker">选择目录</el-button>
+          </div>
+          <div v-if="recentDirs.length > 0" class="recent-dirs">
+            <span class="recent-label">最近：</span>
+            <button
+              v-for="dir in recentDirs"
+              :key="dir"
+              type="button"
+              class="dir-chip"
+              :class="{ 'dir-chip-on': newWorkDir === dir }"
+              :title="dir"
+              @click="newWorkDir = dir"
+            >
+              {{ baseName(dir) }}
+            </button>
+          </div>
         </el-form-item>
       </el-form>
+      <p class="new-hint">标题不用填：首条消息自动取前 10 字，之后可随时重命名。</p>
       <template #footer>
         <el-button @click="newDialogVisible = false">取消</el-button>
         <el-button type="primary" :disabled="!newWorkDir.trim()" @click="handleCreate">
           创建
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="dirDialogVisible" title="选择工作目录" width="560px">
+      <div class="dir-bar">
+        <el-button size="small" :disabled="dirParent === null" @click="goUpDir">上一级</el-button>
+        <span class="dir-path" :title="dirPath || '此电脑'">{{ dirPath || '此电脑' }}</span>
+      </div>
+      <div class="dir-list">
+        <p v-if="dirEntries.length === 0" class="dir-empty">没有子目录。</p>
+        <button
+          v-for="entry in dirEntries"
+          :key="entry.path"
+          type="button"
+          class="dir-item"
+          @click="enterDir(entry.path)"
+        >
+          <span class="dir-icon">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
+            >
+              <path d="M2 4.5h4l1.3 1.5H14v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
+              <path d="M2 6h12" />
+            </svg>
+          </span>
+          <span class="dir-name">{{ entry.name }}</span>
+        </button>
+      </div>
+      <template #footer>
+        <el-button @click="dirDialogVisible = false">取消</el-button>
+        <el-button type="primary" :disabled="!dirPath" @click="chooseCurrentDir">
+          选择此目录
         </el-button>
       </template>
     </el-dialog>
@@ -215,7 +313,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 import {
@@ -223,21 +321,31 @@ import {
   addSubSession,
   addTurnResume,
   addTurnStream,
+  deleteWorkspace,
   getAssistantSessions,
   getSessionEvents,
   getSessionUsage,
   getSubSessions,
+  getWorkspaceDirs,
+  updateAssistantSession,
   updateSessionPermission,
   updateTurnStop,
 } from '@/api/assistant';
 import type {
   AssistantSession,
+  DirEntry,
   PermissionPreset,
   SessionEventItem,
   SessionUsage,
   SubSessionItem,
 } from '@/types/assistant';
 import { formatDateTime } from '@/utils/date';
+
+/** 会话分组：按工作目录聚合 */
+interface SessionGroup {
+  workDir: string;
+  items: AssistantSession[];
+}
 
 /** 工具调用行：名称、参数与结果 */
 interface ToolLine {
@@ -274,13 +382,130 @@ const personaLabel = ref('v1');
 const messageBox = ref<HTMLElement | null>(null);
 const newDialogVisible = ref(false);
 const newWorkDir = ref('');
-const newTitle = ref('');
 const usage = ref<SessionUsage | null>(null);
 const trajectoryVisible = ref(false);
 const trajectoryEvents = ref<SessionEventItem[]>([]);
 const subVisible = ref(false);
 const subSessions = ref<SubSessionItem[]>([]);
+const collapsedGroups = ref<Record<string, boolean>>({});
+const dirDialogVisible = ref(false);
+const dirPath = ref('');
+const dirParent = ref<string | null>(null);
+const dirEntries = ref<DirEntry[]>([]);
 let subTimer: number | null = null;
+
+/** 按工作目录分组的会话：组按最近更新时间倒序，组内同样倒序 */
+const sessionGroups = computed<SessionGroup[]>(() => {
+  const groups = new Map<string, AssistantSession[]>();
+  for (const item of sessions.value) {
+    const bucket = groups.get(item.work_dir) ?? [];
+    bucket.push(item);
+    groups.set(item.work_dir, bucket);
+  }
+  return [...groups.entries()]
+    .map(([workDir, items]) => ({
+      workDir,
+      items: [...items].sort((left, right) => right.updated_at.localeCompare(left.updated_at)),
+    }))
+    .sort((left, right) =>
+      (right.items.at(0)?.updated_at ?? '').localeCompare(left.items.at(0)?.updated_at ?? ''),
+    );
+});
+
+/** 最近使用的工作目录（新建会话快捷选择） */
+const recentDirs = computed(() =>
+  [...new Set(sessions.value.map((item) => item.work_dir))].slice(0, 6),
+);
+
+/** 目录名：取路径最后一段 */
+function baseName(path: string): string {
+  const parts = path.split(/[\\/]/).filter((part) => part.length > 0);
+  return parts.at(-1) ?? path;
+}
+
+/** 展开/收起分组 */
+function toggleGroup(workDir: string): void {
+  collapsedGroups.value = { ...collapsedGroups.value, [workDir]: !collapsedGroups.value[workDir] };
+}
+
+/** 打开目录选择器：优先定位当前输入目录，否则列盘符 */
+async function openDirPicker(): Promise<void> {
+  dirDialogVisible.value = true;
+  await loadDir(newWorkDir.value.trim() || undefined);
+}
+
+/** 载入目录：不传 path 时列盘符 */
+async function loadDir(path?: string): Promise<void> {
+  const listing = await getWorkspaceDirs(path);
+  dirPath.value = listing.path;
+  dirParent.value = listing.parent;
+  dirEntries.value = listing.entries;
+}
+
+/** 进入子目录 */
+async function enterDir(path: string): Promise<void> {
+  await loadDir(path);
+}
+
+/** 返回上一级 */
+async function goUpDir(): Promise<void> {
+  await loadDir(dirParent.value ?? undefined);
+}
+
+/** 确认选择当前目录 */
+function chooseCurrentDir(): void {
+  if (!dirPath.value) {
+    return;
+  }
+  newWorkDir.value = dirPath.value;
+  dirDialogVisible.value = false;
+}
+
+/** 重命名会话 */
+async function handleRename(item: AssistantSession): Promise<void> {
+  let value = '';
+  try {
+    const result = await ElMessageBox.prompt('输入新的会话标题', '重命名', {
+      inputValue: item.title,
+      confirmButtonText: '保存',
+      cancelButtonText: '取消',
+    });
+    value = result.value.trim();
+  } catch {
+    return;
+  }
+  if (!value) {
+    return;
+  }
+  await updateAssistantSession(item.id, value);
+  item.title = value;
+  if (currentId.value === item.id && current.value) {
+    current.value = { ...current.value, title: value };
+  }
+}
+
+/** 删除某个工作目录下的会话记录：逻辑删除，磁盘文件不动 */
+async function handleDeleteGroup(workDir: string): Promise<void> {
+  try {
+    await ElMessageBox.confirm(
+      `删除「${baseName(workDir)}」下的全部会话记录？只删数据库记录（逻辑删除），不会删除磁盘文件。`,
+      '删除会话记录',
+      { confirmButtonText: '删除记录', cancelButtonText: '取消', type: 'warning' },
+    );
+  } catch {
+    return;
+  }
+  const deleted = await deleteWorkspace(workDir);
+  sessions.value = sessions.value.filter((item) => item.work_dir !== workDir);
+  if (current.value?.work_dir === workDir) {
+    currentId.value = '';
+    current.value = null;
+    messages.value = [];
+    usage.value = null;
+    subSessions.value = [];
+  }
+  ElMessage.success(`已删除 ${deleted} 条会话记录`);
+}
 
 /** 运行中的后台任务数（抽屉按钮角标） */
 const runningSubCount = computed(
@@ -500,6 +725,7 @@ function handleSend(): void {
     onDone: () => {
       running.value = false;
       void loadUsage();
+      void refreshSessions();
     },
     onError: (message) => {
       running.value = false;
@@ -607,12 +833,22 @@ async function handleCreate(): Promise<void> {
   if (!newWorkDir.value.trim()) {
     return;
   }
-  const created = await addAssistantSession(newWorkDir.value.trim(), newTitle.value.trim());
+  const created = await addAssistantSession(newWorkDir.value.trim(), '');
   sessions.value.unshift(created);
   newDialogVisible.value = false;
   newWorkDir.value = '';
-  newTitle.value = '';
   await selectSession(created);
+}
+
+/** 刷新会话列表：首条消息后标题由后端自动生成，同步到列表与当前会话 */
+async function refreshSessions(): Promise<void> {
+  sessions.value = await getAssistantSessions();
+  if (currentId.value) {
+    const latest = sessions.value.find((item) => item.id === currentId.value);
+    if (latest) {
+      current.value = latest;
+    }
+  }
 }
 
 onMounted(async () => {
@@ -718,30 +954,148 @@ onUnmounted(() => {
   flex: none;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--kb-line);
 }
 
 .sessions-title {
+  color: var(--kb-text-3);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.sessions-refresh {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--kb-text-3);
+  cursor: pointer;
+}
+
+.sessions-refresh:hover {
+  background: rgb(255 255 255 / 6%);
   color: var(--kb-text-2);
-  font-size: 13px;
 }
 
 .sessions-list {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 8px;
+  padding: 6px 6px 12px;
 }
 
+/* 工作区行：34px；文件夹图标悬停切换为展开箭头（DSH 同款交互） */
+.group-head {
+  display: flex;
+  height: 34px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: 8px;
+  color: var(--kb-text-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.group-head:hover {
+  background: rgb(255 255 255 / 5%);
+}
+
+.group-folder {
+  display: inline-flex;
+  flex: none;
+  width: 16px;
+  align-items: center;
+  justify-content: center;
+  color: var(--kb-text-3);
+}
+
+.group-arrow {
+  display: none;
+  flex: none;
+  width: 16px;
+  color: var(--kb-text-3);
+  font-size: 9px;
+  text-align: center;
+  transition: transform 150ms ease;
+}
+
+.group-arrow-open {
+  transform: rotate(90deg);
+}
+
+.group-head:hover .group-folder {
+  display: none;
+}
+
+.group-head:hover .group-arrow {
+  display: inline-block;
+}
+
+.group-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-count {
+  flex: none;
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+}
+
+.group-del {
+  display: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--kb-text-3);
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.group-del:hover {
+  background: rgb(255 255 255 / 8%);
+  color: var(--kb-danger);
+}
+
+.group-head:hover .group-del {
+  display: block;
+}
+
+.group-items {
+  display: flex;
+  flex-direction: column;
+  padding-left: 22px;
+}
+
+/* 会话行：32px 单行；悬停换底色，时间让位给重命名（DSH 同款） */
 .session-item {
   display: flex;
+  height: 32px;
   width: 100%;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 8px;
   background: none;
   color: var(--kb-text-1);
   cursor: pointer;
@@ -749,22 +1103,167 @@ onUnmounted(() => {
   text-align: left;
 }
 
+.session-item:hover {
+  background: rgb(255 255 255 / 5%);
+}
+
 .session-item-on {
-  border-color: rgb(52 211 153 / 25%);
+  background: var(--kb-tint);
+}
+
+.session-item-on:hover {
   background: var(--kb-tint);
 }
 
 .session-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   font-size: 13px;
-  font-weight: 600;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.session-dir,
 .session-time {
+  flex: none;
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+}
+
+.session-rename {
+  display: none;
+  flex: none;
+  width: 18px;
+  color: var(--kb-text-3);
+  font-size: 11px;
+  text-align: center;
+}
+
+.session-rename:hover {
+  color: var(--kb-primary);
+}
+
+.session-item:hover .session-time {
+  display: none;
+}
+
+.session-item:hover .session-rename {
+  display: block;
+}
+
+.session-group {
+  margin-bottom: 2px;
+}
+
+.workdir-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.recent-dirs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.recent-label {
+  color: var(--kb-text-3);
+  font-size: 12px;
+}
+
+.dir-chip {
+  max-width: 140px;
+  overflow: hidden;
+  padding: 2px 10px;
+  border: 1px solid var(--kb-line);
+  border-radius: 999px;
+  background: var(--kb-surface);
+  color: var(--kb-text-2);
+  cursor: pointer;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dir-chip-on {
+  border-color: var(--kb-primary);
+  color: var(--kb-primary);
+}
+
+.new-hint {
+  margin: 0;
+  color: var(--kb-text-3);
+  font-size: 12px;
+}
+
+.dir-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.dir-path {
+  flex: 1;
   overflow: hidden;
   color: var(--kb-text-3);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dir-list {
+  display: flex;
+  max-height: 320px;
+  flex-direction: column;
+  gap: 2px;
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid var(--kb-line);
+  border-radius: 10px;
+}
+
+.dir-empty {
+  margin: 0;
+  padding: 14px;
+  color: var(--kb-text-3);
+  font-size: 12px;
+  text-align: center;
+}
+
+.dir-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--kb-text-1);
+  cursor: pointer;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-size: 13px;
+  text-align: left;
+}
+
+.dir-item:hover {
+  background: rgb(255 255 255 / 5%);
+}
+
+.dir-icon {
+  display: inline-flex;
+  color: var(--kb-text-3);
+}
+
+.dir-name {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

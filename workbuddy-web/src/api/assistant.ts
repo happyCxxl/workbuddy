@@ -2,6 +2,7 @@ import { http } from './http';
 import type {
   AssistantMemory,
   AssistantSession,
+  DirListing,
   PermissionPreset,
   PersonaFields,
   PersonaVersionItem,
@@ -26,6 +27,32 @@ export async function addAssistantSession(
 export async function getAssistantSessions(): Promise<AssistantSession[]> {
   const response = await http.get<{ sessions: AssistantSession[] }>('/sessions');
   return response.data.sessions;
+}
+
+/** 重命名会话 */
+export async function updateAssistantSession(sessionId: string, title: string): Promise<void> {
+  await http.patch(`/sessions/${sessionId}`, { title });
+}
+
+/** 逻辑删除单条会话：只从列表消失，数据库行与事件保留 */
+export async function deleteAssistantSession(sessionId: string): Promise<void> {
+  await http.delete(`/sessions/${sessionId}`);
+}
+
+/** 逻辑删除某工作目录下的全部会话记录：不触碰磁盘文件 */
+export async function deleteWorkspace(workDir: string): Promise<number> {
+  const response = await http.delete<{ deleted: number }>('/workspaces', {
+    params: { work_dir: workDir },
+  });
+  return response.data.deleted;
+}
+
+/** 目录浏览：不传 path 时为盘符列表，传 path 时列子目录 */
+export async function getWorkspaceDirs(path?: string): Promise<DirListing> {
+  const response = await http.get<DirListing>('/fs/dirs', {
+    params: path ? { path } : {},
+  });
+  return response.data;
 }
 
 /** 读会话：工作目录、权限档与绑定的人格版本 */
