@@ -7,6 +7,7 @@
 import os
 import tomllib
 from pathlib import Path
+from typing import cast
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -84,8 +85,18 @@ def _read_toml(path: str) -> dict[str, object]:
         return tomllib.load(file)
 
 
+def _merge(base: dict[str, object], override: dict[str, object]) -> None:
+    """递归合并配置：同名嵌套表逐层合并，标量与列表由后者整体覆盖。"""
+    for key, value in override.items():
+        current = base.get(key)
+        if isinstance(value, dict) and isinstance(current, dict):
+            _merge(cast(dict[str, object], current), cast(dict[str, object], value))
+        else:
+            base[key] = value
+
+
 class TomlSource(PydanticBaseSettingsSource):
-    """TOML 配置源：按文件顺序加载，后者覆盖前者。"""
+    """TOML 配置源：按文件顺序加载，后者覆盖前者；嵌套表逐层合并，本地可只写要覆盖的键。"""
 
     def __init__(self, settings_cls: type[BaseSettings], files: tuple[str, ...]) -> None:
         super().__init__(settings_cls)
@@ -99,7 +110,7 @@ class TomlSource(PydanticBaseSettingsSource):
         """合并全部文件为一层嵌套字典。"""
         data: dict[str, object] = {}
         for file in self._files:
-            data.update(_read_toml(file))
+            _merge(data, _read_toml(file))
         return data
 
 
@@ -125,10 +136,10 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        """注入 TOML 源：排在环境变量之后，本地文件先于主文件。"""
+        """注入 TOML 源：排在环境变量之后；主文件先加载，本地文件后加载以覆盖同名键。"""
         return (
             init_settings,
             env_settings,
-            TomlSource(settings_cls, (LOCAL_CONFIG_FILE, CONFIG_FILE)),
+            TomlSource(settings_cls, (CONFIG_FILE, LOCAL_CONFIG_FILE)),
             file_secret_settings,
         )
