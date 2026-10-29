@@ -9,6 +9,9 @@ from lingxi.app.config import MemoryConfig
 
 logger = logging.getLogger(__name__)
 
+# 超时：向量化失败本来就走降级（仅关键词召回），不能让召回/抽取把回合拖住
+_TIMEOUT_SECONDS = 30.0
+
 
 class Embedder:
     """向量化接口：单方法 embed，输出归一化向量（异步）。"""
@@ -23,7 +26,11 @@ class OpenAICompatibleEmbedder(Embedder):
 
     def __init__(self, config: MemoryConfig) -> None:
         self._model = config.embedding_model
-        self._client = AsyncOpenAI(api_key=config.embedding_api_key or "unset", base_url=config.embedding_base_url)
+        self._client = AsyncOpenAI(
+            api_key=config.embedding_api_key or "unset",
+            base_url=config.embedding_base_url,
+            timeout=_TIMEOUT_SECONDS,
+        )
 
     async def embed(self, text: str) -> list[float]:
         response = await self._client.embeddings.create(

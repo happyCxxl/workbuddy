@@ -13,6 +13,9 @@ from lingxi.domain.ports import ModelT
 
 logger = logging.getLogger(__name__)
 
+# 读超时：结构化判定不能把回合无限期挂住（失败按既有重试/降级路径处理）
+_TIMEOUT_SECONDS = 120.0
+
 
 class StructuredOutput:
     """结构化输出出口：业务传入目标模型类型，拿到校验通过的实例。"""
@@ -20,7 +23,9 @@ class StructuredOutput:
     def __init__(self, settings: Settings) -> None:
         self._model = settings.llm.chat_model
         self._max_retries = settings.llm.structured_max_retries
-        self._client = AsyncOpenAI(api_key=settings.llm.api_key or "unset", base_url=settings.llm.base_url)
+        self._client = AsyncOpenAI(
+            api_key=settings.llm.api_key or "unset", base_url=settings.llm.base_url, timeout=_TIMEOUT_SECONDS
+        )
         self._strict_disabled = False
 
     async def structured(self, prompt: str, model_type: type[ModelT], model: str | None = None) -> ModelT:

@@ -11,6 +11,8 @@ from lingxi.domain.ports import ChatMessage, ChatRequest, StreamChunk, ToolCall,
 _PROVIDER_EXTRA = "reasoning_content"
 _CACHE_HIT = "prompt_cache_hit_tokens"
 _CACHE_MISS = "prompt_cache_miss_tokens"
+# 读超时：模型端长时间不再产出 chunk 时尽快失败，避免回合永久停在“进行中”
+_TIMEOUT_SECONDS = 120.0
 
 
 def _int_extra(obj: object, name: str) -> int:
@@ -28,7 +30,9 @@ class DeepSeekAdapter:
 
     def __init__(self, settings: Settings, model: str | None = None) -> None:
         self._model = model or settings.llm.chat_model
-        self._client = AsyncOpenAI(api_key=settings.llm.api_key or "unset", base_url=settings.llm.base_url)
+        self._client = AsyncOpenAI(
+            api_key=settings.llm.api_key or "unset", base_url=settings.llm.base_url, timeout=_TIMEOUT_SECONDS
+        )
 
     @staticmethod
     def _to_provider(message: ChatMessage) -> dict[str, object]:

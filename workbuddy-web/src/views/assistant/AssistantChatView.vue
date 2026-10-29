@@ -607,7 +607,7 @@ async function handleDeleteWorkspace(group: SessionGroup): Promise<void> {
   }
   try {
     await ElMessageBox.confirm(
-      `删除工作区「${group.name}」？其下 ${group.items.length} 个会话记录会一并删除（只删记录，磁盘文件不动）。`,
+      `确认删除工作区「${group.name}」？其下会话记录会一并删除`,
       '删除工作区',
       { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' },
     );

@@ -126,7 +126,6 @@ class TurnRunner:
                 session.kind,
             ):
                 yield event
-            self._stop_requested.discard(session_id)
         except PendingApproval:
             yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
         except ApiError as exc:
@@ -138,6 +137,9 @@ class TurnRunner:
             yield await self._emit(session_id, EventType.ERROR, {"message": str(exc)})
             yield await self._emit(session_id, EventType.TURN_END, {"status": "error"})
             raise
+        finally:
+            # 停车标记只在本次回合内有效：断线/取消也要清掉，否则下一回合会被直接判停车
+            self._stop_requested.discard(session_id)
 
     async def _resume_locked(self, session_id: int, request_id: str, outcome: str) -> AsyncIterator[TurnEvent]:
         checkpoint = self._pending.pop((session_id, request_id), None)
@@ -282,8 +284,12 @@ class TurnRunner:
                     "assistant_content": "".join(content_parts),
                 },
             )
-            await self._hooks.run("post_execute", post)
+            # 先落 turn.end：界面立即收尾；后置钩子（记忆抽取）慢或失败都不再拖住回合
             yield await self._emit(session_id, EventType.TURN_END, {"status": "completed"})
+            try:
+                await self._hooks.run("post_execute", post)
+            except Exception:
+                logger.warning("回合后置钩子失败", exc_info=True)
             return
 
     async def _execute_tool(

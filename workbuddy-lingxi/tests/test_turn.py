@@ -164,3 +164,39 @@ async def test_max_steps_aborts_turn(
     assert types.count("tool.call") == 2
     assert "error" in types
     assert types[-1] == "turn.end"
+
+
+async def test_stop_flag_does_not_leak_into_next_turn(
+    fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
+) -> None:
+    """停车标记只属于当轮：被停车后，下一轮照常执行（断线/取消也不能把会话卡死）。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings, _ = fake_server
+    runner = make_runner(settings, LlmGateway(settings), HookRegistry())
+    sid = await create_session("D:\\tmp", "停车回收")
+    runner.request_stop(sid)
+    stopped = await collect(runner, sid, "hi")
+    assert stopped[-1].payload["status"] == "pending_stop"
+    resumed = await collect(runner, sid, "hi")
+    assert resumed[-1].payload["status"] == "completed"
+
+
+async def test_post_hook_failure_keeps_turn_completed(
+    fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
+) -> None:
+    """后置钩子失败不影响已完成的回合：turn.end 仍为 completed，异常只记日志。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings, _ = fake_server
+    hooks = HookRegistry()
+
+    async def boom(_ctx: TurnContext) -> None:
+        raise RuntimeError("记忆服务不可用")
+
+    hooks.register("post_execute", boom)
+    runner = make_runner(settings, LlmGateway(settings), hooks)
+    sid = await create_session("D:\\tmp", "钩子失败")
+    events = await collect(runner, sid, "hi")
+    assert events[-1].type == "turn.end"
+    assert events[-1].payload["status"] == "completed"
