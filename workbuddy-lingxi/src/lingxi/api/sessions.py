@@ -17,9 +17,6 @@ from lingxi.domain.session.service import (
     session_usage,
     set_session_preset,
 )
-from lingxi.domain.session.service import (
-    delete_workspace as soft_delete_workspace,
-)
 from lingxi.domain.sub_session.service import create_sub_session, get_sub_session, list_sub_sessions
 from lingxi.domain.workspace.service import get_workspace
 
@@ -188,11 +185,5 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         """逻辑删除单条会话：行与事件保留，只从列表消失。"""
         await delete_session(session_id)
         return R.ok(None).to_dict()
-
-    @router.delete("/workspaces")
-    async def remove_workspace(work_dir: str) -> dict[str, object]:
-        """逻辑删除某工作目录下的全部会话记录：绝不触碰磁盘文件。"""
-        deleted = await soft_delete_workspace(work_dir)
-        return R.ok({"deleted": deleted}).to_dict()
 
     return router

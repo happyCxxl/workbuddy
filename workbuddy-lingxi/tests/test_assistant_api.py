@@ -114,24 +114,6 @@ async def test_title_auto_rename_and_delete(client: AsyncClient, engine_fixture:
     assert all(row["id"] != str(sid) for row in rows)
 
 
-async def test_delete_workspace_soft_deletes_records_only(client: AsyncClient, engine_fixture: None, tmp_path) -> None:
-    """删除工作目录分组：只逻辑删除会话记录，磁盘目录原样保留。"""
-    if not await db_up():
-        pytest.skip("数据库未启动：先 docker compose up -d postgres")
-    work_dir = str(tmp_path)
-    first = (await client.post("/sessions", json={"work_dir": work_dir})).json()["data"]["id"]
-    second = (await client.post("/sessions", json={"work_dir": work_dir})).json()["data"]["id"]
-    other = (await client.post("/sessions", json={"work_dir": "D:\\tmp", "title": "别处"})).json()["data"]["id"]
-    removed = (await client.delete("/workspaces", params={"work_dir": work_dir})).json()
-    assert removed["code"] == 0
-    assert removed["data"]["deleted"] == 2
-    rows = (await client.get("/sessions")).json()["data"]["sessions"]
-    ids = {row["id"] for row in rows}
-    assert str(first) not in ids and str(second) not in ids
-    assert str(other) in ids
-    assert (tmp_path).is_dir()
-
-
 async def test_fs_dirs_browse(client: AsyncClient, engine_fixture: None, tmp_path) -> None:
     """目录浏览：列出子目录与上级路径；不带 path 时给盘符。"""
     if not await db_up():

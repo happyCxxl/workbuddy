@@ -63,11 +63,9 @@ export async function deleteAssistantSession(sessionId: string): Promise<void> {
   await http.delete(`/sessions/${sessionId}`);
 }
 
-/** 逻辑删除某工作目录下的全部会话记录：不触碰磁盘文件 */
-export async function deleteWorkspace(workDir: string): Promise<number> {
-  const response = await http.delete<{ deleted: number }>('/workspaces', {
-    params: { work_dir: workDir },
-  });
+/** 删除工作区：其下会话记录一并删除（只删记录，磁盘文件不动） */
+export async function deleteWorkspace(workspaceId: string): Promise<number> {
+  const response = await http.delete<{ deleted: number }>(`/workspaces/${workspaceId}`);
   return response.data.deleted;
 }
 

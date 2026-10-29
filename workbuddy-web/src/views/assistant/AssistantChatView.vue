@@ -105,9 +105,7 @@
                     <el-dropdown-menu>
                       <el-dropdown-item command="copy">复制路径</el-dropdown-item>
                       <el-dropdown-item command="rename">重命名</el-dropdown-item>
-                      <el-dropdown-item command="delete" :disabled="group.items.length === 0">
-                        删除会话记录
-                      </el-dropdown-item>
+                      <el-dropdown-item command="delete-workspace">删除工作区</el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
@@ -135,6 +133,12 @@
                 <span class="session-time">{{ formatTime(item.updated_at) }}</span>
                 <span class="session-rename" title="重命名" @click.stop="handleRename(item)"
                   >✎</span
+                >
+                <span
+                  class="session-delete"
+                  title="删除会话"
+                  @click.stop="handleDeleteSession(item)"
+                  >✕</span
                 >
               </button>
             </div>
@@ -595,30 +599,61 @@ async function handleRename(item: AssistantSession): Promise<void> {
   }
 }
 
-/** 删除某个工作区下的会话记录：逻辑删除，磁盘文件不动 */
-async function handleDeleteGroup(workDir: string): Promise<void> {
+/** 删除工作区：其下会话一并逻辑删除，磁盘目录不动 */
+async function handleDeleteWorkspace(group: SessionGroup): Promise<void> {
+  const workspaceId = group.workspaceId;
+  if (!workspaceId) {
+    return;
+  }
   try {
     await ElMessageBox.confirm(
-      `删除「${baseName(workDir)}」下的全部会话记录？只删数据库记录（逻辑删除），不会删除磁盘文件或工作区。`,
-      '删除会话记录',
-      { confirmButtonText: '删除记录', cancelButtonText: '取消', type: 'warning' },
+      `删除工作区「${group.name}」？其下 ${group.items.length} 个会话记录会一并删除（只删记录，磁盘文件不动）。`,
+      '删除工作区',
+      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' },
     );
   } catch {
     return;
   }
-  const deleted = await deleteWorkspace(workDir);
-  await loadSessions();
-  if (draftSessionId.value && !sessions.value.some((item) => item.id === draftSessionId.value)) {
+  await deleteWorkspace(workspaceId);
+  const deletedIds = new Set(group.items.map((item) => item.id));
+  if (draftSessionId.value && deletedIds.has(draftSessionId.value)) {
     draftSessionId.value = null;
   }
-  if (current.value?.work_dir === workDir) {
+  if (current.value && deletedIds.has(current.value.id)) {
     currentId.value = '';
     current.value = null;
     messages.value = [];
     usage.value = null;
     subSessions.value = [];
   }
-  ElMessage.success(`已删除 ${deleted} 条会话记录`);
+  await loadWorkspaces();
+  await loadSessions();
+  ElMessage.success('工作区已删除');
+}
+
+/** 删除单条会话：只删记录，磁盘文件不动 */
+async function handleDeleteSession(item: AssistantSession): Promise<void> {
+  try {
+    await ElMessageBox.confirm(
+      `删除会话「${item.title || '未命名会话'}」？只删记录，磁盘文件不动。`,
+      '删除会话',
+      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' },
+    );
+  } catch {
+    return;
+  }
+  await deleteAssistantSession(item.id);
+  sessions.value = sessions.value.filter((row) => row.id !== item.id);
+  if (draftSessionId.value === item.id) {
+    draftSessionId.value = null;
+  }
+  if (currentId.value === item.id) {
+    currentId.value = '';
+    current.value = null;
+    messages.value = [];
+    usage.value = null;
+    subSessions.value = [];
+  }
 }
 
 /** 运行中的后台任务数（抽屉按钮角标） */
@@ -996,8 +1031,8 @@ async function handleGroupCommand(command: unknown, group: SessionGroup): Promis
     await handleRenameGroup(group);
     return;
   }
-  if (action === 'delete') {
-    await handleDeleteGroup(group.path);
+  if (action === 'delete-workspace') {
+    await handleDeleteWorkspace(group);
   }
 }
 
@@ -1421,11 +1456,25 @@ onUnmounted(() => {
   color: var(--kb-primary);
 }
 
+.session-delete {
+  display: none;
+  flex: none;
+  width: 18px;
+  color: var(--kb-text-3);
+  font-size: 11px;
+  text-align: center;
+}
+
+.session-delete:hover {
+  color: var(--kb-danger);
+}
+
 .session-item:hover .session-time {
   display: none;
 }
 
-.session-item:hover .session-rename {
+.session-item:hover .session-rename,
+.session-item:hover .session-delete {
   display: block;
 }
 

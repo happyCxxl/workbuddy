@@ -30,10 +30,3 @@ class SessionRepo:
             .limit(limit)
         )
         return list((await self._session.scalars(stmt)).all())
-
-    async def list_active_by_work_dir(self, work_dir: str) -> list[AiSession]:
-        """某工作目录下的活动对话会话（删除分组用）。"""
-        stmt = select(AiSession).where(
-            AiSession.status == "active", AiSession.kind == "chat", AiSession.work_dir == work_dir
-        )
-        return list((await self._session.scalars(stmt)).all())

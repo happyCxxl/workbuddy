@@ -81,3 +81,24 @@ async def test_workspace_rename_missing(client: AsyncClient, engine_fixture: Non
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     resp = (await client.patch("/workspaces/99999999", json={"name": "x"})).json()
     assert resp["code"] == 60002
+
+
+async def test_workspace_delete_removes_its_sessions(client: AsyncClient, engine_fixture: None, tmp_path: Path) -> None:
+    """删除工作区：其下会话一并逻辑删除，工作区从列表消失，磁盘目录保留。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    workspace = (await client.post("/workspaces", json={"path": str(tmp_path)})).json()["data"]
+    session_id = (await client.post("/sessions", json={"workspace_id": workspace["id"]})).json()["data"]["id"]
+    removed = (await client.delete(f"/workspaces/{workspace['id']}")).json()
+    assert removed["code"] == 0
+    assert removed["data"]["deleted"] == 1
+    listed = (await client.get("/workspaces")).json()["data"]["workspaces"]
+    assert all(item["id"] != workspace["id"] for item in listed)
+    assert (await client.get(f"/sessions/{session_id}")).json()["code"] == 60002
+
+
+async def test_workspace_delete_missing(client: AsyncClient, engine_fixture: None) -> None:
+    """删除不存在的工作区：报 60002。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    assert (await client.delete("/workspaces/99999999")).json()["code"] == 60002

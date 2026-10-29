@@ -87,16 +87,6 @@ async def delete_session(session_id: int) -> None:
         await s.commit()
 
 
-async def delete_workspace(work_dir: str) -> int:
-    """逻辑删除某工作目录下的全部对话会话：只改状态，绝不触碰磁盘文件。"""
-    async with session_scope() as s:
-        rows = await SessionRepo(s).list_active_by_work_dir(work_dir)
-        for row in rows:
-            row.status = "deleted"
-        await s.commit()
-        return len(rows)
-
-
 async def list_sessions(limit: int = 50) -> list[AiSession]:
     """最近会话列表：按更新时间倒序。"""
     async with session_scope() as s:

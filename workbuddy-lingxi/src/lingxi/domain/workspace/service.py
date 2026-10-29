@@ -1,4 +1,4 @@
-"""工作区服务：列表、创建（路径唯一）与读取。"""
+"""工作区服务：列表、创建（路径唯一）、重命名与删除。"""
 
 import asyncio
 from pathlib import Path
@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from lingxi.contract import ApiError, ErrorCode
 from lingxi.db.engine import session_scope
-from lingxi.db.models import Workspace
+from lingxi.db.models import AiSession, Workspace
 
 
 def _resolve_directory(path: str) -> Path:
@@ -60,3 +60,24 @@ async def rename_workspace(workspace_id: int, name: str) -> Workspace:
         row.name = workspace_name[:255]
         await s.commit()
         return row
+
+
+async def delete_workspace(workspace_id: int) -> int:
+    """删除工作区：其下会话逻辑删除并解绑，工作区行物理删除；磁盘目录不动。"""
+    async with session_scope() as s:
+        row = await s.get(Workspace, workspace_id)
+        if row is None:
+            raise ApiError(ErrorCode.NOT_FOUND, f"工作区不存在：{workspace_id}")
+        sessions = list(
+            (
+                await s.scalars(
+                    select(AiSession).where(AiSession.workspace_id == workspace_id, AiSession.status == "active")
+                )
+            ).all()
+        )
+        for session in sessions:
+            session.status = "deleted"
+            session.workspace_id = None
+        await s.delete(row)
+        await s.commit()
+        return len(sessions)
