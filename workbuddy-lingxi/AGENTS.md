@@ -13,6 +13,7 @@
 | 启动验证 | `uv run python -m lingxi`                                                            | 打印启动信息                                                             |
 | 全量校验 | `uv run ruff check && uv run ruff format --check && uv run pyright && uv run pytest` | 推送门禁与 CI 同套；覆盖率阈值 70%                                       |
 | 单测     | `uv run pytest`                                                                      | pytest-randomly 随机顺序                                                 |
+| 重置开发库 | `uv run alembic downgrade base && uv run alembic upgrade head`                     | 清空全部数据并重灌人格 v1 种子；仅本机开发库                              |
 
 ## 2. 灵犀 Never（违反即不合规；完整条款以规范正典为准）
 

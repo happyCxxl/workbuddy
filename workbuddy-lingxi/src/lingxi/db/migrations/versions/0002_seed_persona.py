@@ -35,4 +35,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute("DELETE FROM persona_version WHERE version = 1")
+    # 有会话引用时不能删（外键）；0001 随后会整表删除，跳过即可让降级在存量数据上仍可用
+    op.execute(
+        "DELETE FROM persona_version WHERE version = 1 "
+        "AND NOT EXISTS (SELECT 1 FROM ai_session WHERE persona_version_id = persona_version.id)"
+    )
