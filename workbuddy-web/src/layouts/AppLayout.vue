@@ -489,20 +489,24 @@ const BACK_TARGETS: Record<string, { path: string; label: string }> = {
 const routeName = computed(() => String(route.name ?? ''));
 const backTarget = computed(() => BACK_TARGETS[routeName.value] ?? null);
 
-/** 返回上一层：优先回本次实际来源页；来源是首页/外部或与当前页相同才按层级表回退 */
+/**
+ * 返回上一层：只按层级表走，不回退到「上次碰巧访问的页面」。
+ *
+ * <p>**不能 `push(history.state.back)`**：`push` 只追加历史、不消费历史，新页面的上一条
+ * 恰好是刚离开的页面，于是第一次返回到 B、第二次又回到 A，两页互为来源永远点不完，
+ * 还会把用户带到与层级无关的页面（按钮提示语写的是层级目标，落点却可能是别的页）。
+ * 层级表是限深 DAG（处理链/索引/评测 → 知识库管理 → 首页），按表走必然收敛。
+ *
+ * <p>上一条历史正好是层级目标时用真实后退而不是 `push`：省掉一条重复历史，
+ * 浏览器自带的回退也不会在两层之间来回。
+ */
 function goBack(): void {
-  const previous = router.options.history.state.back;
-  if (
-    typeof previous === 'string' &&
-    previous.startsWith('/') &&
-    previous !== '/login' &&
-    previous !== '/home' &&
-    previous !== route.fullPath
-  ) {
-    void router.push(previous);
+  const target = backTarget.value;
+  if (router.options.history.state.back === target.path) {
+    router.back();
     return;
   }
-  void router.push(backTarget.value.path);
+  void router.push(target.path);
 }
 
 // 展示用姓名：优先真实姓名（登录响应下发并本地持久化），无则回落登录名
@@ -585,12 +589,17 @@ function handleLogout(): void {
  * 品牌链接：`flex: none` 让它**不被压缩**。
  *
  * <p>收窄由内部文字块承担（它自己有定宽 + `overflow: hidden`）。
+ *
+ * <p>**必须限宽**：文字块为折叠动画定宽 260px，会把链接盒子撑到 309px、越出 210px 的
+ * 侧栏内容区；侧栏 `z-index` 高于主区，越界那段正好压在顶栏返回按钮上——点返回时命中的
+ * 是品牌链接，于是跳回首页。限宽后文字块按 flex 收缩到可用宽度，链接盒子不再出侧栏。
  */
 .layout-brand {
   display: flex;
   gap: 11px;
   flex: none;
   align-items: center;
+  max-width: 100%;
   color: inherit;
   text-decoration: none;
 }
