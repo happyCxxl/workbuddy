@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import math
+import os
 import random
 import re
 import threading
@@ -23,6 +24,10 @@ from lingxi.db.models import AiSession
 from lingxi.db.repo.memory_repo import MemoryRepo
 from lingxi.db.repo.permission_repo import PermissionRepo
 from lingxi.domain.memory.embedding import Embedder
+
+# 测试独占数据库：默认指向 lingxi_test，避免 pytest 把会话写进开发库；CI 用服务容器的库，
+# 通过 LINGXI_DATABASE__URL 显式覆盖（见 gate.yml），setdefault 不会压掉外部设置。
+os.environ.setdefault("LINGXI_DATABASE__URL", "postgresql+asyncpg://lingxi:lingxi@localhost:5432/lingxi_test")
 
 
 class FakeEmbedder(Embedder):

@@ -91,6 +91,8 @@ jobs:
 
       - name: Python 全量校验（ruff + pyright + pytest）
         working-directory: workbuddy-lingxi
+        env:
+          LINGXI_DATABASE__URL: postgresql+asyncpg://lingxi:lingxi@localhost:5432/lingxi
         run: |
           printf '[llm]\napi_key = "fake"\n' > config.local.toml
           uv sync --frozen
