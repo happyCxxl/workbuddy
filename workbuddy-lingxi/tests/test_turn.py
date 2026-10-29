@@ -86,7 +86,7 @@ async def test_hook_fail_closed(fake_server: tuple[Settings, list[dict[str, obje
 async def test_budget_overflow_triggers_compaction(
     fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
 ) -> None:
-    """历史超预算 80%：追加 compaction 事件并截断投影。"""
+    """历史超压缩阈值：追加 compaction 事件并截断投影（阈值 = 预算 × ratio，独立于提示长度）。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
@@ -95,7 +95,7 @@ async def test_budget_overflow_triggers_compaction(
         database={},
         tools={},
         llm=settings.llm.model_dump(),
-        loop={"input_token_budget": 1000, "context_budget_ratio": 0.8, "max_steps": 25},
+        loop={"input_token_budget": 100000, "context_budget_ratio": 0.01, "max_steps": 25},
     )
     runner = make_runner(small, LlmGateway(settings), HookRegistry())
     sid = await create_session("D:\\tmp", "压缩测试")

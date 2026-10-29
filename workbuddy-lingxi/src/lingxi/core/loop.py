@@ -27,7 +27,7 @@ from lingxi.domain.session.service import (
     get_session,
     persona_of_session,
 )
-from lingxi.domain.tools.registry import ToolContext, ToolRegistry
+from lingxi.domain.tools.registry import SessionToolState, ToolContext, ToolRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +76,8 @@ class TurnRunner:
         self._locks: dict[int, asyncio.Lock] = {}
         self._stop_requested: set[int] = set()
         self._pending: dict[tuple[int, str], PendingCheckpoint] = {}
+        # 会话级工具状态：已读文件集合（读前写/改门禁）
+        self._tool_states: dict[int, SessionToolState] = {}
         self._hooks.register(
             "pre_step", make_budget_gate(settings.loop.input_token_budget, settings.loop.context_budget_ratio)
         )
@@ -371,7 +373,9 @@ class TurnRunner:
             raw_args = (
                 cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
             )
-            output = await tool.handler(raw_args, ToolContext(work_dir))
+            output = await tool.handler(
+                raw_args, ToolContext(work_dir, self._tool_states.setdefault(session_id, SessionToolState()))
+            )
             yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "result": output})
             yield await self._emit(
                 session_id,
@@ -422,7 +426,11 @@ class TurnRunner:
         lines = ["【能力与规则】", "可用工具（参数由系统注入，勿编造工具或参数）："]
         for spec in self._tools.specs():
             lines.append(f"- {spec.name}：{spec.description}")
-        lines.append("执行约定：只读工具直接执行；写/删除等高风险操作会先询问用户；文件操作限定在当前工作目录内。")
+        lines.append(
+            "执行约定：找文件先 fs_glob、搜内容先 fs_search，再 fs_read；改已有文件用 fs_edit，"
+            "新建或整文件重写用 fs_write；覆盖/编辑已有文件前必须先读；只读工具直接执行；"
+            "写/删除等高风险操作会先询问用户；文件操作限定在当前工作目录内。"
+        )
         lines.append("只使用上述工具；没有对应工具时如实说明。")
         return "\n".join(lines)
 

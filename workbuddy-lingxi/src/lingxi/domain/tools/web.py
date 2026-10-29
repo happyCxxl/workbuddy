@@ -3,7 +3,7 @@
 from typing import Any, cast
 
 import httpx2
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from lingxi.app.config import Settings
 from lingxi.domain.tools.registry import RISK_READ, ToolContext, ToolDefinition, ToolRegistry
@@ -14,14 +14,14 @@ SEARCH_RESULT_CHARS = 20_000
 class SearchArgs(BaseModel):
     """搜索参数：query 必填，count 受服务端上限约束。"""
 
-    query: str
-    count: int = 5
+    query: str = Field(description="搜索关键词（1-128 字），支持 site:、-site:、引号短语等操作符")
+    count: int = Field(default=5, ge=1, le=50, description="返回结果数（1-50），默认 5")
 
 
 class FetchArgs(BaseModel):
     """抓取参数：仅接受 HTTP/HTTPS URL。"""
 
-    url: str
+    url: str = Field(description="要抓取的网页绝对 URL，必须 http:// 或 https:// 开头（含主机名）")
 
 
 class WebClient:
@@ -46,7 +46,10 @@ class WebClient:
                     f"{self._base_url}{path}", json=payload, headers=headers, timeout=self._timeout
                 )
         if response.status_code >= 300:
-            raise RuntimeError(f"Web 接口失败（HTTP {response.status_code}）：{response.text[:200]}")
+            raise RuntimeError(
+                f"Web 接口失败（HTTP {response.status_code}）：{response.text[:200]}；"
+                "请换关键词或链接重试，仍失败则稍后再试"
+            )
         return cast(dict[str, object], response.json())
 
     async def search(self, query: str, count: int) -> list[dict[str, object]]:
@@ -67,7 +70,7 @@ class WebClient:
 def _format_search(results: list[dict[str, object]]) -> str:
     """搜索结果 → 模型可读文本：序号、标题、链接、摘要。"""
     if not results:
-        return "未找到相关结果。"
+        return "未找到相关结果（可换关键词重试，或改用 web_fetch 抓已知链接）。"
     lines: list[str] = []
     for index, result in enumerate(results, start=1):
         lines.append(f"[{index}] {result.get('title') or ''}")
@@ -91,8 +94,14 @@ def register_web_tools(registry: ToolRegistry, settings: Settings, client: "http
         del ctx
         url = str(args["url"])
         if not (url.startswith("http://") or url.startswith("https://")):
-            raise ValueError(f"只支持 http/https URL：{url}")
+            raise ValueError(f"只支持 http/https URL：{url}（示例：https://example.com/page）")
         title, content = await web.fetch(url)
+        if not content.strip():
+            return (
+                f"{title}\n\n（页面没有可提取的正文；可换个链接或改用 web_search）"
+                if title
+                else "（页面没有可提取的正文；可换个链接或改用 web_search）"
+            )
         cap = settings.tools.web_fetch_output_cap_chars
         body = content[:cap]
         if len(content) > cap:
@@ -102,7 +111,10 @@ def register_web_tools(registry: ToolRegistry, settings: Settings, client: "http
     registry.register(
         ToolDefinition(
             name="web_search",
-            description="联网搜索：返回若干结果的标题、链接与摘要（需要正文时用 web_fetch 抓取）",
+            description=(
+                "联网搜索：返回结果标题、链接与摘要（不返回长正文）；需要正文时用 web_fetch 抓取。"
+                "适合查最新信息；count 默认 5，最多 50。"
+            ),
             parameters=SearchArgs.model_json_schema(),
             risk=RISK_READ,
             handler=_search,
@@ -111,7 +123,10 @@ def register_web_tools(registry: ToolRegistry, settings: Settings, client: "http
     registry.register(
         ToolDefinition(
             name="web_fetch",
-            description="抓取网页并转为 Markdown（只读；输出有上限、超时可配）",
+            description=(
+                "抓取单个网页并转为 Markdown 正文（适合读文档/文章）；输出最多 20 万字符、"
+                "超时 30 秒；链接必须是 http/https。"
+            ),
             parameters=FetchArgs.model_json_schema(),
             risk=RISK_READ,
             handler=_fetch,

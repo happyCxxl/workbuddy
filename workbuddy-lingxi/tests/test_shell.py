@@ -153,6 +153,9 @@ async def test_shell_tool_executes_in_sandbox(sandbox_dir: Path) -> None:
     register_shell_tools(registry, shell_settings())
     tool = registry.get("shell")
     assert tool is not None and tool.risk == RISK_WRITE
+    assert len(tool.description) >= 20
+    for field, spec in tool.parameters["properties"].items():  # type: ignore[union-attr]
+        assert "description" in spec, f"shell.{field} 缺少字段说明"
     output = await tool.handler({"command": "echo hello"}, ToolContext(str(sandbox_dir)))
     assert output.startswith("exit=0")
     assert "hello" in output
@@ -167,6 +170,21 @@ async def test_shell_tool_rejects_empty_command(tmp_path: Path) -> None:
     assert tool is not None
     with pytest.raises(ValueError, match="命令不能为空"):
         await tool.handler({"command": "   "}, ToolContext(str(tmp_path)))
+
+
+async def test_shell_timeout_ms_param(sandbox_dir: Path) -> None:
+    """timeout_ms：覆盖默认 120s，到点终止并在结果里标注超时。"""
+    registry = ToolRegistry()
+    register_shell_tools(registry, shell_settings())
+    tool = registry.get("shell")
+    assert tool is not None
+    assert "timeout_ms" in tool.parameters["properties"]
+    started = time.monotonic()
+    output = await tool.handler(
+        {"command": "ping -n 20 127.0.0.1 >nul", "timeout_ms": 1000}, ToolContext(str(sandbox_dir))
+    )
+    assert "超时" in output
+    assert time.monotonic() - started < 15
 
 
 async def test_dangerous_shell_always_asks(engine_fixture: None, clean_rules: None, tmp_path: Path) -> None:

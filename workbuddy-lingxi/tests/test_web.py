@@ -85,6 +85,23 @@ async def test_fetch_truncates_and_titles() -> None:
     assert len(output) < 200
 
 
+async def test_web_tool_descriptions_are_documented() -> None:
+    """ACI：web 两个工具的说明与非空参数都要有描述（否则模型不知道何时用/怎么填）。"""
+
+    async def handler(request: httpx2.Request) -> httpx2.Response:
+        del request
+        return httpx2.Response(200, json={"results": [], "title": "", "content": ""})
+
+    registry = ToolRegistry()
+    register_web_tools(registry, web_settings(), make_client(handler))
+    for name in ("web_search", "web_fetch"):
+        tool = registry.get(name)
+        assert tool is not None
+        assert len(tool.description) >= 20
+        for field, spec in tool.parameters["properties"].items():  # type: ignore[union-attr]
+            assert "description" in spec, f"{name}.{field} 缺少字段说明"
+
+
 async def test_fetch_rejects_non_http_url() -> None:
     """抓取：非 http(s) URL 直接拒绝。"""
 

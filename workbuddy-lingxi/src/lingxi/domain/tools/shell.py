@@ -3,18 +3,30 @@
 import asyncio
 import re
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from lingxi.app.config import Settings
 from lingxi.domain.sandbox import WindowsSandbox
-from lingxi.domain.tools.registry import RISK_WRITE, ToolContext, ToolDefinition, ToolRegistry
+from lingxi.domain.tools.registry import RISK_WRITE, ToolContext, ToolDefinition, ToolRegistry, parse_int
 
 
 class ShellArgs(BaseModel):
     """命令参数：command 必填；description 供界面展示用途。"""
 
-    command: str
-    description: str = ""
+    command: str = Field(
+        description=(
+            "要执行的完整 cmd 命令（Windows cmd.exe 语法），工作目录为会话工作目录；"
+            "只有工作目录可写，读取不受限；危险命令会被询问。"
+            "读文件用 fs_read、搜内容用 fs_search、找文件用 fs_glob、编辑用 fs_edit，不要用 type/findstr/dir 替代"
+        )
+    )
+    description: str = Field(default="", description="给用户看的一句话用途说明（可选）")
+    timeout_ms: int | None = Field(
+        default=None,
+        ge=1000,
+        le=600_000,
+        description="超时毫秒数（1s-10min）；不填用默认配置（120s）",
+    )
 
 
 # 危险命令：系统级破坏、权限/账户/服务变更、下载后执行（命中即询问，不依赖档位）
@@ -61,10 +73,12 @@ def register_shell_tools(registry: ToolRegistry, settings: Settings) -> None:
     async def _shell(args: dict[str, object], ctx: ToolContext) -> str:
         command = str(args.get("command") or "").strip()
         if not command:
-            raise ValueError("命令不能为空")
+            raise ValueError("命令不能为空（command 需为一条完整 cmd 命令）")
+        default_ms = int(settings.tools.shell_timeout_seconds * 1000)
+        timeout_ms = parse_int(args.get("timeout_ms"), default_ms)
         sandbox = WindowsSandbox(
             ctx.work_dir,
-            settings.tools.shell_timeout_seconds,
+            timeout_ms / 1000,
             settings.tools.shell_output_cap_chars,
         )
         result = await asyncio.to_thread(sandbox.run, command)
@@ -73,7 +87,12 @@ def register_shell_tools(registry: ToolRegistry, settings: Settings) -> None:
     registry.register(
         ToolDefinition(
             name="shell",
-            description="在受限沙箱中执行命令：仅当前工作目录可写，输出截断、超时终止；危险命令会先询问",
+            description=(
+                "在 Windows 受限沙箱中执行 cmd 命令：只有当前工作目录可写（读取不受限）；"
+                "输出最多 8KB；默认 120 秒超时（可用 timeout_ms 调整，上限 10 分钟）并终止进程树；"
+                "危险命令（删盘/注册表/账户/服务/下载执行等）会先询问用户。"
+                "读/搜/找/改文件优先用 fs_* 专用工具，不要用 type/findstr/dir 替代。"
+            ),
             parameters=ShellArgs.model_json_schema(),
             risk=RISK_WRITE,
             handler=_shell,
