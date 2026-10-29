@@ -1,6 +1,7 @@
 """模型出口门面测试：重试、降级、全败与调用明细落库。"""
 
 import uuid
+from collections.abc import AsyncIterator
 
 import pytest
 from conftest import db_up
@@ -12,7 +13,7 @@ from lingxi.contract import REQUEST_ID, ApiError
 from lingxi.db.engine import session_scope
 from lingxi.db.models import ModelCall
 from lingxi.domain.llm.gateway import LlmGateway
-from lingxi.domain.ports import ChatMessage, ChatRequest
+from lingxi.domain.ports import ChatMessage, ChatRequest, StreamChunk
 
 
 class Sample(BaseModel):
@@ -81,3 +82,29 @@ async def test_model_call_recorded(fake_server: tuple[Settings, list[dict[str, o
     assert ok_rows[0].prompt_tokens == 9
     assert ok_rows[0].completion_tokens == 4
     assert err_rows
+
+
+class _DropAfterText:
+    """先吐一段正文再断开：模拟上游流式中断（如连接停滞被超时切断）。"""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def stream(self, request: ChatRequest) -> AsyncIterator[StreamChunk]:
+        self.calls += 1
+        yield StreamChunk(kind="text", text="半句", tool_calls=[])
+        raise RuntimeError("stream dropped")
+
+
+async def test_stream_partial_output_not_retried(engine_fixture: None, monkeypatch) -> None:
+    """已输出正文后断流：不重试、直接报 60201（重试会把正文重复一遍）。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings = Settings(llm={"api_key": "fake", "base_url": "http://127.0.0.1:1"})
+    gateway = LlmGateway(settings)
+    stub = _DropAfterText()
+    monkeypatch.setattr(gateway, "_flash", stub)
+    with pytest.raises(ApiError) as exc_info:
+        await collect_stream(gateway, "hi")
+    assert exc_info.value.error.code == 60201
+    assert stub.calls == 1

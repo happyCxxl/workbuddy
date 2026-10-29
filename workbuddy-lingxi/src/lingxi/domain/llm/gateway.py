@@ -45,10 +45,12 @@ class LlmGateway:
                     break
                 start = time.monotonic()
                 usage: Usage | None = None
+                emitted = False
                 try:
                     async for chunk in adapter.stream(request):
                         if chunk.kind == "usage":
                             usage = chunk.usage
+                        emitted = True
                         yield chunk
                     breaker.record_success()
                     await self._record(model, usage, self._elapsed_ms(start), None)
@@ -59,12 +61,22 @@ class LlmGateway:
                     breaker.record_failure()
                     last_error = exc
                     await self._record(model, usage, self._elapsed_ms(start), exc.status_code)
+                    if emitted:
+                        # 已向客户端输出过正文：重试会重复内容，直接收口
+                        raise ApiError(
+                            ErrorCode.MODEL_UNAVAILABLE, f"流式中断，已输出部分内容不再重试：{type(exc).__name__}"
+                        ) from exc
                     if not _retryable(exc):
                         break
                 except Exception as exc:
                     breaker.record_failure()
                     last_error = exc
                     await self._record(model, usage, self._elapsed_ms(start), ErrorCode.MODEL_UNAVAILABLE.code)
+                    if emitted:
+                        # 同上：半截正文不能靠重试补齐
+                        raise ApiError(
+                            ErrorCode.MODEL_UNAVAILABLE, f"流式中断，已输出部分内容不再重试：{type(exc).__name__}"
+                        ) from exc
         raise ApiError(ErrorCode.MODEL_UNAVAILABLE, f"模型出口全部候选不可用：{type(last_error).__name__}")
 
     async def structured(self, prompt: str, model_type: type[ModelT]) -> ModelT:
