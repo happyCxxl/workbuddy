@@ -80,14 +80,14 @@ class DeleteArgs(BaseModel):
     path: str = Field(description="要删除的单个文件路径，相对工作目录；不支持删除目录")
 
 
-def _resolve(work_dir: str, path: str, *, write: bool = False) -> Path:
-    """解析路径：读允许工作区外（越界需权限审批），写/改/删必须落在工作区内。"""
+def _resolve(work_dir: str, path: str, *, write: bool = False, allow_outside: bool = False) -> Path:
+    """解析路径：读允许工作区外（越界需权限审批），写默认限工作区，完全权限档可越界写。"""
     base = Path(work_dir).resolve()
     target = Path(path)
     if not target.is_absolute():
         target = base / path
     target = target.resolve()
-    if write and not target.is_relative_to(base):
+    if write and not allow_outside and not target.is_relative_to(base):
         raise ValueError(f"写操作只能在工作区内：{path}（读可以用绝对路径，越界读会先征得同意）")
     return target
 
@@ -227,7 +227,7 @@ async def _fs_search(args: dict[str, object], ctx: ToolContext) -> str:
 
 
 async def _fs_write(args: dict[str, object], ctx: ToolContext) -> str:
-    target = _resolve(ctx.work_dir, str(args["path"]), write=True)
+    target = _resolve(ctx.work_dir, str(args["path"]), write=True, allow_outside=ctx.full_access)
     _require_read(ctx, target, "写入")
     content = str(args["content"])
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -237,7 +237,7 @@ async def _fs_write(args: dict[str, object], ctx: ToolContext) -> str:
 
 
 async def _fs_edit(args: dict[str, object], ctx: ToolContext) -> str:
-    target = _resolve(ctx.work_dir, str(args["path"]), write=True)
+    target = _resolve(ctx.work_dir, str(args["path"]), write=True, allow_outside=ctx.full_access)
     if not target.is_file():
         raise FileNotFoundError(f"文件不存在：{args['path']}（编辑前先用 fs_read 读取内容）")
     _require_read(ctx, target, "编辑")
@@ -259,7 +259,7 @@ async def _fs_edit(args: dict[str, object], ctx: ToolContext) -> str:
 
 
 async def _fs_delete(args: dict[str, object], ctx: ToolContext) -> str:
-    target = _resolve(ctx.work_dir, str(args["path"]), write=True)
+    target = _resolve(ctx.work_dir, str(args["path"]), write=True, allow_outside=ctx.full_access)
     if target.is_dir():
         raise IsADirectoryError(f"是目录：{args['path']}（fs_delete 只删文件；列目录请用 fs_list）")
     if not target.exists():

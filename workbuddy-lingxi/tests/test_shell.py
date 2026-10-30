@@ -188,12 +188,12 @@ async def test_shell_timeout_ms_param(sandbox_dir: Path) -> None:
 
 
 async def test_dangerous_shell_always_asks(engine_fixture: None, clean_rules: None, tmp_path: Path) -> None:
-    """危险命令：宽松档也询问（参数级高危判定优先于预设）。"""
+    """危险命令：工作区内修改档也询问（参数级高危判定优先于预设）。"""
     registry = ToolRegistry()
     register_shell_tools(registry, shell_settings())
     tool = registry.get("shell")
     assert tool is not None
-    decision = await PermissionGate.decide(tool, str(tmp_path), {"command": "format d:"}, "loose")
+    decision = await PermissionGate.decide(tool, str(tmp_path), {"command": "format d:"}, "workspace-write")
     assert decision.verdict == "ask"
-    benign = await PermissionGate.decide(tool, str(tmp_path), {"command": "git status"}, "loose")
+    benign = await PermissionGate.decide(tool, str(tmp_path), {"command": "git status"}, "workspace-write")
     assert benign.verdict == "allow"

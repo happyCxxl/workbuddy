@@ -151,10 +151,6 @@
           <span class="chat-title">{{ current?.title || '选择或新建一个会话' }}</span>
           <span v-if="current" class="chat-dir">{{ current.work_dir }}</span>
           <span class="page-spacer"></span>
-          <span v-if="usage" class="chat-usage">
-            {{ usage.calls }} 次调用 · {{ totalTokens }} tokens
-            <template v-if="cacheRate !== null"> · 缓存 {{ cacheRate }}%</template>
-          </span>
           <el-button v-if="current" size="small" text @click="openTrajectory">轨迹</el-button>
           <el-button v-if="current" size="small" text @click="openSubSessions">
             后台任务
@@ -265,37 +261,61 @@
               <MarkdownView :content="view.answer.text" />
             </div>
             <div v-if="view.answer && !view.running" class="turn-footer">
-              <button class="turn-meta" type="button" @click="toggleUsage(view.key)">
-                <template v-if="turnMeta[view.turnSeq ?? 0]?.duration">
-                  {{ turnMeta[view.turnSeq ?? 0]?.duration }}
+              <el-popover placement="top" width="300" trigger="click">
+                <template #reference>
+                  <button class="turn-meta" type="button">
+                    <svg
+                      class="turn-icon"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                    >
+                      <ellipse cx="8" cy="3.5" rx="5" ry="2" />
+                      <path d="M3 3.5v9c0 1.1 2.2 2 5 2s5-.9 5-2v-9" />
+                      <path d="M3 8c0 1.1 2.2 2 5 2s5-.9 5-2" />
+                    </svg>
+                    <template v-if="turnMeta[view.turnSeq ?? 0]?.duration">
+                      {{ turnMeta[view.turnSeq ?? 0]?.duration }}
+                    </template>
+                    <template v-if="turnMeta[view.turnSeq ?? 0]?.tokens">
+                      · {{ compactTokens(turnMeta[view.turnSeq ?? 0]?.tokens ?? 0) }} tok
+                    </template>
+                  </button>
                 </template>
-                <template v-if="turnMeta[view.turnSeq ?? 0]?.tokens">
-                  · {{ turnMeta[view.turnSeq ?? 0]?.tokens }} tok
-                </template>
-                <span class="turn-chevron">{{ expandedUsage.has(view.key) ? '▴' : '▾' }}</span>
-              </button>
+                <div class="usage-pop">
+                  <div class="usage-pop-head">
+                    <span class="usage-pop-title">本轮用量</span>
+                    <span class="usage-pop-total">
+                      {{ (turnMeta[view.turnSeq ?? 0]?.tokens ?? 0).toLocaleString() }} tok
+                    </span>
+                  </div>
+                  <div class="usage-pop-row">
+                    <span>提供方 / 模型</span><span>{{ turnModels(view) }}</span>
+                  </div>
+                  <div class="usage-pop-row">
+                    <span>缓存命中</span><span>{{ turnCacheRate(view) }}%</span>
+                  </div>
+                  <div class="usage-pop-row">
+                    <span>未缓存输入</span
+                    ><span>{{ turnMeta[view.turnSeq ?? 0]?.cacheMiss ?? 0 }} tok</span>
+                  </div>
+                  <div class="usage-pop-row">
+                    <span>缓存读取</span
+                    ><span>{{ turnMeta[view.turnSeq ?? 0]?.cacheHit ?? 0 }} tok</span>
+                  </div>
+                  <div class="usage-pop-row"><span>缓存写入</span><span>0 tok</span></div>
+                  <div class="usage-pop-row">
+                    <span>输出</span
+                    ><span>{{ turnMeta[view.turnSeq ?? 0]?.completion ?? 0 }} tok</span>
+                  </div>
+                </div>
+              </el-popover>
               <span class="turn-actions">
                 <button class="turn-action" type="button" @click="copyAnswer(view)">复制</button>
-                <button class="turn-action" type="button" @click="retryTurn(view)">重试</button>
               </span>
-              <div v-if="expandedUsage.has(view.key)" class="usage-list">
-                <div
-                  v-for="(call, callIndex) in turnMeta[view.turnSeq ?? 0]?.calls ?? []"
-                  :key="callIndex"
-                  class="usage-row"
-                >
-                  <span class="usage-model">{{ call.model }}</span>
-                  <span>{{ call.tokens }} tok</span>
-                  <span>{{ call.latency }}</span>
-                  <span class="usage-time">{{ call.time }}</span>
-                </div>
-                <p
-                  v-if="(turnMeta[view.turnSeq ?? 0]?.calls ?? []).length === 0"
-                  class="usage-empty"
-                >
-                  没有调用明细。
-                </p>
-              </div>
             </div>
           </section>
         </div>
@@ -306,31 +326,82 @@
             type="textarea"
             :autosize="{ minRows: 3, maxRows: 8 }"
             resize="none"
-            placeholder="继续输入… Enter 发送 · Shift+Enter 换行"
+            placeholder="发消息或创建任务 · Shift+Enter 换行"
             :disabled="!current"
             @keydown.enter.exact.prevent="handleSend"
           />
           <div class="composer-row">
             <div class="composer-hints">
-              <span>记忆注入：自动</span>
-              <el-popover placement="top" width="300" trigger="click">
+              <el-popover placement="top" width="220" trigger="click">
                 <template #reference>
                   <button class="hint-link" type="button" :disabled="!current">
-                    权限 {{ presetLabel(current?.permission_preset ?? 'standard') }} ▾
+                    <svg
+                      class="hint-icon"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                    >
+                      <path d="M8 1.5l5 2.5v4c0 3-2.2 5.3-5 6.5-2.8-1.2-5-3.5-5-6.5v-4z" />
+                    </svg>
+                    权限 {{ presetLabel(currentPreset) }}
                   </button>
                 </template>
                 <div class="preset-box">
-                  <p class="preset-title">本会话权限档位</p>
-                  <el-radio-group
-                    :model-value="current?.permission_preset"
-                    size="small"
-                    @change="changePreset"
+                  <button
+                    v-for="option in PRESET_OPTIONS"
+                    :key="option.value"
+                    type="button"
+                    class="preset-item"
+                    :class="{ 'preset-item-on': currentPreset === option.value }"
+                    @click="changePreset(option.value)"
                   >
-                    <el-radio-button value="loose">宽松档</el-radio-button>
-                    <el-radio-button value="standard">标准档</el-radio-button>
-                    <el-radio-button value="strict">严格档</el-radio-button>
-                  </el-radio-group>
-                  <p class="preset-note">只影响本会话；高危操作始终询问。</p>
+                    <span class="preset-name">{{ option.label }}</span>
+                    <span v-if="currentPreset === option.value" class="preset-check">✓</span>
+                  </button>
+                </div>
+              </el-popover>
+              <el-popover placement="top" width="280" trigger="click">
+                <template #reference>
+                  <button class="hint-link" type="button" :disabled="!current">
+                    <svg
+                      class="hint-icon"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                    >
+                      <ellipse cx="8" cy="3.5" rx="5" ry="2" />
+                      <path d="M3 3.5v9c0 1.1 2.2 2 5 2s5-.9 5-2v-9" />
+                      <path d="M3 8c0 1.1 2.2 2 5 2s5-.9 5-2" />
+                    </svg>
+                    用量 {{ compactTokens(totalTokens) }} tok
+                  </button>
+                </template>
+                <div class="usage-pop">
+                  <div class="usage-pop-head">
+                    <span class="usage-pop-title">Token 用量</span>
+                    <span class="usage-pop-total">{{ totalTokens }} tok</span>
+                  </div>
+                  <div class="usage-pop-row">
+                    <span>缓存命中</span><span>{{ cacheRate ?? 0 }}%</span>
+                  </div>
+                  <div class="usage-pop-row">
+                    <span>未缓存输入</span>
+                    <span>{{ usage?.prompt_cache_miss_tokens ?? 0 }} tok</span>
+                  </div>
+                  <div class="usage-pop-row">
+                    <span>缓存读取</span>
+                    <span>{{ usage?.prompt_cache_hit_tokens ?? 0 }} tok</span>
+                  </div>
+                  <div class="usage-pop-row"><span>缓存写入</span><span>0 tok</span></div>
+                  <div class="usage-pop-row">
+                    <span>输出</span><span>{{ usage?.completion_tokens ?? 0 }} tok</span>
+                  </div>
                 </div>
               </el-popover>
             </div>
@@ -656,8 +727,6 @@ const input = ref('');
 const running = ref(false);
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
-/** 逐轮用量明细展开状态 */
-const expandedUsage = ref<Set<string>>(new Set());
 const stepLabel = ref('1');
 const personaLabel = ref('v1');
 const messageBox = ref<HTMLElement | null>(null);
@@ -901,15 +970,34 @@ function subTagType(status: string): 'success' | 'danger' | 'info' {
   return status === 'completed' ? 'success' : 'danger';
 }
 
-/** 档位中文名 */
+/** 权限档位选项（对齐 DSH：能力级三档，上下排列） */
+const PRESET_OPTIONS: { value: PermissionPreset; label: string }[] = [
+  { value: 'read-only', label: '仅可查看' },
+  { value: 'workspace-write', label: '工作区内修改' },
+  { value: 'full-access', label: '完全权限' },
+];
+
+/** 当前会话的规范化档位（兼容旧值） */
+const currentPreset = computed<PermissionPreset>(() => {
+  const value = current.value?.permission_preset ?? 'workspace-write';
+  if (value === 'loose' || value === 'standard') {
+    return 'workspace-write';
+  }
+  if (value === 'strict') {
+    return 'read-only';
+  }
+  return value as PermissionPreset;
+});
+
+/** 档位中文名（对齐 DSH：仅可查看 / 工作区内修改 / 完全权限；兼容旧值） */
 function presetLabel(preset: string): string {
-  if (preset === 'loose') {
-    return '宽松档';
+  if (preset === 'read-only' || preset === 'strict') {
+    return '仅可查看';
   }
-  if (preset === 'strict') {
-    return '严格档';
+  if (preset === 'full-access') {
+    return '完全权限';
   }
-  return '标准档';
+  return '工作区内修改';
 }
 
 /** 时间格式化：统一走工具函数 */
@@ -1200,14 +1288,6 @@ const supersededTurns = computed<Set<number>>(() => {
   return superseded;
 });
 
-/** 重试指定回合：用同一句输入再跑一轮，并带上 retry_of */
-function retryTurn(view: TurnView): void {
-  if (view.user === null || running.value) {
-    return;
-  }
-  sendContent(view.user.text, view.turnSeq);
-}
-
 /** 选中记录：右侧检查器展示完整细节 */
 const selected = ref<TrailNode | null>(null);
 
@@ -1496,9 +1576,18 @@ function trailStatusLabel(status: string): string {
 /** 轮次耗时 */
 function durationLabel(startMs: number, endMs: number | null): string {
   if (endMs === null || endMs < startMs) return '';
-  const seconds = Math.round((endMs - startMs) / 1000);
+  const ms = endMs - startMs;
+  if (ms < 1000) return `${String(Math.max(1, Math.round(ms)))}ms`;
+  const seconds = Math.round(ms / 1000);
   if (seconds < 60) return `${String(seconds)}s`;
   return `${String(Math.floor(seconds / 60))}m${String(seconds % 60)}s`;
+}
+
+/** token 数缩写：1.2M / 760k */
+function compactTokens(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1000) return `${String(Math.round(value / 1000))}k`;
+  return String(value);
 }
 
 /** 从 assistant/message 载荷里还原工具调用行 */
@@ -1668,17 +1757,6 @@ function isOpen(view: TurnView): boolean {
   return view.running || expandedTurns.value.has(view.key);
 }
 
-/** 展开/收起某一轮的用量明细 */
-function toggleUsage(key: string): void {
-  const next = new Set(expandedUsage.value);
-  if (next.has(key)) {
-    next.delete(key);
-  } else {
-    next.add(key);
-  }
-  expandedUsage.value = next;
-}
-
 /** 复制最终回复 */
 function copyAnswer(view: TurnView): void {
   if (!view.answer) {
@@ -1697,28 +1775,44 @@ interface TurnCall {
   time: string;
 }
 
-/** 每轮耗时、token 与调用明细：来自事件时间窗与调用明细 */
-const turnMeta = computed<
-  Partial<Record<number, { duration: string; tokens: number; calls: TurnCall[] }>>
->(() => {
+/** 单轮用量汇总 */
+interface TurnUsage {
+  duration: string;
+  tokens: number;
+  prompt: number;
+  completion: number;
+  cacheHit: number;
+  cacheMiss: number;
+  models: Set<string>;
+  calls: TurnCall[];
+}
+
+/** 每轮耗时、token 与用量汇总：来自事件时间窗与调用明细 */
+const turnMeta = computed<Partial<Record<number, TurnUsage>>>(() => {
   const windows: { seq: number; start: number; end: number }[] = [];
-  const result: Partial<Record<number, { duration: string; tokens: number; calls: TurnCall[] }>> =
-    {};
+  const result: Partial<Record<number, TurnUsage>> = {};
   let current: { seq: number; start: number; end: number } | null = null;
+  const empty = (): TurnUsage => ({
+    duration: '',
+    tokens: 0,
+    prompt: 0,
+    completion: 0,
+    cacheHit: 0,
+    cacheMiss: 0,
+    models: new Set<string>(),
+    calls: [],
+  });
   for (const event of trajectoryEvents.value) {
     if (event.type === 'turn/start') {
       current = { seq: event.seq, start: Date.parse(event.created_at), end: Number.NaN };
       windows.push(current);
-      result[event.seq] = { duration: '', tokens: 0, calls: [] };
+      result[event.seq] = empty();
       continue;
     }
     if (event.type === 'turn.end' && current !== null) {
       current.end = Date.parse(event.created_at);
-      result[current.seq] = {
-        duration: durationLabel(current.start, current.end),
-        tokens: result[current.seq]?.tokens ?? 0,
-        calls: result[current.seq]?.calls ?? [],
-      };
+      const entry = result[current.seq] ?? empty();
+      result[current.seq] = { ...entry, duration: durationLabel(current.start, current.end) };
     }
   }
   for (const call of modelCalls.value) {
@@ -1733,18 +1827,47 @@ const turnMeta = computed<
       continue;
     }
     const key = window.seq;
-    const tokens = (call.prompt_tokens ?? 0) + (call.completion_tokens ?? 0);
-    const entry = result[key] ?? { duration: '', tokens: 0, calls: [] };
+    const entry = result[key] ?? empty();
+    const prompt = call.prompt_tokens ?? 0;
+    const completion = call.completion_tokens ?? 0;
+    const cacheHit = call.prompt_cache_hit_tokens ?? 0;
+    const cacheMiss = call.prompt_cache_miss_tokens ?? 0;
+    entry.models.add(call.model);
     entry.calls.push({
       model: call.model,
-      tokens,
+      tokens: prompt + completion,
       latency: call.latency_ms === null ? '' : `${(call.latency_ms / 1000).toFixed(1)}s`,
       time: formatClock(call.created_at),
     });
-    result[key] = { ...entry, tokens: entry.tokens + tokens };
+    result[key] = {
+      ...entry,
+      tokens: entry.tokens + prompt + completion,
+      prompt: entry.prompt + prompt,
+      completion: entry.completion + completion,
+      cacheHit: entry.cacheHit + cacheHit,
+      cacheMiss: entry.cacheMiss + cacheMiss,
+    };
   }
   return result;
 });
+
+/** 本轮涉及的模型列表 */
+function turnModels(view: TurnView): string {
+  const entry = turnMeta.value[view.turnSeq ?? 0];
+  if (!entry || entry.models.size === 0) {
+    return '—';
+  }
+  return [...entry.models].join('、');
+}
+
+/** 本轮缓存命中率 */
+function turnCacheRate(view: TurnView): number {
+  const entry = turnMeta.value[view.turnSeq ?? 0];
+  if (!entry || entry.prompt === 0) {
+    return 0;
+  }
+  return Math.round((entry.cacheHit / entry.prompt) * 100);
+}
 
 /** 工具结果回填：按调用顺序填第一个还没有结果的工具行 */
 function applyToolResult(last: ChatMessage, payload: Record<string, unknown>, at: number): void {
@@ -1953,10 +2076,21 @@ function decidePermission(
   });
 }
 
-/** 切换本会话权限档 */
+/** 切换本会话权限档：完全权限需二次确认（对齐 DSH 的风险确认） */
 async function changePreset(value: string | number | boolean | undefined): Promise<void> {
   if (!current.value || typeof value !== 'string') {
     return;
+  }
+  if (value === 'full-access') {
+    try {
+      await ElMessageBox.confirm(
+        '启用完全权限后，智能体将减少确认步骤，并且可以直接执行更多操作，包括敏感操作、文件修改或外部命令。仅建议在你信任当前任务时使用。',
+        '开启完全权限',
+        { type: 'warning', confirmButtonText: '确认开启', cancelButtonText: '取消' },
+      );
+    } catch {
+      return;
+    }
   }
   await updateSessionPermission(currentId.value, value as PermissionPreset);
   current.value = { ...current.value, permission_preset: value };
@@ -2566,16 +2700,6 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-.chat-usage {
-  padding: 2px 8px;
-  border: 1px solid var(--kb-line);
-  border-radius: 999px;
-  background: var(--kb-surface);
-  color: var(--kb-text-2);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 11px;
-}
-
 /* 会话轨迹：顶部时间概览 + 按轮次的事件记录表 + 右侧检查器（对齐 DSH Trajectory） */
 .trajectory-shell {
   display: flex;
@@ -3000,13 +3124,13 @@ onUnmounted(() => {
 }
 
 .message-user .message-bubble {
-  max-width: 72%;
-  padding: 10px 14px;
+  max-width: 60%;
+  padding: 6px 10px;
   border: 1px solid rgb(52 211 153 / 18%);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgb(52 211 153 / 8%);
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 1.7;
   white-space: pre-wrap;
 }
 
@@ -3099,6 +3223,9 @@ onUnmounted(() => {
 }
 
 .turn-meta {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
   padding: 0;
   border: none;
   color: var(--kb-text-3);
@@ -3112,9 +3239,9 @@ onUnmounted(() => {
   color: var(--kb-text-2);
 }
 
-.turn-chevron {
-  margin-left: 2px;
-  font-size: 9px;
+.turn-icon {
+  width: 12px;
+  height: 12px;
 }
 
 .turn-actions {
@@ -3136,37 +3263,43 @@ onUnmounted(() => {
   color: var(--kb-primary-2);
 }
 
-.usage-list {
+.usage-pop {
   display: flex;
-  flex-basis: 100%;
   flex-direction: column;
-  gap: 3px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  background: rgb(255 255 255 / 3%);
+  gap: 4px;
 }
 
-.usage-row {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 10px;
-  color: var(--kb-text-3);
+.usage-pop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--kb-line);
+}
+
+.usage-pop-title {
+  color: var(--kb-text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.usage-pop-total {
+  color: var(--kb-text-2);
   font-family: ui-monospace, Consolas, monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 
-.usage-model {
-  color: var(--kb-primary-2);
-}
-
-.usage-time {
-  text-align: right;
-}
-
-.usage-empty {
-  margin: 0;
+.usage-pop-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
   color: var(--kb-text-3);
   font-size: 11px;
+}
+
+.usage-pop-row > :last-child {
+  color: var(--kb-text-2);
+  font-family: ui-monospace, Consolas, monospace;
 }
 
 .tool-card {
@@ -3303,6 +3436,9 @@ onUnmounted(() => {
 }
 
 .hint-link {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
   padding: 0;
   border: none;
   background: none;
@@ -3312,21 +3448,45 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
+.hint-icon {
+  width: 12px;
+  height: 12px;
+}
+
 .preset-box {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
-.preset-title {
-  margin: 0;
-  color: var(--kb-text-3);
+.preset-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 6px;
+  color: var(--kb-text-2);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
   font-size: 12px;
 }
 
-.preset-note {
-  margin: 0;
-  color: var(--kb-text-3);
-  font-size: 11px;
+.preset-item:hover {
+  background: rgb(255 255 255 / 5%);
+}
+
+.preset-item-on {
+  background: rgb(52 211 153 / 10%);
+}
+
+.preset-name {
+  flex: 1;
+}
+
+.preset-check {
+  color: var(--kb-primary-2);
+  font-size: 12px;
 }
 </style>

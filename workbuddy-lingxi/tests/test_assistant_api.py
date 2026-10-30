@@ -50,13 +50,13 @@ async def test_session_permission_preset(client: AsyncClient, engine_fixture: No
     created = (await client.post("/sessions", json={"work_dir": "D:\\tmp", "title": "档位"})).json()
     sid = int(created["data"]["id"])
     got = (await client.get(f"/sessions/{sid}")).json()["data"]
-    assert got["permission_preset"] == "standard"
-    changed = (await client.put(f"/sessions/{sid}/permission", json={"preset": "loose"})).json()
+    assert got["permission_preset"] == "workspace-write"
+    changed = (await client.put(f"/sessions/{sid}/permission", json={"preset": "read-only"})).json()
     assert changed["code"] == 0
     got2 = (await client.get(f"/sessions/{sid}")).json()["data"]
-    assert got2["permission_preset"] == "loose"
+    assert got2["permission_preset"] == "read-only"
     policies = [e for e in await replay_events(sid) if e.type == "permission/policy"]
-    assert policies and policies[-1].payload["preset"] == "loose"
+    assert policies and policies[-1].payload["preset"] == "read-only"
     bad = (await client.put(f"/sessions/{sid}/permission", json={"preset": "nonsense"})).json()
     assert bad["code"] == 60001
 

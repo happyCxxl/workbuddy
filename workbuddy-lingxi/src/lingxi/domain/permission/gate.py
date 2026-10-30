@@ -8,7 +8,7 @@ from lingxi.db.models import PermissionRule
 from lingxi.db.repo.permission_repo import PermissionRepo
 from lingxi.domain.tools.registry import RISK_HIGH, RISK_READ, RISK_WRITE, ToolDefinition
 
-PRESETS = ("loose", "standard", "strict")
+PRESETS = ("read-only", "workspace-write", "full-access")
 
 
 @dataclass
@@ -59,13 +59,16 @@ class PermissionGate:
 
     @staticmethod
     async def decide(tool: ToolDefinition, work_dir: str, args: dict[str, object], preset: str) -> Decision:
-        """裁决顺序：显式规则 → 高危恒询问 → 会话预设。"""
+        """裁决顺序：显式规则 → 高危恒询问 → 会话预设（兼容旧档位名）。"""
+        preset = {"loose": "workspace-write", "standard": "workspace-write", "strict": "read-only"}.get(preset, preset)
         async with session_scope() as s:
             rules = await PermissionRepo(s).list_matching(tool.name, work_dir)
         scoped = [r for r in rules if r.scope is None or r.scope == tool.risk or r.scope == "any"]
-        best = max(scoped, key=_specificity, default=None)
+        best = max(scoped, key=lambda rule: (_specificity(rule), rule.id), default=None)
         if best is not None:
             return Decision(verdict=best.action, reason=f"规则命中（{best.action}）")
+        if preset == "read-only" and tool.risk in (RISK_WRITE, RISK_HIGH):
+            return Decision(verdict="deny", reason="仅可查看档：禁止写操作")
         if tool.risk == RISK_HIGH:
             return Decision(verdict="ask", reason="高危工具恒询问")
         if tool.high_risk_args is not None and tool.high_risk_args(args):
@@ -75,16 +78,17 @@ class PermissionGate:
             if _escapes(work_dir, path):
                 if tool.risk == RISK_READ:
                     return Decision(verdict="ask", reason="读取工作区外路径需确认")
-                return Decision(verdict="deny", reason="写操作只能在工作区内")
+                if preset != "full-access":
+                    return Decision(verdict="deny", reason="写操作只能在工作区内")
             if tool.name == "fs_write" and _exists(work_dir, path):
                 return Decision(verdict="ask", reason="覆盖已有文件需确认")
-        if preset == "strict":
-            return Decision(verdict="ask", reason="严格档：每步询问")
-        if preset == "loose":
-            return Decision(verdict="allow", reason="宽松档放行")
-        if tool.risk == RISK_WRITE:
-            return Decision(verdict="ask", reason="标准档：写操作询问")
-        return Decision(verdict="allow", reason="只读放行")
+        if preset == "full-access":
+            return Decision(verdict="allow", reason="完全权限档放行")
+        if preset == "workspace-write":
+            return Decision(verdict="allow", reason="工作区内修改档放行")
+        if preset == "read-only":
+            return Decision(verdict="allow", reason="仅可查看档放行只读")
+        return Decision(verdict="deny", reason=f"未知权限档：{preset}")
 
     @staticmethod
     async def remember_allow(tool_name: str, work_dir: str) -> None:

@@ -48,36 +48,42 @@ async def add_rule(tool: str, action: str, level: str = "dir", work_dir: str = "
         return rule.id
 
 
-async def test_preset_strict_asks_read(clean_rules: None) -> None:
-    """严格档：只读工具也询问。"""
+async def test_preset_read_only_denies_write(clean_rules: None) -> None:
+    """仅可查看档：写工具直接拒绝，读工具放行。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     gate = PermissionGate()
-    tool = make_registry().get("fs_read")
-    assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "x.txt"}, "strict")
-    assert decision.verdict == "ask"
+    write = make_registry().get("fs_write")
+    read = make_registry().get("fs_read")
+    delete = make_registry().get("fs_delete")
+    assert write is not None and read is not None and delete is not None
+    denied = await gate.decide(write, "D:\\tmp", {"path": "new.txt", "content": "x"}, "read-only")
+    assert denied.verdict == "deny"
+    removed = await gate.decide(delete, "D:\\tmp", {"path": "x.txt"}, "read-only")
+    assert removed.verdict == "deny"
+    allowed = await gate.decide(read, "D:\\tmp", {"path": "x.txt"}, "read-only")
+    assert allowed.verdict == "allow"
 
 
-async def test_preset_loose_allows_write(clean_rules: None) -> None:
-    """宽松档：写工具（非覆盖）放行。"""
+async def test_preset_workspace_write_allows_write(clean_rules: None) -> None:
+    """工作区内修改档：工作区内写工具（非覆盖）放行。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     gate = PermissionGate()
     tool = make_registry().get("fs_write")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "loose")
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "workspace-write")
     assert decision.verdict == "allow"
 
 
-async def test_high_risk_always_asks_even_loose(clean_rules: None) -> None:
-    """高危恒询问：宽松档下删除也问。"""
+async def test_high_risk_always_asks_even_full_access(clean_rules: None) -> None:
+    """高危恒询问：完全权限档下删除也问。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     gate = PermissionGate()
     tool = make_registry().get("fs_delete")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "x.txt"}, "loose")
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "x.txt"}, "full-access")
     assert decision.verdict == "ask"
 
 
@@ -89,7 +95,7 @@ async def test_deny_rule_wins(clean_rules: None) -> None:
     gate = PermissionGate()
     tool = make_registry().get("fs_write")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "loose")
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "workspace-write")
     assert decision.verdict == "deny"
 
 
@@ -102,7 +108,7 @@ async def test_most_specific_rule_wins(clean_rules: None) -> None:
     gate = PermissionGate()
     tool = make_registry().get("fs_write")
     assert tool is not None
-    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "loose")
+    decision = await gate.decide(tool, "D:\\tmp", {"path": "new.txt", "content": "x"}, "workspace-write")
     assert decision.verdict == "ask"
 
 
@@ -116,14 +122,15 @@ async def test_ask_pause_and_resume_allowed_once(
     work_dir = str(tmp_path)
     gate = PermissionGate()
     runner = TurnRunner(
-        small_settings(settings, "standard"),
+        small_settings(settings, "workspace-write"),
         LlmGateway(settings),
         HookRegistry(),
         FakeEmbedder(),
         make_registry(),
         gate,
     )
-    sid = await create_session(work_dir, "审批恢复", "standard")
+    await add_rule("fs_write", "ask", work_dir=work_dir)
+    sid = await create_session(work_dir, "审批恢复", "workspace-write")
     events = [event async for event in runner.run(sid, "tool_write")]
     required = [e for e in events if e.type == "permission.required"][0]
     request_id = str(required.payload["request_id"])
@@ -150,14 +157,15 @@ async def test_resume_rejected(
     work_dir = str(tmp_path)
     gate = PermissionGate()
     runner = TurnRunner(
-        small_settings(settings, "standard"),
+        small_settings(settings, "workspace-write"),
         LlmGateway(settings),
         HookRegistry(),
         FakeEmbedder(),
         make_registry(),
         gate,
     )
-    sid = await create_session(work_dir, "裁决拒绝", "standard")
+    await add_rule("fs_write", "ask", work_dir=work_dir)
+    sid = await create_session(work_dir, "裁决拒绝", "workspace-write")
     events = [event async for event in runner.run(sid, "tool_write")]
     request_id = str([e for e in events if e.type == "permission.required"][0].payload["request_id"])
     resumed: list[object] = []
@@ -179,14 +187,15 @@ async def test_allowed_always_persists_rule(
     work_dir = str(tmp_path)
     gate = PermissionGate()
     runner = TurnRunner(
-        small_settings(settings, "standard"),
+        small_settings(settings, "workspace-write"),
         LlmGateway(settings),
         HookRegistry(),
         FakeEmbedder(),
         make_registry(),
         gate,
     )
-    sid = await create_session(work_dir, "始终允许", "standard")
+    await add_rule("fs_write", "ask", work_dir=work_dir)
+    sid = await create_session(work_dir, "始终允许", "workspace-write")
     events = [event async for event in runner.run(sid, "tool_write")]
     request_id = str([e for e in events if e.type == "permission.required"][0].payload["request_id"])
     async for event in runner.resume(sid, request_id, "allowed-always"):
@@ -195,7 +204,7 @@ async def test_allowed_always_persists_rule(
     assert (tmp_path / "out.txt").exists()
     tool = make_registry().get("fs_write")
     assert tool is not None
-    decision = await gate.decide(tool, work_dir, {"path": "again.txt", "content": "x"}, "standard")
+    decision = await gate.decide(tool, work_dir, {"path": "again.txt", "content": "x"}, "workspace-write")
     assert decision.verdict == "allow"
 
 
@@ -208,14 +217,14 @@ async def test_resume_unknown_request(
     settings, _ = fake_server
     work_dir = str(tmp_path)
     runner = TurnRunner(
-        small_settings(settings, "standard"),
+        small_settings(settings, "workspace-write"),
         LlmGateway(settings),
         HookRegistry(),
         FakeEmbedder(),
         make_registry(),
         PermissionGate(),
     )
-    sid = await create_session(work_dir, "未知审批", "standard")
+    sid = await create_session(work_dir, "未知审批", "workspace-write")
     with pytest.raises(ApiError) as exc_info:
         async for _event in runner.resume(sid, "no-such-id", "allowed-once"):
             pass

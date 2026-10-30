@@ -39,7 +39,7 @@ def small_settings(settings: Settings) -> Settings:
         tools={},
         memory=settings.memory.model_dump(),
         llm=settings.llm.model_dump(),
-        permission={"preset": "standard"},
+        permission={"preset": "workspace-write"},
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 3},
     )
 
@@ -78,7 +78,7 @@ async def test_sub_session_runs_clean_and_reports(
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, captured = fake_server
     manager = make_manager(settings)
-    parent = await create_session(str(tmp_path), "父会话", "standard")
+    parent = await create_session(str(tmp_path), "父会话", "workspace-write")
     row = await create_sub_session(parent, "跑个任务", "hi")
     manager.start(parent, row.id, row.child_session_id, row.title, row.task)
     status = await wait_finished(row.id)
@@ -110,7 +110,7 @@ async def test_sub_session_auto_denies_approval(
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
     manager = make_manager(settings)
-    parent = await create_session(str(tmp_path), "父会话", "loose")
+    parent = await create_session(str(tmp_path), "父会话", "workspace-write")
     row = await create_sub_session(parent, "删文件", "tool_delete")
     manager.start(parent, row.id, row.child_session_id, row.title, row.task)
     status = await wait_finished(row.id)

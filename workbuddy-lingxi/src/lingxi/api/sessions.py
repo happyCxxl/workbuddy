@@ -160,6 +160,8 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
                         "model": row.model,
                         "prompt_tokens": row.prompt_tokens,
                         "completion_tokens": row.completion_tokens,
+                        "prompt_cache_hit_tokens": row.prompt_cache_hit_tokens,
+                        "prompt_cache_miss_tokens": row.prompt_cache_miss_tokens,
                         "latency_ms": row.latency_ms,
                         "error_code": row.error_code,
                         "created_at": row.created_at.isoformat(),

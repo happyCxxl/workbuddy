@@ -10,11 +10,23 @@ from lingxi.contract import ApiError
 from lingxi.core.hooks import HookRegistry
 from lingxi.core.log import replay_events
 from lingxi.core.loop import TurnRunner
+from lingxi.db.engine import session_scope
+from lingxi.db.models import PermissionRule
+from lingxi.db.repo.permission_repo import PermissionRepo
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.permission.gate import PermissionGate
 from lingxi.domain.session.service import create_session
 from lingxi.domain.tools.fs import register_fs_tools
 from lingxi.domain.tools.registry import RISK_READ, RISK_WRITE, SessionToolState, ToolContext, ToolRegistry
+
+
+async def add_tool_rule(tool: str, action: str, work_dir: str) -> None:
+    """直接入库一条目录级规则（集成测试用）。"""
+    async with session_scope() as s:
+        await PermissionRepo(s).insert(
+            PermissionRule(tool=tool, scope=None, action=action, level="dir", work_dir=work_dir)
+        )
+        await s.commit()
 
 
 def make_registry() -> ToolRegistry:
@@ -238,7 +250,7 @@ async def test_loop_read_tool_end_to_end(
         tools={},
         memory=settings.memory.model_dump(),
         llm=settings.llm.model_dump(),
-        permission={"preset": "standard"},
+        permission={"preset": "workspace-write"},
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
     )
     runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate())
@@ -272,10 +284,11 @@ async def test_loop_write_asks_and_pauses(
         tools={},
         memory=settings.memory.model_dump(),
         llm=settings.llm.model_dump(),
-        permission={"preset": "standard"},
+        permission={"preset": "workspace-write"},
         loop={"input_token_budget": 100000, "context_budget_ratio": 0.8, "max_steps": 2},
     )
     runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate())
+    await add_tool_rule("fs_write", "ask", work_dir)
     sid = await create_session(work_dir, "写工具询问")
     events = [event async for event in runner.run(sid, "tool_write")]
     assert any(e.type == "permission.required" for e in events)

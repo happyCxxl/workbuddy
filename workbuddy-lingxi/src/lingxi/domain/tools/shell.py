@@ -99,7 +99,7 @@ def register_shell_tools(registry: ToolRegistry, settings: Settings) -> None:
             raise ValueError("命令不能为空（command 需为一条完整 cmd 命令）")
         default_ms = int(settings.tools.shell_timeout_seconds * 1000)
         timeout_ms = parse_int(args.get("timeout_ms"), default_ms)
-        if settings.tools.sandbox == "off":
+        if settings.tools.sandbox == "off" or ctx.full_access:
             return await _run_unsandboxed(command, ctx.work_dir, timeout_ms, settings.tools.shell_output_cap_chars)
         sandbox = WindowsSandbox(
             ctx.work_dir,

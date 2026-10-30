@@ -37,4 +37,4 @@ embedding_model = "BAAI/bge-m3"
 embedding_api_key = ""
 
 [permission]
-preset = "standard"
+preset = "workspace-write"

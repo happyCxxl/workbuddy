@@ -33,10 +33,11 @@ def parse_int(value: object, default: int) -> int:
 
 @dataclass
 class ToolContext:
-    """工具执行上下文：会话工作目录与可选的会话级状态（直接单测可省略状态）。"""
+    """工具执行上下文：会话工作目录、可选的会话级状态与完全权限标记（直接单测可省略）。"""
 
     work_dir: str
     state: SessionToolState | None = None
+    full_access: bool = False
 
 
 Handler = Callable[[dict[str, object], ToolContext], Awaitable[str]]

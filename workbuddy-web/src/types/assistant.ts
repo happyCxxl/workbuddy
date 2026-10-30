@@ -33,13 +33,15 @@ export interface ModelCallItem {
   model: string;
   prompt_tokens: number | null;
   completion_tokens: number | null;
+  prompt_cache_hit_tokens: number | null;
+  prompt_cache_miss_tokens: number | null;
   latency_ms: number | null;
   error_code: number | null;
   created_at: string;
 }
 
 // 权限档位：绑定会话
-export type PermissionPreset = 'loose' | 'standard' | 'strict';
+export type PermissionPreset = 'read-only' | 'workspace-write' | 'full-access';
 
 // 记忆条目
 export interface AssistantMemory {

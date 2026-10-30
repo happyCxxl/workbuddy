@@ -13,7 +13,9 @@ from lingxi.domain.persona.models import Persona, PersonaFields
 from lingxi.domain.ports import ChatMessage, ToolCall
 
 
-async def create_session(work_dir: str, title: str, preset: str = "standard", workspace_id: int | None = None) -> int:
+async def create_session(
+    work_dir: str, title: str, preset: str = "workspace-write", workspace_id: int | None = None
+) -> int:
     """创建会话：绑定当前启用的人格版本与权限档；可归属工作区（工作目录取自工作区）。"""
     async with session_scope() as s:
         persona = await PersonaRepo(s).current()

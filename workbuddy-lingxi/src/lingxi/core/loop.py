@@ -382,7 +382,12 @@ class TurnRunner:
                 cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
             )
             output = await tool.handler(
-                raw_args, ToolContext(work_dir, self._tool_states.setdefault(session_id, SessionToolState()))
+                raw_args,
+                ToolContext(
+                    work_dir,
+                    self._tool_states.setdefault(session_id, SessionToolState()),
+                    preset == "full-access",
+                ),
             )
             yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "result": output})
             yield await self._emit(
