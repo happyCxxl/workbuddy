@@ -29,7 +29,7 @@ MAX_GLOB_RESULTS = 500
 class ReadArgs(BaseModel):
     """读取参数。"""
 
-    path: str = Field(description="文件路径，相对工作目录（如 src/main.py）；不能用 ../ 越界")
+    path: str = Field(description="文件路径，相对工作目录（如 src/main.py）；也可传绝对路径，读工作区外会先征得同意")
     offset: int = Field(default=1, ge=1, description="起始行号（1 起），用于分段读大文件")
     limit: int = Field(default=MAX_READ_LINES, ge=1, le=MAX_READ_LINES, description="本次最多读取行数")
 
@@ -37,14 +37,16 @@ class ReadArgs(BaseModel):
 class ListArgs(BaseModel):
     """列目录参数。"""
 
-    path: str = Field(default=".", description="目录路径，相对工作目录；默认 . 表示工作目录根")
+    path: str = Field(
+        default=".", description="目录路径，相对工作目录；也可传绝对路径（读工作区外需同意）；默认 . 表示工作目录根"
+    )
 
 
 class SearchArgs(BaseModel):
     """搜索参数。"""
 
     pattern: str = Field(description="搜索模式：默认按字面子串匹配（区分大小写）；regex=true 时按正则匹配")
-    path: str = Field(default=".", description="搜索起点目录，相对工作目录；默认 .")
+    path: str = Field(default=".", description="搜索起点目录，相对工作目录；也可传绝对路径（读工作区外需同意）；默认 .")
     regex: bool = Field(default=False, description="是否把 pattern 当作正则表达式")
     glob: str = Field(default="", description="只搜索文件名匹配该 glob 的文件（如 *.py），空表示全部")
 
@@ -53,13 +55,13 @@ class GlobArgs(BaseModel):
     """文件匹配参数。"""
 
     pattern: str = Field(description="文件名 glob 模式，相对 path（如 **/*.py、src/*.ts）")
-    path: str = Field(default=".", description="搜索起点目录，相对工作目录；默认 .")
+    path: str = Field(default=".", description="搜索起点目录，相对工作目录；也可传绝对路径（读工作区外需同意）；默认 .")
 
 
 class WriteArgs(BaseModel):
     """写入参数。"""
 
-    path: str = Field(description="写入的文件路径，相对工作目录；父目录不存在会自动创建")
+    path: str = Field(description="写入的文件路径，相对工作目录（只能在工作区内）；父目录不存在会自动创建")
     content: str = Field(description="完整文件内容（UTF-8 文本，覆盖写入，不是追加）")
 
 
@@ -78,12 +80,15 @@ class DeleteArgs(BaseModel):
     path: str = Field(description="要删除的单个文件路径，相对工作目录；不支持删除目录")
 
 
-def _resolve(work_dir: str, path: str) -> Path:
-    """解析路径并强制限定工作目录内；越界抛错。"""
+def _resolve(work_dir: str, path: str, *, write: bool = False) -> Path:
+    """解析路径：读允许工作区外（越界需权限审批），写/改/删必须落在工作区内。"""
     base = Path(work_dir).resolve()
-    target = (base / path).resolve()
-    if not target.is_relative_to(base):
-        raise ValueError(f"路径越界：{path}（只能访问工作目录内的文件；请改用工作目录内的相对路径）")
+    target = Path(path)
+    if not target.is_absolute():
+        target = base / path
+    target = target.resolve()
+    if write and not target.is_relative_to(base):
+        raise ValueError(f"写操作只能在工作区内：{path}（读可以用绝对路径，越界读会先征得同意）")
     return target
 
 
@@ -222,7 +227,7 @@ async def _fs_search(args: dict[str, object], ctx: ToolContext) -> str:
 
 
 async def _fs_write(args: dict[str, object], ctx: ToolContext) -> str:
-    target = _resolve(ctx.work_dir, str(args["path"]))
+    target = _resolve(ctx.work_dir, str(args["path"]), write=True)
     _require_read(ctx, target, "写入")
     content = str(args["content"])
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -232,7 +237,7 @@ async def _fs_write(args: dict[str, object], ctx: ToolContext) -> str:
 
 
 async def _fs_edit(args: dict[str, object], ctx: ToolContext) -> str:
-    target = _resolve(ctx.work_dir, str(args["path"]))
+    target = _resolve(ctx.work_dir, str(args["path"]), write=True)
     if not target.is_file():
         raise FileNotFoundError(f"文件不存在：{args['path']}（编辑前先用 fs_read 读取内容）")
     _require_read(ctx, target, "编辑")
@@ -254,7 +259,7 @@ async def _fs_edit(args: dict[str, object], ctx: ToolContext) -> str:
 
 
 async def _fs_delete(args: dict[str, object], ctx: ToolContext) -> str:
-    target = _resolve(ctx.work_dir, str(args["path"]))
+    target = _resolve(ctx.work_dir, str(args["path"]), write=True)
     if target.is_dir():
         raise IsADirectoryError(f"是目录：{args['path']}（fs_delete 只删文件；列目录请用 fs_list）")
     if not target.exists():

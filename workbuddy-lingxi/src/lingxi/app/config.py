@@ -7,7 +7,7 @@
 import os
 import tomllib
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -46,6 +46,7 @@ class ToolsConfig(BaseModel):
     web_fetch_output_cap_chars: int
     web_timeout_seconds: int
     web_search_count: int
+    sandbox: Literal["workspace-write", "off"] = "workspace-write"
 
 
 class LlmConfig(BaseModel):

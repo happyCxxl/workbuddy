@@ -61,6 +61,14 @@ class SandboxError(RuntimeError):
     """沙箱不可用：非 Windows、目录不存在或 API 失败。"""
 
 
+def _access_denied(exc: Exception) -> bool:
+    """是否为拒绝访问（winerror 5）：目录不属于当前用户，拿不到所有权/WRITE_DAC。"""
+    if getattr(exc, "winerror", None) == 5:
+        return True
+    args = getattr(exc, "args", ())
+    return bool(args) and args[0] == 5
+
+
 @dataclass
 class SandboxResult:
     """一次命令执行的结果：退出码、输出与截断/超时标记。"""
@@ -283,10 +291,18 @@ class WindowsSandbox:
         """在沙箱内执行命令：成功返回退出码与输出，超时报超时并杀进程树。"""
         _api, _con, _file, _proc, security = self._api
         write_sid = security.ConvertStringSidToSid(write_sid_for(self._work_dir))
-        self._grant(write_sid)
-        label = read_label(self._work_dir)
-        if label != _LOW_LABEL_SID:
-            apply_label(self._work_dir)
+        try:
+            self._grant(write_sid)
+            if read_label(self._work_dir) != _LOW_LABEL_SID:
+                apply_label(self._work_dir)
+        except Exception as exc:
+            if not _access_denied(exc):
+                raise
+            raise SandboxError(
+                "SANDBOX_UNAVAILABLE：无法为工作区加固权限（目录不属于当前用户，缺少所有权/WRITE_DAC）。"
+                f"工作区：{self._work_dir}；请换一个自己拥有写权限的目录，"
+                "或在 config 中把 tools.sandbox 设为 off 显式关闭沙箱。"
+            ) from exc
         token = self._restricted_token(write_sid)
         try:
             return self._spawn(token, command)

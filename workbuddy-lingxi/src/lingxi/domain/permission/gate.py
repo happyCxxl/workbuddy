@@ -6,7 +6,7 @@ from pathlib import Path
 from lingxi.db.engine import session_scope
 from lingxi.db.models import PermissionRule
 from lingxi.db.repo.permission_repo import PermissionRepo
-from lingxi.domain.tools.registry import RISK_HIGH, RISK_WRITE, ToolDefinition
+from lingxi.domain.tools.registry import RISK_HIGH, RISK_READ, RISK_WRITE, ToolDefinition
 
 PRESETS = ("loose", "standard", "strict")
 
@@ -73,7 +73,9 @@ class PermissionGate:
         path = _path_of(tool, args)
         if path is not None:
             if _escapes(work_dir, path):
-                return Decision(verdict="ask", reason="路径越出工作目录")
+                if tool.risk == RISK_READ:
+                    return Decision(verdict="ask", reason="读取工作区外路径需确认")
+                return Decision(verdict="deny", reason="写操作只能在工作区内")
             if tool.name == "fs_write" and _exists(work_dir, path):
                 return Decision(verdict="ask", reason="覆盖已有文件需确认")
         if preset == "strict":

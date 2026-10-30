@@ -396,6 +396,7 @@
             <div class="trail-line">
               <span class="trail-badge">{{ node.badge }}</span>
               <span class="trail-title">{{ node.title }}</span>
+              <span v-if="node.duration" class="trail-node-duration">{{ node.duration }}</span>
               <span class="trail-node-time">{{ node.time }}</span>
             </div>
             <details v-if="node.detail" class="trail-detail">
@@ -844,6 +845,9 @@ interface TrailNode {
   title: string;
   detail?: string;
   time: string;
+  /** 工具/步骤耗时（开始到结果的时间差） */
+  duration?: string;
+  startedMs?: number;
 }
 interface TrailTurn {
   key: string;
@@ -876,6 +880,7 @@ function newTrailTurn(index: number, event: SessionEventItem): TrailTurn {
 /** 单事件归并为节点：文本/思考增量直接跳过 */
 function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
   const time = formatClock(event.created_at);
+  const at = Date.parse(event.created_at);
   if (event.type === 'user/message') {
     const content = String(event.payload['content'] ?? '');
     turn.nodes.push({
@@ -913,6 +918,7 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
       title: `${name} ${preview(args, 80)}`,
       detail: prettyJson(args),
       time,
+      startedMs: at,
     });
     return;
   }
@@ -925,6 +931,7 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
       return;
     }
     const error = event.payload['error'];
+    node.duration = durationLabel(node.startedMs ?? at, at);
     if (error) {
       node.kind = 'error';
       node.badge = '失败';
@@ -2023,7 +2030,8 @@ onUnmounted(() => {
 
 .trail-time,
 .trail-duration,
-.trail-node-time {
+.trail-node-time,
+.trail-node-duration {
   color: var(--kb-text-3);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;

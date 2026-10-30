@@ -67,6 +67,29 @@ def is_dangerous(command: str) -> bool:
     return any(pattern.search(normalized) is not None for pattern in _COMPILED)
 
 
+_CREATE_NO_WINDOW = 0x08000000
+
+
+async def _run_unsandboxed(command: str, cwd: str, timeout_ms: int, cap: int) -> str:
+    """显式关闭沙箱（tools.sandbox=off）时直接执行：结果标注未沙箱，提醒用户边界。"""
+    process = await asyncio.create_subprocess_shell(
+        command,
+        cwd=cwd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+        creationflags=_CREATE_NO_WINDOW,
+    )
+    try:
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout_ms / 1000)
+    except TimeoutError:
+        process.kill()
+        await process.wait()
+        return f"[未沙箱] 命令超时（{timeout_ms} ms），已终止。"
+    text = stdout.decode("utf-8", errors="replace")
+    body = text if len(text) <= cap else f"{text[:cap]}\n…（输出已截断）"
+    return f"[未沙箱] 退出码 {process.returncode}\n{body}"
+
+
 def register_shell_tools(registry: ToolRegistry, settings: Settings) -> None:
     """注册 shell：写级别；危险命令命中参数级高危判定。"""
 
@@ -76,6 +99,8 @@ def register_shell_tools(registry: ToolRegistry, settings: Settings) -> None:
             raise ValueError("命令不能为空（command 需为一条完整 cmd 命令）")
         default_ms = int(settings.tools.shell_timeout_seconds * 1000)
         timeout_ms = parse_int(args.get("timeout_ms"), default_ms)
+        if settings.tools.sandbox == "off":
+            return await _run_unsandboxed(command, ctx.work_dir, timeout_ms, settings.tools.shell_output_cap_chars)
         sandbox = WindowsSandbox(
             ctx.work_dir,
             timeout_ms / 1000,

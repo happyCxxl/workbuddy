@@ -144,16 +144,19 @@ async def test_fs_search_regex_and_glob_filter(tmp_path: Path) -> None:
         await search.handler({"pattern": "([", "regex": True}, ToolContext(str(tmp_path)))
 
 
-async def test_fs_path_escape_rejected(tmp_path: Path) -> None:
-    """越界路径拒绝：../ 逃逸工作目录报错。"""
+async def test_fs_read_outside_allowed_write_denied(tmp_path: Path) -> None:
+    """读工作区外允许（越界读由权限层询问），写/改/删仍限工作区内。"""
     work_dir = str(tmp_path)
     secret = tmp_path.parent / "secret.txt"
     secret.write_text("机密", encoding="utf-8")
     registry = make_registry()
     read = registry.get("fs_read")
     assert read is not None
-    with pytest.raises(ValueError, match="越界"):
-        await read.handler({"path": "../secret.txt"}, ToolContext(work_dir))
+    assert "机密" in await read.handler({"path": "../secret.txt"}, ToolContext(work_dir))
+    write = registry.get("fs_write")
+    assert write is not None
+    with pytest.raises(ValueError, match="工作区内"):
+        await write.handler({"path": "../escape.txt", "content": "x"}, ToolContext(work_dir))
 
 
 async def test_fs_delete_removes_file(tmp_path: Path) -> None:
@@ -181,7 +184,7 @@ def test_tool_descriptions_and_field_docs() -> None:
 
 
 async def test_fs_errors_are_actionable(tmp_path: Path) -> None:
-    """报错要告诉模型下一步怎么做（读缺失提示 fs_list、目录提示 fs_list、越界提示相对路径）。"""
+    """报错要告诉模型下一步怎么做（读缺失提示 fs_list、目录提示 fs_list、写越界提示工作区内）。"""
     work_dir = str(tmp_path)
     (tmp_path / "dir").mkdir()
     registry = make_registry()
@@ -191,8 +194,10 @@ async def test_fs_errors_are_actionable(tmp_path: Path) -> None:
         await read.handler({"path": "missing.txt"}, ToolContext(work_dir))
     with pytest.raises(IsADirectoryError, match="fs_list"):
         await read.handler({"path": "dir"}, ToolContext(work_dir))
-    with pytest.raises(ValueError, match="工作目录"):
-        await read.handler({"path": "../outside.txt"}, ToolContext(work_dir))
+    write = registry.get("fs_write")
+    assert write is not None
+    with pytest.raises(ValueError, match="工作区内"):
+        await write.handler({"path": "../outside.txt", "content": "x"}, ToolContext(work_dir))
 
 
 async def test_fs_write_creates_parent_dirs(tmp_path: Path) -> None:
