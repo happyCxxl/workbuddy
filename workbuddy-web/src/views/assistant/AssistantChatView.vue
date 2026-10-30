@@ -382,29 +382,70 @@
       </template>
     </el-dialog>
 
-    <el-drawer v-model="trajectoryVisible" title="活动时间线" size="52%">
-      <div class="trail">
+    <el-drawer v-model="trajectoryVisible" title="会话轨迹" size="76%">
+      <div class="trajectory-shell">
         <p v-if="trailTurns.length === 0" class="trajectory-empty">还没有活动。</p>
-        <section v-for="turn in trailTurns" :key="turn.key" class="trail-turn">
-          <header class="trail-head">
-            <span class="trail-index">第 {{ turn.index }} 轮</span>
-            <span class="trail-time">{{ turn.startedAt }}</span>
-            <span class="trail-status" :data-status="turn.status">{{ turn.statusLabel }}</span>
-            <span class="trail-duration">{{ turn.duration }}</span>
-          </header>
-          <div v-for="node in turn.nodes" :key="node.key" class="trail-node" :data-kind="node.kind">
-            <div class="trail-line">
-              <span class="trail-badge">{{ node.badge }}</span>
-              <span class="trail-title">{{ node.title }}</span>
-              <span v-if="node.duration" class="trail-node-duration">{{ node.duration }}</span>
-              <span class="trail-node-time">{{ node.time }}</span>
+        <template v-else>
+          <div class="overview">
+            <div v-for="turn in trailTurns" :key="turn.key" class="overview-row">
+              <span class="overview-label">第 {{ turn.index }} 轮</span>
+              <div class="overview-track">
+                <button
+                  v-for="node in turn.nodes.filter((item) => item.kind !== 'user')"
+                  :key="node.key"
+                  type="button"
+                  class="overview-span"
+                  :data-kind="node.kind"
+                  :style="spanStyle(turn, node)"
+                  :title="`${node.badge} · ${node.title}`"
+                  @click="selectNode(node)"
+                ></button>
+              </div>
+              <span class="overview-duration">{{ turn.duration }}</span>
             </div>
-            <details v-if="node.detail" class="trail-detail">
-              <summary class="trail-summary">详情</summary>
-              <pre class="trail-pre">{{ node.detail }}</pre>
-            </details>
           </div>
-        </section>
+          <div class="trajectory-main">
+            <div class="traj-table">
+              <section v-for="turn in trailTurns" :key="turn.key">
+                <header class="traj-turn">
+                  <span>第 {{ turn.index }} 轮</span>
+                  <span class="traj-turn-time">{{ turn.startedAt }}</span>
+                  <span class="traj-status" :data-status="turn.status">{{ turn.statusLabel }}</span>
+                  <span class="traj-turn-duration">{{ turn.duration }}</span>
+                </header>
+                <button
+                  v-for="node in turn.nodes"
+                  :key="node.key"
+                  type="button"
+                  class="traj-row"
+                  :class="{ 'is-selected': selected?.key === node.key }"
+                  @click="selectNode(node)"
+                >
+                  <span class="traj-time">{{ node.time }}</span>
+                  <span class="traj-badge" :data-kind="node.kind">{{ node.badge }}</span>
+                  <span class="traj-title">{{ node.title }}</span>
+                  <span class="traj-duration">{{ node.duration ?? '' }}</span>
+                </button>
+              </section>
+            </div>
+            <aside class="traj-inspector">
+              <template v-if="selected">
+                <div class="inspector-head">
+                  <span class="traj-badge" :data-kind="selected.kind">{{ selected.badge }}</span>
+                  <span class="inspector-title">{{ selected.title }}</span>
+                </div>
+                <p class="inspector-meta">
+                  {{ selected.time }}
+                  <template v-if="selected.duration"> · 耗时 {{ selected.duration }}</template>
+                </p>
+                <p v-if="selected.meta" class="inspector-meta">{{ selected.meta }}</p>
+                <pre v-if="selected.detail" class="inspector-body">{{ selected.detail }}</pre>
+                <p v-else class="inspector-meta">没有更多细节。</p>
+              </template>
+              <p v-else class="trajectory-empty">选择左侧一条记录查看详情。</p>
+            </aside>
+          </div>
+        </template>
       </div>
     </el-drawer>
 
@@ -848,6 +889,9 @@ interface TrailNode {
   /** 工具/步骤耗时（开始到结果的时间差） */
   duration?: string;
   startedMs?: number;
+  endedMs?: number;
+  /** 检查器附加信息：模型、token 等 */
+  meta?: string;
 }
 interface TrailTurn {
   key: string;
@@ -859,6 +903,9 @@ interface TrailTurn {
   statusLabel: string;
   duration: string;
   nodes: TrailNode[];
+  /** 时间概览用的轮次时间窗 */
+  spanStart: number;
+  spanEnd: number;
 }
 
 /** 新轮次：turn/start 建一个分组 */
@@ -874,6 +921,8 @@ function newTrailTurn(index: number, event: SessionEventItem): TrailTurn {
     statusLabel: '进行中',
     duration: '',
     nodes: [],
+    spanStart: Number.isNaN(at) ? 0 : at,
+    spanEnd: Number.isNaN(at) ? 0 : at,
   };
 }
 
@@ -890,6 +939,8 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
       title: preview(content),
       detail: content,
       time,
+      startedMs: at,
+      endedMs: at,
     });
     return;
   }
@@ -905,6 +956,8 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
       title: preview(content),
       detail: content,
       time,
+      startedMs: at,
+      endedMs: at,
     });
     return;
   }
@@ -931,6 +984,7 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
       return;
     }
     const error = event.payload['error'];
+    node.endedMs = at;
     node.duration = durationLabel(node.startedMs ?? at, at);
     if (error) {
       node.kind = 'error';
@@ -951,6 +1005,8 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
       title: preview(message, 120),
       detail: message,
       time,
+      startedMs: at,
+      endedMs: at,
     });
     return;
   }
@@ -988,6 +1044,9 @@ function attachModelCalls(turns: TrailTurn[], calls: ModelCallItem[]): void {
       badge: '模型',
       title: `${call.model}${latency}${tokens}${failed}`,
       time: formatClock(call.created_at),
+      startedMs: call.latency_ms === null ? at : at - call.latency_ms,
+      endedMs: at,
+      meta: `模型 ${call.model}${latency}${tokens}${failed}`,
     });
   }
 }
@@ -1007,8 +1066,36 @@ const trailTurns = computed<TrailTurn[]>(() => {
     }
   }
   attachModelCalls(turns, modelCalls.value);
+  for (const turn of turns) {
+    const starts = turn.nodes
+      .map((node) => node.startedMs)
+      .filter((value): value is number => value !== undefined);
+    const ends = turn.nodes
+      .map((node) => node.endedMs ?? node.startedMs)
+      .filter((value): value is number => value !== undefined);
+    turn.spanStart = starts.length > 0 ? Math.min(...starts) : turn.startedMs;
+    turn.spanEnd = ends.length > 0 ? Math.max(...ends) : turn.startedMs;
+  }
   return turns;
 });
+
+/** 选中记录：右侧检查器展示完整细节 */
+const selected = ref<TrailNode | null>(null);
+
+/** 选中一条记录 */
+function selectNode(node: TrailNode): void {
+  selected.value = node;
+}
+
+/** 时间概览条位置：按轮次时间窗换算百分比 */
+function spanStyle(turn: TrailTurn, node: TrailNode): Record<string, string> {
+  const span = Math.max(1, turn.spanEnd - turn.spanStart);
+  const start = node.startedMs ?? turn.spanStart;
+  const end = node.endedMs ?? node.startedMs ?? start;
+  const left = ((start - turn.spanStart) / span) * 100;
+  const width = Math.max(1.5, ((end - start) / span) * 100);
+  return { left: `${left}%`, width: `${width}%` };
+}
 
 /** 单行摘要：折叠空白并截断 */
 function preview(text: string, limit = 120): string {
@@ -1996,11 +2083,12 @@ onUnmounted(() => {
   font-size: 11px;
 }
 
-/* 活动时间线：按轮次分组，文本/思考增量不入线 */
-.trail {
+/* 会话轨迹：顶部时间概览 + 按轮次的事件记录表 + 右侧检查器（对齐 DSH Trajectory） */
+.trajectory-shell {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+  height: 100%;
 }
 
 .trajectory-empty {
@@ -2008,36 +2096,106 @@ onUnmounted(() => {
   font-size: 13px;
 }
 
-.trail-turn {
-  overflow: hidden;
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--kb-line);
+}
+
+.overview-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.overview-label {
+  flex: none;
+  width: 56px;
+  color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.overview-track {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+}
+
+.overview-span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 3px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--kb-text-3);
+  cursor: pointer;
+}
+
+.overview-span[data-kind='tool'] {
+  background: var(--kb-primary-2);
+}
+
+.overview-span[data-kind='call'] {
+  background: #60a5fa;
+}
+
+.overview-span[data-kind='assistant'] {
+  background: #34d399;
+}
+
+.overview-span[data-kind='error'] {
+  background: var(--kb-danger);
+}
+
+.overview-duration {
+  flex: none;
+  width: 48px;
+  color: var(--kb-text-3);
+  font-size: 11px;
+  text-align: right;
+}
+
+.trajectory-main {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 14px;
+  min-height: 0;
+}
+
+.traj-table {
+  overflow: auto;
   border: 1px solid var(--kb-line);
   border-radius: 10px;
 }
 
-.trail-head {
+.traj-turn {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
-  padding: 8px 12px;
-  background: rgb(255 255 255 / 4%);
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--kb-line);
+  background: var(--kb-surface);
   font-size: 12px;
 }
 
-.trail-index {
-  color: var(--kb-text);
-  font-weight: 600;
-}
-
-.trail-time,
-.trail-duration,
-.trail-node-time,
-.trail-node-duration {
+.traj-turn-time,
+.traj-turn-duration {
   color: var(--kb-text-3);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;
 }
 
-.trail-status {
+.traj-status {
   margin-left: auto;
   padding: 1px 8px;
   border-radius: 999px;
@@ -2046,73 +2204,118 @@ onUnmounted(() => {
   font-size: 11px;
 }
 
-.trail-status[data-status='completed'] {
+.traj-status[data-status='completed'] {
   color: var(--kb-ok);
 }
 
-.trail-status[data-status='aborted'],
-.trail-status[data-status='error'] {
+.traj-status[data-status='aborted'],
+.traj-status[data-status='error'] {
   color: var(--kb-danger);
 }
 
-.trail-status[data-status='pending_stop'] {
+.traj-status[data-status='pending_stop'] {
   color: #f59e0b;
 }
 
-.trail-node {
-  padding: 8px 12px;
-  border-top: 1px solid var(--kb-line);
-}
-
-.trail-line {
+.traj-row {
   display: flex;
   gap: 8px;
   align-items: baseline;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-bottom: 1px solid rgb(255 255 255 / 4%);
+  color: var(--kb-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
 }
 
-.trail-badge {
+.traj-row:hover {
+  background: rgb(255 255 255 / 4%);
+}
+
+.traj-row.is-selected {
+  background: rgb(96 165 250 / 12%);
+}
+
+.traj-time {
+  flex: none;
+  width: 62px;
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+
+.traj-badge {
   flex: none;
   width: 34px;
   color: var(--kb-text-3);
   font-size: 11px;
 }
 
-.trail-title {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 12px;
-}
-
-.trail-node[data-kind='tool'] .trail-badge {
+.traj-badge[data-kind='tool'] {
   color: var(--kb-primary-2);
 }
 
-.trail-node[data-kind='error'] .trail-title {
+.traj-badge[data-kind='call'] {
+  color: #60a5fa;
+}
+
+.traj-badge[data-kind='error'] {
   color: var(--kb-danger);
 }
 
-.trail-node[data-kind='call'] .trail-title {
+.traj-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.traj-duration {
+  flex: none;
+  width: 48px;
+  color: var(--kb-text-3);
+  font-size: 11px;
+  text-align: right;
+}
+
+.traj-inspector {
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--kb-line);
+  border-radius: 10px;
+}
+
+.inspector-head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.inspector-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.inspector-meta {
+  margin: 2px 0;
   color: var(--kb-text-3);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;
 }
 
-.trail-detail {
-  margin: 6px 0 0 42px;
-}
-
-.trail-summary {
-  color: var(--kb-text-3);
-  cursor: pointer;
-  font-size: 11px;
-}
-
-.trail-pre {
-  margin: 6px 0 0;
-  padding: 8px 10px;
+.inspector-body {
+  max-height: 55vh;
+  margin: 8px 0 0;
+  padding: 10px;
+  overflow: auto;
   overflow-wrap: anywhere;
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--kb-text-2);
   background: rgb(0 0 0 / 30%);
   font-size: 11px;
