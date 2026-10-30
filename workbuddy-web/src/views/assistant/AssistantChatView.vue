@@ -178,17 +178,40 @@
           >
             <div class="message-bubble">
               <details v-if="item.thinking" class="message-thinking">
-                <summary class="thinking-summary">已思考（点击展开）</summary>
-                <p class="thinking-body">{{ item.thinking }}</p>
+                <summary class="thinking-summary">思考过程</summary>
+                <pre class="thinking-body">{{ item.thinking }}</pre>
               </details>
-              <p v-if="item.text" class="message-text">{{ item.text }}</p>
-              <div v-for="(tool, toolIndex) in item.tools" :key="toolIndex" class="message-tool">
-                <span class="tool-name">{{ tool.name }}</span>
-                <span class="tool-args">{{ tool.args }}</span>
-                <span v-if="tool.error" class="tool-fail">失败：{{ tool.error }}</span>
-                <span v-else-if="tool.result" class="tool-ok">成功</span>
-                <span v-else class="tool-run">执行中…</span>
-              </div>
+              <MarkdownView v-if="item.text" :content="item.text" />
+              <details
+                v-for="(tool, toolIndex) in item.tools"
+                :key="toolIndex"
+                class="tool-card"
+                :class="{ 'tool-fail': Boolean(tool.error) }"
+              >
+                <summary class="tool-head">
+                  <span
+                    class="tool-dot"
+                    :class="tool.error ? 'is-fail' : tool.result ? 'is-ok' : 'is-run'"
+                  ></span>
+                  <span class="tool-name">{{ tool.name }}</span>
+                  <span class="tool-args">{{ tool.args }}</span>
+                  <span class="tool-state">{{
+                    tool.error ? '失败' : tool.result ? '完成' : '执行中'
+                  }}</span>
+                </summary>
+                <div class="tool-body">
+                  <p class="tool-label">参数</p>
+                  <pre class="tool-pre">{{ prettyJson(tool.args) }}</pre>
+                  <template v-if="tool.error">
+                    <p class="tool-label">错误</p>
+                    <pre class="tool-pre tool-error">{{ tool.error }}</pre>
+                  </template>
+                  <template v-else-if="tool.result">
+                    <p class="tool-label">结果</p>
+                    <pre class="tool-pre">{{ tool.result }}</pre>
+                  </template>
+                </div>
+              </details>
               <div v-if="item.permission" class="message-perm">
                 <div class="perm-title">⚠ 需要你确认：{{ item.permission.name }}</div>
                 <div class="perm-reason">{{ item.permission.reason }}</div>
@@ -346,14 +369,28 @@
       </template>
     </el-dialog>
 
-    <el-drawer v-model="trajectoryVisible" title="会话轨迹" size="46%">
-      <div class="trajectory">
-        <p v-if="trajectoryEvents.length === 0" class="trajectory-empty">还没有事件。</p>
-        <div v-for="event in trajectoryEvents" :key="event.seq" class="trajectory-item">
-          <span class="trajectory-seq">#{{ event.seq }}</span>
-          <span class="trajectory-type">{{ event.type }}</span>
-          <pre class="trajectory-payload">{{ shortPayload(event) }}</pre>
-        </div>
+    <el-drawer v-model="trajectoryVisible" title="活动时间线" size="52%">
+      <div class="trail">
+        <p v-if="trailTurns.length === 0" class="trajectory-empty">还没有活动。</p>
+        <section v-for="turn in trailTurns" :key="turn.key" class="trail-turn">
+          <header class="trail-head">
+            <span class="trail-index">第 {{ turn.index }} 轮</span>
+            <span class="trail-time">{{ turn.startedAt }}</span>
+            <span class="trail-status" :data-status="turn.status">{{ turn.statusLabel }}</span>
+            <span class="trail-duration">{{ turn.duration }}</span>
+          </header>
+          <div v-for="node in turn.nodes" :key="node.key" class="trail-node" :data-kind="node.kind">
+            <div class="trail-line">
+              <span class="trail-badge">{{ node.badge }}</span>
+              <span class="trail-title">{{ node.title }}</span>
+              <span class="trail-node-time">{{ node.time }}</span>
+            </div>
+            <details v-if="node.detail" class="trail-detail">
+              <summary class="trail-summary">详情</summary>
+              <pre class="trail-pre">{{ node.detail }}</pre>
+            </details>
+          </div>
+        </section>
       </div>
     </el-drawer>
 
@@ -392,6 +429,7 @@ import {
   deleteAssistantSession,
   deleteWorkspace,
   getAssistantSessions,
+  getSessionCalls,
   getSessionEvents,
   getSessionUsage,
   getSubSessions,
@@ -405,6 +443,7 @@ import {
 import type {
   AssistantSession,
   DirEntry,
+  ModelCallItem,
   PermissionPreset,
   SessionEventItem,
   SessionUsage,
@@ -412,6 +451,7 @@ import type {
   Workspace,
 } from '@/types/assistant';
 import { formatDateTime } from '@/utils/date';
+import MarkdownView from '@/components/assistant/MarkdownView.vue';
 
 /** 会话分组：一个工作区一组（无工作区的旧会话按目录兜底成组） */
 interface SessionGroup {
@@ -466,6 +506,7 @@ const onlyWithSessions = ref(false);
 const usage = ref<SessionUsage | null>(null);
 const trajectoryVisible = ref(false);
 const trajectoryEvents = ref<SessionEventItem[]>([]);
+const modelCalls = ref<ModelCallItem[]>([]);
 const subVisible = ref(false);
 const subSessions = ref<SubSessionItem[]>([]);
 const collapsedGroups = ref<Record<string, boolean>>({});
@@ -766,19 +807,221 @@ async function loadUsage(): Promise<void> {
   usage.value = await getSessionUsage(currentId.value);
 }
 
-/** 打开轨迹抽屉：按最新事件刷新 */
+/** 打开轨迹抽屉：按最新事件与调用明细刷新 */
 async function openTrajectory(): Promise<void> {
   if (!currentId.value) {
     return;
   }
-  trajectoryEvents.value = await getSessionEvents(currentId.value);
+  [trajectoryEvents.value, modelCalls.value] = await Promise.all([
+    getSessionEvents(currentId.value),
+    getSessionCalls(currentId.value),
+  ]);
   trajectoryVisible.value = true;
 }
 
-/** 轨迹载荷剪裁：单行 200 字符 */
-function shortPayload(event: SessionEventItem): string {
-  const text = JSON.stringify(event.payload);
-  return text.length > 200 ? `${text.slice(0, 200)}…` : text;
+// 活动时间线：按轮次分组，只保留语义节点（文本/思考增量不单独成条）
+interface TrailNode {
+  key: string;
+  kind: 'user' | 'assistant' | 'tool' | 'call' | 'error';
+  badge: string;
+  title: string;
+  detail?: string;
+  time: string;
+}
+interface TrailTurn {
+  key: string;
+  index: number;
+  startedAt: string;
+  startedMs: number;
+  endedMs: number | null;
+  status: string;
+  statusLabel: string;
+  duration: string;
+  nodes: TrailNode[];
+}
+
+/** 新轮次：turn/start 建一个分组 */
+function newTrailTurn(index: number, event: SessionEventItem): TrailTurn {
+  const at = Date.parse(event.created_at);
+  return {
+    key: `turn-${String(event.seq)}`,
+    index,
+    startedAt: formatClock(event.created_at),
+    startedMs: Number.isNaN(at) ? 0 : at,
+    endedMs: null,
+    status: 'running',
+    statusLabel: '进行中',
+    duration: '',
+    nodes: [],
+  };
+}
+
+/** 单事件归并为节点：文本/思考增量直接跳过 */
+function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
+  const time = formatClock(event.created_at);
+  if (event.type === 'user/message') {
+    const content = String(event.payload['content'] ?? '');
+    turn.nodes.push({
+      key: `e${String(event.seq)}`,
+      kind: 'user',
+      badge: '你',
+      title: preview(content),
+      detail: content,
+      time,
+    });
+    return;
+  }
+  if (event.type === 'assistant/message') {
+    const content = String(event.payload['content'] ?? '').trim();
+    if (!content) {
+      return;
+    }
+    turn.nodes.push({
+      key: `a${String(event.seq)}`,
+      kind: 'assistant',
+      badge: '助手',
+      title: preview(content),
+      detail: content,
+      time,
+    });
+    return;
+  }
+  if (event.type === 'tool.call') {
+    const name = String(event.payload['name'] ?? '');
+    const args = String(event.payload['arguments'] ?? '');
+    turn.nodes.push({
+      key: `t${String(event.seq)}`,
+      kind: 'tool',
+      badge: '工具',
+      title: `${name} ${preview(args, 80)}`,
+      detail: prettyJson(args),
+      time,
+    });
+    return;
+  }
+  if (event.type === 'tool.result') {
+    const name = String(event.payload['name'] ?? '');
+    const node = [...turn.nodes]
+      .reverse()
+      .find((item) => item.kind === 'tool' && item.title.startsWith(name));
+    if (!node) {
+      return;
+    }
+    const error = event.payload['error'];
+    if (error) {
+      node.kind = 'error';
+      node.badge = '失败';
+      node.title = `${name} 失败：${preview(String(error), 100)}`;
+      node.detail = String(error);
+      return;
+    }
+    node.title = `${node.title} → ${preview(String(event.payload['result'] ?? ''), 80)}`;
+    return;
+  }
+  if (event.type === 'error') {
+    const message = String(event.payload['message'] ?? '');
+    turn.nodes.push({
+      key: `x${String(event.seq)}`,
+      kind: 'error',
+      badge: '错误',
+      title: preview(message, 120),
+      detail: message,
+      time,
+    });
+    return;
+  }
+  if (event.type === 'turn.end') {
+    turn.status = String(event.payload['status'] ?? 'completed');
+    turn.statusLabel = trailStatusLabel(turn.status);
+    const at = Date.parse(event.created_at);
+    turn.endedMs = Number.isNaN(at) ? null : at;
+    turn.duration = durationLabel(turn.startedMs, turn.endedMs);
+  }
+}
+
+/** 模型调用按发生时间归入对应轮次（调用明细没有 turn_seq） */
+function attachModelCalls(turns: TrailTurn[], calls: ModelCallItem[]): void {
+  for (const call of calls) {
+    const at = Date.parse(call.created_at);
+    if (Number.isNaN(at)) {
+      continue;
+    }
+    const turn = turns.find(
+      (item) => at >= item.startedMs && (item.endedMs === null || at <= item.endedMs),
+    );
+    if (!turn) {
+      continue;
+    }
+    const latency = call.latency_ms === null ? '' : ` · ${(call.latency_ms / 1000).toFixed(1)}s`;
+    const tokens =
+      call.prompt_tokens === null
+        ? ''
+        : ` · ${String(call.prompt_tokens)}+${String(call.completion_tokens ?? 0)} tok`;
+    const failed = call.error_code === null ? '' : ` · 错误 ${String(call.error_code)}`;
+    turn.nodes.push({
+      key: `call-${call.created_at}-${call.model}`,
+      kind: 'call',
+      badge: '模型',
+      title: `${call.model}${latency}${tokens}${failed}`,
+      time: formatClock(call.created_at),
+    });
+  }
+}
+
+/** 活动时间线：事件 + 调用明细归并成"轮次 → 节点" */
+const trailTurns = computed<TrailTurn[]>(() => {
+  const turns: TrailTurn[] = [];
+  let current: TrailTurn | null = null;
+  for (const event of trajectoryEvents.value) {
+    if (event.type === 'turn/start') {
+      current = newTrailTurn(turns.length + 1, event);
+      turns.push(current);
+      continue;
+    }
+    if (current !== null) {
+      appendTrailEvent(current, event);
+    }
+  }
+  attachModelCalls(turns, modelCalls.value);
+  return turns;
+});
+
+/** 单行摘要：折叠空白并截断 */
+function preview(text: string, limit = 120): string {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  return flat.length > limit ? `${flat.slice(0, limit)}…` : flat;
+}
+
+/** 参数格式化：JSON 可解析则缩进，否则原样 */
+function prettyJson(text: string): string {
+  try {
+    return JSON.stringify(JSON.parse(text), null, 2);
+  } catch {
+    return text;
+  }
+}
+
+/** 时间显示：HH:mm:ss */
+function formatClock(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString('zh-CN', { hour12: false });
+}
+
+/** 轮次状态中文名 */
+function trailStatusLabel(status: string): string {
+  if (status === 'completed') return '完成';
+  if (status === 'pending_stop') return '已停车';
+  if (status === 'aborted') return '中止';
+  if (status === 'error') return '出错';
+  return status;
+}
+
+/** 轮次耗时 */
+function durationLabel(startMs: number, endMs: number | null): string {
+  if (endMs === null || endMs < startMs) return '';
+  const seconds = Math.round((endMs - startMs) / 1000);
+  if (seconds < 60) return `${String(seconds)}s`;
+  return `${String(Math.floor(seconds / 60))}m${String(seconds % 60)}s`;
 }
 
 /** 从 assistant/message 载荷里还原工具调用行 */
@@ -1640,10 +1883,11 @@ onUnmounted(() => {
   font-size: 11px;
 }
 
-.trajectory {
+/* 活动时间线：按轮次分组，文本/思考增量不入线 */
+.trail {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 18px;
 }
 
 .trajectory-empty {
@@ -1651,38 +1895,114 @@ onUnmounted(() => {
   font-size: 13px;
 }
 
-.trajectory-item {
+.trail-turn {
+  overflow: hidden;
+  border: 1px solid var(--kb-line);
+  border-radius: 10px;
+}
+
+.trail-head {
   display: flex;
   gap: 10px;
-  align-items: flex-start;
-  padding: 8px 10px;
-  border: 1px solid var(--kb-line);
-  border-radius: 8px;
-  background: var(--kb-surface);
-}
-
-.trajectory-seq {
-  color: var(--kb-text-3);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 11px;
-}
-
-.trajectory-type {
-  color: var(--kb-primary-2);
-  font-family: ui-monospace, Consolas, monospace;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgb(255 255 255 / 4%);
   font-size: 12px;
 }
 
-.trajectory-payload {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  overflow-wrap: anywhere;
+.trail-index {
+  color: var(--kb-text);
+  font-weight: 600;
+}
+
+.trail-time,
+.trail-duration,
+.trail-node-time {
   color: var(--kb-text-3);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;
+}
+
+.trail-status {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--kb-text-2);
+  background: rgb(255 255 255 / 6%);
+  font-size: 11px;
+}
+
+.trail-status[data-status='completed'] {
+  color: var(--kb-ok);
+}
+
+.trail-status[data-status='aborted'],
+.trail-status[data-status='error'] {
+  color: var(--kb-danger);
+}
+
+.trail-status[data-status='pending_stop'] {
+  color: #f59e0b;
+}
+
+.trail-node {
+  padding: 8px 12px;
+  border-top: 1px solid var(--kb-line);
+}
+
+.trail-line {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.trail-badge {
+  flex: none;
+  width: 34px;
+  color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.trail-title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.trail-node[data-kind='tool'] .trail-badge {
+  color: var(--kb-primary-2);
+}
+
+.trail-node[data-kind='error'] .trail-title {
+  color: var(--kb-danger);
+}
+
+.trail-node[data-kind='call'] .trail-title {
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+
+.trail-detail {
+  margin: 6px 0 0 42px;
+}
+
+.trail-summary {
+  color: var(--kb-text-3);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.trail-pre {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+  border-radius: 6px;
+  color: var(--kb-text-2);
+  background: rgb(0 0 0 / 30%);
+  font-size: 11px;
   white-space: pre-wrap;
-  word-break: break-all;
 }
 
 .messages {
@@ -1690,37 +2010,42 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   overflow: auto;
-  padding: 18px 20px;
+  padding: 18px 22px;
 }
 
 .message {
   display: flex;
-  max-width: 86%;
+  max-width: 100%;
 }
 
 .message-bubble {
-  padding: 10px 14px;
-  border: 1px solid var(--kb-line);
-  border-radius: var(--kb-radius);
-  background: var(--kb-surface);
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   line-height: 1.7;
 }
 
+.message-user {
+  justify-content: flex-end;
+}
+
 .message-user .message-bubble {
-  border-color: rgb(52 211 153 / 30%);
+  max-width: 78%;
+  padding: 10px 14px;
+  border: 1px solid rgb(52 211 153 / 25%);
+  border-radius: 10px;
   background: var(--kb-tint);
 }
 
-.message-text {
-  margin: 4px 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font-size: 13px;
+.message-assistant .message-bubble {
+  width: 100%;
 }
 
 .message-thinking {
+  margin-bottom: 6px;
   color: var(--kb-text-3);
   font-size: 12px;
 }
@@ -1733,20 +2058,50 @@ onUnmounted(() => {
 .thinking-body {
   margin: 6px 0 4px;
   padding: 8px 10px;
+  overflow-wrap: anywhere;
   border-left: 2px solid var(--kb-line-2);
   background: rgb(255 255 255 / 3%);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
 }
 
-.message-tool {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin: 6px 0;
-  padding: 6px 10px;
+.tool-card {
+  margin: 8px 0;
+  overflow: hidden;
   border: 1px solid var(--kb-line);
   border-radius: 8px;
   background: rgb(255 255 255 / 3%);
+}
+
+.tool-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  cursor: pointer;
   font-size: 12px;
+  list-style: none;
+}
+
+.tool-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--kb-text-3);
+}
+
+.tool-dot.is-ok {
+  background: var(--kb-ok);
+}
+
+.tool-dot.is-fail {
+  background: var(--kb-danger);
+}
+
+.tool-dot.is-run {
+  background: #f59e0b;
 }
 
 .tool-name {
@@ -1762,19 +2117,44 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.tool-ok {
+.tool-state {
   margin-left: auto;
-  color: var(--kb-ok);
+  flex: none;
+  color: var(--kb-text-3);
+  font-size: 11px;
 }
 
-.tool-fail {
-  margin-left: auto;
+.tool-card.tool-fail .tool-state {
   color: var(--kb-danger);
 }
 
-.tool-run {
-  margin-left: auto;
+.tool-body {
+  padding: 0 10px 10px;
+  border-top: 1px solid var(--kb-line);
+}
+
+.tool-label {
+  margin: 8px 0 4px;
   color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.tool-pre {
+  max-height: 260px;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  border-radius: 6px;
+  color: var(--kb-text-2);
+  background: rgb(0 0 0 / 30%);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+
+.tool-error {
+  color: var(--kb-danger);
 }
 
 .message-perm {

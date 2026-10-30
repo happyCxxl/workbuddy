@@ -17,6 +17,11 @@ class ModelCallRepo:
         self._session.add(call)
         await self._session.flush()
 
+    async def list_by_session(self, session_id: int) -> list[ModelCall]:
+        """会话的全部调用明细：按写入顺序（轨迹展示用）。"""
+        stmt = select(ModelCall).where(ModelCall.session_id == session_id).order_by(ModelCall.id.asc())
+        return list((await self._session.scalars(stmt)).all())
+
     async def usage_summary(self, session_id: int) -> tuple[int, int, int, int, int]:
         """会话用量：调用次数、输入/输出 token、缓存命中/未命中的输入 token。"""
         stmt = select(

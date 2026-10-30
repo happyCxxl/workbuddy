@@ -5,7 +5,7 @@ from typing import cast
 from lingxi.contract import ApiError, ErrorCode
 from lingxi.core.log import EventType, append_event, replay_events
 from lingxi.db.engine import session_scope
-from lingxi.db.models import AiSession, PersonaVersion
+from lingxi.db.models import AiSession, ModelCall, PersonaVersion
 from lingxi.db.repo.model_call_repo import ModelCallRepo
 from lingxi.db.repo.persona_repo import PersonaRepo
 from lingxi.db.repo.session_repo import SessionRepo
@@ -97,6 +97,12 @@ async def session_usage(session_id: int) -> tuple[int, int, int, int, int]:
     """会话用量：调用次数、输入/输出 token、缓存命中/未命中。"""
     async with session_scope() as s:
         return await ModelCallRepo(s).usage_summary(session_id)
+
+
+async def list_model_calls(session_id: int) -> list[ModelCall]:
+    """会话的模型调用明细：轨迹里按回合/步骤展示模型、token 与耗时。"""
+    async with session_scope() as s:
+        return await ModelCallRepo(s).list_by_session(session_id)
 
 
 async def persona_of_session(session: AiSession) -> Persona:

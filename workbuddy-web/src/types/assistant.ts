@@ -23,6 +23,19 @@ export interface SessionEventItem {
   seq: number;
   type: string;
   payload: Record<string, unknown>;
+  created_at: string;
+}
+
+// 模型调用明细：轨迹时间线里的模型节点
+export interface ModelCallItem {
+  turn_seq: number | null;
+  step_seq: number | null;
+  model: string;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  latency_ms: number | null;
+  error_code: number | null;
+  created_at: string;
 }
 
 // 权限档位：绑定会话

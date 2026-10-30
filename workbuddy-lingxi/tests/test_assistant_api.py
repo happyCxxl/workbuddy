@@ -134,3 +134,21 @@ def test_persona_fields_model_shape() -> None:
     fields = PersonaFields(**FIELDS)
     assert fields.name == "可乐"
     assert len(PersonaFields.model_fields) == 8
+
+
+async def test_session_calls_and_event_timestamps(client: AsyncClient, engine_fixture: None, tmp_path) -> None:
+    """轨迹数据：事件带 created_at；模型调用明细含模型、token 与耗时。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    sid = (await client.post("/sessions", json={"work_dir": str(tmp_path), "title": "轨迹数据"})).json()["data"]["id"]
+    async with client.stream("POST", f"/sessions/{sid}/turns", json={"content": "hi"}) as response:
+        assert response.status_code == 200
+        async for _line in response.aiter_lines():
+            pass
+    events = (await client.get(f"/sessions/{sid}/events")).json()["data"]["events"]
+    assert events
+    assert all(isinstance(event.get("created_at"), str) and event["created_at"] for event in events)
+    calls = (await client.get(f"/sessions/{sid}/calls")).json()["data"]["calls"]
+    assert calls
+    assert calls[0]["model"] == "deepseek-flash"
+    assert calls[0]["prompt_tokens"] is not None

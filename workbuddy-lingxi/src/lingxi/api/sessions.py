@@ -12,6 +12,7 @@ from lingxi.domain.session.service import (
     create_session,
     delete_session,
     get_session,
+    list_model_calls,
     list_sessions,
     rename_session,
     session_usage,
@@ -137,7 +138,36 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
     async def events(session_id: int, after_seq: int = 0, limit: int = 500) -> dict[str, object]:
         """事件重放：after_seq 之后的事件（界面重建 = after_seq 0；断线补齐 = 客户端游标）。"""
         rows = await read_events(session_id, after_seq, limit)
-        return R.ok({"events": [{"seq": e.seq, "type": e.type, "payload": e.payload} for e in rows]}).to_dict()
+        return R.ok(
+            {
+                "events": [
+                    {"seq": e.seq, "type": e.type, "payload": e.payload, "created_at": e.created_at.isoformat()}
+                    for e in rows
+                ]
+            }
+        ).to_dict()
+
+    @router.get("/sessions/{session_id}/calls")
+    async def calls(session_id: int) -> dict[str, object]:
+        """模型调用明细：回合/步骤、模型、token、耗时与错误（轨迹时间线用）。"""
+        rows = await list_model_calls(session_id)
+        return R.ok(
+            {
+                "calls": [
+                    {
+                        "turn_seq": row.turn_seq,
+                        "step_seq": row.step_seq,
+                        "model": row.model,
+                        "prompt_tokens": row.prompt_tokens,
+                        "completion_tokens": row.completion_tokens,
+                        "latency_ms": row.latency_ms,
+                        "error_code": row.error_code,
+                        "created_at": row.created_at.isoformat(),
+                    }
+                    for row in rows
+                ]
+            }
+        ).to_dict()
 
     @router.get("/sessions/{session_id}/usage")
     async def usage(session_id: int) -> dict[str, object]:

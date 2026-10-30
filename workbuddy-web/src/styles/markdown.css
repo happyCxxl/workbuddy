@@ -1,0 +1,154 @@
+/* Markdown 渲染样式（全局）：marked 生成的标签统一打 data-md，按属性选择器落样式。 */
+.md-body {
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.md-body > :first-child {
+  margin-top: 0;
+}
+
+.md-body > :last-child {
+  margin-bottom: 0;
+}
+
+.md-body [data-md='p'] {
+  margin: 8px 0;
+}
+
+.md-body [data-md='h1'],
+.md-body [data-md='h2'],
+.md-body [data-md='h3'],
+.md-body [data-md='h4'] {
+  margin: 16px 0 8px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.md-body [data-md='h1'] {
+  font-size: 19px;
+}
+
+.md-body [data-md='h2'] {
+  font-size: 17px;
+}
+
+.md-body [data-md='h3'] {
+  font-size: 15px;
+}
+
+.md-body [data-md='h4'] {
+  font-size: 14px;
+}
+
+.md-body [data-md='ul'],
+.md-body [data-md='ol'] {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+
+.md-body [data-md='li'] {
+  margin: 3px 0;
+}
+
+.md-body [data-md='blockquote'] {
+  margin: 8px 0;
+  padding: 6px 12px;
+  border-left: 3px solid var(--kb-line-2);
+  color: var(--kb-text-2);
+  background: rgb(255 255 255 / 3%);
+}
+
+.md-body [data-md='a'] {
+  color: var(--kb-primary);
+  text-decoration: none;
+}
+
+.md-body [data-md='a']:hover {
+  text-decoration: underline;
+}
+
+.md-body [data-md='code'] {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 8%);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+}
+
+.md-body [data-md='pre'] {
+  margin: 10px 0;
+}
+
+.md-body [data-md='table'] {
+  width: 100%;
+  margin: 10px 0;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.md-body [data-md='th'],
+.md-body [data-md='td'] {
+  padding: 6px 10px;
+  border: 1px solid var(--kb-line);
+  text-align: left;
+}
+
+.md-body [data-md='th'] {
+  background: rgb(255 255 255 / 5%);
+  font-weight: 600;
+}
+
+.md-body [data-md='hr'] {
+  margin: 14px 0;
+  border: none;
+  border-top: 1px solid var(--kb-line);
+}
+
+.md-body [data-md='img'] {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+.md-code {
+  margin: 10px 0;
+  overflow: hidden;
+  border: 1px solid var(--kb-line);
+  border-radius: 8px;
+  background: #0d1117;
+}
+
+.md-code-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  color: var(--kb-text-3);
+  background: rgb(255 255 255 / 5%);
+  font-size: 11px;
+}
+
+.md-code-copy {
+  border: none;
+  color: var(--kb-text-3);
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.md-code-copy:hover {
+  color: var(--kb-primary);
+}
+
+.md-code-body .shiki {
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  font-size: 12px;
+}
+
+.md-body .katex-display {
+  margin: 10px 0;
+  overflow: auto hidden;
+}

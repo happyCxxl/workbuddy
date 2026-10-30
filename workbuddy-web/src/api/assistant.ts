@@ -3,6 +3,7 @@ import type {
   AssistantMemory,
   AssistantSession,
   DirListing,
+  ModelCallItem,
   PermissionPreset,
   PersonaFields,
   PersonaVersionItem,
@@ -100,6 +101,12 @@ export async function getSessionEvents(
     params: { after_seq: afterSeq },
   });
   return response.data.events;
+}
+
+/** 模型调用明细：轨迹时间线里的模型节点 */
+export async function getSessionCalls(sessionId: string): Promise<ModelCallItem[]> {
+  const response = await http.get<{ calls: ModelCallItem[] }>(`/sessions/${sessionId}/calls`);
+  return response.data.calls;
 }
 
 /** 申请停止：当前回合在下一步或流式块边界停止 */
