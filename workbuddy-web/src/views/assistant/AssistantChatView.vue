@@ -76,11 +76,7 @@
         </div>
         <div class="sessions-list">
           <div v-for="group in sessionGroups" :key="group.key" class="session-group">
-            <div
-              class="group-head"
-              :class="{ 'group-head-on': isGroupActive(group) }"
-              @click="toggleGroup(group.key)"
-            >
+            <div class="group-head" @click="toggleGroup(group.key)">
               <span class="group-folder">
                 <svg
                   width="14"
@@ -1966,11 +1962,6 @@ async function changePreset(value: string | number | boolean | undefined): Promi
   current.value = { ...current.value, permission_preset: value };
 }
 
-/** 当前会话所在的工作区高亮 */
-function isGroupActive(group: SessionGroup): boolean {
-  return group.items.some((item) => item.id === currentId.value);
-}
-
 /** 工作区行菜单：复制路径 / 重命名 / 删除会话记录 */
 async function handleGroupCommand(command: unknown, group: SessionGroup): Promise<void> {
   const action = String(command);
@@ -2255,10 +2246,6 @@ onUnmounted(() => {
   background: rgb(255 255 255 / 5%);
 }
 
-.group-head-on {
-  background: rgb(255 255 255 / 7%);
-}
-
 .group-folder {
   display: inline-flex;
   flex: none;
@@ -2282,7 +2269,6 @@ onUnmounted(() => {
   transform: rotate(90deg);
 }
 
-.group-head-on .group-arrow,
 .group-head:hover .group-arrow {
   display: inline-block;
 }
@@ -2304,7 +2290,6 @@ onUnmounted(() => {
   gap: 2px;
 }
 
-.group-head-on .group-actions,
 .group-head:hover .group-actions {
   display: inline-flex;
 }
