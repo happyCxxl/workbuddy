@@ -171,73 +171,86 @@
           <p v-if="messages.length === 0" class="messages-empty">
             发一句话开始干活。可乐会按人格版本 {{ personaLabel }} 说话，按权限档执行工具。
           </p>
-          <div
-            v-for="(item, index) in messages"
-            :key="index"
-            :class="['message', item.role === 'user' ? 'message-user' : 'message-assistant']"
-          >
-            <div class="message-bubble">
-              <details v-if="item.thinking" class="message-thinking">
-                <summary class="thinking-summary">思考过程</summary>
-                <pre class="thinking-body">{{ item.thinking }}</pre>
-              </details>
-              <MarkdownView v-if="item.text" :content="item.text" />
-              <details
-                v-for="(tool, toolIndex) in item.tools"
-                :key="toolIndex"
-                class="tool-card"
-                :class="{ 'tool-fail': Boolean(tool.error) }"
-              >
-                <summary class="tool-head">
-                  <span
-                    class="tool-dot"
-                    :class="tool.error ? 'is-fail' : tool.result ? 'is-ok' : 'is-run'"
-                  ></span>
-                  <span class="tool-name">{{ tool.name }}</span>
-                  <span class="tool-args">{{ tool.args }}</span>
-                  <span class="tool-state">{{
-                    tool.error ? '失败' : tool.result ? '完成' : '执行中'
-                  }}</span>
-                </summary>
-                <div class="tool-body">
-                  <p class="tool-label">参数</p>
-                  <pre class="tool-pre">{{ prettyJson(tool.args) }}</pre>
-                  <template v-if="tool.error">
-                    <p class="tool-label">错误</p>
-                    <pre class="tool-pre tool-error">{{ tool.error }}</pre>
-                  </template>
-                  <template v-else-if="tool.result">
-                    <p class="tool-label">结果</p>
-                    <pre class="tool-pre">{{ tool.result }}</pre>
-                  </template>
-                </div>
-              </details>
-              <div v-if="item.permission" class="message-perm">
-                <div class="perm-title">⚠ 需要你确认：{{ item.permission.name }}</div>
-                <div class="perm-reason">{{ item.permission.reason }}</div>
-                <div class="perm-actions">
-                  <el-button
-                    size="small"
-                    type="primary"
-                    @click="decidePermission(item, 'allowed-once')"
+          <section v-for="view in turnViews" :key="view.key" class="turn">
+            <div v-if="view.user" class="message message-user">
+              <div class="message-bubble">{{ view.user.text }}</div>
+            </div>
+            <div v-if="view.steps.length > 0" class="process">
+              <button class="process-head" type="button" @click="toggleProcess(view.key)">
+                <span class="process-title">{{ view.running ? '执行中' : '工作步骤' }}</span>
+                <span class="process-meta">{{ view.steps.length }} 步</span>
+                <span class="process-arrow">{{
+                  view.running || expandedTurns.has(view.key) ? '收起' : '展开'
+                }}</span>
+              </button>
+              <div v-show="view.running || expandedTurns.has(view.key)" class="process-body">
+                <div v-for="(step, stepIndex) in view.steps" :key="stepIndex" class="step">
+                  <details v-if="step.thinking" class="message-thinking">
+                    <summary class="thinking-summary">思考过程</summary>
+                    <pre class="thinking-body">{{ step.thinking }}</pre>
+                  </details>
+                  <MarkdownView v-if="step.text" :content="step.text" />
+                  <details
+                    v-for="(tool, toolIndex) in step.tools"
+                    :key="toolIndex"
+                    class="tool-card"
+                    :class="{ 'tool-fail': Boolean(tool.error) }"
                   >
-                    允许一次
-                  </el-button>
-                  <el-button size="small" @click="decidePermission(item, 'allowed-always')">
-                    始终允许（本目录）
-                  </el-button>
-                  <el-button
-                    size="small"
-                    type="danger"
-                    plain
-                    @click="decidePermission(item, 'rejected')"
-                  >
-                    拒绝
-                  </el-button>
+                    <summary class="tool-head">
+                      <span
+                        class="tool-dot"
+                        :class="tool.error ? 'is-fail' : tool.result ? 'is-ok' : 'is-run'"
+                      ></span>
+                      <span class="tool-name">{{ tool.name }}</span>
+                      <span class="tool-args">{{ tool.args }}</span>
+                      <span class="tool-state">{{
+                        tool.error ? '失败' : tool.result ? '完成' : '执行中'
+                      }}</span>
+                    </summary>
+                    <div class="tool-body">
+                      <p class="tool-label">参数</p>
+                      <pre class="tool-pre">{{ prettyJson(tool.args) }}</pre>
+                      <template v-if="tool.error">
+                        <p class="tool-label">错误</p>
+                        <pre class="tool-pre tool-error">{{ tool.error }}</pre>
+                      </template>
+                      <template v-else-if="tool.result">
+                        <p class="tool-label">结果</p>
+                        <pre class="tool-pre">{{ tool.result }}</pre>
+                      </template>
+                    </div>
+                  </details>
+                  <div v-if="step.permission" class="message-perm">
+                    <div class="perm-title">⚠ 需要你确认：{{ step.permission.name }}</div>
+                    <div class="perm-reason">{{ step.permission.reason }}</div>
+                    <div class="perm-actions">
+                      <el-button
+                        size="small"
+                        type="primary"
+                        @click="decidePermission(step, 'allowed-once')"
+                      >
+                        允许一次
+                      </el-button>
+                      <el-button size="small" @click="decidePermission(step, 'allowed-always')">
+                        始终允许（本目录）
+                      </el-button>
+                      <el-button
+                        size="small"
+                        type="danger"
+                        plain
+                        @click="decidePermission(step, 'rejected')"
+                      >
+                        拒绝
+                      </el-button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+            <div v-if="view.answer" class="message message-assistant message-answer">
+              <MarkdownView :content="view.answer.text" />
+            </div>
+          </section>
         </div>
 
         <div class="composer">
@@ -492,8 +505,12 @@ const current = ref<AssistantSession | null>(null);
 /** 草稿会话：新建工作区/点「＋」时自动创建，未发消息就切走即丢弃（对齐 DSH） */
 const draftSessionId = ref<string | null>(null);
 const messages = ref<ChatMessage[]>([]);
+/** 上一步以工具调用收尾：下一个增量事件开启新的步骤块，保证"思考 → 工具 → 思考"的循环可见 */
+let awaitingNextStep = false;
 const input = ref('');
 const running = ref(false);
+/** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
+const expandedTurns = ref<Set<string>>(new Set());
 const stepLabel = ref('1');
 const personaLabel = ref('v1');
 const messageBox = ref<HTMLElement | null>(null);
@@ -1037,7 +1054,7 @@ function replayTools(payload: Record<string, unknown>): ToolLine[] {
   return tools;
 }
 
-/** 重放单条事件：只投影用户消息、助手消息与审批卡 */
+/** 重放单条事件：用户消息、每个步骤的助手消息（含工具行）与工具结果回填 */
 function applyReplayEvent(event: SessionEventItem): void {
   const payload = event.payload;
   if (event.type === 'user/message') {
@@ -1058,6 +1075,15 @@ function applyReplayEvent(event: SessionEventItem): void {
     });
     return;
   }
+  if (event.type === 'tool.result') {
+    const target = [...messages.value]
+      .reverse()
+      .find((item) => item.role === 'assistant' && item.tools.length > 0);
+    if (target !== undefined) {
+      applyToolResult(target, payload);
+    }
+    return;
+  }
   const last = messages.value.at(-1);
   if (last === undefined) {
     return;
@@ -1076,14 +1102,76 @@ function applyReplayEvent(event: SessionEventItem): void {
 /** 把事件重放成消息列表 */
 function applyReplay(events: SessionEventItem[]): void {
   messages.value = [];
+  awaitingNextStep = false;
   for (const event of events) {
     applyReplayEvent(event);
   }
 }
 
-/** 工具结果回填到最近一个工具行 */
-function applyToolResult(last: ChatMessage, payload: Record<string, unknown>): void {
-  const target = last.tools.at(-1);
+// 一轮 = 过程组（各步骤的思考/文本/工具）+ 最终回复；对齐 DSH 的轮次过程折叠
+interface TurnView {
+  key: string;
+  user: ChatMessage | null;
+  steps: ChatMessage[];
+  answer: ChatMessage | null;
+  running: boolean;
+}
+
+/** 按用户消息切分轮次：最后一轮运行中；完成轮把末条无工具的助手消息作为最终回复 */
+const turnViews = computed<TurnView[]>(() => {
+  const views: TurnView[] = [];
+  for (const message of messages.value) {
+    if (message.role === 'user') {
+      views.push({
+        key: `turn-${String(views.length)}`,
+        user: message,
+        steps: [],
+        answer: null,
+        running: false,
+      });
+      continue;
+    }
+    const view = views.at(-1);
+    if (view !== undefined) {
+      view.steps.push(message);
+    }
+  }
+  for (const [index, view] of views.entries()) {
+    view.running = index === views.length - 1 && running.value;
+    if (view.running) {
+      continue;
+    }
+    const answer = view.steps.at(-1);
+    if (answer === undefined || answer.tools.length > 0 || answer.text.trim() === '') {
+      continue;
+    }
+    view.steps.pop();
+    if (answer.thinking) {
+      view.steps.push({ role: 'assistant', text: '', thinking: answer.thinking, tools: [] });
+    }
+    view.answer = { ...answer, thinking: '' };
+  }
+  return views;
+});
+
+/** 展开/收起某一轮的过程组 */
+function toggleProcess(key: string): void {
+  const next = new Set(expandedTurns.value);
+  if (next.has(key)) {
+    next.delete(key);
+  } else {
+    next.add(key);
+  }
+  expandedTurns.value = next;
+}
+
+/** 工具结果回填：按调用顺序填第一个还没有结果的工具行 */ function applyToolResult(
+  last: ChatMessage,
+  payload: Record<string, unknown>,
+): void {
+  const target =
+    last.tools.find((tool) => tool.result === undefined && tool.error === undefined) ??
+    last.tools.at(-1);
   if (target === undefined) {
     return;
   }
@@ -1091,8 +1179,25 @@ function applyToolResult(last: ChatMessage, payload: Record<string, unknown>): v
   target.error = payload['error'] ? String(payload['error']) : undefined;
 }
 
-/** 应用单条实时事件 */
+/** 应用单条实时事件：assistant/message 一步一条，带工具调用则在下一步增量时另起消息块 */
 function applyEvent(type: string, payload: Record<string, unknown>): void {
+  if (type === 'assistant/message') {
+    const current = messages.value.at(-1);
+    if (current?.role === 'assistant') {
+      current.text = String(payload['content'] ?? '');
+      const reasoning = payload['reasoning_content'];
+      if (typeof reasoning === 'string') {
+        current.thinking = reasoning;
+      }
+      const calls = payload['tool_calls'];
+      awaitingNextStep = Array.isArray(calls) && calls.length > 0;
+    }
+    return;
+  }
+  if (awaitingNextStep && (type === 'thinking.delta' || type === 'text.delta')) {
+    messages.value.push({ role: 'assistant', text: '', thinking: '', tools: [] });
+    awaitingNextStep = false;
+  }
   const last = messages.value.at(-1);
   if (last === undefined) {
     return;
@@ -1142,6 +1247,7 @@ function handleSend(): void {
   input.value = '';
   // 发出首条消息即转正：不再按草稿丢弃
   draftSessionId.value = null;
+  awaitingNextStep = false;
   messages.value.push({ role: 'user', text: content, thinking: '', tools: [] });
   messages.value.push({ role: 'assistant', text: '', thinking: '', tools: [] });
   running.value = true;
@@ -2005,6 +2111,61 @@ onUnmounted(() => {
   white-space: pre-wrap;
 }
 
+/* 轮次 = 过程组 + 最终回复；过程组默认折叠（运行中展开） */
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.process {
+  padding-left: 12px;
+  border-left: 2px solid var(--kb-line);
+}
+
+.process-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 2px 0;
+  border: none;
+  color: var(--kb-text-2);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.process-title {
+  font-weight: 600;
+}
+
+.process-meta,
+.process-arrow {
+  color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.process-arrow {
+  margin-left: auto;
+}
+
+.process-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.message-answer {
+  margin-top: 2px;
+}
+
 .messages {
   display: flex;
   flex: 1;
@@ -2038,6 +2199,7 @@ onUnmounted(() => {
   border: 1px solid rgb(52 211 153 / 25%);
   border-radius: 10px;
   background: var(--kb-tint);
+  white-space: pre-wrap;
 }
 
 .message-assistant .message-bubble {
