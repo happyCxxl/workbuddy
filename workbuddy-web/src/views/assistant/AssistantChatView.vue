@@ -159,18 +159,6 @@
             {{ usage.calls }} 次调用 · {{ totalTokens }} tokens
             <template v-if="cacheRate !== null"> · 缓存 {{ cacheRate }}%</template>
           </span>
-          <el-select
-            v-if="current"
-            v-model="processMode"
-            size="small"
-            class="process-mode"
-            @change="saveProcessMode"
-          >
-            <el-option label="过程：简洁" value="concise" />
-            <el-option label="过程：标准" value="standard" />
-            <el-option label="过程：详细" value="detailed" />
-            <el-option label="过程：完全展开" value="expanded" />
-          </el-select>
           <el-button v-if="current" size="small" text @click="openTrajectory">轨迹</el-button>
           <el-button v-if="current" size="small" text @click="openSubSessions">
             后台任务
@@ -320,7 +308,7 @@
           <el-input
             v-model="input"
             type="textarea"
-            :rows="2"
+            :autosize="{ minRows: 3, maxRows: 8 }"
             resize="none"
             placeholder="继续输入… Enter 发送 · Shift+Enter 换行"
             :disabled="!current"
@@ -674,11 +662,6 @@ const running = ref(false);
 const expandedTurns = ref<Set<string>>(new Set());
 /** 逐轮用量明细展开状态 */
 const expandedUsage = ref<Set<string>>(new Set());
-/** 工作步骤展示模式：简洁/标准/详细折叠已完成轮次，完全展开常驻显示 */
-type ProcessMode = 'concise' | 'standard' | 'detailed' | 'expanded';
-const processMode = ref<ProcessMode>(
-  (localStorage.getItem('assistant.processMode') as ProcessMode | null) ?? 'standard',
-);
 const stepLabel = ref('1');
 const personaLabel = ref('v1');
 const messageBox = ref<HTMLElement | null>(null);
@@ -1684,17 +1667,9 @@ function showEarlier(): void {
   expandedTurns.value = next;
 }
 
-/** 过程组当前是否展开：运行中与「完全展开」模式强制显示 */
+/** 过程组当前是否展开：运行中强制显示，其余按用户展开状态 */
 function isOpen(view: TurnView): boolean {
-  if (view.running || processMode.value === 'expanded') {
-    return true;
-  }
-  return expandedTurns.value.has(view.key);
-}
-
-/** 保存展示模式：与本机偏好一致，刷新后保留 */
-function saveProcessMode(): void {
-  localStorage.setItem('assistant.processMode', processMode.value);
+  return view.running || expandedTurns.value.has(view.key);
 }
 
 /** 展开/收起某一轮的用量明细 */
@@ -2305,11 +2280,6 @@ onUnmounted(() => {
 
 .group-arrow-open {
   transform: rotate(90deg);
-}
-
-.group-head-on .group-folder,
-.group-head:hover .group-folder {
-  display: none;
 }
 
 .group-head-on .group-arrow,
@@ -2940,7 +2910,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 880px;
+  max-width: 1120px;
   margin: 0 auto;
   content-visibility: auto;
   contain-intrinsic-size: auto 200px;
@@ -3024,7 +2994,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 24px;
   overflow: auto;
-  padding: 26px 32px 30px;
+  padding: 24px 28px 28px;
 }
 
 .message {
@@ -3050,16 +3020,13 @@ onUnmounted(() => {
   border: 1px solid rgb(52 211 153 / 18%);
   border-radius: 12px;
   background: rgb(52 211 153 / 8%);
+  font-size: 14px;
+  line-height: 1.8;
   white-space: pre-wrap;
 }
 
 .message-assistant .message-bubble {
   width: 100%;
-}
-
-.process-mode {
-  width: 118px;
-  margin-right: 4px;
 }
 
 .process-head.is-running .process-title {
