@@ -194,14 +194,17 @@
                 type="button"
                 @click="toggleProcess(view.key)"
               >
+                <span class="process-chevron">{{ isOpen(view) ? '▾' : '▸' }}</span>
                 <span class="process-title">{{ view.running ? '执行中' : '工作步骤' }}</span>
                 <span class="process-meta">
                   {{ view.steps.length }} 步
                   <template v-if="turnMeta[viewIndex + 1]?.duration">
                     · {{ turnMeta[viewIndex + 1]?.duration }}
                   </template>
+                  <template v-if="turnMeta[viewIndex + 1]?.tokens">
+                    · {{ turnMeta[viewIndex + 1]?.tokens }} tok
+                  </template>
                 </span>
-                <span class="process-arrow">{{ isOpen(view) ? '收起' : '展开' }}</span>
               </button>
               <div v-show="isOpen(view)" class="process-body">
                 <div v-for="(step, stepIndex) in view.steps" :key="stepIndex" class="step">
@@ -1291,8 +1294,7 @@ const turnViews = computed<TurnView[]>(() => {
   return views;
 });
 
-/** 展开/收起某一轮的过程组 */
-function toggleProcess(key: string): void {
+/** 展开/收起某一轮的过程组 */ function toggleProcess(key: string): void {
   const next = new Set(expandedTurns.value);
   if (next.has(key)) {
     next.delete(key);
@@ -1457,9 +1459,12 @@ function handleSend(): void {
     onDone: () => {
       running.value = false;
       void loadUsage();
-      void getSessionCalls(currentId.value).then((calls) => {
-        modelCalls.value = calls;
-      });
+      void Promise.all([getSessionEvents(currentId.value), getSessionCalls(currentId.value)]).then(
+        ([events, calls]) => {
+          trajectoryEvents.value = events;
+          modelCalls.value = calls;
+        },
+      );
       void refreshSessions();
     },
     onError: (message) => {
@@ -2436,11 +2441,14 @@ onUnmounted(() => {
 .turn {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
 }
 
 .process {
-  padding-left: 12px;
+  padding-left: 14px;
   border-left: 2px solid var(--kb-line);
 }
 
@@ -2448,43 +2456,50 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 2px 0;
+  margin-left: -6px;
+  padding: 4px 6px;
   border: none;
+  border-radius: 6px;
   color: var(--kb-text-2);
   background: transparent;
   cursor: pointer;
   font-size: 12px;
 }
 
+.process-head:hover {
+  background: rgb(255 255 255 / 4%);
+}
+
+.process-chevron {
+  width: 10px;
+  color: var(--kb-text-3);
+  font-size: 10px;
+}
+
 .process-title {
   font-weight: 600;
 }
 
-.process-meta,
-.process-arrow {
+.process-meta {
   color: var(--kb-text-3);
   font-size: 11px;
-}
-
-.process-arrow {
-  margin-left: auto;
 }
 
 .process-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 .step {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .message-answer {
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .messages {
@@ -2492,9 +2507,9 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
   overflow: auto;
-  padding: 18px 22px;
+  padding: 26px 32px 30px;
 }
 
 .message {
@@ -2507,7 +2522,7 @@ onUnmounted(() => {
   padding: 0;
   border: none;
   background: transparent;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .message-user {
@@ -2515,11 +2530,11 @@ onUnmounted(() => {
 }
 
 .message-user .message-bubble {
-  max-width: 78%;
+  max-width: 72%;
   padding: 10px 14px;
-  border: 1px solid rgb(52 211 153 / 25%);
-  border-radius: 10px;
-  background: var(--kb-tint);
+  border: 1px solid rgb(52 211 153 / 18%);
+  border-radius: 12px;
+  background: rgb(52 211 153 / 8%);
   white-space: pre-wrap;
 }
 

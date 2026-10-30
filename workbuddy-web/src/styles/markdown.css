@@ -1,7 +1,7 @@
 /* Markdown 渲染样式（全局）：marked 生成的标签统一打 data-md，按属性选择器落样式。 */
 .md-body {
-  font-size: 13px;
-  line-height: 1.75;
+  font-size: 14px;
+  line-height: 1.8;
   overflow-wrap: anywhere;
 }
 
@@ -14,7 +14,7 @@
 }
 
 .md-body [data-md='p'] {
-  margin: 8px 0;
+  margin: 10px 0;
 }
 
 .md-body [data-md='h1'],

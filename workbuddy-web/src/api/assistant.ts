@@ -97,10 +97,23 @@ export async function getSessionEvents(
   sessionId: string,
   afterSeq = 0,
 ): Promise<SessionEventItem[]> {
-  const response = await http.get<{ events: SessionEventItem[] }>(`/sessions/${sessionId}/events`, {
-    params: { after_seq: afterSeq },
-  });
-  return response.data.events;
+  const events: SessionEventItem[] = [];
+  let cursor = afterSeq;
+  for (;;) {
+    const response = await http.get<{ events: SessionEventItem[] }>(
+      `/sessions/${sessionId}/events`,
+      {
+        params: { after_seq: cursor, limit: 500 },
+      },
+    );
+    const batch = response.data.events;
+    const next = batch.at(-1)?.seq;
+    events.push(...batch);
+    if (batch.length < 500 || next === undefined || next <= cursor) {
+      return events;
+    }
+    cursor = next;
+  }
 }
 
 /** 模型调用明细：轨迹时间线里的模型节点 */
