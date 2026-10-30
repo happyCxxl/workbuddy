@@ -135,9 +135,9 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         return R.ok({"preset": request.preset}).to_dict()
 
     @router.get("/sessions/{session_id}/events")
-    async def events(session_id: int, after_seq: int = 0, limit: int = 500) -> dict[str, object]:
-        """事件重放：after_seq 之后的事件（界面重建 = after_seq 0；断线补齐 = 客户端游标）。"""
-        rows = await read_events(session_id, after_seq, limit)
+    async def events(session_id: int, after_seq: int = 0, limit: int = 500, compact: bool = False) -> dict[str, object]:
+        """事件重放：after_seq 之后的事件；compact=true 过滤流式增量（界面重建用）。"""
+        rows = await read_events(session_id, after_seq, limit, compact)
         return R.ok(
             {
                 "events": [

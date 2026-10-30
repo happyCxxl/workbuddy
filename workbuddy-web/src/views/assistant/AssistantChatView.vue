@@ -232,9 +232,10 @@
                       ></span>
                       <span class="tool-name">{{ tool.name }}</span>
                       <span class="tool-args">{{ tool.args }}</span>
-                      <span class="tool-state">{{
-                        tool.error ? '失败' : tool.result ? '完成' : '执行中'
-                      }}</span>
+                      <span class="tool-state">
+                        {{ tool.error ? '失败' : tool.result ? '完成' : '执行中' }}
+                        <template v-if="tool.duration"> · {{ tool.duration }}</template>
+                      </span>
                     </summary>
                     <div class="tool-body">
                       <p class="tool-label">参数</p>
@@ -280,15 +281,34 @@
               <MarkdownView :content="view.answer.text" />
             </div>
             <div v-if="view.answer && !view.running" class="turn-footer">
-              <span class="turn-meta">
+              <button class="turn-meta" type="button" @click="toggleUsage(view.key)">
                 <template v-if="turnMeta[viewIndex + 1]?.duration">
                   {{ turnMeta[viewIndex + 1]?.duration }}
                 </template>
                 <template v-if="turnMeta[viewIndex + 1]?.tokens">
                   · {{ turnMeta[viewIndex + 1]?.tokens }} tok
                 </template>
+                <span class="turn-chevron">{{ expandedUsage.has(view.key) ? '▴' : '▾' }}</span>
+              </button>
+              <span class="turn-actions">
+                <button class="turn-action" type="button" @click="copyAnswer(view)">复制</button>
+                <button class="turn-action" type="button" @click="retryTurn(view)">重试</button>
               </span>
-              <button class="turn-action" type="button" @click="copyAnswer(view)">复制</button>
+              <div v-if="expandedUsage.has(view.key)" class="usage-list">
+                <div
+                  v-for="(call, callIndex) in turnMeta[viewIndex + 1]?.calls ?? []"
+                  :key="callIndex"
+                  class="usage-row"
+                >
+                  <span class="usage-model">{{ call.model }}</span>
+                  <span>{{ call.tokens }} tok</span>
+                  <span>{{ call.latency }}</span>
+                  <span class="usage-time">{{ call.time }}</span>
+                </div>
+                <p v-if="(turnMeta[viewIndex + 1]?.calls ?? []).length === 0" class="usage-empty">
+                  没有调用明细。
+                </p>
+              </div>
             </div>
           </section>
         </div>
@@ -563,6 +583,9 @@ interface ToolLine {
   args: string;
   result?: string;
   error?: string;
+  /** 调用开始时间与耗时（毫秒） */
+  startedAt?: number;
+  duration?: string;
 }
 
 /** 待审批信息：request_id 用于恢复重放 */
@@ -593,6 +616,8 @@ const input = ref('');
 const running = ref(false);
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
+/** 逐轮用量明细展开状态 */
+const expandedUsage = ref<Set<string>>(new Set());
 /** 工作步骤展示模式：简洁/标准/详细折叠已完成轮次，完全展开常驻显示 */
 type ProcessMode = 'concise' | 'standard' | 'detailed' | 'expanded';
 const processMode = ref<ProcessMode>(
@@ -1215,12 +1240,27 @@ function applyReplayEvent(event: SessionEventItem): void {
     });
     return;
   }
+  if (event.type === 'tool.call') {
+    const name = String(payload['name'] ?? '');
+    const target = [...messages.value]
+      .reverse()
+      .find(
+        (item) =>
+          item.role === 'assistant' &&
+          item.tools.some((tool) => tool.name === name && tool.startedAt === undefined),
+      );
+    const tool = target?.tools.find((item) => item.name === name && item.startedAt === undefined);
+    if (tool !== undefined) {
+      tool.startedAt = Date.parse(event.created_at);
+    }
+    return;
+  }
   if (event.type === 'tool.result') {
     const target = [...messages.value]
       .reverse()
       .find((item) => item.role === 'assistant' && item.tools.length > 0);
     if (target !== undefined) {
-      applyToolResult(target, payload);
+      applyToolResult(target, payload, Date.parse(event.created_at));
     }
     return;
   }
@@ -1317,6 +1357,25 @@ function saveProcessMode(): void {
   localStorage.setItem('assistant.processMode', processMode.value);
 }
 
+/** 展开/收起某一轮的用量明细 */
+function toggleUsage(key: string): void {
+  const next = new Set(expandedUsage.value);
+  if (next.has(key)) {
+    next.delete(key);
+  } else {
+    next.add(key);
+  }
+  expandedUsage.value = next;
+}
+
+/** 重试：用同一句用户输入重新发起一轮 */
+function retryTurn(view: TurnView): void {
+  if (view.user === null || running.value) {
+    return;
+  }
+  sendContent(view.user.text);
+}
+
 /** 复制最终回复 */
 function copyAnswer(view: TurnView): void {
   if (!view.answer) {
@@ -1327,16 +1386,27 @@ function copyAnswer(view: TurnView): void {
   });
 }
 
-/** 每轮耗时与 token：来自事件时间窗与调用明细 */
-const turnMeta = computed<Partial<Record<number, { duration: string; tokens: number }>>>(() => {
+/** 单轮用量明细 */
+interface TurnCall {
+  model: string;
+  tokens: number;
+  latency: string;
+  time: string;
+}
+
+/** 每轮耗时、token 与调用明细：来自事件时间窗与调用明细 */
+const turnMeta = computed<
+  Partial<Record<number, { duration: string; tokens: number; calls: TurnCall[] }>>
+>(() => {
   const windows: { start: number; end: number }[] = [];
-  const result: Partial<Record<number, { duration: string; tokens: number }>> = {};
+  const result: Partial<Record<number, { duration: string; tokens: number; calls: TurnCall[] }>> =
+    {};
   let current: { start: number; end: number } | null = null;
   for (const event of trajectoryEvents.value) {
     if (event.type === 'turn/start') {
       current = { start: Date.parse(event.created_at), end: Number.NaN };
       windows.push(current);
-      result[windows.length] = { duration: '', tokens: 0 };
+      result[windows.length] = { duration: '', tokens: 0, calls: [] };
       continue;
     }
     if (event.type === 'turn.end' && current !== null) {
@@ -1344,6 +1414,7 @@ const turnMeta = computed<Partial<Record<number, { duration: string; tokens: num
       result[windows.length] = {
         duration: durationLabel(current.start, current.end),
         tokens: result[windows.length]?.tokens ?? 0,
+        calls: result[windows.length]?.calls ?? [],
       };
     }
   }
@@ -1360,18 +1431,20 @@ const turnMeta = computed<Partial<Record<number, { duration: string; tokens: num
     }
     const key = index + 1;
     const tokens = (call.prompt_tokens ?? 0) + (call.completion_tokens ?? 0);
-    result[key] = {
-      duration: result[key]?.duration ?? '',
-      tokens: (result[key]?.tokens ?? 0) + tokens,
-    };
+    const entry = result[key] ?? { duration: '', tokens: 0, calls: [] };
+    entry.calls.push({
+      model: call.model,
+      tokens,
+      latency: call.latency_ms === null ? '' : `${(call.latency_ms / 1000).toFixed(1)}s`,
+      time: formatClock(call.created_at),
+    });
+    result[key] = { ...entry, tokens: entry.tokens + tokens };
   }
   return result;
 });
 
-/** 工具结果回填：按调用顺序填第一个还没有结果的工具行 */ function applyToolResult(
-  last: ChatMessage,
-  payload: Record<string, unknown>,
-): void {
+/** 工具结果回填：按调用顺序填第一个还没有结果的工具行 */
+function applyToolResult(last: ChatMessage, payload: Record<string, unknown>, at: number): void {
   const target =
     last.tools.find((tool) => tool.result === undefined && tool.error === undefined) ??
     last.tools.at(-1);
@@ -1380,6 +1453,9 @@ const turnMeta = computed<Partial<Record<number, { duration: string; tokens: num
   }
   target.result = String(payload['result'] ?? '');
   target.error = payload['error'] ? String(payload['error']) : undefined;
+  if (target.startedAt !== undefined) {
+    target.duration = durationLabel(target.startedAt, at);
+  }
 }
 
 /** 应用单条实时事件：assistant/message 一步一条，带工具调用则在下一步增量时另起消息块 */
@@ -1413,9 +1489,10 @@ function applyEvent(type: string, payload: Record<string, unknown>): void {
     last.tools.push({
       name: String(payload['name'] ?? ''),
       args: String(payload['arguments'] ?? ''),
+      startedAt: Date.now(),
     });
   } else if (type === 'tool.result') {
-    applyToolResult(last, payload);
+    applyToolResult(last, payload, Date.now());
   } else if (type === 'permission.required') {
     last.permission = {
       request_id: String(payload['request_id'] ?? ''),
@@ -1448,6 +1525,14 @@ function handleSend(): void {
   }
   const content = input.value.trim();
   input.value = '';
+  sendContent(content);
+}
+
+/** 发送指定内容：草稿转正、推入用户与助手占位、开启 SSE */
+function sendContent(content: string): void {
+  if (!current.value || running.value) {
+    return;
+  }
   // 发出首条消息即转正：不再按草稿丢弃
   draftSessionId.value = null;
   awaitingNextStep = false;
@@ -2611,15 +2696,35 @@ onUnmounted(() => {
 
 .turn-footer {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   padding-left: 2px;
 }
 
 .turn-meta {
+  padding: 0;
+  border: none;
   color: var(--kb-text-3);
+  background: transparent;
+  cursor: pointer;
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;
+}
+
+.turn-meta:hover {
+  color: var(--kb-text-2);
+}
+
+.turn-chevron {
+  margin-left: 2px;
+  font-size: 9px;
+}
+
+.turn-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
 }
 
 .turn-action {
@@ -2633,6 +2738,39 @@ onUnmounted(() => {
 
 .turn-action:hover {
   color: var(--kb-primary-2);
+}
+
+.usage-list {
+  display: flex;
+  flex-basis: 100%;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 3%);
+}
+
+.usage-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 10px;
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+
+.usage-model {
+  color: var(--kb-primary-2);
+}
+
+.usage-time {
+  text-align: right;
+}
+
+.usage-empty {
+  margin: 0;
+  color: var(--kb-text-3);
+  font-size: 11px;
 }
 
 .tool-card {

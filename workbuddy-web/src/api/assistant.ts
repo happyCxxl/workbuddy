@@ -103,7 +103,7 @@ export async function getSessionEvents(
     const response = await http.get<{ events: SessionEventItem[] }>(
       `/sessions/${sessionId}/events`,
       {
-        params: { after_seq: cursor, limit: 500 },
+        params: { after_seq: cursor, limit: 500, compact: true },
       },
     );
     const batch = response.data.events;

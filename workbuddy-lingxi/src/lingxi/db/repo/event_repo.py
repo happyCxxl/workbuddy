@@ -27,13 +27,21 @@ class EventRepo:
         stmt = select(SessionEvent).where(SessionEvent.session_id == session_id, SessionEvent.seq == seq)
         return await self._session.scalar(stmt)
 
-    async def list_after(self, session_id: int, after_seq: int, limit: int | None) -> list[SessionEvent]:
-        """after_seq 之后按 seq 升序；limit 为空表示不限。"""
+    async def list_after(
+        self,
+        session_id: int,
+        after_seq: int,
+        limit: int | None,
+        exclude_types: tuple[str, ...] = (),
+    ) -> list[SessionEvent]:
+        """after_seq 之后按 seq 升序；limit 为空表示不限；exclude_types 用于过滤流式增量。"""
         stmt = (
             select(SessionEvent)
             .where(SessionEvent.session_id == session_id, SessionEvent.seq > after_seq)
             .order_by(SessionEvent.seq)
         )
+        if exclude_types:
+            stmt = stmt.where(SessionEvent.type.notin_(exclude_types))
         if limit is not None:
             stmt = stmt.limit(limit)
         result = await self._session.scalars(stmt)

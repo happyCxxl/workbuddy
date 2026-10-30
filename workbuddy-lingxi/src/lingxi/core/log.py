@@ -52,10 +52,15 @@ async def append_event(session_id: int, event_type: EventType, payload: dict[str
             raise
 
 
-async def read_events(session_id: int, after_seq: int = 0, limit: int = 500) -> list[SessionEvent]:
-    """按 seq 读：after_seq 之后（不含）最多 limit 条。"""
+STREAM_DELTA_TYPES: tuple[str, ...] = ("text.delta", "thinking.delta")
+
+
+async def read_events(
+    session_id: int, after_seq: int = 0, limit: int = 500, compact: bool = False
+) -> list[SessionEvent]:
+    """按 seq 读：after_seq 之后（不含）最多 limit 条；compact 过滤流式增量（回放用）。"""
     async with session_scope() as s:
-        return await EventRepo(s).list_after(session_id, after_seq, limit)
+        return await EventRepo(s).list_after(session_id, after_seq, limit, STREAM_DELTA_TYPES if compact else ())
 
 
 async def replay_events(session_id: int, after_seq: int = 0) -> list[SessionEvent]:

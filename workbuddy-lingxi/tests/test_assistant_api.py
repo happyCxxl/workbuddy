@@ -148,6 +148,11 @@ async def test_session_calls_and_event_timestamps(client: AsyncClient, engine_fi
     events = (await client.get(f"/sessions/{sid}/events")).json()["data"]["events"]
     assert events
     assert all(isinstance(event.get("created_at"), str) and event["created_at"] for event in events)
+    assert any(event["type"] == "text.delta" for event in events)
+    compact = (await client.get(f"/sessions/{sid}/events", params={"compact": "true"})).json()["data"]["events"]
+    assert compact
+    assert all(event["type"] not in {"text.delta", "thinking.delta"} for event in compact)
+    assert any(event["type"] == "assistant/message" for event in compact)
     calls = (await client.get(f"/sessions/{sid}/calls")).json()["data"]["calls"]
     assert calls
     assert calls[0]["model"] == "deepseek-flash"
