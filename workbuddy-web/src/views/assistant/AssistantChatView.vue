@@ -510,28 +510,38 @@
             </div>
           </div>
           <div class="trajectory-main">
-            <div class="traj-table">
-              <section v-for="turn in visibleTurns" :key="turn.key">
-                <header class="traj-turn">
-                  <span>第 {{ turn.index }} 轮</span>
-                  <span class="traj-turn-time">{{ turn.startedAt }}</span>
-                  <span class="traj-status" :data-status="turn.status">{{ turn.statusLabel }}</span>
-                  <span class="traj-turn-duration">{{ turn.duration }}</span>
-                </header>
-                <button
-                  v-for="node in turn.nodes"
-                  :key="node.key"
-                  type="button"
-                  class="traj-row"
-                  :class="{ 'is-selected': selected?.key === node.key }"
-                  @click="selectNode(node)"
+            <div class="traj-table" @scroll="onTrajScroll">
+              <div class="traj-viewport" :style="{ height: `${trajTotal}px` }">
+                <div
+                  class="traj-window"
+                  :style="{ transform: `translateY(${trajWindow.offset}px)` }"
                 >
-                  <span class="traj-time">{{ node.time }}</span>
-                  <span class="traj-badge" :data-kind="node.kind">{{ node.badge }}</span>
-                  <span class="traj-title">{{ node.title }}</span>
-                  <span class="traj-duration">{{ node.duration ?? '' }}</span>
-                </button>
-              </section>
+                  <template v-for="row in trajWindow.rows" :key="row.key">
+                    <header v-if="row.node === null" class="traj-turn">
+                      <span>第 {{ row.turn.index }} 轮</span>
+                      <span class="traj-turn-time">{{ row.turn.startedAt }}</span>
+                      <span class="traj-status" :data-status="row.turn.status">{{
+                        row.turn.statusLabel
+                      }}</span>
+                      <span class="traj-turn-duration">{{ row.turn.duration }}</span>
+                    </header>
+                    <button
+                      v-else
+                      type="button"
+                      class="traj-row"
+                      :class="{ 'is-selected': selected?.key === row.node?.key }"
+                      @click="selectTrajRow(row)"
+                    >
+                      <span class="traj-time">{{ row.node?.time }}</span>
+                      <span class="traj-badge" :data-kind="row.node?.kind">{{
+                        row.node?.badge
+                      }}</span>
+                      <span class="traj-title">{{ row.node?.title }}</span>
+                      <span class="traj-duration">{{ row.node?.duration ?? '' }}</span>
+                    </button>
+                  </template>
+                </div>
+              </div>
             </div>
             <aside class="traj-inspector">
               <template v-if="selected">
@@ -1281,6 +1291,68 @@ const hiddenTrailTurns = computed(() =>
 /** 加载更早的轨迹轮次（每次 50 轮） */
 function showEarlierTrail(): void {
   trailLimit.value += 50;
+}
+
+/** 轨迹表格虚拟滚动：固定行高，只渲染可视窗口附近的记录 */
+const TRAJ_HEADER_HEIGHT = 30;
+const TRAJ_ROW_HEIGHT = 28;
+const TRAJ_VIEWPORT = 560;
+
+interface TrajRow {
+  key: string;
+  height: number;
+  turn: TrailTurn;
+  node: TrailNode | null;
+}
+
+const trajRows = computed<TrajRow[]>(() => {
+  const rows: TrajRow[] = [];
+  for (const turn of visibleTurns.value) {
+    rows.push({ key: `${turn.key}-head`, height: TRAJ_HEADER_HEIGHT, turn, node: null });
+    for (const node of turn.nodes) {
+      rows.push({ key: node.key, height: TRAJ_ROW_HEIGHT, turn, node });
+    }
+  }
+  return rows;
+});
+
+const trajOffsets = computed<number[]>(() => {
+  const offsets = [0];
+  for (const row of trajRows.value) {
+    offsets.push((offsets.at(-1) ?? 0) + row.height);
+  }
+  return offsets;
+});
+
+const trajTotal = computed(() => trajOffsets.value.at(-1) ?? 0);
+const trajScrollTop = ref(0);
+
+/** 表格滚动：只更新窗口起点，不重排全部行 */
+function onTrajScroll(event: Event): void {
+  trajScrollTop.value = (event.target as HTMLElement).scrollTop;
+}
+
+const trajWindow = computed(() => {
+  const rows = trajRows.value;
+  const offsets = trajOffsets.value;
+  const top = Math.max(0, trajScrollTop.value - 200);
+  const bottom = trajScrollTop.value + TRAJ_VIEWPORT + 200;
+  let start = 0;
+  while (start < rows.length && (offsets[start + 1] ?? 0) <= top) {
+    start += 1;
+  }
+  let end = start;
+  while (end < rows.length && (offsets[end] ?? 0) < bottom) {
+    end += 1;
+  }
+  return { rows: rows.slice(start, end), offset: offsets[start] ?? 0 };
+});
+
+/** 点击虚拟行：标题行不可选 */
+function selectTrajRow(row: TrajRow): void {
+  if (row.node !== null) {
+    selectNode(row.node);
+  }
 }
 
 /** 记录表按框选过滤 */
@@ -2701,15 +2773,24 @@ onUnmounted(() => {
 }
 
 .traj-table {
+  max-height: 62vh;
   overflow: auto;
   border: 1px solid var(--kb-line);
   border-radius: 10px;
 }
 
-.traj-turn {
-  position: sticky;
+.traj-viewport {
+  position: relative;
+}
+
+.traj-window {
+  position: absolute;
   top: 0;
-  z-index: 1;
+  right: 0;
+  left: 0;
+}
+
+.traj-turn {
   display: flex;
   gap: 8px;
   align-items: center;
