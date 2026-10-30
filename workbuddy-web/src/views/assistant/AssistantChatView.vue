@@ -159,6 +159,18 @@
             {{ usage.calls }} 次调用 · {{ totalTokens }} tokens
             <template v-if="cacheRate !== null"> · 缓存 {{ cacheRate }}%</template>
           </span>
+          <el-select
+            v-if="current"
+            v-model="processMode"
+            size="small"
+            class="process-mode"
+            @change="saveProcessMode"
+          >
+            <el-option label="过程：简洁" value="concise" />
+            <el-option label="过程：标准" value="standard" />
+            <el-option label="过程：详细" value="detailed" />
+            <el-option label="过程：完全展开" value="expanded" />
+          </el-select>
           <el-button v-if="current" size="small" text @click="openTrajectory">轨迹</el-button>
           <el-button v-if="current" size="small" text @click="openSubSessions">
             后台任务
@@ -171,23 +183,37 @@
           <p v-if="messages.length === 0" class="messages-empty">
             发一句话开始干活。可乐会按人格版本 {{ personaLabel }} 说话，按权限档执行工具。
           </p>
-          <section v-for="view in turnViews" :key="view.key" class="turn">
+          <section v-for="(view, viewIndex) in turnViews" :key="view.key" class="turn">
             <div v-if="view.user" class="message message-user">
               <div class="message-bubble">{{ view.user.text }}</div>
             </div>
             <div v-if="view.steps.length > 0" class="process">
-              <button class="process-head" type="button" @click="toggleProcess(view.key)">
+              <button
+                class="process-head"
+                :class="{ 'is-running': view.running }"
+                type="button"
+                @click="toggleProcess(view.key)"
+              >
                 <span class="process-title">{{ view.running ? '执行中' : '工作步骤' }}</span>
-                <span class="process-meta">{{ view.steps.length }} 步</span>
-                <span class="process-arrow">{{
-                  view.running || expandedTurns.has(view.key) ? '收起' : '展开'
-                }}</span>
+                <span class="process-meta">
+                  {{ view.steps.length }} 步
+                  <template v-if="turnMeta[viewIndex + 1]?.duration">
+                    · {{ turnMeta[viewIndex + 1]?.duration }}
+                  </template>
+                </span>
+                <span class="process-arrow">{{ isOpen(view) ? '收起' : '展开' }}</span>
               </button>
-              <div v-show="view.running || expandedTurns.has(view.key)" class="process-body">
+              <div v-show="isOpen(view)" class="process-body">
                 <div v-for="(step, stepIndex) in view.steps" :key="stepIndex" class="step">
-                  <details v-if="step.thinking" class="message-thinking">
-                    <summary class="thinking-summary">思考过程</summary>
-                    <pre class="thinking-body">{{ step.thinking }}</pre>
+                  <div v-if="view.steps.length > 1" class="step-label">
+                    第 {{ stepIndex + 1 }} 步
+                  </div>
+                  <details v-if="step.thinking" class="reasoning">
+                    <summary class="reasoning-head">
+                      <span class="reasoning-label">思考</span>
+                      <span class="reasoning-preview">{{ preview(step.thinking, 80) }}</span>
+                    </summary>
+                    <pre class="reasoning-body">{{ step.thinking }}</pre>
                   </details>
                   <MarkdownView v-if="step.text" :content="step.text" />
                   <details
@@ -249,6 +275,17 @@
             </div>
             <div v-if="view.answer" class="message message-assistant message-answer">
               <MarkdownView :content="view.answer.text" />
+            </div>
+            <div v-if="view.answer && !view.running" class="turn-footer">
+              <span class="turn-meta">
+                <template v-if="turnMeta[viewIndex + 1]?.duration">
+                  {{ turnMeta[viewIndex + 1]?.duration }}
+                </template>
+                <template v-if="turnMeta[viewIndex + 1]?.tokens">
+                  · {{ turnMeta[viewIndex + 1]?.tokens }} tok
+                </template>
+              </span>
+              <button class="turn-action" type="button" @click="copyAnswer(view)">复制</button>
             </div>
           </section>
         </div>
@@ -553,6 +590,11 @@ const input = ref('');
 const running = ref(false);
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
+/** 工作步骤展示模式：简洁/标准/详细折叠已完成轮次，完全展开常驻显示 */
+type ProcessMode = 'concise' | 'standard' | 'detailed' | 'expanded';
+const processMode = ref<ProcessMode>(
+  (localStorage.getItem('assistant.processMode') as ProcessMode | null) ?? 'standard',
+);
 const stepLabel = ref('1');
 const personaLabel = ref('v1');
 const messageBox = ref<HTMLElement | null>(null);
@@ -847,8 +889,9 @@ async function selectSession(item: AssistantSession): Promise<void> {
   currentId.value = item.id;
   current.value = item;
   messages.value = [];
-  const events = await getSessionEvents(item.id);
+  const [events, calls] = await Promise.all([getSessionEvents(item.id), getSessionCalls(item.id)]);
   trajectoryEvents.value = events;
+  modelCalls.value = calls;
   applyReplay(events);
   await loadUsage();
   await loadSubSessions();
@@ -1259,6 +1302,70 @@ function toggleProcess(key: string): void {
   expandedTurns.value = next;
 }
 
+/** 过程组当前是否展开：运行中与「完全展开」模式强制显示 */
+function isOpen(view: TurnView): boolean {
+  if (view.running || processMode.value === 'expanded') {
+    return true;
+  }
+  return expandedTurns.value.has(view.key);
+}
+
+/** 保存展示模式：与本机偏好一致，刷新后保留 */
+function saveProcessMode(): void {
+  localStorage.setItem('assistant.processMode', processMode.value);
+}
+
+/** 复制最终回复 */
+function copyAnswer(view: TurnView): void {
+  if (!view.answer) {
+    return;
+  }
+  void navigator.clipboard.writeText(view.answer.text).then(() => {
+    ElMessage.success('已复制');
+  });
+}
+
+/** 每轮耗时与 token：来自事件时间窗与调用明细 */
+const turnMeta = computed<Partial<Record<number, { duration: string; tokens: number }>>>(() => {
+  const windows: { start: number; end: number }[] = [];
+  const result: Partial<Record<number, { duration: string; tokens: number }>> = {};
+  let current: { start: number; end: number } | null = null;
+  for (const event of trajectoryEvents.value) {
+    if (event.type === 'turn/start') {
+      current = { start: Date.parse(event.created_at), end: Number.NaN };
+      windows.push(current);
+      result[windows.length] = { duration: '', tokens: 0 };
+      continue;
+    }
+    if (event.type === 'turn.end' && current !== null) {
+      current.end = Date.parse(event.created_at);
+      result[windows.length] = {
+        duration: durationLabel(current.start, current.end),
+        tokens: result[windows.length]?.tokens ?? 0,
+      };
+    }
+  }
+  for (const call of modelCalls.value) {
+    const at = Date.parse(call.created_at);
+    if (Number.isNaN(at)) {
+      continue;
+    }
+    const index = windows.findIndex(
+      (window) => at >= window.start && (Number.isNaN(window.end) || at <= window.end),
+    );
+    if (index < 0) {
+      continue;
+    }
+    const key = index + 1;
+    const tokens = (call.prompt_tokens ?? 0) + (call.completion_tokens ?? 0);
+    result[key] = {
+      duration: result[key]?.duration ?? '',
+      tokens: (result[key]?.tokens ?? 0) + tokens,
+    };
+  }
+  return result;
+});
+
 /** 工具结果回填：按调用顺序填第一个还没有结果的工具行 */ function applyToolResult(
   last: ChatMessage,
   payload: Record<string, unknown>,
@@ -1350,6 +1457,9 @@ function handleSend(): void {
     onDone: () => {
       running.value = false;
       void loadUsage();
+      void getSessionCalls(currentId.value).then((calls) => {
+        modelCalls.value = calls;
+      });
       void refreshSessions();
     },
     onError: (message) => {
@@ -2417,18 +2527,63 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.message-thinking {
-  margin-bottom: 6px;
-  color: var(--kb-text-3);
-  font-size: 12px;
+.process-mode {
+  width: 118px;
+  margin-right: 4px;
 }
 
-.thinking-summary {
+.process-head.is-running .process-title {
+  background: linear-gradient(90deg, var(--kb-text-2), #34d399, var(--kb-text-2));
+  background-size: 200% 100%;
+  animation: process-shimmer 1.6s linear infinite;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes process-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: 0 0;
+  }
+}
+
+.step-label {
+  color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.reasoning {
+  margin: 0;
+}
+
+.reasoning-head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
   cursor: pointer;
   list-style: none;
 }
 
-.thinking-body {
+.reasoning-label {
+  flex: none;
+  color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.reasoning-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--kb-text-3);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reasoning-body {
   margin: 6px 0 4px;
   padding: 8px 10px;
   overflow-wrap: anywhere;
@@ -2437,6 +2592,32 @@ onUnmounted(() => {
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;
   white-space: pre-wrap;
+}
+
+.turn-footer {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-left: 2px;
+}
+
+.turn-meta {
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+
+.turn-action {
+  padding: 0;
+  border: none;
+  color: var(--kb-text-3);
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.turn-action:hover {
+  color: var(--kb-primary-2);
 }
 
 .tool-card {
