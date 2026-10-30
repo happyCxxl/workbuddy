@@ -183,7 +183,10 @@
           <p v-if="messages.length === 0" class="messages-empty">
             发一句话开始干活。可乐会按人格版本 {{ personaLabel }} 说话，按权限档执行工具。
           </p>
-          <section v-for="(view, viewIndex) in turnViews" :key="view.key" class="turn">
+          <button v-if="hiddenTurns > 0" class="turn-earlier" type="button" @click="showEarlier">
+            显示更早的 {{ hiddenTurns }} 轮
+          </button>
+          <section v-for="view in pagedTurns" :key="view.key" class="turn">
             <div v-if="view.user" class="message message-user">
               <div class="message-bubble">{{ view.user.text }}</div>
             </div>
@@ -198,11 +201,11 @@
                 <span class="process-title">{{ view.running ? '执行中' : '工作步骤' }}</span>
                 <span class="process-meta">
                   {{ view.steps.length }} 步
-                  <template v-if="turnMeta[viewIndex + 1]?.duration">
-                    · {{ turnMeta[viewIndex + 1]?.duration }}
+                  <template v-if="turnMeta[view.turnSeq ?? 0]?.duration">
+                    · {{ turnMeta[view.turnSeq ?? 0]?.duration }}
                   </template>
-                  <template v-if="turnMeta[viewIndex + 1]?.tokens">
-                    · {{ turnMeta[viewIndex + 1]?.tokens }} tok
+                  <template v-if="turnMeta[view.turnSeq ?? 0]?.tokens">
+                    · {{ turnMeta[view.turnSeq ?? 0]?.tokens }} tok
                   </template>
                 </span>
               </button>
@@ -226,12 +229,7 @@
                     :class="{ 'tool-fail': Boolean(tool.error) }"
                   >
                     <summary class="tool-head">
-                      <span
-                        class="tool-icon"
-                        :class="tool.error ? 'is-fail' : tool.result ? 'is-ok' : 'is-run'"
-                      >
-                        {{ tool.error ? '✕' : tool.result ? '✓' : '…' }}
-                      </span>
+                      <ToolIcon :name="tool.name" class="tool-icon" />
                       <span class="tool-name">{{ tool.name }}</span>
                       <span class="tool-args">{{ tool.args }}</span>
                       <span class="tool-state">
@@ -284,11 +282,11 @@
             </div>
             <div v-if="view.answer && !view.running" class="turn-footer">
               <button class="turn-meta" type="button" @click="toggleUsage(view.key)">
-                <template v-if="turnMeta[viewIndex + 1]?.duration">
-                  {{ turnMeta[viewIndex + 1]?.duration }}
+                <template v-if="turnMeta[view.turnSeq ?? 0]?.duration">
+                  {{ turnMeta[view.turnSeq ?? 0]?.duration }}
                 </template>
-                <template v-if="turnMeta[viewIndex + 1]?.tokens">
-                  · {{ turnMeta[viewIndex + 1]?.tokens }} tok
+                <template v-if="turnMeta[view.turnSeq ?? 0]?.tokens">
+                  · {{ turnMeta[view.turnSeq ?? 0]?.tokens }} tok
                 </template>
                 <span class="turn-chevron">{{ expandedUsage.has(view.key) ? '▴' : '▾' }}</span>
               </button>
@@ -298,7 +296,7 @@
               </span>
               <div v-if="expandedUsage.has(view.key)" class="usage-list">
                 <div
-                  v-for="(call, callIndex) in turnMeta[viewIndex + 1]?.calls ?? []"
+                  v-for="(call, callIndex) in turnMeta[view.turnSeq ?? 0]?.calls ?? []"
                   :key="callIndex"
                   class="usage-row"
                 >
@@ -307,7 +305,10 @@
                   <span>{{ call.latency }}</span>
                   <span class="usage-time">{{ call.time }}</span>
                 </div>
-                <p v-if="(turnMeta[viewIndex + 1]?.calls ?? []).length === 0" class="usage-empty">
+                <p
+                  v-if="(turnMeta[view.turnSeq ?? 0]?.calls ?? []).length === 0"
+                  class="usage-empty"
+                >
                   没有调用明细。
                 </p>
               </div>
@@ -457,7 +458,27 @@
             @mouseup="onOverviewUp"
             @mouseleave="onOverviewUp"
           >
-            <p class="overview-hint">滚轮缩放 · 拖选区间筛选 · 右键清除</p>
+            <div class="overview-toolbar">
+              <span class="overview-hint">滚轮缩放 · 拖选区间筛选 · 右键清除</span>
+              <span class="overview-tools">
+                <button class="overview-zoom" type="button" @click="zoomTrail(0.8)">＋</button>
+                <button class="overview-zoom" type="button" @click="zoomTrail(1.25)">－</button>
+                <button class="overview-zoom" type="button" @click="clearTrailView">重置</button>
+              </span>
+            </div>
+            <div class="overview-ruler">
+              <span class="overview-label"></span>
+              <div class="overview-ruler-track">
+                <span
+                  v-for="tick in rulerTicks"
+                  :key="tick.key"
+                  class="overview-tick"
+                  :style="{ left: tick.left }"
+                  >{{ tick.label }}</span
+                >
+              </div>
+              <span class="overview-duration"></span>
+            </div>
             <div v-for="turn in trailTurns" :key="turn.key" class="overview-row">
               <span class="overview-label">第 {{ turn.index }} 轮</span>
               <div class="overview-track">
@@ -583,6 +604,7 @@ import type {
 } from '@/types/assistant';
 import { formatDateTime } from '@/utils/date';
 import MarkdownView from '@/components/assistant/MarkdownView.vue';
+import ToolIcon from '@/components/assistant/ToolIcon.vue';
 
 /** 会话分组：一个工作区一组（无工作区的旧会话按目录兜底成组） */
 interface SessionGroup {
@@ -1314,6 +1336,39 @@ function onOverviewWheel(event: WheelEvent): void {
   trailDomain.value = target >= full.end - full.start - 1 ? null : { start, end };
 }
 
+/** 时间刻度：当前域内 5 个等距点 */
+const rulerTicks = computed<{ key: number; left: string; label: string }[]>(() => {
+  const domain = activeDomain();
+  return [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+    const at = domain.start + ratio * (domain.end - domain.start);
+    return {
+      key: ratio,
+      left: `${ratio * 100}%`,
+      label: formatClock(new Date(at).toISOString()),
+    };
+  });
+});
+
+/** 以中心缩放时间域（按钮可达，不依赖滚轮） */
+function zoomTrail(factor: number): void {
+  const full = sessionSpan.value;
+  const current = trailDomain.value ?? full;
+  const span = Math.max(1, current.end - current.start);
+  const target = Math.max(1000, Math.min(full.end - full.start, span * factor));
+  const center = (current.start + current.end) / 2;
+  let start = center - target / 2;
+  let end = center + target / 2;
+  if (start < full.start) {
+    start = full.start;
+    end = start + target;
+  }
+  if (end > full.end) {
+    end = full.end;
+    start = end - target;
+  }
+  trailDomain.value = target >= full.end - full.start - 1 ? null : { start, end };
+}
+
 /** 右键清除框选与缩放 */
 function clearTrailView(): void {
   trailSelection.value = null;
@@ -1496,6 +1551,20 @@ const turnStartSeqs = computed<number[]>(() =>
   trajectoryEvents.value.filter((event) => event.type === 'turn/start').map((event) => event.seq),
 );
 
+/** 会话默认渲染最近若干轮，避免超长会话一次性挂载全部节点 */
+const turnLimit = ref(25);
+
+/** 当前渲染的轮次窗口 */
+const pagedTurns = computed(() => turnViews.value.slice(-turnLimit.value));
+
+/** 被窗口截掉的更早轮次数 */
+const hiddenTurns = computed(() => Math.max(0, turnViews.value.length - pagedTurns.value.length));
+
+/** 加载更早的轮次（每次 25 轮） */
+function showEarlier(): void {
+  turnLimit.value += 25;
+}
+
 /** 展开/收起某一轮的过程组 */ function toggleProcess(key: string): void {
   const next = new Set(expandedTurns.value);
   if (next.has(key)) {
@@ -1552,23 +1621,23 @@ interface TurnCall {
 const turnMeta = computed<
   Partial<Record<number, { duration: string; tokens: number; calls: TurnCall[] }>>
 >(() => {
-  const windows: { start: number; end: number }[] = [];
+  const windows: { seq: number; start: number; end: number }[] = [];
   const result: Partial<Record<number, { duration: string; tokens: number; calls: TurnCall[] }>> =
     {};
-  let current: { start: number; end: number } | null = null;
+  let current: { seq: number; start: number; end: number } | null = null;
   for (const event of trajectoryEvents.value) {
     if (event.type === 'turn/start') {
-      current = { start: Date.parse(event.created_at), end: Number.NaN };
+      current = { seq: event.seq, start: Date.parse(event.created_at), end: Number.NaN };
       windows.push(current);
-      result[windows.length] = { duration: '', tokens: 0, calls: [] };
+      result[event.seq] = { duration: '', tokens: 0, calls: [] };
       continue;
     }
     if (event.type === 'turn.end' && current !== null) {
       current.end = Date.parse(event.created_at);
-      result[windows.length] = {
+      result[current.seq] = {
         duration: durationLabel(current.start, current.end),
-        tokens: result[windows.length]?.tokens ?? 0,
-        calls: result[windows.length]?.calls ?? [],
+        tokens: result[current.seq]?.tokens ?? 0,
+        calls: result[current.seq]?.calls ?? [],
       };
     }
   }
@@ -1577,13 +1646,13 @@ const turnMeta = computed<
     if (Number.isNaN(at)) {
       continue;
     }
-    const index = windows.findIndex(
-      (window) => at >= window.start && (Number.isNaN(window.end) || at <= window.end),
+    const window = windows.find(
+      (item) => at >= item.start && (Number.isNaN(item.end) || at <= item.end),
     );
-    if (index < 0) {
+    if (window === undefined) {
       continue;
     }
-    const key = index + 1;
+    const key = window.seq;
     const tokens = (call.prompt_tokens ?? 0) + (call.completion_tokens ?? 0);
     const entry = result[key] ?? { duration: '', tokens: 0, calls: [] };
     entry.calls.push({
@@ -2467,9 +2536,57 @@ onUnmounted(() => {
 }
 
 .overview-hint {
-  margin: 0 0 2px;
+  margin: 0;
   color: var(--kb-text-3);
   font-size: 11px;
+}
+
+.overview-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.overview-tools {
+  display: flex;
+  gap: 4px;
+}
+
+.overview-zoom {
+  padding: 0 6px;
+  border: 1px solid var(--kb-line);
+  border-radius: 5px;
+  color: var(--kb-text-3);
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.overview-zoom:hover {
+  color: var(--kb-text-2);
+  background: rgb(255 255 255 / 5%);
+}
+
+.overview-ruler {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.overview-ruler-track {
+  position: relative;
+  flex: 1;
+  height: 14px;
+}
+
+.overview-tick {
+  position: absolute;
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  transform: translateX(-50%);
 }
 
 .overview-band {
@@ -2766,6 +2883,22 @@ onUnmounted(() => {
   margin-top: 4px;
 }
 
+.turn-earlier {
+  align-self: center;
+  padding: 4px 12px;
+  border: 1px solid var(--kb-line);
+  border-radius: 999px;
+  color: var(--kb-text-3);
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.turn-earlier:hover {
+  color: var(--kb-text-2);
+  background: rgb(255 255 255 / 4%);
+}
+
 .messages {
   display: flex;
   flex: 1;
@@ -2978,22 +3111,8 @@ onUnmounted(() => {
 .tool-icon {
   flex: none;
   width: 12px;
+  height: 12px;
   color: var(--kb-text-3);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 11px;
-  text-align: center;
-}
-
-.tool-icon.is-ok {
-  color: var(--kb-ok);
-}
-
-.tool-icon.is-fail {
-  color: var(--kb-danger);
-}
-
-.tool-icon.is-run {
-  color: #f59e0b;
 }
 
 .tool-name {
