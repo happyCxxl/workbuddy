@@ -449,6 +449,14 @@
       <div class="trajectory-shell">
         <p v-if="trailTurns.length === 0" class="trajectory-empty">还没有活动。</p>
         <template v-else>
+          <button
+            v-if="hiddenTrailTurns > 0"
+            class="turn-earlier"
+            type="button"
+            @click="showEarlierTrail"
+          >
+            显示更早的 {{ hiddenTrailTurns }} 轮
+          </button>
           <div
             class="overview"
             @wheel.prevent="onOverviewWheel"
@@ -479,7 +487,7 @@
               </div>
               <span class="overview-duration"></span>
             </div>
-            <div v-for="turn in trailTurns" :key="turn.key" class="overview-row">
+            <div v-for="turn in pagedTrailTurns" :key="turn.key" class="overview-row">
               <span class="overview-label">第 {{ turn.index }} 轮</span>
               <div class="overview-track">
                 <div
@@ -1263,13 +1271,26 @@ function bandStyle(selection: { start: number; end: number }): Record<string, st
   };
 }
 
+/** 轨迹默认渲染最近 50 轮，避免超长会话铺满 DOM */
+const trailLimit = ref(50);
+const pagedTrailTurns = computed(() => trailTurns.value.slice(-trailLimit.value));
+const hiddenTrailTurns = computed(() =>
+  Math.max(0, trailTurns.value.length - pagedTrailTurns.value.length),
+);
+
+/** 加载更早的轨迹轮次（每次 50 轮） */
+function showEarlierTrail(): void {
+  trailLimit.value += 50;
+}
+
 /** 记录表按框选过滤 */
 const visibleTurns = computed<TrailTurn[]>(() => {
   const selection = trailSelection.value;
+  const base = pagedTrailTurns.value;
   if (selection === null) {
-    return trailTurns.value;
+    return base;
   }
-  return trailTurns.value
+  return base
     .map((turn) => ({
       ...turn,
       nodes: turn.nodes.filter((node) => {
@@ -1336,17 +1357,33 @@ function onOverviewWheel(event: WheelEvent): void {
   trailDomain.value = target >= full.end - full.start - 1 ? null : { start, end };
 }
 
-/** 时间刻度：当前域内 5 个等距点 */
+const TICK_STEPS = [
+  1000, 2000, 5000, 10000, 15000, 30000, 60000, 120000, 300000, 600000, 900000, 1800000, 3600000,
+];
+
+/** 刻度间隔：取能让刻度数不超过 8 的最小档 */
+function pickTickStep(span: number): number {
+  return TICK_STEPS.find((step) => span / step <= 8) ?? 3600000;
+}
+
+/** 时间刻度：按当前域自适应间隔 */
 const rulerTicks = computed<{ key: number; left: string; label: string }[]>(() => {
   const domain = activeDomain();
-  return [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-    const at = domain.start + ratio * (domain.end - domain.start);
-    return {
-      key: ratio,
-      left: `${ratio * 100}%`,
+  const span = Math.max(1, domain.end - domain.start);
+  const step = pickTickStep(span);
+  const ticks: { key: number; left: string; label: string }[] = [];
+  for (
+    let at = Math.ceil(domain.start / step) * step;
+    at <= domain.end && ticks.length < 12;
+    at += step
+  ) {
+    ticks.push({
+      key: at,
+      left: `${((at - domain.start) / span) * 100}%`,
       label: formatClock(new Date(at).toISOString()),
-    };
-  });
+    });
+  }
+  return ticks;
 });
 
 /** 以中心缩放时间域（按钮可达，不依赖滚轮） */
@@ -3012,6 +3049,20 @@ onUnmounted(() => {
   gap: 10px;
   align-items: center;
   padding-left: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.turn-footer:focus-within,
+.turn:last-child .turn-footer,
+.turn:hover .turn-footer {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .turn-footer {
+    opacity: 1;
+  }
 }
 
 .turn-meta {
