@@ -202,6 +202,20 @@ async def test_post_hook_failure_keeps_turn_completed(
     assert events[-1].payload["status"] == "completed"
 
 
+async def test_retry_of_recorded_on_turn_start(
+    fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
+) -> None:
+    """重试标记：turn/start 记录 retry_of，前端据此隐藏被重试的旧回合。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings, _ = fake_server
+    runner = make_runner(settings, LlmGateway(settings), HookRegistry())
+    sid = await create_session("D:\\tmp", "重试标记")
+    events = [event async for event in runner.run(sid, "hi", 42)]
+    assert events[0].type == "turn/start"
+    assert events[0].payload["retry_of"] == 42
+
+
 async def test_tool_result_feeds_back_into_next_step(
     fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None, tmp_path
 ) -> None:

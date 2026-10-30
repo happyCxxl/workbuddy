@@ -85,11 +85,11 @@ class TurnRunner:
         """申请停车：当前回合在下一步前停止，状态记入 turn/end 事件。"""
         self._stop_requested.add(session_id)
 
-    async def run(self, session_id: int, user_content: str) -> AsyncIterator[TurnEvent]:
+    async def run(self, session_id: int, user_content: str, retry_of: int | None = None) -> AsyncIterator[TurnEvent]:
         """跑一个回合：产出与日志同构的事件流；异常路径补齐 error 与 turn/end 后上抛。"""
         lock = self._locks.setdefault(session_id, asyncio.Lock())
         async with lock:
-            async for event in self._run_locked(session_id, user_content):
+            async for event in self._run_locked(session_id, user_content, retry_of):
                 yield event
 
     async def resume(self, session_id: int, request_id: str, outcome: str) -> AsyncIterator[TurnEvent]:
@@ -99,7 +99,9 @@ class TurnRunner:
             async for event in self._resume_locked(session_id, request_id, outcome):
                 yield event
 
-    async def _run_locked(self, session_id: int, user_content: str) -> AsyncIterator[TurnEvent]:
+    async def _run_locked(
+        self, session_id: int, user_content: str, retry_of: int | None = None
+    ) -> AsyncIterator[TurnEvent]:
         session = await get_session(session_id)
         # 子会话是任务执行器：不绑人格、不注入记忆；对话会话照旧
         persona = await persona_of_session(session) if session.kind == "chat" else None
@@ -111,7 +113,9 @@ class TurnRunner:
                 session_id=session_id, turn_seq=0, step=0, action="pre_turn", payload={"input": user_content}
             )
             await self._hooks.run("pre_turn", pre_turn)
-            start_event = await self._emit(session_id, EventType.TURN_START, {"work_dir": session.work_dir})
+            start_event = await self._emit(
+                session_id, EventType.TURN_START, {"work_dir": session.work_dir, "retry_of": retry_of}
+            )
             yield start_event
             yield await self._emit(session_id, EventType.USER_MESSAGE, {"content": user_content})
             turn_seq = cast(int, start_event.payload["seq"])

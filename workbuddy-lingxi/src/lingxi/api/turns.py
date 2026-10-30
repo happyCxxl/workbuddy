@@ -13,9 +13,10 @@ from lingxi.core.loop import TurnRunner
 
 
 class TurnRequest(BaseModel):
-    """回合请求。"""
+    """回合请求：retry_of 指向被重试回合的 turn_seq（前端渲染时隐藏旧回合）。"""
 
     content: str
+    retry_of: int | None = None
 
 
 class ResumeRequest(BaseModel):
@@ -49,7 +50,7 @@ def make_router(runner: TurnRunner) -> APIRouter:
     @router.post("/sessions/{session_id}/turns")
     async def create_turn(session_id: int, request: TurnRequest) -> StreamingResponse:
         """建回合：SSE 下发完整事件流（turn/start → … → turn.end），末尾 DONE。"""
-        return _sse(runner.run(session_id, request.content))
+        return _sse(runner.run(session_id, request.content, request.retry_of))
 
     @router.post("/sessions/{session_id}/turns/resume")
     async def resume_turn(session_id: int, request: ResumeRequest) -> StreamingResponse:

@@ -282,6 +282,7 @@ export function addTurnStream(
   sessionId: string,
   content: string,
   handlers: TurnStreamHandlers,
+  retryOf?: number,
 ): AbortController {
   const controller = new AbortController();
   const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY) ?? '';
@@ -290,7 +291,7 @@ export function addTurnStream(
       const response = await fetch(`/sessions/${sessionId}/turns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, retry_of: retryOf ?? null }),
         signal: controller.signal,
       });
       await readSseFrames(response, handlers);

@@ -227,9 +227,11 @@
                   >
                     <summary class="tool-head">
                       <span
-                        class="tool-dot"
+                        class="tool-icon"
                         :class="tool.error ? 'is-fail' : tool.result ? 'is-ok' : 'is-run'"
-                      ></span>
+                      >
+                        {{ tool.error ? '✕' : tool.result ? '✓' : '…' }}
+                      </span>
                       <span class="tool-name">{{ tool.name }}</span>
                       <span class="tool-args">{{ tool.args }}</span>
                       <span class="tool-state">
@@ -446,17 +448,31 @@
       <div class="trajectory-shell">
         <p v-if="trailTurns.length === 0" class="trajectory-empty">还没有活动。</p>
         <template v-else>
-          <div class="overview">
+          <div
+            class="overview"
+            @wheel.prevent="onOverviewWheel"
+            @contextmenu.prevent="clearTrailView"
+            @mousedown="onOverviewDown"
+            @mousemove="onOverviewMove"
+            @mouseup="onOverviewUp"
+            @mouseleave="onOverviewUp"
+          >
+            <p class="overview-hint">滚轮缩放 · 拖选区间筛选 · 右键清除</p>
             <div v-for="turn in trailTurns" :key="turn.key" class="overview-row">
               <span class="overview-label">第 {{ turn.index }} 轮</span>
               <div class="overview-track">
+                <div
+                  v-if="trailSelection"
+                  class="overview-band"
+                  :style="bandStyle(trailSelection)"
+                ></div>
                 <button
                   v-for="node in turn.nodes.filter((item) => item.kind !== 'user')"
                   :key="node.key"
                   type="button"
                   class="overview-span"
                   :data-kind="node.kind"
-                  :style="spanStyle(turn, node)"
+                  :style="spanStyle(node)"
                   :title="`${node.badge} · ${node.title}`"
                   @click="selectNode(node)"
                 ></button>
@@ -466,7 +482,7 @@
           </div>
           <div class="trajectory-main">
             <div class="traj-table">
-              <section v-for="turn in trailTurns" :key="turn.key">
+              <section v-for="turn in visibleTurns" :key="turn.key">
                 <header class="traj-turn">
                   <span>第 {{ turn.index }} 轮</span>
                   <span class="traj-turn-time">{{ turn.startedAt }}</span>
@@ -1150,6 +1166,29 @@ const trailTurns = computed<TrailTurn[]>(() => {
   return turns;
 });
 
+/** 被重试淘汰的回合 seq：重试轮会隐藏旧回合（旧答复只留在轨迹里） */
+const supersededTurns = computed<Set<number>>(() => {
+  const superseded = new Set<number>();
+  for (const event of trajectoryEvents.value) {
+    if (event.type !== 'turn/start') {
+      continue;
+    }
+    const retryOf = event.payload['retry_of'];
+    if (typeof retryOf === 'number') {
+      superseded.add(retryOf);
+    }
+  }
+  return superseded;
+});
+
+/** 重试指定回合：用同一句输入再跑一轮，并带上 retry_of */
+function retryTurn(view: TurnView): void {
+  if (view.user === null || running.value) {
+    return;
+  }
+  sendContent(view.user.text, view.turnSeq);
+}
+
 /** 选中记录：右侧检查器展示完整细节 */
 const selected = ref<TrailNode | null>(null);
 
@@ -1158,14 +1197,127 @@ function selectNode(node: TrailNode): void {
   selected.value = node;
 }
 
-/** 时间概览条位置：按轮次时间窗换算百分比 */
-function spanStyle(turn: TrailTurn, node: TrailNode): Record<string, string> {
-  const span = Math.max(1, turn.spanEnd - turn.spanStart);
-  const start = node.startedMs ?? turn.spanStart;
+/** 全量时间窗：概览默认显示整段会话 */
+const sessionSpan = computed<{ start: number; end: number }>(() => {
+  const turns = trailTurns.value;
+  if (turns.length === 0) {
+    return { start: 0, end: 1 };
+  }
+  return {
+    start: Math.min(...turns.map((turn) => turn.spanStart)),
+    end: Math.max(...turns.map((turn) => turn.spanEnd)),
+  };
+});
+
+/** 当前可视时间窗：null 表示全量 */
+const trailDomain = ref<{ start: number; end: number } | null>(null);
+/** 框选区间：非空时记录表只保留与该区间有交集的节点 */
+const trailSelection = ref<{ start: number; end: number } | null>(null);
+
+/** 时间轴当前域 */
+function activeDomain(): { start: number; end: number } {
+  return trailDomain.value ?? sessionSpan.value;
+}
+
+/** 节点在时间轴上的位置百分比 */
+function spanStyle(node: TrailNode): Record<string, string> {
+  const domain = activeDomain();
+  const span = Math.max(1, domain.end - domain.start);
+  const start = node.startedMs ?? domain.start;
   const end = node.endedMs ?? node.startedMs ?? start;
-  const left = ((start - turn.spanStart) / span) * 100;
-  const width = Math.max(1.5, ((end - start) / span) * 100);
-  return { left: `${left}%`, width: `${width}%` };
+  return {
+    left: `${Math.min(100, Math.max(0, ((start - domain.start) / span) * 100))}%`,
+    width: `${Math.min(100, Math.max(0.6, ((end - start) / span) * 100))}%`,
+  };
+}
+
+/** 框选带位置 */
+function bandStyle(selection: { start: number; end: number }): Record<string, string> {
+  const domain = activeDomain();
+  const span = Math.max(1, domain.end - domain.start);
+  return {
+    left: `${Math.min(100, Math.max(0, ((selection.start - domain.start) / span) * 100))}%`,
+    width: `${Math.min(100, Math.max(0.6, ((selection.end - selection.start) / span) * 100))}%`,
+  };
+}
+
+/** 记录表按框选过滤 */
+const visibleTurns = computed<TrailTurn[]>(() => {
+  const selection = trailSelection.value;
+  if (selection === null) {
+    return trailTurns.value;
+  }
+  return trailTurns.value
+    .map((turn) => ({
+      ...turn,
+      nodes: turn.nodes.filter((node) => {
+        const start = node.startedMs ?? node.endedMs ?? 0;
+        const end = node.endedMs ?? node.startedMs ?? start;
+        return end >= selection.start && start <= selection.end;
+      }),
+    }))
+    .filter((turn) => turn.nodes.length > 0);
+});
+
+let dragAnchor: number | null = null;
+
+/** 鼠标位置 → 时间 */
+function timeAt(event: MouseEvent): number {
+  const root = event.currentTarget as HTMLElement;
+  const track = root.querySelector<HTMLElement>('.overview-track') ?? root;
+  const rect = track.getBoundingClientRect();
+  const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / Math.max(1, rect.width)));
+  const domain = activeDomain();
+  return domain.start + ratio * (domain.end - domain.start);
+}
+
+function onOverviewDown(event: MouseEvent): void {
+  dragAnchor = timeAt(event);
+  trailSelection.value = null;
+}
+
+function onOverviewMove(event: MouseEvent): void {
+  if (dragAnchor === null) {
+    return;
+  }
+  const now = timeAt(event);
+  trailSelection.value = { start: Math.min(dragAnchor, now), end: Math.max(dragAnchor, now) };
+}
+
+function onOverviewUp(): void {
+  dragAnchor = null;
+  const selection = trailSelection.value;
+  if (selection !== null && selection.end - selection.start < 500) {
+    trailSelection.value = null;
+  }
+}
+
+/** 滚轮缩放时间域（以指针为锚点） */
+function onOverviewWheel(event: WheelEvent): void {
+  const full = sessionSpan.value;
+  const current = trailDomain.value ?? full;
+  const span = Math.max(1, current.end - current.start);
+  const factor = event.deltaY < 0 ? 0.8 : 1.25;
+  const target = Math.max(1000, Math.min(full.end - full.start, span * factor));
+  const anchor = timeAt(event);
+  const ratio = (anchor - current.start) / span;
+  let start = anchor - target * ratio;
+  let end = start + target;
+  if (start < full.start) {
+    start = full.start;
+    end = start + target;
+  }
+  if (end > full.end) {
+    end = full.end;
+    start = end - target;
+  }
+  trailDomain.value = target >= full.end - full.start - 1 ? null : { start, end };
+}
+
+/** 右键清除框选与缩放 */
+function clearTrailView(): void {
+  trailSelection.value = null;
+  trailDomain.value = null;
 }
 
 /** 单行摘要：折叠空白并截断 */
@@ -1295,6 +1447,8 @@ interface TurnView {
   steps: ChatMessage[];
   answer: ChatMessage | null;
   running: boolean;
+  /** 该轮在事件日志里的 turn_seq（重试用） */
+  turnSeq?: number;
 }
 
 /** 按用户消息切分轮次：最后一轮运行中；完成轮把末条无工具的助手消息作为最终回复 */
@@ -1317,6 +1471,7 @@ const turnViews = computed<TurnView[]>(() => {
     }
   }
   for (const [index, view] of views.entries()) {
+    view.turnSeq = turnStartSeqs.value[index];
     view.running = index === views.length - 1 && running.value;
     if (view.running) {
       continue;
@@ -1331,8 +1486,15 @@ const turnViews = computed<TurnView[]>(() => {
     }
     view.answer = { ...answer, thinking: '' };
   }
-  return views;
+  return views.filter(
+    (view) => view.turnSeq === undefined || !supersededTurns.value.has(view.turnSeq),
+  );
 });
+
+/** 事件里每轮的 turn_seq（与用户消息顺序一致） */
+const turnStartSeqs = computed<number[]>(() =>
+  trajectoryEvents.value.filter((event) => event.type === 'turn/start').map((event) => event.seq),
+);
 
 /** 展开/收起某一轮的过程组 */ function toggleProcess(key: string): void {
   const next = new Set(expandedTurns.value);
@@ -1366,14 +1528,6 @@ function toggleUsage(key: string): void {
     next.add(key);
   }
   expandedUsage.value = next;
-}
-
-/** 重试：用同一句用户输入重新发起一轮 */
-function retryTurn(view: TurnView): void {
-  if (view.user === null || running.value) {
-    return;
-  }
-  sendContent(view.user.text);
 }
 
 /** 复制最终回复 */
@@ -1528,8 +1682,8 @@ function handleSend(): void {
   sendContent(content);
 }
 
-/** 发送指定内容：草稿转正、推入用户与助手占位、开启 SSE */
-function sendContent(content: string): void {
+/** 发送指定内容：草稿转正、推入用户与助手占位、开启 SSE；retryOf 标记重试的旧回合 */
+function sendContent(content: string, retryOf?: number): void {
   if (!current.value || running.value) {
     return;
   }
@@ -1539,24 +1693,30 @@ function sendContent(content: string): void {
   messages.value.push({ role: 'user', text: content, thinking: '', tools: [] });
   messages.value.push({ role: 'assistant', text: '', thinking: '', tools: [] });
   running.value = true;
-  abortController = addTurnStream(currentId.value, content, {
-    onEvent: applyEvent,
-    onDone: () => {
-      running.value = false;
-      void loadUsage();
-      void Promise.all([getSessionEvents(currentId.value), getSessionCalls(currentId.value)]).then(
-        ([events, calls]) => {
+  abortController = addTurnStream(
+    currentId.value,
+    content,
+    {
+      onEvent: applyEvent,
+      onDone: () => {
+        running.value = false;
+        void loadUsage();
+        void Promise.all([
+          getSessionEvents(currentId.value),
+          getSessionCalls(currentId.value),
+        ]).then(([events, calls]) => {
           trajectoryEvents.value = events;
           modelCalls.value = calls;
-        },
-      );
-      void refreshSessions();
+        });
+        void refreshSessions();
+      },
+      onError: (message) => {
+        running.value = false;
+        ElMessage.error(message);
+      },
     },
-    onError: (message) => {
-      running.value = false;
-      ElMessage.error(message);
-    },
-  });
+    retryOf,
+  );
 }
 
 /** 停止：结束流并通知后端 */
@@ -2302,6 +2462,23 @@ onUnmounted(() => {
   gap: 4px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--kb-line);
+  cursor: crosshair;
+  user-select: none;
+}
+
+.overview-hint {
+  margin: 0 0 2px;
+  color: var(--kb-text-3);
+  font-size: 11px;
+}
+
+.overview-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: rgb(96 165 250 / 22%);
+  pointer-events: none;
 }
 
 .overview-row {
@@ -2530,6 +2707,8 @@ onUnmounted(() => {
   width: 100%;
   max-width: 880px;
   margin: 0 auto;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
 }
 
 .process {
@@ -2774,41 +2953,47 @@ onUnmounted(() => {
 }
 
 .tool-card {
-  margin: 8px 0;
-  overflow: hidden;
-  border: 1px solid var(--kb-line);
-  border-radius: 8px;
-  background: rgb(255 255 255 / 3%);
+  margin: 2px 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
 }
 
 .tool-head {
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 6px 10px;
+  margin-left: -6px;
+  padding: 3px 6px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
   list-style: none;
 }
 
-.tool-dot {
+.tool-head:hover {
+  background: rgb(255 255 255 / 4%);
+}
+
+.tool-icon {
   flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--kb-text-3);
+  width: 12px;
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  text-align: center;
 }
 
-.tool-dot.is-ok {
-  background: var(--kb-ok);
+.tool-icon.is-ok {
+  color: var(--kb-ok);
 }
 
-.tool-dot.is-fail {
-  background: var(--kb-danger);
+.tool-icon.is-fail {
+  color: var(--kb-danger);
 }
 
-.tool-dot.is-run {
-  background: #f59e0b;
+.tool-icon.is-run {
+  color: #f59e0b;
 }
 
 .tool-name {
@@ -2836,7 +3021,8 @@ onUnmounted(() => {
 }
 
 .tool-body {
-  padding: 0 10px 10px;
+  margin-left: 12px;
+  padding: 2px 0 8px;
   border-top: 1px solid var(--kb-line);
 }
 
