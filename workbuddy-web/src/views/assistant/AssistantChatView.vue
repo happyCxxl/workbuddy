@@ -1,15 +1,6 @@
 <template>
   <div class="page assistant-page">
-    <div class="page-head">
-      <div>
-        <h1 class="page-title">对话</h1>
-        <p class="page-desc">
-          先新增工作区，再在工作区里新建会话；可乐会读写工作区目录、跑命令、查资料，高危操作先问过你。
-        </p>
-      </div>
-    </div>
-
-    <div class="chat-wrap">
+    <div class="chat-wrap" :class="{ 'sessions-collapsed': !sessionsOpen, switching }">
       <!-- 工作区列表 -->
       <div class="sessions-panel">
         <div class="sessions-head">
@@ -23,8 +14,8 @@
             @click="searchVisible = !searchVisible"
           >
             <svg
-              width="13"
-              height="13"
+              width="16"
+              height="16"
               viewBox="0 0 16 16"
               fill="none"
               stroke="currentColor"
@@ -42,8 +33,8 @@
             @click="onlyWithSessions = !onlyWithSessions"
           >
             <svg
-              width="13"
-              height="13"
+              width="16"
+              height="16"
               viewBox="0 0 16 16"
               fill="none"
               stroke="currentColor"
@@ -54,8 +45,8 @@
           </button>
           <button class="head-icon" type="button" title="新增工作区" @click="openWorkspaceDialog">
             <svg
-              width="13"
-              height="13"
+              width="16"
+              height="16"
               viewBox="0 0 16 16"
               fill="none"
               stroke="currentColor"
@@ -79,8 +70,8 @@
             <div class="group-head" @click="toggleGroup(group.key)">
               <span class="group-folder">
                 <svg
-                  width="14"
-                  height="14"
+                  width="18"
+                  height="18"
                   viewBox="0 0 16 16"
                   fill="none"
                   stroke="currentColor"
@@ -145,9 +136,31 @@
         </div>
       </div>
 
+      <!-- 切换会话栏时：发光扫描线从左到右擦除 / 从右到左重绘网格 -->
+      <div v-show="switching" ref="wipeEl" class="grid-wipe" aria-hidden="true">
+        <span class="wipe-edge"></span>
+      </div>
+
       <!-- 对话区 -->
       <div class="chat-panel">
         <div class="chat-head">
+          <button
+            class="head-icon"
+            type="button"
+            :title="sessionsOpen ? '收起会话栏' : '展开会话栏'"
+            @click="toggleSessions"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M2.5 4h11M2.5 8h11M2.5 12h11" />
+            </svg>
+          </button>
           <span class="chat-title">{{ current?.title || '选择或新建一个会话' }}</span>
           <span v-if="current" class="chat-dir">{{ current.work_dir }}</span>
           <span class="page-spacer"></span>
@@ -261,7 +274,7 @@
               <MarkdownView :content="view.answer.text" />
             </div>
             <div v-if="view.answer && !view.running" class="turn-footer">
-              <el-popover placement="top" width="300" trigger="click">
+              <el-popover placement="top-start" width="300" trigger="click">
                 <template #reference>
                   <button class="turn-meta" type="button">
                     <svg
@@ -332,7 +345,7 @@
           />
           <div class="composer-row">
             <div class="composer-hints">
-              <el-popover placement="top" width="220" trigger="click">
+              <el-popover placement="top-start" width="220" trigger="click">
                 <template #reference>
                   <button class="hint-link" type="button" :disabled="!current">
                     <svg
@@ -363,7 +376,7 @@
                   </button>
                 </div>
               </el-popover>
-              <el-popover placement="top" width="280" trigger="click">
+              <el-popover placement="top-start" width="280" trigger="click">
                 <template #reference>
                   <button class="hint-link" type="button" :disabled="!current">
                     <svg
@@ -734,6 +747,50 @@ const workspaceDialogVisible = ref(false);
 const workspacePath = ref('');
 const workspaces = ref<Workspace[]>([]);
 const searchVisible = ref(false);
+
+/** 会话栏展开状态（持久化） */
+const sessionsOpen = ref(localStorage.getItem('assistant.sessionsOpen') !== '0');
+
+/** 切换中：先淡出，改布局，再淡入，避免正文在动画里逐帧重排 */
+const switching = ref(false);
+
+/** 扫描擦除层 */
+const wipeEl = ref<HTMLElement | null>(null);
+
+/** 亮网格扫描：崩解时亮网格从左到右被擦掉，重组时从右到左重绘 */
+function runWipe(mode: 'break' | 'assemble'): void {
+  const el = wipeEl.value;
+  if (!el) {
+    return;
+  }
+  const edge = el.querySelector('.wipe-edge');
+  const shrink = [{ clipPath: 'inset(0 0 0 0%)' }, { clipPath: 'inset(0 0 0 100%)' }];
+  const grow = [{ clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0%)' }];
+  const edgeMove =
+    mode === 'break' ? [{ left: '0%' }, { left: '100%' }] : [{ left: '100%' }, { left: '0%' }];
+  el.animate(mode === 'break' ? shrink : grow, {
+    duration: 800,
+    easing: 'linear',
+    fill: 'forwards',
+  });
+  edge?.animate(edgeMove, { duration: 800, easing: 'linear', fill: 'forwards' });
+}
+
+/** 收起 / 展开会话栏：淡出 + 网格扫描 → 换布局 → 淡入 */
+function toggleSessions(): void {
+  if (switching.value) {
+    return;
+  }
+  switching.value = true;
+  runWipe(sessionsOpen.value ? 'break' : 'assemble');
+  window.setTimeout(() => {
+    sessionsOpen.value = !sessionsOpen.value;
+    localStorage.setItem('assistant.sessionsOpen', sessionsOpen.value ? '1' : '0');
+    window.requestAnimationFrame(() => {
+      switching.value = false;
+    });
+  }, 850);
+}
 const workspaceKeyword = ref('');
 const onlyWithSessions = ref(false);
 const usage = ref<SessionUsage | null>(null);
@@ -949,6 +1006,7 @@ const cacheRate = computed(() => {
   const total = current.prompt_cache_hit_tokens + current.prompt_cache_miss_tokens;
   return total > 0 ? Math.round((current.prompt_cache_hit_tokens / total) * 100) : null;
 });
+
 let abortController: AbortController | null = null;
 
 /** 后台任务状态中文名 */
@@ -2292,22 +2350,122 @@ onUnmounted(() => {
 }
 
 .chat-wrap {
+  position: relative;
   display: grid;
   flex: 1;
   min-height: 0;
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: 14px;
+  overflow: hidden;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 0;
 }
 
 .sessions-panel,
 .chat-panel {
   display: flex;
+  min-width: 0;
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--kb-line);
-  border-radius: var(--kb-radius);
-  background: var(--kb-bg-2);
+}
+
+.sessions-panel {
+  min-width: 240px;
+  border-right: 1px solid var(--kb-line);
+  background: linear-gradient(180deg, var(--kb-bg-1), #050a12);
+  transition: opacity 0.8s ease;
+}
+
+.chat-panel {
+  position: relative;
+  background:
+    radial-gradient(720px 260px at 85% -8%, var(--kb-tint), transparent 72%), var(--kb-bg-2);
+  transition: opacity 0.8s ease;
+}
+
+/*
+ * 切换会话栏宽度时，先把两侧淡出，再瞬间改布局，最后淡入。
+ * 宽度是布局属性，若直接做过渡，正文会逐帧重排导致行数跳动；
+ * 在不可见时完成重排，用户只看到一次干净的淡入淡出与网格崩解。
+ */
+.chat-wrap.switching .sessions-panel,
+.chat-wrap.switching .chat-panel {
+  opacity: 0;
+}
+
+.chat-wrap.sessions-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.chat-wrap.sessions-collapsed .sessions-panel {
+  border-right-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 亮网格扫描层：整片 16px 网格，靠 clip-path 从左到右被擦掉 */
+.grid-wipe {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+  background-image:
+    linear-gradient(rgb(34 224 255 / 30%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(34 224 255 / 30%) 1px, transparent 1px);
+  background-size: 16px 16px;
+  pointer-events: none;
+  will-change: clip-path;
+}
+
+.wipe-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--kb-primary);
+  box-shadow:
+    0 0 12px var(--kb-primary),
+    0 0 28px rgb(34 224 255 / 55%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sessions-panel,
+  .chat-panel {
+    transition: none;
+  }
+
+  .grid-wipe {
+    display: none;
+  }
+}
+
+/* HUD 角标：左上 / 右下 */
+.chat-panel::before,
+.chat-panel::after {
+  position: absolute;
+  z-index: 3;
+  width: 12px;
+  height: 12px;
+  border-style: solid;
+  border-color: var(--kb-primary);
+  border-width: 0;
+  filter: drop-shadow(0 0 4px var(--kb-glow));
+  opacity: 0.55;
+  pointer-events: none;
+  content: '';
+}
+
+.chat-panel::before {
+  top: 8px;
+  left: 8px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.chat-panel::after {
+  right: 8px;
+  bottom: 8px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
 }
 
 .sessions-head {
@@ -2315,22 +2473,24 @@ onUnmounted(() => {
   flex: none;
   gap: 2px;
   align-items: center;
-  padding: 10px 10px 10px 12px;
+  padding: 12px 12px 12px 14px;
   border-bottom: 1px solid var(--kb-line);
 }
 
 .sessions-title {
   color: var(--kb-text-2);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .head-icon {
   display: inline-flex;
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   align-items: center;
   justify-content: center;
   padding: 0;
@@ -2342,8 +2502,8 @@ onUnmounted(() => {
 }
 
 .head-icon:hover {
-  background: rgb(255 255 255 / 6%);
-  color: var(--kb-text-2);
+  background: rgb(34 224 255 / 8%);
+  color: var(--kb-primary);
 }
 
 .head-icon-on {
@@ -2366,10 +2526,10 @@ onUnmounted(() => {
 /* 工作区行：34px；文件夹图标悬停/选中切换为展开箭头（DSH 同款交互） */
 .group-head {
   display: flex;
-  height: 34px;
+  height: 44px;
   align-items: center;
-  gap: 6px;
-  padding: 0 6px 0 8px;
+  gap: 8px;
+  padding: 0 8px 0 10px;
   border-radius: 8px;
   color: var(--kb-text-2);
   cursor: pointer;
@@ -2377,16 +2537,16 @@ onUnmounted(() => {
 }
 
 .group-head:hover {
-  background: rgb(255 255 255 / 5%);
+  background: rgb(34 224 255 / 5%);
 }
 
 .group-folder {
   display: inline-flex;
   flex: none;
-  width: 16px;
+  width: 20px;
   align-items: center;
   justify-content: center;
-  color: var(--kb-text-3);
+  color: var(--kb-primary);
 }
 
 .group-arrow {
@@ -2403,15 +2563,11 @@ onUnmounted(() => {
   transform: rotate(90deg);
 }
 
-.group-head:hover .group-arrow {
-  display: inline-block;
-}
-
 .group-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2467,16 +2623,20 @@ onUnmounted(() => {
   padding-left: 22px;
 }
 
-/* 会话行：32px 单行；悬停换底色，时间让位给重命名（DSH 同款） */
+/* 会话行：名称在上、时间在下的两行结构 */
 .session-item {
+  position: relative;
   display: flex;
-  height: 32px;
+  height: auto;
+  min-height: 48px;
   width: 100%;
-  align-items: center;
-  gap: 6px;
-  padding: 0 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 34px 8px 14px;
   border: none;
-  border-radius: 8px;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
   background: none;
   color: var(--kb-text-1);
   cursor: pointer;
@@ -2485,11 +2645,23 @@ onUnmounted(() => {
 }
 
 .session-item:hover {
-  background: rgb(255 255 255 / 5%);
+  background: rgb(34 224 255 / 5%);
 }
 
 .session-item-on {
-  background: var(--kb-tint);
+  background: linear-gradient(90deg, rgb(34 224 255 / 14%), rgb(34 224 255 / 3%) 72%, transparent);
+  box-shadow: inset 0 0 0 1px var(--kb-line);
+}
+
+.session-item-on::before {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  width: 2px;
+  background: var(--kb-primary);
+  box-shadow: 0 0 12px var(--kb-primary);
+  content: '';
 }
 
 .session-item-on:hover {
@@ -2497,25 +2669,30 @@ onUnmounted(() => {
 }
 
 .session-title {
-  flex: 1;
+  flex: none;
+  width: 100%;
   min-width: 0;
   overflow: hidden;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 20px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .session-time {
+  display: block;
   flex: none;
   color: var(--kb-text-3);
   font-family: ui-monospace, Consolas, monospace;
-  font-size: 10px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
 }
 
 .session-rename {
+  position: absolute;
+  top: 6px;
+  right: 22px;
   display: none;
-  flex: none;
   width: 18px;
   color: var(--kb-text-3);
   font-size: 11px;
@@ -2527,8 +2704,10 @@ onUnmounted(() => {
 }
 
 .session-delete {
+  position: absolute;
+  top: 6px;
+  right: 4px;
   display: none;
-  flex: none;
   width: 18px;
   color: var(--kb-text-3);
   font-size: 11px;
@@ -2537,10 +2716,6 @@ onUnmounted(() => {
 
 .session-delete:hover {
   color: var(--kb-danger);
-}
-
-.session-item:hover .session-time {
-  display: none;
 }
 
 .session-item:hover .session-rename,
@@ -2686,13 +2861,16 @@ onUnmounted(() => {
 }
 
 .chat-dir {
-  padding: 2px 8px;
-  border: 1px solid var(--kb-line);
-  border-radius: 999px;
-  background: var(--kb-surface);
+  padding: 4px 12px;
+  border: 1px solid var(--kb-line-2);
+  border-left: 2px solid var(--kb-primary);
+  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+  background: linear-gradient(90deg, var(--kb-tint), transparent 70%);
   color: var(--kb-text-2);
   font-family: ui-monospace, Consolas, monospace;
-  font-size: 11px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 0 14px var(--kb-tint);
 }
 
 .chat-status {
@@ -3019,8 +3197,6 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 1120px;
-  margin: 0 auto;
   content-visibility: auto;
   contain-intrinsic-size: auto 200px;
 }

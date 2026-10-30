@@ -6,26 +6,26 @@
  *   描边强度  --kb-line（最淡）→ line-2 → line-strong（最明显）
  */
 :root {
-  --kb-bg-0: #070b14;
-  --kb-bg-1: #0a0e17;
-  --kb-bg-2: #0d1424;
-  --kb-text-1: #e6eaf2;
-  --kb-text-2: rgb(230 234 242 / 62%);
-  --kb-text-3: rgb(230 234 242 / 36%);
-  --kb-text-4: rgb(230 234 242 / 22%);
-  --kb-line: rgb(255 255 255 / 8%);
-  --kb-line-2: rgb(255 255 255 / 12%);
-  --kb-line-strong: rgb(255 255 255 / 16%);
-  --kb-surface: rgb(255 255 255 / 4%);
-  --kb-primary: #34d399;
-  --kb-primary-2: #2dd4bf;
-  --kb-glow: rgb(52 211 153 / 35%);
-  --kb-tint: rgb(52 211 153 / 10%);
-  --kb-aurora: rgb(52 211 153 / 14%);
-  --kb-ok: #a3e635;
-  --kb-warn: #fbbf24;
+  --kb-bg-0: #03060c;
+  --kb-bg-1: #070d18;
+  --kb-bg-2: #0a1424;
+  --kb-text-1: #dff4ff;
+  --kb-text-2: rgb(223 244 255 / 62%);
+  --kb-text-3: rgb(223 244 255 / 34%);
+  --kb-text-4: rgb(223 244 255 / 22%);
+  --kb-line: rgb(34 224 255 / 12%);
+  --kb-line-2: rgb(34 224 255 / 18%);
+  --kb-line-strong: rgb(34 224 255 / 26%);
+  --kb-surface: rgb(34 224 255 / 5%);
+  --kb-primary: #22e0ff;
+  --kb-primary-2: #4d7cff;
+  --kb-glow: rgb(34 224 255 / 35%);
+  --kb-tint: rgb(34 224 255 / 10%);
+  --kb-aurora: rgb(34 224 255 / 14%);
+  --kb-ok: #34d399;
+  --kb-warn: #ffb020;
   --kb-danger: #f87171;
-  --kb-btn-text: #041510;
+  --kb-btn-text: #04121c;
   --kb-preview-bg: #fff;
   --kb-preview-text: #000;
   --kb-file-pdf: #ffc9c9;
@@ -34,7 +34,7 @@
   --kb-file-slide: #fed7aa;
   --kb-file-text: #ddd6fe;
   --kb-file-image: #a5f3fc;
-  --kb-radius: 14px;
+  --kb-radius: 0;
 }
 
 /* 全局基底：暗色画布与文字体系 */
@@ -54,32 +54,32 @@
 
 /* Element Plus 暗色主题品牌化：主色切为翡翠系，容器与文字色对齐设计变量 */
 :root.dark {
-  --el-color-primary: #34d399;
-  --el-color-primary-light-3: #5fe0b0;
-  --el-color-primary-light-5: #86e8c6;
-  --el-color-primary-light-7: #aef0d9;
-  --el-color-primary-light-8: #c4f4e5;
-  --el-color-primary-light-9: #daf8ee;
-  --el-color-primary-dark-2: #2ab98a;
-  --el-bg-color: #0a0e17;
-  --el-bg-color-overlay: #0d1424;
-  --el-border-color: rgb(255 255 255 / 8%);
-  --el-border-color-light: rgb(255 255 255 / 8%);
-  --el-border-color-lighter: rgb(255 255 255 / 6%);
-  --el-text-color-primary: #e6eaf2;
-  --el-text-color-regular: rgb(230 234 242 / 75%);
-  --el-text-color-secondary: rgb(230 234 242 / 62%);
-  --el-text-color-placeholder: rgb(230 234 242 / 36%);
-  --el-fill-color-blank: rgb(255 255 255 / 4%);
-  --el-fill-color-light: rgb(255 255 255 / 6%);
+  --el-color-primary: #22e0ff;
+  --el-color-primary-light-3: #5ce9ff;
+  --el-color-primary-light-5: #8df0ff;
+  --el-color-primary-light-7: #b8f6ff;
+  --el-color-primary-light-8: #cef9ff;
+  --el-color-primary-light-9: #e2fbff;
+  --el-color-primary-dark-2: #1cb3cc;
+  --el-bg-color: #070d18;
+  --el-bg-color-overlay: #0a1424;
+  --el-border-color: rgb(34 224 255 / 12%);
+  --el-border-color-light: rgb(34 224 255 / 12%);
+  --el-border-color-lighter: rgb(34 224 255 / 8%);
+  --el-text-color-primary: #dff4ff;
+  --el-text-color-regular: rgb(223 244 255 / 75%);
+  --el-text-color-secondary: rgb(223 244 255 / 62%);
+  --el-text-color-placeholder: rgb(223 244 255 / 34%);
+  --el-fill-color-blank: rgb(34 224 255 / 4%);
+  --el-fill-color-light: rgb(34 224 255 / 6%);
   --el-form-label-font-size: 13px;
-  --el-checkbox-text-color: rgb(230 234 242 / 62%);
-  --el-input-border-radius: 10px;
-  --el-input-bg-color: rgb(255 255 255 / 4%);
-  --el-input-border-color: rgb(255 255 255 / 8%);
-  --el-input-hover-border-color: rgb(255 255 255 / 8%);
-  --el-input-focus-border-color: #34d399;
-  --el-input-text-color: #e6eaf2;
-  --el-input-placeholder-color: rgb(230 234 242 / 36%);
-  --el-mask-color: rgb(7 11 20 / 70%);
+  --el-checkbox-text-color: rgb(223 244 255 / 62%);
+  --el-input-border-radius: 0;
+  --el-input-bg-color: rgb(34 224 255 / 4%);
+  --el-input-border-color: rgb(34 224 255 / 14%);
+  --el-input-hover-border-color: rgb(34 224 255 / 26%);
+  --el-input-focus-border-color: #22e0ff;
+  --el-input-text-color: #dff4ff;
+  --el-input-placeholder-color: rgb(223 244 255 / 34%);
+  --el-mask-color: rgb(3 6 12 / 76%);
 }

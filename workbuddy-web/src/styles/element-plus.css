@@ -29,8 +29,8 @@
   background: rgb(255 255 255 / 6%);
   box-shadow:
     0 0 0 1px var(--kb-primary) inset,
-    0 0 0 3px rgb(52 211 153 / 12%),
-    0 0 18px rgb(52 211 153 / 12%);
+    0 0 0 3px rgb(34 224 255 / 12%),
+    0 0 18px rgb(34 224 255 / 12%);
 }
 
 /* noinspection CssUnusedSymbol */
@@ -100,7 +100,7 @@
  * 统一禁用态：不保留 Element Plus 的默认灰。
  *
  * <p>Element Plus 的禁用态是它自带的一套中性灰（**浅色主题的灰**），
- * 与这套暗色 + 青绿（`--kb-primary: #34d399`）的界面不一致。而且
+ * 与这套暗色 + 青蓝（`--kb-primary: #22e0ff`）的界面不一致。而且
  * 它默认的**可用/不可用对比只有 26% 的透明度差**（62% vs 36%），
  * 看不出哪一侧翻不动。
  *
@@ -129,7 +129,7 @@
    */
   --el-disabled-text-color: rgb(230 234 242 / 28%);
   --el-disabled-bg-color: transparent;
-  --el-disabled-border-color: rgb(52 211 153 / 10%);
+  --el-disabled-border-color: rgb(34 224 255 / 10%);
   --el-text-color-disabled: rgb(230 234 242 / 28%);
 
   /*
@@ -139,9 +139,9 @@
    */
   --el-button-disabled-text-color: rgb(230 234 242 / 28%);
   --el-button-disabled-bg-color: transparent;
-  --el-button-disabled-border-color: rgb(52 211 153 / 10%);
+  --el-button-disabled-border-color: rgb(34 224 255 / 10%);
   --el-select-disabled-color: rgb(230 234 242 / 28%);
-  --el-select-disabled-border: rgb(52 211 153 / 10%);
+  --el-select-disabled-border: rgb(34 224 255 / 10%);
   --el-link-disabled-text-color: rgb(230 234 242 / 28%);
   --el-cascader-node-color-disabled: rgb(230 234 242 / 28%);
   --el-segmented-item-disabled-color: rgb(230 234 242 / 28%);
@@ -165,7 +165,7 @@
 .el-button--warning.is-disabled,
 .el-button--danger.is-disabled,
 .el-button--info.is-disabled {
-  border-color: rgb(52 211 153 / 10%);
+  border-color: rgb(34 224 255 / 10%);
   background-color: transparent;
   color: rgb(230 234 242 / 28%);
 
@@ -181,10 +181,27 @@
 .el-button--warning.is-disabled:hover,
 .el-button--danger.is-disabled:hover,
 .el-button--info.is-disabled:hover {
-  border-color: rgb(52 211 153 / 10%);
+  border-color: rgb(34 224 255 / 10%);
   background-color: transparent;
   color: rgb(230 234 242 / 28%);
   box-shadow: none;
+}
+
+/* 助手输入框：终端风格（战术控制台） */
+.composer .el-textarea__inner {
+  border: 1px solid var(--kb-line);
+  background: rgb(3 6 12 / 72%);
+  color: var(--kb-text-1);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+  box-shadow: inset 0 0 26px var(--kb-tint);
+}
+
+.composer .el-textarea__inner:focus {
+  border-color: rgb(34 224 255 / 50%);
+  box-shadow:
+    inset 0 0 26px var(--kb-tint),
+    0 0 22px rgb(34 224 255 / 18%);
 }
 
 /*

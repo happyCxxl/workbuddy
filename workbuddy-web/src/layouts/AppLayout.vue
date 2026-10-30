@@ -540,6 +540,20 @@ function handleLogout(): void {
   transition: grid-template-columns 0.22s ease;
 }
 
+/* 深空网格：只做质感，不挡交互 */
+.layout-main::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--kb-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--kb-line) 1px, transparent 1px);
+  background-size: 16px 16px;
+  mask-image: radial-gradient(90% 80% at 55% 35%, #000 10%, transparent 100%);
+  pointer-events: none;
+  content: '';
+}
+
 .layout-glow {
   position: fixed;
   top: -240px;
@@ -559,9 +573,25 @@ function handleLogout(): void {
   display: flex;
   flex-direction: column;
   padding: 22px 14px;
-  border-right: 1px solid var(--kb-line);
-  background: linear-gradient(180deg, rgb(255 255 255 / 3%), transparent);
-  backdrop-filter: blur(20px);
+  background: linear-gradient(180deg, #040a13, #02050a);
+}
+
+/* 侧栏右缘的发光缝：不是分割线，是光 */
+.layout-side::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgb(34 224 255 / 45%) 22%,
+    rgb(77 124 255 / 35%) 68%,
+    transparent
+  );
+  box-shadow: 0 0 18px rgb(34 224 255 / 35%);
+  content: '';
 }
 
 /* 品牌名是回首页的链接，需清掉锚点默认样式 */
@@ -941,9 +971,9 @@ function handleLogout(): void {
   width: 32px;
   height: 32px;
   place-items: center;
-  border: 1px solid rgb(52 211 153 / 40%);
+  border: 1px solid rgb(34 224 255 / 40%);
   border-radius: 50%;
-  background: linear-gradient(135deg, rgb(52 211 153 / 30%), rgb(45 212 191 / 20%));
+  background: linear-gradient(135deg, rgb(34 224 255 / 30%), rgb(77 124 255 / 20%));
   color: var(--kb-primary);
   font-size: 13px;
 }
@@ -971,7 +1001,7 @@ function handleLogout(): void {
   height: 62px;
   padding: 0 28px;
   border-bottom: 1px solid var(--kb-line);
-  background: rgb(10 14 23 / 70%);
+  background: rgb(4 10 19 / 82%);
   backdrop-filter: blur(16px);
 }
 
@@ -1022,7 +1052,20 @@ function handleLogout(): void {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  padding: 26px 28px 40px;
+  padding: 0;
+}
+
+/* 页面底部渐变光带：不挡交互，只做氛围 */
+.layout::after {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  height: 220px;
+  background: linear-gradient(0deg, rgb(34 224 255 / 8%), transparent 75%);
+  pointer-events: none;
+  content: '';
 }
 
 /* ==================== 侧边栏折叠（放最后：覆盖上面的基础样式）==================== */
@@ -1116,13 +1159,13 @@ function handleLogout(): void {
   border-radius: 3px;
   background: linear-gradient(
     180deg,
-    rgb(52 211 153 / 0%),
-    rgb(52 211 153 / 30%),
-    rgb(45 212 191 / 85%),
-    rgb(52 211 153 / 30%),
-    rgb(52 211 153 / 0%)
+    rgb(34 224 255 / 0%),
+    rgb(34 224 255 / 30%),
+    rgb(77 124 255 / 85%),
+    rgb(34 224 255 / 30%),
+    rgb(34 224 255 / 0%)
   );
-  box-shadow: 0 0 10px rgb(52 211 153 / 50%);
+  box-shadow: 0 0 10px rgb(34 224 255 / 50%);
   cursor: pointer;
   transform: translateY(-50%);
   transition:
@@ -1155,7 +1198,7 @@ function handleLogout(): void {
 /* 悬停：光缝拉长加亮，给一点"通电"的反馈 */
 .layout-side-toggle:hover {
   height: 52px;
-  box-shadow: 0 0 20px rgb(52 211 153 / 85%);
+  box-shadow: 0 0 20px rgb(34 224 255 / 85%);
 }
 
 /* ==================== 收起态：同色系，只翻三角 ==================== */
@@ -1165,7 +1208,7 @@ function handleLogout(): void {
  * 状态差异靠三角方向 + 光晕强弱表达，颜色始终是青蓝。
  */
 .layout-side-toggle.is-collapsed {
-  box-shadow: 0 0 14px rgb(52 211 153 / 65%);
+  box-shadow: 0 0 14px rgb(34 224 255 / 65%);
 }
 
 .layout-side-toggle.is-collapsed::after {
@@ -1175,7 +1218,7 @@ function handleLogout(): void {
 }
 
 .layout-side-toggle.is-collapsed:hover {
-  box-shadow: 0 0 20px rgb(52 211 153 / 85%);
+  box-shadow: 0 0 20px rgb(34 224 255 / 85%);
 }
 
 /* 图片头像：按方形裁切填满圆框，不设会拉变形 */
