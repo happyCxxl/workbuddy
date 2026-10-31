@@ -56,6 +56,17 @@ public class AuthCookieSupport {
     }
 
     /**
+     * 写会话 Cookie（不勾选「记住我」）：浏览器关闭即失效。
+     *
+     * @param response HTTP 响应
+     * @param token    令牌
+     */
+    public void writeSession(HttpServletResponse response, String token) {
+        add(response, sessionCookie(TOKEN_COOKIE, token, true));
+        add(response, sessionCookie(CSRF_COOKIE, UUID.randomUUID().toString(), false));
+    }
+
+    /**
      * 清登录 Cookie：令牌与 CSRF 一并失效。
      *
      * @param response HTTP 响应
@@ -91,6 +102,15 @@ public class AuthCookieSupport {
                 .path(PATH)
                 .sameSite("Lax")
                 .maxAge(ttl)
+                .build();
+    }
+
+    private ResponseCookie sessionCookie(String name, String value, boolean httpOnly) {
+        return ResponseCookie.from(name, value)
+                .httpOnly(httpOnly)
+                .secure(secure)
+                .path(PATH)
+                .sameSite("Lax")
                 .build();
     }
 

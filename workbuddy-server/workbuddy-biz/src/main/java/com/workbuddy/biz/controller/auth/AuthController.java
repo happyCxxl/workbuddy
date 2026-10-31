@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Duration;
-
 /**
  * 认证接口：登录与注册。
  *
@@ -45,8 +43,12 @@ public class AuthController {
     @RateLimit()
     public R<LoginVO> login(@Valid @RequestBody LoginDTO request, HttpServletResponse response) {
         LoginVO vo = authService.login(request);
-        Duration ttl = request.isRemember() ? jwtTokenSupport.rememberTtl() : jwtTokenSupport.standardTtl();
-        authCookieSupport.write(response, vo.getToken(), ttl);
+        if (request.isRemember()) {
+            authCookieSupport.write(response, vo.getToken(), jwtTokenSupport.rememberTtl());
+        } else {
+            // 未勾选「记住我」：会话 Cookie，浏览器关闭即失效
+            authCookieSupport.writeSession(response, vo.getToken());
+        }
         // 令牌只走 HttpOnly Cookie，避免脚本可读
         vo.setToken(null);
         return R.ok(vo);
