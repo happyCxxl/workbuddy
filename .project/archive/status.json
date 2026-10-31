@@ -63,7 +63,7 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-31",
-      "baseline": "e8de4177",
+      "baseline": "31d89f98",
       "note": "令牌改 HttpOnly Cookie（记住我为持久、否则会话）；Java 与灵犀双侧 CSRF 双提交校验"
     }
   }
