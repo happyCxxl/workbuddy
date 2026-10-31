@@ -2,7 +2,6 @@ package com.workbuddy.auth.support;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -31,17 +30,6 @@ public class AuthCookieSupport {
     public static final String CSRF_HEADER = "X-CSRF-Token";
 
     private static final String PATH = "/";
-
-    private final boolean secure;
-
-    /**
-     * 构造 Cookie 工具。
-     *
-     * @param secure 是否加 Secure 标记（HTTPS 部署置 true）
-     */
-    public AuthCookieSupport(@Value("${workbuddy.auth.cookie.secure:false}") boolean secure) {
-        this.secure = secure;
-    }
 
     /**
      * 写登录 Cookie：令牌 HttpOnly，有效期随「记住我」档位；同时刷新 CSRF Cookie。
@@ -98,7 +86,6 @@ public class AuthCookieSupport {
     private ResponseCookie cookie(String name, String value, Duration ttl, boolean httpOnly) {
         return ResponseCookie.from(name, value)
                 .httpOnly(httpOnly)
-                .secure(secure)
                 .path(PATH)
                 .sameSite("Lax")
                 .maxAge(ttl)
@@ -108,7 +95,6 @@ public class AuthCookieSupport {
     private ResponseCookie sessionCookie(String name, String value, boolean httpOnly) {
         return ResponseCookie.from(name, value)
                 .httpOnly(httpOnly)
-                .secure(secure)
                 .path(PATH)
                 .sameSite("Lax")
                 .build();

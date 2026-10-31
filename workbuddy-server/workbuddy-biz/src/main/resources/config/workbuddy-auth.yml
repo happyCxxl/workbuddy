@@ -10,9 +10,6 @@ workbuddy:
       # 不勾选「记住我」：短期令牌（会话 Cookie）；勾选：长期令牌（持久 Cookie 30 天）
       ttl-days: 1
       ttl-days-remember: 30
-    cookie:
-      # 令牌 Cookie 的 Secure 标记：HTTPS 部署必须置 true
-      secure: false
     # 登录失败防护：达阈值后按「账号 + IP」或「IP」维度临时锁定（窗口自首次失败起算）
     guard:
       enabled: true
