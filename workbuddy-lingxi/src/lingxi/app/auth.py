@@ -1,5 +1,6 @@
-"""JWT 鉴权：只验签、不发令牌；密钥来自 config.local.toml，与 Java 服务一致。"""
+"""JWT 鉴权：只验签、不发令牌；令牌来自 HttpOnly Cookie（兼容 Authorization 头）。"""
 
+import hmac
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Annotated
@@ -16,6 +17,14 @@ _MIN_SECRET_LENGTH = 32
 _KEY_PREFIX = "auth:token-version:"
 
 _EUNAUTHORIZED = "登录已失效，请重新登录"
+
+TOKEN_COOKIE = "wb_token"
+
+CSRF_COOKIE = "XSRF-TOKEN"
+
+CSRF_HEADER = "X-CSRF-Token"
+
+_SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS", "TRACE"})
 
 TokenVersionReader = Callable[[int], Awaitable[int | None]]
 
@@ -80,11 +89,16 @@ def decode_token(token: str, secret: str) -> CurrentUser:
 
 
 async def require_user(request: Request, authorization: str | None = Header(default=None)) -> CurrentUser:
-    """FastAPI 依赖：验签 + 比对共享版本号，失败走统一未认证错误码。"""
-    if not authorization or not authorization.startswith("Bearer "):
+    """FastAPI 依赖：取 Cookie 或 Bearer 令牌，验签并比对共享版本号。"""
+    token: str | None = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:]
+    else:
+        token = request.cookies.get(TOKEN_COOKIE)
+    if not token:
         raise ApiError(ErrorCode.UNAUTHORIZED, _EUNAUTHORIZED)
     settings = request.app.state.settings
-    user = decode_token(authorization[7:], settings.auth.secret)
+    user = decode_token(token, settings.auth.secret)
     reader: TokenVersionReader = request.app.state.token_version_reader
     try:
         current_version = await reader(user.id)
@@ -93,6 +107,20 @@ async def require_user(request: Request, authorization: str | None = Header(defa
     if current_version is None or current_version != user.token_version:
         raise ApiError(ErrorCode.UNAUTHORIZED, _EUNAUTHORIZED)
     return user
+
+
+async def require_csrf(request: Request) -> None:
+    """Cookie 认证的写请求做双提交校验；显式 Bearer 客户端不受影响。"""
+    if request.method in _SAFE_METHODS or request.url.path == "/health":
+        return
+    if request.headers.get("authorization"):
+        return
+    if request.cookies.get(TOKEN_COOKIE) is None:
+        return
+    header = request.headers.get(CSRF_HEADER)
+    cookie = request.cookies.get(CSRF_COOKIE)
+    if not header or not cookie or not hmac.compare_digest(header, cookie):
+        raise ApiError(ErrorCode.FORBIDDEN, "CSRF 校验失败")
 
 
 CurrentUserDep = Annotated[CurrentUser, Depends(require_user)]

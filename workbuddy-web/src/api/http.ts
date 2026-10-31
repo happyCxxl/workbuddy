@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus';
 
 import type { R } from '@/types/response';
 
-const TOKEN_KEY = 'knowledge-token';
+const USER_KEY = 'knowledge-user';
 
 const CODE_UNAUTHORIZED = 40101;
 /** 灵犀（Python）域未认证码：与 Java 的 40101 同样处理 */
@@ -30,20 +30,40 @@ declare module 'axios' {
 export const http = axios.create({
   baseURL: '',
   timeout: 15000,
+  // 令牌在 HttpOnly Cookie 里：跨源部署时也要带上凭证
+  withCredentials: true,
 });
 
+const CSRF_HEADER = 'X-CSRF-Token';
+const CSRF_COOKIE = 'XSRF-TOKEN';
+const UNSAFE_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+
+function readCookie(name: string): string | null {
+  const prefix = `${name}=`;
+  for (const part of document.cookie.split(';')) {
+    const item = part.trim();
+    if (item.startsWith(prefix)) {
+      return decodeURIComponent(item.slice(prefix.length));
+    }
+  }
+  return null;
+}
+
 http.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const method = (config.method ?? 'get').toLowerCase();
+  if (UNSAFE_METHODS.has(method)) {
+    const csrf = readCookie(CSRF_COOKIE);
+    if (csrf) {
+      config.headers[CSRF_HEADER] = csrf;
+    }
   }
   return config;
 });
 
 /** 清令牌并携来源路径回登录页；已在登录页时不重复跳，避免刷新循环 */
 function redirectToLogin(): void {
-  localStorage.removeItem(TOKEN_KEY);
-  sessionStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(USER_KEY);
   if (window.location.pathname === '/login') {
     return;
   }
@@ -73,9 +93,13 @@ http.interceptors.response.use(
   },
   (error) => {
     const status = error?.response?.status;
-    // 令牌缺失/失效/被吊销时后端若直接返回 401/403，这里兜底回登录页
-    if (status === HTTP_UNAUTHORIZED || status === HTTP_FORBIDDEN) {
+    if (status === HTTP_UNAUTHORIZED) {
       redirectToLogin();
+      return Promise.reject(error);
+    }
+    if (status === HTTP_FORBIDDEN) {
+      // CSRF 校验失败：不跳登录，提示后让用户刷新重试
+      ElMessage.error('请求校验失败，请刷新页面重试');
       return Promise.reject(error);
     }
     // 原样响应的接口自己给失败提示（例如"取文件失败（HTTP 404）"），这里不插话

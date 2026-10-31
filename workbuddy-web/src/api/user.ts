@@ -20,9 +20,9 @@ export async function updateProfile(request: ProfileUpdateRequest): Promise<void
   await http.put<void>('/user/profile', request);
 }
 
-/** 修改密码（本人）：返回以新令牌版本补签的令牌（本地令牌需替换为新值） */
-export async function updatePassword(request: PasswordUpdateRequest): Promise<string> {
-  const response = await http.put<string>('/user/password', request);
+/** 修改密码（本人）：服务端刷新 HttpOnly 登录 Cookie，响应体不回传令牌 */
+export async function updatePassword(request: PasswordUpdateRequest): Promise<null> {
+  const response = await http.put<null>('/user/password', request);
   return response.data;
 }
 

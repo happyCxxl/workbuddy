@@ -209,11 +209,26 @@ export interface TurnStreamHandlers {
   onError: (message: string) => void;
 }
 
-/** 令牌与后端地址：SSE 走原生 fetch（axios 不暴露流式 body） */
-const TOKEN_KEY = 'knowledge-token';
+/** 用户快照键：令牌在 HttpOnly Cookie 中，前端只清快照 */
+const USER_KEY = 'knowledge-user';
 
 /** 灵犀（Python）域未认证码 */
 const CODE_AI_UNAUTHORIZED = 60003;
+
+const CSRF_COOKIE = 'XSRF-TOKEN';
+const CSRF_HEADER = 'X-CSRF-Token';
+
+/** 读取 CSRF Cookie 并拼回请求头（Cookie 认证的写请求需要） */
+function csrfHeaders(): Record<string, string> {
+  const prefix = `${CSRF_COOKIE}=`;
+  for (const part of document.cookie.split(';')) {
+    const item = part.trim();
+    if (item.startsWith(prefix)) {
+      return { [CSRF_HEADER]: decodeURIComponent(item.slice(prefix.length)) };
+    }
+  }
+  return {};
+}
 
 /** SSE 解析状态：当前事件类型与 DONE 标记 */
 interface SseParser {
@@ -253,8 +268,8 @@ async function readSseFrames(response: Response, handlers: TurnStreamHandlers): 
   if (contentType.includes('application/json')) {
     const body = (await response.json()) as { code?: number; msg?: string };
     if (body.code === CODE_AI_UNAUTHORIZED) {
-      localStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      sessionStorage.removeItem(USER_KEY);
       if (window.location.pathname !== '/login') {
         const from = encodeURIComponent(window.location.pathname + window.location.search);
         window.location.href = `/login?redirect=${from}`;
@@ -303,13 +318,13 @@ export function addTurnStream(
   retryOf?: number,
 ): AbortController {
   const controller = new AbortController();
-  const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY) ?? '';
   void (async () => {
     try {
       const response = await fetch(`/sessions/${sessionId}/turns`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ content, retry_of: retryOf ?? null }),
+        credentials: 'include',
         signal: controller.signal,
       });
       await readSseFrames(response, handlers);
@@ -330,13 +345,13 @@ export function addTurnResume(
   handlers: TurnStreamHandlers,
 ): AbortController {
   const controller = new AbortController();
-  const token = localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY) ?? '';
   void (async () => {
     try {
       const response = await fetch(`/sessions/${sessionId}/turns/resume`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
         body: JSON.stringify({ request_id: requestId, outcome }),
+        credentials: 'include',
         signal: controller.signal,
       });
       await readSseFrames(response, handlers);

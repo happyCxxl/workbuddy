@@ -25,8 +25,8 @@ export interface LoginVO {
   role: UserRole;
   /** 令牌版本：递增即让该账号已签发的令牌全部失效 */
   tokenVersion: number;
-  /** 访问令牌 */
-  token: string;
+  /** 访问令牌：HttpOnly Cookie 方案下响应体不回传，保留可选字段兼容旧响应 */
+  token?: string | null;
 }
 
 export interface RegisterRequest {

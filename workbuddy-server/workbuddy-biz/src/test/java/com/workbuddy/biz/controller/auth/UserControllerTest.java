@@ -2,6 +2,8 @@ package com.workbuddy.biz.controller.auth;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.workbuddy.auth.support.AuthCookieSupport;
+import com.workbuddy.auth.support.JwtTokenSupport;
 import com.workbuddy.auth.service.UserService;
 import com.workbuddy.common.dto.request.user.PasswordUpdateDTO;
 import com.workbuddy.common.dto.request.user.ProfileUpdateDTO;
@@ -22,6 +24,9 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -41,6 +46,12 @@ class UserControllerTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private AuthCookieSupport authCookieSupport;
+
+    @Mock
+    private JwtTokenSupport jwtTokenSupport;
+
     private MockedStatic<SecurityUtil> security;
 
     private UserController controller;
@@ -54,7 +65,7 @@ class UserControllerTest {
         KnowledgeUser user = new KnowledgeUser();
         user.setId(CURRENT_USER_ID);
         security.when(SecurityUtil::getUser).thenReturn(user);
-        controller = new UserController(userService);
+        controller = new UserController(userService, authCookieSupport, jwtTokenSupport);
     }
 
     /**
@@ -83,20 +94,20 @@ class UserControllerTest {
     }
 
     /**
-     * 改密返回重签的令牌并带成功提示。
-     *
-     * <p>守护 {@code changePassword} 的响应载荷：令牌丢失会让前端继续用已失效的旧令牌。
+     * 改密后用补签令牌刷新登录 Cookie，响应体不再回传令牌。
      */
     @Test
-    void changePasswordShouldReturnResignedToken() {
+    void changePasswordShouldRefreshLoginCookie() {
         PasswordUpdateDTO request = new PasswordUpdateDTO();
+        MockHttpServletResponse servletResponse = new MockHttpServletResponse();
         when(userService.changePassword(CURRENT_USER_ID, request)).thenReturn("new-token");
+        when(jwtTokenSupport.standardTtl()).thenReturn(Duration.ofDays(1));
 
-        R<String> response = controller.changePassword(request);
+        R<String> response = controller.changePassword(request, servletResponse);
 
-        assertEquals("new-token", response.getData());
         assertEquals(R.SUCCESS, response.getCode());
         assertEquals("密码已修改", response.getMsg());
+        verify(authCookieSupport).write(servletResponse, "new-token", Duration.ofDays(1));
     }
 
     /**

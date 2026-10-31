@@ -321,12 +321,11 @@ async function handleSavePassword(): Promise<void> {
   }
   savingPassword.value = true;
   try {
-    const token = await updatePassword({
+    await updatePassword({
       oldPassword: passwordForm.oldPassword,
       newPassword: passwordForm.newPassword,
     });
-    // 服务端已递增令牌版本，本地令牌必须换成响应里补签的那张
-    authStore.replaceToken(token);
+    // 服务端已递增令牌版本并刷新 HttpOnly Cookie，本地无需替换令牌
     passwordForm.oldPassword = '';
     passwordForm.newPassword = '';
     passwordForm.confirmPassword = '';

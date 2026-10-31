@@ -1,6 +1,7 @@
 package com.workbuddy.auth.security;
 
 import com.workbuddy.auth.db.WbUserDbService;
+import com.workbuddy.auth.support.AuthCookieSupport;
 import com.workbuddy.auth.support.JwtTokenSupport;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
@@ -56,9 +57,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         String header = request.getHeader("Authorization");
-        if (NullUtil.isNotNull(header) && header.startsWith(BEARER_PREFIX)) {
+        String token = NullUtil.isNotNull(header) && header.startsWith(BEARER_PREFIX)
+                ? header.substring(BEARER_PREFIX.length())
+                : AuthCookieSupport.value(request.getCookies(), AuthCookieSupport.TOKEN_COOKIE);
+        if (NullUtil.isNotNull(token)) {
             try {
-                KnowledgeUser user = jwtUtil.parse(header.substring(BEARER_PREFIX.length()));
+                KnowledgeUser user = jwtUtil.parse(token);
                 if (isTokenStillValid(user)) {
                     // 角色写入权限集（ROLE_ADMIN / ROLE_USER），供 requestMatchers(...hasRole) 判定
                     SimpleGrantedAuthority authority =

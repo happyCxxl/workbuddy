@@ -51,8 +51,8 @@
     "07": {
       "status": "已复核",
       "reviewed": "2026-10-31",
-      "baseline": "ad40c16a",
-      "note": "新增 POST /auth/logout；登录改为单会话递增版本"
+      "baseline": "709479f0",
+      "note": "登录/退出改为 HttpOnly Cookie；新增 CSRF 双提交校验"
     },
     "08": {
       "status": "已复核",
@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-31",
-      "baseline": "ad40c16a",
-      "note": "单会话登录 + 主动退出：登录/退出都递增令牌版本，Java 与灵犀两侧即时失效"
+      "baseline": "709479f0",
+      "note": "令牌改 HttpOnly Cookie；Java 与灵犀双侧 CSRF 双提交校验"
     }
   }
 }

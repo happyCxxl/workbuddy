@@ -2,6 +2,8 @@ package com.workbuddy.biz.controller.auth;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.workbuddy.auth.service.UserService;
+import com.workbuddy.auth.support.AuthCookieSupport;
+import com.workbuddy.auth.support.JwtTokenSupport;
 import com.workbuddy.common.web.R;
 import com.workbuddy.common.dto.request.user.PasswordUpdateDTO;
 import com.workbuddy.common.dto.request.user.ProfileUpdateDTO;
@@ -15,6 +17,7 @@ import com.workbuddy.common.annotation.AdminOnly;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.common.utils.SecurityUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,6 +41,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+
+    private final AuthCookieSupport authCookieSupport;
+
+    private final JwtTokenSupport jwtTokenSupport;
 
     /**
      * 当前登录用户的档案。
@@ -68,8 +75,11 @@ public class UserController {
      * @return 重签的令牌
      */
     @PutMapping("/password")
-    public R<String> changePassword(@Valid @RequestBody PasswordUpdateDTO request) {
-        return R.ok(userService.changePassword(currentUserId(), request), "密码已修改");
+    public R<String> changePassword(@Valid @RequestBody PasswordUpdateDTO request, HttpServletResponse response) {
+        String token = userService.changePassword(currentUserId(), request);
+        // 改密会递增版本，旧 Cookie 立即失效：用补签令牌刷新登录 Cookie
+        authCookieSupport.write(response, token, jwtTokenSupport.standardTtl());
+        return R.ok(null, "密码已修改");
     }
 
     /**

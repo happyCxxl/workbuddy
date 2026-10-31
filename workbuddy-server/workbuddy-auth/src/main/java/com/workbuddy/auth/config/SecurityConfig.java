@@ -1,5 +1,6 @@
 package com.workbuddy.auth.config;
 
+import com.workbuddy.auth.security.CsrfFilter;
 import com.workbuddy.auth.security.JwtAuthFilter;
 import com.workbuddy.auth.security.RestAccessDeniedHandler;
 import com.workbuddy.auth.security.RestAuthenticationEntryPoint;
@@ -30,6 +31,8 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    private final CsrfFilter csrfFilter;
+
     private final RestAccessDeniedHandler restAccessDeniedHandler;
 
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
@@ -54,6 +57,7 @@ public class SecurityConfig {
                         // 未认证 → 40101；已认证但无权限 → 40104；两者都归一成 R + HTTP 200
                         .authenticationEntryPoint(restAuthenticationEntryPoint)
                         .accessDeniedHandler(restAccessDeniedHandler))
+                .addFilterBefore(csrfFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

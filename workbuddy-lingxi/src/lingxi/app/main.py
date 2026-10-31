@@ -13,6 +13,7 @@ from lingxi.app.auth import (
     RedisTokenVersionReader,
     TokenVersionReader,
     ensure_auth_configured,
+    require_csrf,
     require_user,
 )
 from lingxi.app.config import RedisConfig, Settings
@@ -83,7 +84,7 @@ def create_app(
         """业务失败统一出口：HTTP 恒 200 + 信封（PY-DTO-005）。"""
         return JSONResponse(status_code=200, content=R.fail(exc.error, str(exc)).to_dict())
 
-    protected = [Depends(require_user)]
+    protected = [Depends(require_user), Depends(require_csrf)]
     app.include_router(health.router)
     app.include_router(fs.router, dependencies=protected)
     app.include_router(workspaces.router, dependencies=protected)
