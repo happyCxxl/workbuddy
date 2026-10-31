@@ -1,16 +1,5 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <!-- 标题与说明要包一层：.page-head 是 flex 行，不包会与右侧按钮并排 -->
-      <div>
-        <h1 class="page-title">用户管理</h1>
-        <p class="page-desc">维护平台账号与角色，支持按用户名、角色、状态筛选</p>
-      </div>
-      <div class="page-actions">
-        <el-button class="page-btn-primary" @click="openCreate">新增用户</el-button>
-      </div>
-    </div>
-
     <div class="page-panel">
       <!-- 筛选栏：搜索与筛选集中一处，与表体、分页同属一个面板（工具栏样式来自 .page-toolbar） -->
       <div class="page-toolbar">
@@ -34,6 +23,8 @@
         </el-select>
         <el-button class="page-btn-primary" @click="handleSearch">查询</el-button>
         <el-button class="page-btn-ghost" @click="handleReset">重置</el-button>
+        <span class="page-spacer"></span>
+        <el-button class="page-btn-primary" @click="openCreate">新增用户</el-button>
         <button
           class="page-refresh"
           type="button"

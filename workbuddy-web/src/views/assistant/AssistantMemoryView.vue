@@ -1,26 +1,15 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div>
-        <h1 class="page-title">记忆</h1>
-        <p class="page-desc">
-          每回合结束自动抽取（用户明说「记住 / 忘掉」必办）；低置信不会注入上下文；删除即物理移除。
-        </p>
-      </div>
-      <div class="page-actions">
+    <div class="page-panel">
+      <div class="page-toolbar">
+        <span class="memory-chip">共 {{ records.length }} 条</span>
+        <span class="memory-chip">全局 {{ globalCount }} · 目录级 {{ dirCount }}</span>
         <el-radio-group v-model="scopeFilter" size="small">
           <el-radio-button value="">全部</el-radio-button>
           <el-radio-button value="global">全局</el-radio-button>
           <el-radio-button value="dir">目录级</el-radio-button>
         </el-radio-group>
         <el-input v-model="keyword" class="memory-search" placeholder="搜索记忆内容" clearable />
-      </div>
-    </div>
-
-    <div class="page-panel">
-      <div class="page-toolbar">
-        <span class="memory-chip">共 {{ records.length }} 条</span>
-        <span class="memory-chip">全局 {{ globalCount }} · 目录级 {{ dirCount }}</span>
         <div class="page-spacer"></div>
         <button
           class="page-refresh"

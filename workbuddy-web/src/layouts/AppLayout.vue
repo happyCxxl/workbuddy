@@ -541,19 +541,6 @@ function handleLogout(): void {
 }
 
 /* 深空网格：只做质感，不挡交互 */
-.layout-main::before {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image:
-    linear-gradient(var(--kb-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--kb-line) 1px, transparent 1px);
-  background-size: 16px 16px;
-  mask-image: radial-gradient(90% 80% at 55% 35%, #000 10%, transparent 100%);
-  pointer-events: none;
-  content: '';
-}
-
 .layout-glow {
   position: fixed;
   top: -240px;
@@ -994,6 +981,8 @@ function handleLogout(): void {
 }
 
 .layout-topbar {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex: none;
   gap: 18px;
@@ -1047,6 +1036,8 @@ function handleLogout(): void {
  * 百分比/flex 高度链必须一路确定下来。为此子页面需自行管理超高内容的滚动。
  */
 .layout-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex: 1;
   min-height: 0;

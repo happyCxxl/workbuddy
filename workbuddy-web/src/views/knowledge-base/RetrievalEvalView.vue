@@ -1,17 +1,5 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div>
-        <h1 class="page-title">检索评测</h1>
-        <p class="page-desc">
-          {{ kbName }} · 与生产检索同一执行引擎，测试台显式指定索引版本与检索规则
-        </p>
-      </div>
-      <div class="page-actions">
-        <span class="rt-lock">重排 / 预处理 / 后处理 暂未开放</span>
-      </div>
-    </div>
-
     <div class="page-panel rt-panel">
       <!-- 检索控件：一行放完（版本 / 规则 / query / 执行） -->
       <div class="rt-bar">
@@ -55,6 +43,8 @@
         >
           执行检索
         </el-button>
+        <span class="page-spacer"></span>
+        <span class="rt-lock">重排 / 预处理 / 后处理 暂未开放</span>
       </div>
 
       <!-- 左右分栏：左=结果，右=记录 / 对比（分段切换） -->

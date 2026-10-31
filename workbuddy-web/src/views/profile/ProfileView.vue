@@ -1,12 +1,5 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div>
-        <h1 class="page-title">个人中心</h1>
-        <p class="page-desc">账号信息、联系方式与登录密码</p>
-      </div>
-    </div>
-
     <div class="page-panel">
       <div class="profile-body">
         <section class="profile-hero">

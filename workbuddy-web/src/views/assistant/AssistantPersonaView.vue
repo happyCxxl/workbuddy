@@ -1,14 +1,5 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div>
-        <h1 class="page-title">人设</h1>
-        <p class="page-desc">
-          人格（可乐的皮）：八字段可编辑；保存生成新版本并自动启用，已建会话保持绑定时的版本。
-        </p>
-      </div>
-    </div>
-
     <div class="persona-wrap">
       <!-- 左：版本列表 -->
       <div class="persona-panel persona-versions">

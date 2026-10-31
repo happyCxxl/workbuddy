@@ -1,16 +1,5 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <!-- 标题与说明要包一层：.page-head 是 flex 行，不包会与右侧按钮并排 -->
-      <div>
-        <h1 class="page-title">模型清单</h1>
-        <p class="page-desc">维护可用模型与价格限额，以及启用状态</p>
-      </div>
-      <div class="page-actions">
-        <el-button class="page-btn-primary" @click="openCreate"> 新增模型 </el-button>
-      </div>
-    </div>
-
     <div class="page-panel">
       <div class="page-toolbar">
         <el-select v-model="capabilityFilter" class="model-select" placeholder="能力">
@@ -37,6 +26,8 @@
         />
         <el-button class="page-btn-primary" @click="handleSearch">查询</el-button>
         <el-button class="page-btn-ghost" @click="handleReset">重置</el-button>
+        <span class="page-spacer"></span>
+        <el-button class="page-btn-primary" @click="openCreate">新增模型</el-button>
         <button
           class="page-refresh"
           type="button"

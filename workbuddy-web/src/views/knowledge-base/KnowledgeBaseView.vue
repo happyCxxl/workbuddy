@@ -1,23 +1,13 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <!-- 标题与说明要包一层：.page-head 是 flex 行，不包会与右侧按钮并排 -->
-      <div>
-        <h1 class="page-title">知识库</h1>
-        <p class="page-desc">管理你的知识库与文档资产，查看构建与运行状态</p>
-      </div>
-      <div class="page-actions">
-        <el-button class="page-btn-ghost" plain @click="openImport()">导入文档</el-button>
-      </div>
-    </div>
-    <div class="page-stats">
-      <div v-for="item in statItems" :key="item.label" class="page-stat">
-        <span class="page-stat-num">{{ item.value }}</span>
-        <span class="page-stat-label">{{ item.label }}</span>
-      </div>
-    </div>
     <div class="page-panel">
       <div class="page-toolbar">
+        <div class="page-stats page-stats-inline">
+          <div v-for="item in statItems" :key="item.label" class="page-stat">
+            <span class="page-stat-num">{{ item.value }}</span>
+            <span class="page-stat-label">{{ item.label }}</span>
+          </div>
+        </div>
         <el-input
           v-model="keyword"
           class="kb-search"
@@ -46,6 +36,7 @@
         </el-select>
         <!-- 计数只在页脚说一次：同屏重复两遍没有信息量，却要占掉工具条右端 -->
         <div class="page-spacer"></div>
+        <el-button class="page-btn-ghost" plain @click="openImport()">导入文档</el-button>
         <button
           class="page-refresh"
           type="button"
@@ -91,7 +82,6 @@
         <p v-if="isFiltered" class="kb-empty-text">没有符合当前筛选条件的知识库</p>
         <template v-else>
           <p class="kb-empty-text">还没有启用的知识库</p>
-          <p class="kb-empty-hint">点左上角虚线卡即可新建；已停用的库切到「已停用」查看</p>
         </template>
         <el-button v-if="isFiltered" class="page-btn-ghost" @click="handleClearFilter">
           清除筛选
@@ -792,13 +782,6 @@ function applyEntryAction(): void {
 
 .kb-empty-text {
   margin: 0;
-}
-
-/* 空态里指向虚线卡的提示：比正文弱一档，不抢主文案 */
-.kb-empty-hint {
-  margin: -6px 0 0;
-  color: var(--kb-text-4);
-  font-size: 12px;
 }
 
 /* ==================== 对话框：策略绑定三件套 ==================== */

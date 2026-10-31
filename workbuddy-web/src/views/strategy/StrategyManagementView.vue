@@ -1,22 +1,16 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div>
-        <h1 class="page-title">策略管理</h1>
-        <p class="page-desc">管理预处理 / 切片 / 向量化 / 检索策略的版本与知识库绑定</p>
-      </div>
-      <div class="page-actions">
+    <!--
+      两栏工作台装进 .page-panel：与知识库的卡片区、用户管理的表格区是同一层容器。
+    -->
+    <div class="page-panel">
+      <div class="page-toolbar">
+        <span class="page-spacer"></span>
         <el-button size="small" @click="toggleShowInactive">
           {{ showInactive ? '隐藏已停用' : '显示已停用' }}
         </el-button>
         <el-button size="small" type="primary" @click="openCreate">+ 新建策略</el-button>
       </div>
-    </div>
-
-    <!--
-      两栏工作台装进 .page-panel：与知识库的卡片区、用户管理的表格区是同一层容器。
-    -->
-    <div class="page-panel">
       <div class="stg-body">
         <!-- ==================== 左：类型 + 策略族 + 版本 ==================== -->
         <aside class="stg-rail">

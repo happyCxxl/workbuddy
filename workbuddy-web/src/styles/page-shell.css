@@ -37,23 +37,24 @@
 .page-head {
   display: flex;
   flex: none;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 12px 16px 8px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 14px 4px;
 }
 
 /* noinspection CssUnusedSymbol */
 .page-title {
   margin: 0;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 650;
+  letter-spacing: 0.01em;
 }
 
 /* noinspection CssUnusedSymbol */
 .page-desc {
-  margin: 6px 0 0;
+  margin: 5px 0 0;
   color: var(--kb-text-3);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /* noinspection CssUnusedSymbol */
@@ -101,15 +102,45 @@
 
 /* noinspection CssUnusedSymbol */
 .page-stat-num {
+  color: var(--kb-text-1);
   font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 650;
+  text-shadow: 0 0 14px var(--kb-glow);
 }
 
 /* noinspection CssUnusedSymbol */
 .page-stat-label {
   color: var(--kb-text-3);
-  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* 统计并入工具栏时的紧凑形态 */
+.page-stats-inline {
+  align-items: center;
+  padding: 0;
+  margin-right: 6px;
+}
+
+.page-stats-inline .page-stat {
+  gap: 6px;
+  padding: 0 14px;
+}
+
+.page-stats-inline .page-stat-num {
+  font-size: 18px;
+}
+
+.page-stats-inline .page-stat-label {
+  font-size: 9px;
+}
+
+/* 资产带并入面板顶部时，用一条线把数据与列表分开 */
+.page-assets-inline {
+  border-bottom: 1px solid var(--kb-line);
 }
 
 /*
@@ -135,8 +166,9 @@
   flex: none;
   gap: 10px;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--kb-line);
+  background: var(--kb-bg-2);
 }
 
 /* noinspection CssUnusedSymbol */
@@ -198,10 +230,10 @@
 .page-table {
   --el-table-bg-color: transparent;
   --el-table-tr-bg-color: transparent;
-  --el-table-header-bg-color: var(--kb-bg-1);
+  --el-table-header-bg-color: var(--kb-bg-2);
   --el-table-border-color: var(--kb-line);
   --el-table-text-color: var(--kb-text-1);
-  --el-table-header-text-color: var(--kb-text-2);
+  --el-table-header-text-color: var(--kb-text-3);
   --el-table-row-hover-bg-color: rgb(34 224 255 / 6%);
 
   /* 加载遮罩：默认是白色蒙层，在暗色底上会白闪一下，改成极淡的暗色 */
@@ -209,6 +241,15 @@
   --el-mask-color: rgb(10 14 18 / 45%);
 
   background: transparent;
+}
+
+/* 表头统一成遥测风格：等宽、全大写、宽字距 */
+.page-table .el-table__header-wrapper .cell {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 /* noinspection CssUnusedSymbol */
@@ -337,14 +378,19 @@
 /* noinspection CssUnusedSymbol */
 .page-asset-k {
   color: var(--kb-text-3);
-  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 /* noinspection CssUnusedSymbol */
 .page-asset-v {
+  color: var(--kb-text-1);
   font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 650;
+  text-shadow: 0 0 14px var(--kb-glow);
 }
 
 /* noinspection CssUnusedSymbol */

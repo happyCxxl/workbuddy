@@ -1,45 +1,35 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div>
-        <h1 class="page-title">你好，{{ username }}</h1>
-        <p class="page-desc">平台资产概览，以及我最近提交的文件</p>
-      </div>
-    </div>
-
-    <!--
-      资产带：用共用的 .page-assets（竖排 标签/数值/副文案），而不是 .page-stats ——
-      这里除了数值还有"细分说明"（可用策略要拆成预处理/切片/向量化/检索），
-      与列表页顶部那种"就是一个数"的横排指标不是同一层级。
-    -->
-    <div class="page-assets">
-      <div class="page-asset">
-        <span class="page-asset-k">知识库</span>
-        <span class="page-asset-v">{{ summaryText.knowledgeBaseCount }}</span>
-        <span class="page-asset-sub">启用 {{ summaryText.enabledKnowledgeBaseCount }}</span>
-      </div>
-      <div class="page-asset">
-        <span class="page-asset-k">文档</span>
-        <span class="page-asset-v">{{ summaryText.documentCount }}</span>
-        <!-- 副文案不写"提交总数"：校验失败的提交不建结果，两个数不是一回事 -->
-        <span class="page-asset-sub">已建档文档</span>
-      </div>
-      <div class="page-asset">
-        <span class="page-asset-k">可用策略</span>
-        <span class="page-asset-v">{{ summaryText.strategyVersionCount }}</span>
-        <span class="page-asset-sub">
-          预处理 {{ summaryText.preprocessVersionCount }} · 切片
-          {{ summaryText.chunkVersionCount }} · 向量化 {{ summaryText.embedVersionCount }} · 检索
-          {{ summaryText.retrievalVersionCount }}
-        </span>
-      </div>
-    </div>
-
-    <!--
-      最近提交：**只含本人**的记录（后端按登录用户过滤，前端不传提交人），
-      没有"提交人"列。面板走共用骨架：标题在 .page-toolbar，计数与翻页在 .page-panel-foot。
-    -->
     <div class="page-panel">
+      <!--
+        资产带：用共用的 .page-assets（竖排 标签/数值/副文案），收进面板顶部。
+      -->
+      <div class="page-assets page-assets-inline">
+        <div class="page-asset">
+          <span class="page-asset-k">知识库</span>
+          <span class="page-asset-v">{{ summaryText.knowledgeBaseCount }}</span>
+          <span class="page-asset-sub">启用 {{ summaryText.enabledKnowledgeBaseCount }}</span>
+        </div>
+        <div class="page-asset">
+          <span class="page-asset-k">文档</span>
+          <span class="page-asset-v">{{ summaryText.documentCount }}</span>
+          <span class="page-asset-sub">已建档文档</span>
+        </div>
+        <div class="page-asset">
+          <span class="page-asset-k">可用策略</span>
+          <span class="page-asset-v">{{ summaryText.strategyVersionCount }}</span>
+          <span class="page-asset-sub">
+            预处理 {{ summaryText.preprocessVersionCount }} · 切片
+            {{ summaryText.chunkVersionCount }} · 向量化 {{ summaryText.embedVersionCount }} · 检索
+            {{ summaryText.retrievalVersionCount }}
+          </span>
+        </div>
+      </div>
+
+      <!--
+        最近提交：**只含本人**的记录（后端按登录用户过滤，前端不传提交人），
+        没有"提交人"列。面板走共用骨架：标题在 .page-toolbar，计数与翻页在 .page-panel-foot。
+      -->
       <div class="page-toolbar">
         <span class="home-panel-title">最近提交</span>
         <span class="page-spacer"></span>
@@ -140,16 +130,12 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { getHomeRecentSubmits, getHomeSummary } from '@/api/home';
-import { useAuthStore } from '@/stores/auth';
 import { formatSubmitTime } from '@/types/home';
 import type { HomeRecentSubmit, HomeSummary } from '@/types/home';
-
-const authStore = useAuthStore();
 
 /** 固定每页条数（页长不随窗口高度变化，翻页用页码） */
 const PAGE_SIZE = 10;
 
-const username = computed(() => authStore.username ?? '');
 const summary = ref<HomeSummary | null>(null);
 
 /** 最近提交（仅本人） */

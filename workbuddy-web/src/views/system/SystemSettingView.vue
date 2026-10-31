@@ -1,12 +1,5 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div>
-        <h1 class="page-title">系统设置</h1>
-        <p class="page-desc">管理你的系统通用设置</p>
-      </div>
-    </div>
-
     <div class="setting-body">
       <!-- 设置卡容器：卡片依次排列，一行放不下换行；卡片尺寸取容器上的两个尺寸变量 -->
       <div class="setting-cards">
