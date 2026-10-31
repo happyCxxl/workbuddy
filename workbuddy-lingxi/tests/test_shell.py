@@ -187,7 +187,7 @@ async def test_shell_timeout_ms_param(sandbox_dir: Path) -> None:
     assert time.monotonic() - started < 15
 
 
-async def test_dangerous_shell_always_asks(engine_fixture: None, clean_rules: None, tmp_path: Path) -> None:
+async def test_dangerous_shell_always_asks(engine_fixture: None, tmp_path: Path) -> None:
     """危险命令：工作区内修改档也询问（参数级高危判定优先于预设）。"""
     registry = ToolRegistry()
     register_shell_tools(registry, shell_settings())

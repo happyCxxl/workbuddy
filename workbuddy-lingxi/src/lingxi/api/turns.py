@@ -23,7 +23,7 @@ class ResumeRequest(BaseModel):
     """审批裁决请求。"""
 
     request_id: str
-    outcome: Literal["allowed-once", "allowed-always", "rejected"]
+    outcome: Literal["allowed-once", "rejected"]
 
 
 def _sse(events: AsyncIterator[object]) -> StreamingResponse:

@@ -1,11 +1,8 @@
-"""权限门：显式规则（最具体优先）→ 高危恒询问 → 三档预设兜底；审批挂起异常。"""
+"""权限门：高危恒询问 → 三档预设兜底；审批挂起异常。"""
 
 from dataclasses import dataclass
 from pathlib import Path
 
-from lingxi.db.engine import session_scope
-from lingxi.db.models import PermissionRule
-from lingxi.db.repo.permission_repo import PermissionRepo
 from lingxi.domain.tools.registry import RISK_HIGH, RISK_READ, RISK_WRITE, ToolDefinition
 
 PRESETS = ("read-only", "workspace-write", "full-access")
@@ -25,11 +22,6 @@ class PendingApproval(Exception):
     def __init__(self, request_id: str) -> None:
         super().__init__(request_id)
         self.request_id = request_id
-
-
-def _specificity(rule: PermissionRule) -> int:
-    """规则具体度：工具名具体 +2，操作域具体 +1。"""
-    return (rule.tool != "*") * 2 + (rule.scope is not None) * 1
 
 
 def _path_of(tool: ToolDefinition, args: dict[str, object]) -> str | None:
@@ -55,18 +47,12 @@ def _exists(work_dir: str, path: str) -> bool:
 
 
 class PermissionGate:
-    """权限裁决：规则命中即定；否则高危恒询问；否则按会话档位兜底（无状态）。"""
+    """权限裁决：高危恒询问，其余按会话档位兜底（无状态，不落审批记忆）。"""
 
     @staticmethod
     async def decide(tool: ToolDefinition, work_dir: str, args: dict[str, object], preset: str) -> Decision:
-        """裁决顺序：显式规则 → 高危恒询问 → 会话预设（兼容旧档位名）。"""
+        """裁决顺序：高危恒询问 → 会话预设（兼容旧档位名）→ 路径边界。"""
         preset = {"loose": "workspace-write", "standard": "workspace-write", "strict": "read-only"}.get(preset, preset)
-        async with session_scope() as s:
-            rules = await PermissionRepo(s).list_matching(tool.name, work_dir)
-        scoped = [r for r in rules if r.scope is None or r.scope == tool.risk or r.scope == "any"]
-        best = max(scoped, key=lambda rule: (_specificity(rule), rule.id), default=None)
-        if best is not None:
-            return Decision(verdict=best.action, reason=f"规则命中（{best.action}）")
         if preset == "read-only" and tool.risk in (RISK_WRITE, RISK_HIGH):
             return Decision(verdict="deny", reason="仅可查看档：禁止写操作")
         if tool.risk == RISK_HIGH:
@@ -89,12 +75,3 @@ class PermissionGate:
         if preset == "read-only":
             return Decision(verdict="allow", reason="仅可查看档放行只读")
         return Decision(verdict="deny", reason=f"未知权限档：{preset}")
-
-    @staticmethod
-    async def remember_allow(tool_name: str, work_dir: str) -> None:
-        """“始终允许”落目录级规则。"""
-        async with session_scope() as s:
-            await PermissionRepo(s).insert(
-                PermissionRule(tool=tool_name, scope=None, action="allow", level="dir", work_dir=work_dir)
-            )
-            await s.commit()

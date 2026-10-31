@@ -326,7 +326,7 @@ export function addTurnStream(
 export function addTurnResume(
   sessionId: string,
   requestId: string,
-  outcome: 'allowed-once' | 'allowed-always' | 'rejected',
+  outcome: 'allowed-once' | 'rejected',
   handlers: TurnStreamHandlers,
 ): AbortController {
   const controller = new AbortController();

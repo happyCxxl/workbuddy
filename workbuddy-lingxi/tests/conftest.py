@@ -24,7 +24,6 @@ from lingxi.app.main import create_app
 from lingxi.db.engine import dispose_engine, init_engine, session_scope
 from lingxi.db.models import AiSession
 from lingxi.db.repo.memory_repo import MemoryRepo
-from lingxi.db.repo.permission_repo import PermissionRepo
 from lingxi.domain.memory.embedding import Embedder
 
 # 测试独占数据库：默认指向 lingxi_test，避免 pytest 把会话写进开发库；CI 用服务容器的库，
@@ -366,21 +365,6 @@ async def make_session(title: str) -> int:
         s.add(row)
         await s.commit()
         return row.id
-
-
-async def wipe_rules() -> None:
-    """清空权限规则表：保证用例可重复执行、规则不跨用例污染。"""
-    async with session_scope() as s:
-        repo = PermissionRepo(s)
-        for rule in await repo.list_all():
-            await repo.delete(rule.id)
-        await s.commit()
-
-
-@pytest.fixture
-async def clean_rules(engine_fixture: None) -> None:
-    """清空权限规则表。"""
-    await wipe_rules()
 
 
 @pytest.fixture

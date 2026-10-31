@@ -8,7 +8,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
-from lingxi.api import fs, health, memories, permissions, persona, sessions, turns, workspaces
+from lingxi.api import fs, health, memories, persona, sessions, turns, workspaces
 from lingxi.app.auth import (
     RedisTokenVersionReader,
     TokenVersionReader,
@@ -90,6 +90,5 @@ def create_app(
     app.include_router(sessions.make_router(settings, sub_sessions), dependencies=protected)
     app.include_router(memories.router, dependencies=protected)
     app.include_router(persona.router, dependencies=protected)
-    app.include_router(permissions.router, dependencies=protected)
     app.include_router(turns.make_router(runner), dependencies=protected)
     return app

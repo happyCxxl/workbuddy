@@ -254,9 +254,6 @@
                       >
                         允许一次
                       </el-button>
-                      <el-button size="small" @click="decidePermission(step, 'allowed-always')">
-                        始终允许（本目录）
-                      </el-button>
                       <el-button
                         size="small"
                         type="danger"
@@ -2111,10 +2108,7 @@ function stopSubPolling(): void {
 }
 
 /** 裁决后恢复重放 */
-function decidePermission(
-  item: ChatMessage,
-  outcome: 'allowed-once' | 'allowed-always' | 'rejected',
-): void {
+function decidePermission(item: ChatMessage, outcome: 'allowed-once' | 'rejected'): void {
   const permission = item.permission;
   if (!permission) {
     return;

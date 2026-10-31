@@ -120,21 +120,6 @@ class Memory(Base):
     )
 
 
-class PermissionRule(Base):
-    """权限规则：工具 × 作用域 × 动作；层级为全局或按工作目录。"""
-
-    __tablename__ = "permission_rule"
-
-    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
-    tool: Mapped[str] = mapped_column(String(64), nullable=False)
-    scope: Mapped[str | None] = mapped_column(Text, nullable=True)
-    action: Mapped[str] = mapped_column(String(16), nullable=False)
-    level: Mapped[str] = mapped_column(String(16), nullable=False)
-    work_dir: Mapped[str | None] = mapped_column(Text, nullable=True)
-    source: Mapped[str] = mapped_column(String(32), nullable=False, server_default="user")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-
-
 class ModelCall(Base):
     """模型调用明细：request_id 对账，按模型与时间检索。"""
 

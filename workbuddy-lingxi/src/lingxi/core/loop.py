@@ -93,7 +93,7 @@ class TurnRunner:
                 yield event
 
     async def resume(self, session_id: int, request_id: str, outcome: str) -> AsyncIterator[TurnEvent]:
-        """审批裁决后恢复重放：allowed-once/allowed-always 执行该工具，rejected 记拒绝结果，然后继续循环。"""
+        """审批裁决后恢复重放：allowed-once 执行该工具，rejected 记拒绝结果，然后继续循环。"""
         lock = self._locks.setdefault(session_id, asyncio.Lock())
         async with lock:
             async for event in self._resume_locked(session_id, request_id, outcome):
@@ -156,8 +156,6 @@ class TurnRunner:
             )
             session = await get_session(session_id)
             persona = await persona_of_session(session) if session.kind == "chat" else None
-            if outcome == "allowed-always":
-                await self._permission.remember_allow(checkpoint.call.name, checkpoint.work_dir)
             if outcome == "rejected":
                 yield await self._emit(
                     session_id,
