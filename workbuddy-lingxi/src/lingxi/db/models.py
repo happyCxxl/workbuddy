@@ -28,9 +28,11 @@ class PersonaVersion(Base):
     """人格版本：八字段快照，版本递增、内容不可变；active 标记新会话默认使用的版本。"""
 
     __tablename__ = "persona_version"
+    __table_args__ = (UniqueConstraint("user_id", "version", name="uq_persona_user_version"),)
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
-    version: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(BigInteger, index=True, nullable=False, server_default="1", default=1)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
     fields: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -40,10 +42,12 @@ class Workspace(Base):
     """工作区：会话的归属目录（路径唯一），独立存在，即使还没有会话。"""
 
     __tablename__ = "workspace"
+    __table_args__ = (UniqueConstraint("user_id", "path", name="uq_workspace_user_path"),)
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, index=True, nullable=False, server_default="1", default=1)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    path: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
+    path: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
@@ -53,6 +57,7 @@ class AiSession(Base):
     __tablename__ = "ai_session"
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, index=True, nullable=False, server_default="1", default=1)
     work_dir: Mapped[str] = mapped_column(Text, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
     persona_version_id: Mapped[int | None] = mapped_column(ForeignKey("persona_version.id"), nullable=True)
@@ -74,6 +79,7 @@ class SubSession(Base):
     __tablename__ = "sub_session"
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, index=True, nullable=False, server_default="1", default=1)
     parent_session_id: Mapped[int] = mapped_column(ForeignKey("ai_session.id"), index=True, nullable=False)
     child_session_id: Mapped[int] = mapped_column(ForeignKey("ai_session.id"), unique=True, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
@@ -106,6 +112,7 @@ class Memory(Base):
     __tablename__ = "memory"
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, index=True, nullable=False, server_default="1", default=1)
     kind: Mapped[str] = mapped_column(String(32), nullable=False)
     scope: Mapped[str] = mapped_column(String(16), nullable=False)
     work_dir: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -1,4 +1,4 @@
-"""数据库接入：六表存在性与基本读写（依赖 docker compose 起 postgres）。"""
+"""数据库接入：表存在性与基本读写（依赖 docker compose 起 postgres）。"""
 
 import pytest
 from conftest import db_up
@@ -8,11 +8,19 @@ from sqlalchemy.exc import IntegrityError
 from lingxi.db.engine import session_scope
 from lingxi.db.models import AiSession, SessionEvent
 
-TABLE_NAMES = {"ai_session", "memory", "model_call", "permission_rule", "persona_version", "session_event"}
+TABLE_NAMES = {
+    "ai_session",
+    "memory",
+    "model_call",
+    "persona_version",
+    "session_event",
+    "sub_session",
+    "workspace",
+}
 
 
-async def test_six_tables_exist(engine_fixture: None) -> None:
-    """迁移后六张表齐备。"""
+async def test_all_tables_exist(engine_fixture: None) -> None:
+    """迁移后业务表齐备。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres 再跑 alembic upgrade head")
     async with session_scope() as s:
