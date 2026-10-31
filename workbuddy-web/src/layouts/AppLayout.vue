@@ -230,6 +230,14 @@
               <path d="M10 3.2 5.2 8l4.8 4.8" />
             </svg>
           </button>
+          <nav class="layout-crumbs" aria-label="当前位置">
+            <template v-for="(item, index) in breadcrumb" :key="item">
+              <span v-if="index > 0" class="crumb-sep">/</span>
+              <span class="crumb" :class="{ 'crumb-now': index === breadcrumb.length - 1 }">
+                {{ item }}
+              </span>
+            </template>
+          </nav>
         </div>
         <div class="layout-top-right">
           <el-dropdown trigger="click" placement="bottom-end">
@@ -488,6 +496,41 @@ const BACK_TARGETS: Record<string, { path: string; label: string }> = {
 
 const routeName = computed(() => String(route.name ?? ''));
 const backTarget = computed(() => BACK_TARGETS[routeName.value] ?? null);
+
+/** 面包屑的分组层：首页只显示「工作台 / 页面名」 */
+const PAGE_SECTIONS: Record<string, string> = {
+  KnowledgeBase: '知识库',
+  PipelineStage: '知识库',
+  IndexBuild: '知识库',
+  RetrievalEval: '知识库',
+  StrategyManagement: '知识库',
+  ModelList: '模型管理',
+  UserManagement: '用户管理',
+  SystemSetting: '系统设置',
+  Profile: '个人中心',
+  AssistantChat: '个人助手',
+  AssistantMemory: '个人助手',
+  AssistantPersona: '个人助手',
+};
+
+/** 个别路由的面包屑末级名称与页签标题不同（避免与分组同名被合并） */
+const PAGE_LABELS: Record<string, string> = {
+  KnowledgeBase: '知识库管理',
+};
+
+/** 顶栏面包屑：工作台 / 分组 / 当前页 */
+const breadcrumb = computed<string[]>(() => {
+  const items = ['工作台'];
+  const section = PAGE_SECTIONS[routeName.value];
+  if (section) {
+    items.push(section);
+  }
+  const title = PAGE_LABELS[routeName.value] ?? route.meta.title;
+  if (title && title !== items.at(-1)) {
+    items.push(title);
+  }
+  return items;
+});
 
 /**
  * 返回上一层：只按层级表走，不回退到「上次碰巧访问的页面」。
@@ -988,7 +1031,7 @@ function handleLogout(): void {
   gap: 18px;
   align-items: center;
   height: 62px;
-  padding: 0 28px;
+  padding: 0 28px 0 20px;
   border-bottom: 1px solid var(--kb-line);
   background: rgb(4 10 19 / 82%);
   backdrop-filter: blur(16px);
@@ -997,11 +1040,11 @@ function handleLogout(): void {
 /* 顶栏左侧：只有返回按钮，首页不渲染（层级起点，整个左侧为空） */
 .layout-topbar-left {
   display: flex;
+  gap: 12px;
   align-items: center;
 }
 
-/* 返回按钮：默认无边框，只有悬停才显出淡圆底。
-   顶栏左侧是次要区域，返回是低重要度动作，常驻描边会让它过于抢眼 */
+/* 返回按钮：切角方形 + 青色细边，悬停发光；与面包屑合成一组 */
 .layout-back {
   display: grid;
   width: 28px;
@@ -1009,19 +1052,55 @@ function handleLogout(): void {
   flex: none;
   place-items: center;
   padding: 0;
-  border: none;
-  border-radius: 8px;
-  background: none;
-  color: var(--kb-text-3);
+  border: 1px solid var(--kb-line);
+  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+  background: transparent;
+  color: var(--kb-text-2);
   cursor: pointer;
   transition:
+    border-color 0.15s,
     background 0.15s,
-    color 0.15s;
+    color 0.15s,
+    filter 0.15s;
 }
 
 .layout-back:hover {
-  background: rgb(255 255 255 / 7%);
+  border-color: rgb(34 224 255 / 45%);
+  background: rgb(34 224 255 / 8%);
+  color: var(--kb-primary);
+  filter: drop-shadow(0 0 8px rgb(34 224 255 / 35%));
+}
+
+.layout-back:focus-visible {
+  border-color: rgb(34 224 255 / 60%);
+  background: rgb(34 224 255 / 8%);
+  color: var(--kb-primary);
+  outline: none;
+}
+
+/* 面包屑：正文级无衬线，父级弱化、当前页加亮加粗 */
+.layout-crumbs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--kb-text-3);
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.crumb {
+  color: var(--kb-text-3);
+}
+
+.crumb-sep {
+  color: rgb(34 224 255 / 28%);
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.crumb-now {
   color: var(--kb-text-1);
+  font-weight: 600;
 }
 
 .layout-top-right {
