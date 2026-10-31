@@ -4,11 +4,18 @@ import logging
 from collections.abc import Awaitable, Callable
 from uuid import uuid4
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+from redis.asyncio import Redis
 
 from lingxi.api import fs, health, memories, permissions, persona, sessions, turns, workspaces
-from lingxi.app.config import Settings
+from lingxi.app.auth import (
+    RedisTokenVersionReader,
+    TokenVersionReader,
+    ensure_auth_configured,
+    require_user,
+)
+from lingxi.app.config import RedisConfig, Settings
 from lingxi.app.lifespan import make_lifespan
 from lingxi.contract import REQUEST_ID, ApiError, R
 from lingxi.core.hooks import HookRegistry
@@ -25,11 +32,30 @@ from lingxi.domain.tools.shell import register_shell_tools
 from lingxi.domain.tools.web import register_web_tools
 
 
-def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
-    """构建应用：中间件 + 路由 + 回合执行器装配；embedder 可注入（测试用假向量，缺省用配置的 embedding API）。"""
+def _redis_url(config: RedisConfig) -> str:
+    """拼装 Redis 连接串；密码为空时省略认证段。"""
+    auth = f":{config.password}@" if config.password else ""
+    return f"redis://{auth}{config.host}:{config.port}/{config.db}"
+
+
+def create_app(
+    settings: Settings,
+    embedder: Embedder | None = None,
+    token_version_reader: TokenVersionReader | None = None,
+) -> FastAPI:
+    """构建应用：中间件 + 路由 + 回合执行器装配；embedder 与版本读取器可注入（测试用）。"""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    ensure_auth_configured(settings.auth)
 
     app = FastAPI(title="灵犀", lifespan=make_lifespan(settings, startup=mark_stale_running))
+    reader = token_version_reader
+    if reader is None:
+        client = Redis.from_url(  # pyright: ignore[reportUnknownMemberType]
+            _redis_url(settings.redis), decode_responses=True
+        )
+        reader = RedisTokenVersionReader(client)
+    app.state.settings = settings
+    app.state.token_version_reader = reader
     gateway = LlmGateway(settings)
     effective_embedder = embedder or OpenAICompatibleEmbedder(settings.memory)
     tools = ToolRegistry()
@@ -57,12 +83,13 @@ def create_app(settings: Settings, embedder: Embedder | None = None) -> FastAPI:
         """业务失败统一出口：HTTP 恒 200 + 信封（PY-DTO-005）。"""
         return JSONResponse(status_code=200, content=R.fail(exc.error, str(exc)).to_dict())
 
+    protected = [Depends(require_user)]
     app.include_router(health.router)
-    app.include_router(fs.router)
-    app.include_router(workspaces.router)
-    app.include_router(sessions.make_router(settings, sub_sessions))
-    app.include_router(memories.router)
-    app.include_router(persona.router)
-    app.include_router(permissions.router)
-    app.include_router(turns.make_router(runner))
+    app.include_router(fs.router, dependencies=protected)
+    app.include_router(workspaces.router, dependencies=protected)
+    app.include_router(sessions.make_router(settings, sub_sessions), dependencies=protected)
+    app.include_router(memories.router, dependencies=protected)
+    app.include_router(persona.router, dependencies=protected)
+    app.include_router(permissions.router, dependencies=protected)
+    app.include_router(turns.make_router(runner), dependencies=protected)
     return app

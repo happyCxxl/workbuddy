@@ -58,6 +58,8 @@ public class AuthServiceImpl implements AuthService {
         // 角色与令牌版本写入令牌载荷：角色供鉴权判定，版本供失效校验
         UserRole role = UserRole.of(user.getRole());
         Integer tokenVersion = Objects.requireNonNullElse(user.getTokenVersion(), 0);
+        // 每次登录同步版本号：灵犀跨服务校验依赖这个 key，未同步的用户会被判为未认证
+        jwtUtil.syncTokenVersion(user.getId(), tokenVersion);
         Duration ttl = request.isRemember() ? jwtUtil.rememberTtl() : jwtUtil.standardTtl();
         LoginVO vo = new LoginVO();
         vo.setToken(jwtUtil.sign(user.getId(), user.getUsername(), role, tokenVersion, ttl));

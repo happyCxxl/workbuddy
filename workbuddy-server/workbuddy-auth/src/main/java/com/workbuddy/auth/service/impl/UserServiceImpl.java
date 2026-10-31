@@ -153,6 +153,8 @@ public class UserServiceImpl implements UserService {
             user.setTokenVersion(nextTokenVersion(user));
         }
         userDbService.updateById(user);
+        // 版本变更后同步共享缓存：灵犀据此让旧令牌立即失效
+        jwtUtil.syncTokenVersion(user.getId(), user.getTokenVersion());
         auditEventPublisher.publish(resolveUpdateAction(roleChanged, statusChanged, targetStatus),
                 AUDIT_OBJECT_TYPE, id, diffPayload(beforeSummary, auditSummary(user)));
     }
@@ -173,6 +175,8 @@ public class UserServiceImpl implements UserService {
             ThrowUtil.throwIf(countOtherEnabledAdmins(id) == 0, ErrorCode.LAST_ADMIN_FORBIDDEN);
         }
         userDbService.removeById(id);
+        // 删除后写哨兵值：灵犀无法区分「从未同步」与「已删除」，用 -1 明确失效
+        jwtUtil.invalidateTokenVersion(id);
         auditEventPublisher.publish(AuditActionType.USER_DELETE, AUDIT_OBJECT_TYPE, id,
                 JsonUtil.toJsonStr(auditSummary(user)));
     }
@@ -228,6 +232,7 @@ public class UserServiceImpl implements UserService {
         // 凭据变更：递增令牌版本，该账号此前签发的令牌（含本次请求用的那张）全部失效
         user.setTokenVersion(nextTokenVersion(user));
         userDbService.updateById(user);
+        jwtUtil.syncTokenVersion(user.getId(), user.getTokenVersion());
         auditEventPublisher.publish(AuditActionType.USER_PASSWORD_CHANGE, AUDIT_OBJECT_TYPE, id, null);
         // 以新版本补签令牌，当前会话不必重新登录；有效期沿用本会话的剩余时长
         return jwtUtil.sign(user.getId(), user.getUsername(), UserRole.of(user.getRole()),

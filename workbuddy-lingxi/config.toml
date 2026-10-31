@@ -38,3 +38,15 @@ embedding_api_key = ""
 
 [permission]
 preset = "workspace-write"
+
+[auth]
+# 签名密钥写 config.local.toml（不入库），与 Java 的 application-local.yml 保持一致
+enabled = true
+secret = ""
+
+[redis]
+# 与 Java 共用同一实例与库号：读取 auth:token-version:{userId}
+host = "127.0.0.1"
+port = 6379
+db = 0
+password = ""

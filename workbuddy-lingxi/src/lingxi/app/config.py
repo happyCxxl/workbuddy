@@ -9,7 +9,7 @@ import tomllib
 from pathlib import Path
 from typing import Literal, cast
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 _ROOT = Path(__file__).resolve().parents[3]
@@ -78,6 +78,22 @@ class PermissionConfig(BaseModel):
     preset: str
 
 
+class AuthConfig(BaseModel):
+    """鉴权配置：签名密钥写 config.local.toml（不入库），与 Java 服务保持一致。"""
+
+    enabled: bool = True
+    secret: str = ""
+
+
+class RedisConfig(BaseModel):
+    """Redis 连接：读取 Java 写入的令牌版本缓存。"""
+
+    host: str = "127.0.0.1"
+    port: int = 6379
+    db: int = 0
+    password: str = ""
+
+
 def _read_toml(path: str) -> dict[str, object]:
     """读取 TOML 配置；文件不存在返回空。"""
     if not os.path.exists(path):
@@ -127,6 +143,8 @@ class Settings(BaseSettings):
     llm: LlmConfig
     memory: MemoryConfig
     permission: PermissionConfig
+    auth: AuthConfig = Field(default_factory=AuthConfig)
+    redis: RedisConfig = Field(default_factory=RedisConfig)
 
     @classmethod
     def settings_customise_sources(

@@ -212,6 +212,9 @@ export interface TurnStreamHandlers {
 /** 令牌与后端地址：SSE 走原生 fetch（axios 不暴露流式 body） */
 const TOKEN_KEY = 'knowledge-token';
 
+/** 灵犀（Python）域未认证码 */
+const CODE_AI_UNAUTHORIZED = 60003;
+
 /** SSE 解析状态：当前事件类型与 DONE 标记 */
 interface SseParser {
   type: string;
@@ -246,6 +249,21 @@ function applyFrame(frame: string, parser: SseParser, handlers: TurnStreamHandle
 
 /** 解析 SSE 帧：event 行 + data 行；data 为 [DONE] 时收尾 */
 async function readSseFrames(response: Response, handlers: TurnStreamHandlers): Promise<void> {
+  const contentType = response.headers.get('Content-Type') ?? '';
+  if (contentType.includes('application/json')) {
+    const body = (await response.json()) as { code?: number; msg?: string };
+    if (body.code === CODE_AI_UNAUTHORIZED) {
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      if (window.location.pathname !== '/login') {
+        const from = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/login?redirect=${from}`;
+      }
+      return;
+    }
+    handlers.onError(body.msg ?? '流式请求失败');
+    return;
+  }
   if (!response.ok) {
     handlers.onError(`流式接口失败（HTTP ${String(response.status)}）`);
     return;

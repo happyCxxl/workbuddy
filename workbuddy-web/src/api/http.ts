@@ -6,6 +6,8 @@ import type { R } from '@/types/response';
 const TOKEN_KEY = 'knowledge-token';
 
 const CODE_UNAUTHORIZED = 40101;
+/** 灵犀（Python）域未认证码：与 Java 的 40101 同样处理 */
+const CODE_AI_UNAUTHORIZED = 60003;
 const CODE_SYSTEM_ERROR = 40500;
 
 /** HTTP 401/403：兜底识别为未认证/无权限（后端正常情况下会把它们归一成 200 + R.code） */
@@ -57,7 +59,7 @@ http.interceptors.response.use(
     }
     const body = response.data as R<unknown>;
     if (body.code !== 0) {
-      if (body.code === CODE_UNAUTHORIZED) {
+      if (body.code === CODE_UNAUTHORIZED || body.code === CODE_AI_UNAUTHORIZED) {
         redirectToLogin();
       } else if (body.code === CODE_SYSTEM_ERROR) {
         ElMessage.error('系统异常，请稍后重试');

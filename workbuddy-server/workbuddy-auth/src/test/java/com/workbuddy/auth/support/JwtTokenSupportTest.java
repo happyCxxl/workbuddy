@@ -6,6 +6,7 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.security.KnowledgeUser;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -13,6 +14,7 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /**
  * JWT 令牌支撑测试。
@@ -58,7 +60,7 @@ class JwtTokenSupportTest {
      */
     @Test
     void ttlShouldFollowConfiguration() {
-        JwtTokenSupport jwtUtil = new JwtTokenSupport(jwtProperties(1));
+        JwtTokenSupport jwtUtil = new JwtTokenSupport(jwtProperties(1), mock(StringRedisTemplate.class));
 
         assertEquals(Duration.ofDays(1), jwtUtil.standardTtl());
         assertEquals(Duration.ofDays(30), jwtUtil.rememberTtl());
@@ -119,7 +121,7 @@ class JwtTokenSupportTest {
     }
 
     private JwtTokenSupport jwtUtil(long ttlDays) {
-        return new JwtTokenSupport(jwtProperties(ttlDays));
+        return new JwtTokenSupport(jwtProperties(ttlDays), mock(StringRedisTemplate.class));
     }
 
     /** 令牌配置替身：密钥固定，记住我档固定 30 天 */

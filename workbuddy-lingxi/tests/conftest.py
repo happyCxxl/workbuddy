@@ -8,8 +8,10 @@ import os
 import random
 import re
 import threading
-from collections.abc import AsyncIterator
+import time
+from collections.abc import AsyncIterator, Awaitable, Callable
 
+import jwt
 import pytest
 import uvicorn
 from fastapi import FastAPI, Request, Response
@@ -28,6 +30,39 @@ from lingxi.domain.memory.embedding import Embedder
 # 测试独占数据库：默认指向 lingxi_test，避免 pytest 把会话写进开发库；CI 用服务容器的库，
 # 通过 LINGXI_DATABASE__URL 显式覆盖（见 gate.yml），setdefault 不会压掉外部设置。
 os.environ.setdefault("LINGXI_DATABASE__URL", "postgresql+asyncpg://lingxi:lingxi@localhost:5432/lingxi_test")
+
+# 测试签名密钥：写进 Settings 的环境覆盖项，保证 create_app 的启动校验通过。
+TEST_JWT_SECRET = "test-secret-0123456789abcdef0123456789abcdef"
+os.environ.setdefault("LINGXI_AUTH__SECRET", TEST_JWT_SECRET)
+
+
+async def read_version_zero(_user_id: int) -> int:
+    """默认令牌版本读取器：与 make_token 的 tv=0 对齐。"""
+    return 0
+
+
+def make_token(
+    *,
+    user_id: int = 1,
+    username: str = "tester",
+    role: str = "ADMIN",
+    token_version: int = 0,
+    ttl_seconds: int = 3600,
+    secret: str = TEST_JWT_SECRET,
+) -> str:
+    """签发测试令牌：字段与 Java JwtTokenSupport 对齐（sub / username / role / tv / exp）。"""
+    now = int(time.time())
+    return jwt.encode(
+        {
+            "sub": str(user_id),
+            "username": username,
+            "role": role,
+            "tv": token_version,
+            "exp": now + ttl_seconds,
+        },
+        secret,
+        algorithm="HS256",
+    )
 
 
 class FakeEmbedder(Embedder):
@@ -350,8 +385,46 @@ async def clean_rules(engine_fixture: None) -> None:
 
 @pytest.fixture
 async def client(fake_server: tuple[Settings, list[dict[str, object]]]) -> AsyncIterator[AsyncClient]:
-    """应用内嵌客户端：ASGI 传输跑在测试回路，与引擎同回路；注入假嵌入器避免下载模型。"""
+    """应用内嵌客户端：默认带合法令牌，覆盖业务接口；未认证场景用 anonymous_client。"""
     settings, _ = fake_server
-    app = create_app(settings, embedder=FakeEmbedder())
+    app = create_app(settings, embedder=FakeEmbedder(), token_version_reader=read_version_zero)
+    headers = {"Authorization": f"Bearer {make_token()}"}
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=headers) as c:
+        yield c
+
+
+@pytest.fixture
+async def anonymous_client(
+    fake_server: tuple[Settings, list[dict[str, object]]],
+) -> AsyncIterator[AsyncClient]:
+    """不带 Authorization 的客户端：用于鉴权拒绝与 /health 公开性测试。"""
+    settings, _ = fake_server
+    app = create_app(settings, embedder=FakeEmbedder(), token_version_reader=read_version_zero)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
+
+
+@pytest.fixture
+def token_factory() -> Callable[..., str]:
+    """测试令牌工厂：按需覆盖版本号、有效期与密钥。"""
+    return make_token
+
+
+@pytest.fixture
+async def client_factory(
+    fake_server: tuple[Settings, list[dict[str, object]]],
+) -> AsyncIterator[Callable[..., AsyncClient]]:
+    """按需构造客户端：可指定令牌版本读取器与 Authorization 头。"""
+    settings, _ = fake_server
+    clients: list[AsyncClient] = []
+
+    async def make(reader: Callable[[int], Awaitable[int | None]], token: str | None = None) -> AsyncClient:
+        app = create_app(settings, embedder=FakeEmbedder(), token_version_reader=reader)
+        headers = {} if token is None else {"Authorization": f"Bearer {token}"}
+        client = AsyncClient(transport=ASGITransport(app=app), base_url="http://test", headers=headers)
+        clients.append(client)
+        return client
+
+    yield make
+    for client in clients:
+        await client.aclose()

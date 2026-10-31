@@ -11,6 +11,7 @@ import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.NullUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -40,7 +41,19 @@ public class JwtTokenSupport {
      */
     private static final String CLAIM_TOKEN_VERSION = "tv";
 
+    /**
+     * 共享版本号 key 前缀：与灵犀（Python）约定一致
+     */
+    private static final String TOKEN_VERSION_KEY_PREFIX = "auth:token-version:";
+
+    /**
+     * 已删除用户的版本哨兵值
+     */
+    private static final String TOKEN_VERSION_DELETED = "-1";
+
     private final byte[] secret;
+
+    private final StringRedisTemplate stringRedisTemplate;
 
     /**
      * 不勾选「记住我」的令牌有效期
@@ -55,12 +68,40 @@ public class JwtTokenSupport {
     /**
      * 构造令牌工具。
      *
-     * @param properties 令牌配置（密钥与两档有效期）
+     * @param properties          令牌配置（密钥与两档有效期）
+     * @param stringRedisTemplate Redis 客户端（同步共享版本号）
      */
-    public JwtTokenSupport(JwtProperties properties) {
+    public JwtTokenSupport(JwtProperties properties, StringRedisTemplate stringRedisTemplate) {
         this.secret = properties.getSecret().getBytes(StandardCharsets.UTF_8);
         this.standardTtl = Duration.ofDays(properties.getTtlDays());
         this.rememberTtl = Duration.ofDays(properties.getTtlDaysRemember());
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
+
+    /**
+     * 同步用户当前令牌版本到 Redis：灵犀（Python）据此判断令牌是否已失效。
+     *
+     * @param userId  用户 ID
+     * @param version 当前版本号（为空按 0 处理）
+     */
+    public void syncTokenVersion(Long userId, Integer version) {
+        if (NullUtil.isNull(userId)) {
+            return;
+        }
+        stringRedisTemplate.opsForValue().set(TOKEN_VERSION_KEY_PREFIX + userId,
+                String.valueOf(NullUtil.isNull(version) ? 0 : version));
+    }
+
+    /**
+     * 标记用户已删除：保留 key 并写哨兵值，避免与「从未同步」混淆。
+     *
+     * @param userId 用户 ID
+     */
+    public void invalidateTokenVersion(Long userId) {
+        if (NullUtil.isNull(userId)) {
+            return;
+        }
+        stringRedisTemplate.opsForValue().set(TOKEN_VERSION_KEY_PREFIX + userId, TOKEN_VERSION_DELETED);
     }
 
     /**
