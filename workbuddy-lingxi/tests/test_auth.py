@@ -87,3 +87,34 @@ async def test_rejects_when_version_store_unavailable(
     client = await client_factory(broken_reader, token_factory())
     response = await client.get("/sessions")
     assert response.json()["code"] == UNAUTHORIZED
+
+
+@pytest.mark.usefixtures("engine_fixture")
+async def test_cookie_token_accepted(anonymous_client: AsyncClient, token_factory: Callable[..., str]) -> None:
+    """HttpOnly Cookie 里的令牌同样通过鉴权。"""
+    response = await anonymous_client.get("/sessions", cookies={"wb_token": token_factory()})
+    assert response.json()["code"] == 0
+
+
+async def test_cookie_write_requires_csrf(anonymous_client: AsyncClient, token_factory: Callable[..., str]) -> None:
+    """Cookie 认证的写请求缺少 CSRF 头：拒绝。"""
+    response = await anonymous_client.post(
+        "/sessions",
+        json={"work_dir": "D:\\tmp"},
+        cookies={"wb_token": token_factory()},
+    )
+    assert response.json()["code"] == 60004
+
+
+@pytest.mark.usefixtures("engine_fixture")
+async def test_cookie_write_with_csrf_accepted(
+    anonymous_client: AsyncClient, token_factory: Callable[..., str]
+) -> None:
+    """Cookie 认证 + 匹配的 CSRF 头：放行。"""
+    response = await anonymous_client.post(
+        "/sessions",
+        json={"work_dir": "D:\\tmp"},
+        cookies={"wb_token": token_factory(), "XSRF-TOKEN": "csrf-value"},
+        headers={"X-CSRF-Token": "csrf-value"},
+    )
+    assert response.json()["code"] == 0

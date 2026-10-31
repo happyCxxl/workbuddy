@@ -1,15 +1,18 @@
-# 登录认证环节配置：令牌签发与登录失败防护。
-# 键的来源：JwtUtil 的 @Value 注入点（knowledge.auth.jwt.*）与 LoginGuardProperties（前缀 knowledge.auth.guard）。
-# 本环节配置的默认值在此处维护。
+# 登录认证环节配置：令牌签发、登录 Cookie 与登录失败防护。
+# 键的来源：JwtProperties（workbuddy.auth.jwt.*）、AuthCookieSupport（workbuddy.auth.cookie.*）
+# 与 LoginGuardProperties（workbuddy.auth.guard.*）。本环节配置的默认值在此处维护。
 workbuddy:
   auth:
     jwt:
       # 签名密钥必须外部化（SEC-01）：环境变量 WORKBUDDY_JWT_SECRET 或本机覆盖文件 application-local.yml 提供；
       # 仓库默认留空，空值启动即被启动校验链拒绝。
       secret: ${WORKBUDDY_JWT_SECRET:}
-      # 不勾选「记住我」：短期令牌 + sessionStorage；勾选：长期令牌 + localStorage
+      # 不勾选「记住我」：短期令牌（会话 Cookie）；勾选：长期令牌（持久 Cookie 30 天）
       ttl-days: 1
       ttl-days-remember: 30
+    cookie:
+      # 令牌 Cookie 的 Secure 标记：HTTPS 部署必须置 true
+      secure: false
     # 登录失败防护：达阈值后按「账号 + IP」或「IP」维度临时锁定（窗口自首次失败起算）
     guard:
       enabled: true
