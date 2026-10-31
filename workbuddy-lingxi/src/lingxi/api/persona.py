@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from lingxi.app.auth import CurrentUserDep
 from lingxi.contract import R
 from lingxi.domain.persona.engine import (
     activate_version,
@@ -27,23 +28,23 @@ def _serialize_fields(fields: PersonaFields) -> dict[str, object]:
 
 
 @router.get("/persona")
-async def get_current() -> dict[str, object]:
-    """启用中的人格版本。"""
-    persona = await current_persona()
+async def get_current(user: CurrentUserDep) -> dict[str, object]:
+    """当前用户启用中的人格版本。"""
+    persona = await current_persona(user.id)
     return R.ok({"version": persona.version, "fields": _serialize_fields(persona.fields)}).to_dict()
 
 
 @router.put("/persona")
-async def save(request: SavePersonaRequest) -> dict[str, object]:
-    """保存人格为新版本（自动启用）。"""
-    version = await create_persona(request.fields)
+async def save(request: SavePersonaRequest, user: CurrentUserDep) -> dict[str, object]:
+    """保存当前用户的人格为新版本（自动启用）。"""
+    version = await create_persona(request.fields, user.id)
     return R.ok({"version": version}).to_dict()
 
 
 @router.get("/persona/versions")
-async def versions() -> dict[str, object]:
-    """全部版本（倒序）。"""
-    rows = await list_versions()
+async def versions(user: CurrentUserDep) -> dict[str, object]:
+    """当前用户全部版本（倒序）。"""
+    rows = await list_versions(user.id)
     return R.ok(
         {
             "versions": [
@@ -60,14 +61,14 @@ async def versions() -> dict[str, object]:
 
 
 @router.get("/persona/versions/{version}")
-async def version_detail(version: int) -> dict[str, object]:
-    """单版本快照。"""
-    persona = await get_version(version)
+async def version_detail(version: int, user: CurrentUserDep) -> dict[str, object]:
+    """当前用户的单版本快照。"""
+    persona = await get_version(version, user.id)
     return R.ok({"version": persona.version, "fields": _serialize_fields(persona.fields)}).to_dict()
 
 
 @router.post("/persona/versions/{version}/activate")
-async def activate(version: int) -> dict[str, object]:
-    """启用指定版本：只影响新会话。"""
-    await activate_version(version)
+async def activate(version: int, user: CurrentUserDep) -> dict[str, object]:
+    """启用当前用户的指定版本：只影响新会话。"""
+    await activate_version(version, user.id)
     return R.ok({"version": version}).to_dict()

@@ -72,19 +72,20 @@ async def extract_and_store(
     assistant_content: str,
     gateway: LlmGateway,
     embedder: Embedder,
+    user_id: int = 1,
 ) -> None:
     """回合结束抽取：判断 → 删除 → 合并更新 → 新增（带向量化）；全部落一个事务。"""
     async with session_scope() as s:
-        existing = await MemoryRepo(s).list_for_scope(work_dir)
+        existing = await MemoryRepo(s).list_for_scope(user_id, work_dir)
     decision = await gateway.structured(
         _build_prompt(work_dir, user_content, assistant_content, existing), MemoryDecision
     )
     async with session_scope() as s:
         repo = MemoryRepo(s)
         for topic in decision.forget_topics:
-            await repo.delete_matching(topic, work_dir)
+            await repo.delete_matching(user_id, topic, work_dir)
         for update in decision.updates:
-            await repo.update_content(update.memory_id, update.content)
+            await repo.update_content(user_id, update.memory_id, update.content)
         for item in decision.items:
             if item.confidence < LOW_CONFIDENCE_THRESHOLD:
                 continue
@@ -95,6 +96,7 @@ async def extract_and_store(
                 # 向量化失败降级：仍入库，仅关键词召回可用
                 logger.warning("记忆向量化失败，按无向量入库：%s", exc)
             row = Memory(
+                user_id=user_id,
                 kind=item.kind,
                 scope=item.scope,
                 work_dir=work_dir if item.scope == "dir" else None,
@@ -107,7 +109,9 @@ async def extract_and_store(
         await s.commit()
 
 
-async def recall(work_dir: str, query: str, embedder: Embedder, limit: int = RECALL_LIMIT) -> list[Memory]:
+async def recall(
+    work_dir: str, query: str, embedder: Embedder, limit: int = RECALL_LIMIT, user_id: int = 1
+) -> list[Memory]:
     """混合召回：pgvector 向量近邻粗筛 + 关键词精排加权；向量通道失败时仅关键词兜底；低置信不返回。"""
     query_vec: list[float] | None = None
     try:
@@ -116,8 +120,8 @@ async def recall(work_dir: str, query: str, embedder: Embedder, limit: int = REC
         logger.warning("召回向量化失败，降级仅关键词召回：%s", exc)
     async with session_scope() as s:
         repo = MemoryRepo(s)
-        vector_rows = await repo.search_by_vector(work_dir, query_vec, limit * 3) if query_vec else []
-        keyword_rows = [m for m in await repo.list_for_scope(work_dir) if m.embedding is None]
+        vector_rows = await repo.search_by_vector(user_id, work_dir, query_vec, limit * 3) if query_vec else []
+        keyword_rows = [m for m in await repo.list_for_scope(user_id, work_dir) if m.embedding is None]
     scored: list[tuple[float, Memory]] = []
     for row in vector_rows:
         sim = _cosine_similarity(query_vec or [], row.embedding or [])

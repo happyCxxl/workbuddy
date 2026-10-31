@@ -9,19 +9,27 @@ from lingxi.db.models import AiSession, ModelCall, PersonaVersion
 from lingxi.db.repo.model_call_repo import ModelCallRepo
 from lingxi.db.repo.persona_repo import PersonaRepo
 from lingxi.db.repo.session_repo import SessionRepo
-from lingxi.domain.persona.models import Persona, PersonaFields
+from lingxi.domain.persona.models import DEFAULT_FIELDS, Persona, PersonaFields
 from lingxi.domain.ports import ChatMessage, ToolCall
 
 
 async def create_session(
-    work_dir: str, title: str, preset: str = "workspace-write", workspace_id: int | None = None
+    work_dir: str,
+    title: str,
+    preset: str = "workspace-write",
+    workspace_id: int | None = None,
+    user_id: int = 1,
 ) -> int:
-    """创建会话：绑定当前启用的人格版本与权限档；可归属工作区（工作目录取自工作区）。"""
+    """创建会话：绑定当前启用的人格版本与权限档；归属发起用户。"""
     async with session_scope() as s:
-        persona = await PersonaRepo(s).current()
+        persona = await PersonaRepo(s).current(user_id)
         if persona is None:
-            raise ApiError(ErrorCode.NOT_FOUND, "人格未初始化：先执行 alembic upgrade head")
+            # 新用户首次使用：按默认字段懒创建 v1，避免必须先访问人格页
+            persona = PersonaVersion(user_id=user_id, version=1, fields=DEFAULT_FIELDS.model_dump(), active=True)
+            s.add(persona)
+            await s.flush()
         row = AiSession(
+            user_id=user_id,
             work_dir=work_dir,
             title=title,
             persona_version_id=persona.id,
@@ -33,10 +41,10 @@ async def create_session(
         return row.id
 
 
-async def set_session_preset(session_id: int, preset: str) -> None:
+async def set_session_preset(session_id: int, preset: str, user_id: int = 1) -> None:
     """切换本会话权限档：落 permission/policy 审计事件。"""
     async with session_scope() as s:
-        row = await SessionRepo(s).get(session_id)
+        row = await SessionRepo(s).get(session_id, user_id)
         if row is None:
             raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
         row.permission_preset = preset
@@ -44,10 +52,10 @@ async def set_session_preset(session_id: int, preset: str) -> None:
     await append_event(session_id, EventType.PERMISSION_POLICY, {"preset": preset})
 
 
-async def get_session(session_id: int) -> AiSession:
-    """读会话：不存在或已逻辑删除按登记错误码失败。"""
+async def get_session(session_id: int, user_id: int | None = None) -> AiSession:
+    """读会话：不存在、已逻辑删除或跨用户都按登记错误码失败。"""
     async with session_scope() as s:
-        row = await SessionRepo(s).get(session_id)
+        row = await SessionRepo(s).get(session_id, user_id)
     if row is None or row.status == "deleted":
         raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
     return row
@@ -66,33 +74,33 @@ async def ensure_title(session_id: int, content: str) -> None:
         await s.commit()
 
 
-async def rename_session(session_id: int, title: str) -> None:
+async def rename_session(session_id: int, title: str, user_id: int = 1) -> None:
     """重命名会话：标题非空，逻辑删除的会话不可改。"""
     cleaned = " ".join(title.split())
     if not cleaned:
         raise ApiError(ErrorCode.INVALID_ARGUMENT, "标题不能为空")
     async with session_scope() as s:
-        row = await SessionRepo(s).get(session_id)
+        row = await SessionRepo(s).get(session_id, user_id)
         if row is None or row.status == "deleted":
             raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
         row.title = cleaned[:255]
         await s.commit()
 
 
-async def delete_session(session_id: int) -> None:
+async def delete_session(session_id: int, user_id: int = 1) -> None:
     """逻辑删除单条会话：行与事件保留（可审计），列表不再显示。"""
     async with session_scope() as s:
-        row = await SessionRepo(s).get(session_id)
+        row = await SessionRepo(s).get(session_id, user_id)
         if row is None or row.status == "deleted":
             raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
         row.status = "deleted"
         await s.commit()
 
 
-async def list_sessions(limit: int = 50) -> list[AiSession]:
-    """最近会话列表：按更新时间倒序。"""
+async def list_sessions(limit: int = 50, user_id: int = 1) -> list[AiSession]:
+    """最近会话列表：当前用户，按更新时间倒序。"""
     async with session_scope() as s:
-        return await SessionRepo(s).list_recent(limit)
+        return await SessionRepo(s).list_recent(limit, user_id)
 
 
 async def session_usage(session_id: int) -> tuple[int, int, int, int, int]:
@@ -112,7 +120,7 @@ async def persona_of_session(session: AiSession) -> Persona:
     if session.persona_version_id is None:
         raise ApiError(ErrorCode.NOT_FOUND, "会话未绑定人格版本")
     async with session_scope() as s:
-        row = await PersonaRepo(s).get_by_id(session.persona_version_id)
+        row = await PersonaRepo(s).get_by_id(session.user_id, session.persona_version_id)
     if row is None:
         raise ApiError(ErrorCode.NOT_FOUND, "会话绑定的人格版本不存在")
     return _to_persona(row)

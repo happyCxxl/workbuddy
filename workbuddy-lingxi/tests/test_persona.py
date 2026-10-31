@@ -45,7 +45,7 @@ async def test_version_increment_and_snapshot_immutable(engine_fixture: None) ->
     assert latest.version == new_version
     assert latest.fields.name == f"改名{max_before + 1}"
     async with session_scope() as s:
-        old = await PersonaRepo(s).get_by_version(before_active.version)
+        old = await PersonaRepo(s).get_by_version(1, before_active.version)
     assert old is not None
     assert old.fields["name"] == before_active.fields.name
 

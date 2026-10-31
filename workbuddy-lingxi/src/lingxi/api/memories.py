@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from lingxi.app.auth import CurrentUserDep
 from lingxi.contract import ApiError, ErrorCode, R
 from lingxi.db.engine import session_scope
 from lingxi.db.models import Memory
@@ -24,22 +25,26 @@ def _serialize(memory: Memory) -> dict[str, object]:
 
 
 @router.get("/memories")
-async def list_memories(scope: str | None = None, work_dir: str | None = None) -> dict[str, object]:
-    """记忆列表：传 work_dir 查可见范围（全局+本目录）；不传查全部（记忆页）。"""
+async def list_memories(
+    user: CurrentUserDep,
+    scope: str | None = None,
+    work_dir: str | None = None,
+) -> dict[str, object]:
+    """当前用户的记忆列表：传 work_dir 查可见范围（全局+本目录），不传查全部。"""
     async with session_scope() as s:
         repo = MemoryRepo(s)
-        rows = await repo.list_for_scope(work_dir) if work_dir else await repo.list_all()
+        rows = await repo.list_for_scope(user.id, work_dir) if work_dir else await repo.list_all(user.id)
     if scope:
         rows = [m for m in rows if m.scope == scope]
     return R.ok({"memories": [_serialize(m) for m in rows]}).to_dict()
 
 
 @router.delete("/memories/{memory_id}")
-async def delete_memory(memory_id: int) -> dict[str, object]:
-    """删除记忆：物理移除，不留副本（Never#2）。"""
+async def delete_memory(memory_id: int, user: CurrentUserDep) -> dict[str, object]:
+    """删除当前用户的记忆：物理移除，不留副本（Never#2）。"""
     async with session_scope() as s:
         repo = MemoryRepo(s)
-        deleted = await repo.delete(memory_id)
+        deleted = await repo.delete(user.id, memory_id)
         await s.commit()
     if not deleted:
         raise ApiError(ErrorCode.NOT_FOUND, f"记忆不存在：{memory_id}")

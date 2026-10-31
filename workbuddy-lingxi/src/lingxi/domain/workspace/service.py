@@ -18,60 +18,66 @@ def _resolve_directory(path: str) -> Path:
     return resolved
 
 
-async def list_workspaces() -> list[Workspace]:
-    """全部工作区：新建在前。"""
+async def list_workspaces(user_id: int = 1) -> list[Workspace]:
+    """该用户的全部工作区：新建在前。"""
     async with session_scope() as s:
-        stmt = select(Workspace).order_by(Workspace.id.desc())
+        stmt = select(Workspace).where(Workspace.user_id == user_id).order_by(Workspace.id.desc())
         return list((await s.scalars(stmt)).all())
 
 
-async def get_workspace(workspace_id: int) -> Workspace:
-    """读工作区：不存在按登记错误码失败。"""
+async def get_workspace(workspace_id: int, user_id: int = 1) -> Workspace:
+    """读工作区：不存在或跨用户都按登记错误码失败。"""
     async with session_scope() as s:
         row = await s.get(Workspace, workspace_id)
-    if row is None:
+    if row is None or row.user_id != user_id:
         raise ApiError(ErrorCode.NOT_FOUND, f"工作区不存在：{workspace_id}")
     return row
 
 
-async def create_workspace(path: str, name: str = "") -> Workspace:
-    """创建工作区：目录必须存在，路径唯一；名称缺省取目录名。"""
+async def create_workspace(path: str, name: str = "", user_id: int = 1) -> Workspace:
+    """创建当前用户的工作区：目录必须存在，用户内路径唯一；名称缺省取目录名。"""
     resolved = await asyncio.to_thread(_resolve_directory, path)
     workspace_name = " ".join(name.split()) or resolved.name or str(resolved)
     async with session_scope() as s:
-        existing = await s.scalar(select(Workspace).where(Workspace.path == str(resolved)))
+        existing = await s.scalar(
+            select(Workspace).where(Workspace.user_id == user_id, Workspace.path == str(resolved))
+        )
         if existing is not None:
             raise ApiError(ErrorCode.INVALID_ARGUMENT, f"工作区已存在：{resolved}")
-        row = Workspace(name=workspace_name[:255], path=str(resolved))
+        row = Workspace(user_id=user_id, name=workspace_name[:255], path=str(resolved))
         s.add(row)
         await s.commit()
         return row
 
 
-async def rename_workspace(workspace_id: int, name: str) -> Workspace:
-    """重命名工作区：只改显示名，目录与会话归属不变；空名按参数错误拒绝。"""
+async def rename_workspace(workspace_id: int, name: str, user_id: int = 1) -> Workspace:
+    """重命名当前用户的工作区：只改显示名；空名按参数错误拒绝。"""
     workspace_name = " ".join(name.split())
     if not workspace_name:
         raise ApiError(ErrorCode.INVALID_ARGUMENT, "工作区名称不能为空")
     async with session_scope() as s:
         row = await s.get(Workspace, workspace_id)
-        if row is None:
+        if row is None or row.user_id != user_id:
             raise ApiError(ErrorCode.NOT_FOUND, f"工作区不存在：{workspace_id}")
         row.name = workspace_name[:255]
         await s.commit()
         return row
 
 
-async def delete_workspace(workspace_id: int) -> int:
-    """删除工作区：其下会话逻辑删除并解绑，工作区行物理删除；磁盘目录不动。"""
+async def delete_workspace(workspace_id: int, user_id: int = 1) -> int:
+    """删除当前用户的工作区：其下会话逻辑删除并解绑，工作区行物理删除。"""
     async with session_scope() as s:
         row = await s.get(Workspace, workspace_id)
-        if row is None:
+        if row is None or row.user_id != user_id:
             raise ApiError(ErrorCode.NOT_FOUND, f"工作区不存在：{workspace_id}")
         sessions = list(
             (
                 await s.scalars(
-                    select(AiSession).where(AiSession.workspace_id == workspace_id, AiSession.status == "active")
+                    select(AiSession).where(
+                        AiSession.workspace_id == workspace_id,
+                        AiSession.user_id == user_id,
+                        AiSession.status == "active",
+                    )
                 )
             ).all()
         )

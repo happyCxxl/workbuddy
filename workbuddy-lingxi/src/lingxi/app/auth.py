@@ -2,9 +2,10 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Annotated
 
 import jwt
-from fastapi import Header, Request
+from fastapi import Depends, Header, Request
 from redis.asyncio import Redis
 
 from lingxi.app.config import AuthConfig
@@ -92,3 +93,6 @@ async def require_user(request: Request, authorization: str | None = Header(defa
     if current_version is None or current_version != user.token_version:
         raise ApiError(ErrorCode.UNAUTHORIZED, _EUNAUTHORIZED)
     return user
+
+
+CurrentUserDep = Annotated[CurrentUser, Depends(require_user)]

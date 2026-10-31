@@ -121,6 +121,7 @@ class TurnRunner:
             turn_seq = cast(int, start_event.payload["seq"])
             async for event in self._steps(
                 session_id,
+                session.user_id,
                 turn_seq,
                 persona,
                 session.work_dir,
@@ -186,6 +187,7 @@ class TurnRunner:
                     yield event
             async for event in self._steps(
                 session_id,
+                session.user_id,
                 checkpoint.turn_seq,
                 persona,
                 checkpoint.work_dir,
@@ -210,6 +212,7 @@ class TurnRunner:
     async def _steps(
         self,
         session_id: int,
+        user_id: int,
         turn_seq: int,
         persona: Persona | None,
         work_dir: str,
@@ -221,7 +224,9 @@ class TurnRunner:
         step = step_start
         while True:
             step += 1
-            messages = await self._assemble(session_id, persona, work_dir, user_content, turn_seq, first=step == 1)
+            messages = await self._assemble(
+                session_id, user_id, persona, work_dir, user_content, turn_seq, first=step == 1
+            )
             ctx = TurnContext(
                 session_id=session_id,
                 turn_seq=turn_seq,
@@ -232,7 +237,9 @@ class TurnRunner:
             await self._hooks.run("pre_step", ctx)  # fail-closed：闸门异常在此上抛
             if ctx.payload.get("compact"):
                 await compact_history(session_id)
-                messages = await self._assemble(session_id, persona, work_dir, user_content, turn_seq, first=step == 1)
+                messages = await self._assemble(
+                    session_id, user_id, persona, work_dir, user_content, turn_seq, first=step == 1
+                )
             if session_id in self._stop_requested:
                 yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
                 return
@@ -281,6 +288,7 @@ class TurnRunner:
                 step=step,
                 action="post_execute",
                 payload={
+                    "user_id": user_id,
                     "work_dir": work_dir,
                     "user_content": user_content,
                     "assistant_content": "".join(content_parts),
@@ -403,7 +411,14 @@ class TurnRunner:
             )
 
     async def _assemble(
-        self, session_id: int, persona: Persona | None, work_dir: str, query: str, turn_seq: int, first: bool
+        self,
+        session_id: int,
+        user_id: int,
+        persona: Persona | None,
+        work_dir: str,
+        query: str,
+        turn_seq: int,
+        first: bool,
     ) -> list[ChatMessage]:
         """缓存友好装配：静态前缀 → 历史 → 动态尾巴（运行时/记忆）→ 本轮用户消息。
 
@@ -429,7 +444,7 @@ class TurnRunner:
             return messages
         messages.append(ChatMessage(role="system", content=self._runtime_context(work_dir), tool_calls=[]))
         if persona is not None:
-            memories = await recall(work_dir, query, self._embedder)
+            memories = await recall(work_dir, query, self._embedder, user_id=user_id)
             if memories:
                 items = [
                     f"{index}. （{memory.kind}，{memory.created_at:%Y-%m-%d}）{memory.content}"

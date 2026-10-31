@@ -39,7 +39,7 @@ async def add_memory(
 async def visible_contents(work_dir: str) -> list[str]:
     """可见范围内记忆内容。"""
     async with session_scope() as s:
-        rows = await MemoryRepo(s).list_for_scope(work_dir)
+        rows = await MemoryRepo(s).list_for_scope(1, work_dir)
     return [m.content for m in rows]
 
 
@@ -55,7 +55,7 @@ async def test_extract_remembers_important_content(
     assert "喜欢甜品" in await visible_contents("D:\\tmp")
     assert any("证件号码" in str(c.get("input")) for c in captured)
     async with session_scope() as s:
-        rows = await MemoryRepo(s).list_for_scope("D:\\tmp")
+        rows = await MemoryRepo(s).list_for_scope(1, "D:\\tmp")
     stored = [m for m in rows if m.content == "喜欢甜品"][0]
     assert stored.embedding is not None
     assert len(stored.embedding) == 1024
@@ -97,7 +97,7 @@ async def test_conflict_updates_existing(
     gateway = LlmGateway(settings)
     await extract_and_store(999, "D:\\tmp", "更新一下", "好的", gateway, FakeEmbedder())
     async with session_scope() as s:
-        row = await MemoryRepo(s).get(memory_id)
+        row = await MemoryRepo(s).get(1, memory_id)
     assert row is not None
     assert row.content == "改为喜欢咸的"
     assert "改为喜欢咸的" in await visible_contents("D:\\tmp")

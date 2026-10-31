@@ -353,8 +353,8 @@ async def wipe_memories() -> None:
     """清空记忆表：保证记忆用例可重复执行。"""
     async with session_scope() as s:
         repo = MemoryRepo(s)
-        for row in await repo.list_all():
-            await repo.delete(row.id)
+        for row in await repo.list_all(1):
+            await repo.delete(1, row.id)
         await s.commit()
 
 

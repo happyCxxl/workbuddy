@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from lingxi.app.auth import CurrentUserDep
 from lingxi.app.config import Settings
 from lingxi.contract import ApiError, ErrorCode, R
 from lingxi.core.log import read_events
@@ -72,25 +73,25 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
     router = APIRouter()
 
     @router.post("/sessions")
-    async def create(request: CreateSessionRequest) -> dict[str, object]:
+    async def create(request: CreateSessionRequest, user: CurrentUserDep) -> dict[str, object]:
         """建会话：归属工作区（推荐）或直接给目录；绑定当前人格与默认权限档。"""
         workspace_id: int | None = None
         work_dir = request.work_dir.strip()
         if request.workspace_id:
-            workspace = await get_workspace(int(request.workspace_id))
+            workspace = await get_workspace(int(request.workspace_id), user.id)
             workspace_id = workspace.id
             work_dir = workspace.path
         elif not work_dir:
             raise ApiError(ErrorCode.INVALID_ARGUMENT, "必须提供 workspace_id 或 work_dir")
         session_id = await create_session(
-            work_dir, request.title, settings.permission.preset, workspace_id=workspace_id
+            work_dir, request.title, settings.permission.preset, workspace_id=workspace_id, user_id=user.id
         )
         return R.ok({"id": str(session_id)}).to_dict()
 
     @router.get("/sessions")
-    async def list_all() -> dict[str, object]:
-        """最近会话列表：对话页左栏。"""
-        rows = await list_sessions()
+    async def list_all(user: CurrentUserDep) -> dict[str, object]:
+        """当前用户的最近会话列表：对话页左栏。"""
+        rows = await list_sessions(user_id=user.id)
         return R.ok(
             {
                 "sessions": [
@@ -110,9 +111,9 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         ).to_dict()
 
     @router.get("/sessions/{session_id}")
-    async def get(session_id: int) -> dict[str, object]:
+    async def get(session_id: int, user: CurrentUserDep) -> dict[str, object]:
         """读会话。"""
-        row = await get_session(session_id)
+        row = await get_session(session_id, user.id)
         return R.ok(
             {
                 "id": str(row.id),
@@ -127,16 +128,23 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         ).to_dict()
 
     @router.put("/sessions/{session_id}/permission")
-    async def set_permission(session_id: int, request: PresetRequest) -> dict[str, object]:
+    async def set_permission(session_id: int, request: PresetRequest, user: CurrentUserDep) -> dict[str, object]:
         """切换本会话权限档：只影响该会话，落 permission/policy 事件。"""
         if request.preset not in PRESETS:
             raise ApiError(ErrorCode.INVALID_ARGUMENT, f"未知预设档位：{request.preset}")
-        await set_session_preset(session_id, request.preset)
+        await set_session_preset(session_id, request.preset, user.id)
         return R.ok({"preset": request.preset}).to_dict()
 
     @router.get("/sessions/{session_id}/events")
-    async def events(session_id: int, after_seq: int = 0, limit: int = 500, compact: bool = False) -> dict[str, object]:
+    async def events(
+        session_id: int,
+        user: CurrentUserDep,
+        after_seq: int = 0,
+        limit: int = 500,
+        compact: bool = False,
+    ) -> dict[str, object]:
         """事件重放：after_seq 之后的事件；compact=true 过滤流式增量（界面重建用）。"""
+        await get_session(session_id, user.id)
         rows = await read_events(session_id, after_seq, limit, compact)
         return R.ok(
             {
@@ -148,8 +156,9 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         ).to_dict()
 
     @router.get("/sessions/{session_id}/calls")
-    async def calls(session_id: int) -> dict[str, object]:
+    async def calls(session_id: int, user: CurrentUserDep) -> dict[str, object]:
         """模型调用明细：回合/步骤、模型、token、耗时与错误（轨迹时间线用）。"""
+        await get_session(session_id, user.id)
         rows = await list_model_calls(session_id)
         return R.ok(
             {
@@ -172,8 +181,9 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         ).to_dict()
 
     @router.get("/sessions/{session_id}/usage")
-    async def usage(session_id: int) -> dict[str, object]:
+    async def usage(session_id: int, user: CurrentUserDep) -> dict[str, object]:
         """会话用量：调用次数、token 与缓存命中（来自模型调用明细）。"""
+        await get_session(session_id, user.id)
         calls, prompt_tokens, completion_tokens, cache_hit, cache_miss = await session_usage(session_id)
         return R.ok(
             {
@@ -186,36 +196,36 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         ).to_dict()
 
     @router.post("/sessions/{session_id}/subsessions")
-    async def create_sub(session_id: int, request: SubSessionRequest) -> dict[str, object]:
+    async def create_sub(session_id: int, request: SubSessionRequest, user: CurrentUserDep) -> dict[str, object]:
         """提交后台任务：立即返回，结果通过列表与父会话事件查看。"""
         if not request.task.strip():
             raise ApiError(ErrorCode.INVALID_ARGUMENT, "任务不能为空")
-        row = await create_sub_session(session_id, request.title, request.task.strip())
+        row = await create_sub_session(session_id, request.title, request.task.strip(), user.id)
         manager.start(session_id, row.id, row.child_session_id, row.title, row.task)
         return R.ok({"id": str(row.id), "child_session_id": str(row.child_session_id)}).to_dict()
 
     @router.get("/sessions/{session_id}/subsessions")
-    async def list_subs(session_id: int) -> dict[str, object]:
+    async def list_subs(session_id: int, user: CurrentUserDep) -> dict[str, object]:
         """父会话的后台任务列表：新建在前。"""
-        rows = await list_sub_sessions(session_id)
+        rows = await list_sub_sessions(session_id, user.id)
         return R.ok({"subsessions": [_serialize_sub(row) for row in rows]}).to_dict()
 
     @router.get("/subsessions/{sub_session_id}")
-    async def sub_detail(sub_session_id: int) -> dict[str, object]:
+    async def sub_detail(sub_session_id: int, user: CurrentUserDep) -> dict[str, object]:
         """单个后台任务：状态与结果摘要。"""
-        row = await get_sub_session(sub_session_id)
+        row = await get_sub_session(sub_session_id, user.id)
         return R.ok(_serialize_sub(row)).to_dict()
 
     @router.patch("/sessions/{session_id}")
-    async def rename(session_id: int, request: RenameRequest) -> dict[str, object]:
+    async def rename(session_id: int, request: RenameRequest, user: CurrentUserDep) -> dict[str, object]:
         """重命名会话（逻辑删除的不可改）。"""
-        await rename_session(session_id, request.title)
+        await rename_session(session_id, request.title, user.id)
         return R.ok({"title": request.title.strip()}).to_dict()
 
     @router.delete("/sessions/{session_id}")
-    async def remove(session_id: int) -> dict[str, object]:
+    async def remove(session_id: int, user: CurrentUserDep) -> dict[str, object]:
         """逻辑删除单条会话：行与事件保留，只从列表消失。"""
-        await delete_session(session_id)
+        await delete_session(session_id, user.id)
         return R.ok(None).to_dict()
 
     return router

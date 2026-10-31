@@ -17,10 +17,10 @@ def _title_of(title: str, task: str) -> str:
     return cleaned if cleaned else task.strip()[:40]
 
 
-async def create_sub_session(parent_session_id: int, title: str, task: str) -> SubSession:
-    """派生后台任务：子会话干净上下文（无人格绑定）、继承父目录与权限档；禁止再嵌套。"""
+async def create_sub_session(parent_session_id: int, title: str, task: str, user_id: int = 1) -> SubSession:
+    """派生后台任务：子会话干净上下文（无人格绑定）、继承父目录与权限档；归属发起用户。"""
     async with session_scope() as s:
-        parent = await SessionRepo(s).get(parent_session_id)
+        parent = await SessionRepo(s).get(parent_session_id, user_id)
         if parent is None:
             raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{parent_session_id}")
         if parent.kind != "chat":
@@ -33,6 +33,7 @@ async def create_sub_session(parent_session_id: int, title: str, task: str) -> S
         if (running or 0) >= MAX_RUNNING:
             raise ApiError(ErrorCode.INVALID_ARGUMENT, f"后台任务过多（最多 {MAX_RUNNING} 个运行中）")
         child = AiSession(
+            user_id=user_id,
             work_dir=parent.work_dir,
             title=_title_of(title, task),
             permission_preset=parent.permission_preset,
@@ -43,6 +44,7 @@ async def create_sub_session(parent_session_id: int, title: str, task: str) -> S
         s.add(child)
         await s.flush()
         row = SubSession(
+            user_id=user_id,
             parent_session_id=parent_session_id,
             child_session_id=child.id,
             title=_title_of(title, task),
@@ -65,20 +67,22 @@ async def finish_sub_session(sub_session_id: int, status: str, result: str) -> N
         await s.commit()
 
 
-async def list_sub_sessions(parent_session_id: int) -> list[SubSession]:
-    """父会话的后台任务列表：新建在前。"""
+async def list_sub_sessions(parent_session_id: int, user_id: int = 1) -> list[SubSession]:
+    """父会话的后台任务列表：新建在前，限定归属用户。"""
     async with session_scope() as s:
         stmt = (
-            select(SubSession).where(SubSession.parent_session_id == parent_session_id).order_by(SubSession.id.desc())
+            select(SubSession)
+            .where(SubSession.parent_session_id == parent_session_id, SubSession.user_id == user_id)
+            .order_by(SubSession.id.desc())
         )
         return list((await s.scalars(stmt)).all())
 
 
-async def get_sub_session(sub_session_id: int) -> SubSession:
-    """单个后台任务：不存在按登记错误码失败。"""
+async def get_sub_session(sub_session_id: int, user_id: int = 1) -> SubSession:
+    """单个后台任务：不存在或跨用户按登记错误码失败。"""
     async with session_scope() as s:
         row = await s.get(SubSession, sub_session_id)
-    if row is None:
+    if row is None or row.user_id != user_id:
         raise ApiError(ErrorCode.NOT_FOUND, f"后台任务不存在：{sub_session_id}")
     return row
 

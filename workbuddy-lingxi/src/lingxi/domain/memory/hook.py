@@ -22,6 +22,7 @@ def make_memory_hook(gateway: LlmGateway, embedder: Embedder) -> HookFunc:
                 str(ctx.payload["assistant_content"]),
                 gateway,
                 embedder,
+                int(str(ctx.payload.get("user_id", 1))),
             )
         except Exception as exc:
             # 记忆抽取失败只记日志：不影响回合结果

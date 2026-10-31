@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from lingxi.app.auth import CurrentUserDep
 from lingxi.contract import R
 from lingxi.domain.workspace.service import (
     create_workspace,
@@ -41,28 +42,28 @@ def serialize_workspace(row: object) -> dict[str, object]:
 
 
 @router.get("/workspaces")
-async def workspaces() -> dict[str, object]:
-    """全部工作区：新建在前。"""
-    rows = await list_workspaces()
+async def workspaces(user: CurrentUserDep) -> dict[str, object]:
+    """当前用户的全部工作区：新建在前。"""
+    rows = await list_workspaces(user.id)
     return R.ok({"workspaces": [serialize_workspace(row) for row in rows]}).to_dict()
 
 
 @router.post("/workspaces")
-async def create(request: CreateWorkspaceRequest) -> dict[str, object]:
-    """创建工作区：目录必须存在，路径唯一。"""
-    row = await create_workspace(request.path, request.name)
+async def create(request: CreateWorkspaceRequest, user: CurrentUserDep) -> dict[str, object]:
+    """创建工作区：目录必须存在，用户内路径唯一。"""
+    row = await create_workspace(request.path, request.name, user.id)
     return R.ok(serialize_workspace(row)).to_dict()
 
 
 @router.patch("/workspaces/{workspace_id}")
-async def rename(workspace_id: int, request: RenameWorkspaceRequest) -> dict[str, object]:
+async def rename(workspace_id: int, request: RenameWorkspaceRequest, user: CurrentUserDep) -> dict[str, object]:
     """重命名工作区：只改显示名；目录与会话归属不变。"""
-    row = await rename_workspace(workspace_id, request.name)
+    row = await rename_workspace(workspace_id, request.name, user.id)
     return R.ok(serialize_workspace(row)).to_dict()
 
 
 @router.delete("/workspaces/{workspace_id}")
-async def remove(workspace_id: int) -> dict[str, object]:
+async def remove(workspace_id: int, user: CurrentUserDep) -> dict[str, object]:
     """删除工作区：其下会话一并逻辑删除（只删记录，磁盘目录不动）。"""
-    deleted = await delete_workspace(workspace_id)
+    deleted = await delete_workspace(workspace_id, user.id)
     return R.ok({"deleted": deleted}).to_dict()
