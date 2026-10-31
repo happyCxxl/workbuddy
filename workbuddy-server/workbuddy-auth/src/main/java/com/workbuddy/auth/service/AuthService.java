@@ -25,4 +25,9 @@ public interface AuthService {
      * @param request 注册请求
      */
     void register(RegisterDTO request);
+
+    /**
+     * 退出登录：版本 +1，当前及此前签发的令牌全部失效（单会话策略）。
+     */
+    void logout();
 }

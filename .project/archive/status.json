@@ -50,9 +50,9 @@
     },
     "07": {
       "status": "已复核",
-      "reviewed": "2026-10-28",
-      "baseline": "63a05eaf",
-      "note": "模块目录前缀变更；对外接口清单未变"
+      "reviewed": "2026-10-31",
+      "baseline": "ad40c16a",
+      "note": "新增 POST /auth/logout；登录改为单会话递增版本"
     },
     "08": {
       "status": "已复核",
@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-10-31",
-      "baseline": "7cab0e64",
-      "note": "新增跨服务单点登录：Java 签发并写 Redis 令牌版本，灵犀只验签与比对版本；共享密钥走两侧本地配置"
+      "baseline": "ad40c16a",
+      "note": "单会话登录 + 主动退出：登录/退出都递增令牌版本，Java 与灵犀两侧即时失效"
     }
   }
 }

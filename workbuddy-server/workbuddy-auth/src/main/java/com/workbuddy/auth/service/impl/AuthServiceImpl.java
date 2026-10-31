@@ -12,9 +12,11 @@ import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.enums.user.UserStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.ThrowUtil;
+import com.workbuddy.common.security.KnowledgeUser;
 import com.workbuddy.common.utils.AvatarUrlUtil;
 import com.workbuddy.common.utils.ClientIpUtil;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.common.utils.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,11 +57,12 @@ public class AuthServiceImpl implements AuthService {
         ThrowUtil.throwIf(!credentialsMatch, ErrorCode.LOGIN_FAILED,
                 () -> loginAttemptGuard.recordFailure(request.getUsername(), ip));
         loginAttemptGuard.clearAccount(request.getUsername(), ip);
-        // 角色与令牌版本写入令牌载荷：角色供鉴权判定，版本供失效校验
-        UserRole role = UserRole.of(user.getRole());
-        Integer tokenVersion = Objects.requireNonNullElse(user.getTokenVersion(), 0);
-        // 每次登录同步版本号：灵犀跨服务校验依赖这个 key，未同步的用户会被判为未认证
+        // 单会话策略：每次登录版本 +1，旧令牌在 Java 与灵犀两侧立即失效
+        Integer tokenVersion = Objects.requireNonNullElse(user.getTokenVersion(), 0) + 1;
+        user.setTokenVersion(tokenVersion);
+        userDbService.updateById(user);
         jwtUtil.syncTokenVersion(user.getId(), tokenVersion);
+        UserRole role = UserRole.of(user.getRole());
         Duration ttl = request.isRemember() ? jwtUtil.rememberTtl() : jwtUtil.standardTtl();
         LoginVO vo = new LoginVO();
         vo.setToken(jwtUtil.sign(user.getId(), user.getUsername(), role, tokenVersion, ttl));
@@ -94,5 +97,21 @@ public class AuthServiceImpl implements AuthService {
         // 自助注册一律为普通用户，管理员由既有管理员在用户管理中调整
         user.setRole(UserRole.USER.getCode());
         userDbService.save(user);
+    }
+
+    /**
+     * 退出登录：版本 +1，当前及此前签发的令牌全部失效（单会话策略）。
+     */
+    @Override
+    public void logout() {
+        KnowledgeUser current = SecurityUtil.getUser();
+        ThrowUtil.throwIf(NullUtil.isNull(current) || NullUtil.isNull(current.getId()),
+                ErrorCode.UNAUTHORIZED);
+        WbUser user = userDbService.getById(current.getId());
+        ThrowUtil.throwIf(NullUtil.isNull(user), ErrorCode.UNAUTHORIZED);
+        int nextVersion = Objects.requireNonNullElse(user.getTokenVersion(), 0) + 1;
+        user.setTokenVersion(nextVersion);
+        userDbService.updateById(user);
+        jwtUtil.syncTokenVersion(user.getId(), nextVersion);
     }
 }

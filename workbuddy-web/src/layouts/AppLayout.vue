@@ -269,6 +269,7 @@ import { ElMessage } from 'element-plus';
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import { deleteToken } from '@/api/auth';
 import { useAuthStore } from '@/stores/auth';
 import { readCollapsed, writeCollapsed } from '@/utils/ui-state-storage';
 
@@ -565,7 +566,12 @@ function onAvatarError(): void {
 }
 
 // 退出登录：项目口径为客户端丢弃令牌（无登出接口），随后回到登录页
-function handleLogout(): void {
+async function handleLogout(): Promise<void> {
+  try {
+    await deleteToken();
+  } catch {
+    // 令牌已失效也要清本地：退出是本地优先动作
+  }
   authStore.clearToken();
   ElMessage.success('已退出登录');
   void router.push('/login');

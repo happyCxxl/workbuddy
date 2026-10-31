@@ -48,4 +48,15 @@ public class AuthController {
         authService.register(request);
         return R.ok(null, "注册成功");
     }
+
+    /**
+     * 退出登录：当前令牌立即失效（返回后前端清本地令牌）。
+     *
+     * @return 恒为成功响应
+     */
+    @PostMapping("/logout")
+    public R<Void> logout() {
+        authService.logout();
+        return R.ok(null, "已退出登录");
+    }
 }

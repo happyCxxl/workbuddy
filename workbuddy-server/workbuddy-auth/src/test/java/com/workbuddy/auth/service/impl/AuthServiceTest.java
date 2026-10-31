@@ -10,6 +10,8 @@ import com.workbuddy.common.dto.response.auth.LoginVO;
 import com.workbuddy.common.enums.user.UserRole;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
+import com.workbuddy.common.security.KnowledgeUser;
+import com.workbuddy.common.utils.SecurityUtil;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -83,14 +87,14 @@ class AuthServiceTest {
     void loginShouldReturnTokenWhenCredentialsMatch() {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
-        when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 0, STANDARD_TTL)).thenReturn("jwt-token");
+        when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 1, STANDARD_TTL)).thenReturn("jwt-token");
 
         LoginVO vo = authService.login(loginRequest("admin", "pass123456"));
 
         assertEquals("jwt-token", vo.getToken());
         assertEquals("管理员", vo.getDisplayName());
         assertEquals("admin@example.com", vo.getEmail());
-        verify(jwtUtil).sign(1L, "admin", UserRole.ADMIN, 0, STANDARD_TTL);
+        verify(jwtUtil).sign(1L, "admin", UserRole.ADMIN, 1, STANDARD_TTL);
     }
 
     /**
@@ -102,7 +106,7 @@ class AuthServiceTest {
         plain.setRole(null);
         when(userDbService.findActiveByUsername("admin")).thenReturn(plain);
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
-        when(jwtUtil.sign(1L, "admin", UserRole.USER, 0, STANDARD_TTL)).thenReturn("jwt-token");
+        when(jwtUtil.sign(1L, "admin", UserRole.USER, 1, STANDARD_TTL)).thenReturn("jwt-token");
 
         LoginVO vo = authService.login(loginRequest("admin", "pass123456"));
 
@@ -110,7 +114,7 @@ class AuthServiceTest {
         assertEquals("jwt-token", vo.getToken());
         // 回落只影响令牌载荷，VO 仍如实反映库中角色为空
         assertNull(vo.getRole());
-        verify(jwtUtil).sign(1L, "admin", UserRole.USER, 0, STANDARD_TTL);
+        verify(jwtUtil).sign(1L, "admin", UserRole.USER, 1, STANDARD_TTL);
     }
 
     /**
@@ -122,7 +126,7 @@ class AuthServiceTest {
         user.setTokenVersion(5);
         when(userDbService.findActiveByUsername("admin")).thenReturn(user);
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
-        when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 5, STANDARD_TTL)).thenReturn("jwt-token");
+        when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 6, STANDARD_TTL)).thenReturn("jwt-token");
 
         LoginVO vo = authService.login(loginRequest("admin", "pass123456"));
 
@@ -228,7 +232,7 @@ class AuthServiceTest {
     void loginShouldClearAccountCounterOnSuccess() {
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
-        when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 0, STANDARD_TTL)).thenReturn("jwt-token");
+        when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 1, STANDARD_TTL)).thenReturn("jwt-token");
 
         LoginVO vo = authService.login(loginRequest("admin", "pass123456"));
 
@@ -247,12 +251,30 @@ class AuthServiceTest {
         request.setRemember(true);
         when(userDbService.findActiveByUsername("admin")).thenReturn(adminUser());
         when(passwordEncoder.matches("pass123456", "encoded")).thenReturn(true);
-        when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 0, REMEMBER_TTL)).thenReturn("long-token");
+        when(jwtUtil.sign(1L, "admin", UserRole.ADMIN, 1, REMEMBER_TTL)).thenReturn("long-token");
 
         LoginVO vo = authService.login(request);
 
         assertEquals("long-token", vo.getToken());
-        verify(jwtUtil).sign(1L, "admin", UserRole.ADMIN, 0, REMEMBER_TTL);
+        verify(jwtUtil).sign(1L, "admin", UserRole.ADMIN, 1, REMEMBER_TTL);
+    }
+
+    @Test
+    void logoutShouldBumpVersionAndSync() {
+        WbUser user = adminUser();
+        user.setTokenVersion(3);
+        KnowledgeUser current = new KnowledgeUser();
+        current.setId(1L);
+        try (MockedStatic<SecurityUtil> security = mockStatic(SecurityUtil.class)) {
+            security.when(SecurityUtil::getUser).thenReturn(current);
+            when(userDbService.getById(1L)).thenReturn(user);
+
+            authService.logout();
+
+            assertEquals(4, user.getTokenVersion());
+            verify(userDbService).updateById(user);
+            verify(jwtUtil).syncTokenVersion(1L, 4);
+        }
     }
 
     private LoginDTO loginRequest(String username, String password) {

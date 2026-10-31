@@ -12,3 +12,9 @@ export async function addUser(request: RegisterRequest): Promise<null> {
   const response = await http.post<null>('/auth/register', request);
   return response.data;
 }
+
+// 认证接口层（与后端 AuthController 对应）：退出登录，服务端使当前令牌立即失效
+export async function deleteToken(): Promise<null> {
+  const response = await http.post<null>('/auth/logout');
+  return response.data;
+}
