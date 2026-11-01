@@ -1,98 +1,100 @@
 <template>
   <div class="gateway-page page-shell">
     <div class="page-panel">
-      <el-tabs v-model="activeTab" class="gateway-tabs">
-        <el-tab-pane label="厂商" name="vendors">
-          <div class="gateway-toolbar">
-            <el-button type="primary" @click="openVendorDialog()">新增厂商</el-button>
-          </div>
-          <el-table :data="vendors" size="small" class="page-table">
-            <el-table-column prop="code" label="编码" min-width="160" align="center" />
-            <el-table-column prop="display_name" label="名称" min-width="160" align="center" />
-            <el-table-column prop="base_url" label="接入地址" min-width="160" align="center" />
-            <el-table-column prop="api_key_env" label="密钥变量" min-width="160" align="center" />
-            <el-table-column label="状态" min-width="160" align="center">
-              <template #default="{ row }">
-                <el-tag :type="row.enabled ? 'success' : 'info'" size="small">
-                  {{ row.enabled ? '启用' : '停用' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" min-width="160" align="center">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="openVendorDialog(row)">编辑</el-button>
-                <el-button link type="danger" @click="removeVendor(row)">删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
+      <template v-if="tab === 'vendors'">
+        <div class="gateway-toolbar">
+          <el-button type="primary" @click="openVendorDialog()">新增厂商</el-button>
+        </div>
+        <el-table :data="vendors" size="small" class="page-table">
+          <el-table-column prop="code" label="编码" min-width="160" align="center" />
+          <el-table-column prop="display_name" label="名称" min-width="160" align="center" />
+          <el-table-column prop="base_url" label="接入地址" min-width="160" align="center" />
+          <el-table-column label="密钥" min-width="160" align="center">
+            <template #default="{ row }">
+              {{ row.api_key_masked ?? '未配置' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" min-width="160" align="center">
+            <template #default="{ row }">
+              <el-tag :type="row.enabled ? 'success' : 'info'" size="small">
+                {{ row.enabled ? '启用' : '停用' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="160" align="center">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="openVendorDialog(row)">编辑</el-button>
+              <el-button link type="danger" @click="removeVendor(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </template>
 
-        <el-tab-pane label="模型" name="models">
-          <div class="gateway-toolbar">
-            <el-button type="primary" :disabled="vendors.length === 0" @click="openModelDialog()">
-              新增模型
-            </el-button>
-            <el-select
-              v-model="capabilityFilter"
-              clearable
-              placeholder="全部能力"
-              class="gateway-filter"
-            >
-              <el-option
-                v-for="item in capabilities"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </div>
-          <el-table :data="filteredModels" size="small" class="page-table">
-            <el-table-column prop="display_name" label="模型" min-width="160" align="center" />
-            <el-table-column prop="model_key" label="模型名" min-width="160" align="center" />
-            <el-table-column prop="capability" label="能力" min-width="160" align="center" />
-            <el-table-column label="厂商" min-width="160" align="center">
-              <template #default="{ row }">{{ vendorName(row.vendor_id) }}</template>
-            </el-table-column>
-            <el-table-column prop="dimension" label="维度" min-width="160" align="center" />
-            <el-table-column label="状态" min-width="160" align="center">
-              <template #default="{ row }">
-                <el-tag :type="row.enabled ? 'success' : 'info'" size="small">
-                  {{ row.enabled ? '启用' : '停用' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" min-width="160" align="center">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="openModelDialog(row)">编辑</el-button>
-                <el-button link type="primary" @click="runTest(row)">测试</el-button>
-                <el-button link type="danger" @click="removeModel(row)">删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
-
-        <el-tab-pane label="用量" name="usage">
-          <div class="gateway-toolbar">
-            <el-select v-model="groupBy" class="gateway-filter" @change="loadUsage">
-              <el-option label="按来源" value="source" />
-              <el-option label="按模型" value="model_id" />
-              <el-option label="按能力" value="capability" />
-            </el-select>
-          </div>
-          <el-table :data="usage" size="small" class="page-table">
-            <el-table-column prop="key" label="分组" min-width="160" align="center" />
-            <el-table-column prop="calls" label="调用次数" min-width="160" align="center" />
-            <el-table-column prop="tokens" label="Token" min-width="160" align="center" />
-            <el-table-column
-              prop="avg_latency_ms"
-              label="平均延迟(ms)"
-              min-width="160"
-              align="center"
+      <template v-else-if="tab === 'models'">
+        <div class="gateway-toolbar">
+          <el-button type="primary" :disabled="vendors.length === 0" @click="openModelDialog()">
+            新增模型
+          </el-button>
+          <el-select
+            v-model="capabilityFilter"
+            clearable
+            placeholder="全部能力"
+            class="gateway-filter"
+          >
+            <el-option
+              v-for="item in capabilities"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
             />
-            <el-table-column prop="failures" label="失败" min-width="160" align="center" />
-          </el-table>
-        </el-tab-pane>
-      </el-tabs>
+          </el-select>
+        </div>
+        <el-table :data="filteredModels" size="small" class="page-table">
+          <el-table-column prop="display_name" label="模型" min-width="160" align="center" />
+          <el-table-column prop="model_key" label="模型名" min-width="160" align="center" />
+          <el-table-column prop="capability" label="能力" min-width="160" align="center" />
+          <el-table-column label="厂商" min-width="160" align="center">
+            <template #default="{ row }">{{ vendorName(row.vendor_id) }}</template>
+          </el-table-column>
+          <el-table-column prop="dimension" label="维度" min-width="160" align="center" />
+          <el-table-column label="状态" min-width="160" align="center">
+            <template #default="{ row }">
+              <el-tag :type="row.enabled ? 'success' : 'info'" size="small">
+                {{ row.enabled ? '启用' : '停用' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="160" align="center">
+            <template #default="{ row }">
+              <el-button link type="primary" @click="openModelDialog(row)">编辑</el-button>
+              <el-button link type="primary" @click="runTest(row)">测试</el-button>
+              <el-button link type="danger" @click="removeModel(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </template>
+
+      <template v-else>
+        <div class="gateway-toolbar">
+          <el-select v-model="groupBy" class="gateway-filter" @change="loadUsage">
+            <el-option label="按来源" value="source" />
+            <el-option label="按模型" value="model_id" />
+            <el-option label="按能力" value="capability" />
+          </el-select>
+        </div>
+        <el-table :data="usage" size="small" class="page-table">
+          <el-table-column prop="key" label="分组" min-width="160" align="center" />
+          <el-table-column prop="calls" label="调用次数" min-width="160" align="center" />
+          <el-table-column prop="tokens" label="Token" min-width="160" align="center" />
+          <el-table-column
+            prop="avg_latency_ms"
+            label="平均延迟(ms)"
+            min-width="160"
+            align="center"
+          />
+          <el-table-column prop="failures" label="失败" min-width="160" align="center" />
+        </el-table>
+      </template>
     </div>
 
     <el-dialog
@@ -106,7 +108,14 @@
         </el-form-item>
         <el-form-item label="名称"><el-input v-model="vendorForm.display_name" /></el-form-item>
         <el-form-item label="接入地址"><el-input v-model="vendorForm.base_url" /></el-form-item>
-        <el-form-item label="密钥变量"><el-input v-model="vendorForm.api_key_env" /></el-form-item>
+        <el-form-item label="密钥">
+          <el-input
+            v-model="apiKeyInput"
+            type="password"
+            show-password
+            :placeholder="vendorForm.id ? '留空保持不变' : '请输入 API Key'"
+          />
+        </el-form-item>
         <el-form-item label="启用"><el-switch v-model="vendorForm.enabled" /></el-form-item>
       </el-form>
       <template #footer>
@@ -207,7 +216,8 @@ import {
   type UsageRow,
 } from '@/api/model-admin';
 
-const activeTab = ref('vendors');
+const props = defineProps<{ tab: string }>();
+const tab = computed(() => props.tab);
 const vendors = ref<ModelVendor[]>([]);
 const models = ref<GatewayModel[]>([]);
 const usage = ref<UsageRow[]>([]);
@@ -222,12 +232,12 @@ const capabilities = [
 ];
 
 const vendorDialog = ref(false);
+const apiKeyInput = ref('');
 const vendorForm = reactive<Partial<ModelVendor>>({
   id: undefined,
   code: '',
   display_name: '',
   base_url: '',
-  api_key_env: '',
   enabled: true,
 });
 
@@ -280,17 +290,18 @@ function openVendorDialog(raw?: unknown): void {
     code: row?.code ?? '',
     display_name: row?.display_name ?? '',
     base_url: row?.base_url ?? '',
-    api_key_env: row?.api_key_env ?? '',
     enabled: row?.enabled ?? true,
   });
+  apiKeyInput.value = '';
   vendorDialog.value = true;
 }
 
 async function saveVendor(): Promise<void> {
+  const payload = { ...vendorForm, api_key: apiKeyInput.value || undefined };
   if (vendorForm.id) {
-    await updateVendor(vendorForm.id, vendorForm);
+    await updateVendor(vendorForm.id, payload);
   } else {
-    await addVendor(vendorForm);
+    await addVendor(payload);
   }
   vendorDialog.value = false;
   ElMessage.success('已保存');

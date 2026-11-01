@@ -5,8 +5,11 @@
 """
 
 import asyncio
+import os
+import re
 import subprocess
 from decimal import Decimal
+from pathlib import Path
 
 from sqlalchemy import select
 
@@ -49,20 +52,41 @@ def _read_java_models() -> list[list[str]]:
     return [line.split("\t") for line in result.stdout.splitlines() if line.strip()]
 
 
+def _local_keys() -> dict[str, str]:
+    """读取 Java 本地配置里的密钥（application-local.yml），环境变量优先。"""
+    path = (
+        Path(__file__).resolve().parents[2] / "workbuddy-server/workbuddy-biz/src/main/resources/application-local.yml"
+    )
+    keys: dict[str, str] = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            match = re.match(r"\s*([A-Z0-9_]+):\s*\"([^\"]*)\"", line)
+            if match:
+                keys[match.group(1)] = match.group(2)
+    for name in list(keys):
+        if os.environ.get(name):
+            keys[name] = os.environ[name]
+    return keys
+
+
 async def _import(rows: list[list[str]]) -> None:
     async with session_scope() as s:
+        keys = _local_keys()
         vendors: dict[str, ModelVendor] = {}
-        for vendor_code, display_name, base_url, api_key_env in _vendor_defaults(rows):
+        for vendor_code, display_name, base_url, env_name in _vendor_defaults(rows):
             vendor = await s.scalar(select(ModelVendor).where(ModelVendor.code == vendor_code))
+            api_key = keys.get(env_name) or None
             if vendor is None:
                 vendor = ModelVendor(
                     code=vendor_code,
                     display_name=display_name,
                     base_url=base_url,
-                    api_key_env=api_key_env,
+                    api_key=api_key,
                 )
                 s.add(vendor)
                 await s.flush()
+            elif api_key:
+                vendor.api_key = api_key
             vendors[vendor_code] = vendor
         for row in rows:
             (

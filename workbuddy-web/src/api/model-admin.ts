@@ -6,7 +6,8 @@ export interface ModelVendor {
   code: string;
   display_name: string;
   base_url: string;
-  api_key_env: string;
+  api_key_masked: string | null;
+  api_key_configured: boolean;
   timeout_ms: number | null;
   max_retries: number | null;
   enabled: boolean;

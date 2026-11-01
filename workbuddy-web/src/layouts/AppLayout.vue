@@ -386,11 +386,21 @@ const navItems: NavItem[] = [
     label: '模型管理',
     iconPaths: ['M5.2 5.2h5.6v5.6H5.2z', 'M8 2.4v2.8M8 10.8v2.8M2.4 8h2.8M10.8 8h2.8'],
     children: [
-      // 模型清单：厂商、模型能力与用量
+      // 厂商 / 模型 / 用量三个子页，均直连 Python 能力层
       {
-        label: '模型清单',
-        path: '/model/manager',
+        label: '厂商',
+        path: '/model/manager/vendors',
+        iconPaths: ['M2.6 4h10.8v8H2.6z', 'M2.6 7h10.8'],
+      },
+      {
+        label: '模型',
+        path: '/model/manager/models',
         iconPaths: ['M3.2 4.6h9.6M3.2 8h9.6M3.2 11.4h9.6', 'M5.6 3.2v10.8'],
+      },
+      {
+        label: '用量',
+        path: '/model/manager/usage',
+        iconPaths: ['M3 12.8V7.2M8 12.8V3.2M13 12.8V9.2'],
       },
     ],
   },
@@ -506,7 +516,9 @@ const PAGE_SECTIONS: Record<string, string> = {
   IndexBuild: '知识库',
   RetrievalEval: '知识库',
   StrategyManagement: '知识库',
-  ModelList: '模型管理',
+  ModelVendors: '厂商管理',
+  ModelCapabilities: '模型管理',
+  ModelUsage: '模型用量',
   UserManagement: '用户管理',
   SystemSetting: '系统设置',
   Profile: '个人中心',

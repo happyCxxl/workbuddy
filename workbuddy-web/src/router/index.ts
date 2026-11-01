@@ -74,11 +74,29 @@ export const router = createRouter({
           meta: { title: '用户管理', adminOnly: true },
         },
         {
-          // 模型清单：厂商、模型能力与用量，直连 Python 能力层
           path: 'model/manager',
-          name: 'ModelList',
+          redirect: '/model/manager/vendors',
+        },
+        {
+          path: 'model/manager/vendors',
+          name: 'ModelVendors',
           component: () => import('@/views/model/ModelListView.vue'),
-          meta: { title: '模型清单' },
+          props: { tab: 'vendors' },
+          meta: { title: '厂商管理' },
+        },
+        {
+          path: 'model/manager/models',
+          name: 'ModelCapabilities',
+          component: () => import('@/views/model/ModelListView.vue'),
+          props: { tab: 'models' },
+          meta: { title: '模型管理' },
+        },
+        {
+          path: 'model/manager/usage',
+          name: 'ModelUsage',
+          component: () => import('@/views/model/ModelListView.vue'),
+          props: { tab: 'usage' },
+          meta: { title: '模型用量' },
         },
         {
           // 个人助手 · 对话：会话列表 + SSE 流式对话 + 权限裁决

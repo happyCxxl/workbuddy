@@ -15,18 +15,18 @@ class VendorCreate(BaseModel):
     code: str = Field(min_length=1, max_length=64)
     display_name: str = Field(min_length=1, max_length=128)
     base_url: str = Field(min_length=1)
-    api_key_env: str = Field(min_length=1, max_length=128)
+    api_key: str = Field(min_length=1)
     timeout_ms: int | None = None
     max_retries: int | None = None
     enabled: bool = True
 
 
 class VendorUpdate(BaseModel):
-    """编辑厂商：编码不可改。"""
+    """编辑厂商：编码不可改；api_key 为空表示保持原密钥。"""
 
     display_name: str = Field(min_length=1, max_length=128)
     base_url: str = Field(min_length=1)
-    api_key_env: str = Field(min_length=1, max_length=128)
+    api_key: str | None = None
     timeout_ms: int | None = None
     max_retries: int | None = None
     enabled: bool = True
@@ -80,8 +80,17 @@ class ModelStatus(BaseModel):
     enabled: bool
 
 
+def _mask_key(value: str | None) -> str | None:
+    """密钥脱敏：只保留首尾少量字符，永不返回明文。"""
+    if not value:
+        return None
+    if len(value) <= 8:
+        return "****"
+    return f"{value[:3]}****{value[-4:]}"
+
+
 def vendor_view(row: object) -> dict[str, object]:
-    """厂商序列化：密钥只返回环境变量名。"""
+    """厂商序列化：密钥只返回脱敏值与是否已配置。"""
     from lingxi.db.models import ModelVendor
 
     assert isinstance(row, ModelVendor)
@@ -90,7 +99,8 @@ def vendor_view(row: object) -> dict[str, object]:
         "code": row.code,
         "display_name": row.display_name,
         "base_url": row.base_url,
-        "api_key_env": row.api_key_env,
+        "api_key_masked": _mask_key(row.api_key),
+        "api_key_configured": bool(row.api_key),
         "timeout_ms": row.timeout_ms,
         "max_retries": row.max_retries,
         "enabled": row.enabled,

@@ -35,6 +35,8 @@ async def update_vendor(vendor_id: int, payload: VendorUpdate) -> ModelVendor:
         if row is None:
             raise ApiError(ErrorCode.NOT_FOUND, f"厂商不存在：{vendor_id}")
         for field, value in payload.model_dump().items():
+            if field == "api_key" and not value:
+                continue
             setattr(row, field, value)
         await s.commit()
         return row

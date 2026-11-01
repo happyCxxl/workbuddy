@@ -35,7 +35,7 @@ def _vendor(code: str) -> dict[str, object]:
         "code": code,
         "display_name": code,
         "base_url": "https://example.invalid/v1",
-        "api_key_env": "EXAMPLE_API_KEY",
+        "api_key": "sk-test-key",
         "enabled": True,
     }
 
@@ -63,6 +63,11 @@ async def test_vendor_and_model_crud(client: AsyncClient) -> None:
     assert first.json()["code"] == 0 and second.json()["code"] == 0
     vendor_one = first.json()["data"]["id"]
     vendor_two = second.json()["data"]["id"]
+    listed = await client.get("/model-admin/vendors")
+    masked = next(row for row in listed.json()["data"]["vendors"] if row["id"] == vendor_one)
+    assert masked["api_key_configured"] is True
+    assert masked["api_key_masked"] != "sk-test-key"
+    assert "sk-test-key" not in str(masked)
 
     created = await client.post("/model-admin/models", json=_model(vendor_one, "same-embedding", "EMBEDDING"))
     assert created.json()["code"] == 0

@@ -6,7 +6,6 @@ import asyncio
 import base64
 import io
 import json
-import os
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any, cast
@@ -81,23 +80,24 @@ class RerankOutput:
     usage: dict[str, int] = field(default_factory=dict)
 
 
-_CLIENTS: dict[int, AsyncOpenAI] = {}
+_CLIENTS: dict[tuple[int, str], AsyncOpenAI] = {}
 
 
 def _client(vendor: ModelVendor) -> AsyncOpenAI:
-    key = _CLIENTS.get(vendor.id)
-    if key is not None:
-        return key
-    api_key = os.environ.get(vendor.api_key_env, "")
+    api_key = vendor.api_key or ""
+    ref = (vendor.id, api_key)
+    client = _CLIENTS.get(ref)
+    if client is not None:
+        return client
     if not api_key:
-        raise ProviderError("MISSING_API_KEY", f"厂商 {vendor.code} 缺少密钥环境变量 {vendor.api_key_env}", False)
+        raise ProviderError("MISSING_API_KEY", f"厂商 {vendor.code} 未配置密钥", False)
     client = AsyncOpenAI(
         api_key=api_key,
         base_url=vendor.base_url,
         timeout=(vendor.timeout_ms or 60000) / 1000,
         max_retries=0,
     )
-    _CLIENTS[vendor.id] = client
+    _CLIENTS[ref] = client
     return client
 
 
@@ -295,9 +295,9 @@ async def ocr(
 
 async def rerank(model: Model, vendor: ModelVendor, query: str, documents: list[str], top_n: int) -> RerankOutput:
     """重排：调用厂商的 /rerank 端点（非 OpenAI 标准，按通用 JSON 约定）。"""
-    api_key = os.environ.get(vendor.api_key_env, "")
+    api_key = vendor.api_key or ""
     if not api_key:
-        raise ProviderError("MISSING_API_KEY", f"厂商 {vendor.code} 缺少密钥", False)
+        raise ProviderError("MISSING_API_KEY", f"厂商 {vendor.code} 未配置密钥", False)
     url = vendor.base_url.rstrip("/") + "/rerank"
     try:
         async with httpx.AsyncClient(timeout=(vendor.timeout_ms or 60000) / 1000) as client:

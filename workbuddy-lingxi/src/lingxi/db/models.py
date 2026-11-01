@@ -162,7 +162,7 @@ class ModelVendor(Base):
     code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(128), nullable=False)
     base_url: Mapped[str] = mapped_column(Text, nullable=False)
-    api_key_env: Mapped[str] = mapped_column(String(128), nullable=False)
+    api_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     timeout_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_retries: Mapped[int | None] = mapped_column(Integer, nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true", default=True)
