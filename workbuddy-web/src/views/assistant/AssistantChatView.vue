@@ -420,15 +420,22 @@
               v-model="selectedModelId"
               class="composer-model"
               size="small"
-              placeholder="选择模型"
+              filterable
+              placeholder="搜索模型"
+              popper-class="model-select-popper"
               @change="handleModelChange"
             >
-              <el-option
-                v-for="model in chatModels"
-                :key="model.id"
-                :label="modelLabel(model)"
-                :value="model.id"
-              />
+              <template #label="{ value }">
+                <span class="model-label">{{ modelTitle(String(value)) }}</span>
+              </template>
+              <el-option-group v-for="group in modelGroups" :key="group.name" :label="group.name">
+                <el-option
+                  v-for="model in group.models"
+                  :key="model.id"
+                  :label="model.display_name"
+                  :value="model.id"
+                />
+              </el-option-group>
             </el-select>
             <el-button v-if="running" type="danger" plain @click="handleStop">■ 停止</el-button>
             <el-button
@@ -762,9 +769,25 @@ async function handleModelChange(value: string): Promise<void> {
 }
 
 /** 模型展示：厂商 · 模型名 */
-function modelLabel(model: AvailableModel): string {
+function modelTitle(modelId: string): string {
+  const model = chatModels.value.find((item) => item.id === modelId);
+  if (!model) {
+    return '';
+  }
   return `${model.vendor_name || model.vendor_code} · ${model.display_name}`;
 }
+
+/** 按厂商分组：与 DSH 的账号分组一致 */
+const modelGroups = computed(() => {
+  const groups = new Map<string, AvailableModel[]>();
+  for (const model of chatModels.value) {
+    const name = model.vendor_name || model.vendor_code || '其他';
+    const list = groups.get(name) ?? [];
+    list.push(model);
+    groups.set(name, list);
+  }
+  return Array.from(groups, ([name, models]) => ({ name, models }));
+});
 /** 草稿会话：新建工作区/点「＋」时自动创建，未发消息就切走即丢弃（对齐 DSH） */
 const draftSessionId = ref<string | null>(null);
 const messages = ref<ChatMessage[]>([]);

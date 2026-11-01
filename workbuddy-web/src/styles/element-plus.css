@@ -211,6 +211,24 @@
   box-shadow: none;
 }
 
+/* 模型下拉：固定宽度与最大高度，按厂商分组展示 */
+.model-select-popper {
+  width: 278px;
+}
+
+.model-select-popper .el-select-dropdown__list {
+  max-height: 376px;
+}
+
+.model-select-popper .el-select-group__title {
+  color: var(--kb-text-3);
+  font-size: 12px;
+}
+
+.model-select-popper .el-select-dropdown__item {
+  font-size: 13px;
+}
+
 /*
  * 光标统一改 default（按钮那条已并入上面的按钮规则块，这里只列其余控件）。
  *

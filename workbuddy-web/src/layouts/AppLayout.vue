@@ -353,20 +353,6 @@ const navItems: NavItem[] = [
   },
   {
     kind: 'group',
-    // 模型管理：模型目录维护；页面与接口对所有登录用户开放
-    label: '模型管理',
-    iconPaths: ['M5.2 5.2h5.6v5.6H5.2z', 'M8 2.4v2.8M8 10.8v2.8M2.4 8h2.8M10.8 8h2.8'],
-    children: [
-      // 模型清单：厂商、模型能力与用量
-      {
-        label: '模型清单',
-        path: '/model/manager',
-        iconPaths: ['M3.2 4.6h9.6M3.2 8h9.6M3.2 11.4h9.6', 'M5.6 3.2v10.8'],
-      },
-    ],
-  },
-  {
-    kind: 'group',
     // 个人助手：灵犀（Python 服务）的对话、记忆与人设
     label: '个人助手',
     iconPaths: [
@@ -394,6 +380,21 @@ const navItems: NavItem[] = [
       },
     ],
   },
+  {
+    kind: 'group',
+    // 模型管理：模型目录维护；页面与接口对所有登录用户开放
+    label: '模型管理',
+    iconPaths: ['M5.2 5.2h5.6v5.6H5.2z', 'M8 2.4v2.8M8 10.8v2.8M2.4 8h2.8M10.8 8h2.8'],
+    children: [
+      // 模型清单：厂商、模型能力与用量
+      {
+        label: '模型清单',
+        path: '/model/manager',
+        iconPaths: ['M3.2 4.6h9.6M3.2 8h9.6M3.2 11.4h9.6', 'M5.6 3.2v10.8'],
+      },
+    ],
+  },
+
   {
     kind: 'leaf',
     label: '用户管理',
