@@ -176,6 +176,7 @@ async def chat_stream(
         "messages": payload.get("messages") or [],
         "temperature": payload.get("temperature", 0.7),
         "stream": True,
+        "stream_options": {"include_usage": True},
     }
     if payload.get("max_output_tokens") is not None:
         request["max_tokens"] = payload["max_output_tokens"]
@@ -188,6 +189,15 @@ async def chat_stream(
     except Exception as exc:  # noqa: BLE001
         raise _classify(exc) from exc
     async for chunk in stream:
+        usage = getattr(chunk, "usage", None)
+        if usage is not None:
+            yield {
+                "usage": {
+                    "prompt": getattr(usage, "prompt_tokens", None),
+                    "completion": getattr(usage, "completion_tokens", None),
+                    "total": getattr(usage, "total_tokens", None),
+                }
+            }
         choice = chunk.choices[0] if chunk.choices else None
         if choice is None:
             continue

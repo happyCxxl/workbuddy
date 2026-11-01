@@ -4,6 +4,7 @@ import logging
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
+from typing import cast
 
 from lingxi.db.engine import session_scope
 from lingxi.db.models import Model, ModelGatewayCall, ModelVendor
@@ -355,10 +356,15 @@ async def stream_chat(
             "attempts": attempts,
             "fallback_used": attempts > 1,
         }
+        usage: dict[str, int] = {}
         if first is not None:
+            if "usage" in first:
+                usage.update(cast("dict[str, int]", first["usage"]))
             yield {"type": "chunk", "data": first, "meta": meta}
         try:
             async for chunk in chunks:
+                if "usage" in chunk:
+                    usage.update(cast("dict[str, int]", chunk["usage"]))
                 yield {"type": "chunk", "data": chunk, "meta": meta}
         except ProviderError as exc:
             latency = int((time.perf_counter() - started) * 1000)
@@ -390,6 +396,7 @@ async def stream_chat(
             latency_ms=latency,
             attempts=attempts,
             fallback_used=attempts > 1,
+            usage=usage,
         )
         await _record_call(
             request_id=request_id,
@@ -400,6 +407,6 @@ async def stream_chat(
             error_code=None,
             error_message=None,
         )
-        yield {"type": "done", "meta": meta}
+        yield {"type": "done", "meta": meta, "usage": usage}
         return
     raise GatewayError("MODEL_UNAVAILABLE", "全部候选模型调用失败", failures)

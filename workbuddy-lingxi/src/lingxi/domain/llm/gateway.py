@@ -142,6 +142,7 @@ class LlmGateway:
             "stream": True,
         }
         tool_calls: dict[int, dict[str, str]] = {}
+        started = time.monotonic()
         try:
             async for item in service.stream_chat(
                 request_id=REQUEST_ID.get() or uuid4().hex,
@@ -151,6 +152,16 @@ class LlmGateway:
             ):
                 if item["type"] == "error":
                     raise ApiError(ErrorCode.MODEL_UNAVAILABLE, str(item.get("message") or "模型调用失败"))
+                if item["type"] == "done":
+                    meta = cast("dict[str, object]", item.get("meta") or {})
+                    raw_usage = cast("dict[str, object]", item.get("usage") or {})
+                    usage = Usage(
+                        prompt_tokens=int(str(raw_usage.get("prompt") or 0)),
+                        completion_tokens=int(str(raw_usage.get("completion") or 0)),
+                    )
+                    label = f"{meta.get('vendor') or 'unknown'}/{meta.get('model_key') or 'unknown'}"
+                    await self._record(label, usage, self._elapsed_ms(started), None)
+                    continue
                 if item["type"] != "chunk":
                     continue
                 data = cast("dict[str, object]", item["data"])
