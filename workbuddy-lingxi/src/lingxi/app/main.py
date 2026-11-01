@@ -32,6 +32,7 @@ from lingxi.domain.tools.registry import ToolRegistry
 from lingxi.domain.tools.shell import register_shell_tools
 from lingxi.domain.tools.web import register_web_tools
 from lingxi.model_gateway.api_admin import router as model_admin_router
+from lingxi.model_gateway.api_capability import router as model_capability_router
 
 
 def _redis_url(config: RedisConfig) -> str:
@@ -94,4 +95,5 @@ def create_app(
     app.include_router(persona.router, dependencies=protected)
     app.include_router(turns.make_router(runner), dependencies=protected)
     app.include_router(model_admin_router, dependencies=[Depends(require_csrf)])
+    app.include_router(model_capability_router)
     return app
