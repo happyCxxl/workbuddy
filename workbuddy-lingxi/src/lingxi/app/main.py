@@ -23,7 +23,7 @@ from lingxi.core.hooks import HookRegistry
 from lingxi.core.loop import TurnRunner
 from lingxi.core.sub_sessions import SubSessionManager
 from lingxi.domain.llm.gateway import LlmGateway
-from lingxi.domain.memory.embedding import Embedder, OpenAICompatibleEmbedder
+from lingxi.domain.memory.embedding import Embedder, GatewayEmbedder
 from lingxi.domain.memory.hook import make_memory_hook
 from lingxi.domain.permission.gate import PermissionGate
 from lingxi.domain.sub_session.service import mark_stale_running
@@ -60,7 +60,7 @@ def create_app(
     app.state.settings = settings
     app.state.token_version_reader = reader
     gateway = LlmGateway(settings)
-    effective_embedder = embedder or OpenAICompatibleEmbedder(settings.memory)
+    effective_embedder = embedder or GatewayEmbedder(settings.memory)
     tools = ToolRegistry()
     register_fs_tools(tools)
     register_web_tools(tools, settings)

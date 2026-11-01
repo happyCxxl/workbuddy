@@ -17,6 +17,7 @@ from lingxi.domain.session.service import (
     list_sessions,
     rename_session,
     session_usage,
+    set_session_model,
     set_session_preset,
 )
 from lingxi.domain.sub_session.service import create_sub_session, get_sub_session, list_sub_sessions
@@ -29,6 +30,7 @@ class CreateSessionRequest(BaseModel):
     work_dir: str = ""
     title: str = ""
     workspace_id: str | None = None
+    model_id: str | None = None
 
 
 class RenameRequest(BaseModel):
@@ -41,6 +43,12 @@ class PresetRequest(BaseModel):
     """会话权限档切换请求。"""
 
     preset: str
+
+
+class ModelRequest(BaseModel):
+    """会话模型切换请求。"""
+
+    model_id: str
 
 
 class SubSessionRequest(BaseModel):
@@ -84,7 +92,12 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
         elif not work_dir:
             raise ApiError(ErrorCode.INVALID_ARGUMENT, "必须提供 workspace_id 或 work_dir")
         session_id = await create_session(
-            work_dir, request.title, settings.permission.preset, workspace_id=workspace_id, user_id=user.id
+            work_dir,
+            request.title,
+            settings.permission.preset,
+            workspace_id=workspace_id,
+            user_id=user.id,
+            model_id=int(request.model_id) if request.model_id else None,
         )
         return R.ok({"id": str(session_id)}).to_dict()
 
@@ -103,6 +116,7 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
                         "permission_preset": row.permission_preset,
                         "workspace_id": str(row.workspace_id) if row.workspace_id else None,
                         "persona_version_id": str(row.persona_version_id) if row.persona_version_id else None,
+                        "model_id": str(row.model_id) if row.model_id else None,
                         "updated_at": row.updated_at.isoformat(),
                     }
                     for row in rows
@@ -123,6 +137,7 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
                 "permission_preset": row.permission_preset,
                 "workspace_id": str(row.workspace_id) if row.workspace_id else None,
                 "persona_version_id": str(row.persona_version_id) if row.persona_version_id else None,
+                "model_id": str(row.model_id) if row.model_id else None,
                 "updated_at": row.updated_at.isoformat(),
             }
         ).to_dict()
@@ -134,6 +149,12 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
             raise ApiError(ErrorCode.INVALID_ARGUMENT, f"未知预设档位：{request.preset}")
         await set_session_preset(session_id, request.preset, user.id)
         return R.ok({"preset": request.preset}).to_dict()
+
+    @router.put("/sessions/{session_id}/model")
+    async def set_model(session_id: int, request: ModelRequest, user: CurrentUserDep) -> dict[str, object]:
+        """切换本会话模型：只影响后续回合，历史保留。"""
+        await set_session_model(session_id, int(request.model_id), user.id)
+        return R.ok({"model_id": request.model_id}).to_dict()
 
     @router.get("/sessions/{session_id}/events")
     async def events(

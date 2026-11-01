@@ -115,7 +115,7 @@ async def recall(
     """混合召回：pgvector 向量近邻粗筛 + 关键词精排加权；向量通道失败时仅关键词兜底；低置信不返回。"""
     query_vec: list[float] | None = None
     try:
-        query_vec = await embedder.embed(query)
+        query_vec = await embedder.embed_query(query)
     except Exception as exc:
         logger.warning("召回向量化失败，降级仅关键词召回：%s", exc)
     async with session_scope() as s:

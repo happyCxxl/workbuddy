@@ -64,12 +64,13 @@ class LlmConfig(BaseModel):
 
 
 class MemoryConfig(BaseModel):
-    """记忆向量化：OpenAI 兼容 embedding API（与模型出口同款接入模式）。"""
+    """记忆向量化：OpenAI 兼容 embedding API，供应商经配置切换。"""
 
     embedding_provider: str
     embedding_base_url: str
     embedding_model: str
     embedding_api_key: str
+    embedding_dimensions: int = 1024
 
 
 class PermissionConfig(BaseModel):

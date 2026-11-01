@@ -225,8 +225,12 @@ async def embed(
             batch_size = model.batch_limit or 32
             vectors: list[list[float]] = []
             usage: dict[str, int] = {}
+            prefix = ""
+            if input_type == "query":
+                raw_prefix = model.features.get("query_prefix")
+                prefix = raw_prefix if isinstance(raw_prefix, str) else ""
             for start in range(0, len(texts), batch_size):
-                part = texts[start : start + batch_size]
+                part = [prefix + text for text in texts[start : start + batch_size]]
                 output = await providers.embed(model, vendor, part, dimensions)
                 vectors.extend(output.vectors)
                 for key, value in output.usage.items():

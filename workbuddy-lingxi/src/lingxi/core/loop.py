@@ -122,6 +122,7 @@ class TurnRunner:
             async for event in self._steps(
                 session_id,
                 session.user_id,
+                session.model_id,
                 turn_seq,
                 persona,
                 session.work_dir,
@@ -188,6 +189,7 @@ class TurnRunner:
             async for event in self._steps(
                 session_id,
                 session.user_id,
+                session.model_id,
                 checkpoint.turn_seq,
                 persona,
                 checkpoint.work_dir,
@@ -213,6 +215,7 @@ class TurnRunner:
         self,
         session_id: int,
         user_id: int,
+        model_id: int | None,
         turn_seq: int,
         persona: Persona | None,
         work_dir: str,
@@ -246,7 +249,7 @@ class TurnRunner:
             tool_calls: list[ToolCall] = []
             content_parts: list[str] = []
             reasoning_parts: list[str] = []
-            request = ChatRequest(messages=messages, tools=self._tools.specs())
+            request = ChatRequest(messages=messages, tools=self._tools.specs(), model_id=model_id)
             async for chunk in self._gateway.stream(request):
                 if session_id in self._stop_requested:
                     break

@@ -35,10 +35,11 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    """对话请求：消息列表 + 工具清单。模型选择由出口内部路由决定，不在请求中指定。"""
+    """对话请求：消息列表 + 工具清单；model_id 指定时只调该模型，为空由出口选路。"""
 
     messages: list[ChatMessage]
     tools: list[ToolSpec]
+    model_id: int | None = None
 
 
 class Usage(BaseModel):

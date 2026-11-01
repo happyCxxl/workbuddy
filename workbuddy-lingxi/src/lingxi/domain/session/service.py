@@ -1,5 +1,6 @@
 """会话服务：创建、读取与历史投影——事件日志是唯一事实源，历史由事件派生。"""
 
+import random
 from typing import cast
 
 from lingxi.contract import ApiError, ErrorCode
@@ -11,6 +12,7 @@ from lingxi.db.repo.persona_repo import PersonaRepo
 from lingxi.db.repo.session_repo import SessionRepo
 from lingxi.domain.persona.models import DEFAULT_FIELDS, Persona, PersonaFields
 from lingxi.domain.ports import ChatMessage, ToolCall
+from lingxi.model_gateway import catalog
 
 
 async def create_session(
@@ -19,8 +21,12 @@ async def create_session(
     preset: str = "workspace-write",
     workspace_id: int | None = None,
     user_id: int = 1,
+    model_id: int | None = None,
 ) -> int:
-    """创建会话：绑定当前启用的人格版本与权限档；归属发起用户。"""
+    """创建会话：绑定人格、权限档与会话模型；模型未指定时从可用 Chat 模型任选。"""
+    if model_id is None:
+        available = await catalog.list_available("CHAT")
+        model_id = random.choice(available).id if available else None
     async with session_scope() as s:
         persona = await PersonaRepo(s).current(user_id)
         if persona is None:
@@ -30,6 +36,7 @@ async def create_session(
             await s.flush()
         row = AiSession(
             user_id=user_id,
+            model_id=model_id,
             work_dir=work_dir,
             title=title,
             persona_version_id=persona.id,
@@ -50,6 +57,19 @@ async def set_session_preset(session_id: int, preset: str, user_id: int = 1) -> 
         row.permission_preset = preset
         await s.commit()
     await append_event(session_id, EventType.PERMISSION_POLICY, {"preset": preset})
+
+
+async def set_session_model(session_id: int, model_id: int, user_id: int = 1) -> None:
+    """切换会话模型：只允许启用中的 CHAT 模型。"""
+    available = await catalog.list_available("CHAT")
+    if model_id not in {model.id for model in available}:
+        raise ApiError(ErrorCode.INVALID_ARGUMENT, f"模型不可用：{model_id}")
+    async with session_scope() as s:
+        row = await SessionRepo(s).get(session_id, user_id)
+        if row is None or row.status == "deleted":
+            raise ApiError(ErrorCode.NOT_FOUND, f"会话不存在：{session_id}")
+        row.model_id = model_id
+        await s.commit()
 
 
 async def get_session(session_id: int, user_id: int | None = None) -> AiSession:
