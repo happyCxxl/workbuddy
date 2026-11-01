@@ -29,6 +29,12 @@ public class PythonEmbeddingClient implements EmbeddingClient {
 
     private final LingxiProperties properties;
 
+    /**
+     * 调用灵犀向量化接口，返回与输入同序的向量。
+     *
+     * @param request 向量化请求
+     * @return 向量结果
+     */
     @Override
     public EmbeddingResult embed(EmbeddingRequest request) {
         Map<String, Object> payload = new LinkedHashMap<>();

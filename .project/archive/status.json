@@ -51,7 +51,7 @@
     "07": {
       "status": "已复核",
       "reviewed": "2026-11-01",
-      "baseline": "2bdd9a96",
+      "baseline": "b3f9606a",
       "note": "删除 /model/* 管理接口；模型管理改由灵犀 /model-admin 提供"
     },
     "08": {
@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-11-01",
-      "baseline": "2bdd9a96",
-      "note": "新增 workbuddy.lingxi 配置与 EmbeddingClient；删除模型厂商目录与启动校验"
+      "baseline": "b3f9606a",
+      "note": "新增 workbuddy.lingxi 配置与 EmbeddingClient；删除模型厂商目录与启动校验；补齐 CSRF/改密 Javadoc"
     }
   }
 }

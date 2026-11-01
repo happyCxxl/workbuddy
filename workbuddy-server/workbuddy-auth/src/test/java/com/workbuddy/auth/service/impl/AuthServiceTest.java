@@ -259,6 +259,9 @@ class AuthServiceTest {
         verify(jwtUtil).sign(1L, "admin", UserRole.ADMIN, 1, REMEMBER_TTL);
     }
 
+    /**
+     * 守护 COMMON-SEC-20 与 {@code logoutShouldBumpVersionAndSync}：登出递增令牌版本并同步 Redis，旧令牌立即失效。
+     */
     @Test
     void logoutShouldBumpVersionAndSync() {
         WbUser user = adminUser();

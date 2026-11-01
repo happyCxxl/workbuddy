@@ -94,7 +94,7 @@ class UserControllerTest {
     }
 
     /**
-     * 改密后用补签令牌刷新登录 Cookie，响应体不再回传令牌。
+     * 守护 COMMON-SEC-20 与 {@code changePassword}：改密后用补签令牌刷新登录 Cookie，响应体不再回传令牌。
      */
     @Test
     void changePasswordShouldRefreshLoginCookie() {

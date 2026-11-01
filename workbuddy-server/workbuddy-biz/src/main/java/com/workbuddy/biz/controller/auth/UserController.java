@@ -72,6 +72,7 @@ public class UserController {
      * 改密码：成功后返回重签的令牌，旧令牌全部失效。
      *
      * @param request 改密请求
+     * @param response 响应（用于写入重签 Cookie）
      * @return 重签的令牌
      */
     @PutMapping("/password")

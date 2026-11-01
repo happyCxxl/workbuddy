@@ -29,7 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;

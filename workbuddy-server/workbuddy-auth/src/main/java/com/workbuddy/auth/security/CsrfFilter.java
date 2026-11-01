@@ -26,6 +26,15 @@ public class CsrfFilter extends OncePerRequestFilter {
 
     private static final Set<String> ANONYMOUS_PATHS = Set.of("/auth/login", "/auth/register");
 
+    /**
+     * Cookie 认证的写请求校验双提交令牌；显式 Bearer 请求放行。
+     *
+     * @param request     当前请求
+     * @param response    当前响应
+     * @param filterChain 过滤器链
+     * @throws ServletException Servlet 异常
+     * @throws IOException      IO 异常
+     */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
