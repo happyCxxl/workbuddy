@@ -209,10 +209,13 @@ async def embed(
     texts: list[str],
     dimensions: int,
     input_type: str,
+    model_key: str | None = None,
 ) -> tuple[EmbedOutput, CallMeta]:
     """向量化：按模型批量上限拆批，任一子批失败换下一个模型。"""
     constraints = {"dimensions": dimensions}
     candidates = await _candidates("EMBEDDING", model_id, constraints)
+    if model_key:
+        candidates = [item for item in candidates if item[0].model_key == model_key]
     if not candidates:
         raise GatewayError("MODEL_UNAVAILABLE", f"没有维度为 {dimensions} 的可用向量模型")
     failures: list[dict[str, object]] = []

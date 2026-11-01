@@ -48,6 +48,7 @@ class EmbedPayload(BaseModel):
     input: list[str]
     dimensions: int
     input_type: Literal["document", "query"] = "document"
+    model_key: str | None = None
 
 
 class EmbedCall(BaseModel):
@@ -175,6 +176,7 @@ async def embed(call: EmbedCall, _auth: None = Depends(require_internal)) -> dic
             texts=call.payload.input,
             dimensions=call.payload.dimensions,
             input_type=call.payload.input_type,
+            model_key=call.payload.model_key,
         )
     except GatewayError as exc:
         raise ApiError(ErrorCode.MODEL_UNAVAILABLE, exc.message) from exc
