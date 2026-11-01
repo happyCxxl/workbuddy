@@ -96,9 +96,12 @@ class TurnRunner:
 
     def request_stop(self, session_id: int) -> bool:
         """申请停止当前回合；没有活动回合时返回 False，不污染下一轮。"""
+        pending = [key for key in self._pending if key[0] == session_id]
+        for key in pending:
+            self._pending.pop(key, None)
         control = self._active_turns.get(session_id)
         if control is None:
-            return False
+            return bool(pending)
         control.reason = "user"
         control.event.set()
         return True
@@ -219,6 +222,7 @@ class TurnRunner:
                     checkpoint.user_content,
                     session.permission_preset,
                     session.kind,
+                    control,
                     preapproved=True,
                 ):
                     yield event
@@ -332,7 +336,7 @@ class TurnRunner:
                     if control.cancelled:
                         break
                     async for event in self._execute_tool(
-                        session_id, turn_seq, step, call, work_dir, user_content, preset, kind
+                        session_id, turn_seq, step, call, work_dir, user_content, preset, kind, control
                     ):
                         yield event
                 if control.cancelled:
@@ -376,9 +380,12 @@ class TurnRunner:
         user_content: str,
         preset: str,
         kind: str,
+        control: TurnControl,
         preapproved: bool = False,
     ) -> AsyncIterator[TurnEvent]:
         """执行一步工具：pre-execute 钩子 fail-closed；权限门裁决（allow 执行 / deny 拒绝 / ask 挂起）。"""
+        if control.cancelled:
+            return
         ctx = TurnContext(
             session_id=session_id,
             turn_seq=turn_seq,
@@ -457,6 +464,7 @@ class TurnRunner:
                     work_dir,
                     self._tool_states.setdefault(session_id, SessionToolState()),
                     preset == "full-access",
+                    control.event,
                 ),
             )
             yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "result": output})

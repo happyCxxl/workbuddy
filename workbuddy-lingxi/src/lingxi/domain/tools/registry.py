@@ -1,5 +1,6 @@
 """工具注册表：schema 白名单唯一来源；工具名 → 规格、风险级与执行函数。"""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
@@ -38,6 +39,12 @@ class ToolContext:
     work_dir: str
     state: SessionToolState | None = None
     full_access: bool = False
+    cancel: asyncio.Event | None = None
+
+    @property
+    def cancelled(self) -> bool:
+        """当前回合是否已请求取消。"""
+        return self.cancel is not None and self.cancel.is_set()
 
 
 Handler = Callable[[dict[str, object], ToolContext], Awaitable[str]]

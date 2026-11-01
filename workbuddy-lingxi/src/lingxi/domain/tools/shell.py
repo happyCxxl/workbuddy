@@ -1,7 +1,11 @@
 """shell 工具：受限沙箱执行命令；危险命令静态匹配（命中即恒询问，任何档位都不放行）。"""
 
 import asyncio
+import contextlib
+import os
 import re
+import signal
+import sys
 
 from pydantic import BaseModel, Field
 
@@ -70,8 +74,22 @@ def is_dangerous(command: str) -> bool:
 _CREATE_NO_WINDOW = 0x08000000
 
 
-async def _run_unsandboxed(command: str, cwd: str, timeout_ms: int, cap: int) -> str:
+async def _kill_tree(pid: int) -> None:
+    """终止 shell 及子进程树（Windows 用 taskkill，其它平台直接 kill）。"""
+    if sys.platform == "win32":
+        killer = await asyncio.create_subprocess_exec(
+            "taskkill", "/PID", str(pid), "/T", "/F", stdout=asyncio.subprocess.DEVNULL
+        )
+        await killer.wait()
+    else:
+        with contextlib.suppress(ProcessLookupError):
+            os.kill(pid, signal.SIGKILL)
+
+
+async def _run_unsandboxed(command: str, cwd: str, timeout_ms: int, cap: int, cancel: asyncio.Event | None) -> str:
     """显式关闭沙箱（tools.sandbox=off）时直接执行：结果标注未沙箱，提醒用户边界。"""
+    if cancel is not None and cancel.is_set():
+        return "[已取消] 命令未执行"
     process = await asyncio.create_subprocess_shell(
         command,
         cwd=cwd,
@@ -79,12 +97,26 @@ async def _run_unsandboxed(command: str, cwd: str, timeout_ms: int, cap: int) ->
         stderr=asyncio.subprocess.STDOUT,
         creationflags=_CREATE_NO_WINDOW,
     )
+    communicate = asyncio.create_task(process.communicate())
+    cancel_wait = asyncio.create_task(cancel.wait()) if cancel is not None else None
     try:
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout_ms / 1000)
-    except TimeoutError:
-        process.kill()
-        await process.wait()
-        return f"[未沙箱] 命令超时（{timeout_ms} ms），已终止。"
+        done, _pending = await asyncio.wait(
+            {communicate, cancel_wait} if cancel_wait is not None else {communicate},
+            timeout=timeout_ms / 1000,
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if cancel_wait is not None and cancel_wait in done and not communicate.done():
+            await _kill_tree(process.pid)
+            await process.wait()
+            return "[已取消] 命令已终止进程树"
+        if communicate not in done:
+            await _kill_tree(process.pid)
+            await process.wait()
+            return f"[未沙箱] 命令超时（{timeout_ms} ms），已终止。"
+        stdout, _ = communicate.result()
+    finally:
+        if cancel_wait is not None:
+            cancel_wait.cancel()
     text = stdout.decode("utf-8", errors="replace")
     body = text if len(text) <= cap else f"{text[:cap]}\n…（输出已截断）"
     return f"[未沙箱] 退出码 {process.returncode}\n{body}"
@@ -100,11 +132,16 @@ def register_shell_tools(registry: ToolRegistry, settings: Settings) -> None:
         default_ms = int(settings.tools.shell_timeout_seconds * 1000)
         timeout_ms = parse_int(args.get("timeout_ms"), default_ms)
         if settings.tools.sandbox == "off" or ctx.full_access:
-            return await _run_unsandboxed(command, ctx.work_dir, timeout_ms, settings.tools.shell_output_cap_chars)
+            return await _run_unsandboxed(
+                command, ctx.work_dir, timeout_ms, settings.tools.shell_output_cap_chars, ctx.cancel
+            )
+        if ctx.cancelled:
+            return "[已取消] 命令未执行"
         sandbox = WindowsSandbox(
             ctx.work_dir,
             timeout_ms / 1000,
             settings.tools.shell_output_cap_chars,
+            lambda: ctx.cancelled,
         )
         result = await asyncio.to_thread(sandbox.run, command)
         return result.to_text()

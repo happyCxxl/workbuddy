@@ -29,6 +29,7 @@ import subprocess
 import sys
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -78,11 +79,14 @@ class SandboxResult:
     stderr: str
     timed_out: bool = False
     truncated: bool = False
+    cancelled: bool = False
 
     def to_text(self) -> str:
         """渲染为模型可读文本。"""
         parts = [f"exit={self.exit_code}"]
-        if self.timed_out:
+        if self.cancelled:
+            parts.append("（已取消，已终止进程树）")
+        elif self.timed_out:
             parts.append("（超时，已终止进程树）")
         if self.stdout:
             parts.append(self.stdout)
@@ -279,13 +283,20 @@ def token_integrity(token: Any) -> str:  # noqa: ANN401 —— pywin32 句柄无
 class WindowsSandbox:
     """一次运行 = 授权工作区 + 打 Low 标签 + 造低完整性限制令牌 + 启动子进程（同步，调用方放线程里跑）。"""
 
-    def __init__(self, work_dir: str, timeout_seconds: float, output_cap: int) -> None:
+    def __init__(
+        self,
+        work_dir: str,
+        timeout_seconds: float,
+        output_cap: int,
+        cancel: Callable[[], bool] | None = None,
+    ) -> None:
         self._api = _win32()
         self._work_dir = os.path.abspath(work_dir)
         if not os.path.isdir(self._work_dir):
             raise SandboxError(f"工作目录不存在：{self._work_dir}")
         self._timeout = timeout_seconds
         self._cap = output_cap
+        self._cancel = cancel
 
     def run(self, command: str) -> SandboxResult:
         """在沙箱内执行命令：成功返回退出码与输出，超时报超时并杀进程树。"""
@@ -448,16 +459,21 @@ class WindowsSandbox:
             time.sleep(0)  # 让子进程先拿到句柄所有权
 
         timed_out = False
+        cancelled = False
         deadline = time.monotonic() + self._timeout
         code = win32con.STILL_ACTIVE
         try:
             while time.monotonic() < deadline:
+                if self._cancel is not None and self._cancel():
+                    cancelled = True
+                    break
                 code = win32process.GetExitCodeProcess(handle)
                 if code != win32con.STILL_ACTIVE:
                     break
                 time.sleep(0.05)
             if code == win32con.STILL_ACTIVE:
-                timed_out = True
+                if not cancelled:
+                    timed_out = True
                 subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True, check=False)  # noqa: S603 —— 杀自己启动的进程树，参数为整数 pid
                 drain_deadline = time.monotonic() + _MAX_DRAIN_SECONDS
                 while time.monotonic() < drain_deadline:
@@ -503,4 +519,5 @@ class WindowsSandbox:
             stderr=stderr.strip(),
             timed_out=timed_out,
             truncated=truncated,
+            cancelled=cancelled,
         )

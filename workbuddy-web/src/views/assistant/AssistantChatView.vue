@@ -797,7 +797,8 @@ const messages = ref<ChatMessage[]>([]);
 /** 上一步以工具调用收尾：下一个增量事件开启新的步骤块，保证"思考 → 工具 → 思考"的循环可见 */
 let awaitingNextStep = false;
 const input = ref('');
-const running = ref(false);
+const runningSessionId = ref('');
+const running = computed(() => runningSessionId.value === currentId.value);
 const stopping = ref(false);
 const activeTurnSessionId = ref('');
 let stopTimer: number | undefined;
@@ -2009,6 +2010,9 @@ function applyToolResult(last: ChatMessage, payload: Record<string, unknown>, at
 
 /** 应用单条实时事件：assistant/message 一步一条，带工具调用则在下一步增量时另起消息块 */
 function applyEvent(type: string, payload: Record<string, unknown>): void {
+  if (activeTurnSessionId.value && activeTurnSessionId.value !== currentId.value) {
+    return;
+  }
   if (type === 'assistant/message') {
     const current = messages.value.at(-1);
     if (current?.role === 'assistant') {
@@ -2091,7 +2095,7 @@ function sendContent(content: string, retryOf?: number): void {
   awaitingNextStep = false;
   messages.value.push({ role: 'user', text: content, thinking: '', tools: [] });
   messages.value.push({ role: 'assistant', text: '', thinking: '', tools: [] });
-  running.value = true;
+  runningSessionId.value = currentId.value;
   stopping.value = false;
   activeTurnSessionId.value = currentId.value;
   abortController = addTurnStream(
@@ -2122,7 +2126,7 @@ function sendContent(content: string, retryOf?: number): void {
 
 /** 回合收尾：清理运行态、停止计时与目标会话 */
 function finishTurn(): void {
-  running.value = false;
+  runningSessionId.value = '';
   stopping.value = false;
   activeTurnSessionId.value = '';
   if (stopTimer !== undefined) {
@@ -2219,15 +2223,16 @@ function decidePermission(item: ChatMessage, outcome: 'allowed-once' | 'rejected
     return;
   }
   item.permission = undefined;
-  running.value = true;
+  runningSessionId.value = currentId.value;
+  activeTurnSessionId.value = currentId.value;
   abortController = addTurnResume(currentId.value, permission.request_id, outcome, {
     onEvent: applyEvent,
     onDone: () => {
-      running.value = false;
+      finishTurn();
       void loadUsage();
     },
     onError: (message) => {
-      running.value = false;
+      finishTurn();
       ElMessage.error(message);
     },
   });
