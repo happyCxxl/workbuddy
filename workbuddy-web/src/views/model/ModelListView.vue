@@ -49,57 +49,46 @@
       </div>
 
       <div class="mc-panel">
-        <table class="mc-table">
-          <thead>
-            <tr>
-              <th class="mc-th" style="width: 16.66%">厂商</th>
-              <th class="mc-th" style="width: 16.66%">接入地址</th>
-              <th class="mc-th" style="width: 16.66%">密钥</th>
-              <th class="mc-th right" style="width: 16.66%">模型</th>
-              <th class="mc-th" style="width: 16.66%">状态</th>
-              <th class="mc-th" style="width: 16.7%; text-align: right">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="vendor in filteredVendors" :key="vendor.id" class="mc-row">
-              <td class="mc-td">
-                <div class="mc-vendor">
-                  <span class="mc-mark">{{ vendor.code.slice(0, 2).toUpperCase() }}</span>
-                  <span class="mc-id">{{ vendor.code }}</span>
-                  <span class="mc-sub">{{ vendor.display_name }}</span>
-                </div>
-              </td>
-              <td class="mc-td mc-mono">{{ vendor.base_url }}</td>
-              <td class="mc-td">
-                <div class="mc-key">
-                  <code class="mc-key-value">{{ vendor.api_key_masked ?? '未配置' }}</code>
-                  <span class="mc-led" :class="vendor.api_key_configured ? 'ok' : 'bad'">
-                    {{ vendor.api_key_configured ? '已配置' : '缺失' }}
-                  </span>
-                </div>
-              </td>
-              <td class="mc-td right">{{ vendorModelCount(vendor.id) }}</td>
-              <td class="mc-td">
-                <span class="mc-led" :class="vendor.enabled ? 'ok' : ''">
-                  {{ vendor.enabled ? '启用' : '停用' }}
-                </span>
-              </td>
-              <td class="mc-td">
-                <div class="mc-row-actions">
-                  <button class="mc-act" type="button" @click="openVendorDialog(vendor)">
-                    编辑
-                  </button>
-                  <button class="mc-act danger" type="button" @click="removeVendor(vendor)">
-                    删除
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="filteredVendors.length === 0" class="mc-row">
-              <td class="mc-td mc-empty" colspan="6">暂无厂商，先新增一个接入地址。</td>
-            </tr>
-          </tbody>
-        </table>
+        <el-table class="page-table" :data="filteredVendors" :border="false">
+          <el-table-column label="厂商" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-id">{{ row.code }}</span>
+              <span class="mc-sub">{{ row.display_name }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="接入地址" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-mono" :title="row.base_url">{{ row.base_url }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="密钥" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-key-value">{{ row.api_key_masked ?? '未配置' }}</span>
+              <span class="mc-led" :class="row.api_key_configured ? 'ok' : 'bad'">
+                {{ row.api_key_configured ? '已配置' : '缺失' }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="模型" min-width="120" align="center">
+            <template #default="{ row }">{{ vendorModelCount(row.id) }}</template>
+          </el-table-column>
+          <el-table-column label="状态" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-led" :class="row.enabled ? 'ok' : ''">
+                {{ row.enabled ? '启用' : '停用' }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="120" align="center">
+            <template #default="{ row }">
+              <button class="mc-act" type="button" @click="openVendorDialog(row)">编辑</button>
+              <button class="mc-act danger" type="button" @click="removeVendor(row)">删除</button>
+            </template>
+          </el-table-column>
+          <template #empty>
+            <div class="page-table-empty">暂无厂商，先新增一个接入地址。</div>
+          </template>
+        </el-table>
       </div>
     </template>
 
@@ -148,52 +137,46 @@
       </div>
 
       <div class="mc-panel">
-        <table class="mc-table">
-          <thead>
-            <tr>
-              <th class="mc-th" style="width: 16.66%">模型</th>
-              <th class="mc-th" style="width: 16.66%">厂商</th>
-              <th class="mc-th" style="width: 16.66%">能力</th>
-              <th class="mc-th" style="width: 16.66%">规格</th>
-              <th class="mc-th" style="width: 16.66%">状态</th>
-              <th class="mc-th" style="width: 16.7%; text-align: right">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="model in filteredModels" :key="model.id" class="mc-row">
-              <td class="mc-td">
-                <div class="mc-id">{{ model.display_name }}</div>
-                <div class="mc-sub">{{ model.model_key }}</div>
-              </td>
-              <td class="mc-td">
-                <span class="mc-chip">{{ vendorCode(model.vendor_id) }}</span>
-              </td>
-              <td class="mc-td">
-                <span class="mc-chip" :class="chipClass(model.capability)">{{
-                  model.capability
-                }}</span>
-              </td>
-              <td class="mc-td mc-mono">{{ specs(model) }}</td>
-              <td class="mc-td">
-                <span class="mc-led" :class="modelLed(model).tone">{{
-                  modelLed(model).label
-                }}</span>
-              </td>
-              <td class="mc-td">
-                <div class="mc-row-actions">
-                  <button class="mc-act" type="button" @click="runTest(model)">测试</button>
-                  <button class="mc-act" type="button" @click="openModelDialog(model)">编辑</button>
-                  <button class="mc-act danger" type="button" @click="removeModel(model)">
-                    删除
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="filteredModels.length === 0" class="mc-row">
-              <td class="mc-td mc-empty" colspan="6">暂无模型，先选择一个厂商录入。</td>
-            </tr>
-          </tbody>
-        </table>
+        <el-table class="page-table" :data="filteredModels" :border="false">
+          <el-table-column label="模型" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-id">{{ row.display_name }}</span>
+              <span v-if="row.model_key !== row.display_name" class="mc-sub">
+                {{ row.model_key }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="厂商" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-chip">{{ vendorCode(row.vendor_id) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="能力" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-chip" :class="chipClass(row.capability)">{{ row.capability }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="规格" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-mono">{{ specs(row) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" min-width="120" align="center">
+            <template #default="{ row }">
+              <span class="mc-led" :class="modelLed(row).tone">{{ modelLed(row).label }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="120" align="center">
+            <template #default="{ row }">
+              <button class="mc-act" type="button" @click="runTest(row)">测试</button>
+              <button class="mc-act" type="button" @click="openModelDialog(row)">编辑</button>
+              <button class="mc-act danger" type="button" @click="removeModel(row)">删除</button>
+            </template>
+          </el-table-column>
+          <template #empty>
+            <div class="page-table-empty">暂无模型，先选择一个厂商录入。</div>
+          </template>
+        </el-table>
       </div>
     </template>
 
@@ -230,36 +213,31 @@
       </div>
 
       <div class="mc-panel">
-        <table class="mc-table">
-          <thead>
-            <tr>
-              <th class="mc-th" style="width: 20%">分组</th>
-              <th class="mc-th right" style="width: 20%">调用</th>
-              <th class="mc-th right" style="width: 20%">Token</th>
-              <th class="mc-th right" style="width: 20%">平均延迟</th>
-              <th class="mc-th right" style="width: 20%">失败</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in usage" :key="row.key ?? 'none'" class="mc-row">
-              <td class="mc-td">
-                <div class="mc-id">{{ row.key ?? '未知' }}</div>
-              </td>
-              <td class="mc-td right">{{ row.calls }}</td>
-              <td class="mc-td right">
-                {{ compactTokens(row.tokens) }}
-                <span class="mc-bar" :style="{ '--w': tokenWidth(row.tokens) }"></span>
-              </td>
-              <td class="mc-td right">{{ row.avg_latency_ms }} ms</td>
-              <td class="mc-td right" :class="{ 'mc-fail': row.failures > 0 }">
-                {{ row.failures }}
-              </td>
-            </tr>
-            <tr v-if="usage.length === 0" class="mc-row">
-              <td class="mc-td mc-empty" colspan="5">暂无调用记录。</td>
-            </tr>
-          </tbody>
-        </table>
+        <el-table class="page-table" :data="usage" :border="false">
+          <el-table-column label="分组" min-width="120" align="center">
+            <template #default="{ row }">{{ row.key ?? '未知' }}</template>
+          </el-table-column>
+          <el-table-column label="调用" min-width="120" align="center">
+            <template #default="{ row }">{{ row.calls }}</template>
+          </el-table-column>
+          <el-table-column label="Token" min-width="120" align="center">
+            <template #default="{ row }">
+              {{ compactTokens(row.tokens) }}
+              <span class="mc-bar" :style="{ '--w': tokenWidth(row.tokens) }"></span>
+            </template>
+          </el-table-column>
+          <el-table-column label="平均延迟" min-width="120" align="center">
+            <template #default="{ row }">{{ row.avg_latency_ms }} ms</template>
+          </el-table-column>
+          <el-table-column label="失败" min-width="120" align="center">
+            <template #default="{ row }">
+              <span :class="{ 'mc-fail': row.failures > 0 }">{{ row.failures }}</span>
+            </template>
+          </el-table-column>
+          <template #empty>
+            <div class="page-table-empty">暂无调用记录。</div>
+          </template>
+        </el-table>
       </div>
     </template>
 
@@ -518,7 +496,8 @@ function chipClass(capability: string): string {
   return capability.toLowerCase();
 }
 
-function specs(model: GatewayModel): string {
+function specs(raw: unknown): string {
+  const model = raw as GatewayModel;
   const parts: string[] = [];
   if (model.context_window) parts.push(`ctx ${compactTokens(model.context_window)}`);
   if (model.dimension) parts.push(`${model.dimension} dim`);
@@ -527,7 +506,8 @@ function specs(model: GatewayModel): string {
   return parts.length > 0 ? parts.join(' · ') : '—';
 }
 
-function modelLed(model: GatewayModel): { tone: string; label: string } {
+function modelLed(raw: unknown): { tone: string; label: string } {
+  const model = raw as GatewayModel;
   if (!model.enabled) return { tone: '', label: '停用' };
   if (model.status === 'DOWN') return { tone: 'bad', label: '不可用' };
   if (model.status === 'DEGRADED') return { tone: 'warn', label: '延迟偏高' };
