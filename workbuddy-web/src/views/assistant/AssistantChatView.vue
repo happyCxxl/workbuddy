@@ -2095,24 +2095,28 @@ function sendContent(content: string, retryOf?: number): void {
   awaitingNextStep = false;
   messages.value.push({ role: 'user', text: content, thinking: '', tools: [] });
   messages.value.push({ role: 'assistant', text: '', thinking: '', tools: [] });
-  runningSessionId.value = currentId.value;
+  const turnSessionId = currentId.value;
+  runningSessionId.value = turnSessionId;
   stopping.value = false;
-  activeTurnSessionId.value = currentId.value;
+  activeTurnSessionId.value = turnSessionId;
   abortController = addTurnStream(
-    currentId.value,
+    turnSessionId,
     content,
     {
       onEvent: applyEvent,
       onDone: () => {
         finishTurn();
+        if (currentId.value !== turnSessionId) {
+          void refreshSessions();
+          return;
+        }
         void loadUsage();
-        void Promise.all([
-          getSessionEvents(currentId.value),
-          getSessionCalls(currentId.value),
-        ]).then(([events, calls]) => {
-          trajectoryEvents.value = events;
-          modelCalls.value = calls;
-        });
+        void Promise.all([getSessionEvents(turnSessionId), getSessionCalls(turnSessionId)]).then(
+          ([events, calls]) => {
+            trajectoryEvents.value = events;
+            modelCalls.value = calls;
+          },
+        );
         void refreshSessions();
       },
       onError: (message) => {
