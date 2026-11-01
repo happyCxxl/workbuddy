@@ -74,18 +74,11 @@ export const router = createRouter({
           meta: { title: '用户管理', adminOnly: true },
         },
         {
-          // 模型清单：模型目录维护（新增 / 编辑 / 启停）；页面与接口对所有登录用户开放
+          // 模型清单：厂商、模型能力与用量，直连 Python 能力层
           path: 'model/manager',
           name: 'ModelList',
           component: () => import('@/views/model/ModelListView.vue'),
           meta: { title: '模型清单' },
-        },
-        {
-          // 模型能力：厂商、模型能力与用量，直连 Python 能力层
-          path: 'model/gateway',
-          name: 'ModelGateway',
-          component: () => import('@/views/model/ModelGatewayView.vue'),
-          meta: { title: '模型能力' },
         },
         {
           // 个人助手 · 对话：会话列表 + SSE 流式对话 + 权限裁决
