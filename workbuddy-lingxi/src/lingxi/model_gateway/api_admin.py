@@ -1,10 +1,16 @@
-"""模型管理接口：厂商、模型与可用模型查询。"""
+"""模型管理接口：厂商、模型、测试与用量查询。"""
+
+import base64
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
+from sqlalchemy import func, select
 
 from lingxi.app.auth import AdminDep, CurrentUserDep
-from lingxi.contract import R
-from lingxi.model_gateway import catalog
+from lingxi.contract import ApiError, ErrorCode, R
+from lingxi.db.engine import session_scope
+from lingxi.db.models import Model, ModelGatewayCall
+from lingxi.model_gateway import catalog, service
 from lingxi.model_gateway.schemas import (
     ModelCreate,
     ModelStatus,
@@ -15,8 +21,14 @@ from lingxi.model_gateway.schemas import (
     model_view,
     vendor_view,
 )
+from lingxi.model_gateway.service import GatewayError
 
 router = APIRouter(prefix="/model-admin")
+
+# 1x1 透明 PNG：OCR 连通性测试用
+_PNG_1X1 = base64.b64encode(
+    base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
+).decode("ascii")
 
 
 @router.get("/vendors")
@@ -106,6 +118,164 @@ async def available_models(user: CurrentUserDep, capability: str = "CHAT") -> di
                     "display_name": row.display_name,
                     "model_key": row.model_key,
                     "capability": row.capability,
+                }
+                for row in rows
+            ]
+        }
+    ).to_dict()
+
+
+async def _mark_status(model_id: int, status: str) -> None:
+    """更新模型状态与最近探测时间。"""
+    async with session_scope() as s:
+        row = await s.get(Model, model_id)
+        if row is not None:
+            row.status = status
+            row.last_checked_at = datetime.now(UTC)
+            await s.commit()
+
+
+@router.post("/models/{model_id}/test")
+async def test_model(model_id: int, _admin: AdminDep) -> dict[str, object]:
+    """连通性测试：按能力发一次最小请求。"""
+    found = await catalog.get_with_vendor(model_id)
+    if found is None:
+        raise ApiError(ErrorCode.NOT_FOUND, f"模型不存在：{model_id}")
+    model, _vendor = found
+    try:
+        if model.capability == "CHAT":
+            await service.chat(
+                request_id=f"test-{model_id}",
+                source="model.test",
+                model_id=model_id,
+                payload={"messages": [{"role": "user", "content": "ping"}], "max_output_tokens": 8},
+            )
+        elif model.capability == "EMBEDDING":
+            await service.embed(
+                request_id=f"test-{model_id}",
+                source="model.test",
+                model_id=model_id,
+                texts=["ping"],
+                dimensions=model.dimension or 1024,
+                input_type="document",
+            )
+        elif model.capability == "OCR":
+            await service.ocr(
+                request_id=f"test-{model_id}",
+                source="model.test",
+                model_id=model_id,
+                data=base64.b64decode(_PNG_1X1),
+                mime_type="image/png",
+                prompt="识别图片",
+                schema=None,
+                page_limit=1,
+            )
+        else:
+            await service.rerank(
+                request_id=f"test-{model_id}",
+                source="model.test",
+                model_id=model_id,
+                query="ping",
+                documents=["ping", "pong"],
+                top_n=2,
+            )
+    except GatewayError as exc:
+        await _mark_status(model_id, "DOWN")
+        return R.ok({"ok": False, "message": exc.message}).to_dict()
+    await _mark_status(model_id, "HEALTHY")
+    return R.ok({"ok": True}).to_dict()
+
+
+@router.get("/usage")
+async def usage(
+    _admin: AdminDep,
+    source: str | None = None,
+    model_id: int | None = None,
+    capability: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    group_by: str = "source",
+) -> dict[str, object]:
+    """用量聚合：按来源、模型或能力分组。"""
+    column = {
+        "source": ModelGatewayCall.source,
+        "model_id": ModelGatewayCall.model_id,
+        "capability": ModelGatewayCall.capability,
+    }.get(group_by)
+    if column is None:
+        raise ApiError(ErrorCode.INVALID_ARGUMENT, f"不支持的分组：{group_by}")
+    stmt = select(
+        column.label("key"),
+        func.count().label("calls"),
+        func.coalesce(func.sum(ModelGatewayCall.total_tokens), 0).label("tokens"),
+        func.coalesce(func.avg(ModelGatewayCall.latency_ms), 0).label("avg_latency"),
+        func.sum(func.case((ModelGatewayCall.status == "FAILED", 1), else_=0)).label("failures"),
+    ).group_by(column)
+    if source:
+        stmt = stmt.where(ModelGatewayCall.source == source)
+    if model_id is not None:
+        stmt = stmt.where(ModelGatewayCall.model_id == model_id)
+    if capability:
+        stmt = stmt.where(ModelGatewayCall.capability == capability)
+    if start:
+        stmt = stmt.where(ModelGatewayCall.created_at >= datetime.fromisoformat(start))
+    if end:
+        stmt = stmt.where(ModelGatewayCall.created_at <= datetime.fromisoformat(end))
+    async with session_scope() as s:
+        rows = (await s.execute(stmt)).all()
+    return R.ok(
+        {
+            "rows": [
+                {
+                    "key": str(row.key) if row.key is not None else None,
+                    "calls": row.calls,
+                    "tokens": int(row.tokens),
+                    "avg_latency_ms": int(row.avg_latency),
+                    "failures": int(row.failures or 0),
+                }
+                for row in rows
+            ]
+        }
+    ).to_dict()
+
+
+@router.get("/calls")
+async def calls(
+    _admin: AdminDep,
+    request_id: str | None = None,
+    source: str | None = None,
+    model_id: int | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict[str, object]:
+    """调用记录分页。"""
+    stmt = select(ModelGatewayCall).order_by(ModelGatewayCall.id.desc()).limit(min(limit, 200)).offset(offset)
+    if request_id:
+        stmt = stmt.where(ModelGatewayCall.request_id == request_id)
+    if source:
+        stmt = stmt.where(ModelGatewayCall.source == source)
+    if model_id is not None:
+        stmt = stmt.where(ModelGatewayCall.model_id == model_id)
+    async with session_scope() as s:
+        rows = list((await s.scalars(stmt)).all())
+    return R.ok(
+        {
+            "calls": [
+                {
+                    "id": str(row.id),
+                    "request_id": row.request_id,
+                    "source": row.source,
+                    "capability": row.capability,
+                    "model_id": str(row.model_id) if row.model_id else None,
+                    "vendor_code": row.vendor_code,
+                    "model_key": row.model_key,
+                    "tokens": row.total_tokens,
+                    "latency_ms": row.latency_ms,
+                    "status": row.status,
+                    "error_code": row.error_code,
+                    "attempts": row.attempts,
+                    "fallback_used": row.fallback_used,
+                    "created_at": row.created_at.isoformat(),
                 }
                 for row in rows
             ]
