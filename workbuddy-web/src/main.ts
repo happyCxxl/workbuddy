@@ -10,6 +10,7 @@ import { router } from './router';
 import '@/styles/tokens.css';
 import '@/styles/element-plus.css';
 import '@/styles/page-shell.css';
+import '@/styles/model-console.css';
 
 // 应用入口：挂载 Pinia / 路由 / Element Plus
 const app = createApp(App);
