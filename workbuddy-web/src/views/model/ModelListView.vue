@@ -50,22 +50,14 @@
 
       <div class="mc-panel">
         <table class="mc-table">
-          <colgroup>
-            <col style="width: 25%" />
-            <col style="width: 25%" />
-            <col style="width: 25%" />
-            <col style="width: 8.33%" />
-            <col style="width: 8.33%" />
-            <col style="width: 8.34%" />
-          </colgroup>
           <thead>
             <tr>
-              <th class="mc-th">厂商</th>
-              <th class="mc-th">接入地址</th>
-              <th class="mc-th">密钥</th>
-              <th class="mc-th right">模型</th>
-              <th class="mc-th">状态</th>
-              <th class="mc-th" style="text-align: right">操作</th>
+              <th class="mc-th" style="width: 25%">厂商</th>
+              <th class="mc-th" style="width: 25%">接入地址</th>
+              <th class="mc-th" style="width: 25%">密钥</th>
+              <th class="mc-th right" style="width: 8.33%">模型</th>
+              <th class="mc-th" style="width: 8.33%">状态</th>
+              <th class="mc-th" style="width: 8.34%; text-align: right">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -159,22 +151,14 @@
 
       <div class="mc-panel">
         <table class="mc-table">
-          <colgroup>
-            <col style="width: 25%" />
-            <col style="width: 12.5%" />
-            <col style="width: 12.5%" />
-            <col style="width: 25%" />
-            <col style="width: 12.5%" />
-            <col style="width: 12.5%" />
-          </colgroup>
           <thead>
             <tr>
-              <th class="mc-th">模型</th>
-              <th class="mc-th">厂商</th>
-              <th class="mc-th">能力</th>
-              <th class="mc-th">规格</th>
-              <th class="mc-th">状态</th>
-              <th class="mc-th" style="text-align: right">操作</th>
+              <th class="mc-th" style="width: 25%">模型</th>
+              <th class="mc-th" style="width: 12.5%">厂商</th>
+              <th class="mc-th" style="width: 12.5%">能力</th>
+              <th class="mc-th" style="width: 25%">规格</th>
+              <th class="mc-th" style="width: 12.5%">状态</th>
+              <th class="mc-th" style="width: 12.5%; text-align: right">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -249,20 +233,13 @@
 
       <div class="mc-panel">
         <table class="mc-table">
-          <colgroup>
-            <col style="width: 30%" />
-            <col style="width: 14%" />
-            <col style="width: 26%" />
-            <col style="width: 15%" />
-            <col style="width: 15%" />
-          </colgroup>
           <thead>
             <tr>
-              <th class="mc-th">分组</th>
-              <th class="mc-th right">调用</th>
-              <th class="mc-th right">Token</th>
-              <th class="mc-th right">平均延迟</th>
-              <th class="mc-th right">失败</th>
+              <th class="mc-th" style="width: 30%">分组</th>
+              <th class="mc-th right" style="width: 14%">调用</th>
+              <th class="mc-th right" style="width: 26%">Token</th>
+              <th class="mc-th right" style="width: 15%">平均延迟</th>
+              <th class="mc-th right" style="width: 15%">失败</th>
             </tr>
           </thead>
           <tbody>
