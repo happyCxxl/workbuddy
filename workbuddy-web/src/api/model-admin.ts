@@ -110,6 +110,8 @@ export interface AvailableModel {
   display_name: string;
   model_key: string;
   capability: ModelCapability;
+  vendor_code: string;
+  vendor_name: string;
 }
 
 export async function getAvailableModels(capability = 'CHAT'): Promise<AvailableModel[]> {

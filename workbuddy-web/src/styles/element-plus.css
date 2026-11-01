@@ -204,6 +204,13 @@
     0 0 22px rgb(34 224 255 / 18%);
 }
 
+/* 输入框内的模型选择：无边框，贴近 DSH 的纯文字下拉 */
+.composer-model .el-select__wrapper {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
 /*
  * 光标统一改 default（按钮那条已并入上面的按钮规则块，这里只列其余控件）。
  *

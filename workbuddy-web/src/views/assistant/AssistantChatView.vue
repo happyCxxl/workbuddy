@@ -163,21 +163,6 @@
           </button>
           <span class="chat-title">{{ current?.title || '选择或新建一个会话' }}</span>
           <span v-if="current" class="chat-dir">{{ current.work_dir }}</span>
-          <el-select
-            v-if="current"
-            v-model="selectedModelId"
-            class="chat-model"
-            size="small"
-            placeholder="选择模型"
-            @change="handleModelChange"
-          >
-            <el-option
-              v-for="model in chatModels"
-              :key="model.id"
-              :label="model.display_name"
-              :value="model.id"
-            />
-          </el-select>
           <span class="page-spacer"></span>
           <el-button v-if="current" size="small" text @click="openTrajectory">轨迹</el-button>
           <el-button v-if="current" size="small" text @click="openSubSessions">
@@ -430,6 +415,21 @@
                 </div>
               </el-popover>
             </div>
+            <el-select
+              v-if="current"
+              v-model="selectedModelId"
+              class="composer-model"
+              size="small"
+              placeholder="选择模型"
+              @change="handleModelChange"
+            >
+              <el-option
+                v-for="model in chatModels"
+                :key="model.id"
+                :label="modelLabel(model)"
+                :value="model.id"
+              />
+            </el-select>
             <el-button v-if="running" type="danger" plain @click="handleStop">■ 停止</el-button>
             <el-button
               v-else
@@ -759,6 +759,11 @@ async function handleModelChange(value: string): Promise<void> {
   await updateSessionModel(current.value.id, value);
   current.value.model_id = value;
   ElMessage.success('模型已切换');
+}
+
+/** 模型展示：厂商 · 模型名 */
+function modelLabel(model: AvailableModel): string {
+  return `${model.vendor_name || model.vendor_code} · ${model.display_name}`;
 }
 /** 草稿会话：新建工作区/点「＋」时自动创建，未发消息就切走即丢弃（对齐 DSH） */
 const draftSessionId = ref<string | null>(null);
@@ -2887,9 +2892,9 @@ onUnmounted(() => {
   font-weight: 650;
 }
 
-.chat-model {
-  width: 180px;
-  margin-left: 8px;
+.composer-model {
+  width: 210px;
+  flex: none;
 }
 
 .chat-dir {

@@ -110,6 +110,7 @@ async def delete_model(model_id: int, _admin: AdminDep) -> dict[str, object]:
 async def available_models(user: CurrentUserDep, capability: str = "CHAT") -> dict[str, object]:
     """当前用户可选模型：会话页选择用，不要求管理员。"""
     rows = await catalog.list_available(capability)
+    vendors = {vendor.id: vendor for vendor in await catalog.list_vendors()}
     return R.ok(
         {
             "models": [
@@ -118,6 +119,8 @@ async def available_models(user: CurrentUserDep, capability: str = "CHAT") -> di
                     "display_name": row.display_name,
                     "model_key": row.model_key,
                     "capability": row.capability,
+                    "vendor_code": vendors[row.vendor_id].code if row.vendor_id in vendors else "",
+                    "vendor_name": vendors[row.vendor_id].display_name if row.vendor_id in vendors else "",
                 }
                 for row in rows
             ]
