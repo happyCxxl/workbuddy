@@ -52,12 +52,12 @@
         <table class="mc-table">
           <thead>
             <tr>
-              <th class="mc-th" style="width: 25%">厂商</th>
-              <th class="mc-th" style="width: 25%">接入地址</th>
-              <th class="mc-th" style="width: 25%">密钥</th>
-              <th class="mc-th right" style="width: 8.33%">模型</th>
-              <th class="mc-th" style="width: 8.33%">状态</th>
-              <th class="mc-th" style="width: 8.34%; text-align: right">操作</th>
+              <th class="mc-th" style="width: 16.66%">厂商</th>
+              <th class="mc-th" style="width: 16.66%">接入地址</th>
+              <th class="mc-th" style="width: 16.66%">密钥</th>
+              <th class="mc-th right" style="width: 16.66%">模型</th>
+              <th class="mc-th" style="width: 16.66%">状态</th>
+              <th class="mc-th" style="width: 16.7%; text-align: right">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -65,10 +65,8 @@
               <td class="mc-td">
                 <div class="mc-vendor">
                   <span class="mc-mark">{{ vendor.code.slice(0, 2).toUpperCase() }}</span>
-                  <div>
-                    <div class="mc-id">{{ vendor.code }}</div>
-                    <div class="mc-sub">{{ vendor.display_name }}</div>
-                  </div>
+                  <span class="mc-id">{{ vendor.code }}</span>
+                  <span class="mc-sub">{{ vendor.display_name }}</span>
                 </div>
               </td>
               <td class="mc-td mc-mono">{{ vendor.base_url }}</td>
@@ -153,12 +151,12 @@
         <table class="mc-table">
           <thead>
             <tr>
-              <th class="mc-th" style="width: 25%">模型</th>
-              <th class="mc-th" style="width: 12.5%">厂商</th>
-              <th class="mc-th" style="width: 12.5%">能力</th>
-              <th class="mc-th" style="width: 25%">规格</th>
-              <th class="mc-th" style="width: 12.5%">状态</th>
-              <th class="mc-th" style="width: 12.5%; text-align: right">操作</th>
+              <th class="mc-th" style="width: 16.66%">模型</th>
+              <th class="mc-th" style="width: 16.66%">厂商</th>
+              <th class="mc-th" style="width: 16.66%">能力</th>
+              <th class="mc-th" style="width: 16.66%">规格</th>
+              <th class="mc-th" style="width: 16.66%">状态</th>
+              <th class="mc-th" style="width: 16.7%; text-align: right">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -235,11 +233,11 @@
         <table class="mc-table">
           <thead>
             <tr>
-              <th class="mc-th" style="width: 30%">分组</th>
-              <th class="mc-th right" style="width: 14%">调用</th>
-              <th class="mc-th right" style="width: 26%">Token</th>
-              <th class="mc-th right" style="width: 15%">平均延迟</th>
-              <th class="mc-th right" style="width: 15%">失败</th>
+              <th class="mc-th" style="width: 20%">分组</th>
+              <th class="mc-th right" style="width: 20%">调用</th>
+              <th class="mc-th right" style="width: 20%">Token</th>
+              <th class="mc-th right" style="width: 20%">平均延迟</th>
+              <th class="mc-th right" style="width: 20%">失败</th>
             </tr>
           </thead>
           <tbody>
