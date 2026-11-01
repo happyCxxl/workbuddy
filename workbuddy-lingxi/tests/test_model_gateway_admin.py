@@ -77,6 +77,18 @@ async def test_vendor_and_model_crud(client: AsyncClient) -> None:
 
 
 @pytest.mark.usefixtures("engine_fixture")
+async def test_usage_and_calls_query(client: AsyncClient) -> None:
+    """用量聚合与调用记录查询可用（空结果也返回 0）。"""
+    usage = await client.get("/model-admin/usage", params={"group_by": "source"})
+    assert usage.json()["code"] == 0
+    assert isinstance(usage.json()["data"]["rows"], list)
+
+    calls = await client.get("/model-admin/calls", params={"limit": 10})
+    assert calls.json()["code"] == 0
+    assert isinstance(calls.json()["data"]["calls"], list)
+
+
+@pytest.mark.usefixtures("engine_fixture")
 async def test_session_model_switch(client: AsyncClient, tmp_path) -> None:
     """会话创建时选模型，切换后读回新模型。"""
     suffix = uuid4().hex[:8]

@@ -4,7 +4,7 @@ import base64
 from datetime import UTC, datetime
 
 from fastapi import APIRouter
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 
 from lingxi.app.auth import AdminDep, CurrentUserDep
 from lingxi.contract import ApiError, ErrorCode, R
@@ -209,7 +209,7 @@ async def usage(
         func.count().label("calls"),
         func.coalesce(func.sum(ModelGatewayCall.total_tokens), 0).label("tokens"),
         func.coalesce(func.avg(ModelGatewayCall.latency_ms), 0).label("avg_latency"),
-        func.sum(func.case((ModelGatewayCall.status == "FAILED", 1), else_=0)).label("failures"),
+        func.sum(case((ModelGatewayCall.status == "FAILED", 1), else_=0)).label("failures"),
     ).group_by(column)
     if source:
         stmt = stmt.where(ModelGatewayCall.source == source)
