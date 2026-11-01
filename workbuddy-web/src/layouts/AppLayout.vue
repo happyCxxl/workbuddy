@@ -363,6 +363,11 @@ const navItems: NavItem[] = [
         path: '/model/manager',
         iconPaths: ['M3.2 4.6h9.6M3.2 8h9.6M3.2 11.4h9.6', 'M5.6 3.2v10.8'],
       },
+      {
+        label: '模型能力',
+        path: '/model/gateway',
+        iconPaths: ['M4 4h8v8H4z', 'M8 1.6v2.4M8 12v2.4M1.6 8h2.4M12 8h2.4'],
+      },
     ],
   },
   {
@@ -506,6 +511,7 @@ const PAGE_SECTIONS: Record<string, string> = {
   RetrievalEval: '知识库',
   StrategyManagement: '知识库',
   ModelList: '模型管理',
+  ModelGateway: '模型能力',
   UserManagement: '用户管理',
   SystemSetting: '系统设置',
   Profile: '个人中心',

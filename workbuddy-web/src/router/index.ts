@@ -81,6 +81,13 @@ export const router = createRouter({
           meta: { title: '模型清单' },
         },
         {
+          // 模型能力：厂商、模型能力与用量，直连 Python 能力层
+          path: 'model/gateway',
+          name: 'ModelGateway',
+          component: () => import('@/views/model/ModelGatewayView.vue'),
+          meta: { title: '模型能力' },
+        },
+        {
           // 个人助手 · 对话：会话列表 + SSE 流式对话 + 权限裁决
           path: 'assistant/chat',
           name: 'AssistantChat',
