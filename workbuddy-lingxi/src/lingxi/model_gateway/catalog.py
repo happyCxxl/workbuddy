@@ -169,3 +169,33 @@ async def list_available(capability: str) -> list[Model]:
     )
     async with session_scope() as s:
         return list((await s.scalars(stmt)).all())
+
+
+async def get_with_vendor(model_id: int) -> tuple[Model, ModelVendor] | None:
+    """按主键取模型与厂商；软删除视为不存在。"""
+    async with session_scope() as s:
+        row = await s.get(Model, model_id)
+        if row is None or row.deleted_at is not None:
+            return None
+        vendor = await s.get(ModelVendor, row.vendor_id)
+        if vendor is None:
+            return None
+        return row, vendor
+
+
+async def candidates(capability: str) -> list[tuple[Model, ModelVendor]]:
+    """能力候选集：启用、未删除、厂商启用。"""
+    stmt = (
+        select(Model, ModelVendor)
+        .join(ModelVendor, ModelVendor.id == Model.vendor_id)
+        .where(
+            Model.capability == capability,
+            Model.enabled.is_(True),
+            Model.deleted_at.is_(None),
+            ModelVendor.enabled.is_(True),
+        )
+        .order_by(Model.id)
+    )
+    async with session_scope() as s:
+        rows = (await s.execute(stmt)).all()
+        return [(row[0], row[1]) for row in rows]
