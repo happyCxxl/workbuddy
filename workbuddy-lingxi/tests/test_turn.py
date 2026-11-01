@@ -1,5 +1,7 @@
 """回合执行：整轮事件序列、投影、钩子 fail-closed、预算压缩、步数超限。"""
 
+import asyncio
+
 import pytest
 from conftest import FakeEmbedder, db_up
 
@@ -11,6 +13,7 @@ from lingxi.core.log import EventType, append_event, replay_events
 from lingxi.core.loop import TurnRunner
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.permission.gate import PermissionGate
+from lingxi.domain.ports import StreamChunk
 from lingxi.domain.session.service import build_history, create_session
 from lingxi.domain.tools.fs import register_fs_tools
 from lingxi.domain.tools.registry import ToolRegistry
@@ -166,20 +169,58 @@ async def test_max_steps_aborts_turn(
     assert types[-1] == "turn.end"
 
 
-async def test_stop_flag_does_not_leak_into_next_turn(
+async def test_stop_only_hits_active_turn(
     fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
 ) -> None:
-    """停车标记只属于当轮：被停车后，下一轮照常执行（断线/取消也不能把会话卡死）。"""
+    """停止只命中活动回合：空闲停止不污染下一轮，活动回合收口为 interrupted。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
     runner = make_runner(settings, LlmGateway(settings), HookRegistry())
-    sid = await create_session("D:\\tmp", "停车回收")
-    runner.request_stop(sid)
-    stopped = await collect(runner, sid, "hi")
-    assert stopped[-1].payload["status"] == "pending_stop"
+    sid = await create_session("D:\\tmp", "停止回收")
+    assert runner.request_stop(sid) is False
+    stream = runner.run(sid, "hi")
+    first = await anext(stream)
+    assert first.type == EventType.TURN_START
+    assert runner.request_stop(sid) is True
+    stopped = [event async for event in stream]
+    assert stopped[-1].payload["status"] == "interrupted"
+    assert stopped[-1].payload["reason"] == "user"
     resumed = await collect(runner, sid, "hi")
     assert resumed[-1].payload["status"] == "completed"
+
+
+async def test_stop_persists_partial_assistant_message(
+    fake_server: tuple[Settings, list[dict[str, object]]], engine_fixture: None
+) -> None:
+    """流式输出中停止：已产出的半截文本落成 interrupted 消息，不丢内容。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings, _ = fake_server
+
+    class SlowGateway:
+        """先产出一段文本，再延迟；给测试留出停止窗口。"""
+
+        async def stream(self, _request: object) -> object:
+            yield StreamChunk(kind="text", text="半截", tool_calls=[])
+            await asyncio.sleep(0.05)
+            yield StreamChunk(kind="text", text="后续", tool_calls=[])
+
+    runner = TurnRunner(settings, SlowGateway(), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate())
+    sid = await create_session("D:\\tmp", "半截保存")
+    events: list[TurnEvent] = []
+    async for event in runner.run(sid, "hi"):
+        events.append(event)
+        if event.type == EventType.TEXT_DELTA:
+            assert runner.request_stop(sid) is True
+    assistant = [
+        event
+        for event in events
+        if event.type == EventType.ASSISTANT_MESSAGE and event.payload.get("interrupted") is True
+    ]
+    assert assistant, "停止后应保留 interrupted 的 assistant 消息"
+    assert assistant[-1].payload["content"] == "半截"
+    assert events[-1].payload["status"] == "interrupted"
 
 
 async def test_post_hook_failure_keeps_turn_completed(

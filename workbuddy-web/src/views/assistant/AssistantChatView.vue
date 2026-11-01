@@ -437,7 +437,9 @@
                 />
               </el-option-group>
             </el-select>
-            <el-button v-if="running" type="danger" plain @click="handleStop">■ 停止</el-button>
+            <el-button v-if="running" type="danger" plain :loading="stopping" @click="handleStop">
+              ■ 停止
+            </el-button>
             <el-button
               v-else
               size="small"
@@ -747,6 +749,7 @@ interface ChatMessage {
   thinking: string;
   tools: ToolLine[];
   permission?: PermissionInfo;
+  interrupted?: boolean;
 }
 
 const sessions = ref<AssistantSession[]>([]);
@@ -795,6 +798,9 @@ const messages = ref<ChatMessage[]>([]);
 let awaitingNextStep = false;
 const input = ref('');
 const running = ref(false);
+const stopping = ref(false);
+const activeTurnSessionId = ref('');
+let stopTimer: number | undefined;
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
 const stepLabel = ref('1');
@@ -1683,6 +1689,7 @@ function formatClock(iso: string): string {
 function trailStatusLabel(status: string): string {
   if (status === 'completed') return '完成';
   if (status === 'pending_stop') return '已停车';
+  if (status === 'interrupted') return '已中断';
   if (status === 'aborted') return '中止';
   if (status === 'error') return '出错';
   return status;
@@ -1736,6 +1743,7 @@ function applyReplayEvent(event: SessionEventItem): void {
       text: String(payload['content'] ?? ''),
       thinking: String(payload['reasoning_content'] ?? ''),
       tools: replayTools(payload),
+      interrupted: Boolean(payload['interrupted']),
     });
     return;
   }
@@ -2011,6 +2019,7 @@ function applyEvent(type: string, payload: Record<string, unknown>): void {
       }
       const calls = payload['tool_calls'];
       awaitingNextStep = Array.isArray(calls) && calls.length > 0;
+      current.interrupted = Boolean(payload['interrupted']);
     }
     return;
   }
@@ -2046,6 +2055,9 @@ function applyEvent(type: string, payload: Record<string, unknown>): void {
     last.text += `\n[错误] ${String(payload['msg'] ?? payload['code'] ?? '')}`;
   } else if (type === 'turn.end' && String(payload['status'] ?? '') === 'pending_stop') {
     last.text += '\n（等待你的裁决）';
+  } else if (type === 'turn.end' && String(payload['status'] ?? '') === 'interrupted') {
+    last.interrupted = true;
+    last.text += '\n（已中断）';
   }
   void scrollToBottom();
 }
@@ -2080,13 +2092,15 @@ function sendContent(content: string, retryOf?: number): void {
   messages.value.push({ role: 'user', text: content, thinking: '', tools: [] });
   messages.value.push({ role: 'assistant', text: '', thinking: '', tools: [] });
   running.value = true;
+  stopping.value = false;
+  activeTurnSessionId.value = currentId.value;
   abortController = addTurnStream(
     currentId.value,
     content,
     {
       onEvent: applyEvent,
       onDone: () => {
-        running.value = false;
+        finishTurn();
         void loadUsage();
         void Promise.all([
           getSessionEvents(currentId.value),
@@ -2098,7 +2112,7 @@ function sendContent(content: string, retryOf?: number): void {
         void refreshSessions();
       },
       onError: (message) => {
-        running.value = false;
+        finishTurn();
         ElMessage.error(message);
       },
     },
@@ -2106,13 +2120,44 @@ function sendContent(content: string, retryOf?: number): void {
   );
 }
 
-/** 停止：结束流并通知后端 */
-async function handleStop(): Promise<void> {
-  abortController?.abort();
-  abortController = null;
+/** 回合收尾：清理运行态、停止计时与目标会话 */
+function finishTurn(): void {
   running.value = false;
-  await updateTurnStop(currentId.value);
-  await loadUsage();
+  stopping.value = false;
+  activeTurnSessionId.value = '';
+  if (stopTimer !== undefined) {
+    window.clearTimeout(stopTimer);
+    stopTimer = undefined;
+  }
+}
+
+/** 停止：先请求服务端中断，保持 SSE 等 turn.end；超时才断开 */
+async function handleStop(): Promise<void> {
+  const target = activeTurnSessionId.value || currentId.value;
+  if (!target || stopping.value) {
+    return;
+  }
+  stopping.value = true;
+  let result: { accepted: boolean };
+  try {
+    result = await updateTurnStop(target);
+  } catch {
+    abortController?.abort();
+    abortController = null;
+    finishTurn();
+    return;
+  }
+  if (!result.accepted) {
+    abortController?.abort();
+    abortController = null;
+    finishTurn();
+    return;
+  }
+  stopTimer = window.setTimeout(() => {
+    abortController?.abort();
+    abortController = null;
+    finishTurn();
+  }, 5000);
 }
 
 /** 提交后台任务：当前输入内容交给子会话执行（干净上下文） */

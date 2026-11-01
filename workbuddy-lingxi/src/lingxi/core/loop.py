@@ -7,7 +7,7 @@ import os
 import platform
 import sys
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import cast
 from uuid import uuid4
@@ -35,6 +35,19 @@ from lingxi.domain.session.service import (
 from lingxi.domain.tools.registry import SessionToolState, ToolContext, ToolRegistry
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TurnControl:
+    """一次回合的取消信号：只命中创建它的那一轮，不复用、不跨轮。"""
+
+    event: asyncio.Event = field(default_factory=asyncio.Event)
+    reason: str = "user"
+
+    @property
+    def cancelled(self) -> bool:
+        """是否已请求取消。"""
+        return self.event.is_set()
 
 
 def _estimate_tokens(messages: list[ChatMessage]) -> int:
@@ -72,7 +85,7 @@ class TurnRunner:
         self._tools = tools
         self._permission = permission
         self._locks: dict[int, asyncio.Lock] = {}
-        self._stop_requested: set[int] = set()
+        self._active_turns: dict[int, TurnControl] = {}
         self._pending: dict[tuple[int, str], PendingCheckpoint] = {}
         # 会话级工具状态：已读文件集合（读前写/改门禁）
         self._tool_states: dict[int, SessionToolState] = {}
@@ -81,27 +94,49 @@ class TurnRunner:
         )
         self._hooks.register("pre_step", make_max_steps_gate(settings.loop.max_steps))
 
-    def request_stop(self, session_id: int) -> None:
-        """申请停车：当前回合在下一步前停止，状态记入 turn/end 事件。"""
-        self._stop_requested.add(session_id)
+    def request_stop(self, session_id: int) -> bool:
+        """申请停止当前回合；没有活动回合时返回 False，不污染下一轮。"""
+        control = self._active_turns.get(session_id)
+        if control is None:
+            return False
+        control.reason = "user"
+        control.event.set()
+        return True
 
     async def run(self, session_id: int, user_content: str, retry_of: int | None = None) -> AsyncIterator[TurnEvent]:
         """跑一个回合：产出与日志同构的事件流；异常路径补齐 error 与 turn/end 后上抛。"""
         lock = self._locks.setdefault(session_id, asyncio.Lock())
         async with lock:
-            async for event in self._run_locked(session_id, user_content, retry_of):
-                yield event
+            control = TurnControl()
+            self._active_turns[session_id] = control
+            try:
+                async for event in self._run_locked(session_id, user_content, retry_of, control):
+                    yield event
+            finally:
+                if self._active_turns.get(session_id) is control:
+                    self._active_turns.pop(session_id, None)
 
     async def resume(self, session_id: int, request_id: str, outcome: str) -> AsyncIterator[TurnEvent]:
         """审批裁决后恢复重放：allowed-once 执行该工具，rejected 记拒绝结果，然后继续循环。"""
         lock = self._locks.setdefault(session_id, asyncio.Lock())
         async with lock:
-            async for event in self._resume_locked(session_id, request_id, outcome):
-                yield event
+            control = TurnControl()
+            self._active_turns[session_id] = control
+            try:
+                async for event in self._resume_locked(session_id, request_id, outcome, control):
+                    yield event
+            finally:
+                if self._active_turns.get(session_id) is control:
+                    self._active_turns.pop(session_id, None)
 
     async def _run_locked(
-        self, session_id: int, user_content: str, retry_of: int | None = None
+        self,
+        session_id: int,
+        user_content: str,
+        retry_of: int | None = None,
+        control: TurnControl | None = None,
     ) -> AsyncIterator[TurnEvent]:
+        control = control or TurnControl()
         session = await get_session(session_id)
         # 子会话是任务执行器：不绑人格、不注入记忆；对话会话照旧
         persona = await persona_of_session(session) if session.kind == "chat" else None
@@ -130,6 +165,7 @@ class TurnRunner:
                 0,
                 session.permission_preset,
                 session.kind,
+                control,
             ):
                 yield event
         except PendingApproval:
@@ -143,11 +179,11 @@ class TurnRunner:
             yield await self._emit(session_id, EventType.ERROR, {"message": str(exc)})
             yield await self._emit(session_id, EventType.TURN_END, {"status": "error"})
             raise
-        finally:
-            # 停车标记只在本次回合内有效：断线/取消也要清掉，否则下一回合会被直接判停车
-            self._stop_requested.discard(session_id)
 
-    async def _resume_locked(self, session_id: int, request_id: str, outcome: str) -> AsyncIterator[TurnEvent]:
+    async def _resume_locked(
+        self, session_id: int, request_id: str, outcome: str, control: TurnControl | None = None
+    ) -> AsyncIterator[TurnEvent]:
+        control = control or TurnControl()
         checkpoint = self._pending.pop((session_id, request_id), None)
         if checkpoint is None:
             raise ApiError(ErrorCode.NOT_FOUND, f"审批请求不存在或已裁决：{request_id}")
@@ -197,6 +233,7 @@ class TurnRunner:
                 checkpoint.step,
                 session.permission_preset,
                 session.kind,
+                control,
             ):
                 yield event
         except PendingApproval:
@@ -223,6 +260,7 @@ class TurnRunner:
         step_start: int,
         preset: str,
         kind: str,
+        control: TurnControl,
     ) -> AsyncIterator[TurnEvent]:
         step = step_start
         while True:
@@ -243,15 +281,17 @@ class TurnRunner:
                 messages = await self._assemble(
                     session_id, user_id, persona, work_dir, user_content, turn_seq, first=step == 1
                 )
-            if session_id in self._stop_requested:
-                yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
+            if control.cancelled:
+                yield await self._emit(
+                    session_id, EventType.TURN_END, {"status": "interrupted", "reason": control.reason}
+                )
                 return
             tool_calls: list[ToolCall] = []
             content_parts: list[str] = []
             reasoning_parts: list[str] = []
             request = ChatRequest(messages=messages, tools=self._tools.specs(), model_id=model_id)
             async for chunk in self._gateway.stream(request):
-                if session_id in self._stop_requested:
+                if control.cancelled:
                     break
                 if chunk.kind == "text":
                     content_parts.append(chunk.text)
@@ -261,8 +301,22 @@ class TurnRunner:
                     yield await self._emit(session_id, EventType.THINKING_DELTA, {"text": chunk.text})
                 elif chunk.kind == "tool_calls":
                     tool_calls.extend(chunk.tool_calls)
-            if session_id in self._stop_requested:
-                yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
+            if control.cancelled:
+                content = "".join(content_parts)
+                reasoning = "".join(reasoning_parts)
+                if content or reasoning:
+                    yield await self._emit(
+                        session_id,
+                        EventType.ASSISTANT_MESSAGE,
+                        {
+                            "content": content,
+                            "reasoning_content": reasoning or None,
+                            "interrupted": True,
+                        },
+                    )
+                yield await self._emit(
+                    session_id, EventType.TURN_END, {"status": "interrupted", "reason": control.reason}
+                )
                 return
             if tool_calls:
                 yield await self._emit(
@@ -275,10 +329,17 @@ class TurnRunner:
                     },
                 )
                 for call in tool_calls:
+                    if control.cancelled:
+                        break
                     async for event in self._execute_tool(
                         session_id, turn_seq, step, call, work_dir, user_content, preset, kind
                     ):
                         yield event
+                if control.cancelled:
+                    yield await self._emit(
+                        session_id, EventType.TURN_END, {"status": "interrupted", "reason": control.reason}
+                    )
+                    return
                 continue
             yield await self._emit(
                 session_id,

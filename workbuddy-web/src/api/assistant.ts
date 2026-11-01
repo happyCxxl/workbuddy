@@ -128,8 +128,10 @@ export async function getSessionCalls(sessionId: string): Promise<ModelCallItem[
 }
 
 /** 申请停止：当前回合在下一步或流式块边界停止 */
-export async function updateTurnStop(sessionId: string): Promise<void> {
-  await http.post(`/sessions/${sessionId}/turns/stop`);
+/** 停止当前回合：accepted=false 表示已经没有活动回合 */
+export async function updateTurnStop(sessionId: string): Promise<{ accepted: boolean }> {
+  const response = await http.post<{ accepted: boolean }>(`/sessions/${sessionId}/turns/stop`);
+  return response.data;
 }
 
 /** 会话用量：调用次数与 token 汇总 */
