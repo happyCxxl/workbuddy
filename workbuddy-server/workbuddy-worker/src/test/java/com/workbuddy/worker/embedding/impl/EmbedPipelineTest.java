@@ -3,21 +3,18 @@ package com.workbuddy.worker.embedding.impl;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.embed.EmbedOutcome;
+import com.workbuddy.common.domain.embed.EmbeddingClient;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
 import com.workbuddy.common.domain.embed.EmbeddingResult;
 import com.workbuddy.common.domain.embed.EmbeddingSet;
-import com.workbuddy.common.domain.model.catalog.ModelDescriptor;
 import com.workbuddy.common.domain.task.StepLogInfo;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.enums.embed.EmbedMetric;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
-import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
-import com.workbuddy.model.AiClient;
-import com.workbuddy.model.ModelCatalogPort;
 import com.workbuddy.worker.embedding.EmbedContext;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.embedding.check.ConsistencyChecker;
@@ -59,10 +56,7 @@ class EmbedPipelineTest {
     private InputTemplatePort template;
 
     @Mock
-    private AiClient aiClient;
-
-    @Mock
-    private ModelCatalogPort modelCatalogPort;
+    private EmbeddingClient embeddingClient;
 
     private EmbedProperties properties;
 
@@ -79,11 +73,9 @@ class EmbedPipelineTest {
     void setUp() {
         properties = PropertiesFixtures.embed();
         properties.setMaxRetries(0);
-        lenient().when(modelCatalogPort.listByCapability(ModelCapability.EMBEDDING))
-                .thenReturn(List.of(embeddingModel("text-embedding-v4")));
         lenient().doThrow(new WorkbuddyException(ErrorCode.MODEL_SERVER_ERROR, "fake down"))
-                .when(aiClient).embed(any());
-        pipeline = new EmbedPipeline(properties, checker, template, aiClient, modelCatalogPort);
+                .when(embeddingClient).embed(any());
+        pipeline = new EmbedPipeline(properties, checker, template, embeddingClient);
 
         strategy = new EmbedStrategy();
         strategy.setName("embed");
@@ -308,7 +300,7 @@ class EmbedPipelineTest {
     void succeedsWhenModelReturnsVectors() {
         context.setChunkSet(chunkSet(textChunk("c1", "正文一"), textChunk("c2", "正文二")));
         when(template.render(any(), any())).thenReturn("正文一");
-        doReturn(embeddingResult(2, DIMENSION)).when(aiClient).embed(any());
+        doReturn(embeddingResult(2, DIMENSION)).when(embeddingClient).embed(any());
         when(checker.check(any(), any(), any())).thenReturn(ConsistencyResult.pass());
 
         EmbedOutcome outcome = pipeline.embed(context);
@@ -320,23 +312,6 @@ class EmbedPipelineTest {
         assertEquals(0, set.getCachedCount());
         assertEquals(DIMENSION, set.getDimension());
         assertEquals(EmbedRecordStatus.SUCCESS.name(), set.getRecords().getFirst().getStatus());
-    }
-
-    /**
-     * 构造目录行（向量能力）。
-     *
-     * @param modelKey 模型名
-     * @return 目录行
-     */
-    private ModelDescriptor embeddingModel(String modelKey) {
-        ModelDescriptor model = new ModelDescriptor();
-        model.setVendorCode("dashscope");
-        model.setModelKey(modelKey);
-        model.setCapabilities(Set.of(ModelCapability.EMBEDDING));
-        model.setStatus("ENABLED");
-        model.setRpmLimit(60);
-        model.setTpmLimit(100000);
-        return model;
     }
 
     /**

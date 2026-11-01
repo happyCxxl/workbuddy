@@ -1,0 +1,11 @@
+# 灵犀（Python）服务接入：模型能力统一由灵犀提供。
+# 键的来源：LingxiProperties（前缀 workbuddy.lingxi）。
+
+workbuddy:
+  lingxi:
+    # 灵犀服务地址
+    base-url: http://127.0.0.1:8000
+    # 服务间令牌；为空时灵犀仅接受本机调用
+    internal-token: ${MODEL_GATEWAY_TOKEN:}
+    # 单次调用超时（毫秒）
+    timeout-ms: 120000

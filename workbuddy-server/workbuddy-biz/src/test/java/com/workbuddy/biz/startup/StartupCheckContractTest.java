@@ -6,10 +6,6 @@ import com.workbuddy.auth.startup.AuthConfigCheck;
 import com.workbuddy.biz.config.RetrievalCapabilityProperties;
 import com.workbuddy.biz.config.TaskQueueProperties;
 import com.workbuddy.common.startup.StartupCheck;
-import com.workbuddy.model.config.ModelRouteProperties;
-import com.workbuddy.model.config.ModelVendorProperties;
-import com.workbuddy.model.startup.ModelRouteConfigCheck;
-import com.workbuddy.model.startup.ModelVendorValidator;
 import com.workbuddy.worker.parser.DocumentParserPort;
 import com.workbuddy.worker.parser.office.impl.DocDocumentParser;
 import com.workbuddy.worker.parser.office.impl.DocxDocumentParser;
@@ -40,8 +36,6 @@ class StartupCheckContractTest {
      */
     @Test
     void realChecksShouldProceedOnPassPath() {
-        assertProceeds(new ModelVendorValidator(new ModelVendorProperties()));
-        assertProceeds(new ModelRouteConfigCheck(routeProperties()));
         assertProceeds(new ParserWhitelistChecker(realParsers(), ConfigFixtures.fileValidation()));
         assertProceeds(new RetrievalCapabilityCheck(new RetrievalCapabilityProperties()));
         assertProceeds(new TaskTimeoutCheck(new TaskQueueProperties()));
@@ -53,8 +47,6 @@ class StartupCheckContractTest {
      */
     @Test
     void knownChecksShouldKeepTheirOrderTier() {
-        assertEquals(StartupCheck.ORDER_CREDENTIALS, new ModelVendorValidator(new ModelVendorProperties()).order());
-        assertEquals(StartupCheck.ORDER_PARAMETERS, new ModelRouteConfigCheck(routeProperties()).order());
         assertEquals(StartupCheck.ORDER_ASSEMBLY,
                 new ParserWhitelistChecker(List.of(), ConfigFixtures.fileValidation()).order());
         assertEquals(StartupCheck.ORDER_PARAMETERS,
@@ -62,17 +54,6 @@ class StartupCheckContractTest {
         assertEquals(StartupCheck.ORDER_PARAMETERS, new TaskTimeoutCheck(new TaskQueueProperties()).order());
         assertEquals(StartupCheck.ORDER_CREDENTIALS,
                 new AuthConfigCheck(jwtProperties(), new LoginGuardProperties()).order());
-    }
-
-    /** 路由配置替身：与 config/workbuddy-model.yml 同值 */
-    private ModelRouteProperties routeProperties() {
-        ModelRouteProperties properties = new ModelRouteProperties();
-        properties.setCooldownSeconds(60);
-        properties.setSlowStartSeconds(45);
-        properties.setErrorTriggerRatio(0.05);
-        properties.setErrorWindowSeconds(60);
-        properties.setMaxAttempts(3);
-        return properties;
     }
 
     private void assertProceeds(StartupCheck check) {        AtomicBoolean proceeded = new AtomicBoolean();

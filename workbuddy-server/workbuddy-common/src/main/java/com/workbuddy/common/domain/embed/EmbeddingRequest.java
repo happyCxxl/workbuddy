@@ -25,4 +25,7 @@ public class EmbeddingRequest {
 
     /** 本批 requestId（成本审计/追踪） */
     private String requestId;
+
+    /** 期望向量维度（能力层按维度筛选模型） */
+    private Integer dimension;
 }

@@ -6,6 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.embed.EmbedOutcome;
+import com.workbuddy.common.domain.embed.EmbeddingClient;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
 import com.workbuddy.common.domain.embed.EmbeddingRequest;
 import com.workbuddy.common.domain.embed.EmbeddingResult;
@@ -14,12 +15,9 @@ import com.workbuddy.common.domain.task.StepLogInfo;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
 import com.workbuddy.common.enums.embed.EmbeddingModel;
 import com.workbuddy.common.enums.embed.EmbedRecordStatus;
-import com.workbuddy.common.enums.model.ModelCapability;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.model.AiClient;
-import com.workbuddy.model.ModelCatalogPort;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.embedding.EmbedContext;
 import com.workbuddy.worker.embedding.EmbedWindowRules;
@@ -53,8 +51,7 @@ public class EmbedPipeline implements EmbedderPort {
     private final EmbedProperties properties;
     private final ConsistencyChecker checker;
     private final InputTemplatePort template;
-    private final AiClient aiClient;
-    private final ModelCatalogPort modelCatalogPort;
+    private final EmbeddingClient embeddingClient;
 
     /**
      * 一批文本的向量编码：交给模型门面，按请求里的模型名精确选模型。
@@ -63,7 +60,7 @@ public class EmbedPipeline implements EmbedderPort {
      * @return 向量结果
      */
     private EmbeddingResult embedBatch(EmbeddingRequest request) {
-        return aiClient.embed(request);
+        return embeddingClient.embed(request);
     }
 
     /**
@@ -159,11 +156,6 @@ public class EmbedPipeline implements EmbedderPort {
         EmbeddingModel model = EmbeddingModel.of(strategy.getModel());
         if (NullUtil.isNull(model) || !model.enabled()) {
             return "模型不存在或未启用: " + strategy.getModel();
-        }
-        boolean registered = modelCatalogPort.listByCapability(ModelCapability.EMBEDDING).stream()
-                .anyMatch(candidate -> strategy.getModel().equals(candidate.getModelKey()));
-        if (!registered) {
-            return "模型目录未录入或未启用: " + strategy.getModel();
         }
         if (NullUtil.isNull(strategy.getContextWindowTokens()) || strategy.getContextWindowTokens() <= 0) {
             return "模型目录缺少上下文窗口声明: " + strategy.getModel();
@@ -307,6 +299,7 @@ public class EmbedPipeline implements EmbedderPort {
             request.setTimeoutMs(timeoutMs);
             request.setBatchSize(batch.size());
             request.setRequestId(requestId);
+            request.setDimension(strategy.getDimension());
             try {
                 EmbeddingResult response = embedBatch(request);
                 long checkStartedNanos = System.nanoTime();

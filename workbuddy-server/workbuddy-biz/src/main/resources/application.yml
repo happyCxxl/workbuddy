@@ -11,7 +11,7 @@ spring:
     import:
       - classpath:config/workbuddy-auth.yml
       - classpath:config/workbuddy-file.yml
-      - classpath:config/workbuddy-model.yml
+      - classpath:config/workbuddy-lingxi.yml
       - classpath:config/knowledge/knowledge-parse.yml
       - classpath:config/knowledge/knowledge-structure.yml
       - classpath:config/knowledge/knowledge-preprocess.yml

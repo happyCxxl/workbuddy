@@ -12,8 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @MapperScan({
         "com.workbuddy.biz.mapper",
         "com.workbuddy.auth.mapper",
-        "com.workbuddy.filecenter.mapper",
-        "com.workbuddy.model.mapper"
+        "com.workbuddy.filecenter.mapper"
 })
 public class WorkbuddyApplication {
 

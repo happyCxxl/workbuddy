@@ -8,9 +8,9 @@
     },
     "11": {
       "status": "已复核",
-      "reviewed": "2026-10-28",
-      "baseline": "c3bedd7a",
-      "note": "门禁脚本改为自动定位 Maven 与前端根（目录名不再写死）；父工程坐标改名，依赖守卫用例改为只扫依赖块；快照与债务条目未变"
+      "reviewed": "2026-11-01",
+      "baseline": "2bdd9a96",
+      "note": "Java 819 项测试通过；删除模型模块后构建链保持 6 模块，覆盖率与债务条目未变"
     },
     "01": {
       "status": "已复核",
@@ -38,21 +38,21 @@
     },
     "05": {
       "status": "已复核",
-      "reviewed": "2026-10-28",
-      "baseline": "c3bedd7a",
-      "note": "父工程坐标改为 workbuddy-server（artifactId 与 name）；模块清单与依赖边未变"
+      "reviewed": "2026-11-01",
+      "baseline": "2bdd9a96",
+      "note": "删除 workbuddy-model 模块：模块清单 7→6，biz/worker 依赖边移除 model，新增灵犀向量化客户端"
     },
     "06": {
       "status": "已复核",
-      "reviewed": "2026-10-28",
-      "baseline": "63a05eaf",
-      "note": "模块目录前缀变更；数据模型清单与表结构未变"
+      "reviewed": "2026-11-01",
+      "baseline": "2bdd9a96",
+      "note": "Java 模型表与实体已删除；模型目录与调用记录迁至灵犀 PostgreSQL"
     },
     "07": {
       "status": "已复核",
-      "reviewed": "2026-10-31",
-      "baseline": "f8878ecf",
-      "note": "登录/退出改为 HttpOnly Cookie；未记住我使用会话 Cookie；新增 CSRF 双提交校验"
+      "reviewed": "2026-11-01",
+      "baseline": "2bdd9a96",
+      "note": "删除 /model/* 管理接口；模型管理改由灵犀 /model-admin 提供"
     },
     "08": {
       "status": "已复核",
@@ -62,9 +62,9 @@
     },
     "09": {
       "status": "已复核",
-      "reviewed": "2026-10-31",
-      "baseline": "31d89f98",
-      "note": "令牌改 HttpOnly Cookie（记住我为持久、否则会话）；Java 与灵犀双侧 CSRF 双提交校验"
+      "reviewed": "2026-11-01",
+      "baseline": "2bdd9a96",
+      "note": "新增 workbuddy.lingxi 配置与 EmbeddingClient；删除模型厂商目录与启动校验"
     }
   }
 }

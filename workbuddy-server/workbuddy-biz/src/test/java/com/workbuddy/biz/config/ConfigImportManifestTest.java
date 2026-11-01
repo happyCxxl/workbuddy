@@ -52,8 +52,8 @@ class ConfigImportManifestTest {
     /** 环节配置文件名：平台级 workbuddy-<域>.yml 与知识库功能专属 knowledge-<域>.yml 两种 */
     private static final String CONFIG_FILE_PATTERN = "(workbuddy|knowledge)-.*\\.yml";
 
-    /** 允许整份注释、零属性的环节文件（厂商与路由参数按需再写进来） */
-    private static final String EMPTY_ALLOWED = "workbuddy-model.yml";
+    /** 允许整份注释、零属性的环节文件（当前无） */
+    private static final String EMPTY_ALLOWED = "";
 
     /** 文件名 → 允许出现的键前缀（登记的前缀都要在该文件里出现，{@link #EMPTY_ALLOWED} 除外） */
     private static final Map<String, List<String>> DOMAINS = new LinkedHashMap<>();
@@ -67,9 +67,9 @@ class ConfigImportManifestTest {
         DOMAINS.put("knowledge-milvus.yml", List.of("knowledge.vector.milvus."));
         DOMAINS.put("workbuddy-auth.yml", List.of("workbuddy.auth."));
         DOMAINS.put("workbuddy-file.yml", List.of("workbuddy.file."));
+        DOMAINS.put("workbuddy-lingxi.yml", List.of("workbuddy.lingxi."));
         DOMAINS.put("knowledge-task.yml", List.of("knowledge.task."));
         DOMAINS.put("knowledge-retrieval.yml", List.of("retrieval."));
-        DOMAINS.put(EMPTY_ALLOWED, List.of("workbuddy.model."));
     }
 
     @TempDir

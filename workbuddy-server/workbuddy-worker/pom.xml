@@ -34,12 +34,6 @@
             <artifactId>workbuddy-file</artifactId>
         </dependency>
 
-        <!-- 模型能力模块（向量化模型网关与目录） -->
-        <dependency>
-            <groupId>com.workbuddy</groupId>
-            <artifactId>workbuddy-model</artifactId>
-        </dependency>
-
         <!-- 基础设施模块（含 Milvus 客户端/集合/查询封装） -->
         <dependency>
             <groupId>com.workbuddy</groupId>

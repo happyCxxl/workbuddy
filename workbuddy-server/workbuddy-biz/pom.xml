@@ -114,10 +114,6 @@
             <groupId>com.workbuddy</groupId>
             <artifactId>workbuddy-worker</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.workbuddy</groupId>
-            <artifactId>workbuddy-model</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.workbuddy</groupId>
