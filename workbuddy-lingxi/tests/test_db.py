@@ -11,7 +11,10 @@ from lingxi.db.models import AiSession, SessionEvent
 TABLE_NAMES = {
     "ai_session",
     "memory",
+    "model",
     "model_call",
+    "model_gateway_call",
+    "model_vendor",
     "persona_version",
     "session_event",
     "sub_session",

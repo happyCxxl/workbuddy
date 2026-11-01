@@ -1,6 +1,7 @@
-"""数据模型：六张表的 ORM 映射，与 Alembic 迁移同步维护。"""
+"""数据模型：业务表的 ORM 映射，与 Alembic 迁移同步维护。"""
 
 from datetime import datetime
+from decimal import Decimal
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -10,11 +11,14 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Identity,
+    Index,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -58,6 +62,7 @@ class AiSession(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
     user_id: Mapped[int] = mapped_column(BigInteger, index=True, nullable=False, server_default="1", default=1)
+    model_id: Mapped[int | None] = mapped_column(ForeignKey("model.id"), index=True, nullable=True)
     work_dir: Mapped[str] = mapped_column(Text, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
     persona_version_id: Mapped[int | None] = mapped_column(ForeignKey("persona_version.id"), nullable=True)
@@ -145,4 +150,87 @@ class ModelCall(Base):
     prompt_cache_miss_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class ModelVendor(Base):
+    """模型厂商：接入地址与密钥环境变量名，密钥本身不入库。"""
+
+    __tablename__ = "model_vendor"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    base_url: Mapped[str] = mapped_column(Text, nullable=False)
+    api_key_env: Mapped[str] = mapped_column(String(128), nullable=False)
+    timeout_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_retries: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true", default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class Model(Base):
+    """模型：厂商 + 模型名 + 能力；同模型不同厂商是两条独立记录。"""
+
+    __tablename__ = "model"
+    __table_args__ = (
+        UniqueConstraint("vendor_id", "model_key", "capability", name="uq_model_vendor_key_cap"),
+        Index("ix_model_capability_enabled", "capability", "enabled"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    vendor_id: Mapped[int] = mapped_column(ForeignKey("model_vendor.id"), index=True, nullable=False)
+    model_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    capability: Mapped[str] = mapped_column(String(16), nullable=False)
+    dimension: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    context_window: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    batch_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rpm_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tpm_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    price_in: Mapped[Decimal | None] = mapped_column(Numeric(12, 6), nullable=True)
+    price_out: Mapped[Decimal | None] = mapped_column(Numeric(12, 6), nullable=True)
+    currency: Mapped[str] = mapped_column(String(8), nullable=False, server_default="CNY")
+    features: Mapped[dict[str, object]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb"), default=dict
+    )
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true", default=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="UNKNOWN")
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class ModelGatewayCall(Base):
+    """模型能力层调用记录：一次请求最终落一条，失败也记录。"""
+
+    __tablename__ = "model_gateway_call"
+    __table_args__ = (
+        Index("ix_model_gateway_call_source_time", "source", "created_at"),
+        Index("ix_model_gateway_call_model_time", "model_id", "created_at"),
+        Index("ix_model_gateway_call_capability_time", "capability", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    request_id: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
+    source: Mapped[str] = mapped_column(String(64), nullable=False)
+    capability: Mapped[str] = mapped_column(String(16), nullable=False)
+    model_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    vendor_code: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
+    model_key: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
+    prompt_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    completion_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    total_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    fallback_used: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
