@@ -103,3 +103,18 @@ export async function getUsage(groupBy: string): Promise<UsageRow[]> {
   });
   return response.data.rows;
 }
+
+/** 当前可用的 Chat 模型：会话页选择用，任意登录用户可读 */
+export interface AvailableModel {
+  id: string;
+  display_name: string;
+  model_key: string;
+  capability: ModelCapability;
+}
+
+export async function getAvailableModels(capability = 'CHAT'): Promise<AvailableModel[]> {
+  const response = await http.get<{ models: AvailableModel[] }>('/model-admin/models/available', {
+    params: { capability },
+  });
+  return response.data.models;
+}

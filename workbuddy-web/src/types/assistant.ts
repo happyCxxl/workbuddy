@@ -7,6 +7,7 @@ export interface AssistantSession {
   permission_preset: string;
   workspace_id: string | null;
   persona_version_id: string | null;
+  model_id: string | null;
   updated_at: string;
 }
 

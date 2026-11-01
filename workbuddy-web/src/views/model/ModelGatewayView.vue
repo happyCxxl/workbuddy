@@ -142,6 +142,41 @@
         <el-form-item v-if="modelForm.capability === 'EMBEDDING'" label="维度">
           <el-input-number v-model="modelForm.dimension" :min="1" />
         </el-form-item>
+        <el-form-item label="上下文">
+          <el-input-number v-model="modelForm.context_window" :min="0" />
+        </el-form-item>
+        <el-form-item label="单批上限">
+          <el-input-number v-model="modelForm.batch_limit" :min="0" />
+        </el-form-item>
+        <el-form-item label="RPM">
+          <el-input-number v-model="modelForm.rpm_limit" :min="0" />
+        </el-form-item>
+        <el-form-item label="TPM">
+          <el-input-number v-model="modelForm.tpm_limit" :min="0" />
+        </el-form-item>
+        <el-form-item label="输入价">
+          <el-input-number v-model="modelForm.price_in" :min="0" :precision="6" />
+        </el-form-item>
+        <el-form-item label="输出价">
+          <el-input-number v-model="modelForm.price_out" :min="0" :precision="6" />
+        </el-form-item>
+        <el-form-item label="币种">
+          <el-select v-model="modelForm.currency">
+            <el-option label="CNY" value="CNY" />
+            <el-option label="USD" value="USD" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="特性">
+          <el-checkbox-group v-model="featureList">
+            <el-checkbox label="stream" />
+            <el-checkbox label="tools" />
+            <el-checkbox label="response_format" />
+            <el-checkbox label="structured_output" />
+          </el-checkbox-group>
+        </el-form-item>
+        <el-form-item label="查询前缀">
+          <el-input v-model="queryPrefix" placeholder="仅向量模型的查询指令前缀" />
+        </el-form-item>
         <el-form-item label="启用"><el-switch v-model="modelForm.enabled" /></el-form-item>
       </el-form>
       <template #footer>
@@ -197,6 +232,8 @@ const vendorForm = reactive<Partial<ModelVendor>>({
 });
 
 const modelDialog = ref(false);
+const featureList = ref<string[]>([]);
+const queryPrefix = ref('');
 const modelForm = reactive<Partial<GatewayModel>>({
   id: undefined,
   vendor_id: '',
@@ -204,6 +241,13 @@ const modelForm = reactive<Partial<GatewayModel>>({
   display_name: '',
   capability: 'CHAT',
   dimension: 1024,
+  context_window: null,
+  batch_limit: null,
+  rpm_limit: null,
+  tpm_limit: null,
+  price_in: null,
+  price_out: null,
+  currency: 'CNY',
   enabled: true,
 });
 
@@ -270,13 +314,31 @@ function openModelDialog(raw?: unknown): void {
     display_name: row?.display_name ?? '',
     capability: row?.capability ?? 'CHAT',
     dimension: row?.dimension ?? 1024,
+    context_window: row?.context_window ?? null,
+    batch_limit: row?.batch_limit ?? null,
+    rpm_limit: row?.rpm_limit ?? null,
+    tpm_limit: row?.tpm_limit ?? null,
+    price_in: row?.price_in ?? null,
+    price_out: row?.price_out ?? null,
+    currency: row?.currency ?? 'CNY',
     enabled: row?.enabled ?? true,
   });
+  featureList.value = Object.entries(row?.features ?? {})
+    .filter(([, enabled]) => enabled)
+    .map(([key]) => key);
+  queryPrefix.value = String(row?.features['query_prefix'] ?? '');
   modelDialog.value = true;
 }
 
 async function saveModel(): Promise<void> {
-  const payload = { ...modelForm };
+  const features: Record<string, boolean | string> = {};
+  for (const key of featureList.value) {
+    features[key] = true;
+  }
+  if (queryPrefix.value.trim()) {
+    features['query_prefix'] = queryPrefix.value.trim();
+  }
+  const payload = { ...modelForm, features };
   if (modelForm.id) {
     await updateModel(modelForm.id, payload);
   } else {

@@ -92,6 +92,11 @@ export async function updateSessionPermission(
   await http.put(`/sessions/${sessionId}/permission`, { preset });
 }
 
+/** 切换会话模型：只影响后续回合 */
+export async function updateSessionModel(sessionId: string, modelId: string): Promise<void> {
+  await http.put(`/sessions/${sessionId}/model`, { model_id: modelId });
+}
+
 /** 事件重放：界面重建 = afterSeq 0；断线补齐 = 客户端游标 */
 export async function getSessionEvents(
   sessionId: string,
