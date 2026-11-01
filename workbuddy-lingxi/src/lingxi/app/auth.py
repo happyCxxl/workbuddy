@@ -124,3 +124,13 @@ async def require_csrf(request: Request) -> None:
 
 
 CurrentUserDep = Annotated[CurrentUser, Depends(require_user)]
+
+
+async def require_admin(user: CurrentUserDep) -> CurrentUser:
+    """管理员依赖：角色来自 Java 签发的令牌。"""
+    if user.role != "ADMIN":
+        raise ApiError(ErrorCode.FORBIDDEN, "需要管理员权限")
+    return user
+
+
+AdminDep = Annotated[CurrentUser, Depends(require_admin)]
