@@ -158,6 +158,8 @@ class LlmGateway:
                     usage = Usage(
                         prompt_tokens=int(str(raw_usage.get("prompt") or 0)),
                         completion_tokens=int(str(raw_usage.get("completion") or 0)),
+                        prompt_cache_hit_tokens=int(str(raw_usage.get("cache_hit") or 0)),
+                        prompt_cache_miss_tokens=int(str(raw_usage.get("cache_miss") or 0)),
                     )
                     label = f"{meta.get('vendor') or 'unknown'}/{meta.get('model_key') or 'unknown'}"
                     await self._record(label, usage, self._elapsed_ms(started), None)

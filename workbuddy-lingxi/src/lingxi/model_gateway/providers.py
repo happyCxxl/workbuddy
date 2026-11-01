@@ -196,6 +196,8 @@ async def chat_stream(
                     "prompt": getattr(usage, "prompt_tokens", None),
                     "completion": getattr(usage, "completion_tokens", None),
                     "total": getattr(usage, "total_tokens", None),
+                    "cache_hit": getattr(usage, "prompt_cache_hit_tokens", None),
+                    "cache_miss": getattr(usage, "prompt_cache_miss_tokens", None),
                 }
             }
         choice = chunk.choices[0] if chunk.choices else None
