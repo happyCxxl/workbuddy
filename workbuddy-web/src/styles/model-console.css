@@ -141,25 +141,27 @@
 }
 
 .mc-th {
-  height: 34px;
-  padding: 0 14px;
+  height: 38px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--kb-line);
   background: rgb(34 224 255 / 4%);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 9px;
   font-weight: 500;
+  line-height: 38px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--kb-text-3);
   text-align: left;
+  vertical-align: middle;
   white-space: nowrap;
 }
 
 .mc-td {
-  height: 52px;
-  padding: 0 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgb(34 224 255 / 7%);
   color: var(--kb-text-2);
+  line-height: 1.35;
   vertical-align: middle;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -179,10 +181,14 @@
   box-shadow: inset 2px 0 0 var(--kb-primary);
 }
 
-.mc-table .right {
+.mc-th.right {
   text-align: right;
+}
+
+.mc-td.right {
   font-family: ui-monospace, Consolas, monospace;
   font-size: 12px;
+  text-align: right;
 }
 
 .mc-id {
@@ -208,6 +214,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 26px;
 }
 
 .mc-mark {
@@ -221,12 +228,14 @@
   color: var(--kb-primary);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 11px;
+  vertical-align: middle;
 }
 
 .mc-key {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 22px;
 }
 
 .mc-key-value {
@@ -241,6 +250,7 @@
   gap: 7px;
   font-size: 11px;
   color: var(--kb-text-3);
+  vertical-align: middle;
 }
 
 .mc-led::before {

@@ -16,11 +16,9 @@
           新增厂商
         </el-button>
         <template v-else-if="tab === 'models'">
-          <el-button size="small" :disabled="models.length === 0" @click="testAll"
-            >
-批量测试
-</el-button
-          >
+          <el-button size="small" :disabled="models.length === 0" @click="testAll">
+            批量测试
+          </el-button>
           <el-button
             type="primary"
             size="small"
@@ -53,12 +51,12 @@
       <div class="mc-panel">
         <table class="mc-table">
           <colgroup>
-            <col style="width: 22%" />
-            <col style="width: 26%" />
-            <col style="width: 24%" />
-            <col style="width: 9%" />
-            <col style="width: 9%" />
-            <col style="width: 10%" />
+            <col style="width: 25%" />
+            <col style="width: 25%" />
+            <col style="width: 25%" />
+            <col style="width: 8.33%" />
+            <col style="width: 8.33%" />
+            <col style="width: 8.34%" />
           </colgroup>
           <thead>
             <tr>
@@ -162,12 +160,12 @@
       <div class="mc-panel">
         <table class="mc-table">
           <colgroup>
-            <col style="width: 28%" />
-            <col style="width: 14%" />
-            <col style="width: 11%" />
-            <col style="width: 21%" />
-            <col style="width: 12%" />
-            <col style="width: 14%" />
+            <col style="width: 25%" />
+            <col style="width: 12.5%" />
+            <col style="width: 12.5%" />
+            <col style="width: 25%" />
+            <col style="width: 12.5%" />
+            <col style="width: 12.5%" />
           </colgroup>
           <thead>
             <tr>
