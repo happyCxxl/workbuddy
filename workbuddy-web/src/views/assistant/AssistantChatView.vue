@@ -2687,7 +2687,12 @@ async function removeQueueItem(item: QueueItem): Promise<void> {
   if (!currentId.value) {
     return;
   }
-  await deleteSessionQueue(currentId.value, item.id);
+  const removed = await deleteSessionQueue(currentId.value, item.id);
+  if (!removed) {
+    ElMessage.warning('这条消息已经开始处理，无法撤回');
+    await refreshQueue();
+    return;
+  }
   queueItems.value = queueItems.value.filter((row) => row.id !== item.id);
 }
 

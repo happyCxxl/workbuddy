@@ -39,6 +39,23 @@ async def test_queue_reorder(tmp_path) -> None:
 
 
 @pytest.mark.usefixtures("engine_fixture")
+async def test_cancel_claimed_before_injection(tmp_path) -> None:
+    """已认领但尚未注入的消息仍可撤回；注入完成后不能再撤回。"""
+    session_id = await create_session(str(tmp_path), "撤回竞态")
+    item_id = await service.enqueue(session_id, "撤回我")
+    assert [row.id for row in await service.claim_pending(session_id)] == [item_id]
+
+    assert await service.cancel_item(session_id, item_id) is True
+    assert await service.is_claimed(session_id, item_id) is False
+    assert await service.claim_pending(session_id) == []
+
+    injected_id = await service.enqueue(session_id, "已注入")
+    await service.claim_pending(session_id)
+    await service.mark_injected(session_id, injected_id)
+    assert await service.cancel_item(session_id, injected_id) is False
+
+
+@pytest.mark.usefixtures("engine_fixture")
 async def test_queue_api(client: AsyncClient, tmp_path) -> None:
     """队列接口：新增、列表、编辑、撤回。"""
     session_id = await create_session(str(tmp_path), "队列接口")

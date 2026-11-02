@@ -73,14 +73,36 @@ async def update_item(session_id: int, item_id: int, content: str) -> bool:
 
 
 async def cancel_item(session_id: int, item_id: int) -> bool:
-    """撤回排队消息。"""
+    """撤回排队消息；已认领但尚未注入的项标记为取消。"""
     async with session_scope() as s:
         row = await s.get(SessionInputQueue, item_id)
-        if row is None or row.session_id != session_id or row.status != "pending":
+        if row is None or row.session_id != session_id:
             return False
-        await s.delete(row)
-        await s.commit()
-        return True
+        if row.status == "pending":
+            await s.delete(row)
+            await s.commit()
+            return True
+        if row.status == "claimed":
+            row.status = "cancelled"
+            await s.commit()
+            return True
+        return False
+
+
+async def is_claimed(session_id: int, item_id: int) -> bool:
+    """检查项是否仍处于已认领、尚未注入状态。"""
+    async with session_scope() as s:
+        row = await s.get(SessionInputQueue, item_id)
+        return row is not None and row.session_id == session_id and row.status == "claimed"
+
+
+async def mark_injected(session_id: int, item_id: int) -> None:
+    """消息已写入回合事件后标记，之后不能再撤回。"""
+    async with session_scope() as s:
+        row = await s.get(SessionInputQueue, item_id)
+        if row is not None and row.session_id == session_id and row.status == "claimed":
+            row.status = "injected"
+            await s.commit()
 
 
 async def claim_pending(session_id: int) -> list[SessionInputQueue]:
