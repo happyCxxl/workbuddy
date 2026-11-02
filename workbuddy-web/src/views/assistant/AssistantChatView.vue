@@ -4105,10 +4105,11 @@ onUnmounted(() => {
 }
 
 .composer-menu-item {
-  display: flex;
+  display: grid;
   width: 100%;
-  flex-direction: column;
-  gap: 3px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
   padding: 8px 12px;
   border: 0;
   border-bottom: 1px solid rgb(34 224 255 / 6%);
@@ -4130,14 +4131,17 @@ onUnmounted(() => {
 }
 
 .composer-menu-name {
+  flex: none;
   font-family: ui-monospace, Consolas, monospace;
   font-size: 12px;
 }
 
 .composer-menu-desc {
+  min-width: 0;
   overflow: hidden;
   color: var(--kb-text-3);
   font-size: 11px;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
