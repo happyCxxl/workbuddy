@@ -331,14 +331,68 @@
         </div>
 
         <div class="composer">
+          <div v-if="composerMenuOpen" class="composer-menu">
+            <template v-if="rewindStage === 'checkpoints'">
+              <div class="composer-menu-head">选择回退检查点</div>
+              <button
+                v-for="(checkpoint, index) in checkpoints"
+                :key="checkpoint.id"
+                type="button"
+                class="composer-menu-item"
+                :class="{ 'composer-menu-item-on': index === rewindIndex }"
+                @mousedown.prevent
+                @click="selectRewindCheckpoint(checkpoint)"
+              >
+                <span class="composer-menu-name">第 {{ checkpoint.turn_seq }} 回合</span>
+                <span class="composer-menu-desc">
+                  {{ checkpoint.prompt || '（无输入）' }} · {{ checkpoint.file_count }} 个文件改动
+                </span>
+              </button>
+              <div v-if="checkpoints.length === 0" class="composer-menu-empty">
+                还没有可回退的检查点。
+              </div>
+            </template>
+            <template v-else-if="rewindStage === 'mode'">
+              <div class="composer-menu-head">回退操作</div>
+              <button
+                v-for="(mode, index) in rewindModes"
+                :key="mode.value"
+                type="button"
+                class="composer-menu-item"
+                :class="{ 'composer-menu-item-on': index === rewindIndex }"
+                @mousedown.prevent
+                @click="executeRewind(mode.value)"
+              >
+                <span class="composer-menu-name">{{ mode.label }}</span>
+              </button>
+            </template>
+            <template v-else>
+              <button
+                v-for="(command, index) in filteredSlashCommands"
+                :key="command.name"
+                type="button"
+                class="composer-menu-item"
+                :class="{ 'composer-menu-item-on': index === slashIndex }"
+                @mousedown.prevent
+                @click="pickSlashCommand(command)"
+              >
+                <span class="composer-menu-name">{{ command.name }}</span>
+                <span class="composer-menu-desc">{{ command.description }}</span>
+              </button>
+              <div v-if="filteredSlashCommands.length === 0" class="composer-menu-empty">
+                没有匹配的命令。
+              </div>
+            </template>
+          </div>
           <el-input
             v-model="input"
             type="textarea"
             :autosize="{ minRows: 3, maxRows: 8 }"
             resize="none"
-            placeholder="发消息或创建任务 · /rewind 回退操作 · Shift+Enter 换行"
+            placeholder="发消息或创建任务 · / 命令 · Shift+Enter 换行"
             :disabled="!current"
-            @keydown.enter.exact.prevent="handleSend"
+            @input="onComposerInput"
+            @keydown="handleComposerKeydown"
           />
           <div class="composer-row">
             <div class="composer-hints">
@@ -701,6 +755,7 @@ import {
   updateSessionPermission,
   updateTurnStop,
   updateWorkspace,
+  type SessionCheckpoint,
 } from '@/api/assistant';
 import { getAvailableModels, type AvailableModel } from '@/api/model-admin';
 import type {
@@ -804,6 +859,27 @@ const running = computed(() => runningSessionId.value === currentId.value);
 const stopping = ref(false);
 const activeTurnSessionId = ref('');
 let stopTimer: number | undefined;
+interface SlashCommand {
+  name: string;
+  description: string;
+}
+const slashCommands: SlashCommand[] = [{ name: '/rewind', description: '回退到检查点' }];
+const slashOpen = ref(false);
+const slashQuery = ref('');
+const slashIndex = ref(0);
+const rewindStage = ref<'closed' | 'checkpoints' | 'mode'>('closed');
+const checkpoints = ref<SessionCheckpoint[]>([]);
+const rewindIndex = ref(0);
+const selectedCheckpoint = ref<SessionCheckpoint | null>(null);
+const rewindModes: Array<{ value: 'both' | 'code' | 'conversation'; label: string }> = [
+  { value: 'both', label: '回退操作（文件 + 对话）' },
+  { value: 'code', label: '只回退文件操作' },
+  { value: 'conversation', label: '只回退对话' },
+];
+const filteredSlashCommands = computed(() =>
+  slashCommands.filter((command) => command.name.slice(1).startsWith(slashQuery.value)),
+);
+const composerMenuOpen = computed(() => rewindStage.value !== 'closed' || slashOpen.value);
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
 const stepLabel = ref('1');
@@ -2087,13 +2163,153 @@ async function scrollToBottom(): Promise<void> {
   }
 }
 
+/** 输入变化：/ 开头且未进入参数时打开命令补全 */
+function onComposerInput(value: string): void {
+  if (rewindStage.value !== 'closed') {
+    return;
+  }
+  if (value.startsWith('/') && !value.includes(' ')) {
+    slashOpen.value = true;
+    slashQuery.value = value.slice(1);
+    slashIndex.value = 0;
+    return;
+  }
+  slashOpen.value = false;
+}
+
+/** 关闭所有命令菜单 */
+function closeComposerMenu(): void {
+  slashOpen.value = false;
+  rewindStage.value = 'closed';
+  selectedCheckpoint.value = null;
+}
+
+/** composer 键盘：菜单优先，其次才是发送 */
+function handleComposerKeydown(raw: Event): void {
+  if (!(raw instanceof KeyboardEvent)) {
+    return;
+  }
+  const event = raw;
+  if (event.isComposing) {
+    return;
+  }
+  if (rewindStage.value === 'mode') {
+    const modes = rewindModes.length;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      rewindIndex.value = (rewindIndex.value + 1) % modes;
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      rewindIndex.value = (rewindIndex.value - 1 + modes) % modes;
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      void executeRewind(rewindModes[rewindIndex.value].value);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      rewindStage.value = 'checkpoints';
+      rewindIndex.value = 0;
+    }
+    return;
+  }
+  if (rewindStage.value === 'checkpoints') {
+    const count = checkpoints.value.length;
+    if (event.key === 'ArrowDown' && count > 0) {
+      event.preventDefault();
+      rewindIndex.value = (rewindIndex.value + 1) % count;
+    } else if (event.key === 'ArrowUp' && count > 0) {
+      event.preventDefault();
+      rewindIndex.value = (rewindIndex.value - 1 + count) % count;
+    } else if (event.key === 'Enter' && count > 0) {
+      event.preventDefault();
+      selectRewindCheckpoint(checkpoints.value[rewindIndex.value]);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      closeComposerMenu();
+    }
+    return;
+  }
+  if (slashOpen.value) {
+    const count = filteredSlashCommands.value.length;
+    if (event.key === 'ArrowDown' && count > 0) {
+      event.preventDefault();
+      slashIndex.value = (slashIndex.value + 1) % count;
+    } else if (event.key === 'ArrowUp' && count > 0) {
+      event.preventDefault();
+      slashIndex.value = (slashIndex.value - 1 + count) % count;
+    } else if ((event.key === 'Enter' || event.key === 'Tab') && count > 0) {
+      event.preventDefault();
+      pickSlashCommand(filteredSlashCommands.value[slashIndex.value]);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      closeComposerMenu();
+    }
+    return;
+  }
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    handleSend();
+  }
+}
+
+/** 选中命令：目前只有 /rewind，直接进入检查点列表 */
+function pickSlashCommand(command: SlashCommand): void {
+  slashOpen.value = false;
+  if (command.name === '/rewind') {
+    input.value = '';
+    void openRewindStage();
+  }
+}
+
+/** 打开检查点选择 */
+async function openRewindStage(): Promise<void> {
+  if (!current.value) {
+    return;
+  }
+  if (running.value) {
+    ElMessage.warning('当前回合仍在运行，先停止或等待完成');
+    return;
+  }
+  rewindStage.value = 'checkpoints';
+  rewindIndex.value = 0;
+  checkpoints.value = await getSessionCheckpoints(currentId.value);
+}
+
+/** 选中检查点，进入回退方式选择 */
+function selectRewindCheckpoint(checkpoint: SessionCheckpoint): void {
+  selectedCheckpoint.value = checkpoint;
+  rewindStage.value = 'mode';
+  rewindIndex.value = 0;
+}
+
+/** 执行回退 */
+async function executeRewind(mode: 'both' | 'code' | 'conversation'): Promise<void> {
+  if (!current.value || selectedCheckpoint.value === null) {
+    return;
+  }
+  const checkpoint = selectedCheckpoint.value;
+  closeComposerMenu();
+  const result = await updateCheckpointRewind(currentId.value, checkpoint.id, mode);
+  if (mode !== 'code') {
+    input.value = result.prompt;
+  }
+  const modeLabel = mode === 'both' ? '文件 + 对话' : mode === 'code' ? '文件' : '对话';
+  const skipped = result.skipped.length > 0 ? `，跳过 ${result.skipped.length} 个链接文件` : '';
+  ElMessage.success(`已回退${modeLabel}：恢复 ${result.restored} 个文件操作${skipped}`);
+  await selectSession(current.value);
+}
+
 /** 发送消息：进入流式；/rewind 走命令 */
 function handleSend(): void {
   if (!current.value || !input.value.trim() || running.value) {
     return;
   }
   const content = input.value.trim();
-  if (content === '/rewind' || content.startsWith('/rewind ')) {
+  if (content === '/rewind') {
+    input.value = '';
+    void openRewindStage();
+    return;
+  }
+  if (content.startsWith('/rewind ')) {
     input.value = '';
     void runRewindCommand(content.slice('/rewind'.length).trim());
     return;
@@ -2102,31 +2318,12 @@ function handleSend(): void {
   sendContent(content);
 }
 
-/** /rewind 命令：无参数列出检查点；带参数执行回退 */
+/** /rewind 带参数：直接执行回退 */
 async function runRewindCommand(args: string): Promise<void> {
-  if (!current.value) {
-    return;
-  }
-  if (running.value) {
-    ElMessage.warning('当前回合仍在运行，先停止或等待完成');
+  if (!current.value || running.value) {
     return;
   }
   const parts = args.split(/\s+/).filter(Boolean);
-  if (parts.length === 0) {
-    const rows = await getSessionCheckpoints(currentId.value);
-    if (rows.length === 0) {
-      appendCommandOutput('还没有可回退的检查点。');
-      return;
-    }
-    const lines = rows.map(
-      (item) =>
-        `#${item.id} · 第 ${item.turn_seq} 回合 · ${item.file_count} 个文件改动\n${item.prompt || '（无输入）'}`,
-    );
-    appendCommandOutput(
-      `可回退的检查点：\n\n${lines.join('\n\n')}\n\n用法：/rewind <检查点ID> [both|code|conversation]`,
-    );
-    return;
-  }
   const checkpointId = parts[0];
   if (!/^\d+$/.test(checkpointId)) {
     appendCommandOutput('用法：/rewind [检查点ID] [both|code|conversation]');
@@ -3771,12 +3968,80 @@ onUnmounted(() => {
 }
 
 .composer {
+  position: relative;
   display: flex;
   flex: none;
   flex-direction: column;
   gap: 8px;
   padding: 12px 14px 14px;
   border-top: 1px solid var(--kb-line);
+}
+
+.composer-menu {
+  position: absolute;
+  right: 14px;
+  bottom: calc(100% + 6px);
+  left: 14px;
+  z-index: 30;
+  max-height: 340px;
+  overflow: auto;
+  border: 1px solid var(--kb-line-2);
+  background: var(--kb-bg-1);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+}
+
+.composer-menu-head {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--kb-line);
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.composer-menu-item {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 1px solid rgb(34 224 255 / 6%);
+  background: transparent;
+  color: var(--kb-text-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.composer-menu-item:last-child {
+  border-bottom: 0;
+}
+
+.composer-menu-item:hover,
+.composer-menu-item-on {
+  background: rgb(34 224 255 / 8%);
+  box-shadow: inset 2px 0 0 var(--kb-primary);
+  color: var(--kb-text-1);
+}
+
+.composer-menu-name {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+}
+
+.composer-menu-desc {
+  overflow: hidden;
+  color: var(--kb-text-3);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composer-menu-empty {
+  padding: 18px 12px;
+  color: var(--kb-text-3);
+  font-size: 12px;
+  text-align: center;
 }
 
 .composer-row {
