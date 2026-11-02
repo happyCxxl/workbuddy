@@ -55,6 +55,21 @@ class Workspace(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
+class SessionCheckpoint(Base):
+    """会话检查点：一个回合一份，files 记录文件快照清单。"""
+
+    __tablename__ = "session_checkpoint"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("ai_session.id"), index=True, nullable=False)
+    turn_seq: Mapped[int] = mapped_column(Integer, nullable=False)
+    prompt: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    files: Mapped[list[dict[str, object]]] = mapped_column(JSONB, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (Index("ix_session_checkpoint_session_turn", "session_id", "turn_seq"),)
+
+
 class AiSession(Base):
     """会话：绑定工作目录与人格版本；子会话以 parent_id 表达，删除只改 status。"""
 

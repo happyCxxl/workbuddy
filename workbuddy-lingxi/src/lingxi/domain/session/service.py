@@ -147,15 +147,22 @@ async def persona_of_session(session: AiSession) -> Persona:
 
 
 async def build_history(session_id: int, max_seq: int | None = None, skip_seq: int | None = None) -> list[ChatMessage]:
-    """事件投影：compaction 截断点之后的消息序列；max_seq 排除尾部事件，skip_seq 跳过指定一条。"""
+    """事件投影：compaction / rewind 截断后的消息序列；max_seq 排除尾部事件。"""
     events = await replay_events(session_id)
     cutoff = 0
+    rewind_start: int | None = None
+    rewind_end: int | None = None
     for event in events:
         if event.type == EventType.COMPACTION:
             cutoff = max(cutoff, cast(int, event.payload.get("cutoff_seq", 0)))
+        elif event.type == EventType.REWIND and bool(event.payload.get("apply_conversation")):
+            rewind_start = cast(int, event.payload.get("target_turn_seq", 0))
+            rewind_end = event.seq
     messages: list[ChatMessage] = []
     for event in events:
         if event.seq <= cutoff:
+            continue
+        if rewind_start is not None and rewind_end is not None and rewind_start <= event.seq <= rewind_end:
             continue
         if max_seq is not None and event.seq > max_seq:
             continue

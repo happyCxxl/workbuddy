@@ -134,6 +134,35 @@ export async function updateTurnStop(sessionId: string): Promise<{ accepted: boo
   return response.data;
 }
 
+/** 会话检查点：按回合列出可回退点 */
+export interface SessionCheckpoint {
+  id: string;
+  turn_seq: number;
+  prompt: string;
+  file_count: number;
+  created_at: string;
+}
+
+export async function getSessionCheckpoints(sessionId: string): Promise<SessionCheckpoint[]> {
+  const response = await http.get<{ checkpoints: SessionCheckpoint[] }>(
+    `/sessions/${sessionId}/checkpoints`,
+  );
+  return response.data.checkpoints;
+}
+
+/** 回退操作：code / conversation / both */
+export async function updateCheckpointRewind(
+  sessionId: string,
+  checkpointId: string,
+  mode: 'code' | 'conversation' | 'both',
+): Promise<{ restored: number; skipped: string[]; prompt: string }> {
+  const response = await http.post<{ restored: number; skipped: string[]; prompt: string }>(
+    `/sessions/${sessionId}/checkpoints/${checkpointId}/rewind`,
+    { mode },
+  );
+  return response.data;
+}
+
 /** 会话用量：调用次数与 token 汇总 */
 export async function getSessionUsage(sessionId: string): Promise<SessionUsage> {
   const response = await http.get<SessionUsage>(`/sessions/${sessionId}/usage`);

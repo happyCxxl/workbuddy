@@ -20,6 +20,7 @@ class EventType(StrEnum):
     TOOL_RESULT = "tool.result"
     PERMISSION_REQUIRED = "permission.required"
     COMPACTION = "compaction"
+    REWIND = "rewind"
     SUBSESSION = "subsession"
     SUBSESSION_STARTED = "subsession/started"
     SUBSESSION_COMPLETED = "subsession/completed"

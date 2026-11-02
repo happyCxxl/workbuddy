@@ -40,6 +40,7 @@ class ToolContext:
     state: SessionToolState | None = None
     full_access: bool = False
     cancel: asyncio.Event | None = None
+    snapshot: Callable[[str, str], Awaitable[None]] | None = None
 
     @property
     def cancelled(self) -> bool:

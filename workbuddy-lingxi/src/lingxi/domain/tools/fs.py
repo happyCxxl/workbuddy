@@ -1,5 +1,6 @@
 """文件系统工具：读/列/搜/glob/写/编辑/删；路径强制限定工作目录，已有文件“先读后写/改”。"""
 
+import asyncio
 import fnmatch
 import os
 import re
@@ -226,10 +227,32 @@ async def _fs_search(args: dict[str, object], ctx: ToolContext) -> str:
     return "\n".join([*hits, *notes]) if notes else "\n".join(hits)
 
 
+def _relative_path(work_dir: str, target: str) -> str | None:
+    """计算工作区相对路径；越界返回 None。"""
+    try:
+        relative = os.path.relpath(target, os.path.abspath(work_dir))
+    except ValueError:
+        return None
+    if relative.startswith(".."):
+        return None
+    return relative.replace(os.sep, "/")
+
+
+async def _snapshot(ctx: ToolContext, target: Path, action: str) -> None:
+    """写/改/删前登记检查点快照；工作区外或未启用检查点时跳过。"""
+    if ctx.snapshot is None:
+        return
+    relative = await asyncio.to_thread(_relative_path, ctx.work_dir, str(target))
+    if relative is None:
+        return
+    await ctx.snapshot(action, relative)
+
+
 async def _fs_write(args: dict[str, object], ctx: ToolContext) -> str:
     target = _resolve(ctx.work_dir, str(args["path"]), write=True, allow_outside=ctx.full_access)
     _require_read(ctx, target, "写入")
     content = str(args["content"])
+    await _snapshot(ctx, target, "write")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
     _mark_read(ctx, target)
@@ -253,6 +276,7 @@ async def _fs_edit(args: dict[str, object], ctx: ToolContext) -> str:
     if count > 1 and not replace_all:
         raise ValueError(f"old_string 出现 {count} 次，不唯一；请提供更多上下文使其唯一，或设置 replace_all=true")
     updated = content.replace(old_string, new_string) if replace_all else content.replace(old_string, new_string, 1)
+    await _snapshot(ctx, target, "edit")
     target.write_text(updated, encoding="utf-8")
     _mark_read(ctx, target)
     return f"已替换 {count if replace_all else 1} 处 → {args['path']}；可回读校验"
@@ -264,6 +288,7 @@ async def _fs_delete(args: dict[str, object], ctx: ToolContext) -> str:
         raise IsADirectoryError(f"是目录：{args['path']}（fs_delete 只删文件；列目录请用 fs_list）")
     if not target.exists():
         raise FileNotFoundError(f"文件不存在：{args['path']}（先用 fs_list 确认文件名）")
+    await _snapshot(ctx, target, "delete")
     target.unlink()
     return f"已删除 {args['path']}"
 

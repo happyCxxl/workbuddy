@@ -18,6 +18,7 @@ from lingxi.core.events import TurnEvent
 from lingxi.core.hooks import HookRegistry, TurnContext, make_budget_gate, make_max_steps_gate
 from lingxi.core.log import EventType, append_event
 from lingxi.core.prompts import load_prompt, render_prompt
+from lingxi.domain.checkpoint.service import create_checkpoint, snapshot_file
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.memory.embedding import Embedder
 from lingxi.domain.memory.service import recall
@@ -157,6 +158,11 @@ class TurnRunner:
             yield start_event
             yield await self._emit(session_id, EventType.USER_MESSAGE, {"content": user_content})
             turn_seq = cast(int, start_event.payload["seq"])
+            checkpoint_id: int | None = None
+            try:
+                checkpoint_id = await create_checkpoint(session_id, turn_seq, user_content)
+            except Exception:  # noqa: BLE001 检查点失败不阻断主流程
+                logger.exception("创建检查点失败")
             async for event in self._steps(
                 session_id,
                 session.user_id,
@@ -169,6 +175,7 @@ class TurnRunner:
                 session.permission_preset,
                 session.kind,
                 control,
+                checkpoint_id,
             ):
                 yield event
         except PendingApproval:
@@ -265,6 +272,7 @@ class TurnRunner:
         preset: str,
         kind: str,
         control: TurnControl,
+        checkpoint_id: int | None = None,
     ) -> AsyncIterator[TurnEvent]:
         step = step_start
         while True:
@@ -336,7 +344,16 @@ class TurnRunner:
                     if control.cancelled:
                         break
                     async for event in self._execute_tool(
-                        session_id, turn_seq, step, call, work_dir, user_content, preset, kind, control
+                        session_id,
+                        turn_seq,
+                        step,
+                        call,
+                        work_dir,
+                        user_content,
+                        preset,
+                        kind,
+                        control,
+                        checkpoint_id,
                     ):
                         yield event
                 if control.cancelled:
@@ -381,6 +398,7 @@ class TurnRunner:
         preset: str,
         kind: str,
         control: TurnControl,
+        checkpoint_id: int | None = None,
         preapproved: bool = False,
     ) -> AsyncIterator[TurnEvent]:
         """执行一步工具：pre-execute 钩子 fail-closed；权限门裁决（allow 执行 / deny 拒绝 / ask 挂起）。"""
@@ -458,6 +476,11 @@ class TurnRunner:
             raw_args = (
                 cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
             )
+
+            async def _snapshot(action: str, path: str) -> None:
+                if checkpoint_id is not None:
+                    await snapshot_file(checkpoint_id, work_dir, path, action)
+
             output = await tool.handler(
                 raw_args,
                 ToolContext(
@@ -465,6 +488,7 @@ class TurnRunner:
                     self._tool_states.setdefault(session_id, SessionToolState()),
                     preset == "full-access",
                     control.event,
+                    _snapshot,
                 ),
             )
             yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "result": output})
