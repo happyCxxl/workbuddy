@@ -883,7 +883,6 @@ const stopping = ref(false);
 const activeTurnSessionId = ref('');
 let stopTimer: number | undefined;
 let skillTimer: number | undefined;
-let queueTimer: number | undefined;
 const queueItems = ref<QueueItem[]>([]);
 interface SlashCommand {
   name: string;
@@ -1850,6 +1849,10 @@ function replayTools(payload: Record<string, unknown>): ToolLine[] {
 function applyReplayEvent(event: SessionEventItem): void {
   const payload = event.payload;
   if (event.type === 'user/message') {
+    const queueId = payload['queue_id'];
+    if (queueId !== undefined && queueId !== null) {
+      queueItems.value = queueItems.value.filter((item) => item.id !== String(queueId));
+    }
     messages.value.push({
       role: 'user',
       text: String(payload['content'] ?? ''),
@@ -2363,7 +2366,7 @@ async function interruptAndSend(): Promise<void> {
     return;
   }
   input.value = '';
-  await addSessionQueue(currentId.value, content);
+  await queueCurrent(content);
   await handleStop();
 }
 
@@ -2566,9 +2569,12 @@ async function queueCurrent(content: string): Promise<void> {
   if (!currentId.value) {
     return;
   }
-  await addSessionQueue(currentId.value, content);
+  const created = await addSessionQueue(currentId.value, content);
+  queueItems.value = [
+    ...queueItems.value,
+    { id: created.id, content, created_at: new Date().toISOString() },
+  ];
   input.value = '';
-  await refreshQueue();
 }
 
 /** 回合结束后自动发送队列中的下一条 */
@@ -2576,7 +2582,6 @@ async function drainQueue(): Promise<void> {
   if (running.value || !currentId.value) {
     return;
   }
-  await refreshQueue();
   const next = queueItems.value.at(0);
   if (next === undefined) {
     return;
@@ -2864,11 +2869,6 @@ onMounted(async () => {
   skillTimer = window.setInterval(() => {
     void refreshSkills();
   }, 2000);
-  queueTimer = window.setInterval(() => {
-    if (running.value || queueItems.value.length > 0) {
-      void refreshQueue();
-    }
-  }, 1500);
   if (currentId.value) {
     await loadSubSessions();
   }
@@ -2879,10 +2879,6 @@ onUnmounted(() => {
   if (skillTimer !== undefined) {
     window.clearInterval(skillTimer);
     skillTimer = undefined;
-  }
-  if (queueTimer !== undefined) {
-    window.clearInterval(queueTimer);
-    queueTimer = undefined;
   }
 });
 </script>
