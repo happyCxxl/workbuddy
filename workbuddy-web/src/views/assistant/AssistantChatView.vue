@@ -2865,8 +2865,10 @@ onMounted(async () => {
     void refreshSkills();
   }, 2000);
   queueTimer = window.setInterval(() => {
-    void refreshQueue();
-  }, 1000);
+    if (running.value || queueItems.value.length > 0) {
+      void refreshQueue();
+    }
+  }, 1500);
   if (currentId.value) {
     await loadSubSessions();
   }
