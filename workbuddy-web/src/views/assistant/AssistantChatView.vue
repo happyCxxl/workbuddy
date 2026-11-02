@@ -2091,6 +2091,10 @@ const turnMeta = computed<Partial<Record<number, TurnUsage>>>(() => {
       continue;
     }
     if (event.type === 'assistant/message' && current !== null) {
+      const model = event.payload['model'];
+      if (typeof model === 'string' && model) {
+        result[current.seq]?.models.add(model);
+      }
       const rawUsage = event.payload['usage'];
       if (rawUsage !== null && typeof rawUsage === 'object') {
         const usage = rawUsage as Record<string, unknown>;

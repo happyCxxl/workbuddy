@@ -340,6 +340,7 @@ class TurnRunner:
             content_parts: list[str] = []
             reasoning_parts: list[str] = []
             usage = None
+            model_name = ""
             request = ChatRequest(messages=messages, tools=self._tools.specs(), model_id=model_id)
             async for chunk in self._gateway.stream(request):
                 if control.cancelled:
@@ -354,6 +355,7 @@ class TurnRunner:
                     tool_calls.extend(chunk.tool_calls)
                 elif chunk.kind == "usage":
                     usage = chunk.usage
+                    model_name = chunk.model
             usage_data = usage.model_dump() if usage is not None else None
             if control.cancelled:
                 content = "".join(content_parts)
@@ -367,6 +369,7 @@ class TurnRunner:
                             "reasoning_content": reasoning or None,
                             "interrupted": True,
                             "usage": usage_data,
+                            "model": model_name or None,
                         },
                     )
                 yield await self._emit(
@@ -382,6 +385,7 @@ class TurnRunner:
                         "reasoning_content": "".join(reasoning_parts) or None,
                         "tool_calls": [{"id": c.id, "name": c.name, "arguments": c.arguments} for c in tool_calls],
                         "usage": usage_data,
+                        "model": model_name or None,
                     },
                 )
                 for call in tool_calls:

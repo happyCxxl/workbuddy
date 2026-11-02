@@ -61,6 +61,7 @@ class LlmGateway:
                     async for chunk in adapter.stream(request):
                         if chunk.kind == "usage":
                             usage = chunk.usage
+                            chunk = chunk.model_copy(update={"model": model})
                         emitted = True
                         yield chunk
                     breaker.record_success()
@@ -163,6 +164,7 @@ class LlmGateway:
                     )
                     label = f"{meta.get('vendor') or 'unknown'}/{meta.get('model_key') or 'unknown'}"
                     await self._record(label, usage, self._elapsed_ms(started), None)
+                    yield StreamChunk(kind="usage", usage=usage, tool_calls=[], model=label)
                     continue
                 if item["type"] != "chunk":
                     continue

@@ -58,6 +58,7 @@ class StreamChunk(BaseModel):
     text: str = ""
     tool_calls: list[ToolCall]
     usage: Usage | None = None
+    model: str = ""
 
 
 class LlmPort(Protocol):
