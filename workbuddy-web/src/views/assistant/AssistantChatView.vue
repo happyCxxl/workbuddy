@@ -2090,6 +2090,24 @@ const turnMeta = computed<Partial<Record<number, TurnUsage>>>(() => {
       result[event.seq] = empty();
       continue;
     }
+    if (event.type === 'assistant/message' && current !== null) {
+      const rawUsage = event.payload['usage'];
+      if (rawUsage !== null && typeof rawUsage === 'object') {
+        const usage = rawUsage as Record<string, unknown>;
+        const previous = eventUsage[current.seq] ?? {
+          prompt: 0,
+          completion: 0,
+          cacheHit: 0,
+          cacheMiss: 0,
+        };
+        eventUsage[current.seq] = {
+          prompt: previous.prompt + Number(usage['prompt_tokens'] ?? 0),
+          completion: previous.completion + Number(usage['completion_tokens'] ?? 0),
+          cacheHit: previous.cacheHit + Number(usage['prompt_cache_hit_tokens'] ?? 0),
+          cacheMiss: previous.cacheMiss + Number(usage['prompt_cache_miss_tokens'] ?? 0),
+        };
+      }
+    }
     if (event.type === 'turn.end' && current !== null) {
       current.end = Date.parse(event.created_at);
       const entry = result[current.seq] ?? empty();

@@ -354,6 +354,7 @@ class TurnRunner:
                     tool_calls.extend(chunk.tool_calls)
                 elif chunk.kind == "usage":
                     usage = chunk.usage
+            usage_data = usage.model_dump() if usage is not None else None
             if control.cancelled:
                 content = "".join(content_parts)
                 reasoning = "".join(reasoning_parts)
@@ -365,6 +366,7 @@ class TurnRunner:
                             "content": content,
                             "reasoning_content": reasoning or None,
                             "interrupted": True,
+                            "usage": usage_data,
                         },
                     )
                 yield await self._emit(
@@ -379,6 +381,7 @@ class TurnRunner:
                         "content": "".join(content_parts),
                         "reasoning_content": "".join(reasoning_parts) or None,
                         "tool_calls": [{"id": c.id, "name": c.name, "arguments": c.arguments} for c in tool_calls],
+                        "usage": usage_data,
                     },
                 )
                 for call in tool_calls:
@@ -408,7 +411,11 @@ class TurnRunner:
             yield await self._emit(
                 session_id,
                 EventType.ASSISTANT_MESSAGE,
-                {"content": "".join(content_parts), "reasoning_content": "".join(reasoning_parts) or None},
+                {
+                    "content": "".join(content_parts),
+                    "reasoning_content": "".join(reasoning_parts) or None,
+                    "usage": usage_data,
+                },
             )
             post = TurnContext(
                 session_id=session_id,
