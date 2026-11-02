@@ -1,14 +1,14 @@
 """权限：三档预设、高危恒询问与审批停车/一次性恢复。"""
 
+from collections.abc import AsyncIterator
 from pathlib import Path
 
 import pytest
 from conftest import FakeEmbedder, db_up
 
 from lingxi.app.config import Settings
-from lingxi.contract import ApiError
 from lingxi.core.hooks import HookRegistry
-from lingxi.core.loop import TurnRunner
+from lingxi.core.loop import TurnEvent, TurnRunner
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.permission.gate import PermissionGate
 from lingxi.domain.ports import ChatRequest, StreamChunk, ToolCall, Usage
@@ -47,6 +47,19 @@ def make_runner(settings: Settings, preset: str) -> TurnRunner:
         make_registry(),
         PermissionGate(),
     )
+
+
+async def run_until_permission(
+    runner: TurnRunner, session_id: int, content: str
+) -> tuple[AsyncIterator[TurnEvent], list[TurnEvent], str]:
+    """驱动回合直到审批事件；返回仍在等待的生成器、已收事件与 request_id。"""
+    stream = runner.run(session_id, content)
+    events: list[TurnEvent] = []
+    async for event in stream:
+        events.append(event)
+        if event.type == "permission.required":
+            return stream, events, str(event.payload["request_id"])
+    raise AssertionError("回合未进入审批")
 
 
 @pytest.mark.usefixtures("engine_fixture")
@@ -98,19 +111,15 @@ async def test_ask_pause_and_resume_allowed_once(
     target.write_text("待删除", encoding="utf-8")
     runner = make_runner(settings, "workspace-write")
     sid = await create_session(work_dir, "审批恢复", "workspace-write")
-    events = [event async for event in runner.run(sid, "tool_delete")]
-    required = [e for e in events if e.type == "permission.required"][0]
-    request_id = str(required.payload["request_id"])
-    assert events[-1].type == "turn.paused"
-    assert events[-1].payload.get("status") == "approval"
+    stream, events, request_id = await run_until_permission(runner, sid, "tool_delete")
+    assert events[-1].type == "permission.required"
     assert target.exists()
-    resumed: list[object] = []
-    async for event in runner.resume(sid, request_id, "allowed-once"):
-        resumed.append(event)
+    assert await runner.resolve_approval(sid, request_id, "allowed-once") is True
+    async for event in stream:
+        events.append(event)
         if event.type == "tool.result":
             break
-    assert resumed[0].type == "permission/decided"
-    assert any(e.type == "tool.result" and "已删除" in str(e.payload.get("result")) for e in resumed)
+    assert any(e.type == "tool.result" and "已删除" in str(e.payload.get("result")) for e in events)
     assert not target.exists()
 
 
@@ -169,13 +178,13 @@ async def test_parallel_batch_survives_approval(
         PermissionGate(),
     )
     sid = await create_session(str(tmp_path), "并行审批", "workspace-write")
-    events = [event async for event in runner.run(sid, "删文件再列目录")]
-    required = [e for e in events if e.type == "permission.required"][0]
-    assert events[-1].type == "turn.paused"
+    stream, events, request_id = await run_until_permission(runner, sid, "删文件再列目录")
+    assert events[-1].type == "permission.required"
+    assert await runner.resolve_approval(sid, request_id, "allowed-once") is True
+    async for event in stream:
+        events.append(event)
 
-    resumed = [event async for event in runner.resume(sid, str(required.payload["request_id"]), "allowed-once")]
-
-    results = [e for e in resumed if e.type == "tool.result"]
+    results = [e for e in events if e.type == "tool.result"]
     assert {e.payload.get("tool_call_id") for e in results} == {"call_delete", "call_list"}
     assert not target.exists()
     second = gateway.requests[1]
@@ -211,9 +220,11 @@ async def test_cancel_pending_writes_skipped_results(
         PermissionGate(),
     )
     sid = await create_session(str(tmp_path), "取消审批", "workspace-write")
-    _ = [event async for event in runner.run(sid, "删文件")]
+    stream, _, _ = await run_until_permission(runner, sid, "删文件")
 
-    assert await runner.cancel_pending(sid) is True
+    assert runner.request_stop(sid) is True
+    async for _event in stream:
+        pass
     history = await build_history(sid)
     tool_messages = [message for message in history if message.role == "tool"]
     assert [message.tool_call_id for message in tool_messages] == ["call_delete"]
@@ -230,14 +241,13 @@ async def test_resume_rejected(fake_server: tuple[Settings, list[dict[str, objec
     target.write_text("保留", encoding="utf-8")
     runner = make_runner(settings, "workspace-write")
     sid = await create_session(work_dir, "裁决拒绝", "workspace-write")
-    events = [event async for event in runner.run(sid, "tool_delete")]
-    request_id = str([e for e in events if e.type == "permission.required"][0].payload["request_id"])
-    resumed: list[object] = []
-    async for event in runner.resume(sid, request_id, "rejected"):
-        resumed.append(event)
+    stream, events, request_id = await run_until_permission(runner, sid, "tool_delete")
+    assert await runner.resolve_approval(sid, request_id, "rejected") is True
+    async for event in stream:
+        events.append(event)
         if event.type == "tool.result":
             break
-    assert any(e.type == "tool.result" and "用户拒绝" in str(e.payload.get("error")) for e in resumed)
+    assert any(e.type == "tool.result" and "用户拒绝" in str(e.payload.get("error")) for e in events)
     assert target.exists()
 
 
@@ -249,7 +259,4 @@ async def test_resume_unknown_request(fake_server: tuple[Settings, list[dict[str
     settings, _ = fake_server
     runner = make_runner(settings, "workspace-write")
     sid = await create_session(str(tmp_path), "未知审批", "workspace-write")
-    with pytest.raises(ApiError) as exc_info:
-        async for _event in runner.resume(sid, "no-such-id", "allowed-once"):
-            pass
-    assert exc_info.value.error.code == 60002
+    assert await runner.resolve_approval(sid, "no-such-id", "allowed-once") is False

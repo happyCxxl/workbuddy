@@ -58,18 +58,17 @@ def make_router(runner: TurnRunner) -> APIRouter:
         return _sse(runner.run(session_id, request.content, request.retry_of, request.skill, request.queue_id))
 
     @router.post("/sessions/{session_id}/turns/resume")
-    async def resume_turn(session_id: int, request: ResumeRequest, user: CurrentUserDep) -> StreamingResponse:
-        """审批裁决后恢复重放：SSE 续流，末尾 DONE。"""
+    async def resume_turn(session_id: int, request: ResumeRequest, user: CurrentUserDep) -> dict[str, object]:
+        """审批裁决：把结果交给仍在等待的回合，不新开事件流。"""
         await get_session(session_id, user.id)
-        return _sse(runner.resume(session_id, request.request_id, request.outcome))
+        accepted = await runner.resolve_approval(session_id, request.request_id, request.outcome)
+        return R.ok({"accepted": accepted}).to_dict()
 
     @router.post("/sessions/{session_id}/turns/stop")
     async def stop_turn(session_id: int, user: CurrentUserDep) -> dict[str, object]:
-        """申请停止当前回合：活动回合置取消信号，审批挂起补未执行结果。"""
+        """申请停止当前回合：等待审批的工具会收到取消。"""
         await get_session(session_id, user.id)
         accepted = runner.request_stop(session_id)
-        if not accepted:
-            accepted = await runner.cancel_pending(session_id)
         return R.ok({"accepted": accepted}).to_dict()
 
     return router

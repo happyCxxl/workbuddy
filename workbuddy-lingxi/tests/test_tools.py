@@ -260,7 +260,7 @@ async def test_loop_delete_asks_and_pauses(
     engine_fixture: None,
     tmp_path: Path,
 ) -> None:
-    """高危删除触发询问：permission.required + 回合 pending_stop 停车，文件保留。"""
+    """高危删除触发询问：permission.required 后原地等待，停止时补结果。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
@@ -277,8 +277,15 @@ async def test_loop_delete_asks_and_pauses(
     )
     runner = TurnRunner(small, LlmGateway(settings), HookRegistry(), FakeEmbedder(), make_registry(), PermissionGate())
     sid = await create_session(work_dir, "删除工具询问")
-    events = [event async for event in runner.run(sid, "tool_delete")]
-    assert any(e.type == "permission.required" for e in events)
-    assert events[-1].type == "turn.paused"
-    assert events[-1].payload.get("status") == "approval"
+    stream = runner.run(sid, "tool_delete")
+    events = []
+    async for event in stream:
+        events.append(event)
+        if event.type == "permission.required":
+            break
+    assert events[-1].type == "permission.required"
     assert (tmp_path / "hello.txt").exists()
+    assert runner.request_stop(sid) is True
+    async for event in stream:
+        events.append(event)
+    assert any(e.type == "turn.end" and e.payload.get("status") == "interrupted" for e in events)

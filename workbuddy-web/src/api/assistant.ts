@@ -444,28 +444,14 @@ export function addTurnStream(
 }
 
 /** 审批裁决后恢复重放（SSE 续流） */
-export function addTurnResume(
+export async function addTurnResume(
   sessionId: string,
   requestId: string,
   outcome: 'allowed-once' | 'rejected',
-  handlers: TurnStreamHandlers,
-): AbortController {
-  const controller = new AbortController();
-  void (async () => {
-    try {
-      const response = await fetch(`/sessions/${sessionId}/turns/resume`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
-        body: JSON.stringify({ request_id: requestId, outcome }),
-        credentials: 'include',
-        signal: controller.signal,
-      });
-      await readSseFrames(response, handlers);
-    } catch (error) {
-      if (!controller.signal.aborted) {
-        handlers.onError(error instanceof Error ? error.message : '恢复请求失败');
-      }
-    }
-  })();
-  return controller;
+): Promise<boolean> {
+  const response = await http.post<{ accepted: boolean }>(`/sessions/${sessionId}/turns/resume`, {
+    request_id: requestId,
+    outcome,
+  });
+  return response.data.accepted;
 }

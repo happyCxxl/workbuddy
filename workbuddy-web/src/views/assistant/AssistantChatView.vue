@@ -2863,25 +2863,29 @@ function stopSubPolling(): void {
 }
 
 /** 裁决后恢复重放 */
-function decidePermission(item: ChatMessage, outcome: 'allowed-once' | 'rejected'): void {
+async function decidePermission(
+  item: ChatMessage,
+  outcome: 'allowed-once' | 'rejected',
+): Promise<void> {
   const permission = item.permission;
   if (!permission) {
     return;
   }
   item.permission = undefined;
-  runningSessionId.value = currentId.value;
-  activeTurnSessionId.value = currentId.value;
-  abortController = addTurnResume(currentId.value, permission.request_id, outcome, {
-    onEvent: applyEvent,
-    onDone: () => {
-      finishTurn();
-      void loadUsage();
-    },
-    onError: (message) => {
-      finishTurn();
-      ElMessage.error(message);
-    },
-  });
+  approvalPending.value = false;
+  try {
+    const accepted = await addTurnResume(currentId.value, permission.request_id, outcome);
+    if (!accepted) {
+      ElMessage.warning('审批已失效，请刷新会话');
+      if (current.value) {
+        await selectSession(current.value);
+      }
+    }
+  } catch {
+    item.permission = permission;
+    approvalPending.value = true;
+    ElMessage.error('审批提交失败，请重试');
+  }
 }
 
 /** 切换本会话权限档：完全权限需二次确认（对齐 DSH 的风险确认） */

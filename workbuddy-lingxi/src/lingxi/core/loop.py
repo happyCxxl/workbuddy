@@ -22,7 +22,7 @@ from lingxi.domain.checkpoint.service import create_checkpoint, snapshot_file
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.memory.embedding import Embedder
 from lingxi.domain.memory.service import recall
-from lingxi.domain.permission.gate import PendingApproval, PermissionGate
+from lingxi.domain.permission.gate import PermissionGate
 from lingxi.domain.persona.engine import render_system_prompt
 from lingxi.domain.persona.models import Persona
 from lingxi.domain.ports import ChatMessage, ChatRequest, ToolCall
@@ -58,19 +58,6 @@ def _estimate_tokens(messages: list[ChatMessage]) -> int:
     return sum(len(m.content) for m in messages) // 4
 
 
-@dataclass
-class PendingBatch:
-    """审批挂起批次：保存完整 tool_calls、当前下标与调用事件状态。"""
-
-    turn_seq: int
-    step: int
-    calls: list[ToolCall]
-    next_index: int
-    work_dir: str
-    user_content: str
-    call_emitted: bool = True
-
-
 class TurnRunner:
     """回合执行器：同会话一次一个回合（串行锁）；支持停车申请与审批恢复（v1 只停止不回退）。"""
 
@@ -91,7 +78,7 @@ class TurnRunner:
         self._permission = permission
         self._locks: dict[int, asyncio.Lock] = {}
         self._active_turns: dict[int, TurnControl] = {}
-        self._pending: dict[tuple[int, str], PendingBatch] = {}
+        self._approvals: dict[tuple[int, str], asyncio.Future[str]] = {}
         # 会话级工具状态：已读文件集合（读前写/改门禁）
         self._tool_states: dict[int, SessionToolState] = {}
         self._hooks.register(
@@ -100,7 +87,7 @@ class TurnRunner:
         self._hooks.register("pre_step", make_max_steps_gate(settings.loop.max_steps))
 
     def request_stop(self, session_id: int) -> bool:
-        """申请停止当前活动回合；审批挂起由 cancel_pending 处理。"""
+        """申请停止当前活动回合；审批等待由 control 事件取消。"""
         control = self._active_turns.get(session_id)
         if control is None:
             return False
@@ -108,32 +95,35 @@ class TurnRunner:
         control.event.set()
         return True
 
-    async def cancel_pending(self, session_id: int) -> bool:
-        """停止审批挂起：为未执行调用补显式结果并结束回合。"""
-        keys = [key for key in self._pending if key[0] == session_id]
-        if not keys:
+    async def resolve_approval(self, session_id: int, request_id: str, outcome: str) -> bool:
+        """把用户的审批结果交给正在等待的工具调用；不新开事件流。"""
+        future = self._approvals.get((session_id, request_id))
+        if future is None or future.done():
             return False
-        for key in keys:
-            batch = self._pending.pop(key, None)
-            if batch is None:
-                continue
-            for call in batch.calls[batch.next_index :]:
-                await self._emit(
-                    session_id,
-                    EventType.TOOL_RESULT,
-                    {"name": call.name, "error": "审批未完成，调用已取消", "tool_call_id": call.id},
-                )
-                await self._emit(
-                    session_id,
-                    EventType.TOOL_MESSAGE,
-                    {
-                        "tool_call_id": call.id,
-                        "name": call.name,
-                        "content": f"工具 {call.name} 未执行：审批未完成",
-                    },
-                )
-            await self._emit(session_id, EventType.TURN_END, {"status": "interrupted", "reason": "user"})
+        future.set_result(outcome)
         return True
+
+    async def _await_approval(
+        self,
+        session_id: int,
+        request_id: str,
+        future: asyncio.Future[str],
+        control: TurnControl,
+    ) -> str | None:
+        """原地等待审批；停止信号优先，返回 None 表示取消。"""
+        cancel_wait = asyncio.create_task(control.event.wait())
+        try:
+            done, _ = await asyncio.wait({future, cancel_wait}, return_when=asyncio.FIRST_COMPLETED)
+        finally:
+            cancel_wait.cancel()
+            self._approvals.pop((session_id, request_id), None)
+        if control.cancelled:
+            if not future.done():
+                future.cancel()
+            return None
+        if future in done and not future.cancelled():
+            return future.result()
+        return None
 
     async def run(
         self,
@@ -150,19 +140,6 @@ class TurnRunner:
             self._active_turns[session_id] = control
             try:
                 async for event in self._run_locked(session_id, user_content, retry_of, control, skill, queue_id):
-                    yield event
-            finally:
-                if self._active_turns.get(session_id) is control:
-                    self._active_turns.pop(session_id, None)
-
-    async def resume(self, session_id: int, request_id: str, outcome: str) -> AsyncIterator[TurnEvent]:
-        """审批裁决后恢复重放：allowed-once 执行该工具，rejected 记拒绝结果，然后继续循环。"""
-        lock = self._locks.setdefault(session_id, asyncio.Lock())
-        async with lock:
-            control = TurnControl()
-            self._active_turns[session_id] = control
-            try:
-                async for event in self._resume_locked(session_id, request_id, outcome, control):
                     yield event
             finally:
                 if self._active_turns.get(session_id) is control:
@@ -227,95 +204,12 @@ class TurnRunner:
                 skill_text,
             ):
                 yield event
-        except PendingApproval as exc:
-            yield await self._emit(
-                session_id,
-                EventType.TURN_PAUSED,
-                {"request_id": exc.request_id, "status": "approval"},
-            )
         except ApiError as exc:
             yield await self._emit(session_id, EventType.ERROR, {"code": exc.error.code, "message": str(exc)})
             yield await self._emit(session_id, EventType.TURN_END, {"status": "aborted"})
             raise
         except Exception as exc:
             logger.exception("回合异常")
-            yield await self._emit(session_id, EventType.ERROR, {"message": str(exc)})
-            yield await self._emit(session_id, EventType.TURN_END, {"status": "error"})
-            raise
-
-    async def _resume_locked(
-        self, session_id: int, request_id: str, outcome: str, control: TurnControl | None = None
-    ) -> AsyncIterator[TurnEvent]:
-        control = control or TurnControl()
-        batch = self._pending.pop((session_id, request_id), None)
-        if batch is None:
-            raise ApiError(ErrorCode.NOT_FOUND, f"审批请求不存在或已裁决：{request_id}")
-        SESSION_ID.set(session_id)
-        try:
-            yield await self._emit(
-                session_id, EventType.PERMISSION_DECIDED, {"request_id": request_id, "outcome": outcome}
-            )
-            session = await get_session(session_id)
-            persona = await persona_of_session(session) if session.kind == "chat" else None
-            current = batch.calls[batch.next_index]
-            async for event in self._execute_tool(
-                session_id,
-                batch.turn_seq,
-                batch.step,
-                current,
-                batch.work_dir,
-                batch.user_content,
-                session.permission_preset,
-                session.kind,
-                control,
-                calls=batch.calls,
-                call_index=batch.next_index,
-                emit_call=False,
-                approved_outcome=outcome,
-            ):
-                yield event
-            for index in range(batch.next_index + 1, len(batch.calls)):
-                async for event in self._execute_tool(
-                    session_id,
-                    batch.turn_seq,
-                    batch.step,
-                    batch.calls[index],
-                    batch.work_dir,
-                    batch.user_content,
-                    session.permission_preset,
-                    session.kind,
-                    control,
-                    calls=batch.calls,
-                    call_index=index,
-                    emit_call=True,
-                ):
-                    yield event
-            async for event in self._steps(
-                session_id,
-                session.user_id,
-                session.model_id,
-                batch.turn_seq,
-                persona,
-                batch.work_dir,
-                batch.user_content,
-                batch.step,
-                session.permission_preset,
-                session.kind,
-                control,
-            ):
-                yield event
-        except PendingApproval as exc:
-            yield await self._emit(
-                session_id,
-                EventType.TURN_PAUSED,
-                {"request_id": exc.request_id, "status": "approval"},
-            )
-        except ApiError as exc:
-            yield await self._emit(session_id, EventType.ERROR, {"code": exc.error.code, "message": str(exc)})
-            yield await self._emit(session_id, EventType.TURN_END, {"status": "aborted"})
-            raise
-        except Exception as exc:
-            logger.exception("回合恢复异常")
             yield await self._emit(session_id, EventType.ERROR, {"message": str(exc)})
             yield await self._emit(session_id, EventType.TURN_END, {"status": "error"})
             raise
@@ -622,21 +516,46 @@ class TurnRunner:
                     )
                     return
                 request_id = uuid4().hex
-                self._pending[(session_id, request_id)] = PendingBatch(
-                    turn_seq=turn_seq,
-                    step=step,
-                    calls=calls if calls is not None else [call],
-                    next_index=call_index,
-                    work_dir=work_dir,
-                    user_content=user_content,
-                    call_emitted=emit_call,
-                )
+                future: asyncio.Future[str] = asyncio.get_running_loop().create_future()
+                self._approvals[(session_id, request_id)] = future
                 yield await self._emit(
                     session_id,
                     EventType.PERMISSION_REQUIRED,
                     {"request_id": request_id, "name": call.name, "reason": decision.reason},
                 )
-                raise PendingApproval(request_id)
+                outcome = await self._await_approval(session_id, request_id, future, control)
+                if outcome is None:
+                    yield await self._emit(
+                        session_id,
+                        EventType.TOOL_RESULT,
+                        {"name": call.name, "error": "审批已取消，调用未执行", "tool_call_id": call.id},
+                    )
+                    yield await self._emit(
+                        session_id,
+                        EventType.TOOL_MESSAGE,
+                        {
+                            "tool_call_id": call.id,
+                            "name": call.name,
+                            "content": f"工具 {call.name} 未执行：审批已取消",
+                        },
+                    )
+                    return
+                if outcome == "rejected":
+                    yield await self._emit(
+                        session_id,
+                        EventType.TOOL_RESULT,
+                        {"name": call.name, "error": "用户拒绝", "tool_call_id": call.id},
+                    )
+                    yield await self._emit(
+                        session_id,
+                        EventType.TOOL_MESSAGE,
+                        {
+                            "tool_call_id": call.id,
+                            "name": call.name,
+                            "content": f"工具 {call.name} 被用户拒绝",
+                        },
+                    )
+                    return
         try:
             raw_args = (
                 cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
