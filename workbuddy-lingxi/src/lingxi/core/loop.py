@@ -33,6 +33,7 @@ from lingxi.domain.session.service import (
     get_session,
     persona_of_session,
 )
+from lingxi.domain.skills.service import find_skill
 from lingxi.domain.tools.registry import SessionToolState, ToolContext, ToolRegistry
 
 logger = logging.getLogger(__name__)
@@ -107,14 +108,16 @@ class TurnRunner:
         control.event.set()
         return True
 
-    async def run(self, session_id: int, user_content: str, retry_of: int | None = None) -> AsyncIterator[TurnEvent]:
+    async def run(
+        self, session_id: int, user_content: str, retry_of: int | None = None, skill: str | None = None
+    ) -> AsyncIterator[TurnEvent]:
         """跑一个回合：产出与日志同构的事件流；异常路径补齐 error 与 turn/end 后上抛。"""
         lock = self._locks.setdefault(session_id, asyncio.Lock())
         async with lock:
             control = TurnControl()
             self._active_turns[session_id] = control
             try:
-                async for event in self._run_locked(session_id, user_content, retry_of, control):
+                async for event in self._run_locked(session_id, user_content, retry_of, control, skill):
                     yield event
             finally:
                 if self._active_turns.get(session_id) is control:
@@ -139,9 +142,16 @@ class TurnRunner:
         user_content: str,
         retry_of: int | None = None,
         control: TurnControl | None = None,
+        skill: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         control = control or TurnControl()
         session = await get_session(session_id)
+        skill_text: str | None = None
+        if skill:
+            found = find_skill(session.work_dir, skill)
+            if found is None:
+                raise ApiError(ErrorCode.NOT_FOUND, f"技能不存在：{skill}")
+            skill_text = f'<skill name="{found.name}">\n{found.body}\n</skill>'
         # 子会话是任务执行器：不绑人格、不注入记忆；对话会话照旧
         persona = await persona_of_session(session) if session.kind == "chat" else None
         if session.kind == "chat":
@@ -176,6 +186,7 @@ class TurnRunner:
                 session.kind,
                 control,
                 checkpoint_id,
+                skill_text,
             ):
                 yield event
         except PendingApproval:
@@ -273,12 +284,20 @@ class TurnRunner:
         kind: str,
         control: TurnControl,
         checkpoint_id: int | None = None,
+        skill_text: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         step = step_start
         while True:
             step += 1
             messages = await self._assemble(
-                session_id, user_id, persona, work_dir, user_content, turn_seq, first=step == 1
+                session_id,
+                user_id,
+                persona,
+                work_dir,
+                user_content,
+                turn_seq,
+                first=step == 1,
+                skill_text=skill_text,
             )
             ctx = TurnContext(
                 session_id=session_id,
@@ -291,7 +310,14 @@ class TurnRunner:
             if ctx.payload.get("compact"):
                 await compact_history(session_id)
                 messages = await self._assemble(
-                    session_id, user_id, persona, work_dir, user_content, turn_seq, first=step == 1
+                    session_id,
+                    user_id,
+                    persona,
+                    work_dir,
+                    user_content,
+                    turn_seq,
+                    first=step == 1,
+                    skill_text=skill_text,
                 )
             if control.cancelled:
                 yield await self._emit(
@@ -515,6 +541,7 @@ class TurnRunner:
         query: str,
         turn_seq: int,
         first: bool,
+        skill_text: str | None = None,
     ) -> list[ChatMessage]:
         """缓存友好装配：静态前缀 → 历史 → 动态尾巴（运行时/记忆）→ 本轮用户消息。
 
@@ -539,6 +566,8 @@ class TurnRunner:
         if not first:
             return messages
         messages.append(ChatMessage(role="system", content=self._runtime_context(work_dir), tool_calls=[]))
+        if skill_text is not None:
+            messages.append(ChatMessage(role="system", content=skill_text, tool_calls=[]))
         if persona is not None:
             memories = await recall(work_dir, query, self._embedder, user_id=user_id)
             if memories:

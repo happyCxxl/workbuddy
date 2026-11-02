@@ -150,6 +150,19 @@ export async function getSessionCheckpoints(sessionId: string): Promise<SessionC
   return response.data.checkpoints;
 }
 
+/** 当前会话可调用的 skill */
+export interface SkillItem {
+  name: string;
+  description: string;
+  args_hint: string;
+  source: string;
+}
+
+export async function getSessionSkills(sessionId: string): Promise<SkillItem[]> {
+  const response = await http.get<{ skills: SkillItem[] }>(`/sessions/${sessionId}/skills`);
+  return response.data.skills;
+}
+
 /** 回退操作：code / conversation / both */
 export async function updateCheckpointRewind(
   sessionId: string,
@@ -352,6 +365,7 @@ export function addTurnStream(
   content: string,
   handlers: TurnStreamHandlers,
   retryOf?: number,
+  skill?: string,
 ): AbortController {
   const controller = new AbortController();
   void (async () => {
@@ -359,7 +373,7 @@ export function addTurnStream(
       const response = await fetch(`/sessions/${sessionId}/turns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
-        body: JSON.stringify({ content, retry_of: retryOf ?? null }),
+        body: JSON.stringify({ content, retry_of: retryOf ?? null, skill: skill ?? null }),
         credentials: 'include',
         signal: controller.signal,
       });

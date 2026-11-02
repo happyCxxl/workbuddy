@@ -377,7 +377,10 @@
                 @click="pickSlashCommand(command)"
               >
                 <span class="composer-menu-name">{{ command.name }}</span>
-                <span class="composer-menu-desc">{{ command.description }}</span>
+                <span class="composer-menu-desc">
+                  {{ command.description }}{{ command.argsHint ? ` · ${command.argsHint}` : ''
+                  }}{{ command.kind === 'skill' ? ' · 技能' : '' }}
+                </span>
               </button>
               <div v-if="filteredSlashCommands.length === 0" class="composer-menu-empty">
                 没有匹配的命令。
@@ -748,6 +751,7 @@ import {
   getWorkspaces,
   getSessionCheckpoints,
   getSessionEvents,
+  getSessionSkills,
   getSessionUsage,
   updateCheckpointRewind,
   updateAssistantSession,
@@ -756,6 +760,7 @@ import {
   updateTurnStop,
   updateWorkspace,
   type SessionCheckpoint,
+  type SkillItem,
 } from '@/api/assistant';
 import { getAvailableModels, type AvailableModel } from '@/api/model-admin';
 import type {
@@ -862,8 +867,19 @@ let stopTimer: number | undefined;
 interface SlashCommand {
   name: string;
   description: string;
+  argsHint?: string;
+  kind: 'builtin' | 'skill';
+  skill?: string;
 }
-const slashCommands: SlashCommand[] = [{ name: '/rewind', description: '回退到检查点' }];
+const builtinSlashCommands: SlashCommand[] = [
+  { name: '/rewind', description: '回退到检查点', kind: 'builtin' },
+];
+const skillCommands = ref<SlashCommand[]>([]);
+const skillsLoadedFor = ref('');
+const slashCommands = computed<SlashCommand[]>(() => [
+  ...builtinSlashCommands,
+  ...skillCommands.value,
+]);
 const slashOpen = ref(false);
 const slashQuery = ref('');
 const slashIndex = ref(0);
@@ -877,7 +893,7 @@ const rewindModes: Array<{ value: 'both' | 'code' | 'conversation'; label: strin
   { value: 'conversation', label: '只回退对话' },
 ];
 const filteredSlashCommands = computed(() =>
-  slashCommands.filter((command) => command.name.slice(1).startsWith(slashQuery.value)),
+  slashCommands.value.filter((command) => command.name.slice(1).startsWith(slashQuery.value)),
 );
 const composerMenuOpen = computed(() => rewindStage.value !== 'closed' || slashOpen.value);
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
@@ -1239,6 +1255,8 @@ async function selectSession(item: AssistantSession): Promise<void> {
   }
   currentId.value = item.id;
   current.value = item;
+  skillsLoadedFor.value = '';
+  skillCommands.value = [];
   messages.value = [];
   const [events, calls] = await Promise.all([getSessionEvents(item.id), getSessionCalls(item.id)]);
   trajectoryEvents.value = events;
@@ -2172,9 +2190,30 @@ function onComposerInput(value: string): void {
     slashOpen.value = true;
     slashQuery.value = value.slice(1);
     slashIndex.value = 0;
+    void loadSessionSkills();
     return;
   }
   slashOpen.value = false;
+}
+
+/** 加载当前会话可用的 skill；同一会话只拉一次 */
+async function loadSessionSkills(): Promise<void> {
+  const sessionId = currentId.value;
+  if (!sessionId || skillsLoadedFor.value === sessionId) {
+    return;
+  }
+  const rows = await getSessionSkills(sessionId).catch(() => []);
+  if (currentId.value !== sessionId) {
+    return;
+  }
+  skillCommands.value = rows.map((skill: SkillItem) => ({
+    name: `/${skill.name}`,
+    description: skill.description || '技能',
+    argsHint: skill.args_hint,
+    kind: 'skill',
+    skill: skill.name,
+  }));
+  skillsLoadedFor.value = sessionId;
 }
 
 /** 关闭所有命令菜单 */
@@ -2257,6 +2296,10 @@ function pickSlashCommand(command: SlashCommand): void {
   if (command.name === '/rewind') {
     input.value = '';
     void openRewindStage();
+    return;
+  }
+  if (command.kind === 'skill') {
+    input.value = `${command.name} `;
   }
 }
 
@@ -2314,6 +2357,15 @@ function handleSend(): void {
     void runRewindCommand(content.slice('/rewind'.length).trim());
     return;
   }
+  const skillMatch = /^\/([\w.-]+)(?:\s+([\s\S]*))?$/.exec(content);
+  if (skillMatch !== null) {
+    const command = skillCommands.value.find((item) => item.skill === skillMatch[1]);
+    if (command !== undefined) {
+      input.value = '';
+      sendContent((skillMatch[2] || '').trim(), undefined, command.skill);
+      return;
+    }
+  }
   input.value = '';
   sendContent(content);
 }
@@ -2351,15 +2403,20 @@ function appendCommandOutput(text: string): void {
   void scrollToBottom();
 }
 
-/** 发送指定内容：草稿转正、推入用户与助手占位、开启 SSE；retryOf 标记重试的旧回合 */
-function sendContent(content: string, retryOf?: number): void {
+/** 发送指定内容：草稿转正、推入用户与助手占位、开启 SSE；skill 指定技能名 */
+function sendContent(content: string, retryOf?: number, skill?: string): void {
   if (!current.value || running.value) {
     return;
   }
   // 发出首条消息即转正：不再按草稿丢弃
   draftSessionId.value = null;
   awaitingNextStep = false;
-  messages.value.push({ role: 'user', text: content, thinking: '', tools: [] });
+  messages.value.push({
+    role: 'user',
+    text: content || (skill ? `/${skill}` : ''),
+    thinking: '',
+    tools: [],
+  });
   messages.value.push({ role: 'assistant', text: '', thinking: '', tools: [] });
   const turnSessionId = currentId.value;
   runningSessionId.value = turnSessionId;
@@ -2391,6 +2448,7 @@ function sendContent(content: string, retryOf?: number): void {
       },
     },
     retryOf,
+    skill,
   );
 }
 
