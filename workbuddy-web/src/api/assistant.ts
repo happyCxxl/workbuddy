@@ -188,6 +188,13 @@ export async function deleteSessionQueue(sessionId: string, itemId: string): Pro
   return response.data.removed;
 }
 
+export async function updateSessionQueueOrder(sessionId: string, ids: string[]): Promise<boolean> {
+  const response = await http.put<{ reordered: boolean }>(`/sessions/${sessionId}/queue/order`, {
+    ids,
+  });
+  return response.data.reordered;
+}
+
 /** 当前会话可调用的 skill */
 export interface SkillItem {
   name: string;

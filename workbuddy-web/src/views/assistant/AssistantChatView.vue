@@ -330,20 +330,38 @@
           </section>
         </div>
 
-        <div v-if="queueItems.length > 0" class="queue-panel">
-          <div class="queue-head">排队消息 · {{ queueItems.length }}</div>
-          <div v-for="item in queueItems" :key="item.id" class="queue-row">
-            <span class="queue-content">{{ item.content }}</span>
-            <span class="queue-actions">
-              <button type="button" class="queue-action" @click="editQueueItem(item)">编辑</button>
-              <button type="button" class="queue-action" @click="removeQueueItem(item)">
-                撤回
-              </button>
-            </span>
-          </div>
-        </div>
-
         <div class="composer">
+          <div v-if="queueItems.length > 0" class="queue-panel">
+            <div class="queue-head">
+              <span>排队中</span>
+              <span>{{ queueItems.length }}</span>
+            </div>
+            <div
+              v-for="(item, index) in queueItems"
+              :key="item.id"
+              class="queue-row"
+              :class="{
+                'queue-row-dragging': dragIndex === index,
+                'queue-row-over': dragOverIndex === index && dragIndex !== index,
+              }"
+              draggable="true"
+              @dragstart="onQueueDragStart(index)"
+              @dragover.prevent="onQueueDragOver(index)"
+              @drop.prevent="onQueueDrop"
+              @dragend="onQueueDragEnd"
+            >
+              <span class="queue-grip" aria-hidden="true">⠿</span>
+              <span class="queue-content">{{ item.content }}</span>
+              <span class="queue-actions">
+                <button type="button" class="queue-action" @click="editQueueItem(item)">
+                  编辑
+                </button>
+                <button type="button" class="queue-action" @click="removeQueueItem(item)">
+                  撤回
+                </button>
+              </span>
+            </div>
+          </div>
           <div v-if="composerMenuOpen" class="composer-menu">
             <template v-if="rewindStage === 'checkpoints'">
               <div class="composer-menu-head">选择回退检查点</div>
@@ -774,6 +792,7 @@ import {
   updateSessionModel,
   updateSessionPermission,
   updateSessionQueue,
+  updateSessionQueueOrder,
   updateTurnStop,
   updateWorkspace,
   type QueueItem,
@@ -884,6 +903,8 @@ const activeTurnSessionId = ref('');
 let stopTimer: number | undefined;
 let skillTimer: number | undefined;
 const queueItems = ref<QueueItem[]>([]);
+const dragIndex = ref(-1);
+const dragOverIndex = ref(-1);
 interface SlashCommand {
   name: string;
   description: string;
@@ -2610,7 +2631,51 @@ async function removeQueueItem(item: QueueItem): Promise<void> {
     return;
   }
   await deleteSessionQueue(currentId.value, item.id);
-  await refreshQueue();
+  queueItems.value = queueItems.value.filter((row) => row.id !== item.id);
+}
+
+/** 开始拖动排队消息 */
+function onQueueDragStart(index: number): void {
+  dragIndex.value = index;
+  dragOverIndex.value = index;
+}
+
+/** 拖动经过目标位置 */
+function onQueueDragOver(index: number): void {
+  if (dragIndex.value !== -1) {
+    dragOverIndex.value = index;
+  }
+}
+
+/** 放下后先本地重排，再持久化顺序 */
+async function onQueueDrop(): Promise<void> {
+  const from = dragIndex.value;
+  const to = dragOverIndex.value;
+  dragIndex.value = -1;
+  dragOverIndex.value = -1;
+  if (from < 0 || to < 0 || from === to) {
+    return;
+  }
+  const next = [...queueItems.value];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  queueItems.value = next;
+  if (!currentId.value) {
+    return;
+  }
+  const saved = await updateSessionQueueOrder(
+    currentId.value,
+    next.map((item) => item.id),
+  ).catch(() => false);
+  if (!saved) {
+    await refreshQueue();
+  }
+}
+
+/** 结束拖动，清理高亮 */
+function onQueueDragEnd(): void {
+  dragIndex.value = -1;
+  dragOverIndex.value = -1;
 }
 
 /** 回合收尾：清理运行态、停止计时与目标会话 */
@@ -4195,25 +4260,51 @@ onUnmounted(() => {
 
 .queue-panel {
   display: flex;
-  flex: none;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px 14px;
-  border-top: 1px solid var(--kb-line);
+  gap: 2px;
+  padding: 5px 6px 6px;
+  border: 1px solid var(--kb-line);
   background: rgb(34 224 255 / 3%);
 }
 
 .queue-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 4px 5px;
   color: var(--kb-text-3);
   font-family: ui-monospace, Consolas, monospace;
   font-size: 10px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
 .queue-row {
   display: flex;
-  gap: 10px;
+  min-height: 28px;
+  gap: 6px;
   align-items: center;
+  padding: 3px 4px;
+  border-top: 1px solid rgb(34 224 255 / 5%);
+  cursor: grab;
+}
+
+.queue-row:first-of-type {
+  border-top: 0;
+}
+
+.queue-row-dragging {
+  opacity: 0.35;
+}
+
+.queue-row-over {
+  box-shadow: inset 0 2px 0 var(--kb-primary);
+}
+
+.queue-grip {
+  flex: none;
+  color: var(--kb-text-3);
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 1px;
 }
 
 .queue-content {
@@ -4229,20 +4320,25 @@ onUnmounted(() => {
 .queue-actions {
   display: flex;
   flex: none;
-  gap: 6px;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.queue-row:hover .queue-actions {
+  opacity: 1;
 }
 
 .queue-action {
-  padding: 2px 6px;
-  border: 1px solid var(--kb-line);
+  padding: 1px 4px;
+  border: 0;
   background: transparent;
   color: var(--kb-text-3);
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
 }
 
 .queue-action:hover {
-  border-color: var(--kb-primary);
   color: var(--kb-primary);
 }
 

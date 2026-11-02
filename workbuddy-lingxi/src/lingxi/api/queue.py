@@ -21,6 +21,12 @@ class QueueUpdateRequest(BaseModel):
     content: str = Field(min_length=1)
 
 
+class QueueOrderRequest(BaseModel):
+    """重排排队消息。"""
+
+    ids: list[int] = Field(min_length=1)
+
+
 def make_router() -> APIRouter:
     """构建输入队列路由。"""
     router = APIRouter()
@@ -45,6 +51,13 @@ def make_router() -> APIRouter:
         await get_session(session_id, user.id)
         item_id = await queue_service.enqueue(session_id, request.content)
         return R.ok({"id": str(item_id)}).to_dict()
+
+    @router.put("/sessions/{session_id}/queue/order")
+    async def reorder_queue(session_id: int, request: QueueOrderRequest, user: CurrentUserDep) -> dict[str, object]:
+        """按给定顺序重排全部待消费项。"""
+        await get_session(session_id, user.id)
+        reordered = await queue_service.reorder(session_id, request.ids)
+        return R.ok({"reordered": reordered}).to_dict()
 
     @router.patch("/sessions/{session_id}/queue/{item_id}")
     async def update_queue(

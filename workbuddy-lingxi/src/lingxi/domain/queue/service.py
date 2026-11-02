@@ -1,6 +1,6 @@
 """会话输入队列：运行中排队的消息，支持编辑、撤回与逐步消费。"""
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 
 from lingxi.db.engine import session_scope
 from lingxi.db.models import SessionInputQueue
@@ -9,7 +9,18 @@ from lingxi.db.models import SessionInputQueue
 async def enqueue(session_id: int, content: str) -> int:
     """追加一条排队消息，返回队列项 ID。"""
     async with session_scope() as s:
-        row = SessionInputQueue(session_id=session_id, content=content, status="pending")
+        max_position = await s.scalar(
+            select(func.max(SessionInputQueue.position)).where(
+                SessionInputQueue.session_id == session_id,
+                SessionInputQueue.status == "pending",
+            )
+        )
+        row = SessionInputQueue(
+            session_id=session_id,
+            content=content,
+            status="pending",
+            position=(max_position or 0) + 1,
+        )
         s.add(row)
         await s.commit()
         await s.refresh(row)
@@ -17,7 +28,7 @@ async def enqueue(session_id: int, content: str) -> int:
 
 
 async def list_pending(session_id: int) -> list[SessionInputQueue]:
-    """按写入顺序列出待消费消息。"""
+    """按排序位列待消费消息。"""
     async with session_scope() as s:
         rows = await s.scalars(
             select(SessionInputQueue)
@@ -25,9 +36,29 @@ async def list_pending(session_id: int) -> list[SessionInputQueue]:
                 SessionInputQueue.session_id == session_id,
                 SessionInputQueue.status == "pending",
             )
-            .order_by(SessionInputQueue.id)
+            .order_by(SessionInputQueue.position, SessionInputQueue.id)
         )
         return list(rows)
+
+
+async def reorder(session_id: int, item_ids: list[int]) -> bool:
+    """按给定 ID 顺序重写排序位；只接受同一会话的全部待消费项。"""
+    async with session_scope() as s:
+        rows = list(
+            await s.scalars(
+                select(SessionInputQueue).where(
+                    SessionInputQueue.session_id == session_id,
+                    SessionInputQueue.status == "pending",
+                )
+            )
+        )
+        if {row.id for row in rows} != set(item_ids):
+            return False
+        by_id = {row.id: row for row in rows}
+        for index, item_id in enumerate(item_ids):
+            by_id[item_id].position = index + 1
+        await s.commit()
+        return True
 
 
 async def update_item(session_id: int, item_id: int, content: str) -> bool:
@@ -62,7 +93,7 @@ async def claim_pending(session_id: int) -> list[SessionInputQueue]:
                     SessionInputQueue.session_id == session_id,
                     SessionInputQueue.status == "pending",
                 )
-                .order_by(SessionInputQueue.id)
+                .order_by(SessionInputQueue.position, SessionInputQueue.id)
             )
         )
         for row in rows:

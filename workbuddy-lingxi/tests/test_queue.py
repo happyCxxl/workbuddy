@@ -26,6 +26,19 @@ async def test_queue_lifecycle(tmp_path) -> None:
 
 
 @pytest.mark.usefixtures("engine_fixture")
+async def test_queue_reorder(tmp_path) -> None:
+    """重排后按新顺序列出与认领。"""
+    session_id = await create_session(str(tmp_path), "重排")
+    first = await service.enqueue(session_id, "第一条")
+    second = await service.enqueue(session_id, "第二条")
+    third = await service.enqueue(session_id, "第三条")
+
+    assert await service.reorder(session_id, [third, first, second]) is True
+    assert [row.content for row in await service.list_pending(session_id)] == ["第三条", "第一条", "第二条"]
+    assert [row.content for row in await service.claim_pending(session_id)] == ["第三条", "第一条", "第二条"]
+
+
+@pytest.mark.usefixtures("engine_fixture")
 async def test_queue_api(client: AsyncClient, tmp_path) -> None:
     """队列接口：新增、列表、编辑、撤回。"""
     session_id = await create_session(str(tmp_path), "队列接口")
