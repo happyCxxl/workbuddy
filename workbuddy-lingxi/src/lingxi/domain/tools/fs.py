@@ -8,6 +8,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from lingxi.contract import SESSION_ID
+from lingxi.domain.skills.service import ensure_nested_root
 from lingxi.domain.tools.registry import (
     RISK_HIGH,
     RISK_READ,
@@ -88,6 +90,9 @@ def _resolve(work_dir: str, path: str, *, write: bool = False, allow_outside: bo
     if not target.is_absolute():
         target = base / path
     target = target.resolve()
+    session_id = SESSION_ID.get()
+    if session_id is not None:
+        ensure_nested_root(session_id, work_dir, str(target))
     if write and not allow_outside and not target.is_relative_to(base):
         raise ValueError(f"写操作只能在工作区内：{path}（读可以用绝对路径，越界读会先征得同意）")
     return target

@@ -864,6 +864,7 @@ const running = computed(() => runningSessionId.value === currentId.value);
 const stopping = ref(false);
 const activeTurnSessionId = ref('');
 let stopTimer: number | undefined;
+let skillTimer: number | undefined;
 interface SlashCommand {
   name: string;
   description: string;
@@ -873,6 +874,7 @@ interface SlashCommand {
 }
 const builtinSlashCommands: SlashCommand[] = [
   { name: '/rewind', description: '回退到检查点', kind: 'builtin' },
+  { name: '/reload-skills', description: '重新加载技能目录', kind: 'builtin' },
 ];
 const skillCommands = ref<SlashCommand[]>([]);
 const skillsLoadedFor = ref('');
@@ -2197,9 +2199,29 @@ function onComposerInput(value: string): void {
 }
 
 /** 加载当前会话可用的 skill；同一会话只拉一次 */
-async function loadSessionSkills(): Promise<void> {
+async function loadSessionSkills(force = false): Promise<void> {
   const sessionId = currentId.value;
-  if (!sessionId || skillsLoadedFor.value === sessionId) {
+  if (!sessionId || (!force && skillsLoadedFor.value === sessionId)) {
+    return;
+  }
+  const rows = await getSessionSkills(sessionId, force).catch(() => []);
+  if (currentId.value !== sessionId) {
+    return;
+  }
+  skillCommands.value = rows.map((skill: SkillItem) => ({
+    name: `/${skill.name}`,
+    description: skill.description || '技能',
+    argsHint: skill.args_hint,
+    kind: 'skill',
+    skill: skill.name,
+  }));
+  skillsLoadedFor.value = sessionId;
+}
+
+/** 重新扫描已加载技能根目录（顶级新目录需 /reload-skills） */
+async function refreshSkills(): Promise<void> {
+  const sessionId = currentId.value;
+  if (!sessionId || skillsLoadedFor.value !== sessionId) {
     return;
   }
   const rows = await getSessionSkills(sessionId).catch(() => []);
@@ -2213,7 +2235,15 @@ async function loadSessionSkills(): Promise<void> {
     kind: 'skill',
     skill: skill.name,
   }));
-  skillsLoadedFor.value = sessionId;
+}
+
+/** 重新扫描顶级技能目录 */
+async function reloadSkillsCommand(): Promise<void> {
+  if (!currentId.value) {
+    return;
+  }
+  await loadSessionSkills(true);
+  appendCommandOutput(`已重新加载技能：${skillCommands.value.length} 个。`);
 }
 
 /** 关闭所有命令菜单 */
@@ -2293,6 +2323,11 @@ function handleComposerKeydown(raw: Event): void {
 /** 选中命令：目前只有 /rewind，直接进入检查点列表 */
 function pickSlashCommand(command: SlashCommand): void {
   slashOpen.value = false;
+  if (command.name === '/reload-skills') {
+    input.value = '';
+    void reloadSkillsCommand();
+    return;
+  }
   if (command.name === '/rewind') {
     input.value = '';
     void openRewindStage();
@@ -2347,6 +2382,11 @@ function handleSend(): void {
     return;
   }
   const content = input.value.trim();
+  if (content === '/reload-skills') {
+    input.value = '';
+    void reloadSkillsCommand();
+    return;
+  }
   if (content === '/rewind') {
     input.value = '';
     void openRewindStage();
@@ -2357,7 +2397,7 @@ function handleSend(): void {
     void runRewindCommand(content.slice('/rewind'.length).trim());
     return;
   }
-  const skillMatch = /^\/([\w.-]+)(?:\s+([\s\S]*))?$/.exec(content);
+  const skillMatch = /^\/([\w.:-]+)(?:\s+([\s\S]*))?$/.exec(content);
   if (skillMatch !== null) {
     const command = skillCommands.value.find((item) => item.skill === skillMatch[1]);
     if (command !== undefined) {
@@ -2705,6 +2745,9 @@ async function refreshSessions(): Promise<void> {
 onMounted(async () => {
   await loadSidebar();
   chatModels.value = await getAvailableModels('CHAT').catch(() => []);
+  skillTimer = window.setInterval(() => {
+    void refreshSkills();
+  }, 2000);
   if (currentId.value) {
     await loadSubSessions();
   }
@@ -2712,6 +2755,10 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stopSubPolling();
+  if (skillTimer !== undefined) {
+    window.clearInterval(skillTimer);
+    skillTimer = undefined;
+  }
 });
 </script>
 

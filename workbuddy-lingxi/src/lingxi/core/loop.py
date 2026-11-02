@@ -148,7 +148,7 @@ class TurnRunner:
         session = await get_session(session_id)
         skill_text: str | None = None
         if skill:
-            found = find_skill(session.work_dir, skill)
+            found = find_skill(session.work_dir, skill, session_id)
             if found is None:
                 raise ApiError(ErrorCode.NOT_FOUND, f"技能不存在：{skill}")
             skill_text = f'<skill name="{found.name}">\n{found.body}\n</skill>'

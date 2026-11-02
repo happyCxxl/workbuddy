@@ -158,8 +158,10 @@ export interface SkillItem {
   source: string;
 }
 
-export async function getSessionSkills(sessionId: string): Promise<SkillItem[]> {
-  const response = await http.get<{ skills: SkillItem[] }>(`/sessions/${sessionId}/skills`);
+export async function getSessionSkills(sessionId: string, reload = false): Promise<SkillItem[]> {
+  const response = await http.get<{ skills: SkillItem[] }>(`/sessions/${sessionId}/skills`, {
+    params: { reload },
+  });
   return response.data.skills;
 }
 

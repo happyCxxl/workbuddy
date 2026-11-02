@@ -13,8 +13,8 @@ def make_router() -> APIRouter:
     router = APIRouter()
 
     @router.get("/sessions/{session_id}/skills")
-    async def list_session_skills(session_id: int, user: CurrentUserDep) -> dict[str, object]:
-        """列出当前工作区可调用的技能。"""
+    async def list_session_skills(session_id: int, user: CurrentUserDep, reload: bool = False) -> dict[str, object]:
+        """列出当前工作区可调用的技能；reload=true 重新发现新顶级目录。"""
         session = await get_session(session_id, user.id)
         return R.ok(
             {
@@ -25,7 +25,7 @@ def make_router() -> APIRouter:
                         "args_hint": skill.args_hint,
                         "source": skill.source,
                     }
-                    for skill in list_skills(session.work_dir)
+                    for skill in list_skills(session.work_dir, session_id, reload)
                 ]
             }
         ).to_dict()
