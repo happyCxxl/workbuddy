@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from lingxi.app.auth import CurrentUserDep
 from lingxi.contract import R
-from lingxi.domain.queue import service as queue_service
+from lingxi.domain.queue.coordinator import coordinator
 from lingxi.domain.session.service import get_session
 
 
@@ -33,9 +33,9 @@ def make_router() -> APIRouter:
 
     @router.get("/sessions/{session_id}/queue")
     async def list_queue(session_id: int, user: CurrentUserDep) -> dict[str, object]:
-        """按写入顺序列出待消费消息。"""
+        """按排序位列出待消费消息。"""
         await get_session(session_id, user.id)
-        rows = await queue_service.list_pending(session_id)
+        rows = await coordinator.list_pending(session_id)
         return R.ok(
             {
                 "items": [
@@ -49,14 +49,14 @@ def make_router() -> APIRouter:
     async def add_queue(session_id: int, request: QueueAddRequest, user: CurrentUserDep) -> dict[str, object]:
         """追加一条排队消息。"""
         await get_session(session_id, user.id)
-        item_id = await queue_service.enqueue(session_id, request.content)
+        item_id = await coordinator.enqueue(session_id, request.content)
         return R.ok({"id": str(item_id)}).to_dict()
 
     @router.put("/sessions/{session_id}/queue/order")
     async def reorder_queue(session_id: int, request: QueueOrderRequest, user: CurrentUserDep) -> dict[str, object]:
         """按给定顺序重排全部待消费项。"""
         await get_session(session_id, user.id)
-        reordered = await queue_service.reorder(session_id, request.ids)
+        reordered = await coordinator.reorder(session_id, request.ids)
         return R.ok({"reordered": reordered}).to_dict()
 
     @router.patch("/sessions/{session_id}/queue/{item_id}")
@@ -65,14 +65,14 @@ def make_router() -> APIRouter:
     ) -> dict[str, object]:
         """编辑仍待消费的队列项。"""
         await get_session(session_id, user.id)
-        updated = await queue_service.update_item(session_id, item_id, request.content)
+        updated = await coordinator.update(session_id, item_id, request.content)
         return R.ok({"updated": updated}).to_dict()
 
     @router.delete("/sessions/{session_id}/queue/{item_id}")
     async def delete_queue(session_id: int, item_id: int, user: CurrentUserDep) -> dict[str, object]:
-        """撤回仍待消费的队列项。"""
+        """撤回仍待消费的队列项；失败时返回原因。"""
         await get_session(session_id, user.id)
-        removed = await queue_service.cancel_item(session_id, item_id)
-        return R.ok({"removed": removed}).to_dict()
+        removed, reason = await coordinator.cancel(session_id, item_id)
+        return R.ok({"removed": removed, "reason": reason}).to_dict()
 
     return router

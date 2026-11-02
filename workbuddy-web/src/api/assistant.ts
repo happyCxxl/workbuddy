@@ -181,11 +181,14 @@ export async function updateSessionQueue(
   return response.data.updated;
 }
 
-export async function deleteSessionQueue(sessionId: string, itemId: string): Promise<boolean> {
-  const response = await http.delete<{ removed: boolean }>(
+export async function deleteSessionQueue(
+  sessionId: string,
+  itemId: string,
+): Promise<{ removed: boolean; reason: string | null }> {
+  const response = await http.delete<{ removed: boolean; reason: string | null }>(
     `/sessions/${sessionId}/queue/${itemId}`,
   );
-  return response.data.removed;
+  return response.data;
 }
 
 export async function updateSessionQueueOrder(sessionId: string, ids: string[]): Promise<boolean> {

@@ -26,7 +26,7 @@ from lingxi.domain.permission.gate import PendingApproval, PermissionGate
 from lingxi.domain.persona.engine import render_system_prompt
 from lingxi.domain.persona.models import Persona
 from lingxi.domain.ports import ChatMessage, ChatRequest, ToolCall
-from lingxi.domain.queue.service import claim_item, claim_pending, is_claimed, mark_injected
+from lingxi.domain.queue.coordinator import coordinator as queue_coordinator
 from lingxi.domain.session.service import (
     build_history,
     compact_history,
@@ -154,7 +154,7 @@ class TurnRunner:
         control = control or TurnControl()
         session = await get_session(session_id)
         if queue_id is not None:
-            queued = await claim_item(session_id, queue_id)
+            queued = await queue_coordinator.claim_item(session_id, queue_id)
             if queued is None:
                 raise ApiError(ErrorCode.NOT_FOUND, "排队消息已被消费或不存在")
             user_content = queued.content
@@ -450,15 +450,15 @@ class TurnRunner:
 
     async def _inject_queue(self, session_id: int) -> AsyncIterator[TurnEvent]:
         """工具批次结束后消费排队消息：作为插话写入同一回合的下一步。"""
-        for row in await claim_pending(session_id):
-            if not await is_claimed(session_id, row.id):
+        for row in await queue_coordinator.claim_pending(session_id):
+            if not await queue_coordinator.is_claimed(session_id, row.id):
                 continue
             yield await self._emit(
                 session_id,
                 EventType.USER_MESSAGE,
                 {"content": row.content, "steering": True, "queue_id": str(row.id)},
             )
-            await mark_injected(session_id, row.id)
+            await queue_coordinator.mark_injected(session_id, row.id)
 
     async def _execute_tool(
         self,

@@ -72,6 +72,15 @@ async def update_item(session_id: int, item_id: int, content: str) -> bool:
         return True
 
 
+async def item_status(session_id: int, item_id: int) -> str | None:
+    """读取队列项状态；不存在或不属于该会话时返回 None。"""
+    async with session_scope() as s:
+        row = await s.get(SessionInputQueue, item_id)
+        if row is None or row.session_id != session_id:
+            return None
+        return row.status
+
+
 async def cancel_item(session_id: int, item_id: int) -> bool:
     """撤回排队消息；已认领但尚未注入的项标记为取消。"""
     async with session_scope() as s:

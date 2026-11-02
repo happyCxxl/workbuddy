@@ -4,6 +4,7 @@ import pytest
 from httpx import AsyncClient
 
 from lingxi.domain.queue import service
+from lingxi.domain.queue.coordinator import coordinator
 from lingxi.domain.session.service import create_session
 
 
@@ -53,6 +54,21 @@ async def test_cancel_claimed_before_injection(tmp_path) -> None:
     await service.claim_pending(session_id)
     await service.mark_injected(session_id, injected_id)
     assert await service.cancel_item(session_id, injected_id) is False
+
+
+@pytest.mark.usefixtures("engine_fixture")
+async def test_coordinator_reports_cancel_reason(tmp_path) -> None:
+    """单写者返回明确失败原因，而不是静默成功。"""
+    session_id = await create_session(str(tmp_path), "队列原因")
+    item_id = await coordinator.enqueue(session_id, "撤回")
+    await coordinator.claim_pending(session_id)
+    assert await coordinator.cancel(session_id, item_id) == (True, None)
+
+    injected = await coordinator.enqueue(session_id, "已注入")
+    await coordinator.claim_pending(session_id)
+    await coordinator.mark_injected(session_id, injected)
+    assert await coordinator.cancel(session_id, injected) == (False, "already_injected")
+    assert await coordinator.cancel(session_id, 999999) == (False, "not_found")
 
 
 @pytest.mark.usefixtures("engine_fixture")
