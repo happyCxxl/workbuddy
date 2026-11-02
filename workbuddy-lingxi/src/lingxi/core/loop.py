@@ -339,6 +339,7 @@ class TurnRunner:
             tool_calls: list[ToolCall] = []
             content_parts: list[str] = []
             reasoning_parts: list[str] = []
+            usage = None
             request = ChatRequest(messages=messages, tools=self._tools.specs(), model_id=model_id)
             async for chunk in self._gateway.stream(request):
                 if control.cancelled:
@@ -351,6 +352,8 @@ class TurnRunner:
                     yield await self._emit(session_id, EventType.THINKING_DELTA, {"text": chunk.text})
                 elif chunk.kind == "tool_calls":
                     tool_calls.extend(chunk.tool_calls)
+                elif chunk.kind == "usage":
+                    usage = chunk.usage
             if control.cancelled:
                 content = "".join(content_parts)
                 reasoning = "".join(reasoning_parts)
@@ -420,7 +423,14 @@ class TurnRunner:
                 },
             )
             # 先落 turn.end：界面立即收尾；后置钩子（记忆抽取）慢或失败都不再拖住回合
-            yield await self._emit(session_id, EventType.TURN_END, {"status": "completed"})
+            yield await self._emit(
+                session_id,
+                EventType.TURN_END,
+                {
+                    "status": "completed",
+                    "usage": usage.model_dump() if usage is not None else None,
+                },
+            )
             try:
                 await self._hooks.run("post_execute", post)
             except Exception:

@@ -2069,6 +2069,9 @@ interface TurnUsage {
 const turnMeta = computed<Partial<Record<number, TurnUsage>>>(() => {
   const windows: { seq: number; start: number; end: number }[] = [];
   const result: Partial<Record<number, TurnUsage>> = {};
+  const eventUsage: Partial<
+    Record<number, { prompt: number; completion: number; cacheHit: number; cacheMiss: number }>
+  > = {};
   let current: { seq: number; start: number; end: number } | null = null;
   const empty = (): TurnUsage => ({
     duration: '',
@@ -2091,6 +2094,16 @@ const turnMeta = computed<Partial<Record<number, TurnUsage>>>(() => {
       current.end = Date.parse(event.created_at);
       const entry = result[current.seq] ?? empty();
       result[current.seq] = { ...entry, duration: durationLabel(current.start, current.end) };
+      const rawUsage = event.payload['usage'];
+      if (rawUsage !== null && typeof rawUsage === 'object') {
+        const usage = rawUsage as Record<string, unknown>;
+        eventUsage[current.seq] = {
+          prompt: Number(usage['prompt_tokens'] ?? 0),
+          completion: Number(usage['completion_tokens'] ?? 0),
+          cacheHit: Number(usage['prompt_cache_hit_tokens'] ?? 0),
+          cacheMiss: Number(usage['prompt_cache_miss_tokens'] ?? 0),
+        };
+      }
     }
   }
   for (const call of modelCalls.value) {
@@ -2125,6 +2138,20 @@ const turnMeta = computed<Partial<Record<number, TurnUsage>>>(() => {
       cacheHit: entry.cacheHit + cacheHit,
       cacheMiss: entry.cacheMiss + cacheMiss,
     };
+  }
+  for (const [rawSeq, usage] of Object.entries(eventUsage)) {
+    const seq = Number(rawSeq);
+    const entry = result[seq];
+    if (entry?.calls.length === 0 && usage !== undefined) {
+      result[seq] = {
+        ...entry,
+        tokens: usage.prompt + usage.completion,
+        prompt: usage.prompt,
+        completion: usage.completion,
+        cacheHit: usage.cacheHit,
+        cacheMiss: usage.cacheMiss,
+      };
+    }
   }
   return result;
 });
@@ -2166,6 +2193,14 @@ function applyToolResult(last: ChatMessage, payload: Record<string, unknown>, at
 function applyEvent(type: string, payload: Record<string, unknown>): void {
   if (activeTurnSessionId.value && activeTurnSessionId.value !== currentId.value) {
     return;
+  }
+  if (typeof payload['seq'] === 'number') {
+    trajectoryEvents.value.push({
+      seq: payload['seq'],
+      type,
+      payload,
+      created_at: String(payload['created_at'] ?? new Date().toISOString()),
+    });
   }
   if (type === 'assistant/message') {
     const current = messages.value.at(-1);
