@@ -55,6 +55,18 @@ class Workspace(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
+class SessionInputQueue(Base):
+    """会话输入队列：运行中排队的用户消息，按写入顺序消费。"""
+
+    __tablename__ = "session_input_queue"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("ai_session.id"), index=True, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class SessionCheckpoint(Base):
     """会话检查点：一个回合一份，files 记录文件快照清单。"""
 

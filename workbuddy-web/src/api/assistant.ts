@@ -150,6 +150,44 @@ export async function getSessionCheckpoints(sessionId: string): Promise<SessionC
   return response.data.checkpoints;
 }
 
+/** 排队消息 */
+export interface QueueItem {
+  id: string;
+  content: string;
+  created_at: string;
+}
+
+export async function getSessionQueue(sessionId: string): Promise<QueueItem[]> {
+  const response = await http.get<{ items: QueueItem[] }>(`/sessions/${sessionId}/queue`);
+  return response.data.items;
+}
+
+export async function addSessionQueue(sessionId: string, content: string): Promise<{ id: string }> {
+  const response = await http.post<{ id: string }>(`/sessions/${sessionId}/queue`, { content });
+  return response.data;
+}
+
+export async function updateSessionQueue(
+  sessionId: string,
+  itemId: string,
+  content: string,
+): Promise<boolean> {
+  const response = await http.patch<{ updated: boolean }>(
+    `/sessions/${sessionId}/queue/${itemId}`,
+    {
+      content,
+    },
+  );
+  return response.data.updated;
+}
+
+export async function deleteSessionQueue(sessionId: string, itemId: string): Promise<boolean> {
+  const response = await http.delete<{ removed: boolean }>(
+    `/sessions/${sessionId}/queue/${itemId}`,
+  );
+  return response.data.removed;
+}
+
 /** 当前会话可调用的 skill */
 export interface SkillItem {
   name: string;
@@ -368,6 +406,7 @@ export function addTurnStream(
   handlers: TurnStreamHandlers,
   retryOf?: number,
   skill?: string,
+  queueId?: string,
 ): AbortController {
   const controller = new AbortController();
   void (async () => {
@@ -375,7 +414,12 @@ export function addTurnStream(
       const response = await fetch(`/sessions/${sessionId}/turns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
-        body: JSON.stringify({ content, retry_of: retryOf ?? null, skill: skill ?? null }),
+        body: JSON.stringify({
+          content,
+          retry_of: retryOf ?? null,
+          skill: skill ?? null,
+          queue_id: queueId ?? null,
+        }),
         credentials: 'include',
         signal: controller.signal,
       });

@@ -8,7 +8,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
-from lingxi.api import checkpoints, fs, health, memories, persona, sessions, skills, turns, workspaces
+from lingxi.api import checkpoints, fs, health, memories, persona, queue, sessions, skills, turns, workspaces
 from lingxi.app.auth import (
     RedisTokenVersionReader,
     TokenVersionReader,
@@ -96,6 +96,7 @@ def create_app(
     app.include_router(turns.make_router(runner), dependencies=protected)
     app.include_router(checkpoints.make_router(), dependencies=protected)
     app.include_router(skills.make_router(), dependencies=protected)
+    app.include_router(queue.make_router(), dependencies=protected)
     app.include_router(model_admin_router, dependencies=[Depends(require_csrf)])
     app.include_router(model_capability_router)
     return app

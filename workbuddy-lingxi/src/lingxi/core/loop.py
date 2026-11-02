@@ -26,6 +26,7 @@ from lingxi.domain.permission.gate import PendingApproval, PermissionGate
 from lingxi.domain.persona.engine import render_system_prompt
 from lingxi.domain.persona.models import Persona
 from lingxi.domain.ports import ChatMessage, ChatRequest, ToolCall
+from lingxi.domain.queue.service import claim_item, claim_pending
 from lingxi.domain.session.service import (
     build_history,
     compact_history,
@@ -109,7 +110,12 @@ class TurnRunner:
         return True
 
     async def run(
-        self, session_id: int, user_content: str, retry_of: int | None = None, skill: str | None = None
+        self,
+        session_id: int,
+        user_content: str,
+        retry_of: int | None = None,
+        skill: str | None = None,
+        queue_id: int | None = None,
     ) -> AsyncIterator[TurnEvent]:
         """跑一个回合：产出与日志同构的事件流；异常路径补齐 error 与 turn/end 后上抛。"""
         lock = self._locks.setdefault(session_id, asyncio.Lock())
@@ -117,7 +123,7 @@ class TurnRunner:
             control = TurnControl()
             self._active_turns[session_id] = control
             try:
-                async for event in self._run_locked(session_id, user_content, retry_of, control, skill):
+                async for event in self._run_locked(session_id, user_content, retry_of, control, skill, queue_id):
                     yield event
             finally:
                 if self._active_turns.get(session_id) is control:
@@ -143,9 +149,15 @@ class TurnRunner:
         retry_of: int | None = None,
         control: TurnControl | None = None,
         skill: str | None = None,
+        queue_id: int | None = None,
     ) -> AsyncIterator[TurnEvent]:
         control = control or TurnControl()
         session = await get_session(session_id)
+        if queue_id is not None:
+            queued = await claim_item(session_id, queue_id)
+            if queued is None:
+                raise ApiError(ErrorCode.NOT_FOUND, "排队消息已被消费或不存在")
+            user_content = queued.content
         skill_text: str | None = None
         if skill:
             found = find_skill(session.work_dir, skill, session_id)
@@ -387,6 +399,8 @@ class TurnRunner:
                         session_id, EventType.TURN_END, {"status": "interrupted", "reason": control.reason}
                     )
                     return
+                async for event in self._inject_queue(session_id):
+                    yield event
                 continue
             yield await self._emit(
                 session_id,
@@ -412,6 +426,15 @@ class TurnRunner:
             except Exception:
                 logger.warning("回合后置钩子失败", exc_info=True)
             return
+
+    async def _inject_queue(self, session_id: int) -> AsyncIterator[TurnEvent]:
+        """工具批次结束后消费排队消息：作为插话写入同一回合的下一步。"""
+        for row in await claim_pending(session_id):
+            yield await self._emit(
+                session_id,
+                EventType.USER_MESSAGE,
+                {"content": row.content, "steering": True, "queue_id": str(row.id)},
+            )
 
     async def _execute_tool(
         self,

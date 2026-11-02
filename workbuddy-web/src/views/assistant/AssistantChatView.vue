@@ -330,6 +330,19 @@
           </section>
         </div>
 
+        <div v-if="queueItems.length > 0" class="queue-panel">
+          <div class="queue-head">排队消息 · {{ queueItems.length }}</div>
+          <div v-for="item in queueItems" :key="item.id" class="queue-row">
+            <span class="queue-content">{{ item.content }}</span>
+            <span class="queue-actions">
+              <button type="button" class="queue-action" @click="editQueueItem(item)">编辑</button>
+              <button type="button" class="queue-action" @click="removeQueueItem(item)">
+                撤回
+              </button>
+            </span>
+          </div>
+        </div>
+
         <div class="composer">
           <div v-if="composerMenuOpen" class="composer-menu">
             <template v-if="rewindStage === 'checkpoints'">
@@ -738,27 +751,32 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import {
   addAssistantSession,
+  addSessionQueue,
   addSubSession,
   addTurnResume,
   addTurnStream,
   addWorkspace,
   deleteAssistantSession,
+  deleteSessionQueue,
   deleteWorkspace,
   getAssistantSessions,
   getSessionCalls,
+  getSessionCheckpoints,
+  getSessionEvents,
+  getSessionQueue,
+  getSessionSkills,
+  getSessionUsage,
   getSubSessions,
   getWorkspaceDirs,
   getWorkspaces,
-  getSessionCheckpoints,
-  getSessionEvents,
-  getSessionSkills,
-  getSessionUsage,
   updateCheckpointRewind,
   updateAssistantSession,
   updateSessionModel,
   updateSessionPermission,
+  updateSessionQueue,
   updateTurnStop,
   updateWorkspace,
+  type QueueItem,
   type SessionCheckpoint,
   type SkillItem,
 } from '@/api/assistant';
@@ -865,6 +883,8 @@ const stopping = ref(false);
 const activeTurnSessionId = ref('');
 let stopTimer: number | undefined;
 let skillTimer: number | undefined;
+let queueTimer: number | undefined;
+const queueItems = ref<QueueItem[]>([]);
 interface SlashCommand {
   name: string;
   description: string;
@@ -1259,6 +1279,8 @@ async function selectSession(item: AssistantSession): Promise<void> {
   current.value = item;
   skillsLoadedFor.value = '';
   skillCommands.value = [];
+  queueItems.value = [];
+  void refreshQueue();
   messages.value = [];
   const [events, calls] = await Promise.all([getSessionEvents(item.id), getSessionCalls(item.id)]);
   trajectoryEvents.value = events;
@@ -2314,10 +2336,35 @@ function handleComposerKeydown(raw: Event): void {
     }
     return;
   }
+  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    void interruptAndSend();
+    return;
+  }
+  if (event.key === 'Escape' && running.value) {
+    event.preventDefault();
+    void handleStop();
+    return;
+  }
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     handleSend();
   }
+}
+
+/** Ctrl+Enter：把当前输入排队并中断当前回合，立即开始处理 */
+async function interruptAndSend(): Promise<void> {
+  const content = input.value.trim();
+  if (!content || !currentId.value) {
+    return;
+  }
+  if (!running.value) {
+    handleSend();
+    return;
+  }
+  input.value = '';
+  await addSessionQueue(currentId.value, content);
+  await handleStop();
 }
 
 /** 选中命令：目前只有 /rewind，直接进入检查点列表 */
@@ -2378,10 +2425,18 @@ async function executeRewind(mode: 'both' | 'code' | 'conversation'): Promise<vo
 
 /** 发送消息：进入流式；/rewind 走命令 */
 function handleSend(): void {
-  if (!current.value || !input.value.trim() || running.value) {
+  if (!current.value || !input.value.trim()) {
     return;
   }
   const content = input.value.trim();
+  if (running.value) {
+    if (content.startsWith('/')) {
+      ElMessage.warning('命令需要等当前回合结束后再执行');
+      return;
+    }
+    void queueCurrent(content);
+    return;
+  }
   if (content === '/reload-skills') {
     input.value = '';
     void reloadSkillsCommand();
@@ -2444,7 +2499,7 @@ function appendCommandOutput(text: string): void {
 }
 
 /** 发送指定内容：草稿转正、推入用户与助手占位、开启 SSE；skill 指定技能名 */
-function sendContent(content: string, retryOf?: number, skill?: string): void {
+function sendContent(content: string, retryOf?: number, skill?: string, queueId?: string): void {
   if (!current.value || running.value) {
     return;
   }
@@ -2481,6 +2536,7 @@ function sendContent(content: string, retryOf?: number, skill?: string): void {
           },
         );
         void refreshSessions();
+        void drainQueue();
       },
       onError: (message) => {
         finishTurn();
@@ -2489,7 +2545,67 @@ function sendContent(content: string, retryOf?: number, skill?: string): void {
     },
     retryOf,
     skill,
+    queueId,
   );
+}
+
+/** 刷新当前会话排队消息 */
+async function refreshQueue(): Promise<void> {
+  const sessionId = currentId.value;
+  if (!sessionId) {
+    return;
+  }
+  const rows = await getSessionQueue(sessionId).catch(() => []);
+  if (currentId.value === sessionId) {
+    queueItems.value = rows;
+  }
+}
+
+/** 运行中发送：进入队列，不打断当前回合 */
+async function queueCurrent(content: string): Promise<void> {
+  if (!currentId.value) {
+    return;
+  }
+  await addSessionQueue(currentId.value, content);
+  input.value = '';
+  await refreshQueue();
+}
+
+/** 回合结束后自动发送队列中的下一条 */
+async function drainQueue(): Promise<void> {
+  if (running.value || !currentId.value) {
+    return;
+  }
+  await refreshQueue();
+  const next = queueItems.value.at(0);
+  if (next === undefined) {
+    return;
+  }
+  queueItems.value = queueItems.value.filter((item) => item.id !== next.id);
+  sendContent(next.content, undefined, undefined, next.id);
+}
+
+/** 编辑排队消息 */
+async function editQueueItem(item: QueueItem): Promise<void> {
+  const result = await ElMessageBox.prompt('修改排队消息', '编辑排队消息', {
+    inputValue: item.content,
+    confirmButtonText: '保存',
+    cancelButtonText: '取消',
+  }).catch(() => null);
+  if (result === null || !currentId.value || !result.value.trim()) {
+    return;
+  }
+  await updateSessionQueue(currentId.value, item.id, result.value.trim());
+  await refreshQueue();
+}
+
+/** 撤回排队消息 */
+async function removeQueueItem(item: QueueItem): Promise<void> {
+  if (!currentId.value) {
+    return;
+  }
+  await deleteSessionQueue(currentId.value, item.id);
+  await refreshQueue();
 }
 
 /** 回合收尾：清理运行态、停止计时与目标会话 */
@@ -2748,6 +2864,9 @@ onMounted(async () => {
   skillTimer = window.setInterval(() => {
     void refreshSkills();
   }, 2000);
+  queueTimer = window.setInterval(() => {
+    void refreshQueue();
+  }, 1000);
   if (currentId.value) {
     await loadSubSessions();
   }
@@ -2758,6 +2877,10 @@ onUnmounted(() => {
   if (skillTimer !== undefined) {
     window.clearInterval(skillTimer);
     skillTimer = undefined;
+  }
+  if (queueTimer !== undefined) {
+    window.clearInterval(queueTimer);
+    queueTimer = undefined;
   }
 });
 </script>
@@ -4070,6 +4193,59 @@ onUnmounted(() => {
 .perm-actions {
   display: flex;
   gap: 8px;
+}
+
+.queue-panel {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--kb-line);
+  background: rgb(34 224 255 / 3%);
+}
+
+.queue-head {
+  color: var(--kb-text-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.queue-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.queue-content {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--kb-text-2);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-actions {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.queue-action {
+  padding: 2px 6px;
+  border: 1px solid var(--kb-line);
+  background: transparent;
+  color: var(--kb-text-3);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.queue-action:hover {
+  border-color: var(--kb-primary);
+  color: var(--kb-primary);
 }
 
 .composer {
