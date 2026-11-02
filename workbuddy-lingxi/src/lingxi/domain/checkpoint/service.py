@@ -57,17 +57,19 @@ async def create_checkpoint(session_id: int, turn_seq: int, prompt: str) -> int:
 
 
 async def snapshot_file(checkpoint_id: int, work_dir: str, relative: str, action: str) -> None:
-    """文件第一次被修改前保存原内容；同一检查点同一路径只存一次。"""
+    """文件第一次被修改前保存原内容；支持工作区外的绝对路径。"""
     async with session_scope() as s:
         row = await s.get(SessionCheckpoint, checkpoint_id)
         if row is None:
             return
         files = list(row.files)
-        if any(str(item.get("path")) == relative for item in files):
+        absolute = Path(relative).is_absolute()
+        path_key = str(Path(relative)) if absolute else relative
+        if any(str(item.get("path")) == path_key for item in files):
             return
-        target = _resolve(work_dir, relative)
+        target = Path(relative) if absolute else _resolve(work_dir, relative)
         if _is_link(target):
-            files.append({"path": relative, "action": action, "skipped": "symlink-or-hardlink"})
+            files.append({"path": path_key, "absolute": absolute, "action": action, "skipped": "symlink-or-hardlink"})
             row.files = files
             await s.commit()
             return
@@ -83,7 +85,8 @@ async def snapshot_file(checkpoint_id: int, work_dir: str, relative: str, action
             digest = None
         files.append(
             {
-                "path": relative,
+                "path": path_key,
+                "absolute": absolute,
                 "action": action,
                 "existed": existed,
                 "snapshot": snapshot_name,
@@ -143,7 +146,7 @@ async def rewind(session_id: int, checkpoint_id: int, mode: str) -> dict[str, ob
                 if item.get("skipped"):
                     skipped.append(relative)
                     continue
-                target_path = _resolve(work_dir, relative)
+                target_path = Path(relative) if bool(item.get("absolute")) else _resolve(work_dir, relative)
                 if _is_link(target_path):
                     skipped.append(relative)
                     continue

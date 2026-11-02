@@ -239,11 +239,12 @@ def _relative_path(work_dir: str, target: str) -> str | None:
 
 
 async def _snapshot(ctx: ToolContext, target: Path, action: str) -> None:
-    """写/改/删前登记检查点快照；工作区外或未启用检查点时跳过。"""
+    """写/改/删前登记检查点快照；工作区外使用绝对路径，由检查点标注。"""
     if ctx.snapshot is None:
         return
     relative = await asyncio.to_thread(_relative_path, ctx.work_dir, str(target))
     if relative is None:
+        await ctx.snapshot(action, str(target))
         return
     await ctx.snapshot(action, relative)
 

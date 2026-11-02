@@ -30,6 +30,25 @@ async def test_rewind_restores_file_and_removes_created(tmp_path, monkeypatch) -
 
 
 @pytest.mark.usefixtures("engine_fixture")
+async def test_rewind_restores_outside_workdir_file(tmp_path, monkeypatch) -> None:
+    """完全权限下改到工作区外的文件也进入快照，回退时恢复。"""
+    monkeypatch.setenv("WORKBUDDY_CHECKPOINT_DIR", str(tmp_path / "snapshots"))
+    work = tmp_path / "work"
+    work.mkdir()
+    outside = tmp_path / "outside.txt"
+    outside.write_text("outside-original", encoding="utf-8")
+    session_id = await create_session(str(work), "外部文件")
+    checkpoint_id = await create_checkpoint(session_id, 1, "改外部文件")
+    await snapshot_file(checkpoint_id, str(work), str(outside), "write")
+    outside.write_text("outside-changed", encoding="utf-8")
+
+    result = await rewind(session_id, checkpoint_id, "code")
+
+    assert result["restored"] == 1
+    assert outside.read_text(encoding="utf-8") == "outside-original"
+
+
+@pytest.mark.usefixtures("engine_fixture")
 async def test_rewind_conversation_truncates_history(tmp_path, monkeypatch) -> None:
     """对话回退：目标回合之后、rewind 事件之前的消息不再进入历史。"""
     monkeypatch.setenv("WORKBUDDY_CHECKPOINT_DIR", str(tmp_path / "snapshots"))
