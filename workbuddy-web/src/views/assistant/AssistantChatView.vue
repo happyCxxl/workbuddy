@@ -534,42 +534,6 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="rewindDialog" title="回退操作" width="640px">
-      <p class="rewind-hint">
-        选择一个回合，回退到该回合开始前的状态。文件回退只影响本会话通过文件工具做过的修改。
-      </p>
-      <div v-loading="rewindLoading" class="rewind-list">
-        <button
-          v-for="checkpoint in checkpoints"
-          :key="checkpoint.id"
-          type="button"
-          class="rewind-item"
-          :class="{ 'rewind-item-on': selectedCheckpoint === checkpoint.id }"
-          @click="selectedCheckpoint = checkpoint.id"
-        >
-          <span class="rewind-prompt">{{ checkpoint.prompt || '（无输入）' }}</span>
-          <span class="rewind-meta">
-            第 {{ checkpoint.turn_seq }} 回合 · {{ checkpoint.file_count }} 个文件改动
-          </span>
-        </button>
-        <div v-if="!rewindLoading && checkpoints.length === 0" class="rewind-empty">
-          还没有可回退的检查点。
-        </div>
-      </div>
-      <template #footer>
-        <el-button @click="rewindDialog = false">取消</el-button>
-        <el-button :disabled="!selectedCheckpoint" @click="runRewind('conversation')">
-          只回退对话
-        </el-button>
-        <el-button :disabled="!selectedCheckpoint" @click="runRewind('code')">
-          只回退文件操作
-        </el-button>
-        <el-button type="primary" :disabled="!selectedCheckpoint" @click="runRewind('both')">
-          回退操作
-        </el-button>
-      </template>
-    </el-dialog>
-
     <el-drawer v-model="trajectoryVisible" title="会话轨迹" size="76%">
       <div class="trajectory-shell">
         <p v-if="trailTurns.length === 0" class="trajectory-empty">还没有活动。</p>
@@ -737,7 +701,6 @@ import {
   updateSessionPermission,
   updateTurnStop,
   updateWorkspace,
-  type SessionCheckpoint,
 } from '@/api/assistant';
 import { getAvailableModels, type AvailableModel } from '@/api/model-admin';
 import type {
@@ -840,10 +803,6 @@ const runningSessionId = ref('');
 const running = computed(() => runningSessionId.value === currentId.value);
 const stopping = ref(false);
 const activeTurnSessionId = ref('');
-const rewindDialog = ref(false);
-const rewindLoading = ref(false);
-const checkpoints = ref<SessionCheckpoint[]>([]);
-const selectedCheckpoint = ref<string>('');
 let stopTimer: number | undefined;
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
@@ -2128,23 +2087,23 @@ async function scrollToBottom(): Promise<void> {
   }
 }
 
-/** 发送消息：进入流式；/rewind 打开回退操作 */
+/** 发送消息：进入流式；/rewind 走命令 */
 function handleSend(): void {
   if (!current.value || !input.value.trim() || running.value) {
     return;
   }
   const content = input.value.trim();
-  if (content === '/rewind') {
+  if (content === '/rewind' || content.startsWith('/rewind ')) {
     input.value = '';
-    void openRewind();
+    void runRewindCommand(content.slice('/rewind'.length).trim());
     return;
   }
   input.value = '';
   sendContent(content);
 }
 
-/** 打开回退操作：列出本会话检查点 */
-async function openRewind(): Promise<void> {
+/** /rewind 命令：无参数列出检查点；带参数执行回退 */
+async function runRewindCommand(args: string): Promise<void> {
   if (!current.value) {
     return;
   }
@@ -2152,41 +2111,47 @@ async function openRewind(): Promise<void> {
     ElMessage.warning('当前回合仍在运行，先停止或等待完成');
     return;
   }
-  rewindDialog.value = true;
-  rewindLoading.value = true;
-  selectedCheckpoint.value = '';
-  try {
-    checkpoints.value = await getSessionCheckpoints(currentId.value);
-  } finally {
-    rewindLoading.value = false;
-  }
-}
-
-/** 执行回退：文件 / 对话 / 两者 */
-async function runRewind(mode: 'code' | 'conversation' | 'both'): Promise<void> {
-  if (!current.value || !selectedCheckpoint.value) {
+  const parts = args.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    const rows = await getSessionCheckpoints(currentId.value);
+    if (rows.length === 0) {
+      appendCommandOutput('还没有可回退的检查点。');
+      return;
+    }
+    const lines = rows.map(
+      (item) =>
+        `#${item.id} · 第 ${item.turn_seq} 回合 · ${item.file_count} 个文件改动\n${item.prompt || '（无输入）'}`,
+    );
+    appendCommandOutput(
+      `可回退的检查点：\n\n${lines.join('\n\n')}\n\n用法：/rewind <检查点ID> [both|code|conversation]`,
+    );
     return;
   }
-  rewindLoading.value = true;
-  try {
-    const result = await updateCheckpointRewind(currentId.value, selectedCheckpoint.value, mode);
-    if (mode !== 'code') {
-      input.value = result.prompt;
-    }
-    if (result.skipped.length > 0) {
-      ElMessage.warning(
-        `已回退 ${result.restored} 个文件，跳过 ${result.skipped.length} 个链接文件`,
-      );
-    } else if (mode !== 'conversation') {
-      ElMessage.success(`已回退 ${result.restored} 个文件操作`);
-    } else {
-      ElMessage.success('已回退对话');
-    }
-    rewindDialog.value = false;
-    await selectSession(current.value);
-  } finally {
-    rewindLoading.value = false;
+  const checkpointId = parts[0];
+  if (!/^\d+$/.test(checkpointId)) {
+    appendCommandOutput('用法：/rewind [检查点ID] [both|code|conversation]');
+    return;
   }
+  const requested = parts[1] ?? 'both';
+  if (!['both', 'code', 'conversation'].includes(requested)) {
+    appendCommandOutput('回退模式只能是 both、code 或 conversation。');
+    return;
+  }
+  const mode = requested as 'both' | 'code' | 'conversation';
+  const result = await updateCheckpointRewind(currentId.value, checkpointId, mode);
+  if (mode !== 'code') {
+    input.value = result.prompt;
+  }
+  const modeLabel = mode === 'both' ? '文件 + 对话' : mode === 'code' ? '文件' : '对话';
+  const skipped = result.skipped.length > 0 ? `，跳过 ${result.skipped.length} 个链接文件` : '';
+  appendCommandOutput(`已回退${modeLabel}：恢复 ${result.restored} 个文件操作${skipped}。`);
+  await selectSession(current.value);
+}
+
+/** 在消息区追加一条命令输出（不写入会话事件） */
+function appendCommandOutput(text: string): void {
+  messages.value.push({ role: 'assistant', text, thinking: '', tools: [] });
+  void scrollToBottom();
 }
 
 /** 发送指定内容：草稿转正、推入用户与助手占位、开启 SSE；retryOf 标记重试的旧回合 */
@@ -3076,62 +3041,6 @@ onUnmounted(() => {
 .composer-model {
   width: 210px;
   flex: none;
-}
-
-.rewind-hint {
-  margin: 0 0 10px;
-  color: var(--kb-text-3);
-  font-size: 12px;
-}
-
-.rewind-list {
-  max-height: 340px;
-  overflow: auto;
-  border: 1px solid var(--kb-line);
-}
-
-.rewind-item {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border: 0;
-  border-bottom: 1px solid var(--kb-line);
-  background: transparent;
-  color: var(--kb-text-2);
-  text-align: left;
-  cursor: pointer;
-}
-
-.rewind-item:last-child {
-  border-bottom: 0;
-}
-
-.rewind-item:hover,
-.rewind-item-on {
-  background: rgb(34 224 255 / 7%);
-  box-shadow: inset 2px 0 0 var(--kb-primary);
-  color: var(--kb-text-1);
-}
-
-.rewind-prompt {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rewind-meta {
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 10px;
-  color: var(--kb-text-3);
-}
-
-.rewind-empty {
-  padding: 28px 0;
-  color: var(--kb-text-3);
-  font-size: 12px;
-  text-align: center;
 }
 
 .chat-dir {
