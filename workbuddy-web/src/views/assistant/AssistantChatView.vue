@@ -173,9 +173,6 @@
         </div>
 
         <div ref="messageBox" class="messages">
-          <p v-if="messages.length === 0" class="messages-empty">
-            发一句话开始干活。可乐会按人格版本 {{ personaLabel }} 说话，按权限档执行工具。
-          </p>
           <button v-if="hiddenTurns > 0" class="turn-earlier" type="button" @click="showEarlier">
             显示更早的 {{ hiddenTurns }} 轮
           </button>
@@ -902,6 +899,7 @@ const stopping = ref(false);
 const activeTurnSessionId = ref('');
 let stopTimer: number | undefined;
 let skillTimer: number | undefined;
+const approvalPending = ref(false);
 const queueItems = ref<QueueItem[]>([]);
 const dragIndex = ref(-1);
 const dragOverIndex = ref(-1);
@@ -941,7 +939,6 @@ const composerMenuOpen = computed(() => rewindStage.value !== 'closed' || slashO
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
 const stepLabel = ref('1');
-const personaLabel = ref('v1');
 const messageBox = ref<HTMLElement | null>(null);
 const workspaceDialogVisible = ref(false);
 const workspacePath = ref('');
@@ -1300,6 +1297,7 @@ async function selectSession(item: AssistantSession): Promise<void> {
   skillsLoadedFor.value = '';
   skillCommands.value = [];
   queueItems.value = [];
+  approvalPending.value = false;
   void refreshQueue();
   messages.value = [];
   const [events, calls] = await Promise.all([getSessionEvents(item.id), getSessionCalls(item.id)]);
@@ -1348,6 +1346,8 @@ interface TrailNode {
   endedMs?: number;
   /** 检查器附加信息：模型、token 等 */
   meta?: string;
+  /** 工具调用 ID，用于精确关联 tool.result */
+  callId?: string;
 }
 interface TrailTurn {
   key: string;
@@ -1402,15 +1402,20 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
   }
   if (event.type === 'assistant/message') {
     const content = String(event.payload['content'] ?? '').trim();
-    if (!content) {
+    const rawCalls = event.payload['tool_calls'];
+    const calls = Array.isArray(rawCalls) ? rawCalls : [];
+    if (!content && calls.length === 0) {
       return;
     }
+    const names = calls
+      .map((item) => String((item as Record<string, unknown>)['name'] ?? ''))
+      .filter(Boolean);
     turn.nodes.push({
       key: `a${String(event.seq)}`,
       kind: 'assistant',
       badge: '助手',
-      title: preview(content),
-      detail: content,
+      title: content ? preview(content) : `计划调用 ${names.join('、') || '工具'}`,
+      detail: content || JSON.stringify(calls, null, 2),
       time,
       startedMs: at,
       endedMs: at,
@@ -1428,14 +1433,18 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
       detail: prettyJson(args),
       time,
       startedMs: at,
+      callId: String(event.payload['tool_call_id'] ?? ''),
     });
     return;
   }
   if (event.type === 'tool.result') {
     const name = String(event.payload['name'] ?? '');
+    const callId = String(event.payload['tool_call_id'] ?? '');
     const node = [...turn.nodes]
       .reverse()
-      .find((item) => item.kind === 'tool' && item.title.startsWith(name));
+      .find((item) =>
+        item.kind === 'tool' && callId ? item.callId === callId : item.title.startsWith(name),
+      );
     if (!node) {
       return;
     }
@@ -1464,6 +1473,11 @@ function appendTrailEvent(turn: TrailTurn, event: SessionEventItem): void {
       startedMs: at,
       endedMs: at,
     });
+    return;
+  }
+  if (event.type === 'turn.paused') {
+    turn.status = 'paused';
+    turn.statusLabel = '等待审批';
     return;
   }
   if (event.type === 'turn.end') {
@@ -1522,6 +1536,9 @@ const trailTurns = computed<TrailTurn[]>(() => {
     }
   }
   attachModelCalls(turns, modelCalls.value);
+  for (const turn of turns) {
+    turn.nodes.sort((left, right) => (left.startedMs ?? 0) - (right.startedMs ?? 0));
+  }
   for (const turn of turns) {
     const starts = turn.nodes
       .map((node) => node.startedMs)
@@ -1830,6 +1847,7 @@ function formatClock(iso: string): string {
 function trailStatusLabel(status: string): string {
   if (status === 'completed') return '完成';
   if (status === 'pending_stop') return '已停车';
+  if (status === 'paused') return '等待审批';
   if (status === 'interrupted') return '已中断';
   if (status === 'aborted') return '中止';
   if (status === 'error') return '出错';
@@ -1921,13 +1939,17 @@ function applyReplayEvent(event: SessionEventItem): void {
     return;
   }
   if (event.type === 'permission.required') {
+    approvalPending.value = true;
     last.permission = {
       request_id: String(payload['request_id'] ?? ''),
       name: String(payload['name'] ?? ''),
       reason: String(payload['reason'] ?? ''),
     };
   } else if (event.type === 'permission/decided') {
+    approvalPending.value = false;
     last.permission = undefined;
+  } else if (event.type === 'turn.paused') {
+    approvalPending.value = true;
   }
 }
 
@@ -2259,17 +2281,21 @@ function applyEvent(type: string, payload: Record<string, unknown>): void {
   } else if (type === 'tool.result') {
     applyToolResult(last, payload, Date.now());
   } else if (type === 'permission.required') {
+    approvalPending.value = true;
     last.permission = {
       request_id: String(payload['request_id'] ?? ''),
       name: String(payload['name'] ?? ''),
       reason: String(payload['reason'] ?? ''),
     };
   } else if (type === 'permission/decided') {
+    approvalPending.value = false;
     last.permission = undefined;
   } else if (type === 'error') {
     last.text += `\n[错误] ${String(payload['msg'] ?? payload['code'] ?? '')}`;
   } else if (type === 'turn.end' && String(payload['status'] ?? '') === 'pending_stop') {
     last.text += '\n（等待你的裁决）';
+  } else if (type === 'turn.paused') {
+    approvalPending.value = true;
   } else if (type === 'turn.end' && String(payload['status'] ?? '') === 'interrupted') {
     last.interrupted = true;
     last.text += '\n（已中断）';
@@ -2657,7 +2683,7 @@ async function queueCurrent(content: string): Promise<void> {
 
 /** 回合结束后自动发送队列中的下一条 */
 async function drainQueue(): Promise<void> {
-  if (running.value || !currentId.value) {
+  if (running.value || approvalPending.value || !currentId.value) {
     return;
   }
   const next = queueItems.value.at(0);
@@ -3570,8 +3596,7 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.session-empty,
-.messages-empty {
+.session-empty {
   padding: 18px 12px;
   color: var(--kb-text-3);
   font-size: 13px;

@@ -279,6 +279,6 @@ async def test_loop_delete_asks_and_pauses(
     sid = await create_session(work_dir, "删除工具询问")
     events = [event async for event in runner.run(sid, "tool_delete")]
     assert any(e.type == "permission.required" for e in events)
-    assert events[-1].type == "turn.end"
-    assert events[-1].payload.get("status") == "pending_stop"
+    assert events[-1].type == "turn.paused"
+    assert events[-1].payload.get("status") == "approval"
     assert (tmp_path / "hello.txt").exists()

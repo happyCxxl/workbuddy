@@ -26,6 +26,7 @@ class EventType(StrEnum):
     SUBSESSION_COMPLETED = "subsession/completed"
     SUBSESSION_FAILED = "subsession/failed"
     TURN_END = "turn.end"
+    TURN_PAUSED = "turn.paused"
     ERROR = "error"
     TURN_START = "turn/start"
     USER_MESSAGE = "user/message"

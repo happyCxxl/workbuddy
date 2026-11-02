@@ -11,7 +11,8 @@ from lingxi.core.hooks import HookRegistry
 from lingxi.core.loop import TurnRunner
 from lingxi.domain.llm.gateway import LlmGateway
 from lingxi.domain.permission.gate import PermissionGate
-from lingxi.domain.session.service import create_session
+from lingxi.domain.ports import ChatRequest, StreamChunk, ToolCall, Usage
+from lingxi.domain.session.service import build_history, create_session
 from lingxi.domain.tools.fs import register_fs_tools
 from lingxi.domain.tools.registry import ToolRegistry
 
@@ -100,8 +101,8 @@ async def test_ask_pause_and_resume_allowed_once(
     events = [event async for event in runner.run(sid, "tool_delete")]
     required = [e for e in events if e.type == "permission.required"][0]
     request_id = str(required.payload["request_id"])
-    assert events[-1].type == "turn.end"
-    assert events[-1].payload.get("status") == "pending_stop"
+    assert events[-1].type == "turn.paused"
+    assert events[-1].payload.get("status") == "approval"
     assert target.exists()
     resumed: list[object] = []
     async for event in runner.resume(sid, request_id, "allowed-once"):
@@ -111,6 +112,111 @@ async def test_ask_pause_and_resume_allowed_once(
     assert resumed[0].type == "permission/decided"
     assert any(e.type == "tool.result" and "已删除" in str(e.payload.get("result")) for e in resumed)
     assert not target.exists()
+
+
+@pytest.mark.usefixtures("engine_fixture")
+async def test_parallel_batch_survives_approval(
+    fake_server: tuple[Settings, list[dict[str, object]]], tmp_path: Path
+) -> None:
+    """审批挂起一个调用后，恢复时同批剩余调用仍执行并各自产生 tool 结果。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings, _ = fake_server
+    target = tmp_path / "hello.txt"
+    target.write_text("待删除", encoding="utf-8")
+
+    class BatchGateway:
+        """首轮返回 删除 + 列目录 两个调用，第二轮返回文本。"""
+
+        def __init__(self) -> None:
+            self.requests: list[ChatRequest] = []
+
+        async def stream(self, request: ChatRequest):
+            """按请求序号返回工具批次或最终文本。"""
+            self.requests.append(request)
+            if len(self.requests) == 1:
+                yield StreamChunk(
+                    kind="tool_calls",
+                    tool_calls=[
+                        ToolCall(
+                            id="call_delete",
+                            name="fs_delete",
+                            arguments='{"path": "hello.txt"}',
+                        ),
+                        ToolCall(id="call_list", name="fs_list", arguments='{"path": "."}'),
+                    ],
+                )
+                yield StreamChunk(
+                    kind="usage",
+                    tool_calls=[],
+                    usage=Usage(prompt_tokens=10, completion_tokens=2),
+                )
+                return
+            yield StreamChunk(kind="text", text="处理完成", tool_calls=[])
+            yield StreamChunk(
+                kind="usage",
+                tool_calls=[],
+                usage=Usage(prompt_tokens=20, completion_tokens=3),
+            )
+
+    gateway = BatchGateway()
+    runner = TurnRunner(
+        small_settings(settings, "workspace-write"),
+        gateway,
+        HookRegistry(),
+        FakeEmbedder(),
+        make_registry(),
+        PermissionGate(),
+    )
+    sid = await create_session(str(tmp_path), "并行审批", "workspace-write")
+    events = [event async for event in runner.run(sid, "删文件再列目录")]
+    required = [e for e in events if e.type == "permission.required"][0]
+    assert events[-1].type == "turn.paused"
+
+    resumed = [event async for event in runner.resume(sid, str(required.payload["request_id"]), "allowed-once")]
+
+    results = [e for e in resumed if e.type == "tool.result"]
+    assert {e.payload.get("tool_call_id") for e in results} == {"call_delete", "call_list"}
+    assert not target.exists()
+    second = gateway.requests[1]
+    tool_messages = [message for message in second.messages if message.role == "tool"]
+    assert {message.tool_call_id for message in tool_messages} == {"call_delete", "call_list"}
+
+
+@pytest.mark.usefixtures("engine_fixture")
+async def test_cancel_pending_writes_skipped_results(
+    fake_server: tuple[Settings, list[dict[str, object]]], tmp_path: Path
+) -> None:
+    """审批挂起时停止：未执行调用补错误结果，历史仍保持配对。"""
+    if not await db_up():
+        pytest.skip("数据库未启动：先 docker compose up -d postgres")
+    settings, _ = fake_server
+
+    class BatchGateway:
+        """首轮返回一个待审批删除调用。"""
+
+        async def stream(self, request: ChatRequest):
+            """只返回一次工具调用。"""
+            yield StreamChunk(
+                kind="tool_calls",
+                tool_calls=[ToolCall(id="call_delete", name="fs_delete", arguments='{"path": "missing.txt"}')],
+            )
+
+    runner = TurnRunner(
+        small_settings(settings, "workspace-write"),
+        BatchGateway(),
+        HookRegistry(),
+        FakeEmbedder(),
+        make_registry(),
+        PermissionGate(),
+    )
+    sid = await create_session(str(tmp_path), "取消审批", "workspace-write")
+    _ = [event async for event in runner.run(sid, "删文件")]
+
+    assert await runner.cancel_pending(sid) is True
+    history = await build_history(sid)
+    tool_messages = [message for message in history if message.role == "tool"]
+    assert [message.tool_call_id for message in tool_messages] == ["call_delete"]
 
 
 @pytest.mark.usefixtures("engine_fixture")

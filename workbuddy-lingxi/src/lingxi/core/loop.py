@@ -59,14 +59,16 @@ def _estimate_tokens(messages: list[ChatMessage]) -> int:
 
 
 @dataclass
-class PendingCheckpoint:
-    """审批挂起检查点：用户裁决后据此恢复重放。"""
+class PendingBatch:
+    """审批挂起批次：保存完整 tool_calls、当前下标与调用事件状态。"""
 
     turn_seq: int
     step: int
-    call: ToolCall
+    calls: list[ToolCall]
+    next_index: int
     work_dir: str
     user_content: str
+    call_emitted: bool = True
 
 
 class TurnRunner:
@@ -89,7 +91,7 @@ class TurnRunner:
         self._permission = permission
         self._locks: dict[int, asyncio.Lock] = {}
         self._active_turns: dict[int, TurnControl] = {}
-        self._pending: dict[tuple[int, str], PendingCheckpoint] = {}
+        self._pending: dict[tuple[int, str], PendingBatch] = {}
         # 会话级工具状态：已读文件集合（读前写/改门禁）
         self._tool_states: dict[int, SessionToolState] = {}
         self._hooks.register(
@@ -98,15 +100,39 @@ class TurnRunner:
         self._hooks.register("pre_step", make_max_steps_gate(settings.loop.max_steps))
 
     def request_stop(self, session_id: int) -> bool:
-        """申请停止当前回合；没有活动回合时返回 False，不污染下一轮。"""
-        pending = [key for key in self._pending if key[0] == session_id]
-        for key in pending:
-            self._pending.pop(key, None)
+        """申请停止当前活动回合；审批挂起由 cancel_pending 处理。"""
         control = self._active_turns.get(session_id)
         if control is None:
-            return bool(pending)
+            return False
         control.reason = "user"
         control.event.set()
+        return True
+
+    async def cancel_pending(self, session_id: int) -> bool:
+        """停止审批挂起：为未执行调用补显式结果并结束回合。"""
+        keys = [key for key in self._pending if key[0] == session_id]
+        if not keys:
+            return False
+        for key in keys:
+            batch = self._pending.pop(key, None)
+            if batch is None:
+                continue
+            for call in batch.calls[batch.next_index :]:
+                await self._emit(
+                    session_id,
+                    EventType.TOOL_RESULT,
+                    {"name": call.name, "error": "审批未完成，调用已取消", "tool_call_id": call.id},
+                )
+                await self._emit(
+                    session_id,
+                    EventType.TOOL_MESSAGE,
+                    {
+                        "tool_call_id": call.id,
+                        "name": call.name,
+                        "content": f"工具 {call.name} 未执行：审批未完成",
+                    },
+                )
+            await self._emit(session_id, EventType.TURN_END, {"status": "interrupted", "reason": "user"})
         return True
 
     async def run(
@@ -201,8 +227,12 @@ class TurnRunner:
                 skill_text,
             ):
                 yield event
-        except PendingApproval:
-            yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
+        except PendingApproval as exc:
+            yield await self._emit(
+                session_id,
+                EventType.TURN_PAUSED,
+                {"request_id": exc.request_id, "status": "approval"},
+            )
         except ApiError as exc:
             yield await self._emit(session_id, EventType.ERROR, {"code": exc.error.code, "message": str(exc)})
             yield await self._emit(session_id, EventType.TURN_END, {"status": "aborted"})
@@ -217,8 +247,8 @@ class TurnRunner:
         self, session_id: int, request_id: str, outcome: str, control: TurnControl | None = None
     ) -> AsyncIterator[TurnEvent]:
         control = control or TurnControl()
-        checkpoint = self._pending.pop((session_id, request_id), None)
-        if checkpoint is None:
+        batch = self._pending.pop((session_id, request_id), None)
+        if batch is None:
             raise ApiError(ErrorCode.NOT_FOUND, f"审批请求不存在或已裁决：{request_id}")
         SESSION_ID.set(session_id)
         try:
@@ -227,51 +257,59 @@ class TurnRunner:
             )
             session = await get_session(session_id)
             persona = await persona_of_session(session) if session.kind == "chat" else None
-            if outcome == "rejected":
-                yield await self._emit(
-                    session_id,
-                    EventType.TOOL_RESULT,
-                    {"name": checkpoint.call.name, "error": "用户拒绝"},
-                )
-                yield await self._emit(
-                    session_id,
-                    EventType.TOOL_MESSAGE,
-                    {
-                        "tool_call_id": checkpoint.call.id,
-                        "name": checkpoint.call.name,
-                        "content": f"工具 {checkpoint.call.name} 被用户拒绝",
-                    },
-                )
-            else:
+            current = batch.calls[batch.next_index]
+            async for event in self._execute_tool(
+                session_id,
+                batch.turn_seq,
+                batch.step,
+                current,
+                batch.work_dir,
+                batch.user_content,
+                session.permission_preset,
+                session.kind,
+                control,
+                calls=batch.calls,
+                call_index=batch.next_index,
+                emit_call=False,
+                approved_outcome=outcome,
+            ):
+                yield event
+            for index in range(batch.next_index + 1, len(batch.calls)):
                 async for event in self._execute_tool(
                     session_id,
-                    checkpoint.turn_seq,
-                    checkpoint.step,
-                    checkpoint.call,
-                    checkpoint.work_dir,
-                    checkpoint.user_content,
+                    batch.turn_seq,
+                    batch.step,
+                    batch.calls[index],
+                    batch.work_dir,
+                    batch.user_content,
                     session.permission_preset,
                     session.kind,
                     control,
-                    preapproved=True,
+                    calls=batch.calls,
+                    call_index=index,
+                    emit_call=True,
                 ):
                     yield event
             async for event in self._steps(
                 session_id,
                 session.user_id,
                 session.model_id,
-                checkpoint.turn_seq,
+                batch.turn_seq,
                 persona,
-                checkpoint.work_dir,
-                checkpoint.user_content,
-                checkpoint.step,
+                batch.work_dir,
+                batch.user_content,
+                batch.step,
                 session.permission_preset,
                 session.kind,
                 control,
             ):
                 yield event
-        except PendingApproval:
-            yield await self._emit(session_id, EventType.TURN_END, {"status": "pending_stop"})
+        except PendingApproval as exc:
+            yield await self._emit(
+                session_id,
+                EventType.TURN_PAUSED,
+                {"request_id": exc.request_id, "status": "approval"},
+            )
         except ApiError as exc:
             yield await self._emit(session_id, EventType.ERROR, {"code": exc.error.code, "message": str(exc)})
             yield await self._emit(session_id, EventType.TURN_END, {"status": "aborted"})
@@ -388,8 +426,10 @@ class TurnRunner:
                         "model": model_name or None,
                     },
                 )
-                for call in tool_calls:
+                for index, call in enumerate(tool_calls):
                     if control.cancelled:
+                        async for event in self._skip_calls(session_id, tool_calls[index:]):
+                            yield event
                         break
                     async for event in self._execute_tool(
                         session_id,
@@ -402,6 +442,8 @@ class TurnRunner:
                         kind,
                         control,
                         checkpoint_id,
+                        calls=tool_calls,
+                        call_index=index,
                     ):
                         yield event
                 if control.cancelled:
@@ -448,6 +490,24 @@ class TurnRunner:
                 logger.warning("回合后置钩子失败", exc_info=True)
             return
 
+    async def _skip_calls(self, session_id: int, calls: list[ToolCall]) -> AsyncIterator[TurnEvent]:
+        """回合取消时为未执行调用补显式结果，保证 tool_calls / tool 消息配对。"""
+        for call in calls:
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_RESULT,
+                {"name": call.name, "error": "回合已取消，调用未执行", "tool_call_id": call.id},
+            )
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_MESSAGE,
+                {
+                    "tool_call_id": call.id,
+                    "name": call.name,
+                    "content": f"工具 {call.name} 未执行：回合已取消",
+                },
+            )
+
     async def _inject_queue(self, session_id: int) -> AsyncIterator[TurnEvent]:
         """工具批次结束后消费排队消息：作为插话写入同一回合的下一步。"""
         for row in await queue_coordinator.claim_pending(session_id):
@@ -472,7 +532,10 @@ class TurnRunner:
         kind: str,
         control: TurnControl,
         checkpoint_id: int | None = None,
-        preapproved: bool = False,
+        calls: list[ToolCall] | None = None,
+        call_index: int = 0,
+        emit_call: bool = True,
+        approved_outcome: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         """执行一步工具：pre-execute 钩子 fail-closed；权限门裁决（allow 执行 / deny 拒绝 / ask 挂起）。"""
         if control.cancelled:
@@ -486,17 +549,40 @@ class TurnRunner:
             payload={"arguments": call.arguments},
         )
         await self._hooks.run("pre_execute", ctx)
-        yield await self._emit(session_id, EventType.TOOL_CALL, {"name": call.name, "arguments": call.arguments})
+        if emit_call:
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_CALL,
+                {"name": call.name, "arguments": call.arguments, "tool_call_id": call.id},
+            )
         tool = self._tools.get(call.name)
         if tool is None:
-            yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "error": "未知工具"})
+            yield await self._emit(
+                session_id, EventType.TOOL_RESULT, {"name": call.name, "error": "未知工具", "tool_call_id": call.id}
+            )
             yield await self._emit(
                 session_id,
                 EventType.TOOL_MESSAGE,
                 {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回：未知工具"},
             )
             return
-        if not preapproved:
+        if approved_outcome == "rejected":
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_RESULT,
+                {"name": call.name, "error": "用户拒绝", "tool_call_id": call.id},
+            )
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_MESSAGE,
+                {
+                    "tool_call_id": call.id,
+                    "name": call.name,
+                    "content": f"工具 {call.name} 被用户拒绝",
+                },
+            )
+            return
+        if approved_outcome is None:
             raw_args = (
                 cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
             )
@@ -505,7 +591,7 @@ class TurnRunner:
                 yield await self._emit(
                     session_id,
                     EventType.TOOL_RESULT,
-                    {"name": call.name, "error": f"已拒绝：{decision.reason}"},
+                    {"name": call.name, "error": f"已拒绝：{decision.reason}", "tool_call_id": call.id},
                 )
                 yield await self._emit(
                     session_id,
@@ -536,8 +622,14 @@ class TurnRunner:
                     )
                     return
                 request_id = uuid4().hex
-                self._pending[(session_id, request_id)] = PendingCheckpoint(
-                    turn_seq=turn_seq, step=step, call=call, work_dir=work_dir, user_content=user_content
+                self._pending[(session_id, request_id)] = PendingBatch(
+                    turn_seq=turn_seq,
+                    step=step,
+                    calls=calls if calls is not None else [call],
+                    next_index=call_index,
+                    work_dir=work_dir,
+                    user_content=user_content,
+                    call_emitted=emit_call,
                 )
                 yield await self._emit(
                     session_id,
@@ -564,7 +656,11 @@ class TurnRunner:
                     _snapshot,
                 ),
             )
-            yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "result": output})
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_RESULT,
+                {"name": call.name, "result": output, "tool_call_id": call.id},
+            )
             yield await self._emit(
                 session_id,
                 EventType.TOOL_MESSAGE,
@@ -572,7 +668,11 @@ class TurnRunner:
             )
         except Exception as exc:
             logger.warning("工具执行失败：%s %s", call.name, exc)
-            yield await self._emit(session_id, EventType.TOOL_RESULT, {"name": call.name, "error": str(exc)})
+            yield await self._emit(
+                session_id,
+                EventType.TOOL_RESULT,
+                {"name": call.name, "error": str(exc), "tool_call_id": call.id},
+            )
             yield await self._emit(
                 session_id,
                 EventType.TOOL_MESSAGE,

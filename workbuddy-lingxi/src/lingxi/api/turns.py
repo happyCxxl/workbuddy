@@ -65,9 +65,11 @@ def make_router(runner: TurnRunner) -> APIRouter:
 
     @router.post("/sessions/{session_id}/turns/stop")
     async def stop_turn(session_id: int, user: CurrentUserDep) -> dict[str, object]:
-        """申请停止当前回合：立即置取消信号；没有活动回合时返回 accepted=false。"""
+        """申请停止当前回合：活动回合置取消信号，审批挂起补未执行结果。"""
         await get_session(session_id, user.id)
         accepted = runner.request_stop(session_id)
+        if not accepted:
+            accepted = await runner.cancel_pending(session_id)
         return R.ok({"accepted": accepted}).to_dict()
 
     return router
