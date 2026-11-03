@@ -855,6 +855,8 @@ interface ChatMessage {
   tools: ToolLine[];
   permission?: PermissionInfo;
   interrupted?: boolean;
+  /** 该消息所属回合的 turn/start seq */
+  turnSeq?: number;
 }
 
 const sessions = ref<AssistantSession[]>([]);
@@ -901,6 +903,7 @@ const draftSessionId = ref<string | null>(null);
 const messages = ref<ChatMessage[]>([]);
 /** 上一步以工具调用收尾：下一个增量事件开启新的步骤块，保证"思考 → 工具 → 思考"的循环可见 */
 let awaitingNextStep = false;
+let liveTurnSeq: number | undefined;
 const input = ref('');
 const runningSessionId = ref('');
 const running = computed(() => runningSessionId.value === currentId.value);
@@ -1925,7 +1928,7 @@ function replayTools(payload: Record<string, unknown>): ToolLine[] {
 }
 
 /** 重放单条事件：用户消息、每个步骤的助手消息（含工具行）与工具结果回填 */
-function applyReplayEvent(event: SessionEventItem): void {
+function applyReplayEvent(event: SessionEventItem, turnSeq?: number): void {
   const payload = event.payload;
   if (event.type === 'user/message') {
     const queueId = payload['queue_id'];
@@ -1937,6 +1940,7 @@ function applyReplayEvent(event: SessionEventItem): void {
       text: String(payload['content'] ?? ''),
       thinking: '',
       tools: [],
+      turnSeq,
     });
     return;
   }
@@ -1947,6 +1951,7 @@ function applyReplayEvent(event: SessionEventItem): void {
       thinking: String(payload['reasoning_content'] ?? ''),
       tools: replayTools(payload),
       interrupted: Boolean(payload['interrupted']),
+      turnSeq,
     });
     return;
   }
@@ -2007,8 +2012,12 @@ function applyReplay(events: SessionEventItem[]): void {
           const target = Number(rewind.payload['target_turn_seq'] ?? 0);
           return event.seq < target || event.seq > rewind.seq;
         });
+  let replayTurnSeq: number | undefined;
   for (const event of visible) {
-    applyReplayEvent(event);
+    if (event.type === 'turn/start') {
+      replayTurnSeq = event.seq;
+    }
+    applyReplayEvent(event, replayTurnSeq);
   }
 }
 
@@ -2034,6 +2043,7 @@ const turnViews = computed<TurnView[]>(() => {
         steps: [],
         answer: null,
         running: false,
+        turnSeq: message.turnSeq,
       });
       continue;
     }
@@ -2043,7 +2053,7 @@ const turnViews = computed<TurnView[]>(() => {
     }
   }
   for (const [index, view] of views.entries()) {
-    view.turnSeq = turnStartSeqs.value[index];
+    view.turnSeq = view.user?.turnSeq ?? turnStartSeqs.value[index];
     view.running = index === views.length - 1 && running.value;
     if (view.running) {
       continue;
@@ -2285,6 +2295,13 @@ function applyEvent(type: string, payload: Record<string, unknown>): void {
       payload,
       created_at: String(payload['created_at'] ?? new Date().toISOString()),
     });
+  }
+  if (type === 'turn/start') {
+    liveTurnSeq = typeof payload['seq'] === 'number' ? payload['seq'] : undefined;
+    const lastUser = [...messages.value].reverse().find((item) => item.role === 'user');
+    if (lastUser !== undefined && lastUser.turnSeq === undefined) {
+      lastUser.turnSeq = liveTurnSeq;
+    }
   }
   if (type === 'assistant/message') {
     const current = messages.value.at(-1);
@@ -4089,7 +4106,7 @@ onUnmounted(() => {
   display: flex;
   gap: 4px;
   align-items: center;
-  margin-left: auto;
+  margin-right: auto;
 }
 
 .turn-icon-btn {
