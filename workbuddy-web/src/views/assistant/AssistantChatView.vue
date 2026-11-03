@@ -177,8 +177,12 @@
             显示更早的 {{ hiddenTurns }} 轮
           </button>
           <section v-for="view in pagedTurns" :key="view.key" class="turn">
-            <div v-if="view.user" class="message message-user">
-              <div class="message-bubble">{{ view.user.text }}</div>
+            <div
+              v-for="(userMessage, userIndex) in view.userMessages"
+              :key="`u-${String(userIndex)}`"
+              class="message message-user"
+            >
+              <div class="message-bubble">{{ userMessage.text }}</div>
             </div>
             <div v-if="view.steps.length > 0" class="process">
               <button
@@ -2024,7 +2028,7 @@ function applyReplay(events: SessionEventItem[]): void {
 // 一轮 = 过程组（各步骤的思考/文本/工具）+ 最终回复；对齐 DSH 的轮次过程折叠
 interface TurnView {
   key: string;
-  user: ChatMessage | null;
+  userMessages: ChatMessage[];
   steps: ChatMessage[];
   answer: ChatMessage | null;
   running: boolean;
@@ -2037,9 +2041,18 @@ const turnViews = computed<TurnView[]>(() => {
   const views: TurnView[] = [];
   for (const message of messages.value) {
     if (message.role === 'user') {
+      const current = views.at(-1);
+      if (
+        current !== undefined &&
+        message.turnSeq !== undefined &&
+        current.turnSeq === message.turnSeq
+      ) {
+        current.userMessages.push(message);
+        continue;
+      }
       views.push({
         key: `turn-${String(views.length)}`,
-        user: message,
+        userMessages: [message],
         steps: [],
         answer: null,
         running: false,
@@ -2053,7 +2066,7 @@ const turnViews = computed<TurnView[]>(() => {
     }
   }
   for (const [index, view] of views.entries()) {
-    view.turnSeq = view.user?.turnSeq ?? turnStartSeqs.value[index];
+    view.turnSeq = view.userMessages[0]?.turnSeq ?? turnStartSeqs.value[index];
     view.running = index === views.length - 1 && running.value;
     if (view.running) {
       continue;
