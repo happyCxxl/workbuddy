@@ -316,6 +316,20 @@
                   </div>
                 </el-popover>
 
+                <button class="turn-icon-btn" type="button" title="复制" @click="copyAnswer(view)">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                  >
+                    <rect x="5.5" y="5.5" width="8" height="8" rx="1" />
+                    <path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
+                  </svg>
+                </button>
+
                 <el-popover
                   v-if="!isLastTurn(view) && checkpointForTurn(view.turnSeq)"
                   placement="top"
@@ -353,20 +367,6 @@
                     </button>
                   </div>
                 </el-popover>
-
-                <button class="turn-icon-btn" type="button" title="复制" @click="copyAnswer(view)">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.4"
-                  >
-                    <rect x="5.5" y="5.5" width="8" height="8" rx="1" />
-                    <path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
-                  </svg>
-                </button>
               </span>
             </div>
           </section>
