@@ -268,60 +268,105 @@
               <MarkdownView :content="view.answer.text" />
             </div>
             <div v-if="view.answer && !view.running" class="turn-footer">
-              <el-popover placement="top-start" width="300" trigger="click">
-                <template #reference>
-                  <button class="turn-meta" type="button">
-                    <svg
-                      class="turn-icon"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.4"
-                    >
-                      <ellipse cx="8" cy="3.5" rx="5" ry="2" />
-                      <path d="M3 3.5v9c0 1.1 2.2 2 5 2s5-.9 5-2v-9" />
-                      <path d="M3 8c0 1.1 2.2 2 5 2s5-.9 5-2" />
-                    </svg>
-                    <template v-if="turnMeta[view.turnSeq ?? 0]?.duration">
-                      {{ turnMeta[view.turnSeq ?? 0]?.duration }}
-                    </template>
-                    <template v-if="turnMeta[view.turnSeq ?? 0]?.tokens">
-                      · {{ compactTokens(turnMeta[view.turnSeq ?? 0]?.tokens ?? 0) }} tok
-                    </template>
-                  </button>
-                </template>
-                <div class="usage-pop">
-                  <div class="usage-pop-head">
-                    <span class="usage-pop-title">本轮用量</span>
-                    <span class="usage-pop-total">
-                      {{ (turnMeta[view.turnSeq ?? 0]?.tokens ?? 0).toLocaleString() }} tok
-                    </span>
-                  </div>
-                  <div class="usage-pop-row">
-                    <span>提供方 / 模型</span><span>{{ turnModels(view) }}</span>
-                  </div>
-                  <div class="usage-pop-row">
-                    <span>缓存命中</span><span>{{ turnCacheRate(view) }}%</span>
-                  </div>
-                  <div class="usage-pop-row">
-                    <span>未缓存输入</span
-                    ><span>{{ turnMeta[view.turnSeq ?? 0]?.cacheMiss ?? 0 }} tok</span>
-                  </div>
-                  <div class="usage-pop-row">
-                    <span>缓存读取</span
-                    ><span>{{ turnMeta[view.turnSeq ?? 0]?.cacheHit ?? 0 }} tok</span>
-                  </div>
-                  <div class="usage-pop-row"><span>缓存写入</span><span>0 tok</span></div>
-                  <div class="usage-pop-row">
-                    <span>输出</span
-                    ><span>{{ turnMeta[view.turnSeq ?? 0]?.completion ?? 0 }} tok</span>
-                  </div>
-                </div>
-              </el-popover>
               <span class="turn-actions">
-                <button class="turn-action" type="button" @click="copyAnswer(view)">复制</button>
+                <el-popover placement="top-start" width="300" trigger="click">
+                  <template #reference>
+                    <button class="turn-icon-btn" type="button" title="本轮用量">
+                      <svg
+                        class="turn-icon"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      >
+                        <ellipse cx="8" cy="3.5" rx="5" ry="2" />
+                        <path d="M3 3.5v9c0 1.1 2.2 2 5 2s5-.9 5-2v-9" />
+                        <path d="M3 8c0 1.1 2.2 2 5 2s5-.9 5-2" />
+                      </svg>
+                    </button>
+                  </template>
+                  <div class="usage-pop">
+                    <div class="usage-pop-head">
+                      <span class="usage-pop-title">本轮用量</span>
+                      <span class="usage-pop-total">
+                        {{ (turnMeta[view.turnSeq ?? 0]?.tokens ?? 0).toLocaleString() }} tok
+                      </span>
+                    </div>
+                    <div class="usage-pop-row">
+                      <span>提供方 / 模型</span><span>{{ turnModels(view) }}</span>
+                    </div>
+                    <div class="usage-pop-row">
+                      <span>缓存命中</span><span>{{ turnCacheRate(view) }}%</span>
+                    </div>
+                    <div class="usage-pop-row">
+                      <span>未缓存输入</span
+                      ><span>{{ turnMeta[view.turnSeq ?? 0]?.cacheMiss ?? 0 }} tok</span>
+                    </div>
+                    <div class="usage-pop-row">
+                      <span>缓存读取</span
+                      ><span>{{ turnMeta[view.turnSeq ?? 0]?.cacheHit ?? 0 }} tok</span>
+                    </div>
+                    <div class="usage-pop-row"><span>缓存写入</span><span>0 tok</span></div>
+                    <div class="usage-pop-row">
+                      <span>输出</span
+                      ><span>{{ turnMeta[view.turnSeq ?? 0]?.completion ?? 0 }} tok</span>
+                    </div>
+                  </div>
+                </el-popover>
+
+                <el-popover
+                  v-if="!isLastTurn(view) && checkpointForTurn(view.turnSeq)"
+                  placement="top"
+                  width="240"
+                  trigger="click"
+                >
+                  <template #reference>
+                    <button class="turn-icon-btn" type="button" title="回退操作">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                      >
+                        <path d="M3 8a5 5 0 1 0 1.6-3.7" />
+                        <path d="M3 3v4h4" />
+                      </svg>
+                    </button>
+                  </template>
+                  <div class="rewind-menu">
+                    <button class="rewind-option" type="button" @click="rewindTurn(view, 'both')">
+                      回退操作（文件 + 对话）
+                    </button>
+                    <button class="rewind-option" type="button" @click="rewindTurn(view, 'code')">
+                      只回退文件操作
+                    </button>
+                    <button
+                      class="rewind-option"
+                      type="button"
+                      @click="rewindTurn(view, 'conversation')"
+                    >
+                      只回退对话
+                    </button>
+                  </div>
+                </el-popover>
+
+                <button class="turn-icon-btn" type="button" title="复制" @click="copyAnswer(view)">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                  >
+                    <rect x="5.5" y="5.5" width="8" height="8" rx="1" />
+                    <path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
+                  </svg>
+                </button>
               </span>
             </div>
           </section>
@@ -360,60 +405,24 @@
             </div>
           </div>
           <div v-if="composerMenuOpen" class="composer-menu">
-            <template v-if="rewindStage === 'checkpoints'">
-              <div class="composer-menu-head">选择回退检查点</div>
-              <button
-                v-for="(checkpoint, index) in checkpoints"
-                :key="checkpoint.id"
-                type="button"
-                class="composer-menu-item"
-                :class="{ 'composer-menu-item-on': index === rewindIndex }"
-                @mousedown.prevent
-                @click="selectRewindCheckpoint(checkpoint)"
-              >
-                <span class="composer-menu-name">第 {{ checkpoint.turn_seq }} 回合</span>
-                <span class="composer-menu-desc">
-                  {{ checkpoint.prompt || '（无输入）' }} · {{ checkpoint.file_count }} 个文件改动
-                </span>
-              </button>
-              <div v-if="checkpoints.length === 0" class="composer-menu-empty">
-                还没有可回退的检查点。
-              </div>
-            </template>
-            <template v-else-if="rewindStage === 'mode'">
-              <div class="composer-menu-head">回退操作</div>
-              <button
-                v-for="(mode, index) in rewindModes"
-                :key="mode.value"
-                type="button"
-                class="composer-menu-item"
-                :class="{ 'composer-menu-item-on': index === rewindIndex }"
-                @mousedown.prevent
-                @click="executeRewind(mode.value)"
-              >
-                <span class="composer-menu-name">{{ mode.label }}</span>
-              </button>
-            </template>
-            <template v-else>
-              <button
-                v-for="(command, index) in filteredSlashCommands"
-                :key="command.name"
-                type="button"
-                class="composer-menu-item"
-                :class="{ 'composer-menu-item-on': index === slashIndex }"
-                @mousedown.prevent
-                @click="pickSlashCommand(command)"
-              >
-                <span class="composer-menu-name">{{ command.name }}</span>
-                <span class="composer-menu-desc">
-                  {{ command.description }}{{ command.argsHint ? ` · ${command.argsHint}` : ''
-                  }}{{ command.kind === 'skill' ? ' · 技能' : '' }}
-                </span>
-              </button>
-              <div v-if="filteredSlashCommands.length === 0" class="composer-menu-empty">
-                没有匹配的命令。
-              </div>
-            </template>
+            <button
+              v-for="(command, index) in filteredSlashCommands"
+              :key="command.name"
+              type="button"
+              class="composer-menu-item"
+              :class="{ 'composer-menu-item-on': index === slashIndex }"
+              @mousedown.prevent
+              @click="pickSlashCommand(command)"
+            >
+              <span class="composer-menu-name">{{ command.name }}</span>
+              <span class="composer-menu-desc">
+                {{ command.description }}{{ command.argsHint ? ` · ${command.argsHint}` : ''
+                }}{{ command.kind === 'skill' ? ' · 技能' : '' }}
+              </span>
+            </button>
+            <div v-if="filteredSlashCommands.length === 0" class="composer-menu-empty">
+              没有匹配的命令。
+            </div>
           </div>
           <el-input
             v-model="input"
@@ -911,7 +920,6 @@ interface SlashCommand {
   skill?: string;
 }
 const builtinSlashCommands: SlashCommand[] = [
-  { name: '/rewind', description: '回退到检查点', kind: 'builtin' },
   { name: '/reload-skills', description: '重新加载技能目录', kind: 'builtin' },
 ];
 const skillCommands = ref<SlashCommand[]>([]);
@@ -923,19 +931,11 @@ const slashCommands = computed<SlashCommand[]>(() => [
 const slashOpen = ref(false);
 const slashQuery = ref('');
 const slashIndex = ref(0);
-const rewindStage = ref<'closed' | 'checkpoints' | 'mode'>('closed');
 const checkpoints = ref<SessionCheckpoint[]>([]);
-const rewindIndex = ref(0);
-const selectedCheckpoint = ref<SessionCheckpoint | null>(null);
-const rewindModes: Array<{ value: 'both' | 'code' | 'conversation'; label: string }> = [
-  { value: 'both', label: '回退操作（文件 + 对话）' },
-  { value: 'code', label: '只回退文件操作' },
-  { value: 'conversation', label: '只回退对话' },
-];
 const filteredSlashCommands = computed(() =>
   slashCommands.value.filter((command) => command.name.slice(1).startsWith(slashQuery.value)),
 );
-const composerMenuOpen = computed(() => rewindStage.value !== 'closed' || slashOpen.value);
+const composerMenuOpen = computed(() => slashOpen.value);
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
 const stepLabel = ref('1');
@@ -1305,11 +1305,51 @@ async function selectSession(item: AssistantSession): Promise<void> {
   modelCalls.value = calls;
   applyReplay(events);
   await loadUsage();
+  await refreshCheckpoints();
   await loadSubSessions();
   if (subVisible.value) {
     startSubPolling();
   }
   await scrollToBottom();
+}
+
+/** 当前会话检查点 */
+async function refreshCheckpoints(): Promise<void> {
+  if (!currentId.value) {
+    checkpoints.value = [];
+    return;
+  }
+  checkpoints.value = await getSessionCheckpoints(currentId.value).catch(() => []);
+}
+
+/** 某回合对应的检查点 */
+function checkpointForTurn(turnSeq: number | undefined): SessionCheckpoint | undefined {
+  if (turnSeq === undefined) {
+    return undefined;
+  }
+  return checkpoints.value.find((item) => item.turn_seq === turnSeq);
+}
+
+/** 是否为最后一轮：最后一轮不显示回退 */
+function isLastTurn(view: TurnView): boolean {
+  return turnViews.value.at(-1)?.key === view.key;
+}
+
+/** 从回合底部按钮执行回退 */
+async function rewindTurn(view: TurnView, mode: 'both' | 'code' | 'conversation'): Promise<void> {
+  const checkpoint = checkpointForTurn(view.turnSeq);
+  if (checkpoint === undefined || !currentId.value) {
+    return;
+  }
+  const result = await updateCheckpointRewind(currentId.value, checkpoint.id, mode);
+  if (mode !== 'code') {
+    input.value = result.prompt;
+  }
+  const label = mode === 'both' ? '文件 + 对话' : mode === 'code' ? '文件' : '对话';
+  ElMessage.success(`已回退${label}`);
+  if (current.value) {
+    await selectSession(current.value);
+  }
 }
 
 /** 刷新会话用量 */
@@ -2314,9 +2354,6 @@ async function scrollToBottom(): Promise<void> {
 
 /** 输入变化：/ 开头且未进入参数时打开命令补全 */
 function onComposerInput(value: string): void {
-  if (rewindStage.value !== 'closed') {
-    return;
-  }
   if (value.startsWith('/') && !value.includes(' ')) {
     slashOpen.value = true;
     slashQuery.value = value.slice(1);
@@ -2378,8 +2415,6 @@ async function reloadSkillsCommand(): Promise<void> {
 /** 关闭所有命令菜单 */
 function closeComposerMenu(): void {
   slashOpen.value = false;
-  rewindStage.value = 'closed';
-  selectedCheckpoint.value = null;
 }
 
 /** composer 键盘：菜单优先，其次才是发送 */
@@ -2389,41 +2424,6 @@ function handleComposerKeydown(raw: Event): void {
   }
   const event = raw;
   if (event.isComposing) {
-    return;
-  }
-  if (rewindStage.value === 'mode') {
-    const modes = rewindModes.length;
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      rewindIndex.value = (rewindIndex.value + 1) % modes;
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      rewindIndex.value = (rewindIndex.value - 1 + modes) % modes;
-    } else if (event.key === 'Enter') {
-      event.preventDefault();
-      void executeRewind(rewindModes[rewindIndex.value].value);
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      rewindStage.value = 'checkpoints';
-      rewindIndex.value = 0;
-    }
-    return;
-  }
-  if (rewindStage.value === 'checkpoints') {
-    const count = checkpoints.value.length;
-    if (event.key === 'ArrowDown' && count > 0) {
-      event.preventDefault();
-      rewindIndex.value = (rewindIndex.value + 1) % count;
-    } else if (event.key === 'ArrowUp' && count > 0) {
-      event.preventDefault();
-      rewindIndex.value = (rewindIndex.value - 1 + count) % count;
-    } else if (event.key === 'Enter' && count > 0) {
-      event.preventDefault();
-      selectRewindCheckpoint(checkpoints.value[rewindIndex.value]);
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      closeComposerMenu();
-    }
     return;
   }
   if (slashOpen.value) {
@@ -2474,7 +2474,7 @@ async function interruptAndSend(): Promise<void> {
   await handleStop();
 }
 
-/** 选中命令：目前只有 /rewind，直接进入检查点列表 */
+/** 选中命令：插入技能或执行技能目录刷新 */
 function pickSlashCommand(command: SlashCommand): void {
   slashOpen.value = false;
   if (command.name === '/reload-skills') {
@@ -2482,55 +2482,12 @@ function pickSlashCommand(command: SlashCommand): void {
     void reloadSkillsCommand();
     return;
   }
-  if (command.name === '/rewind') {
-    input.value = '';
-    void openRewindStage();
-    return;
-  }
   if (command.kind === 'skill') {
     input.value = `${command.name} `;
   }
 }
 
-/** 打开检查点选择 */
-async function openRewindStage(): Promise<void> {
-  if (!current.value) {
-    return;
-  }
-  if (running.value) {
-    ElMessage.warning('当前回合仍在运行，先停止或等待完成');
-    return;
-  }
-  rewindStage.value = 'checkpoints';
-  rewindIndex.value = 0;
-  checkpoints.value = await getSessionCheckpoints(currentId.value);
-}
-
-/** 选中检查点，进入回退方式选择 */
-function selectRewindCheckpoint(checkpoint: SessionCheckpoint): void {
-  selectedCheckpoint.value = checkpoint;
-  rewindStage.value = 'mode';
-  rewindIndex.value = 0;
-}
-
-/** 执行回退 */
-async function executeRewind(mode: 'both' | 'code' | 'conversation'): Promise<void> {
-  if (!current.value || selectedCheckpoint.value === null) {
-    return;
-  }
-  const checkpoint = selectedCheckpoint.value;
-  closeComposerMenu();
-  const result = await updateCheckpointRewind(currentId.value, checkpoint.id, mode);
-  if (mode !== 'code') {
-    input.value = result.prompt;
-  }
-  const modeLabel = mode === 'both' ? '文件 + 对话' : mode === 'code' ? '文件' : '对话';
-  const skipped = result.skipped.length > 0 ? `，跳过 ${result.skipped.length} 个链接文件` : '';
-  ElMessage.success(`已回退${modeLabel}：恢复 ${result.restored} 个文件操作${skipped}`);
-  await selectSession(current.value);
-}
-
-/** 发送消息：进入流式；/rewind 走命令 */
+/** 发送消息：进入流式 */
 function handleSend(): void {
   if (!current.value || !input.value.trim()) {
     return;
@@ -2549,16 +2506,6 @@ function handleSend(): void {
     void reloadSkillsCommand();
     return;
   }
-  if (content === '/rewind') {
-    input.value = '';
-    void openRewindStage();
-    return;
-  }
-  if (content.startsWith('/rewind ')) {
-    input.value = '';
-    void runRewindCommand(content.slice('/rewind'.length).trim());
-    return;
-  }
   const skillMatch = /^\/([\w.:-]+)(?:\s+([\s\S]*))?$/.exec(content);
   if (skillMatch !== null) {
     const command = skillCommands.value.find((item) => item.skill === skillMatch[1]);
@@ -2570,33 +2517,6 @@ function handleSend(): void {
   }
   input.value = '';
   sendContent(content);
-}
-
-/** /rewind 带参数：直接执行回退 */
-async function runRewindCommand(args: string): Promise<void> {
-  if (!current.value || running.value) {
-    return;
-  }
-  const parts = args.split(/\s+/).filter(Boolean);
-  const checkpointId = parts[0];
-  if (!/^\d+$/.test(checkpointId)) {
-    appendCommandOutput('用法：/rewind [检查点ID] [both|code|conversation]');
-    return;
-  }
-  const requested = parts[1] ?? 'both';
-  if (!['both', 'code', 'conversation'].includes(requested)) {
-    appendCommandOutput('回退模式只能是 both、code 或 conversation。');
-    return;
-  }
-  const mode = requested as 'both' | 'code' | 'conversation';
-  const result = await updateCheckpointRewind(currentId.value, checkpointId, mode);
-  if (mode !== 'code') {
-    input.value = result.prompt;
-  }
-  const modeLabel = mode === 'both' ? '文件 + 对话' : mode === 'code' ? '文件' : '对话';
-  const skipped = result.skipped.length > 0 ? `，跳过 ${result.skipped.length} 个链接文件` : '';
-  appendCommandOutput(`已回退${modeLabel}：恢复 ${result.restored} 个文件操作${skipped}。`);
-  await selectSession(current.value);
 }
 
 /** 在消息区追加一条命令输出（不写入会话事件） */
@@ -2643,6 +2563,7 @@ function sendContent(content: string, retryOf?: number, skill?: string, queueId?
           },
         );
         void refreshSessions();
+        void refreshCheckpoints();
         void drainQueue();
       },
       onError: (message) => {
@@ -4164,45 +4085,56 @@ onUnmounted(() => {
   }
 }
 
-.turn-meta {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  padding: 0;
-  border: none;
-  color: var(--kb-text-3);
-  background: transparent;
-  cursor: pointer;
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 11px;
-}
-
-.turn-meta:hover {
-  color: var(--kb-text-2);
-}
-
-.turn-icon {
-  width: 12px;
-  height: 12px;
-}
-
 .turn-actions {
   display: flex;
-  gap: 10px;
+  gap: 4px;
+  align-items: center;
   margin-left: auto;
 }
 
-.turn-action {
+.turn-icon-btn {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
   padding: 0;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
   color: var(--kb-text-3);
   background: transparent;
   cursor: pointer;
-  font-size: 11px;
 }
 
-.turn-action:hover {
-  color: var(--kb-primary-2);
+.turn-icon-btn:hover {
+  border-color: var(--kb-line-2);
+  color: var(--kb-primary);
+  background: rgb(34 224 255 / 6%);
+}
+
+.turn-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.rewind-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rewind-option {
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 2px;
+  color: var(--kb-text-2);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rewind-option:hover {
+  color: var(--kb-text-1);
+  background: rgb(34 224 255 / 8%);
 }
 
 .usage-pop {
@@ -4458,15 +4390,6 @@ onUnmounted(() => {
   border: 1px solid var(--kb-line-2);
   background: var(--kb-bg-1);
   box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
-}
-
-.composer-menu-head {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--kb-line);
-  color: var(--kb-text-3);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
 }
 
 .composer-menu-item {
