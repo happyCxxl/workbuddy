@@ -75,6 +75,24 @@ def _serialize_sub(row: object) -> dict[str, object]:
     }
 
 
+def _serialize_session(row: object) -> dict[str, object]:
+    """会话序列化：ID 一律字符串。"""
+    from lingxi.db.models import AiSession
+
+    assert isinstance(row, AiSession)
+    return {
+        "id": str(row.id),
+        "work_dir": row.work_dir,
+        "title": row.title,
+        "status": row.status,
+        "permission_preset": row.permission_preset,
+        "workspace_id": str(row.workspace_id) if row.workspace_id else None,
+        "persona_version_id": str(row.persona_version_id) if row.persona_version_id else None,
+        "model_id": str(row.model_id) if row.model_id else None,
+        "updated_at": row.updated_at.isoformat(),
+    }
+
+
 def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
     """构造会话路由：闭包持有默认权限档配置与后台任务管理器。"""
 
@@ -105,42 +123,13 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
     async def list_all(user: CurrentUserDep) -> dict[str, object]:
         """当前用户的最近会话列表：对话页左栏。"""
         rows = await list_sessions(user_id=user.id)
-        return R.ok(
-            {
-                "sessions": [
-                    {
-                        "id": str(row.id),
-                        "work_dir": row.work_dir,
-                        "title": row.title,
-                        "status": row.status,
-                        "permission_preset": row.permission_preset,
-                        "workspace_id": str(row.workspace_id) if row.workspace_id else None,
-                        "persona_version_id": str(row.persona_version_id) if row.persona_version_id else None,
-                        "model_id": str(row.model_id) if row.model_id else None,
-                        "updated_at": row.updated_at.isoformat(),
-                    }
-                    for row in rows
-                ]
-            }
-        ).to_dict()
+        return R.ok({"sessions": [_serialize_session(row) for row in rows]}).to_dict()
 
     @router.get("/sessions/{session_id}")
     async def get(session_id: int, user: CurrentUserDep) -> dict[str, object]:
         """读会话。"""
         row = await get_session(session_id, user.id)
-        return R.ok(
-            {
-                "id": str(row.id),
-                "work_dir": row.work_dir,
-                "title": row.title,
-                "status": row.status,
-                "permission_preset": row.permission_preset,
-                "workspace_id": str(row.workspace_id) if row.workspace_id else None,
-                "persona_version_id": str(row.persona_version_id) if row.persona_version_id else None,
-                "model_id": str(row.model_id) if row.model_id else None,
-                "updated_at": row.updated_at.isoformat(),
-            }
-        ).to_dict()
+        return R.ok(_serialize_session(row)).to_dict()
 
     @router.put("/sessions/{session_id}/permission")
     async def set_permission(session_id: int, request: PresetRequest, user: CurrentUserDep) -> dict[str, object]:
