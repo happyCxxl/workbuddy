@@ -28,34 +28,18 @@
 
       <!-- 对话区 -->
       <div class="chat-panel">
-        <div class="chat-head">
-          <button
-            class="head-icon"
-            type="button"
-            :title="sessionsOpen ? '收起会话栏' : '展开会话栏'"
-            @click="toggleSessions"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path d="M2.5 4h11M2.5 8h11M2.5 12h11" />
-            </svg>
-          </button>
-          <span class="chat-title">{{ current?.title || '选择或新建一个会话' }}</span>
-          <span v-if="current" class="chat-dir">{{ current.work_dir }}</span>
-          <span class="page-spacer"></span>
-          <el-button v-if="current" size="small" text @click="openTrajectory">轨迹</el-button>
-          <el-button v-if="current" size="small" text @click="openSubSessions">
-            后台任务
-            <span v-if="runningSubCount > 0" class="sub-count">{{ runningSubCount }}</span>
-          </el-button>
-          <span v-if="running" class="chat-status">执行中 · 第 {{ stepLabel }} 步</span>
-        </div>
+        <ChatHeader
+          :sessions-open="sessionsOpen"
+          :title="current?.title || '选择或新建一个会话'"
+          :work-dir="current ? current.work_dir : null"
+          :has-session="Boolean(current)"
+          :running-sub-count="runningSubCount"
+          :running="running"
+          :step-label="stepLabel"
+          @toggle-sessions="toggleSessions"
+          @open-trajectory="openTrajectory"
+          @open-sub-sessions="openSubSessions"
+        />
 
         <div ref="messageBox" class="messages">
           <button v-if="hiddenTurns > 0" class="turn-earlier" type="button" @click="showEarlier">
@@ -545,6 +529,7 @@ import type {
   Workspace,
 } from '@/types/assistant';
 import { durationLabel, formatClock, preview, prettyJson } from '@/utils/chat-format';
+import ChatHeader from '@/components/assistant/ChatHeader.vue';
 import MarkdownView from '@/components/assistant/MarkdownView.vue';
 import SessionSidebar from '@/components/assistant/SessionSidebar.vue';
 import SubSessionDrawer from '@/components/assistant/SubSessionDrawer.vue';
@@ -2178,15 +2163,6 @@ onUnmounted(() => {
   gap: 14px;
 }
 
-.sub-count {
-  margin-left: 4px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--kb-primary);
-  color: #06231a;
-  font-size: 10px;
-}
-
 .chat-wrap {
   position: relative;
   display: grid;
@@ -2285,26 +2261,6 @@ onUnmounted(() => {
   bottom: 8px;
   border-right-width: 1px;
   border-bottom-width: 1px;
-}
-
-.head-icon {
-  display: inline-flex;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: none;
-  color: var(--kb-text-3);
-  cursor: pointer;
-}
-
-.head-icon:hover {
-  background: rgb(34 224 255 / 8%);
-  color: var(--kb-primary);
 }
 
 .workdir-row {
@@ -2418,41 +2374,9 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.chat-head {
-  display: flex;
-  flex: none;
-  gap: 10px;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--kb-line);
-}
-
-.chat-title {
-  font-size: 14px;
-  font-weight: 650;
-}
-
 .composer-model {
   width: 210px;
   flex: none;
-}
-
-.chat-dir {
-  padding: 4px 12px;
-  border: 1px solid var(--kb-line-2);
-  border-left: 2px solid var(--kb-primary);
-  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
-  background: linear-gradient(90deg, var(--kb-tint), transparent 70%);
-  color: var(--kb-text-2);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 12px;
-  letter-spacing: 0.02em;
-  box-shadow: inset 0 0 14px var(--kb-tint);
-}
-
-.chat-status {
-  color: var(--kb-text-3);
-  font-size: 12px;
 }
 
 /* 轮次 = 过程组 + 最终回复；过程组默认折叠（运行中展开） */
