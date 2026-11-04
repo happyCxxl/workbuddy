@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 
 /**
@@ -39,14 +40,13 @@ import java.util.concurrent.CancellationException;
 public class PptDocumentParser extends AbstractPoiDocumentParser {
 
     /**
-     * 是否支持该媒体类型。
+     * 本解析器支持 PPT 与 PPTX。
      *
-     * @param mime 媒体类型
-     * @return 支持 PPT 为 true
+     * @return PPT、PPTX
      */
     @Override
-    public boolean supports(String mime) {
-        return FileFormat.PPT.getMimeType().equals(mime) || FileFormat.PPTX.getMimeType().equals(mime);
+    protected Set<FileFormat> supportedFormats() {
+        return Set.of(FileFormat.PPT, FileFormat.PPTX);
     }
 
     /**
@@ -58,8 +58,7 @@ public class PptDocumentParser extends AbstractPoiDocumentParser {
      */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
-        context.getCancellationToken().throwIfCancelled();
-        String fileId = context.getFileRef().getFileId();
+        String fileId = beginParse(context);
         String fileName = StrUtil.blankToDefault(context.getFileRef().getFileName(), "");
         boolean legacy = fileName.toLowerCase(Locale.ROOT).endsWith(".ppt");
         try (SlideShow<?, ?> show = open(data, legacy)) {

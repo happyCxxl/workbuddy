@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.List;
 import java.util.Map;
@@ -45,14 +46,13 @@ import java.util.regex.Pattern;
 public class DocxDocumentParser extends AbstractPoiDocumentParser {
 
     /**
-     * 是否支持该媒体类型。
+     * 本解析器支持 DOCX。
      *
-     * @param mimeType 媒体类型
-     * @return 支持 DOCX 为 true
+     * @return 仅 DOCX
      */
     @Override
-    public boolean supports(String mimeType) {
-        return FileFormat.DOCX.getMimeType().equals(mimeType);
+    protected Set<FileFormat> supportedFormats() {
+        return Set.of(FileFormat.DOCX);
     }
 
     /**
@@ -64,8 +64,7 @@ public class DocxDocumentParser extends AbstractPoiDocumentParser {
      */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
-        context.getCancellationToken().throwIfCancelled();
-        String fileId = context.getFileRef().getFileId();
+        String fileId = beginParse(context);
         try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(data))) {
             List<IBodyElement> bodyElements = doc.getBodyElements();
             int paragraphIndex = 0;

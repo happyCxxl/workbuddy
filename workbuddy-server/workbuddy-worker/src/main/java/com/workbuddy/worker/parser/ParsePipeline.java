@@ -399,9 +399,7 @@ public class ParsePipeline {
                                       ParseSource ocrSource, QualityInfo quality) {
         ParseSummary summary = new ParseSummary();
         Set<Integer> blankPages = quality.getBlankPages().stream().distinct().collect(Collectors.toSet());
-        Set<Integer> scannedPages = quality.getScannedPages().stream()
-                .filter(page -> !blankPages.contains(page))
-                .collect(Collectors.toSet());
+        Set<Integer> scannedPages = scannedPages(quality, blankPages);
         Set<Integer> ocrPages = ocrPages(ocrSource);
         int unitCount = outcome.getUnitCount();
         summary.setUnitCount(unitCount);
@@ -483,9 +481,7 @@ public class ParsePipeline {
             return;
         }
         // 扫描页不再由 handler 直接计失败：OCR 覆盖的页算恢复，未覆盖的页由门禁计入失败
-        Set<Integer> scannedPages = quality.getScannedPages().stream()
-                .filter(page -> !blankPages.contains(page))
-                .collect(Collectors.toSet());
+        Set<Integer> scannedPages = scannedPages(quality, blankPages);
         Set<Integer> ocrPages = ocrPages(ocrSource);
         Set<Integer> recoveredPages = scannedPages.stream()
                 .filter(ocrPages::contains)
@@ -545,6 +541,13 @@ public class ParsePipeline {
         outcome.fail(PipelineTaskErrorCode.RATIO_BELOW_THRESHOLD.name(),
                 String.format("成功单元占比 %.2f 低于门槛 %.2f（内容单元 %d，失败 %d）",
                         ratio, properties.getSuccessUnitRatio(), contentUnits, effectiveFailedUnits));
+    }
+
+    /** 扫描页去掉空白页：空白页无内容可恢复，不参与 OCR 覆盖判定。 */
+    private Set<Integer> scannedPages(QualityInfo quality, Set<Integer> blankPages) {
+        return quality.getScannedPages().stream()
+                .filter(page -> !blankPages.contains(page))
+                .collect(Collectors.toSet());
     }
 
     /** OCR 路已产出文字的页码集合（无 OCR 能力或元素无页码时为空）。 */

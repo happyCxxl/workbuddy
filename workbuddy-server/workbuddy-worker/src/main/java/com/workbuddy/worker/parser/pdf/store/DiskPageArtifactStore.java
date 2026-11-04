@@ -1,6 +1,5 @@
 package com.workbuddy.worker.parser.pdf.store;
 
-import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +49,8 @@ final class DiskPageArtifactStore implements PageArtifactStore {
      */
     @Override
     public void writeWindow(int fromPage, List<PageContent> pages) {
-        validateWindow(fromPage, pages);
-        Path file = fileOf(fromPage);
+        PageArtifactSupport.validateWindow(fromPage, pages);
+        Path file = PageArtifactSupport.fileOf(directory, fromPage);
         try {
             PageArtifactCodec.write(file, pages);
         } catch (IOException e) {
@@ -67,13 +66,13 @@ final class DiskPageArtifactStore implements PageArtifactStore {
      */
     @Override
     public List<PageContent> readWindow(int fromPage) {
-        Path file = fileOf(fromPage);
+        Path file = PageArtifactSupport.fileOf(directory, fromPage);
         if (!Files.exists(file)) {
             throw new PageArtifactStoreException("页产物窗口不存在: " + fromPage);
         }
         try {
             List<PageContent> pages = PageArtifactCodec.read(file);
-            validateWindow(fromPage, pages);
+            PageArtifactSupport.validateWindow(fromPage, pages);
             return pages;
         } catch (IOException e) {
             throw new PageArtifactStoreException("读取页产物失败: " + file, e);
@@ -84,25 +83,6 @@ final class DiskPageArtifactStore implements PageArtifactStore {
     @Override
     public void close() {
         deleteRecursively(directory);
-    }
-
-    /** 窗口文件路径（按起始页命名） */
-    private Path fileOf(int fromPage) {
-        return directory.resolve("window-" + fromPage + ".json.gz");
-    }
-
-    /** 校验窗口页码连续，损坏文件在读取阶段立即失败 */
-    private static void validateWindow(int fromPage, List<PageContent> pages) {
-        ThrowUtil.throwIf(fromPage <= 0 || NullUtil.isNull(pages) || pages.isEmpty(),
-                () -> new PageArtifactStoreException("页产物窗口为空或起始页非法: " + fromPage));
-        for (int i = 0; i < pages.size(); i++) {
-            PageContent page = pages.get(i);
-            int index = i;
-            int expected = fromPage + index;
-            ThrowUtil.throwIf(NullUtil.isNull(page) || page.pageNo() != expected,
-                    () -> new PageArtifactStoreException(
-                            "页产物页码不连续: fromPage=" + fromPage + ", index=" + index));
-        }
     }
 
     /** 创建本次解析独有的临时目录 */

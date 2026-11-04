@@ -8,6 +8,7 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
+import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.ParseAssetKind;
 import com.workbuddy.common.enums.parse.ParseFactLevel;
@@ -20,6 +21,7 @@ import com.workbuddy.worker.parser.support.ParserStreamSupport;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * POI 系解析器基类（非 Spring Bean）：能力标识、parse 骨架
@@ -54,6 +56,36 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
      * @param context 解析上下文（文件引用等）
      */
     protected abstract void parseNative(ParseSource source, byte[] data, ParseContext context);
+
+    /**
+     * 本解析器支持的文件格式。
+     *
+     * @return 支持的格式集合
+     */
+    protected abstract Set<FileFormat> supportedFormats();
+
+    /**
+     * 是否支持该媒体类型。
+     *
+     * @param mimeType 媒体类型
+     * @return 支持任一声明格式时为 true
+     */
+    @Override
+    public final boolean supports(String mimeType) {
+        return supportedFormats().stream()
+                .anyMatch(format -> format.getMimeType().equals(mimeType));
+    }
+
+    /**
+     * 解析原生结构前的前置检查：确认未取消并取文件 ID。
+     *
+     * @param context 解析上下文
+     * @return 文件 ID
+     */
+    protected final String beginParse(ParseContext context) {
+        context.getCancellationToken().throwIfCancelled();
+        return context.getFileRef().getFileId();
+    }
 
     /**
      * 写一张嵌入图片并返回 assetRef：空白字节或未启用资产写入时返回 null。

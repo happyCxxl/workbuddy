@@ -26,6 +26,7 @@ import org.apache.poi.hwpf.usermodel.TableIterator;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 
 /**
@@ -37,14 +38,13 @@ import java.util.concurrent.CancellationException;
 public class DocDocumentParser extends AbstractPoiDocumentParser {
 
     /**
-     * 是否支持该媒体类型。
+     * 本解析器支持 DOC。
      *
-     * @param mimeType 媒体类型
-     * @return 支持 DOC 为 true
+     * @return 仅 DOC
      */
     @Override
-    public boolean supports(String mimeType) {
-        return FileFormat.DOC.getMimeType().equals(mimeType);
+    protected Set<FileFormat> supportedFormats() {
+        return Set.of(FileFormat.DOC);
     }
 
     /**
@@ -56,8 +56,7 @@ public class DocDocumentParser extends AbstractPoiDocumentParser {
      */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
-        context.getCancellationToken().throwIfCancelled();
-        String fileId = context.getFileRef().getFileId();
+        String fileId = beginParse(context);
         try (HWPFDocument doc = new HWPFDocument(new ByteArrayInputStream(data))) {
             Range range = doc.getRange();
             int paragraphIndex = 0;

@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -46,15 +47,13 @@ import java.util.stream.Collectors;
 public class ExcelDocumentParser extends AbstractPoiDocumentParser {
 
     /**
-     * 是否支持该媒体类型。
+     * 本解析器支持 XLS 与 XLSX。
      *
-     * @param mimeType 媒体类型
-     * @return 支持 XLS 或 XLSX 为 true
+     * @return XLS、XLSX
      */
     @Override
-    public boolean supports(String mimeType) {
-        return FileFormat.XLS.getMimeType().equals(mimeType)
-                || FileFormat.XLSX.getMimeType().equals(mimeType);
+    protected Set<FileFormat> supportedFormats() {
+        return Set.of(FileFormat.XLS, FileFormat.XLSX);
     }
 
     /**
@@ -66,8 +65,7 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
      */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
-        context.getCancellationToken().throwIfCancelled();
-        String fileId = context.getFileRef().getFileId();
+        String fileId = beginParse(context);
         boolean xlsx = FileFormat.XLSX.getMimeType().equals(context.getFileRef().getMimeType());
         try (Workbook workbook = xlsx ? new XSSFWorkbook(new ByteArrayInputStream(data))
                 : new HSSFWorkbook(new ByteArrayInputStream(data))) {
