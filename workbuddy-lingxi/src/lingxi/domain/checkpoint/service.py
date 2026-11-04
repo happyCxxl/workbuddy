@@ -98,7 +98,7 @@ async def snapshot_file(checkpoint_id: int, work_dir: str, relative: str, action
 
 
 async def list_checkpoints(session_id: int) -> list[SessionCheckpoint]:
-    """会话检查点列表：新的在前，只返回有文件改动的条目给回退菜单。"""
+    """返回会话全部检查点：新的在前。"""
     async with session_scope() as s:
         rows = (
             await s.scalars(

@@ -14,25 +14,20 @@ class EventType(StrEnum):
 
     TEXT_DELTA = "text.delta"
     THINKING_DELTA = "thinking.delta"
-    STEP_START = "step.start"
-    STEP_END = "step.end"
     TOOL_CALL = "tool.call"
     TOOL_RESULT = "tool.result"
     PERMISSION_REQUIRED = "permission.required"
     COMPACTION = "compaction"
     REWIND = "rewind"
-    SUBSESSION = "subsession"
     SUBSESSION_STARTED = "subsession/started"
     SUBSESSION_COMPLETED = "subsession/completed"
     SUBSESSION_FAILED = "subsession/failed"
     TURN_END = "turn.end"
-    TURN_PAUSED = "turn.paused"
     ERROR = "error"
     TURN_START = "turn/start"
     USER_MESSAGE = "user/message"
     ASSISTANT_MESSAGE = "assistant/message"
     TOOL_MESSAGE = "tool/message"
-    PERMISSION_DECIDED = "permission/decided"
     PERMISSION_POLICY = "permission/policy"
 
 
@@ -65,7 +60,7 @@ async def read_events(
         return await EventRepo(s).list_after(session_id, after_seq, limit, STREAM_DELTA_TYPES if compact else ())
 
 
-async def replay_events(session_id: int, after_seq: int = 0) -> list[SessionEvent]:
-    """重放：after_seq 之后全部事件（界面重建与断线恢复用）。"""
+async def replay_events(session_id: int) -> list[SessionEvent]:
+    """重放：会话全部事件（界面重建与断线恢复用）。"""
     async with session_scope() as s:
-        return await EventRepo(s).list_after(session_id, after_seq, None)
+        return await EventRepo(s).list_after(session_id, 0, None)

@@ -6,8 +6,6 @@ from pydantic import BaseModel, Field
 
 Capability = Literal["CHAT", "EMBEDDING", "OCR", "RERANK"]
 
-CAPABILITIES: tuple[Capability, ...] = ("CHAT", "EMBEDDING", "OCR", "RERANK")
-
 
 class VendorCreate(BaseModel):
     """新增厂商。"""
@@ -17,7 +15,6 @@ class VendorCreate(BaseModel):
     base_url: str = Field(min_length=1)
     api_key: str = Field(min_length=1)
     timeout_ms: int | None = None
-    max_retries: int | None = None
     enabled: bool = True
 
 
@@ -28,7 +25,6 @@ class VendorUpdate(BaseModel):
     base_url: str = Field(min_length=1)
     api_key: str | None = None
     timeout_ms: int | None = None
-    max_retries: int | None = None
     enabled: bool = True
 
 
@@ -102,7 +98,6 @@ def vendor_view(row: object) -> dict[str, object]:
         "api_key_masked": _mask_key(row.api_key),
         "api_key_configured": bool(row.api_key),
         "timeout_ms": row.timeout_ms,
-        "max_retries": row.max_retries,
         "enabled": row.enabled,
         "created_at": row.created_at.isoformat(),
         "updated_at": row.updated_at.isoformat(),

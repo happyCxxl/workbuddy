@@ -1,4 +1,4 @@
-"""权限门：高危恒询问 → 三档预设兜底；审批挂起异常。"""
+"""权限门：高危恒询问 → 三档预设兜底；需确认时返回 ask 裁决由回合层挂起等待。"""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,14 +14,6 @@ class Decision:
 
     verdict: str
     reason: str
-
-
-class PendingApproval(Exception):
-    """工具执行被挂起等待用户裁决：由回合层转为 pending_stop 停车。"""
-
-    def __init__(self, request_id: str) -> None:
-        super().__init__(request_id)
-        self.request_id = request_id
 
 
 def _path_of(tool: ToolDefinition, args: dict[str, object]) -> str | None:

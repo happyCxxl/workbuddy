@@ -1,4 +1,4 @@
-"""骨架冒烟：包可导入、入口可加载。"""
+"""冒烟：包可导入、入口可加载。"""
 
 import lingxi
 from lingxi import __main__

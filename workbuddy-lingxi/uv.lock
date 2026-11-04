@@ -543,7 +543,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "alembic" },
-    { name = "httpx2" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -572,7 +571,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "alembic", specifier = ">=1.13.0" },
-    { name = "httpx2", specifier = ">=0.1.0" },
     { name = "pyright", specifier = ">=1.1.390" },
     { name = "pytest", specifier = ">=8.3.0" },
     { name = "pytest-asyncio", specifier = ">=0.25.0" },

@@ -38,7 +38,6 @@ class ChatCall(BaseModel):
     source: str
     capability: Literal["CHAT"] = "CHAT"
     model_id: int | None = None
-    timeout_ms: int | None = None
     payload: ChatPayload
 
 
@@ -58,7 +57,6 @@ class EmbedCall(BaseModel):
     source: str
     capability: Literal["EMBEDDING"] = "EMBEDDING"
     model_id: int | None = None
-    timeout_ms: int | None = None
     payload: EmbedPayload
 
 
@@ -79,7 +77,6 @@ class OcrCall(BaseModel):
     source: str
     capability: Literal["OCR"] = "OCR"
     model_id: int | None = None
-    timeout_ms: int | None = None
     payload: OcrPayload
 
 
@@ -98,7 +95,6 @@ class RerankCall(BaseModel):
     source: str
     capability: Literal["RERANK"] = "RERANK"
     model_id: int | None = None
-    timeout_ms: int | None = None
     payload: RerankPayload
 
 

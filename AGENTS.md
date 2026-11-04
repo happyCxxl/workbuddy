@@ -9,7 +9,7 @@
 - **workbuddy 是一个工作台**：知识库（文档输入 → 解析 → 组装 → 预处理 → 切片 → 向量化 → 索引 → 检索评测的流水线）
   是首个功能域；后续功能域陆续接入，**可能引入 Java 之外的语言与技术栈**。
 - 当前实现：后端 Java 21 / Spring Boot 3.2.5 / Maven 多模块（`workbuddy-server/` 的 `workbuddy-*` 模块，包根 `com.workbuddy`）；
-  前端 `workbuddy-web/`（Vue 3 + TypeScript + Vite + Element Plus，界面纯中文）；基础设施 MySQL / Redis / MinIO / Milvus（`docker/` 编排）；AI 服务 `workbuddy-lingxi/`（Python，骨架）。
+  前端 `workbuddy-web/`（Vue 3 + TypeScript + Vite + Element Plus，界面纯中文）；基础设施 MySQL / Redis / MinIO / Milvus（`docker/` 编排）；AI 服务 `workbuddy-lingxi/`（Python）。
 - 规范分层：**根文件 = 工作台全局口径；功能域入口就近落位，条款正文收口 `.agent/`**（前端入口在 `workbuddy-web/`、条款在 `.agent/standards/vue/`；Java 后端实现形态在 `.agent/standards/java/`，通用约束与 AI 协作在 `.agent/standards/common/`，检查口径在 `.agent/standards/`，引擎配置在 `.agent/tools/`）。
   新功能域接入前必读 `.agent/standards/common/06-协作流程.md` 的「新功能域接入约定」。
 

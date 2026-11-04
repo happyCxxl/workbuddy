@@ -12,16 +12,6 @@ class PersonaRepo:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def latest(self, user_id: int) -> PersonaVersion | None:
-        """该用户最新版本。"""
-        stmt = (
-            select(PersonaVersion)
-            .where(PersonaVersion.user_id == user_id)
-            .order_by(PersonaVersion.version.desc())
-            .limit(1)
-        )
-        return await self._session.scalar(stmt)
-
     async def current(self, user_id: int) -> PersonaVersion | None:
         """该用户启用中的版本。"""
         stmt = select(PersonaVersion).where(PersonaVersion.user_id == user_id, PersonaVersion.active.is_(True))

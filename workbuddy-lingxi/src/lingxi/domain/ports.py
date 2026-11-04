@@ -1,7 +1,6 @@
 """模型出口端口与契约：业务只见统一出口，供应商差异全部封装在适配层。"""
 
-from collections.abc import AsyncIterator
-from typing import Literal, Protocol, TypeVar
+from typing import Literal, TypeVar
 
 from pydantic import BaseModel
 
@@ -59,15 +58,3 @@ class StreamChunk(BaseModel):
     tool_calls: list[ToolCall]
     usage: Usage | None = None
     model: str = ""
-
-
-class LlmPort(Protocol):
-    """模型出口端口：编排层只依赖此协议。"""
-
-    def stream(self, request: ChatRequest) -> AsyncIterator[StreamChunk]:
-        """流式对话：产出归一化的增量块。"""
-        ...
-
-    def structured(self, prompt: str, model_type: type[ModelT]) -> ModelT:
-        """结构化输出：目标模型类型进，校验通过的实例出（PY-AI-003）。"""
-        ...

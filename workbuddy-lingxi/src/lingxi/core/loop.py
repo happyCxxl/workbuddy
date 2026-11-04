@@ -139,7 +139,7 @@ class TurnRunner:
             control = TurnControl()
             self._active_turns[session_id] = control
             try:
-                async for event in self._run_locked(session_id, user_content, retry_of, control, skill, queue_id):
+                async for event in self._run_locked(session_id, user_content, control, retry_of, skill, queue_id):
                     yield event
             finally:
                 if self._active_turns.get(session_id) is control:
@@ -149,12 +149,11 @@ class TurnRunner:
         self,
         session_id: int,
         user_content: str,
+        control: TurnControl,
         retry_of: int | None = None,
-        control: TurnControl | None = None,
         skill: str | None = None,
         queue_id: int | None = None,
     ) -> AsyncIterator[TurnEvent]:
-        control = control or TurnControl()
         session = await get_session(session_id)
         if queue_id is not None:
             queued = await queue_coordinator.claim_item(session_id, queue_id)
@@ -196,7 +195,6 @@ class TurnRunner:
                 persona,
                 session.work_dir,
                 user_content,
-                0,
                 session.permission_preset,
                 session.kind,
                 control,
@@ -223,14 +221,13 @@ class TurnRunner:
         persona: Persona | None,
         work_dir: str,
         user_content: str,
-        step_start: int,
         preset: str,
         kind: str,
         control: TurnControl,
         checkpoint_id: int | None = None,
         skill_text: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
-        step = step_start
+        step = 0
         while True:
             step += 1
             messages = await self._assemble(
@@ -336,8 +333,6 @@ class TurnRunner:
                         kind,
                         control,
                         checkpoint_id,
-                        calls=tool_calls,
-                        call_index=index,
                     ):
                         yield event
                 if control.cancelled:
@@ -426,10 +421,6 @@ class TurnRunner:
         kind: str,
         control: TurnControl,
         checkpoint_id: int | None = None,
-        calls: list[ToolCall] | None = None,
-        call_index: int = 0,
-        emit_call: bool = True,
-        approved_outcome: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         """执行一步工具：pre-execute 钩子 fail-closed；权限门裁决（allow 执行 / deny 拒绝 / ask 挂起）。"""
         if control.cancelled:
@@ -443,12 +434,11 @@ class TurnRunner:
             payload={"arguments": call.arguments},
         )
         await self._hooks.run("pre_execute", ctx)
-        if emit_call:
-            yield await self._emit(
-                session_id,
-                EventType.TOOL_CALL,
-                {"name": call.name, "arguments": call.arguments, "tool_call_id": call.id},
-            )
+        yield await self._emit(
+            session_id,
+            EventType.TOOL_CALL,
+            {"name": call.name, "arguments": call.arguments, "tool_call_id": call.id},
+        )
         tool = self._tools.get(call.name)
         if tool is None:
             yield await self._emit(
@@ -460,11 +450,15 @@ class TurnRunner:
                 {"tool_call_id": call.id, "name": call.name, "content": f"工具 {call.name} 返回：未知工具"},
             )
             return
-        if approved_outcome == "rejected":
+        raw_args = (
+            cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
+        )
+        decision = await self._permission.decide(tool, work_dir, raw_args, preset)
+        if decision.verdict == "deny":
             yield await self._emit(
                 session_id,
                 EventType.TOOL_RESULT,
-                {"name": call.name, "error": "用户拒绝", "tool_call_id": call.id},
+                {"name": call.name, "error": f"已拒绝：{decision.reason}", "tool_call_id": call.id},
             )
             yield await self._emit(
                 session_id,
@@ -472,20 +466,17 @@ class TurnRunner:
                 {
                     "tool_call_id": call.id,
                     "name": call.name,
-                    "content": f"工具 {call.name} 被用户拒绝",
+                    "content": f"工具 {call.name} 被拒绝：{decision.reason}",
                 },
             )
             return
-        if approved_outcome is None:
-            raw_args = (
-                cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})
-            )
-            decision = await self._permission.decide(tool, work_dir, raw_args, preset)
-            if decision.verdict == "deny":
+        if decision.verdict == "ask":
+            if kind == "sub":
+                # 子会话（后台任务）审批自动拒绝：不弹审批卡，把限制写进结果
                 yield await self._emit(
                     session_id,
                     EventType.TOOL_RESULT,
-                    {"name": call.name, "error": f"已拒绝：{decision.reason}", "tool_call_id": call.id},
+                    {"name": call.name, "error": "后台任务审批自动拒绝：需要更高权限时请在主会话执行"},
                 )
                 yield await self._emit(
                     session_id,
@@ -493,69 +484,51 @@ class TurnRunner:
                     {
                         "tool_call_id": call.id,
                         "name": call.name,
-                        "content": f"工具 {call.name} 被拒绝：{decision.reason}",
+                        "content": f"工具 {call.name} 被自动拒绝：后台任务不能弹审批，请把限制写进最终回复",
                     },
                 )
                 return
-            if decision.verdict == "ask":
-                if kind == "sub":
-                    # 子会话（后台任务）审批自动拒绝：不弹审批卡，把限制写进结果
-                    yield await self._emit(
-                        session_id,
-                        EventType.TOOL_RESULT,
-                        {"name": call.name, "error": "后台任务审批自动拒绝：需要更高权限时请在主会话执行"},
-                    )
-                    yield await self._emit(
-                        session_id,
-                        EventType.TOOL_MESSAGE,
-                        {
-                            "tool_call_id": call.id,
-                            "name": call.name,
-                            "content": f"工具 {call.name} 被自动拒绝：后台任务不能弹审批，请把限制写进最终回复",
-                        },
-                    )
-                    return
-                request_id = uuid4().hex
-                future: asyncio.Future[str] = asyncio.get_running_loop().create_future()
-                self._approvals[(session_id, request_id)] = future
+            request_id = uuid4().hex
+            future: asyncio.Future[str] = asyncio.get_running_loop().create_future()
+            self._approvals[(session_id, request_id)] = future
+            yield await self._emit(
+                session_id,
+                EventType.PERMISSION_REQUIRED,
+                {"request_id": request_id, "name": call.name, "reason": decision.reason},
+            )
+            outcome = await self._await_approval(session_id, request_id, future, control)
+            if outcome is None:
                 yield await self._emit(
                     session_id,
-                    EventType.PERMISSION_REQUIRED,
-                    {"request_id": request_id, "name": call.name, "reason": decision.reason},
+                    EventType.TOOL_RESULT,
+                    {"name": call.name, "error": "审批已取消，调用未执行", "tool_call_id": call.id},
                 )
-                outcome = await self._await_approval(session_id, request_id, future, control)
-                if outcome is None:
-                    yield await self._emit(
-                        session_id,
-                        EventType.TOOL_RESULT,
-                        {"name": call.name, "error": "审批已取消，调用未执行", "tool_call_id": call.id},
-                    )
-                    yield await self._emit(
-                        session_id,
-                        EventType.TOOL_MESSAGE,
-                        {
-                            "tool_call_id": call.id,
-                            "name": call.name,
-                            "content": f"工具 {call.name} 未执行：审批已取消",
-                        },
-                    )
-                    return
-                if outcome == "rejected":
-                    yield await self._emit(
-                        session_id,
-                        EventType.TOOL_RESULT,
-                        {"name": call.name, "error": "用户拒绝", "tool_call_id": call.id},
-                    )
-                    yield await self._emit(
-                        session_id,
-                        EventType.TOOL_MESSAGE,
-                        {
-                            "tool_call_id": call.id,
-                            "name": call.name,
-                            "content": f"工具 {call.name} 被用户拒绝",
-                        },
-                    )
-                    return
+                yield await self._emit(
+                    session_id,
+                    EventType.TOOL_MESSAGE,
+                    {
+                        "tool_call_id": call.id,
+                        "name": call.name,
+                        "content": f"工具 {call.name} 未执行：审批已取消",
+                    },
+                )
+                return
+            if outcome == "rejected":
+                yield await self._emit(
+                    session_id,
+                    EventType.TOOL_RESULT,
+                    {"name": call.name, "error": "用户拒绝", "tool_call_id": call.id},
+                )
+                yield await self._emit(
+                    session_id,
+                    EventType.TOOL_MESSAGE,
+                    {
+                        "tool_call_id": call.id,
+                        "name": call.name,
+                        "content": f"工具 {call.name} 被用户拒绝",
+                    },
+                )
+                return
         try:
             raw_args = (
                 cast(dict[str, object], json.loads(call.arguments)) if call.arguments else cast(dict[str, object], {})

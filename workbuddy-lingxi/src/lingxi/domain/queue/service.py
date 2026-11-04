@@ -1,6 +1,6 @@
 """会话输入队列：运行中排队的消息，支持编辑、撤回与逐步消费。"""
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 
 from lingxi.db.engine import session_scope
 from lingxi.db.models import SessionInputQueue
@@ -143,10 +143,3 @@ async def claim_item(session_id: int, item_id: int) -> SessionInputQueue | None:
         row.status = "claimed"
         await s.commit()
         return row
-
-
-async def clear_session(session_id: int) -> None:
-    """会话删除时清理未消费队列。"""
-    async with session_scope() as s:
-        await s.execute(delete(SessionInputQueue).where(SessionInputQueue.session_id == session_id))
-        await s.commit()

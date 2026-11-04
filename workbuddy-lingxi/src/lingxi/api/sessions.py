@@ -185,8 +185,6 @@ def make_router(settings: Settings, manager: SubSessionManager) -> APIRouter:
             {
                 "calls": [
                     {
-                        "turn_seq": row.turn_seq,
-                        "step_seq": row.step_seq,
                         "model": row.model,
                         "prompt_tokens": row.prompt_tokens,
                         "completion_tokens": row.completion_tokens,

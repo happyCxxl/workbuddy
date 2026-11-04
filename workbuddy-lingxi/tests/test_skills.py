@@ -1,7 +1,7 @@
 """技能目录：发现、优先级与会话接口。"""
 
 import pytest
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 
 from lingxi.domain.session.service import create_session
 from lingxi.domain.skills.service import ensure_nested_root, find_skill, list_skills

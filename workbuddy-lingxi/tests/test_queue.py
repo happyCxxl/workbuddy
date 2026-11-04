@@ -1,7 +1,7 @@
 """输入队列：持久化、编辑、撤回与认领。"""
 
 import pytest
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 
 from lingxi.domain.queue import service
 from lingxi.domain.queue.coordinator import coordinator

@@ -102,7 +102,7 @@ async def test_high_risk_always_asks_even_full_access() -> None:
 async def test_ask_pause_and_resume_allowed_once(
     fake_server: tuple[Settings, list[dict[str, object]]], tmp_path: Path
 ) -> None:
-    """询问停车 → allowed-once 恢复：permission/decided 成对、工具真执行。"""
+    """询问停车 → allowed-once 恢复：permission.required 与 tool.result 成对、工具真执行。"""
     if not await db_up():
         pytest.skip("数据库未启动：先 docker compose up -d postgres")
     settings, _ = fake_server
