@@ -24,7 +24,11 @@ import com.workbuddy.worker.parser.pdf.model.Region;
 import com.workbuddy.worker.parser.pdf.model.TextLine;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -126,20 +130,40 @@ public final class PdfBodyAssembler {
                 })
                 .toList();
 
-        // 线框区域：区域内行归线网格表格，其余行按段落与文本表格候选推进
+        // 线框区域：区域内行按区域归组后一次性结算，其余行按段落与文本表格候选推进。
+        // 归组按「行中心落在哪个区域」判定，不用「阅读顺序里连续」作代理：分栏重排会把同一区域的行
+        // 打散到不同位置，按顺序切段会让同一区域结算多次（表格缺格、残段被当成表格失败降级）。
         List<Region> regions = RuleRegions.regions(page.segments(), properties.getTableLineCoverRatio());
-        List<PageLine> run = new ArrayList<>();
-        Region runRegion = null;
-        for (PageLine line : applyLayoutCapability(bodyLines, page, source, properties, capabilityRegistry)) {
+        List<PageLine> ordered = applyLayoutCapability(bodyLines, page, source, properties, capabilityRegistry);
+        Map<Region, List<PageLine>> regionLines = new LinkedHashMap<>();
+        for (PageLine line : ordered) {
             Region region = regionOf(regions, line);
-            if (region != runRegion) {
-                flushRun(run, runRegion, page, elements, source, fileId, properties, capabilityRegistry);
-                run = new ArrayList<>();
-                runRegion = region;
+            if (NullUtil.isNotNull(region)) {
+                regionLines.computeIfAbsent(region, key -> new ArrayList<>()).add(line);
             }
-            run.add(line);
         }
-        flushRun(run, runRegion, page, elements, source, fileId, properties, capabilityRegistry);
+        // 区域内按纵向顺序：单元格取格按行带判定，与进入装配的行序无关，排序只保证确定性
+        regionLines.values().forEach(lines -> lines.sort(Comparator.comparingDouble(PageLine::y)));
+        Set<Region> settled = new HashSet<>();
+        List<PageLine> run = new ArrayList<>();
+        for (PageLine line : ordered) {
+            Region region = regionOf(regions, line);
+            if (NullUtil.isNull(region)) {
+                run.add(line);
+                continue;
+            }
+            if (!run.isEmpty()) {
+                flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry);
+                run = new ArrayList<>();
+            }
+            if (settled.add(region)) {
+                RuledTableBuilder.flush(regionLines.get(region), region, page, elements, source, fileId,
+                        properties, capabilityRegistry);
+            }
+        }
+        if (!run.isEmpty()) {
+            flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry);
+        }
         elements.addAll(footerElements);
     }
 
@@ -153,20 +177,6 @@ public final class PdfBodyAssembler {
             }
         }
         return null;
-    }
-
-    /** 结算一段连续行：线框区域走线网格表格，其余行走段落与文本表格候选 */
-    private static void flushRun(List<PageLine> run, Region region, PageContent page,
-                                 List<ParseElement> elements, ParseSource source, String fileId,
-                                 ParseProperties properties, CapabilityRegistry capabilityRegistry) {
-        if (run.isEmpty()) {
-            return;
-        }
-        if (NullUtil.isNotNull(region)) {
-            RuledTableBuilder.flush(run, region, page, elements, source, fileId, properties, capabilityRegistry);
-            return;
-        }
-        flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry);
     }
 
     /** 无边框路径：段落聚合 + 文本表格候选块（行距超阈值结算段落；候选行连续成块） */

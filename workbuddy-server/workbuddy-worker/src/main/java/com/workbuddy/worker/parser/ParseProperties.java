@@ -141,6 +141,9 @@ public class ParseProperties {
     /** 分栏：栏沟最大竖直覆盖比例（横向带内被字符覆盖的纵向范围占比低于该值才算栏沟） */
     private double columnGutterMaxCoverage;
 
+    /** 分栏：跨沟行占比上限（整行横越栏沟的行占比高于该值，说明该「栏沟」只是局部几何空隙） */
+    private double columnGutterMaxSpanShare;
+
     /** 分栏：每栏最小字符占比（低于该比例不认该栏） */
     private double columnMinShare;
 
@@ -208,6 +211,7 @@ public class ParseProperties {
         requireRatio("table-header-max-numeric-ratio", tableHeaderMaxNumericRatio);
         requireNonNegative("column-gutter-min-width", columnGutterMinWidth);
         requireRatio("column-gutter-max-coverage", columnGutterMaxCoverage);
+        requireRatio("column-gutter-max-span-share", columnGutterMaxSpanShare);
         requireRatio("column-min-share", columnMinShare);
         requireAtLeast("column-min-chars", columnMinChars, 0);
         requireAtLeast("column-min-page-chars", columnMinPageChars, 0);

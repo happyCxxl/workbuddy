@@ -3,12 +3,16 @@ package com.workbuddy.worker.parser.pdf.extract;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.utils.TextUtil;
 import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.parser.ParseProperties;
+import com.workbuddy.worker.parser.pdf.detect.RuleRegions;
 import com.workbuddy.worker.parser.pdf.detect.RuleSegments;
 import com.workbuddy.worker.parser.pdf.layout.PageLayoutAnalyzer;
 import com.workbuddy.worker.parser.pdf.model.CharInfo;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
+import com.workbuddy.worker.parser.pdf.model.Region;
+import com.workbuddy.worker.parser.pdf.model.Segment;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
@@ -104,17 +108,20 @@ public class PdfPageExtractor {
                 context.getProperties().getLineYTolerance());
         double alignmentTolerance = PdfTableBandSupport.alignmentTolerance(bands, context.getProperties());
         boolean[] tableBands = PdfTableBandSupport.tableBands(bands, context.getProperties(), alignmentTolerance);
-        List<PageLine> rawLines = new ArrayList<>();
-        for (int i = 0; i < bands.size(); i++) {
-            if (tableBands[i]) {
-                rawLines.add(PdfTokenSupport.buildLine(pageNo, bands.get(i), lineTextOptions));
-            } else {
-                rawLines.addAll(PdfLineSupport.buildLines(pageNo, bands.get(i), gutters, lineTextOptions,
-                        context.getProperties()));
-            }
-        }
+        ParseProperties properties = context.getProperties();
+        List<PageLine> rawLines = buildLines(pageNo, bands, tableBands, gutters, lineTextOptions, properties);
         List<PageLine> mergedLines = LineFragmentMerger.merge(rawLines, pageWidth,
-                context.getProperties().getLineYTolerance(), lineTextOptions);
+                properties.getLineYTolerance(), lineTextOptions);
+        // 栏沟复核：真栏沟把正文分成互不横越的栏块。只看线框区域外的行（表格内的行由线网格决定，
+        // 其列间隙不是栏沟）；正文行成片横越「栏沟」时，该栏沟只是局部几何空隙，按单栏重建行
+        if (!gutters.isEmpty()
+                && PdfLineSupport.spanningShare(outsideRegions(mergedLines, graphics.segments(), properties),
+                        gutters) > properties.getColumnGutterMaxSpanShare()) {
+            gutters = List.of();
+            rawLines = buildLines(pageNo, bands, tableBands, gutters, lineTextOptions, properties);
+            mergedLines = LineFragmentMerger.merge(rawLines, pageWidth,
+                    properties.getLineYTolerance(), lineTextOptions);
+        }
         List<PageLine> lines = PdfLineSupport.orderLines(mergedLines, gutters, layoutAnalyzer, pageWidth, pageHeight);
 
         // 文字占比：行级 bbox 累计（行宽 × 行高，行高取 max(字符高, 字号×1.2)），
@@ -128,5 +135,50 @@ public class PdfPageExtractor {
 
         return new PageContent(pageNo, pageWidth, pageHeight, geometry, metric, lines, graphics.segments(),
                 graphics.imageBoxes());
+    }
+
+    /**
+     * 逐 y 带成行：表格带整带一条（不按栏切，跨栏表格不产生残余行），其余带按栏沟断口切行。
+     *
+     * @param pageNo          页码
+     * @param bands           y 带
+     * @param tableBands      该带是否表格带
+     * @param gutters         栏沟中心 x
+     * @param lineTextOptions 行文本重建阈值
+     * @param properties      解析阈值配置
+     * @return 原始行（未合并碎片、未重排）
+     */
+    private static List<PageLine> buildLines(int pageNo, List<List<CharInfo>> bands, boolean[] tableBands,
+                                             List<Double> gutters, LineTexts.Options lineTextOptions,
+                                             ParseProperties properties) {
+        List<PageLine> lines = new ArrayList<>();
+        for (int i = 0; i < bands.size(); i++) {
+            if (tableBands[i]) {
+                lines.add(PdfTokenSupport.buildLine(pageNo, bands.get(i), lineTextOptions));
+            } else {
+                lines.addAll(PdfLineSupport.buildLines(pageNo, bands.get(i), gutters, lineTextOptions, properties));
+            }
+        }
+        return lines;
+    }
+
+    /**
+     * 线框区域外的行：栏沟复核只看正文行——区域内的行由线网格行列决定，其列间隙不是栏沟。
+     *
+     * @param lines      行
+     * @param segments   页面线段
+     * @param properties 解析阈值配置
+     * @return 行中心不在任何线框区域内的行
+     */
+    private static List<PageLine> outsideRegions(List<PageLine> lines, List<Segment> segments,
+                                                 ParseProperties properties) {
+        List<Region> regions = RuleRegions.regions(segments, properties.getTableLineCoverRatio());
+        if (regions.isEmpty()) {
+            return lines;
+        }
+        return lines.stream()
+                .filter(line -> regions.stream().noneMatch(region -> region.contains(
+                        line.x() + line.width() / 2, line.y() + line.height() / 2)))
+                .toList();
     }
 }

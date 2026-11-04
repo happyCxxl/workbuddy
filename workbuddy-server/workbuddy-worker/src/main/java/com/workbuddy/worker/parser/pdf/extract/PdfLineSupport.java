@@ -86,6 +86,26 @@ public final class PdfLineSupport {
     }
 
     /**
+     * 跨沟行占比：整行横越栏沟（越沟字符占比达门槛）的行数 ÷ 行数。
+     * 真栏沟两侧是各自成块的正文，占比接近 0；局部几何空隙（如表格内部的列间隙）会把正文行统统
+     * 算成跨沟行，据此判定该栏沟不成立。
+     *
+     * @param lines   行
+     * @param gutters 栏沟中心 x
+     * @return 占比（无行或无栏沟时为 0）
+     */
+    public static double spanningShare(List<PageLine> lines, List<Double> gutters) {
+        if (lines.isEmpty() || gutters.isEmpty()) {
+            return 0;
+        }
+        long spanning = lines.stream()
+                .filter(line -> PageLayoutAnalyzer.crossesAny(line.x(), line.width(), gutters)
+                        && spansColumns(line, gutters, SPANNING_COLUMN_MIN_SHARE))
+                .count();
+        return (double) spanning / lines.size();
+    }
+
+    /**
      * 在栏沟处的断口切分一条 y 带：沿字符产出顺序走，相邻字符之间出现断口（间隙达词间间隙口径）
      * 或起点回跳/重叠，且下一字符已落到另一栏时切一刀。返回各组字符（未切时为单组）。
      */

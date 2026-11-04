@@ -65,6 +65,7 @@ knowledge:
     # 分栏：栏沟宽度与覆盖比例、每栏门槛、单页门槛、最大栏数
     column-gutter-min-width: 10.0
     column-gutter-max-coverage: 0.25
+    column-gutter-max-span-share: 0.3
     column-min-share: 0.1
     column-min-chars: 10
     column-min-page-chars: 100
