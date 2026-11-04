@@ -11,12 +11,11 @@ import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.entity.WbSubmitLog;
+import com.workbuddy.common.dto.request.input.FileSubmitDTO;
 import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.enums.input.SubmitStatus;
 import com.workbuddy.common.enums.task.PipelineStage;
 import com.workbuddy.common.enums.user.UserRole;
-import com.workbuddy.common.error.ErrorCode;
-import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.service.FileService;
 import com.workbuddy.filecenter.storage.FileStorage;
@@ -34,11 +33,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -147,28 +146,40 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 同知识库同内容重复提交：按 sha256 命中已有来源文件且本库已有文件结果时拒绝。
+     * 同库同内容重复提交：各建一行文件结果、复用同一来源文件，不拦截。
      *
-     * <p>守护 {@link ErrorCode#FILE_DUPLICATE}（40423）：重复内容不能再次建档。
+     * <p>守护 {@code submit} 的入库口径：同内容重复导入必须落两行 wb_file_result
+     * （按 sha256 拒绝的旧规则不得回归）。
      */
     @Test
-    void submitShouldRejectDuplicateContentInSameKb() {
+    void submitShouldAllowDuplicateContentAsSeparateResults() {
         when(knowledgeBaseDbService.getActiveById(1L)).thenReturn(activeKb());
         when(fileService.validate("88")).thenReturn(passResult());
-        WbSourceFile same = new WbSourceFile();
-        same.setId(7L);
-        same.setFileName("招标文件.pdf");
-        when(sourceFileDbService.listBySha256("sha256-abc")).thenReturn(List.of(same));
-        WbFileResult existingResult = new WbFileResult();
-        existingResult.setSourceFileId(7L);
-        when(kbFileResultDbService.listByKb(1L)).thenReturn(List.of(existingResult));
+        when(fileStorage.metadata("88")).thenReturn(metadata());
+        WbSourceFile existingSource = new WbSourceFile();
+        existingSource.setId(7L);
+        existingSource.setFileId("88");
+        when(sourceFileDbService.findByFileId("88")).thenReturn(existingSource);
+        when(kbFileResultDbService.save(any(WbFileResult.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbFileResult.class).setId(10L);
+            return true;
+        });
+        when(submitLogDbService.save(any(WbSubmitLog.class))).thenAnswer(inv -> {
+            inv.getArgument(0, WbSubmitLog.class).setId(30L);
+            return true;
+        });
+        FileSubmitDTO second = new FileSubmitDTO();
+        second.setFileId("88");
+        second.setRequestId("req-2");
 
-        WorkbuddyException error = assertThrows(WorkbuddyException.class,
-                () -> service.submit(1L, request()));
+        service.submit(1L, request());
+        service.submit(1L, second);
 
-        assertEquals(ErrorCode.FILE_DUPLICATE, error.getErrorCode());
+        ArgumentCaptor<WbFileResult> captor = ArgumentCaptor.forClass(WbFileResult.class);
+        verify(kbFileResultDbService, times(2)).save(captor.capture());
+        assertEquals(List.of(7L, 7L), captor.getAllValues().stream()
+                .map(WbFileResult::getSourceFileId).toList());
         verify(sourceFileDbService, never()).save(any(WbSourceFile.class));
-        verify(kbFileResultDbService, never()).save(any(WbFileResult.class));
     }
 
     /**
