@@ -55,140 +55,36 @@
           />
         </div>
 
-        <div class="composer">
-          <ComposerQueue
-            :items="queueItems"
-            :drag-index="dragIndex"
-            :drag-over-index="dragOverIndex"
-            @drag-start="onQueueDragStart"
-            @drag-over="onQueueDragOver"
-            @drop="onQueueDrop"
-            @drag-end="onQueueDragEnd"
-            @edit="editQueueItem"
-            @remove="removeQueueItem"
-          />
-          <SlashMenu
-            :open="composerMenuOpen"
-            :commands="filteredSlashCommands"
-            :active-index="slashIndex"
-            @pick="pickSlashCommand"
-          />
-          <el-input
-            v-model="input"
-            type="textarea"
-            :autosize="{ minRows: 3, maxRows: 8 }"
-            resize="none"
-            placeholder="发消息或创建任务 · / 命令 · Shift+Enter 换行"
-            :disabled="!current"
-            @input="onComposerInput"
-            @keydown="handleComposerKeydown"
-          />
-          <div class="composer-row">
-            <div class="composer-hints">
-              <el-popover placement="top-start" width="220" trigger="click">
-                <template #reference>
-                  <button class="hint-link" type="button" :disabled="!current">
-                    <svg
-                      class="hint-icon"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.4"
-                    >
-                      <path d="M8 1.5l5 2.5v4c0 3-2.2 5.3-5 6.5-2.8-1.2-5-3.5-5-6.5v-4z" />
-                    </svg>
-                    权限 {{ presetLabel(currentPreset) }}
-                  </button>
-                </template>
-                <div class="preset-box">
-                  <button
-                    v-for="option in PRESET_OPTIONS"
-                    :key="option.value"
-                    type="button"
-                    class="preset-item"
-                    :class="{ 'preset-item-on': currentPreset === option.value }"
-                    @click="changePreset(option.value)"
-                  >
-                    <span class="preset-name">{{ option.label }}</span>
-                    <span v-if="currentPreset === option.value" class="preset-check">✓</span>
-                  </button>
-                </div>
-              </el-popover>
-              <el-popover placement="top-start" width="280" trigger="click">
-                <template #reference>
-                  <button class="hint-link" type="button" :disabled="!current">
-                    <svg
-                      class="hint-icon"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.4"
-                    >
-                      <ellipse cx="8" cy="3.5" rx="5" ry="2" />
-                      <path d="M3 3.5v9c0 1.1 2.2 2 5 2s5-.9 5-2v-9" />
-                      <path d="M3 8c0 1.1 2.2 2 5 2s5-.9 5-2" />
-                    </svg>
-                    用量 {{ compactTokens(totalTokens) }} tok
-                  </button>
-                </template>
-                <UsagePopover
-                  title="Token 用量"
-                  :total="String(totalTokens)"
-                  :cache-rate="cacheRate ?? 0"
-                  :cache-miss="usage?.prompt_cache_miss_tokens ?? 0"
-                  :cache-hit="usage?.prompt_cache_hit_tokens ?? 0"
-                  :completion="usage?.completion_tokens ?? 0"
-                />
-              </el-popover>
-            </div>
-            <el-select
-              v-if="current"
-              v-model="selectedModelId"
-              class="composer-model"
-              size="small"
-              filterable
-              placeholder="搜索模型"
-              popper-class="model-select-popper"
-              @change="handleModelChange"
-            >
-              <template #label="{ value }">
-                <span class="model-label">{{ modelTitle(String(value)) }}</span>
-              </template>
-              <el-option-group v-for="group in modelGroups" :key="group.name" :label="group.name">
-                <el-option
-                  v-for="model in group.models"
-                  :key="model.id"
-                  :label="model.display_name"
-                  :value="model.id"
-                />
-              </el-option-group>
-            </el-select>
-            <el-button v-if="running" type="danger" plain :loading="stopping" @click="handleStop">
-              ■ 停止
-            </el-button>
-            <el-button
-              v-else
-              size="small"
-              plain
-              :disabled="!current || !input.trim()"
-              @click="handleBackground"
-            >
-              转后台
-            </el-button>
-            <el-button
-              v-if="!running"
-              type="primary"
-              :disabled="!current || !input.trim()"
-              @click="handleSend"
-            >
-              发送
-            </el-button>
-          </div>
-        </div>
+        <ChatComposer
+          v-model="input"
+          :current="current"
+          :running="running"
+          :stopping="stopping"
+          :queue-items="queueItems"
+          :drag-index="dragIndex"
+          :drag-over-index="dragOverIndex"
+          :commands="slashCommands"
+          :preset="currentPreset"
+          :total-tokens="totalTokens"
+          :cache-rate="cacheRate ?? 0"
+          :usage="usage"
+          :model-id="selectedModelId"
+          :models="chatModels"
+          @need-skills="loadSessionSkills()"
+          @pick-command="pickSlashCommand"
+          @send="handleSend"
+          @stop="handleStop"
+          @background="handleBackground"
+          @interrupt="interruptAndSend"
+          @change-preset="changePreset"
+          @model-change="handleModelChange"
+          @queue-drag-start="onQueueDragStart"
+          @queue-drag-over="onQueueDragOver"
+          @queue-drop="onQueueDrop"
+          @queue-drag-end="onQueueDragEnd"
+          @queue-edit="editQueueItem"
+          @queue-remove="removeQueueItem"
+        />
       </div>
     </div>
 
@@ -269,14 +165,12 @@ import type {
 import type { ChatMessage, ToolLine, TurnView } from '@/types/chat';
 import { useTurnMeta } from '@/composables/useTurnMeta';
 import { durationLabel } from '@/utils/chat-format';
+import ChatComposer from '@/components/assistant/ChatComposer.vue';
 import ChatHeader from '@/components/assistant/ChatHeader.vue';
 import ChatTurnList from '@/components/assistant/ChatTurnList.vue';
-import ComposerQueue from '@/components/assistant/ComposerQueue.vue';
 import SessionSidebar from '@/components/assistant/SessionSidebar.vue';
-import SlashMenu from '@/components/assistant/SlashMenu.vue';
 import SubSessionDrawer from '@/components/assistant/SubSessionDrawer.vue';
 import TrajectoryDrawer from '@/components/assistant/TrajectoryDrawer.vue';
-import UsagePopover from '@/components/common/UsagePopover.vue';
 import WorkspaceDialogs from '@/components/assistant/WorkspaceDialogs.vue';
 
 const sessions = ref<AssistantSession[]>([]);
@@ -298,26 +192,6 @@ async function handleModelChange(value: string): Promise<void> {
   ElMessage.success('模型已切换');
 }
 
-/** 模型展示：厂商 · 模型名 */
-function modelTitle(modelId: string): string {
-  const model = chatModels.value.find((item) => item.id === modelId);
-  if (!model) {
-    return '';
-  }
-  return `${model.vendor_name || model.vendor_code} · ${model.display_name}`;
-}
-
-/** 按厂商分组：与 DSH 的账号分组一致 */
-const modelGroups = computed(() => {
-  const groups = new Map<string, AvailableModel[]>();
-  for (const model of chatModels.value) {
-    const name = model.vendor_name || model.vendor_code || '其他';
-    const list = groups.get(name) ?? [];
-    list.push(model);
-    groups.set(name, list);
-  }
-  return Array.from(groups, ([name, models]) => ({ name, models }));
-});
 /** 草稿会话：新建工作区/点「＋」时自动创建，未发消息就切走即丢弃（对齐 DSH） */
 const draftSessionId = ref<string | null>(null);
 const messages = ref<ChatMessage[]>([]);
@@ -344,14 +218,7 @@ const slashCommands = computed<SlashCommand[]>(() => [
   ...builtinSlashCommands,
   ...skillCommands.value,
 ]);
-const slashOpen = ref(false);
-const slashQuery = ref('');
-const slashIndex = ref(0);
 const checkpoints = ref<SessionCheckpoint[]>([]);
-const filteredSlashCommands = computed(() =>
-  slashCommands.value.filter((command) => command.name.slice(1).startsWith(slashQuery.value)),
-);
-const composerMenuOpen = computed(() => slashOpen.value);
 /** 过程组展开状态：完成的轮次默认折叠，运行中的轮次强制展开 */
 const expandedTurns = ref<Set<string>>(new Set());
 const stepLabel = ref('1');
@@ -622,13 +489,6 @@ const cacheRate = computed(() => {
 
 let abortController: AbortController | null = null;
 
-/** 权限档位选项（对齐 DSH：能力级三档，上下排列） */
-const PRESET_OPTIONS: { value: PermissionPreset; label: string }[] = [
-  { value: 'read-only', label: '仅可查看' },
-  { value: 'workspace-write', label: '工作区内修改' },
-  { value: 'full-access', label: '完全权限' },
-];
-
 /** 当前会话的规范化档位（兼容旧值） */
 const currentPreset = computed<PermissionPreset>(() => {
   const value = current.value?.permission_preset ?? 'workspace-write';
@@ -640,17 +500,6 @@ const currentPreset = computed<PermissionPreset>(() => {
   }
   return value as PermissionPreset;
 });
-
-/** 档位中文名（对齐 DSH：仅可查看 / 工作区内修改 / 完全权限；兼容旧值） */
-function presetLabel(preset: string): string {
-  if (preset === 'read-only' || preset === 'strict') {
-    return '仅可查看';
-  }
-  if (preset === 'full-access') {
-    return '完全权限';
-  }
-  return '工作区内修改';
-}
 
 /** 载入侧栏：工作区 + 会话；首次自动选中最近会话 */
 async function loadSidebar(): Promise<void> {
@@ -773,13 +622,6 @@ const supersededTurns = computed<Set<number>>(() => {
   }
   return superseded;
 });
-
-/** token 数缩写：1.2M / 760k */
-function compactTokens(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1000) return `${String(Math.round(value / 1000))}k`;
-  return String(value);
-}
 
 /** 从 assistant/message 载荷里还原工具调用行 */
 function replayTools(payload: Record<string, unknown>): ToolLine[] {
@@ -1071,18 +913,6 @@ async function scrollToBottom(): Promise<void> {
   }
 }
 
-/** 输入变化：/ 开头且未进入参数时打开命令补全 */
-function onComposerInput(value: string): void {
-  if (value.startsWith('/') && !value.includes(' ')) {
-    slashOpen.value = true;
-    slashQuery.value = value.slice(1);
-    slashIndex.value = 0;
-    void loadSessionSkills();
-    return;
-  }
-  slashOpen.value = false;
-}
-
 /** 加载当前会话可用的 skill；同一会话只拉一次 */
 async function loadSessionSkills(force = false): Promise<void> {
   const sessionId = currentId.value;
@@ -1131,53 +961,6 @@ async function reloadSkillsCommand(): Promise<void> {
   appendCommandOutput(`已重新加载技能：${skillCommands.value.length} 个。`);
 }
 
-/** 关闭所有命令菜单 */
-function closeComposerMenu(): void {
-  slashOpen.value = false;
-}
-
-/** composer 键盘：菜单优先，其次才是发送 */
-function handleComposerKeydown(raw: Event): void {
-  if (!(raw instanceof KeyboardEvent)) {
-    return;
-  }
-  const event = raw;
-  if (event.isComposing) {
-    return;
-  }
-  if (slashOpen.value) {
-    const count = filteredSlashCommands.value.length;
-    if (event.key === 'ArrowDown' && count > 0) {
-      event.preventDefault();
-      slashIndex.value = (slashIndex.value + 1) % count;
-    } else if (event.key === 'ArrowUp' && count > 0) {
-      event.preventDefault();
-      slashIndex.value = (slashIndex.value - 1 + count) % count;
-    } else if ((event.key === 'Enter' || event.key === 'Tab') && count > 0) {
-      event.preventDefault();
-      pickSlashCommand(filteredSlashCommands.value[slashIndex.value]);
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      closeComposerMenu();
-    }
-    return;
-  }
-  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-    event.preventDefault();
-    void interruptAndSend();
-    return;
-  }
-  if (event.key === 'Escape' && running.value) {
-    event.preventDefault();
-    void handleStop();
-    return;
-  }
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    handleSend();
-  }
-}
-
 /** Ctrl+Enter：把当前输入排队并中断当前回合，立即开始处理 */
 async function interruptAndSend(): Promise<void> {
   const content = input.value.trim();
@@ -1195,7 +978,6 @@ async function interruptAndSend(): Promise<void> {
 
 /** 选中命令：插入技能或执行技能目录刷新 */
 function pickSlashCommand(command: SlashCommand): void {
-  slashOpen.value = false;
   if (command.name === '/reload-skills') {
     input.value = '';
     void reloadSkillsCommand();
@@ -1789,11 +1571,6 @@ onUnmounted(() => {
   border-bottom-width: 1px;
 }
 
-.composer-model {
-  width: 210px;
-  flex: none;
-}
-
 .messages {
   display: flex;
   flex: 1;
@@ -1802,85 +1579,5 @@ onUnmounted(() => {
   gap: 24px;
   overflow: auto;
   padding: 24px 28px 28px;
-}
-
-.composer {
-  position: relative;
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px 14px;
-  border-top: 1px solid var(--kb-line);
-}
-
-.composer-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.composer-hints {
-  display: flex;
-  flex: 1;
-  gap: 14px;
-  align-items: center;
-  color: var(--kb-text-3);
-  font-size: 12px;
-}
-
-.hint-link {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--kb-primary);
-  cursor: pointer;
-  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-  font-size: 12px;
-}
-
-.hint-icon {
-  width: 12px;
-  height: 12px;
-}
-
-.preset-box {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.preset-item {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 7px 8px;
-  border: none;
-  border-radius: 6px;
-  color: var(--kb-text-2);
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  font-size: 12px;
-}
-
-.preset-item:hover {
-  background: rgb(255 255 255 / 5%);
-}
-
-.preset-item-on {
-  background: rgb(52 211 153 / 10%);
-}
-
-.preset-name {
-  flex: 1;
-}
-
-.preset-check {
-  color: var(--kb-primary-2);
-  font-size: 12px;
 }
 </style>
