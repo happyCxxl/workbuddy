@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // AGENTS 入口体检：入口文件反引号里引用的仓库路径必须真实存在（指针失效 = ERROR 拦下），行数超预算 = WARN 只提示。
-// 接入点：pre-push 门禁（改动涉及入口文件时）与 CI（每次推送全量跑）。
+// 接入点：pre-push 门禁（改动涉及入口文件时）。
 // 动机：指向已删文件的入口条目比没有条目更糟——人与代理按图索骥必落空。
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
