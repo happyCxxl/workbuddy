@@ -1,15 +1,3 @@
-/** 策略类型（与后端 StrategyType 对齐；解析/组装暂无策略不参与） */
-export const STRATEGY_TYPES = ['PREPROCESS', 'CHUNK', 'EMBED'] as const;
-
-export type StrategyType = (typeof STRATEGY_TYPES)[number];
-
-/** 策略类型中文名（索引签名，未知类型回落原值） */
-export const STRATEGY_TYPE_LABELS: Record<string, string> = {
-  CHUNK: '切片',
-  PREPROCESS: '预处理',
-  EMBED: '向量化',
-};
-
 /** 策略版本状态 */
 export type StrategyStatus = 'ACTIVE' | 'INACTIVE';
 

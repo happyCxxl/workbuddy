@@ -97,7 +97,8 @@ import { useRouter } from 'vue-router';
 
 import type { KnowledgeBase } from '@/types/knowledge-base';
 import { KB_STATUS_ACTIVE, KB_STATUS_DISABLED } from '@/types/knowledge-base';
-import { STRATEGY_TYPE_LABELS, STRATEGY_TYPES } from '@/types/strategy';
+import { STRATEGY_BINDING_TYPES } from '@/types/pipeline';
+import { STRATEGY_TYPE_LABELS } from '@/types/strategy-config';
 import { formatDate, formatTime } from '@/utils/date';
 
 // 知识库卡片：名称、状态、关键指标与操作入口
@@ -143,11 +144,11 @@ const dateText = computed(() => formatDate(props.kb.updateTime ?? ''));
 /**
  * 三条绑定策略（按实际处理顺序：预处理 → 切片 → 向量化）。
  *
- * <p>顺序用 {@link STRATEGY_TYPES} 的声明顺序，而不是手写三个字面量 ——
+ * <p>顺序用 {@link STRATEGY_BINDING_TYPES} 的声明顺序，而不是手写三个字面量 ——
  * 那个常量与后端 StrategyType 对齐，加类型时这里自动跟上。
  */
 const strategies = computed(() =>
-  STRATEGY_TYPES.map((type) => ({
+  STRATEGY_BINDING_TYPES.map((type) => ({
     type,
     label: STRATEGY_TYPE_LABELS[type] ?? type,
     text:
