@@ -76,7 +76,9 @@
               </span>
               <span class="stage-file-meta-text">
                 {{ formatSize(file.fileSize) }}
-                <template v-if="file.createTime"> · {{ formatTime(file.createTime) }}</template>
+                <template v-if="file.createTime">
+                  · {{ formatMonthDayMinute(file.createTime) }}</template
+                >
               </span>
             </div>
           </div>
@@ -206,6 +208,7 @@ import TriggerStageDialog from '@/components/pipeline/TriggerStageDialog.vue';
 import FileExtBadge from '@/components/knowledge-base/FileExtBadge.vue';
 import ImportDocumentDialog from '@/components/knowledge-base/ImportDocumentDialog.vue';
 import { prunePositions, readPositions } from '@/utils/chain-layout-storage';
+import { formatMonthDayMinute } from '@/utils/date';
 import { readCollapsed, writeCollapsed } from '@/utils/ui-state-storage';
 import {
   PIPELINE_STAGES,
@@ -680,12 +683,6 @@ function formatSize(bytes: number | null): string {
     return `${(bytes / 1024).toFixed(0)}K`;
   }
   return `${(bytes / 1024 / 1024).toFixed(1)}M`;
-}
-
-/** 提交时间：只到分钟，与链图节点的时间格式统一（MM-DD HH:mm） */
-function formatTime(value: string): string {
-  const normalized = value.replace('T', ' ');
-  return normalized.length >= 16 ? normalized.slice(5, 16) : normalized;
 }
 
 onMounted(() => {

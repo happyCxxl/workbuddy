@@ -404,28 +404,14 @@
                 </ul>
               </div>
 
-              <div class="parse-drawer-tabfoot">
-                <button
-                  class="parse-drawer-page-btn"
-                  type="button"
-                  :disabled="page <= 1 || itemsLoading"
-                  @click="goPage(page - 1)"
-                >
-                  上一页
-                </button>
-                <span class="parse-drawer-page-info">第 {{ page }} / {{ pageCount }} 页</span>
-                <button
-                  class="parse-drawer-page-btn"
-                  type="button"
-                  :disabled="page >= pageCount || itemsLoading"
-                  @click="goPage(page + 1)"
-                >
-                  下一页
-                </button>
-                <span class="parse-drawer-page-info"
-                  >共 {{ elementTotal }} 条 · 每页 {{ PAGE_SIZE }}</span
-                >
-              </div>
+              <DrawerPager
+                :page="page"
+                :page-count="pageCount"
+                :total="elementTotal"
+                :loading="itemsLoading"
+                :page-size="PAGE_SIZE"
+                @change="goPage"
+              />
             </div>
 
             <!-- 页签：结构树（组装环节；与元素页签同一份分页内容，按标题层级缩进） -->
@@ -478,28 +464,14 @@
                 </ul>
               </div>
 
-              <div class="parse-drawer-tabfoot">
-                <button
-                  class="parse-drawer-page-btn"
-                  type="button"
-                  :disabled="page <= 1 || itemsLoading"
-                  @click="goPage(page - 1)"
-                >
-                  上一页
-                </button>
-                <span class="parse-drawer-page-info">第 {{ page }} / {{ pageCount }} 页</span>
-                <button
-                  class="parse-drawer-page-btn"
-                  type="button"
-                  :disabled="page >= pageCount || itemsLoading"
-                  @click="goPage(page + 1)"
-                >
-                  下一页
-                </button>
-                <span class="parse-drawer-page-info"
-                  >共 {{ elementTotal }} 条 · 每页 {{ PAGE_SIZE }}</span
-                >
-              </div>
+              <DrawerPager
+                :page="page"
+                :page-count="pageCount"
+                :total="elementTotal"
+                :loading="itemsLoading"
+                :page-size="PAGE_SIZE"
+                @change="goPage"
+              />
             </div>
 
             <!-- 页签：剔除内容（预处理；只列不进切片的元素，按状态过滤后分页） -->
@@ -539,30 +511,14 @@
                 </ul>
               </div>
 
-              <div class="parse-drawer-tabfoot">
-                <button
-                  class="parse-drawer-page-btn"
-                  type="button"
-                  :disabled="excludedPage <= 1 || excludedLoading"
-                  @click="goExcludedPage(excludedPage - 1)"
-                >
-                  上一页
-                </button>
-                <span class="parse-drawer-page-info"
-                  >第 {{ excludedPage }} / {{ excludedPageCount }} 页</span
-                >
-                <button
-                  class="parse-drawer-page-btn"
-                  type="button"
-                  :disabled="excludedPage >= excludedPageCount || excludedLoading"
-                  @click="goExcludedPage(excludedPage + 1)"
-                >
-                  下一页
-                </button>
-                <span class="parse-drawer-page-info"
-                  >共 {{ excludedTotal }} 条 · 每页 {{ PAGE_SIZE }}</span
-                >
-              </div>
+              <DrawerPager
+                :page="excludedPage"
+                :page-count="excludedPageCount"
+                :total="excludedTotal"
+                :loading="excludedLoading"
+                :page-size="PAGE_SIZE"
+                @change="goExcludedPage"
+              />
             </div>
 
             <!-- 页签：字段（预处理；标准化字段一览） -->
@@ -624,32 +580,14 @@
                 </ul>
               </div>
 
-              <div class="parse-drawer-tabfoot">
-                <button
-                  class="parse-drawer-page-btn"
-                  type="button"
-                  :disabled="activeChunkPane.page <= 1 || activeChunkPane.loading"
-                  @click="goChunkPanePage(activeChunkPane.page - 1)"
-                >
-                  上一页
-                </button>
-                <span class="parse-drawer-page-info"
-                  >第 {{ activeChunkPane.page }} / {{ activeChunkPanePages }} 页</span
-                >
-                <button
-                  class="parse-drawer-page-btn"
-                  type="button"
-                  :disabled="
-                    activeChunkPane.page >= activeChunkPanePages || activeChunkPane.loading
-                  "
-                  @click="goChunkPanePage(activeChunkPane.page + 1)"
-                >
-                  下一页
-                </button>
-                <span class="parse-drawer-page-info"
-                  >共 {{ activeChunkPane.total }} 条 · 每页 {{ PAGE_SIZE }}</span
-                >
-              </div>
+              <DrawerPager
+                :page="activeChunkPane.page"
+                :page-count="activeChunkPanePages"
+                :total="activeChunkPane.total"
+                :loading="activeChunkPane.loading"
+                :page-size="PAGE_SIZE"
+                @change="goChunkPanePage"
+              />
             </div>
 
             <!-- 页签：来源对照（切片；按左栏选中的片给来源元素个数与关联字段） -->
@@ -812,12 +750,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 
-import { readSplitRatio, removeSplitRatio, writeSplitRatio } from '@/utils/drawer-split-storage';
+import { useSplitter } from '@/composables/useSplitter';
 import { pushEntityTitle, restoreTitle } from '@/utils/page-title';
 import { getStageContent, getStageDetail, getSourceFile } from '@/api/pipeline';
 import PdfSourcePreview from '@/components/pipeline/PdfSourcePreview.vue';
 import DocxSourcePreview from '@/components/pipeline/DocxSourcePreview.vue';
 import XlsxSourcePreview from '@/components/pipeline/XlsxSourcePreview.vue';
+import DrawerPager from '@/components/pipeline/DrawerPager.vue';
 import {
   bboxOf,
   chunkTypeLabel,
@@ -978,172 +917,25 @@ const xlsxRef = ref<InstanceType<typeof XlsxSourcePreview> | null>(null);
 const resultPaneRef = ref<HTMLElement | null>(null);
 /** 双栏容器（分隔条按它的宽度换算左栏像素宽与最小宽度约束） */
 const splitBodyRef = ref<HTMLElement | null>(null);
-
-// ---- 分隔条：两栏宽度 ----
-
-/** 左栏最小宽（再窄原文读不了） */
-const SPLIT_MIN_LEFT = 320;
-/** 右栏最小宽（再窄元素列表不可用） */
-const SPLIT_MIN_RIGHT = 360;
-/** 方向键每次调整的像素 */
-const SPLIT_KEY_STEP = 24;
-/** 默认左栏比例（双击恢复到这个值），与样式里的初始宽度同口径 */
-const SPLIT_DEFAULT_RATIO = 0.62;
-
-/**
- * 左栏宽度（px）。**null 表示还没量过容器**，此时不写内联宽度，
- * 让样式里的默认值（62% / min-width 420px）生效，避免测量前闪一下。
- */
-const sourceWidth = ref<number | null>(null);
-const dragging = ref(false);
-/** 拖动起点：指针 x 与当时的左栏宽 */
-const dragFrom = ref({ pointerX: 0, width: 0 });
-
-/** 双栏容器当前宽度；量不到时按 0 处理（约束函数会退回最小宽） */
-function bodyWidth(): number {
-  return splitBodyRef.value?.clientWidth ?? 0;
-}
-
-/**
- * 把想要的左栏宽夹进合法区间。
- *
- * <p>两侧最小宽都保证：容器太窄放不下两栏最小宽时，优先保左栏最小宽。
- */
-function clampWidth(width: number): number {
-  const total = bodyWidth();
-  const maxLeft = Math.max(total - SPLIT_MIN_RIGHT, SPLIT_MIN_LEFT);
-  return Math.min(Math.max(Math.round(width), SPLIT_MIN_LEFT), maxLeft);
-}
-
-/** 左栏占双栏的比例：量不到容器宽度时按默认比例 */
-const splitRatio = computed(() => {
-  const total = bodyWidth();
-  if (total <= 0 || sourceWidth.value === null) {
-    return SPLIT_DEFAULT_RATIO;
-  }
-  return sourceWidth.value / total;
+const {
+  sourceWidth,
+  dragging,
+  splitRatio,
+  sourcePaneStyle,
+  splitterTitle,
+  onSplitterDown,
+  onSplitterMove,
+  onSplitterUp,
+  resetSplit,
+  onSplitterKeydown,
+  measureSplit,
+  onWindowResize,
+} = useSplitter({
+  bodyRef: splitBodyRef,
+  fileResultId: () => props.fileResultId,
+  taskId: () => props.taskId,
+  onResize: measureRenderedTexts,
 });
-
-const sourcePaneStyle = computed(() =>
-  sourceWidth.value === null
-    ? undefined
-    : { width: `${sourceWidth.value}px`, minWidth: `${SPLIT_MIN_LEFT}px` },
-);
-
-const splitterTitle = computed(
-  () =>
-    `拖动调整两栏宽度；双击恢复默认（左栏 ${Math.round(SPLIT_DEFAULT_RATIO * 100)}%）；←/→ 微调`,
-);
-
-/** 按像素设置左栏宽（夹住后写回，并落到偏好里） */
-function applyWidth(width: number, persist: boolean): void {
-  const next = clampWidth(width);
-  sourceWidth.value = next;
-  if (persist) {
-    writeSplitRatio(props.fileResultId, props.taskId, next / Math.max(bodyWidth(), 1));
-  }
-  void nextTick(measureRenderedTexts);
-}
-
-/** 按默认比例设置左栏宽 */
-function applyDefaultWidth(): void {
-  const total = bodyWidth();
-  sourceWidth.value = clampWidth(total > 0 ? total * SPLIT_DEFAULT_RATIO : SPLIT_MIN_LEFT);
-}
-
-/**
- * 拖动开始：记下起点并捕获指针，后续 move/up 都发到分隔条自己身上。
- *
- * <p>`setPointerCapture` 放在 try 里：某些环境（合成事件、指针已被系统接管）
- * 会抛异常，而那不该让整个拖动挂掉 —— 捕获失败时事件仍会冒泡到本元素，
- * 只是指针移出分隔条后可能收不到 move。
- */
-function onSplitterDown(event: PointerEvent): void {
-  if (sourceWidth.value === null) {
-    applyDefaultWidth();
-  }
-  dragging.value = true;
-  dragFrom.value = { pointerX: event.clientX, width: sourceWidth.value ?? SPLIT_MIN_LEFT };
-  try {
-    (event.currentTarget as HTMLElement | null)?.setPointerCapture(event.pointerId);
-  } catch {
-    // 捕获失败：拖动仍能工作，只是指针离开分隔条后可能丢事件
-  }
-  event.preventDefault();
-}
-
-function onSplitterMove(event: PointerEvent): void {
-  if (!dragging.value) {
-    return;
-  }
-  applyWidth(dragFrom.value.width + (event.clientX - dragFrom.value.pointerX), false);
-}
-
-function onSplitterUp(event: PointerEvent): void {
-  if (!dragging.value) {
-    return;
-  }
-  dragging.value = false;
-  const handle = event.currentTarget as HTMLElement | null;
-  if (handle?.hasPointerCapture(event.pointerId)) {
-    handle.releasePointerCapture(event.pointerId);
-  }
-  // 拖动结束才落盘：拖动过程中每帧写 localStorage 没有必要
-  if (sourceWidth.value !== null) {
-    writeSplitRatio(props.fileResultId, props.taskId, sourceWidth.value / Math.max(bodyWidth(), 1));
-  }
-}
-
-/** 双击：回到默认比例，并把记录清掉（"默认"与"没记录过"是同一种状态） */
-function resetSplit(): void {
-  removeSplitRatio(props.fileResultId, props.taskId);
-  applyDefaultWidth();
-}
-
-/** 方向键：左右各按固定像素调整，Home/End 到两端 */
-function onSplitterKeydown(event: KeyboardEvent): void {
-  const base = sourceWidth.value ?? SPLIT_MIN_LEFT;
-  if (event.key === 'ArrowLeft') {
-    applyWidth(base - SPLIT_KEY_STEP, true);
-  } else if (event.key === 'ArrowRight') {
-    applyWidth(base + SPLIT_KEY_STEP, true);
-  } else if (event.key === 'Home') {
-    applyWidth(SPLIT_MIN_LEFT, true);
-  } else if (event.key === 'End') {
-    applyWidth(Number.MAX_SAFE_INTEGER, true);
-  } else {
-    return;
-  }
-  event.preventDefault();
-}
-
-/**
- * 量一次容器宽度并定下左栏宽。
- *
- * <p>优先用记住的比例，没有记录就按默认比例算 —— 两者都要过最小宽度约束。
- */
-function measureSplit(): void {
-  const total = bodyWidth();
-  if (total <= 0) {
-    return;
-  }
-  const remembered = readSplitRatio(props.fileResultId, props.taskId);
-  sourceWidth.value = clampWidth(total * (remembered ?? SPLIT_DEFAULT_RATIO));
-}
-
-/** 窗口尺寸变化：左栏宽按新容器重新夹一次（保持像素意图，不做比例漂移） */
-function onWindowResize(): void {
-  if (dragging.value) {
-    return;
-  }
-  if (sourceWidth.value === null) {
-    measureSplit();
-    void nextTick(measureRenderedTexts);
-    return;
-  }
-  applyWidth(sourceWidth.value, false);
-  void nextTick(measureRenderedTexts);
-}
 /** 预览当前页（0 = 预览还没就绪） */
 const previewPage = ref(0);
 const previewReady = computed(() => previewPage.value > 0);
@@ -3325,17 +3117,6 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--kb-line);
 }
 
-/* 页签内的固定底行（翻页） */
-.parse-drawer-tabfoot {
-  display: flex;
-  flex: none;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  padding: 8px 14px;
-  border-top: 1px solid var(--kb-line);
-}
-
 /*
  * 页签内容的滚动容器：本区唯一的滚动条就在这里。
  * min-height: 0 让它在 flex 里真正被压缩，内容才不会把面板顶出去。
@@ -3725,32 +3506,6 @@ onBeforeUnmount(() => {
 .parse-drawer-element-cell.is-head {
   background: rgb(255 255 255 / 3%);
   color: var(--kb-text-2);
-}
-
-.parse-drawer-page-btn {
-  padding: 4px 12px;
-  border: 1px solid var(--kb-line-2);
-  border-radius: 8px;
-  background: var(--kb-surface);
-  color: var(--kb-text-2);
-  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.parse-drawer-page-btn:disabled {
-  color: var(--kb-text-4);
-  cursor: not-allowed;
-}
-
-.parse-drawer-page-btn:not(:disabled):hover {
-  border-color: var(--kb-primary);
-  color: var(--kb-primary);
-}
-
-.parse-drawer-page-info {
-  color: var(--kb-text-3);
-  font-size: 11px;
 }
 
 .parse-drawer-hint {

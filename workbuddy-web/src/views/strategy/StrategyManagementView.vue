@@ -117,7 +117,7 @@
                 <span class="stg-meta-sep">|</span>
                 <span>{{ strategyTypeLabel(selected.type) }}</span>
                 <span class="stg-meta-sep">·</span>
-                <span>{{ formatTime(selected.createTime) }}</span>
+                <span>{{ formatMinute(selected.createTime) }}</span>
                 <span class="stg-meta-sep">·</span>
                 <span class="stg-mono">id {{ selected.id }}</span>
               </div>
@@ -236,6 +236,7 @@ import {
   updateStrategyVersionEnable,
 } from '@/api/strategy';
 import { getKnowledgeBasePage } from '@/api/knowledge-base';
+import { formatMinute } from '@/utils/date';
 import ChunkForm from '@/components/strategy/ChunkForm.vue';
 import EmbedForm from '@/components/strategy/EmbedForm.vue';
 import PreprocessForm from '@/components/strategy/PreprocessForm.vue';
@@ -390,13 +391,6 @@ function nextVersion(current: string): string {
     return 'v1';
   }
   return `${matched[1]}${Number(matched[2]) + 1}`;
-}
-
-function formatTime(value: string | null): string {
-  if (!value) {
-    return '—';
-  }
-  return value.replace('T', ' ').slice(0, 16);
 }
 
 // ============================================================

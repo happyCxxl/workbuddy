@@ -37,3 +37,17 @@ export function formatTime(value: string): string {
   }
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
+
+// ISO 时间转 yyyy-MM-dd HH:mm（按后端字面值截取，不做时区换算；空值回退）
+export function formatMinute(value: string | null | undefined, fallback = '—'): string {
+  if (!value) {
+    return fallback;
+  }
+  return value.replace('T', ' ').slice(0, 16);
+}
+
+// ISO 时间转 MM-DD HH:mm（按后端字面值截取，不做时区换算）
+export function formatMonthDayMinute(value: string): string {
+  const normalized = value.replace('T', ' ');
+  return normalized.length >= 16 ? normalized.slice(5, 16) : normalized;
+}

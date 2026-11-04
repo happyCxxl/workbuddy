@@ -60,22 +60,7 @@
             :aria-expanded="isGroupOpen(item)"
             @click="toggleGroup(item)"
           >
-            <svg
-              class="layout-nav-icon"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.4"
-            >
-              <path
-                v-for="(d, index) in item.iconPaths"
-                :key="index"
-                :d="d"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <NavIcon class="layout-nav-icon" :paths="item.iconPaths" />
             <span class="layout-nav-label layout-nav-label-parent">{{ item.label }}</span>
             <svg
               class="layout-nav-caret"
@@ -101,22 +86,7 @@
                 :class="{ 'layout-nav-item-active': isNavActive(child.path) }"
                 :to="child.path"
               >
-                <svg
-                  class="layout-nav-icon"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.4"
-                >
-                  <path
-                    v-for="(d, index) in child.iconPaths"
-                    :key="index"
-                    :d="d"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                <NavIcon class="layout-nav-icon" :paths="child.iconPaths" />
                 <span class="layout-nav-label">{{ child.label }}</span>
               </router-link>
             </div>
@@ -131,22 +101,7 @@
               :class="{ 'layout-nav-item-active': isNavActive(child.path) }"
               :to="child.path"
             >
-              <svg
-                class="layout-nav-icon"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.4"
-              >
-                <path
-                  v-for="(d, index) in child.iconPaths"
-                  :key="index"
-                  :d="d"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              <NavIcon class="layout-nav-icon" :paths="child.iconPaths" />
               <span class="layout-nav-label">{{ child.label }}</span>
             </router-link>
           </div>
@@ -160,37 +115,18 @@
           :to="item.path"
           :title="sideCollapsed ? item.label : undefined"
         >
-          <svg
+          <NavIcon
             class="layout-nav-icon"
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.4"
-          >
-            <path
-              v-for="(d, index) in item.iconPaths"
-              :key="index"
-              :d="d"
-              stroke-linejoin="round"
-            />
-            <circle v-if="item.iconCircle" cx="8" cy="5.4" r="2.6" />
-          </svg>
+            :paths="item.iconPaths"
+            :circle="item.iconCircle ?? false"
+          />
           <span class="layout-nav-label">{{ item.label }}</span>
         </router-link>
       </template>
       <div class="layout-side-foot">
         <el-dropdown class="layout-user-drop" trigger="click" placement="top-start">
           <div class="layout-user-trigger">
-            <img
-              v-if="avatarUrl"
-              class="layout-avatar layout-avatar-img"
-              :src="avatarUrl"
-              alt=""
-              @error="onAvatarError"
-            />
-            <div v-else class="layout-avatar">{{ avatarText }}</div>
+            <UserAvatar :url="avatarUrl" :text="avatarText" @error="onAvatarError" />
             <div class="layout-user">
               <div class="layout-user-name">{{ displayNameLabel }}</div>
             </div>
@@ -241,14 +177,7 @@
         </div>
         <div class="layout-top-right">
           <el-dropdown trigger="click" placement="bottom-end">
-            <img
-              v-if="avatarUrl"
-              class="layout-avatar layout-avatar-clickable layout-avatar-img"
-              :src="avatarUrl"
-              alt=""
-              @error="onAvatarError"
-            />
-            <div v-else class="layout-avatar layout-avatar-clickable">{{ avatarText }}</div>
+            <UserAvatar :url="avatarUrl" :text="avatarText" clickable @error="onAvatarError" />
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
@@ -270,6 +199,8 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { deleteToken } from '@/api/auth';
+import NavIcon from '@/components/common/NavIcon.vue';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 import { useAuthStore } from '@/stores/auth';
 import { readCollapsed, writeCollapsed } from '@/utils/ui-state-storage';
 
@@ -1010,23 +941,6 @@ async function handleLogout(): Promise<void> {
   background: rgb(255 255 255 / 5%);
 }
 
-.layout-avatar-clickable {
-  cursor: pointer;
-}
-
-.layout-avatar {
-  display: grid;
-  flex: none;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 1px solid rgb(34 224 255 / 40%);
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgb(34 224 255 / 30%), rgb(77 124 255 / 20%));
-  color: var(--kb-primary);
-  font-size: 13px;
-}
-
 .layout-user-name {
   overflow: hidden;
   font-size: 13px;
@@ -1308,11 +1222,6 @@ async function handleLogout(): Promise<void> {
 
 .layout-side-toggle.is-collapsed:hover {
   box-shadow: 0 0 20px rgb(34 224 255 / 85%);
-}
-
-/* 图片头像：按方形裁切填满圆框，不设会拉变形 */
-.layout-avatar-img {
-  object-fit: cover;
 }
 
 /*

@@ -117,7 +117,7 @@
                 @click="selectSession(item)"
               >
                 <span class="session-title">{{ item.title || '未命名会话' }}</span>
-                <span class="session-time">{{ formatTime(item.updated_at) }}</span>
+                <span class="session-time">{{ formatDateTime(item.updated_at) }}</span>
                 <span class="session-rename" title="重命名" @click.stop="handleRename(item)"
                   >✎</span
                 >
@@ -291,33 +291,15 @@
                       </svg>
                     </button>
                   </template>
-                  <div class="usage-pop">
-                    <div class="usage-pop-head">
-                      <span class="usage-pop-title">本轮用量</span>
-                      <span class="usage-pop-total">
-                        {{ (turnMeta[view.turnSeq ?? 0]?.tokens ?? 0).toLocaleString() }} tok
-                      </span>
-                    </div>
-                    <div class="usage-pop-row">
-                      <span>提供方 / 模型</span><span>{{ turnModels(view) }}</span>
-                    </div>
-                    <div class="usage-pop-row">
-                      <span>缓存命中</span><span>{{ turnCacheRate(view) }}%</span>
-                    </div>
-                    <div class="usage-pop-row">
-                      <span>未缓存输入</span
-                      ><span>{{ turnMeta[view.turnSeq ?? 0]?.cacheMiss ?? 0 }} tok</span>
-                    </div>
-                    <div class="usage-pop-row">
-                      <span>缓存读取</span
-                      ><span>{{ turnMeta[view.turnSeq ?? 0]?.cacheHit ?? 0 }} tok</span>
-                    </div>
-                    <div class="usage-pop-row"><span>缓存写入</span><span>0 tok</span></div>
-                    <div class="usage-pop-row">
-                      <span>输出</span
-                      ><span>{{ turnMeta[view.turnSeq ?? 0]?.completion ?? 0 }} tok</span>
-                    </div>
-                  </div>
+                  <UsagePopover
+                    title="本轮用量"
+                    :total="(turnMeta[view.turnSeq ?? 0]?.tokens ?? 0).toLocaleString()"
+                    :model="turnModels(view)"
+                    :cache-rate="turnCacheRate(view)"
+                    :cache-miss="turnMeta[view.turnSeq ?? 0]?.cacheMiss ?? 0"
+                    :cache-hit="turnMeta[view.turnSeq ?? 0]?.cacheHit ?? 0"
+                    :completion="turnMeta[view.turnSeq ?? 0]?.completion ?? 0"
+                  />
                 </el-popover>
 
                 <button class="turn-icon-btn" type="button" title="复制" @click="copyAnswer(view)">
@@ -490,27 +472,14 @@
                     用量 {{ compactTokens(totalTokens) }} tok
                   </button>
                 </template>
-                <div class="usage-pop">
-                  <div class="usage-pop-head">
-                    <span class="usage-pop-title">Token 用量</span>
-                    <span class="usage-pop-total">{{ totalTokens }} tok</span>
-                  </div>
-                  <div class="usage-pop-row">
-                    <span>缓存命中</span><span>{{ cacheRate ?? 0 }}%</span>
-                  </div>
-                  <div class="usage-pop-row">
-                    <span>未缓存输入</span>
-                    <span>{{ usage?.prompt_cache_miss_tokens ?? 0 }} tok</span>
-                  </div>
-                  <div class="usage-pop-row">
-                    <span>缓存读取</span>
-                    <span>{{ usage?.prompt_cache_hit_tokens ?? 0 }} tok</span>
-                  </div>
-                  <div class="usage-pop-row"><span>缓存写入</span><span>0 tok</span></div>
-                  <div class="usage-pop-row">
-                    <span>输出</span><span>{{ usage?.completion_tokens ?? 0 }} tok</span>
-                  </div>
-                </div>
+                <UsagePopover
+                  title="Token 用量"
+                  :total="String(totalTokens)"
+                  :cache-rate="cacheRate ?? 0"
+                  :cache-miss="usage?.prompt_cache_miss_tokens ?? 0"
+                  :cache-hit="usage?.prompt_cache_hit_tokens ?? 0"
+                  :completion="usage?.completion_tokens ?? 0"
+                />
               </el-popover>
             </div>
             <el-select
@@ -751,25 +720,7 @@
       </div>
     </el-drawer>
 
-    <el-drawer v-model="subVisible" title="后台任务" size="46%">
-      <div class="subs">
-        <p class="subs-hint">
-          子会话只完成给定任务：干净上下文（无人格、无记忆），权限沿用本会话，审批自动拒绝。
-        </p>
-        <p v-if="subSessions.length === 0" class="trajectory-empty">还没有后台任务。</p>
-        <div v-for="item in subSessions" :key="item.id" class="sub-item">
-          <div class="sub-head">
-            <span class="sub-title">{{ item.title || '未命名任务' }}</span>
-            <el-tag :type="subTagType(item.status)" effect="plain" size="small">
-              {{ subStatusLabel(item.status) }}
-            </el-tag>
-            <span class="sub-time">{{ formatTime(item.created_at) }}</span>
-          </div>
-          <p class="sub-task">{{ item.task }}</p>
-          <pre v-if="item.result" class="sub-result">{{ item.result }}</pre>
-        </div>
-      </div>
-    </el-drawer>
+    <SubSessionDrawer v-model:visible="subVisible" :sessions="subSessions" />
   </div>
 </template>
 
@@ -822,7 +773,9 @@ import type {
 } from '@/types/assistant';
 import { formatDateTime } from '@/utils/date';
 import MarkdownView from '@/components/assistant/MarkdownView.vue';
+import SubSessionDrawer from '@/components/assistant/SubSessionDrawer.vue';
 import ToolIcon from '@/components/assistant/ToolIcon.vue';
+import UsagePopover from '@/components/common/UsagePopover.vue';
 
 /** 会话分组：一个工作区一组（无工作区的旧会话按目录兜底成组） */
 interface SessionGroup {
@@ -1213,25 +1166,6 @@ const cacheRate = computed(() => {
 
 let abortController: AbortController | null = null;
 
-/** 后台任务状态中文名 */
-function subStatusLabel(status: string): string {
-  if (status === 'running') {
-    return '运行中';
-  }
-  if (status === 'completed') {
-    return '已完成';
-  }
-  return '失败';
-}
-
-/** 后台任务状态标签色 */
-function subTagType(status: string): 'success' | 'danger' | 'info' {
-  if (status === 'running') {
-    return 'info';
-  }
-  return status === 'completed' ? 'success' : 'danger';
-}
-
 /** 权限档位选项（对齐 DSH：能力级三档，上下排列） */
 const PRESET_OPTIONS: { value: PermissionPreset; label: string }[] = [
   { value: 'read-only', label: '仅可查看' },
@@ -1260,11 +1194,6 @@ function presetLabel(preset: string): string {
     return '完全权限';
   }
   return '工作区内修改';
-}
-
-/** 时间格式化：统一走工具函数 */
-function formatTime(value: string): string {
-  return formatDateTime(value);
 }
 
 /** 载入侧栏：工作区 + 会话；首次自动选中最近会话 */
@@ -3009,59 +2938,6 @@ onUnmounted(() => {
   font-size: 10px;
 }
 
-.subs {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.subs-hint {
-  margin: 0;
-  color: var(--kb-text-3);
-  font-size: 12px;
-}
-
-.sub-item {
-  padding: 10px 12px;
-  border: 1px solid var(--kb-line);
-  border-radius: 10px;
-  background: var(--kb-surface);
-}
-
-.sub-head {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.sub-title {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.sub-time {
-  margin-left: auto;
-  color: var(--kb-text-3);
-  font-size: 11px;
-}
-
-.sub-task {
-  margin: 6px 0;
-  color: var(--kb-text-2);
-  font-size: 12px;
-  white-space: pre-wrap;
-}
-
-.sub-result {
-  margin: 0;
-  overflow-wrap: anywhere;
-  color: var(--kb-text-3);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 11px;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
 .chat-wrap {
   position: relative;
   display: grid;
@@ -4165,45 +4041,6 @@ onUnmounted(() => {
 .rewind-option:hover {
   color: var(--kb-text-1);
   background: rgb(34 224 255 / 8%);
-}
-
-.usage-pop {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.usage-pop-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--kb-line);
-}
-
-.usage-pop-title {
-  color: var(--kb-text-2);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.usage-pop-total {
-  color: var(--kb-text-2);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 12px;
-}
-
-.usage-pop-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  color: var(--kb-text-3);
-  font-size: 11px;
-}
-
-.usage-pop-row > :last-child {
-  color: var(--kb-text-2);
-  font-family: ui-monospace, Consolas, monospace;
 }
 
 .tool-card {

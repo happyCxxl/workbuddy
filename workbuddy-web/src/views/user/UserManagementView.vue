@@ -84,10 +84,10 @@
             <template #default="{ row }">{{ row.createBy || '-' }}</template>
           </el-table-column>
           <el-table-column label="创建时间" min-width="150" align="center">
-            <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
+            <template #default="{ row }">{{ formatMinute(row.createTime, '-') }}</template>
           </el-table-column>
           <el-table-column label="更新时间" min-width="150" align="center">
-            <template #default="{ row }">{{ formatTime(row.updateTime) }}</template>
+            <template #default="{ row }">{{ formatMinute(row.updateTime, '-') }}</template>
           </el-table-column>
           <el-table-column label="操作" min-width="150" align="center" fixed="right">
             <!--
@@ -219,6 +219,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 
 import { addUserByAdmin, deleteUser, getUserPage, updateUser } from '@/api/user';
 import { useAuthStore } from '@/stores/auth';
+import { formatMinute } from '@/utils/date';
 import { USER_STATUS, type UserVO } from '@/types/user';
 
 // 用户管理页：分页查询 + 新增/编辑/删除（接口层已统一处理失败提示，页面只处理成功分支）
@@ -295,14 +296,6 @@ const dialogRules: FormRules = {
     },
   ],
 };
-
-/** 时间展示：后端下发 ISO 字符串，这里统一按 yyyy-MM-dd HH:mm 呈现 */
-function formatTime(value: string | null): string {
-  if (!value) {
-    return '-';
-  }
-  return value.replace('T', ' ').slice(0, 16);
-}
 
 /** 是否为当前登录账号：后端禁止操作自身，前端提前禁用按钮 */
 function isSelf(row: UserVO): boolean {
