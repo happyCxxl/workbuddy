@@ -117,3 +117,12 @@ export interface DirListing {
   parent: string | null;
   entries: DirEntry[];
 }
+
+// 斜杠命令：内置命令与技能命令
+export interface SlashCommand {
+  name: string;
+  description: string;
+  argsHint?: string;
+  kind: 'builtin' | 'skill';
+  skill?: string;
+}

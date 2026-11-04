@@ -228,57 +228,23 @@
         </div>
 
         <div class="composer">
-          <div v-if="queueItems.length > 0" class="queue-panel">
-            <div class="queue-head">
-              <span>排队中</span>
-              <span>{{ queueItems.length }}</span>
-            </div>
-            <div
-              v-for="(item, index) in queueItems"
-              :key="item.id"
-              class="queue-row"
-              :class="{
-                'queue-row-dragging': dragIndex === index,
-                'queue-row-over': dragOverIndex === index && dragIndex !== index,
-              }"
-              draggable="true"
-              @dragstart="onQueueDragStart(index)"
-              @dragover.prevent="onQueueDragOver(index)"
-              @drop.prevent="onQueueDrop"
-              @dragend="onQueueDragEnd"
-            >
-              <span class="queue-grip" aria-hidden="true">⠿</span>
-              <span class="queue-content">{{ item.content }}</span>
-              <span class="queue-actions">
-                <button type="button" class="queue-action" @click="editQueueItem(item)">
-                  编辑
-                </button>
-                <button type="button" class="queue-action" @click="removeQueueItem(item)">
-                  撤回
-                </button>
-              </span>
-            </div>
-          </div>
-          <div v-if="composerMenuOpen" class="composer-menu">
-            <button
-              v-for="(command, index) in filteredSlashCommands"
-              :key="command.name"
-              type="button"
-              class="composer-menu-item"
-              :class="{ 'composer-menu-item-on': index === slashIndex }"
-              @mousedown.prevent
-              @click="pickSlashCommand(command)"
-            >
-              <span class="composer-menu-name">{{ command.name }}</span>
-              <span class="composer-menu-desc">
-                {{ command.description }}{{ command.argsHint ? ` · ${command.argsHint}` : ''
-                }}{{ command.kind === 'skill' ? ' · 技能' : '' }}
-              </span>
-            </button>
-            <div v-if="filteredSlashCommands.length === 0" class="composer-menu-empty">
-              没有匹配的命令。
-            </div>
-          </div>
+          <ComposerQueue
+            :items="queueItems"
+            :drag-index="dragIndex"
+            :drag-over-index="dragOverIndex"
+            @drag-start="onQueueDragStart"
+            @drag-over="onQueueDragOver"
+            @drop="onQueueDrop"
+            @drag-end="onQueueDragEnd"
+            @edit="editQueueItem"
+            @remove="removeQueueItem"
+          />
+          <SlashMenu
+            :open="composerMenuOpen"
+            :commands="filteredSlashCommands"
+            :active-index="slashIndex"
+            @pick="pickSlashCommand"
+          />
           <el-input
             v-model="input"
             type="textarea"
@@ -525,13 +491,16 @@ import type {
   SessionEventItem,
   SessionGroup,
   SessionUsage,
+  SlashCommand,
   SubSessionItem,
   Workspace,
 } from '@/types/assistant';
 import { durationLabel, formatClock, preview, prettyJson } from '@/utils/chat-format';
 import ChatHeader from '@/components/assistant/ChatHeader.vue';
+import ComposerQueue from '@/components/assistant/ComposerQueue.vue';
 import MarkdownView from '@/components/assistant/MarkdownView.vue';
 import SessionSidebar from '@/components/assistant/SessionSidebar.vue';
+import SlashMenu from '@/components/assistant/SlashMenu.vue';
 import SubSessionDrawer from '@/components/assistant/SubSessionDrawer.vue';
 import ToolIcon from '@/components/assistant/ToolIcon.vue';
 import TrajectoryDrawer from '@/components/assistant/TrajectoryDrawer.vue';
@@ -623,13 +592,6 @@ const approvalPending = ref(false);
 const queueItems = ref<QueueItem[]>([]);
 const dragIndex = ref(-1);
 const dragOverIndex = ref(-1);
-interface SlashCommand {
-  name: string;
-  description: string;
-  argsHint?: string;
-  kind: 'builtin' | 'skill';
-  skill?: string;
-}
 const builtinSlashCommands: SlashCommand[] = [
   { name: '/reload-skills', description: '重新加载技能目录', kind: 'builtin' },
 ];
@@ -2747,90 +2709,6 @@ onUnmounted(() => {
   gap: 8px;
 }
 
-.queue-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 5px 6px 6px;
-  border: 1px solid var(--kb-line);
-  background: rgb(34 224 255 / 3%);
-}
-
-.queue-head {
-  display: flex;
-  justify-content: space-between;
-  padding: 1px 4px 5px;
-  color: var(--kb-text-3);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-}
-
-.queue-row {
-  display: flex;
-  min-height: 28px;
-  gap: 6px;
-  align-items: center;
-  padding: 3px 4px;
-  border-top: 1px solid rgb(34 224 255 / 5%);
-  cursor: grab;
-}
-
-.queue-row:first-of-type {
-  border-top: 0;
-}
-
-.queue-row-dragging {
-  opacity: 0.35;
-}
-
-.queue-row-over {
-  box-shadow: inset 0 2px 0 var(--kb-primary);
-}
-
-.queue-grip {
-  flex: none;
-  color: var(--kb-text-3);
-  font-size: 13px;
-  line-height: 1;
-  letter-spacing: 1px;
-}
-
-.queue-content {
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  color: var(--kb-text-2);
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.queue-actions {
-  display: flex;
-  flex: none;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity 0.12s ease;
-}
-
-.queue-row:hover .queue-actions {
-  opacity: 1;
-}
-
-.queue-action {
-  padding: 1px 4px;
-  border: 0;
-  background: transparent;
-  color: var(--kb-text-3);
-  font-size: 10px;
-  cursor: pointer;
-}
-
-.queue-action:hover {
-  color: var(--kb-primary);
-}
-
 .composer {
   position: relative;
   display: flex;
@@ -2839,68 +2717,6 @@ onUnmounted(() => {
   gap: 8px;
   padding: 12px 14px 14px;
   border-top: 1px solid var(--kb-line);
-}
-
-.composer-menu {
-  position: absolute;
-  right: 14px;
-  bottom: calc(100% + 6px);
-  left: 14px;
-  z-index: 30;
-  max-height: 340px;
-  overflow: auto;
-  border: 1px solid var(--kb-line-2);
-  background: var(--kb-bg-1);
-  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
-}
-
-.composer-menu-item {
-  display: grid;
-  width: 100%;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-  padding: 8px 12px;
-  border: 0;
-  border-bottom: 1px solid rgb(34 224 255 / 6%);
-  background: transparent;
-  color: var(--kb-text-2);
-  text-align: left;
-  cursor: pointer;
-}
-
-.composer-menu-item:last-child {
-  border-bottom: 0;
-}
-
-.composer-menu-item:hover,
-.composer-menu-item-on {
-  background: rgb(34 224 255 / 8%);
-  box-shadow: inset 2px 0 0 var(--kb-primary);
-  color: var(--kb-text-1);
-}
-
-.composer-menu-name {
-  flex: none;
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 12px;
-}
-
-.composer-menu-desc {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--kb-text-3);
-  font-size: 11px;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.composer-menu-empty {
-  padding: 18px 12px;
-  color: var(--kb-text-3);
-  font-size: 12px;
-  text-align: center;
 }
 
 .composer-row {
