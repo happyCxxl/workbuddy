@@ -39,8 +39,8 @@
     "05": {
       "status": "已复核",
       "reviewed": "2026-11-04",
-      "baseline": "6859cce2",
-      "note": "清理 Java 死代码与 model 模块残留文档；模块清单保持 6 个，依赖边不变"
+      "baseline": "89fb3d4d",
+      "note": "清理 Java 死代码与 model 模块残留文档；模块清单保持 6 个，依赖边不变；biz 依赖声明修正为 hutool-core"
     },
     "06": {
       "status": "已复核",

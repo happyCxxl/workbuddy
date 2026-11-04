@@ -87,10 +87,10 @@
             <version>5.8.22</version>
         </dependency>
 
-        <!-- hutool JSON：5.8 起从 core 拆出；审计摘要序列化用，LocalDateTime 经 JSONConfig.setDateFormat 输出可读时间 -->
+        <!-- hutool core 基础工具（StrUtil/CollUtil/ObjectUtil/ThreadFactoryBuilder）；JSON 序列化走 common 的 JsonUtil -->
         <dependency>
             <groupId>cn.hutool</groupId>
-            <artifactId>hutool-json</artifactId>
+            <artifactId>hutool-core</artifactId>
             <version>5.8.22</version>
         </dependency>
 
