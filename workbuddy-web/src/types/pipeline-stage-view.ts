@@ -111,8 +111,6 @@ export interface StageViewConfig {
   bodyKind: StageBodyKind;
   /** 体检清单（仅 `bodyKind = 'checklist'` 时渲染） */
   checklist: (node: LineageNode) => StageCheckItem[];
-  /** 卡片摘要行文案（空串表示这一行留空） */
-  summary: (node: LineageNode) => string;
   /** 详情右栏页签（顺序即展示顺序；至少一项，详情打开时默认落在第一项） */
   tabs: [StageTab, ...StageTab[]];
   /** 详情统计条 */
@@ -211,12 +209,6 @@ const PARSE_VIEW: StageViewConfig = {
     const total = statNumber(stats?.elementCount) ?? sum;
     return barsOf(BAR_TYPES, BAR_LABELS, counts, total, node.status === 'FAILED');
   },
-  summary: (node) => {
-    if (node.status === 'RUNNING') {
-      return '正在解析…';
-    }
-    return node.parseSummary ?? (node.status === 'FAILED' ? (node.errorMsg ?? '') : '');
-  },
   tabs: [
     { key: 'elements', label: '元素' },
     { key: 'warnings', label: '告警' },
@@ -253,12 +245,6 @@ const STRUCTURE_VIEW: StageViewConfig = {
   metrics: () => [],
   composeBars: () => [],
   checklist: (node) => structureChecklist(node),
-  summary: (node) => {
-    if (node.status === 'RUNNING') {
-      return '正在组装…';
-    }
-    return node.stageSummary ?? (node.status === 'FAILED' ? (node.errorMsg ?? '') : '');
-  },
   tabs: [
     { key: 'tree', label: '结构树' },
     { key: 'elements', label: '元素' },
@@ -312,12 +298,6 @@ const PREPROCESS_VIEW: StageViewConfig = {
   metrics: () => [],
   composeBars: () => [],
   checklist: (node) => preprocessChecklist(node),
-  summary: (node) => {
-    if (node.status === 'RUNNING') {
-      return '正在预处理…';
-    }
-    return node.stageSummary ?? (node.status === 'FAILED' ? (node.errorMsg ?? '') : '');
-  },
   tabs: [
     { key: 'elements', label: '清洗结果' },
     { key: 'excluded', label: '剔除内容' },
@@ -662,12 +642,6 @@ const CHUNK_VIEW: StageViewConfig = {
   metrics: () => [],
   composeBars: () => [],
   checklist: (node) => chunkChecklist(node),
-  summary: (node) => {
-    if (node.status === 'RUNNING') {
-      return '正在切片…';
-    }
-    return node.stageSummary ?? (node.status === 'FAILED' ? (node.errorMsg ?? '') : '');
-  },
   tabs: [
     { key: 'elements', label: '切片' },
     { key: 'fallback', label: '兜底片' },
@@ -806,7 +780,6 @@ const NEUTRAL_VIEW: StageViewConfig = {
       { key: 'c', value: '—', unit: '' },
     ]),
   composeBars: () => emptyBars(),
-  summary: () => '',
   tabs: [
     { key: 'elements', label: '元素' },
     { key: 'warnings', label: '告警' },

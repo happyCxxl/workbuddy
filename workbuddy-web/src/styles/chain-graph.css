@@ -102,12 +102,6 @@
   border-left: 3px solid var(--kb-primary);
 }
 
-/* 副行是"能力快照缺失"的兜底 `—` 时弱化，不让它冒充真实值。
-   只保留两级祖先限定（0,3,0）—— `.is-fallback` 本身就只挂在执行链卡片上 */
-.chain-graph .is-fallback .chain-node-ident {
-  color: var(--kb-text-3);
-}
-
 /* 状态点：类名同理由 toneClass 动态给出，与 .is-* 一起放全局。
    `.chain-dot` 只出现在执行链卡片里，不叠一层 `.chain-node`
    （叠上去特异性到 0,4,0，超过 stylelint 的上限 3） */

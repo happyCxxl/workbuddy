@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="chain-node"
-    :class="[nodeClass, { 'is-fallback': detailIsFallback, 'is-failed': isFailed }]"
-    :title="hoverTitle"
-  >
+  <div class="chain-node" :class="[nodeClass, { 'is-failed': isFailed }]" :title="hoverTitle">
     <!-- 连接桩：仅供后端血缘边路由用；用户不能拖拽连线（外层已禁用 connectable） -->
     <Handle type="target" :position="Position.Left" class="chain-handle" />
     <!-- 源桩按出度铺开：同一节点被多次用不同策略触发时，
@@ -21,68 +17,63 @@
 
     <span v-if="hit" class="tone-hit">命中策略</span>
 
-    <!-- ① 状态行：状态色点 + 环节名 + 状态文字 -->
+    <!-- ① 状态行：状态色点 + 环节名 + 状态文字（与下方元素内容用分隔线分开） -->
     <span class="chain-node-head">
       <i class="chain-dot" :class="toneClass"></i>
       <span class="chain-node-stage">{{ stageText }}</span>
       <span class="chain-node-status" :class="toneClass">{{ statusText }}</span>
     </span>
 
-    <!-- ② 身份行：解析器版本 · 策略版本（组装环节是产物 schema 版本） -->
-    <span class="chain-node-ident">{{ identText }}</span>
-
     <!--
-      ③ 主体区：形态由环节配置给。
+      ② 主体区：形态由环节配置给，吃掉分隔线与操作行之间的全部剩余高度。
       bars = 指标行 + 构成图（解析）；checklist = 结构体检清单（组装，不再显示指标行）。
     -->
-    <template v-if="bodyKind === 'checklist'">
-      <span class="chain-node-check">
-        <span v-for="item in checklist" :key="item.key" class="chain-node-check-row">
-          <i class="chain-node-check-dot" :class="item.toneClass"></i>
-          <span class="chain-node-check-label">{{ item.label }}</span>
-          <span class="chain-node-check-value">{{ item.value }}</span>
-          <span class="chain-node-check-note">{{ item.note }}</span>
-        </span>
-      </span>
-    </template>
-    <template v-else>
-      <!-- 指标行：页数 / 元素数 / 耗时（缺项显示 —） -->
-      <span class="chain-node-metrics">
-        <span v-for="item in metrics" :key="item.key" class="chain-node-metric">
-          <span class="chain-node-metric-value">{{ item.value }}</span>
-          {{ item.unit }}
-        </span>
-      </span>
-
-      <!--
-        构成图：一个类型一条（类型标签 + 浅槽 + 彩色条 + 右侧数字），条长 = 该类占全部元素的比例。
-        标签与数字都是定宽右对齐列，四条才能对齐成一张表。
-      -->
-      <span class="chain-node-compose">
-        <span v-for="bar in composeBars" :key="bar.type" class="chain-node-bar" :title="bar.title">
-          <span class="chain-node-bar-label">{{ bar.title }}</span>
-          <span class="chain-node-bar-track">
-            <span
-              class="chain-node-bar-fill"
-              :class="bar.fillClass"
-              :style="{ width: bar.width }"
-            ></span>
+    <div class="chain-node-body">
+      <template v-if="bodyKind === 'checklist'">
+        <span class="chain-node-check">
+          <span v-for="item in checklist" :key="item.key" class="chain-node-check-row">
+            <i class="chain-node-check-dot" :class="item.toneClass"></i>
+            <span class="chain-node-check-label">{{ item.label }}</span>
+            <span class="chain-node-check-value">{{ item.value }}</span>
+            <span class="chain-node-check-note">{{ item.note }}</span>
           </span>
-          <span class="chain-node-bar-value">{{ bar.value }}</span>
         </span>
-      </span>
-    </template>
+      </template>
+      <template v-else>
+        <!-- 指标行：页数 / 元素数 / 耗时（缺项显示 —） -->
+        <span class="chain-node-metrics">
+          <span v-for="item in metrics" :key="item.key" class="chain-node-metric">
+            <span class="chain-node-metric-value">{{ item.value }}</span>
+            {{ item.unit }}
+          </span>
+        </span>
 
-    <!--
-      ④ 结论行：与主体区用分隔线隔开，独立成一块。
-      `⚠` 与文本是**并排的两个子项**：图标不进截断盒，截断盒里只有纯文本。
-    -->
-    <span class="chain-node-summary" :class="toneClass" :title="summaryTitle">
-      <span v-if="isWarning" class="chain-node-warn">⚠</span>
-      <span class="chain-node-summary-text">{{ summaryText }}</span>
-    </span>
+        <!--
+          构成图：一个类型一条（类型标签 + 浅槽 + 彩色条 + 右侧数字），条长 = 该类占全部元素的比例。
+          标签与数字都是定宽右对齐列，四条才能对齐成一张表。
+        -->
+        <span class="chain-node-compose">
+          <span
+            v-for="bar in composeBars"
+            :key="bar.type"
+            class="chain-node-bar"
+            :title="bar.title"
+          >
+            <span class="chain-node-bar-label">{{ bar.title }}</span>
+            <span class="chain-node-bar-track">
+              <span
+                class="chain-node-bar-fill"
+                :class="bar.fillClass"
+                :style="{ width: bar.width }"
+              ></span>
+            </span>
+            <span class="chain-node-bar-value">{{ bar.value }}</span>
+          </span>
+        </span>
+      </template>
+    </div>
 
-    <!-- ⑤ 操作行：时间 + 详情 + 触发下一环节（按钮常驻，只有可点与不可用两态） -->
+    <!-- ③ 操作行：时间 + 详情 + 触发下一环节（按钮常驻，只有可点与不可用两态） -->
     <span class="chain-node-foot">
       <span class="chain-node-time" :title="timeTitle">{{ timeText }}</span>
       <span class="chain-node-actions">
@@ -119,15 +110,9 @@ import { computed } from 'vue';
 import { Handle, Position } from '@vue-flow/core';
 import type { NodeProps } from '@vue-flow/core';
 
-import {
-  PIPELINE_STAGES,
-  capabilityText,
-  isTaskPending,
-  stageLabel,
-  statusTone,
-} from '@/types/pipeline';
+import { PIPELINE_STAGES, isTaskPending, stageLabel, statusTone } from '@/types/pipeline';
 import { stageViewOf } from '@/types/pipeline-stage-view';
-import type { ChainNodeData, LineageNode, PipelineStage } from '@/types/pipeline';
+import type { ChainNodeData, PipelineStage } from '@/types/pipeline';
 
 // 执行树节点 = 一次运行。这里只负责「长什么样」，位置与选中由外层图组件控制。
 // 注意：Vue Flow 要求自定义节点接收 NodeProps，自定义载荷放在 data 里
@@ -176,49 +161,12 @@ const statusText = computed(() => {
   return STATUS_LABELS[status] ?? status;
 });
 
-/**
- * 身份行：这份产物自身是什么（两段都取不到时留空，不显示占位符）。
- *
- * <p>解析环节 = 解析器版本 · 策略版本；组装环节 = 产物 schema 版本。
- * 上下游关系由链图的连线表达，不在卡片上重复。
- */
-const identText = computed(() => {
-  const node = props.data.node;
-  if (node.stage === 'STRUCTURE') {
-    return statText(node) ?? '';
-  }
-  const parts = [capabilityText(node.capability), node.strategyVersion].filter(
-    (part): part is string => typeof part === 'string' && part !== '',
-  );
-  return parts.join(' · ');
-});
-
-/** 从组装统计里取产物 schema 版本 */
-function statText(node: LineageNode): string | null {
-  const stats = node.stats;
-  if (stats === null || !('schemaVersion' in stats)) {
-    return null;
-  }
-  const raw = stats.schemaVersion;
-  return typeof raw === 'string' && raw !== '' ? raw : null;
-}
-
-/** 身份行是否是"两段都缺失"的兜底文案：样式上弱化，不冒充真实值 */
-const detailIsFallback = computed(() => {
-  const node = props.data.node;
-  if (node.stage === 'STRUCTURE') {
-    return statText(node) === null;
-  }
-  return !node.strategyVersion && capabilityText(node.capability) === null;
-});
-
 /** 指标行三项：口径由环节配置给（固定三项三格，缺失项显示 `—`，行高与列位不变） */
 const metrics = computed(() => stageView.value.metrics(props.data.node));
 
 /** 主体区形态：构成条（解析）或体检清单（组装） */
 const bodyKind = computed(() => stageView.value.bodyKind);
 
-/** 体检清单行：状态点颜色类名由脚本给（样式检查看不到计算属性给出的名字，故放全局） */
 interface ComposeBar {
   type: string;
   title: string;
@@ -237,7 +185,7 @@ interface CheckRow {
   toneClass: string;
 }
 
-/** 状态点配色：类名写成字面量表，取值由 tone 决定 */
+/** 状态点配色：类名写成字面量表，取值由 tone 决定（样式检查看不到计算属性给出的名字，故放全局） */
 const CHECK_TONES: Record<string, string> = {
   ok: 'chain-node-check-ok',
   warn: 'chain-node-check-warn',
@@ -264,26 +212,6 @@ const composeBars = computed<ComposeBar[]>(() =>
     fillClass: bar.fillClass,
   })),
 );
-
-/**
- * 警告行。
- *
- * <p>进行态只陈述正在做什么（页面上没有可用的进度计数，不编造页码）；
- * 其余状态一律用后端给的事实文案，失败态在后端文案缺失时回落 `errorMsg`。
- *
- * <p>**文案为空就留空**（行高固定，不给 `—` 之类的占位）：统计没到手时不编造结论，
- * "没有可陈述的内容"本身就是要如实显示的信息。
- */
-const summaryText = computed(() => stageView.value.summary(props.data.node));
-
-/** 该行是否是"有内容要处置"的告警：加 `⚠` 图标与告警色；「无异常」与进行态不加 */
-const isWarning = computed(() => {
-  const text = summaryText.value;
-  return text !== '' && text !== '无异常';
-});
-
-/** 悬停提示：告警被截断时把完整文案给出来 */
-const summaryTitle = computed(() => (isWarning.value ? summaryText.value : ''));
 
 /**
  * 下游环节：解析之后是组装；已在链路末端的环节没有下一环。
@@ -430,11 +358,11 @@ defineOptions({ name: 'ChainNode' });
  * 操作行是「完整年月日时分 + 详情 + 触发向量化」，两处合计约需 276px，取 320px 留出余量
  * （时间文本与条都可省略，按钮与标签列永不收缩）。
  *
- * <p>**高度按六行各自钉死的行高之和定**：head 18 + ident 15 + metrics 16 + 构成图 46
- * + 警告行 42 + 操作行 28 = 165，加警告行 margin 11、行间距 2×5、上下内边距 10×2
- * 与上下边框 1×2 共 214px，余量 12px：中文回退字体（Microsoft YaHei）的行高比拉丁字体高，
- * 余量用于吸收跨浏览器的行盒差异。每一行都必须显式给行高 —— 放任默认值会让行盒随字体度量
- * 变高，多行累加后把操作行顶出卡片。
+ * <p>**高度按固定行块之和定**：状态行 18 + 分隔线 1 + 其间留白 8 + 操作行 20
+ * + 行间距 2×2 + 上下内边距 10×2 + 上下边框 1×2 → 主体区拿走剩下的高度（约 143），
+ * 内容在其中居中；无论中间是构成图（解析）还是五行体检清单（组装），操作行都贴在卡片
+ * 底部同一条线上，不会因为内容多少上下浮动。
+ * 每一行都必须显式给行高：放任默认值会让行盒随字体度量变高，多行累加后把操作行顶出卡片。
  *
  * <p>与 ChainGraph 的 NODE_WIDTH / NODE_ROW_HEIGHT 保持一致
  * （行距按固定高度算，不一致会互相压住）。
@@ -480,14 +408,17 @@ defineOptions({ name: 'ChainNode' });
   transform: translateY(-50%);
 }
 
-/* ==================== 卡片内容：六行 ==================== */
+/* ==================== 卡片内容：三块（状态行 / 主体区 / 操作行） ==================== */
 
-/* ① 状态行：状态点 + 环节名 + 状态文字（18px 行高：容下 13px 中文与 7px 状态点） */
+/* ① 状态行：状态点 + 环节名 + 状态文字（18px 行高：容下 13px 中文与 7px 状态点）。
+   `padding-bottom` 管"线到文字"的呼吸，与操作行上方的 `padding-top` 对称 */
 .chain-node-head {
   display: flex;
   flex: none;
   gap: 7px;
   align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--kb-line);
   line-height: 18px;
 }
 
@@ -510,24 +441,26 @@ defineOptions({ name: 'ChainNode' });
   font-weight: 600;
 }
 
-/* ② 身份行：解析器版本 · 策略版本（单行省略） */
-.chain-node-ident {
-  display: block;
+/*
+ * ② 主体区：吃掉状态行分隔线与操作行之间的全部剩余高度。
+ *
+ * <p>卡片高度恒定，主体区 `flex: 1` 吸收差量、`overflow: hidden` 吞掉多出来的内容，
+ * 操作行就不会被内容顶下去 —— 这是「所有环节卡片按钮都贴在卡片底部同一条线」的实现方式。
+ *
+ * <p>`justify-content: center`：内容在分隔线与操作行之间**居中偏下**，既不会顶在分隔线下
+ * 把下半卡留空，也不会贴着操作行。
+ */
+.chain-node-body {
+  display: flex;
   overflow: hidden;
-  flex: none;
-  color: var(--kb-text-2);
-  font-size: 11px;
-  line-height: 15px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
 }
 
-/* 兜底的 `—`：弱化，不冒充真实值 */
-.chain-node.is-fallback .chain-node-ident {
-  color: var(--kb-text-3);
-}
-
-/* ③ 指标行：页数 / 元素数 / 耗时 */
+/* 指标行：页数 / 元素数 / 耗时 */
 .chain-node-metrics {
   display: flex;
   flex: none;
@@ -539,7 +472,7 @@ defineOptions({ name: 'ChainNode' });
 }
 
 /*
- * ③' 体检清单（组装）：一行 = 状态点 + 项目名 + 关键量 + 说明。
+ * 体检清单（组装）：一行 = 状态点 + 项目名 + 关键量 + 说明。
  *
  * <p>五行的行高与间距合计必须落在主体区可用高度内 —— 卡片总高固定 214px，
  * 行数变化会挤出滚动或压扁结论行。
@@ -607,7 +540,7 @@ defineOptions({ name: 'ChainNode' });
   font-weight: 600;
 }
 
-/* ④ 构成图：四条固定高度，等分占满 46px 区间 —— 条数恒定，高度不随数据变 */
+/* 构成图：四条固定高度，等分占满 46px 区间 —— 条数恒定，高度不随数据变 */
 .chain-node-compose {
   display: flex;
   height: 46px;
@@ -666,59 +599,10 @@ defineOptions({ name: 'ChainNode' });
 }
 
 /*
- * ⑤ 警告行：与构成图用一条淡分隔线隔开，成为独立一块。
- *
- * <p>**上下都要留白，且取值的依据是"视觉"距离**：
- * <ul>
- *   <li>`margin-top: 11px` —— 构成图最后一行的**条只有 4px 高、居中在 14px 行盒里**，
- *       行盒看似到分隔线 8px，条到线其实只有 5px。补到 11px 后条到线约 8px；</li>
- *   <li>`padding-top: 6px` —— `padding` 落在边框内侧，专门管"线到文字"的呼吸，
- *       与 `margin`（管"线到构成图"）分工不同，两个都给才有上下留白。</li>
- * </ul>
- *
- * <p>高度 42px = border 1 + padding 6 + 两行 27，另有 margin 11 在盒外；
- * 两行封顶、超出省略，完整文案在 `title` 里。无告警时该行显示「无异常」，进行态与统计缺失时留空。
- */
-.chain-node-summary {
-  display: flex;
-  box-sizing: border-box;
-  height: 34px;
-  flex: none;
-  gap: 3px;
-  overflow: hidden;
-  margin-top: 11px;
-  padding-top: 6px;
-  border-top: 1px solid var(--kb-line);
-  color: var(--kb-text-3);
-  font-size: 11px;
-  line-height: 14px;
-}
-
-/* 告警图标与文案同色（颜色由状态 tone 给出，见全局 chain-graph.css），不参与收缩 */
-.chain-node-warn {
-  flex: none;
-}
-
-/*
- * 文案两行封顶：`-webkit-box` + `line-clamp` 双写，Chromium 走前者、新标准走后者。
- *
- * <p>**盒里只放纯文本**：再塞一个行内子项（如告警图标）会让 Chromium 不画省略号，
- * 长文案被静默截断、看不出还有内容。
- */
-.chain-node-summary-text {
-  display: -webkit-box;
-  min-width: 0;
-  flex: 1;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-}
-
-/*
- * ⑥ 操作行：时间在左，两个按钮在右（上边框与内容分开）。
+ * ③ 操作行：时间在左，两个按钮在右（上边框与内容分开）。
  *
  * <p>行高钉在 14px：容器默认行高比按钮还高，不钉就把整卡白顶高一段。
+ * 贴底由主体区 `flex: 1` 保证，这里不需要 `margin-top: auto`。
  */
 .chain-node-foot {
   display: flex;
@@ -726,7 +610,6 @@ defineOptions({ name: 'ChainNode' });
   gap: 8px;
   align-items: center;
   justify-content: space-between;
-  margin-top: auto;
   padding-top: 5px;
   border-top: 1px solid var(--kb-line);
   line-height: 14px;
