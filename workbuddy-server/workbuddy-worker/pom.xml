@@ -46,24 +46,6 @@
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- Spring Web 基础（MultipartFile 等） -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-        </dependency>
-
-        <!-- Apache Tika 3.1.0（格式识别 + 损坏/加密探测；与解析环节共用同一套依赖） -->
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-core</artifactId>
-            <version>3.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-parsers-standard-package</artifactId>
-            <version>3.1.0</version>
-        </dependency>
-
         <!-- 解析环节原生解析直接依赖（显式提升；版本由根 pom 钉版）：
              PDFBox 3.0.4（PDF 文本+坐标）、POI 5.4.0（Office 结构）、
              poi-scratchpad 5.4.0（HWPF 二进制 DOC） -->

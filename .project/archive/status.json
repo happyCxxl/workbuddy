@@ -8,9 +8,9 @@
     },
     "11": {
       "status": "已复核",
-      "reviewed": "2026-11-01",
-      "baseline": "2bdd9a96",
-      "note": "Java 819 项测试通过；删除模型模块后构建链保持 6 模块，覆盖率与债务条目未变"
+      "reviewed": "2026-11-04",
+      "baseline": "6859cce2",
+      "note": "清理死代码与过期债务条目；覆盖率表删除 model 行，测试文件计数与名单校正"
     },
     "01": {
       "status": "已复核",
@@ -38,9 +38,9 @@
     },
     "05": {
       "status": "已复核",
-      "reviewed": "2026-11-01",
-      "baseline": "2bdd9a96",
-      "note": "删除 workbuddy-model 模块：模块清单 7→6，biz/worker 依赖边移除 model，新增灵犀向量化客户端"
+      "reviewed": "2026-11-04",
+      "baseline": "6859cce2",
+      "note": "清理 Java 死代码与 model 模块残留文档；模块清单保持 6 个，依赖边不变"
     },
     "06": {
       "status": "已复核",

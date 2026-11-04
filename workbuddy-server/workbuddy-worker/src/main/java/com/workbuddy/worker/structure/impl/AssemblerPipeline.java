@@ -261,7 +261,6 @@ public class AssemblerPipeline implements DocumentAssemblerPort {
                 page.setPageNumber(dimension.getPage());
                 page.setWidth(dimension.getWidth());
                 page.setHeight(dimension.getHeight());
-                page.setRotation(0d);
                 page.setUnit(PAGE_UNIT);
                 page.setOrigin(PAGE_ORIGIN);
                 pages.add(page);

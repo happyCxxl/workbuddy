@@ -286,8 +286,8 @@ public class SearchServiceImpl implements SearchService {
         }
         String template = StrUtil.isBlank(strategy.getQueryTemplate()) ? "{query}" : strategy.getQueryTemplate();
         String input = template.replace("{query}", query);
-        // 模型调用层已移除：查询向量化不可用时走既有降级分支（返回 null，检索降级）。
-        //  接入模型模块后在此按 strategy.getModel() 编码 input，取返回向量的第一个作为查询向量。
+        // 查询向量化统一经灵犀 EmbeddingClient（PythonEmbeddingClient 调 /internal/v1/embed）接入；
+        // 检索侧查询向量化暂未接线，仍走降级分支（返回 null，检索降级）。
         log.warn("===> SearchServiceImpl 查询向量化跳过：模型调用层待接入, versionId={}, input长度={}",
                 version.getId(), input.length());
         return null;

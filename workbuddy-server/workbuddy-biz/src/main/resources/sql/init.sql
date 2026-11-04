@@ -420,7 +420,7 @@ CREATE TABLE wb_user
 CREATE TABLE wb_system_setting
 (
     id            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
-    setting_key   VARCHAR(64)  NOT NULL COMMENT '配置键（SystemSettingKey 枚举名）',
+    setting_key   VARCHAR(64)  NOT NULL COMMENT '配置键（字符串键名）',
     setting_value VARCHAR(255) NOT NULL COMMENT '配置值（字符串，取值域由对应领域服务校验）',
     create_by     VARCHAR(64)           DEFAULT NULL COMMENT '创建人',
     create_time   DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',

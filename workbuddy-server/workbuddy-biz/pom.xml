@@ -120,12 +120,6 @@
             <artifactId>workbuddy-auth</artifactId>
         </dependency>
 
-        <!-- 任务重试 -->
-        <dependency>
-            <groupId>org.springframework.retry</groupId>
-            <artifactId>spring-retry</artifactId>
-        </dependency>
-
         <!-- 测试 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

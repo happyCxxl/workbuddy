@@ -20,9 +20,6 @@ public class AssembleReport {
     /** 冲突数 */
     private int conflictCount;
 
-    /** 阅读顺序切分数（预留未实现：从未赋值，接入顺序切分统计时启用） */
-    private int orderCuts;
-
     /** 标题推定数 */
     private int titleCount;
 

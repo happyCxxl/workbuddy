@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 向量模型目录（静态注册）：模型名 · 维度 · 度量 · 归一化 · 上下文窗口 tokens · 单批上限 · 启用。
  * 单一事实源：前置校验（窗口兼容）/ 四关（维度/度量）/ 保存校验（存在且 enabled）/ 前端展示均以此为准。
- * 当前供应商 = 阿里云 DashScope（模型名即 DashScope 渠道名）。
+ * 模型能力统一由灵犀提供。
  *
  * <p>数值为占位/厂商口径值，联调实测后只改本枚举常量即可。</p>
  */
@@ -32,7 +32,7 @@ public enum EmbeddingModel {
             2048, 64, false,
             "阿里云 text-embedding-v2（旧版备选）：1536 维；上下文窗口 2048 tokens；单批上限 64");
 
-    /** 模型名（DashScope 渠道口径） */
+    /** 模型名（灵犀渠道口径） */
     private final String key;
 
     /** 向量维度 */

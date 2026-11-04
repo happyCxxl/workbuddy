@@ -52,6 +52,6 @@ public class WbKnowledgeBase extends BaseInfo {
     /** 当前发布索引 */
     private Long publishedIndexSetId;
 
-    /** 创建用户ID（占位 NULL；接入认证后取登录用户） */
+    /** 创建用户ID，取当前登录用户 */
     private Long userId;
 }

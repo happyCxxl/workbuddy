@@ -28,9 +28,6 @@ public class UnifiedDocument {
     /** 关系列表（PARENT_CHILD/NEXT/TABLE_CELL_OF/CONTINUATION_OF/…） */
     private List<DocumentRelation> relations = new ArrayList<>();
 
-    /** 二进制资源引用（预留未实现：当前无写入方，启用需解析侧产出资源引用后在此登记） */
-    private List<DocumentAsset> assets = new ArrayList<>();
-
     /** 质量（warnings/conflicts，只标记不阻断） */
     private DocumentQuality quality = new DocumentQuality();
 }

@@ -20,9 +20,6 @@ public enum AuditObjectType {
     /** 存储数据源 */
     STORAGE_SOURCE("STORAGE_SOURCE", "存储数据源"),
 
-    /** 模型目录 */
-    MODEL("MODEL", "模型"),
-
     /** 系统设置 */
     SYSTEM_SETTING("SYSTEM_SETTING", "系统设置");
 

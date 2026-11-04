@@ -25,10 +25,6 @@
     <milvus.version>2.5.5</milvus.version>
     <minio.version>8.5.12</minio.version>
     <bucket4j.version>8.20.0</bucket4j.version>
-    <langchain4j.version>1.22.0</langchain4j.version>
-    <resilience4j.version>2.1.0</resilience4j.version>
-    <json-schema-validator.version>3.0.8</json-schema-validator.version>
-    <jackson-annotations.version>2.22</jackson-annotations.version>
   </properties>
 
   <dependencyManagement>
@@ -63,48 +59,6 @@
         <groupId>com.workbuddy</groupId>
         <artifactId>workbuddy-file</artifactId>
         <version>${project.version}</version>
-      </dependency>
-
-      <!-- LangChain4j 官方 BOM（knowledge-model 的模型供应商调用，版本单点钉版）；
-           只导官方线，不引 community 模块 -->
-      <dependency>
-        <groupId>dev.langchain4j</groupId>
-        <artifactId>langchain4j-bom</artifactId>
-        <version>${langchain4j.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <!-- 严格 JSON Schema 校验（模型输出结构校验，版本单点钉版） -->
-      <dependency>
-        <groupId>com.networknt</groupId>
-        <artifactId>json-schema-validator</artifactId>
-        <version>${json-schema-validator.version}</version>
-      </dependency>
-
-      <!-- Resilience4j 熔断器核心（模型级健康判定，版本单点钉版）；
-           只引 circuitbreaker 模块，不引 spring-boot3 starter —— 装配点在本工程内，
-           starter 会把版本与本工程的 Boot 3.2.5 绑在一起，其自动装配也不参与本工程的健康判定 -->
-      <dependency>
-        <groupId>io.github.resilience4j</groupId>
-        <artifactId>resilience4j-circuitbreaker</artifactId>
-        <version>${resilience4j.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.github.resilience4j</groupId>
-        <artifactId>resilience4j-retry</artifactId>
-        <version>${resilience4j.version}</version>
-      </dependency>
-
-      <!-- 统一钉版：json-schema-validator 3.0.8 传递 tools.jackson.core:jackson-databind 3.2.1，
-           该库类初始化要读 com.fasterxml.jackson.annotation.JsonSerializeAs（2.16 起才有），
-           Boot 3.2.5 管理的 jackson-annotations 2.15.4 内无此类，
-           调 SchemaRegistry.getSchema(...) 即抛 NoClassDefFoundError: JsonSerializeAs；
-           仅提注解版本，databind 与 core 仍随 Boot 保持 2.15.4 -->
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>${jackson-annotations.version}</version>
       </dependency>
 
       <!-- MinIO Java SDK（knowledge-file-center 对象存储实现，版本钉版） -->
