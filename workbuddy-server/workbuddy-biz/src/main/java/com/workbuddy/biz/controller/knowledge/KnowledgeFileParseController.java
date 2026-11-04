@@ -1,15 +1,13 @@
 package com.workbuddy.biz.controller.knowledge;
 
-import com.workbuddy.biz.service.ParseAssetContent;
 import com.workbuddy.biz.service.ParseControlService;
+import com.workbuddy.biz.service.support.ParseAssetContent;
 import com.workbuddy.common.dto.request.stage.StageDetailQueryDTO;
-import com.workbuddy.common.web.R;
 import com.workbuddy.common.dto.response.parse.ParseDetailVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
+import com.workbuddy.common.web.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.InvalidMediaTypeException;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,12 +74,6 @@ public class KnowledgeFileParseController {
             @PathVariable("assetId") String assetId,
             StageDetailQueryDTO query) {
         ParseAssetContent asset = parseControlService.asset(fileResultId, assetId, query.getTaskId());
-        MediaType mediaType;
-        try {
-            mediaType = MediaType.parseMediaType(asset.mimeType());
-        } catch (InvalidMediaTypeException e) {
-            mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        }
-        return ResponseEntity.ok().contentType(mediaType).body(asset.content());
+        return ResponseEntity.ok().contentType(asset.mediaType()).body(asset.content());
     }
 }

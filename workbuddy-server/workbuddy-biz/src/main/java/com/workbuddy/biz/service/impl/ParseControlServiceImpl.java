@@ -1,7 +1,7 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.ParseAssetContent;
 import com.workbuddy.biz.service.ParseControlService;
+import com.workbuddy.biz.service.support.ParseAssetContent;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.stats.ParseStatsSupport;
 import com.workbuddy.biz.service.support.task.TaskDetailSupport;

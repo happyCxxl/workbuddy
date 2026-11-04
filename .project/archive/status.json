@@ -51,8 +51,8 @@
     "07": {
       "status": "已复核",
       "reviewed": "2026-11-04",
-      "baseline": "e052f115",
-      "note": "新增 /file-results/{fileResultId}/parse-assets/{assetId} 资产读取子路径，仍归 /file-results/*；接口分组未变"
+      "baseline": "443f4aeb",
+      "note": "新增 /file-results/{fileResultId}/parse-assets/{assetId} 资产读取子路径，仍归 /file-results/*；MIME 非法时回退二进制流"
     },
     "08": {
       "status": "已复核",
@@ -63,8 +63,8 @@
     "09": {
       "status": "已复核",
       "reviewed": "2026-11-04",
-      "baseline": "e052f115",
-      "note": "复核解析配置新增 page-image-dpi 启动期校验与资产读取路径；鉴权、异常与事务机制未变"
+      "baseline": "443f4aeb",
+      "note": "复核解析配置新增 page-image-dpi 启动期校验与资产读取路径；MIME 非法时回退二进制流，鉴权与事务机制未变"
     }
   }
 }

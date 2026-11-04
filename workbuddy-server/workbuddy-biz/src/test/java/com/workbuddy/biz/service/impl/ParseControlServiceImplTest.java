@@ -1,12 +1,12 @@
 package com.workbuddy.biz.service.impl;
 
-import com.workbuddy.biz.service.ParseAssetContent;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
 import com.workbuddy.biz.service.db.WbPipelineStepLogDbService;
 import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
+import com.workbuddy.biz.service.support.ParseAssetContent;
 import com.workbuddy.biz.service.support.access.ChainStorageSupport;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.task.TaskDetailSupport;
@@ -33,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -311,7 +312,18 @@ class ParseControlServiceImplTest {
         ParseAssetContent content = service.asset(10L, "asset-abc", null);
 
         assertEquals("image/png", content.mimeType());
+        assertEquals(MediaType.IMAGE_PNG, content.mediaType());
         assertArrayEquals(new byte[]{1, 2, 3}, content.content());
+    }
+
+    /**
+     * 校验点：{@code ParseAssetContent} 对非法 MIME 回退二进制流，入口层不抛异常。
+     */
+    @Test
+    void assetContentWithInvalidMimeShouldFallbackToOctetStream() {
+        ParseAssetContent content = new ParseAssetContent("invalid mime", new byte[]{1});
+
+        assertEquals(MediaType.APPLICATION_OCTET_STREAM, content.mediaType());
     }
 
     /**
