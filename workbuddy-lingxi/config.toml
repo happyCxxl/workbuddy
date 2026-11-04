@@ -13,6 +13,8 @@ context_budget_ratio = 0.8
 input_token_budget = 100000
 
 [tools]
+# 命令沙箱：workspace-write 限制在工作区内写入，off 显式关闭（执行结果会标注未沙箱）
+sandbox = "workspace-write"
 shell_timeout_seconds = 120
 shell_output_cap_chars = 8000
 web_fetch_output_cap_chars = 200000
