@@ -726,8 +726,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
+import { createChunkPane } from '@/composables/useChunkPane';
+import type { ChunkPane } from '@/composables/useChunkPane';
 import { useSplitter } from '@/composables/useSplitter';
 import { pushEntityTitle, restoreTitle } from '@/utils/page-title';
 import { getStageContent, getStageDetail, getSourceFile } from '@/api/pipeline';
@@ -1666,78 +1668,19 @@ function chunkOrderOf(key: string): number | null {
   return chunk?.orderNo ?? null;
 }
 
-/** 按过滤条件单独取数的切片页签（兜底片 / 父片 · 孤儿）：过滤与分页都在服务端做 */
-interface ChunkPane {
-  page: number;
-  items: StageContentItem[];
-  total: number;
-  loading: boolean;
-  error: string;
-  loaded: boolean;
-  load: () => Promise<void>;
-  go: (next: number) => void;
-  reset: () => void;
-}
-
-/** 建一个切片过滤页签的状态（两个页签各自翻页、各自按需取数） */
-function createChunkPane(filter: { fallback?: boolean; hasParent?: boolean }): ChunkPane {
-  const pane = reactive<ChunkPane>({
-    page: 1,
-    items: [],
-    total: 0,
-    loading: false,
-    error: '',
-    loaded: false,
-    load: async () => undefined,
-    go: () => undefined,
-    reset: () => undefined,
-  });
-  const pageCount = (): number => Math.max(1, Math.ceil(pane.total / PAGE_SIZE));
-  pane.load = async (): Promise<void> => {
-    pane.loading = true;
-    pane.error = '';
-    try {
-      const data = await getStageContent(props.fileResultId, props.stage, {
-        taskId: props.taskId,
-        ...filter,
-        current: pane.page,
-        size: PAGE_SIZE,
-      });
-      pane.items = data.items ?? [];
-      pane.total = data.total ?? 0;
-      pane.loaded = true;
-    } catch {
-      // 失败提示已由接口层统一拦截处理
-      pane.items = [];
-      pane.total = 0;
-      pane.error = '切片内容加载失败';
-    } finally {
-      pane.loading = false;
-    }
-  };
-  pane.go = (next: number): void => {
-    const target = Math.min(Math.max(next, 1), pageCount());
-    if (target === pane.page) {
-      return;
-    }
-    pane.page = target;
-    void pane.load();
-  };
-  pane.reset = (): void => {
-    pane.page = 1;
-    pane.items = [];
-    pane.total = 0;
-    pane.error = '';
-    pane.loaded = false;
-  };
-  return pane;
-}
+/** 切片页签取数的上下文：选中的文件与运行变了就按新值取，页签状态不必重建 */
+const chunkPaneContext = {
+  fileResultId: () => props.fileResultId,
+  stage: () => props.stage,
+  taskId: () => props.taskId,
+  pageSize: PAGE_SIZE,
+};
 
 /** 兜底片页签（只看 contentType=FALLBACK 的片） */
-const fallbackPane = createChunkPane({ fallback: true });
+const fallbackPane = createChunkPane({ fallback: true }, chunkPaneContext);
 
 /** 父片 · 孤儿页签（只看没有父片的片：父片与孤儿片都在其中） */
-const parentPane = createChunkPane({ hasParent: false });
+const parentPane = createChunkPane({ hasParent: false }, chunkPaneContext);
 
 /** 页签角标数：优先用详情统计（不必先请求列表） */
 function chunkStatCount(key: keyof ChunkStats): number | null {
@@ -2235,6 +2178,12 @@ function fieldCount(): number {
 const FAIL_ADVICE: Record<string, string> = {
   PARSE_CORRUPTED:
     '文件内容无法解析：确认文件未损坏，或用带文本层的版本重新导出后，重新提交该文件（同一份文件重新提交会产生新的文件结果）',
+  PARSE_UNSUPPORTED_FORMAT:
+    '格式不支持：请转换为 PDF / DOC / DOCX / XLS / XLSX / PPT / PPTX 后重新提交',
+  PARSE_ENCRYPTED: '文件已加密：请去除密码或导出为未加密版本后重新提交',
+  PARSE_TOO_LARGE: '文件超过大小上限：请压缩或拆分文件后重新提交',
+  PARSE_INPUT_UNREADABLE: '读不到源文件：确认文件未被删除且存储可读，必要时重新提交该文件',
+  PARSE_TIMEOUT: '解析超时：请拆分文件或减少页数后重新提交',
   SCANNED_UNSUPPORTED: '纯扫描件暂不支持：请提供带文本层的 PDF（OCR 能力尚未开放）后重新提交该文件',
   RATIO_BELOW_THRESHOLD: '成功单元占比过低：检查是否有大量扫描页或乱码，换一版文件重新提交',
   STRUCTURE_EMPTY: '解析产物里没有可组装的元素（空树）：确认上游解析结果有内容后再触发组装',
