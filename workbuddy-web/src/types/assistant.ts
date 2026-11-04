@@ -11,6 +11,15 @@ export interface AssistantSession {
   updated_at: string;
 }
 
+// 会话分组：一个工作区一组（无工作区的旧会话按目录兜底成组）
+export interface SessionGroup {
+  key: string;
+  name: string;
+  path: string;
+  workspaceId: string | null;
+  items: AssistantSession[];
+}
+
 // 工作区：会话归属目录（DSH workspace 语义）
 export interface Workspace {
   id: string;

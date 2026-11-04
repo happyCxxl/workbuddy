@@ -2,139 +2,24 @@
   <div class="page assistant-page">
     <div class="chat-wrap" :class="{ 'sessions-collapsed': !sessionsOpen, switching }">
       <!-- 工作区列表 -->
-      <div class="sessions-panel">
-        <div class="sessions-head">
-          <span class="sessions-title">工作区</span>
-          <span class="page-spacer"></span>
-          <button
-            class="head-icon"
-            :class="{ 'head-icon-on': searchVisible }"
-            type="button"
-            title="搜索工作区"
-            @click="searchVisible = !searchVisible"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <circle cx="7" cy="7" r="4.2" />
-              <path d="m10.2 10.2 3 3" />
-            </svg>
-          </button>
-          <button
-            class="head-icon"
-            :class="{ 'head-icon-on': onlyWithSessions }"
-            type="button"
-            title="仅显示有会话的工作区"
-            @click="onlyWithSessions = !onlyWithSessions"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path d="M2.5 4h11M4.5 8h7M6.5 12h3" />
-            </svg>
-          </button>
-          <button class="head-icon" type="button" title="新增工作区" @click="openWorkspaceDialog">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.4"
-            >
-              <path d="M2 4.5h4l1.3 1.5H13v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
-              <path d="M10 5.6v4.2M7.9 7.7h4.2" />
-            </svg>
-          </button>
-        </div>
-        <div v-if="searchVisible" class="workspace-search">
-          <el-input
-            v-model="workspaceKeyword"
-            size="small"
-            placeholder="搜索工作区名称或路径"
-            clearable
-          />
-        </div>
-        <div class="sessions-list">
-          <div v-for="group in sessionGroups" :key="group.key" class="session-group">
-            <div class="group-head" @click="toggleGroup(group.key)">
-              <span class="group-folder">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.4"
-                >
-                  <path d="M2 4.5h4l1.3 1.5H14v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
-                  <path d="M2 6h12" />
-                </svg>
-              </span>
-              <span class="group-arrow" :class="{ 'group-arrow-open': !collapsedGroups[group.key] }"
-                >▸</span
-              >
-              <span class="group-name" :title="group.path">{{ group.name }}</span>
-              <span v-if="group.workspaceId" class="group-actions" @click.stop>
-                <el-dropdown trigger="click" @command="handleGroupCommand($event, group)">
-                  <button class="group-icon" type="button" title="更多">⋯</button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="copy">复制路径</el-dropdown-item>
-                      <el-dropdown-item command="rename">重命名</el-dropdown-item>
-                      <el-dropdown-item command="delete-workspace">删除工作区</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-                <button
-                  class="group-icon group-add"
-                  type="button"
-                  title="在该工作区新建会话"
-                  @click.stop="handleNewSession(group)"
-                >
-                  ＋
-                </button>
-              </span>
-            </div>
-            <div v-show="!collapsedGroups[group.key]" class="group-items">
-              <p v-if="group.items.length === 0" class="group-empty">暂无会话</p>
-              <button
-                v-for="item in group.items"
-                :key="item.id"
-                type="button"
-                class="session-item"
-                :class="{ 'session-item-on': item.id === currentId }"
-                @click="selectSession(item)"
-              >
-                <span class="session-title">{{ item.title || '未命名会话' }}</span>
-                <span class="session-time">{{ formatDateTime(item.updated_at) }}</span>
-                <span class="session-rename" title="重命名" @click.stop="handleRename(item)"
-                  >✎</span
-                >
-                <span
-                  class="session-delete"
-                  title="删除会话"
-                  @click.stop="handleDeleteSession(item)"
-                  >✕</span
-                >
-              </button>
-            </div>
-          </div>
-          <p v-if="workspaces.length === 0 && sessions.length === 0" class="session-empty">
-            暂无工作区 暂无工作区
-          </p>
-        </div>
-      </div>
+      <SessionSidebar
+        v-model:search-visible="searchVisible"
+        v-model:only-with-sessions="onlyWithSessions"
+        v-model:workspace-keyword="workspaceKeyword"
+        :groups="sessionGroups"
+        :current-id="currentId"
+        :collapsed-groups="collapsedGroups"
+        :collapsed="!sessionsOpen"
+        :switching="switching"
+        :empty="workspaces.length === 0 && sessions.length === 0"
+        @toggle-group="toggleGroup"
+        @group-command="handleGroupCommand"
+        @new-session="handleNewSession"
+        @select="selectSession"
+        @rename="handleRename"
+        @delete="handleDeleteSession"
+        @new-workspace="openWorkspaceDialog"
+      />
 
       <!-- 切换会话栏时：发光扫描线从左到右擦除 / 从右到左重绘网格 -->
       <div v-show="switching" ref="wipeEl" class="grid-wipe" aria-hidden="true">
@@ -654,26 +539,18 @@ import type {
   ModelCallItem,
   PermissionPreset,
   SessionEventItem,
+  SessionGroup,
   SessionUsage,
   SubSessionItem,
   Workspace,
 } from '@/types/assistant';
 import { durationLabel, formatClock, preview, prettyJson } from '@/utils/chat-format';
-import { formatDateTime } from '@/utils/date';
 import MarkdownView from '@/components/assistant/MarkdownView.vue';
+import SessionSidebar from '@/components/assistant/SessionSidebar.vue';
 import SubSessionDrawer from '@/components/assistant/SubSessionDrawer.vue';
 import ToolIcon from '@/components/assistant/ToolIcon.vue';
 import TrajectoryDrawer from '@/components/assistant/TrajectoryDrawer.vue';
 import UsagePopover from '@/components/common/UsagePopover.vue';
-
-/** 会话分组：一个工作区一组（无工作区的旧会话按目录兜底成组） */
-interface SessionGroup {
-  key: string;
-  name: string;
-  path: string;
-  workspaceId: string | null;
-  items: AssistantSession[];
-}
 
 /** 工具调用行：名称、参数与结果 */
 interface ToolLine {
@@ -2320,24 +2197,13 @@ onUnmounted(() => {
   gap: 0;
 }
 
-.sessions-panel,
 .chat-panel {
+  position: relative;
   display: flex;
   min-width: 0;
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-}
-
-.sessions-panel {
-  min-width: 240px;
-  border-right: 1px solid var(--kb-line);
-  background: linear-gradient(180deg, var(--kb-bg-1), #050a12);
-  transition: opacity 0.8s ease;
-}
-
-.chat-panel {
-  position: relative;
   background:
     radial-gradient(720px 260px at 85% -8%, var(--kb-tint), transparent 72%), var(--kb-bg-2);
   transition: opacity 0.8s ease;
@@ -2348,19 +2214,12 @@ onUnmounted(() => {
  * 宽度是布局属性，若直接做过渡，正文会逐帧重排导致行数跳动；
  * 在不可见时完成重排，用户只看到一次干净的淡入淡出与网格崩解。
  */
-.chat-wrap.switching .sessions-panel,
 .chat-wrap.switching .chat-panel {
   opacity: 0;
 }
 
 .chat-wrap.sessions-collapsed {
   grid-template-columns: 0 minmax(0, 1fr);
-}
-
-.chat-wrap.sessions-collapsed .sessions-panel {
-  border-right-color: transparent;
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* 亮网格扫描层：整片 16px 网格，靠 clip-path 从左到右被擦掉 */
@@ -2389,7 +2248,6 @@ onUnmounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sessions-panel,
   .chat-panel {
     transition: none;
   }
@@ -2429,24 +2287,6 @@ onUnmounted(() => {
   border-bottom-width: 1px;
 }
 
-.sessions-head {
-  display: flex;
-  flex: none;
-  gap: 2px;
-  align-items: center;
-  padding: 12px 12px 12px 14px;
-  border-bottom: 1px solid var(--kb-line);
-}
-
-.sessions-title {
-  color: var(--kb-text-2);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .head-icon {
   display: inline-flex;
   flex: none;
@@ -2465,227 +2305,6 @@ onUnmounted(() => {
 .head-icon:hover {
   background: rgb(34 224 255 / 8%);
   color: var(--kb-primary);
-}
-
-.head-icon-on {
-  color: var(--kb-primary);
-}
-
-.workspace-search {
-  flex: none;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--kb-line);
-}
-
-.sessions-list {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 6px 6px 12px;
-}
-
-/* 工作区行：34px；文件夹图标悬停/选中切换为展开箭头（DSH 同款交互） */
-.group-head {
-  display: flex;
-  height: 44px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 8px 0 10px;
-  border-radius: 8px;
-  color: var(--kb-text-2);
-  cursor: pointer;
-  user-select: none;
-}
-
-.group-head:hover {
-  background: rgb(34 224 255 / 5%);
-}
-
-.group-folder {
-  display: inline-flex;
-  flex: none;
-  width: 20px;
-  align-items: center;
-  justify-content: center;
-  color: var(--kb-primary);
-}
-
-.group-arrow {
-  display: none;
-  flex: none;
-  width: 16px;
-  color: var(--kb-text-3);
-  font-size: 9px;
-  text-align: center;
-  transition: transform 150ms ease;
-}
-
-.group-arrow-open {
-  transform: rotate(90deg);
-}
-
-.group-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  font-size: 16px;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.group-actions {
-  display: none;
-  flex: none;
-  align-items: center;
-  gap: 2px;
-}
-
-.group-head:hover .group-actions {
-  display: inline-flex;
-}
-
-.group-icon {
-  display: inline-flex;
-  width: 20px;
-  height: 20px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  border-radius: 5px;
-  background: none;
-  color: var(--kb-text-3);
-  cursor: pointer;
-  font-size: 12px;
-  line-height: 20px;
-  text-align: center;
-}
-
-.group-icon:hover {
-  background: rgb(255 255 255 / 10%);
-  color: var(--kb-text-1);
-}
-
-.group-add:hover {
-  color: var(--kb-primary);
-}
-
-.group-empty {
-  margin: 0;
-  padding: 2px 8px 6px;
-  color: var(--kb-text-3);
-  font-size: 12px;
-}
-
-.group-items {
-  display: flex;
-  flex-direction: column;
-  padding-left: 22px;
-}
-
-/* 会话行：名称在上、时间在下的两行结构 */
-.session-item {
-  position: relative;
-  display: flex;
-  height: auto;
-  min-height: 48px;
-  width: 100%;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 3px;
-  padding: 8px 34px 8px 14px;
-  border: none;
-  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
-  background: none;
-  color: var(--kb-text-1);
-  cursor: pointer;
-  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-  text-align: left;
-}
-
-.session-item:hover {
-  background: rgb(34 224 255 / 5%);
-}
-
-.session-item-on {
-  background: linear-gradient(90deg, rgb(34 224 255 / 14%), rgb(34 224 255 / 3%) 72%, transparent);
-  box-shadow: inset 0 0 0 1px var(--kb-line);
-}
-
-.session-item-on::before {
-  position: absolute;
-  top: 5px;
-  bottom: 5px;
-  left: 0;
-  width: 2px;
-  background: var(--kb-primary);
-  box-shadow: 0 0 12px var(--kb-primary);
-  content: '';
-}
-
-.session-item-on:hover {
-  background: var(--kb-tint);
-}
-
-.session-title {
-  flex: none;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  font-size: 14px;
-  line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.session-time {
-  display: block;
-  flex: none;
-  color: var(--kb-text-3);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-}
-
-.session-rename {
-  position: absolute;
-  top: 6px;
-  right: 22px;
-  display: none;
-  width: 18px;
-  color: var(--kb-text-3);
-  font-size: 11px;
-  text-align: center;
-}
-
-.session-rename:hover {
-  color: var(--kb-primary);
-}
-
-.session-delete {
-  position: absolute;
-  top: 6px;
-  right: 4px;
-  display: none;
-  width: 18px;
-  color: var(--kb-text-3);
-  font-size: 11px;
-  text-align: center;
-}
-
-.session-delete:hover {
-  color: var(--kb-danger);
-}
-
-.session-item:hover .session-rename,
-.session-item:hover .session-delete {
-  display: block;
-}
-
-.session-group {
-  margin-bottom: 2px;
 }
 
 .workdir-row {
@@ -2797,13 +2416,6 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.session-empty {
-  padding: 18px 12px;
-  color: var(--kb-text-3);
-  font-size: 13px;
-  text-align: center;
 }
 
 .chat-head {
