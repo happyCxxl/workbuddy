@@ -249,12 +249,6 @@ export async function getSubSessions(sessionId: string): Promise<SubSessionItem[
   return response.data.subsessions;
 }
 
-/** 单个后台任务详情 */
-export async function getSubSession(subSessionId: string): Promise<SubSessionItem> {
-  const response = await http.get<SubSessionItem>(`/subsessions/${subSessionId}`);
-  return response.data;
-}
-
 /** 记忆列表：传 workDir 查可见范围（全局 + 该目录） */
 export async function getMemories(workDir?: string): Promise<AssistantMemory[]> {
   const response = await http.get<{ memories: AssistantMemory[] }>('/memories', {
@@ -266,12 +260,6 @@ export async function getMemories(workDir?: string): Promise<AssistantMemory[]> 
 /** 删除记忆：物理移除 */
 export async function deleteMemory(memoryId: string): Promise<void> {
   await http.delete(`/memories/${memoryId}`);
-}
-
-/** 启用中的人格版本 */
-export async function getPersona(): Promise<{ version: number; fields: PersonaFields }> {
-  const response = await http.get<{ version: number; fields: PersonaFields }>('/persona');
-  return response.data;
 }
 
 /** 保存人格为新版本（自动启用） */

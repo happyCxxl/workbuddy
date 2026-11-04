@@ -83,23 +83,6 @@ export async function deleteStrategyVersion(id: string): Promise<boolean> {
 }
 
 /**
- * 查询某知识库在某类型的策略绑定；未绑定时只有 strategyType、其余字段为 null。
- *
- * <p>**只在"确实只关心一个库"时用它。** 要回答「这个版本被哪些库绑了」，
- * 用 {@link getStrategyBindings}（批量）。
- */
-export async function getStrategyBinding(
-  knowledgeBaseId: string,
-  strategyType: string,
-): Promise<StrategyBinding> {
-  const response = await http.get<StrategyBinding>(
-    `/knowledge-base/${knowledgeBaseId}/strategy-binding`,
-    { params: { strategyType } },
-  );
-  return response.data;
-}
-
-/**
  * 批量查询某策略类型下**所有已绑定的知识库**（一次请求）。
  *
  * <p>绑定按知识库维度存储，"某策略版本被哪些库绑了"是反方向的问题；

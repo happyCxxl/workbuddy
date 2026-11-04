@@ -27,17 +27,6 @@ export async function getIndexVersions(knowledgeBaseId: string): Promise<IndexVe
   return response.data;
 }
 
-/** 查询单个索引版本详情 */
-export async function detailIndexVersion(
-  knowledgeBaseId: string,
-  versionId: string,
-): Promise<IndexVersionVO> {
-  const response = await http.get<IndexVersionVO>(
-    `/knowledge-base/${knowledgeBaseId}/index-sets/${versionId}`,
-  );
-  return response.data;
-}
-
 /**
  * 枚举可构建的组合。
  *

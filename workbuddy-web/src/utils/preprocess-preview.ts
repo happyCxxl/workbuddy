@@ -7,12 +7,7 @@
  * <p>示例是静态手写节选，不调接口、不跑后端；变换按后端口径简化实现（NFKC、折行合并、
  * 千分位、日期合法性、面积单位、软连字符、项目符号、链接移除等）。
  */
-import {
-  PREPROCESS_RULE_LABELS,
-  preprocessAction,
-  preprocessSubToggle,
-  preprocessToggle,
-} from '@/types/strategy-config';
+import { preprocessAction, preprocessSubToggle, preprocessToggle } from '@/types/strategy-config';
 import type { PreprocessConfig, PreprocessRuleRaw } from '@/types/strategy-config';
 
 /** 示例行类型（决定它归哪条规则处置） */
@@ -388,9 +383,4 @@ export function preprocessRuleValue(ruleKey: string, cfg: PreprocessConfig): str
   }
   const action = preprocessAction(ruleKey, cfg.rules[ruleKey]);
   return action === 'KEEP' ? '保留' : action === 'MARK' ? '标记' : '剔除';
-}
-
-/** 规则标题（含自定义规则组） */
-export function preprocessRuleTitle(ruleKey: string): string {
-  return PREPROCESS_RULE_LABELS[ruleKey] ?? ruleKey;
 }

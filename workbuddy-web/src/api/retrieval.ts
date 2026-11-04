@@ -7,23 +7,6 @@ import type {
 } from '@/types/retrieval';
 
 /**
- * 生产检索：不传 ruleId / versionId，走回退链（在线版本行 → kb 默认 → 引擎基线）。
- *
- * <p>与测试台是**同一个执行引擎**，区别只在"规则如何确定"。
- * 未发布索引时后端报 40446。
- */
-export async function getSearchResult(
-  knowledgeBaseId: string,
-  request: SearchRequest,
-): Promise<SearchResult> {
-  const response = await http.post<SearchResult>(
-    `/knowledge-base/${knowledgeBaseId}/search`,
-    request,
-  );
-  return response.data;
-}
-
-/**
  * 测试台检索：**必须显式传 versionId + ruleId**（可检索候选冻结集）。
  *
  * <p>执行即落运行记录（`wb_knowledge_retrieval_run`，append-only 机器表），

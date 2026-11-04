@@ -55,7 +55,6 @@ export function strategyTypeLabel(type: string): string {
 
 /** 策略版本状态 */
 export const STRATEGY_STATUS_ACTIVE = 'ACTIVE';
-export const STRATEGY_STATUS_INACTIVE = 'INACTIVE';
 
 export function isStrategyActive(item: StrategyVersion): boolean {
   return item.status === STRATEGY_STATUS_ACTIVE;
@@ -74,12 +73,6 @@ export const PREPROCESS_ACTION_LABELS: Record<string, string> = {
   EXCLUDE: '剔除',
 };
 
-/** 用「动作」语义的规则：三选一（重复与三条处置规则同形） */
-export const PREPROCESS_ACTION_RULES = ['headerFooter', 'toc', 'noise', 'repeat'] as const;
-
-/** 用「开关」语义的规则：开 / 关 */
-export const PREPROCESS_TOGGLE_RULES = ['field', 'tidy', 'encoding'] as const;
-
 /** 配置区展示顺序（含自定义规则组，它是链尾第 8 个节点） */
 export const PREPROCESS_RULE_ORDER = [
   'headerFooter',
@@ -91,12 +84,6 @@ export const PREPROCESS_RULE_ORDER = [
   'field',
   'custom',
 ] as const;
-
-/** 处置类规则分组（判定在上游环节，本页只决定处置方式） */
-export const PREPROCESS_DISPOSE_RULES = ['headerFooter', 'toc', 'noise', 'repeat'] as const;
-
-/** 内容整理类规则分组 */
-export const PREPROCESS_ORGANIZE_RULES = ['encoding', 'tidy', 'field'] as const;
 
 export const PREPROCESS_RULE_LABELS: Record<string, string> = {
   headerFooter: '页眉页脚',
@@ -399,15 +386,6 @@ export interface ChunkConfig {
   [key: string]: unknown;
 }
 
-/**
- * 切片配置的互斥关系（后端 `ChunkAlgorithmSpec.validate` 同款，前端联动禁用）。
- *
- * <p>表格并入正文流时，「表 + 引导段落」语义重复，两者不能同时启用。
- */
-export function isTableInBodyFlowOn(pipeline: Record<string, string> | undefined): boolean {
-  return pipeline?.tableInBodyFlow === 'ON';
-}
-
 // ============================================================
 // 向量化配置
 // ============================================================
@@ -506,8 +484,6 @@ export const RETRIEVAL_FUSION_MODES = [
   { key: 'RRF', label: 'RRF（倒数排名融合）' },
   { key: 'NONE', label: '不融合' },
 ] as const;
-
-export const RETRIEVAL_PREPROCESS_MODES = [{ key: 'NONE', label: '不做' }] as const;
 
 export const RETRIEVAL_RERANK_MODES = [{ key: 'NONE', label: '不重排' }] as const;
 

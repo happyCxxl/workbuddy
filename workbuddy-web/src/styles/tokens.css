@@ -52,7 +52,7 @@
   min-height: 100vh;
 }
 
-/* Element Plus 暗色主题品牌化：主色切为翡翠系，容器与文字色对齐设计变量 */
+/* Element Plus 暗色主题品牌化：品牌主色（青），容器与文字色对齐设计变量 */
 :root.dark {
   --el-color-primary: #22e0ff;
   --el-color-primary-light-3: #5ce9ff;

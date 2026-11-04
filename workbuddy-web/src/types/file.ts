@@ -31,16 +31,6 @@ export interface FileSubmitResult {
   pipelineTaskId: string | null;
 }
 
-/** 提交记录分页入参 */
-export interface SubmitLogQuery {
-  current: number;
-  size: number;
-  /** 提交结果筛选：PASS / FAIL */
-  status?: string;
-  /** 文件名模糊筛选 */
-  fileName?: string;
-}
-
 /** 后端允许的文件格式（knowledge.file.enabled-formats 默认值，识别依据是 Tika 魔数而非扩展名） */
 export const ACCEPTED_FILE_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'] as const;
 

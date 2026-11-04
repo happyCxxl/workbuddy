@@ -1,6 +1,5 @@
 import { http } from './http';
-import type { PageResult } from '@/types/response';
-import type { FileSubmitResult, SubmitLog, SubmitLogQuery } from '@/types/file';
+import type { FileSubmitResult } from '@/types/file';
 
 /** 上传文件到文件中心，返回 fileId（建档时用） */
 export async function addFile(file: File, onProgress?: (percent: number) => void): Promise<string> {
@@ -34,17 +33,5 @@ export async function addFileSubmit(
     fileId,
     requestId,
   });
-  return response.data;
-}
-
-/** 分页查询知识库的提交记录（含失败原因） */
-export async function getSubmitLogs(
-  knowledgeBaseId: string,
-  query: SubmitLogQuery,
-): Promise<PageResult<SubmitLog>> {
-  const response = await http.get<PageResult<SubmitLog>>(
-    `/knowledge-base/${knowledgeBaseId}/submit-logs`,
-    { params: query },
-  );
   return response.data;
 }

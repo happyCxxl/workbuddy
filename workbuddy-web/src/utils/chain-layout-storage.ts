@@ -30,11 +30,6 @@ function storageKey(fileKey: string, taskId: string): string {
   return `${STORAGE_PREFIX}${fileKey}${SEPARATOR}${taskId}`;
 }
 
-/** 本模块写入的键，用于区分同一 localStorage 里别处的数据 */
-function isOwnKey(key: string): boolean {
-  return key.startsWith(STORAGE_PREFIX);
-}
-
 /** 读出某个文件的全部节点坐标；损坏或不可用时返回空表 */
 export function readPositions(fileKey: string): Map<string, StoredPosition> {
   const result = new Map<string, StoredPosition>();
@@ -70,15 +65,6 @@ export function writePosition(fileKey: string, taskId: string, pos: StoredPositi
   }
 }
 
-/** 删除单条坐标 */
-export function removePosition(fileKey: string, taskId: string): void {
-  try {
-    localStorage.removeItem(storageKey(fileKey, taskId));
-  } catch {
-    // 同上：清理失败不影响功能
-  }
-}
-
 /**
  * 清理某个文件里「已经不可能再匹配上」的坐标记录。
  *
@@ -106,22 +92,6 @@ export function prunePositions(fileKey: string, aliveTaskIds: Set<string>): void
     stale.forEach((key) => localStorage.removeItem(key));
   } catch {
     // 清理失败只意味着多留几条死数据，不影响功能
-  }
-}
-
-/** 丢弃本模块写入的全部记录（数据格式升级或整体重置时用） */
-export function clearPositions(): void {
-  try {
-    const keys: string[] = [];
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i);
-      if (key && isOwnKey(key)) {
-        keys.push(key);
-      }
-    }
-    keys.forEach((key) => localStorage.removeItem(key));
-  } catch {
-    // 同上：失败不影响功能
   }
 }
 
