@@ -2,44 +2,22 @@
   <Teleport to="body">
     <div v-if="visible" class="parse-drawer-mask" @click="onClose">
       <aside class="parse-drawer" role="dialog" aria-modal="true" @click.stop>
-        <!-- 头部：文件 + 本次运行标识 + 状态徽标 -->
-        <header class="parse-drawer-head">
-          <div class="parse-drawer-title">
-            <span class="parse-drawer-file">{{ fileName }}</span>
-            <span class="parse-drawer-badge" :class="badgeClass">{{ statusText }}</span>
-          </div>
-          <button class="parse-drawer-x" type="button" @click="onClose">关闭</button>
-        </header>
-        <div class="parse-drawer-ident">
-          <span class="parse-drawer-ident-item">开始 {{ formatClock(detail?.startedAt) }}</span>
-          <span class="parse-drawer-ident-item"
-            >耗时 {{ formatDuration(stats?.durationMs ?? detailDurationMs) }}</span
-          >
-          <span class="parse-drawer-ident-item">任务 {{ taskId }}</span>
-        </div>
-
-        <!-- 统计条：固定，一行摘要 + 一行统计 -->
-        <div class="parse-drawer-statbar">
-          <span class="parse-drawer-conclusion" :class="conclusionClass">{{ conclusionText }}</span>
-          <div class="parse-drawer-stats">
-            <span v-for="item in statItems" :key="item.key" class="parse-drawer-stat">
-              <span class="parse-drawer-stat-value">{{ item.value }}</span>
-              {{ item.label }}
-            </span>
-          </div>
-        </div>
-
-        <!-- 失败态：固定，解析失败的运行一眼可见 -->
-        <section
-          v-if="isFailed"
-          class="parse-drawer-block parse-drawer-block-bad parse-drawer-failbar"
-        >
-          <span class="parse-drawer-error-code">{{ detail?.errorCode ?? '—' }}</span>
-          <span class="parse-drawer-error-msg">{{
-            detail?.errorMsg ?? '本次运行没有留下失败说明'
-          }}</span>
-          <span class="parse-drawer-advice">建议：{{ failAdvice }}</span>
-        </section>
+        <StageDrawerHead
+          :file-name="fileName"
+          :status-text="statusText"
+          :badge-class="badgeClass"
+          :started-at-text="formatClock(detail?.startedAt)"
+          :duration-text="formatDuration(stats?.durationMs ?? detailDurationMs)"
+          :task-id="taskId"
+          :conclusion-text="conclusionText"
+          :conclusion-class="conclusionClass"
+          :stat-items="statItems"
+          :is-failed="isFailed"
+          :error-code="detail?.errorCode ?? '—'"
+          :error-msg="detail?.errorMsg ?? '本次运行没有留下失败说明'"
+          :fail-advice="failAdvice"
+          @close="onClose"
+        />
 
         <div ref="splitBodyRef" class="parse-drawer-body" :class="{ 'is-dragging': dragging }">
           <!-- 左栏：内容形态由环节配置给（原文预览 / 组装产物文档 / 清洗后的正文）；宽度由分隔条决定 -->
@@ -757,6 +735,7 @@ import PdfSourcePreview from '@/components/pipeline/PdfSourcePreview.vue';
 import DocxSourcePreview from '@/components/pipeline/DocxSourcePreview.vue';
 import XlsxSourcePreview from '@/components/pipeline/XlsxSourcePreview.vue';
 import DrawerPager from '@/components/pipeline/DrawerPager.vue';
+import StageDrawerHead from '@/components/pipeline/StageDrawerHead.vue';
 import {
   bboxOf,
   chunkTypeLabel,
@@ -2859,86 +2838,6 @@ onBeforeUnmount(() => {
   box-shadow: -12px 0 32px rgb(0 0 0 / 45%);
 }
 
-.parse-drawer-head {
-  display: flex;
-  flex: none;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--kb-line);
-}
-
-.parse-drawer-title {
-  display: flex;
-  min-width: 0;
-  gap: 10px;
-  align-items: center;
-}
-
-.parse-drawer-file {
-  overflow: hidden;
-  font-size: 15px;
-  font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 状态徽标：底色与文字色按状态 tone 给（is-* 规则在全局 chain-graph.css —— 
-   它们由计算属性动态给出，静态检查看不到 scoped 里的声明） */
-.parse-drawer-badge {
-  flex: none;
-  padding: 2px 8px;
-  border-radius: 99px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.parse-drawer-x {
-  flex: none;
-  padding: 4px 10px;
-  border: none;
-  border-radius: 8px;
-  background: var(--kb-surface);
-  color: var(--kb-text-2);
-  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.parse-drawer-x:hover {
-  background: var(--kb-line-2);
-}
-
-.parse-drawer-ident {
-  display: flex;
-  flex: none;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 9px 18px;
-  border-bottom: 1px solid var(--kb-line);
-  color: var(--kb-text-3);
-  font-size: 11px;
-}
-
-/* 统计条：固定分区，内容一行放不下就换行，自身不滚动 */
-.parse-drawer-statbar {
-  display: flex;
-  flex: none;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  align-items: baseline;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--kb-line);
-}
-
-/* 失败条：固定分区，把错误码 / 说明 / 建议压成一行一行的短句 */
-.parse-drawer-failbar {
-  flex: none;
-  margin: 10px 18px 0;
-  gap: 6px;
-}
-
 /*
  * 中间双栏：唯一会伸缩的分区。
  * flex: 1 + min-height: 0 是关键 —— 少了 min-height，子内容会把这一区撑高，
@@ -3131,12 +3030,6 @@ onBeforeUnmount(() => {
   padding: 12px 14px;
 }
 
-.parse-drawer-block {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
 .parse-drawer-block-title {
   display: flex;
   margin: 0;
@@ -3146,34 +3039,6 @@ onBeforeUnmount(() => {
   color: var(--kb-text-2);
   font-size: 12px;
   font-weight: 650;
-}
-
-/* 结论文案沿用状态色（规则同样在全局 chain-graph.css） */
-.parse-drawer-conclusion {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.parse-drawer-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-}
-
-.parse-drawer-stat {
-  display: flex;
-  gap: 5px;
-  align-items: baseline;
-  color: var(--kb-text-3);
-  font-size: 11px;
-}
-
-.parse-drawer-stat-value {
-  color: var(--kb-text-1);
-  font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .parse-drawer-warnings {
@@ -3225,34 +3090,6 @@ onBeforeUnmount(() => {
   color: var(--kb-text-3);
   font-size: 11px;
   cursor: pointer;
-}
-
-.parse-drawer-block-bad {
-  padding: 12px 14px;
-  border: 1px solid rgb(248 113 113 / 28%);
-  border-radius: 10px;
-  background: rgb(248 113 113 / 8%);
-}
-
-.parse-drawer-error-code {
-  margin: 0;
-  color: var(--kb-danger);
-  font-family: ui-monospace, 'JetBrains Mono', Consolas, monospace;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.parse-drawer-error-msg {
-  margin: 0;
-  color: var(--kb-text-1);
-  font-size: 12px;
-}
-
-.parse-drawer-advice {
-  margin: 0;
-  color: var(--kb-text-2);
-  font-size: 12px;
-  line-height: 1.6;
 }
 
 .parse-drawer-steps {
