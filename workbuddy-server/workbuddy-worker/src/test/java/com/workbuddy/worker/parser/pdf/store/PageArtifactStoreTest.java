@@ -28,6 +28,7 @@ class PageArtifactStoreTest {
     @TempDir
     Path tempDir;
 
+    /** 校验点：{@code MemoryPageArtifactStore#readWindow} 读回写入窗口。 */
     @Test
     void memoryStoreShouldRoundTrip() {
         try (PageArtifactStore store = new MemoryPageArtifactStore()) {
@@ -37,6 +38,7 @@ class PageArtifactStoreTest {
         }
     }
 
+    /** 校验点：{@code DiskPageArtifactStore#readWindow} 读回写入窗口，关闭时清理目录。 */
     @Test
     void diskStoreShouldRoundTripAndCleanUp() {
         Path directory = tempDir.resolve("pages");
@@ -49,6 +51,7 @@ class PageArtifactStoreTest {
         assertFalse(Files.exists(directory), "页产物临时目录未清理");
     }
 
+    /** 校验点：{@code PageArtifactStore#readWindow} 对未写入窗口抛 {@code PageArtifactStoreException}。 */
     @Test
     void missingWindowShouldFail() {
         try (PageArtifactStore store = new MemoryPageArtifactStore()) {
@@ -56,6 +59,7 @@ class PageArtifactStoreTest {
         }
     }
 
+    /** 校验点：{@code DiskPageArtifactStore#readWindow} 对未写入窗口抛 {@code PageArtifactStoreException}。 */
     @Test
     void diskStoreShouldRejectMissingWindow() {
         Path directory = tempDir.resolve("missing");
@@ -64,6 +68,7 @@ class PageArtifactStoreTest {
         }
     }
 
+    /** 校验点：{@code PageArtifactStore#open} 按窗口数选择内存或磁盘实现。 */
     @Test
     void openShouldChooseMemoryForSingleWindowAndDiskForMultiWindow() {
         assertTrue(PageArtifactStore.open(1, 1) instanceof MemoryPageArtifactStore);

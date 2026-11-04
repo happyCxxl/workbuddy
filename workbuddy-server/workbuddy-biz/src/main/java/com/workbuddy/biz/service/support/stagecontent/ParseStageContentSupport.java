@@ -2,6 +2,7 @@ package com.workbuddy.biz.service.support.stagecontent;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.ParseSource;
@@ -18,7 +19,9 @@ import org.springframework.stereotype.Component;
 import com.workbuddy.biz.service.support.artifact.StageArtifactReader;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 解析环节内容：sources 平铺元素，顺序号从 1 起，extra 带来源/页网格/边界框/Office 锚点/表格单元格。
@@ -42,6 +45,7 @@ public class ParseStageContentSupport {
         if (NullUtil.isNull(result) || NullUtil.isNull(result.getSources())) {
             return items;
         }
+        Map<String, String> assetUrls = assetUrls(result);
         int seq = 1;
         for (ParseSource source : result.getSources()) {
             for (ParseElement element : ObjectUtil.defaultIfNull(source.getElements(), List.<ParseElement>of())) {
@@ -50,19 +54,30 @@ public class ParseStageContentSupport {
                 item.setSeq(seq++);
                 item.setType(element.getType());
                 item.setDisplay(element.getText());
-                item.setExtra(parseExtra(source, element));
+                item.setExtra(parseExtra(source, element, assetUrls));
                 items.add(item);
             }
         }
         return items;
     }
 
+    /** 资产 ID → 公开 URL；没有 URL 的资产不进入映射。 */
+    private Map<String, String> assetUrls(ParseResult result) {
+        Map<String, String> urls = new HashMap<>();
+        for (ParseAsset asset : ObjectUtil.defaultIfNull(result.getAssets(), List.<ParseAsset>of())) {
+            if (StrUtil.isNotBlank(asset.getUrl())) {
+                urls.put(asset.getAssetId(), asset.getUrl());
+            }
+        }
+        return urls;
+    }
+
     /** 解析环节专属字段 + 公共页网格字段 + 原文定位锚点 + 表格单元格明细 */
-    private StageContentExtraVO parseExtra(ParseSource source, ParseElement element) {
+    private StageContentExtraVO parseExtra(ParseSource source, ParseElement element, Map<String, String> assetUrls) {
         StageContentExtraVO extra = new StageContentExtraVO();
         extra.setSource(source.getSource());
         extra.setProvider(source.getProvider());
-        extra.setAssetRef(element.getAssetRef());
+        extra.setAssetUrl(assetUrls.get(element.getAssetRef()));
         knowledgeConverter.putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
         knowledgeConverter.putBbox(extra, element.getBbox());
         if (NullUtil.isNotNull(element.getDisplayBBox())) {

@@ -1,14 +1,12 @@
 package com.workbuddy.biz.controller.knowledge;
 
 import com.workbuddy.biz.service.ParseControlService;
-import com.workbuddy.biz.service.support.ParseAssetContent;
 import com.workbuddy.common.dto.request.stage.StageDetailQueryDTO;
 import com.workbuddy.common.dto.response.parse.ParseDetailVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import com.workbuddy.common.web.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,23 +55,5 @@ public class KnowledgeFileParseController {
             @PathVariable("fileResultId") Long fileResultId,
             StageDetailQueryDTO query) {
         return R.ok(parseControlService.parseDetail(fileResultId, query.getTaskId()));
-    }
-
-    /**
-     * 读取解析资产（图片本体）：按产物内 assetId 回读对象存储，直接返回图片字节。
-     *
-     * @param fileResultId 文件结果 ID（路径参数）
-     * @param assetId      资产 ID（路径参数）
-     * @param query        查询条件：taskId 可选（缺省取最新任务）
-     * @return 图片字节（Content-Type 取资产 MIME）
-     * @apiNote 文件结果不存在 40432；任务/产物/资产不存在 40410
-     */
-    @GetMapping("/{fileResultId}/parse-assets/{assetId}")
-    public ResponseEntity<byte[]> parseAsset(
-            @PathVariable("fileResultId") Long fileResultId,
-            @PathVariable("assetId") String assetId,
-            StageDetailQueryDTO query) {
-        ParseAssetContent asset = parseControlService.asset(fileResultId, assetId, query.getTaskId());
-        return ResponseEntity.ok().contentType(asset.mediaType()).body(asset.content());
     }
 }

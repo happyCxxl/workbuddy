@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class ParsePipelineAssetTest {
 
-    /** 解析器向 assetSink 写入的资产应出现在 ParseResult.assets。 */
+    /** 校验点：解析器写入的资产应出现在 {@code ParseResult#assets}，并计入摘要。 */
     @Test
     void resultShouldCarryAssetsWrittenByParser() {
         ParsePipelineTestFixture fixture = new ParsePipelineTestFixture();

@@ -18,8 +18,8 @@ public class StageContentExtraVO {
     /** 解析：元素来源（native / ocr 等，取自 ParseSource.source） */
     private String source;
 
-    /** 解析：图片资产 ID（IMAGE 元素用，按它读取资产字节） */
-    private String assetRef;
+    /** 解析：图片资产 URL（IMAGE 元素用，浏览器直接渲染；后端不支持公开读时为 null） */
+    private String assetUrl;
 
     /** 解析：解析器标识（取自 ParseSource.provider） */
     private String provider;

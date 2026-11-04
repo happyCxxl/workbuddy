@@ -1,5 +1,6 @@
 package com.workbuddy.biz.task.runner.asset;
 
+import cn.hutool.crypto.digest.DigestUtil;
 import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.enums.parse.ParseAssetKind;
@@ -11,10 +12,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.InputStream;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
@@ -26,11 +31,13 @@ class FileStorageParseAssetSinkTest {
     @Mock
     private FileStorage fileStorage;
 
-    /** 同内容只登记一份资产，assetId 由对象键派生。 */
+    /** 校验点：{@code FileStorageParseAssetSink#put} 对同内容只登记一份资产，assetId 由对象键派生。 */
     @Test
     void sameContentShouldReuseAsset() {
-        ObjectRef ref = new ObjectRef(1L, StorageType.LOCAL, "artifact", "abc123");
-        when(fileStorage.putObject(any())).thenReturn(ref);
+        String sha256 = DigestUtil.sha256Hex(new byte[]{1, 2});
+        ObjectRef ref = new ObjectRef(1L, StorageType.LOCAL, "files", "parse-assets/" + sha256);
+        when(fileStorage.putRaw(anyString(), any(InputStream.class), anyLong(), anyString())).thenReturn(ref);
+        when(fileStorage.publicUrl(ref)).thenReturn("http://storage/files/parse-assets/" + sha256);
         FileStorageParseAssetSink sink = new FileStorageParseAssetSink(fileStorage);
 
         ParseAsset first = sink.put(ParseAssetKind.EMBEDDED_IMAGE, new byte[]{1, 2}, "image/png",
@@ -40,12 +47,13 @@ class FileStorageParseAssetSinkTest {
 
         assertEquals(first, second);
         assertEquals(1, sink.assets().size());
-        assertEquals("asset-abc123", first.getAssetId());
-        assertEquals("abc123", first.getSha256());
+        assertEquals("asset-" + sha256, first.getAssetId());
+        assertEquals(sha256, first.getSha256());
+        assertEquals("http://storage/files/parse-assets/" + sha256, first.getUrl());
         assertEquals(2L, first.getSize());
     }
 
-    /** 空字节不写资产。 */
+    /** 校验点：{@code FileStorageParseAssetSink#put} 对空字节不写资产。 */
     @Test
     void emptyContentShouldBeSkipped() {
         FileStorageParseAssetSink sink = new FileStorageParseAssetSink(fileStorage);
@@ -54,10 +62,11 @@ class FileStorageParseAssetSinkTest {
         assertEquals(0, sink.assets().size());
     }
 
-    /** 存储异常转 ParseAssetException，由管线归 PARSE_FAILED。 */
+    /** 校验点：存储异常转 {@code ParseAssetException}，由管线归 {@code PipelineTaskErrorCode#PARSE_FAILED}。 */
     @Test
     void storageFailureShouldBeWrapped() {
-        when(fileStorage.putObject(any())).thenThrow(new IllegalStateException("disk"));
+        when(fileStorage.putRaw(anyString(), any(InputStream.class), anyLong(), anyString()))
+                .thenThrow(new IllegalStateException("disk"));
         FileStorageParseAssetSink sink = new FileStorageParseAssetSink(fileStorage);
 
         assertThrows(ParseAssetException.class, () -> sink.put(ParseAssetKind.EMBEDDED_IMAGE,

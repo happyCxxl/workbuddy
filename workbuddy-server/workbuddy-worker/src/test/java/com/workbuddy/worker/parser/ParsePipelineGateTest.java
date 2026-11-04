@@ -442,7 +442,7 @@ class ParsePipelineGateTest {
     }
 
     /**
-     * 页产物存储失败属于执行异常，不能伪装成文件损坏。
+     * 校验点：页产物存储失败归 {@code PipelineTaskErrorCode#PARSE_FAILED}，不能伪装成文件损坏。
      */
     @Test
     void artifactStoreFailureShouldFailParseFailed() {
@@ -456,7 +456,7 @@ class ParsePipelineGateTest {
     }
 
     /**
-     * 图片资产写入失败属于执行异常，不能伪装成文件损坏。
+     * 校验点：图片资产写入失败归 {@code PipelineTaskErrorCode#PARSE_FAILED}，不能伪装成文件损坏。
      */
     @Test
     void assetStoreFailureShouldFailParseFailed() {

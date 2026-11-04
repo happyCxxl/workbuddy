@@ -1,5 +1,6 @@
 package com.workbuddy.biz.task.runner.asset;
 
+import cn.hutool.crypto.digest.DigestUtil;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.storage.ObjectRef;
@@ -9,17 +10,20 @@ import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.parser.asset.ParseAssetException;
 import com.workbuddy.worker.parser.asset.ParseAssetSink;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 解析资产写入口的对象存储实现：按内容寻址写入，同一任务内相同字节只保留一份资产描述。
+ * 解析资产写入口的对象存储实现：按内容寻址写入公开读前缀，同一任务内相同字节只保留一份资产描述。
  */
 public class FileStorageParseAssetSink implements ParseAssetSink {
 
     private static final String ASSET_ID_PREFIX = "asset-";
+
+    private static final String KEY_PREFIX = "parse-assets/";
 
     private final FileStorage fileStorage;
 
@@ -53,12 +57,14 @@ public class FileStorageParseAssetSink implements ParseAssetSink {
             return null;
         }
         try {
-            ObjectRef ref = fileStorage.putObject(content);
-            String assetId = ASSET_ID_PREFIX + ref.objectKey();
+            String sha256 = DigestUtil.sha256Hex(content);
+            String assetId = ASSET_ID_PREFIX + sha256;
             ParseAsset existing = assets.get(assetId);
             if (NullUtil.isNotNull(existing)) {
                 return existing;
             }
+            ObjectRef ref = fileStorage.putRaw(KEY_PREFIX + sha256, new ByteArrayInputStream(content),
+                    content.length, mimeType);
             ParseAsset asset = new ParseAsset();
             asset.setAssetId(assetId);
             asset.setKind(kind);
@@ -66,9 +72,10 @@ public class FileStorageParseAssetSink implements ParseAssetSink {
             asset.setStorageType(ref.storageType().getCode());
             asset.setBucket(ref.bucket());
             asset.setObjectKey(ref.objectKey());
+            asset.setUrl(fileStorage.publicUrl(ref));
             asset.setMimeType(mimeType);
             asset.setSize((long) content.length);
-            asset.setSha256(ref.objectKey());
+            asset.setSha256(sha256);
             asset.setPage(page);
             asset.setBbox(bbox);
             asset.setWidth(width);

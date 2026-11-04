@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PdfImageAssetTest {
 
-    /** 整页图片页：产 PAGE_IMAGE，元素 assetRef 可读到 PNG 字节。 */
+    /** 校验点：整页图片页产 {@code ParseAssetKind#PAGE_IMAGE}，元素 assetRef 可读到 PNG 字节。 */
     @Test
     void fullPageImageShouldBeWrittenAsPageAsset() throws Exception {
         RecordingAssetSink sink = new RecordingAssetSink();
@@ -51,7 +51,7 @@ class PdfImageAssetTest {
         assertArrayEquals(new byte[]{(byte) 0x89, 'P', 'N', 'G'}, java.util.Arrays.copyOf(content, 4));
     }
 
-    /** 正文 + 大图：不产页图，产 IMAGE_CROP，元素 assetRef 指向裁剪图。 */
+    /** 校验点：正文 + 大图不产页图，产 {@code ParseAssetKind#IMAGE_CROP}，元素 assetRef 指向裁剪图。 */
     @Test
     void textPageImageShouldBeWrittenAsCropAsset() throws Exception {
         RecordingAssetSink sink = new RecordingAssetSink();

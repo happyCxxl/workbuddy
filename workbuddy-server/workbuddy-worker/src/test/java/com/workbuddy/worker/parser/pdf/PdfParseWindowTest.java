@@ -52,7 +52,7 @@ class PdfParseWindowTest {
                 fingerprint(parse(data, 1, IN_MEMORY_BYTES)));
     }
 
-    /** 第二遍读页产物，不重新提取 PDF（每页 extractPage 只调用一次）。 */
+    /** 校验点：第二遍读 {@code PageArtifactStore} 产物，{@code PdfPageExtractor#extractPage} 每页只调用一次。 */
     @Test
     void secondPassShouldReadArtifactsWithoutExtractingAgain() throws Exception {
         PdfPageExtractor extractor = spy(new PdfPageExtractor(new ProjectionPageLayoutAnalyzer()));
@@ -66,7 +66,7 @@ class PdfParseWindowTest {
         verify(extractor, times(3)).extractPage(any(PDDocument.class), anyInt(), any(ParseContext.class));
     }
 
-    /** 页产物临时目录在解析结束后清理。 */
+    /** 校验点：{@code DiskPageArtifactStore} 的临时目录在解析结束后清理。 */
     @Test
     void pageArtifactTempDirectoryShouldBeRemovedAfterParse() throws Exception {
         Path tempDir = Path.of(System.getProperty("java.io.tmpdir"));

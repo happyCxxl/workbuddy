@@ -30,6 +30,9 @@ public class ParseAsset {
     /** 对象键 */
     private String objectKey;
 
+    /** 可直接渲染的公开 URL（后端不支持公开读时为 null） */
+    private String url;
+
     /** 图片 MIME 类型 */
     private String mimeType;
 

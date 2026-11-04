@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class DocxImageAssetTest {
 
-    /** 文档内图片写 EMBEDDED_IMAGE，assetRef 可读回原字节。 */
+    /** 校验点：文档内图片写 {@code ParseAssetKind#EMBEDDED_IMAGE}，{@code ParseElement#assetRef} 可读回原字节。 */
     @Test
     void embeddedPictureShouldBeWrittenAsAsset() throws Exception {
         byte[] png = pngBytes();

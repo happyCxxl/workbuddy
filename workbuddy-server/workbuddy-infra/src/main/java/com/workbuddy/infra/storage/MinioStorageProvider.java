@@ -56,7 +56,7 @@ public class MinioStorageProvider implements StorageProvider {
     public void initialize() {
         ensureBucket(def.fileBucket());
         ensureBucket(def.artifactBucket());
-        ensureAvatarPublic(def.fileBucket());
+        ensurePublicRead(def.fileBucket());
         log.info("MinIO 桶就绪: {}/{}（数据源 {}, 端点 {}）", def.fileBucket(), def.artifactBucket(),
                 def.name(), def.param(StorageSourceDef.KEY_ENDPOINT));
     }
@@ -125,7 +125,7 @@ public class MinioStorageProvider implements StorageProvider {
     }
 
     /**
-     * 对象的公开读取地址：桶内 `avatar/*` 前缀在初始化时放开匿名 GET。
+     * 对象的公开读取地址：桶内 `avatar/*` 与 `parse-assets/*` 前缀在初始化时放开匿名 GET。
      *
      * @param bucket 桶名
      * @param key    对象名
@@ -138,16 +138,17 @@ public class MinioStorageProvider implements StorageProvider {
         return base + "/" + bucket + "/" + key;
     }
 
-    /** 放开头像前缀的匿名读；文件与产物对象仍保持私有 */
-    private void ensureAvatarPublic(String bucket) {
+    /** 放开头像与解析资产前缀的匿名读；文件与产物对象仍保持私有 */
+    private void ensurePublicRead(String bucket) {
         String policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{"
                 + "\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},"
                 + "\"Action\":[\"s3:GetObject\"],"
-                + "\"Resource\":[\"arn:aws:s3:::" + bucket + "/avatar/*\"]}]}";
+                + "\"Resource\":[\"arn:aws:s3:::" + bucket + "/avatar/*\","
+                + "\"arn:aws:s3:::" + bucket + "/parse-assets/*\"]}]}";
         try {
             minioClient.setBucketPolicy(SetBucketPolicyArgs.builder().bucket(bucket).config(policy).build());
         } catch (Exception e) {
-            throw new IllegalStateException("MinIO 头像公开读策略设置失败: " + bucket, e);
+            throw new IllegalStateException("MinIO 公开读策略设置失败: " + bucket, e);
         }
     }
 
