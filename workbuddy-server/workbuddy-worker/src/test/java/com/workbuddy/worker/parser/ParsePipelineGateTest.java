@@ -1,13 +1,19 @@
 package com.workbuddy.worker.parser;
 
 import com.workbuddy.common.domain.parse.ParseOutcome;
+import com.workbuddy.common.domain.parse.ParseSummary;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
+import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
+import com.workbuddy.worker.parser.asset.ParseAssetException;
+import com.workbuddy.worker.parser.pdf.store.PageArtifactStoreException;
+import org.apache.poi.EncryptedDocumentException;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,6 +43,13 @@ class ParsePipelineGateTest {
         assertEquals(3, outcome.getStepLogs().size());
         assertEquals(2, outcome.getParseResult().getSources().size());
         assertEquals("ocr", outcome.getParseResult().getSources().get(1).getSource());
+        ParseSummary summary = outcome.getParseResult().getSummary();
+        assertNotNull(summary);
+        assertEquals(2, summary.getUnitCount());
+        assertEquals(2, summary.getReadableUnits());
+        assertEquals(0, summary.getFailedUnits());
+        assertEquals(64, summary.getConfigHash().length());
+        assertTrue(summary.getThresholds().containsKey("success-unit-ratio"));
     }
 
     /**
@@ -57,6 +70,11 @@ class ParsePipelineGateTest {
         assertEquals(1, outcome.getFailedUnits());
         assertEquals(1, outcome.getParseResult().getQuality().getScannedPages().size());
         assertEquals(1, outcome.getParseResult().getQuality().getWarnings().size());
+        ParseSummary summary = outcome.getParseResult().getSummary();
+        assertEquals(1, summary.getScannedUnits());
+        assertEquals(1, summary.getFailedUnits());
+        assertEquals(9, summary.getReadableUnits());
+        assertEquals(0, summary.getOcrPages());
     }
 
     /**
@@ -356,13 +374,96 @@ class ParsePipelineGateTest {
     }
 
     /**
-     * 守护 {@code noParserShouldFail}：该场景行为改动即失败。
+     * 守护 {@code noParserShouldFailUnsupportedFormat}：该场景行为改动即失败。
      */
     @Test
-    void noParserShouldFail() {
+    void noParserShouldFailUnsupportedFormat() {
         ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(List.of(), List.of()));
 
         ParseOutcome outcome = pipeline.run(fixture.context("application/msword"));
+
+        assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
+        assertEquals(PipelineTaskErrorCode.PARSE_UNSUPPORTED_FORMAT.name(), outcome.getErrorCode());
+    }
+
+    /**
+     * 守护 {@code tikaAliasShouldRouteByFileName}：Tika 泛 OOXML 别名按后缀归一后能命中 DOCX 解析器。
+     */
+    @Test
+    void tikaAliasShouldRouteByFileName() {
+        ParseContext context = fixture.context("application/x-tika-ooxml");
+        context.getFileRef().setFileName("a.docx");
+        ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(
+                FileFormat.DOCX.getMimeType(), List.of(fixture.normalPage(1)), List.of()));
+
+        ParseOutcome outcome = pipeline.run(context);
+
+        assertEquals(PipelineTaskStatus.SUCCESS, outcome.getSuggestedStatus());
+    }
+
+    /**
+     * 守护 {@code encryptedParseShouldFailEncrypted}：该场景行为改动即失败。
+     */
+    @Test
+    void encryptedParseShouldFailEncrypted() {
+        ParsePipeline pipeline = fixture.pipeline(fixture.throwingParser(
+                new RuntimeException(new EncryptedDocumentException("encrypted"))));
+
+        ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
+
+        assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
+        assertEquals(PipelineTaskErrorCode.PARSE_ENCRYPTED.name(), outcome.getErrorCode());
+    }
+
+    /**
+     * 守护 {@code cancelledParseShouldFailParseTimeout}：取消异常不被归为文件损坏。
+     */
+    @Test
+    void cancelledParseShouldFailParseTimeout() {
+        ParsePipeline pipeline = fixture.pipeline(fixture.throwingParser(new CancellationException("cancelled")));
+
+        ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
+
+        assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
+        assertEquals(PipelineTaskErrorCode.PARSE_TIMEOUT.name(), outcome.getErrorCode());
+    }
+
+    /**
+     * 守护 {@code corruptParseShouldFailCorrupted}：该场景行为改动即失败。
+     */
+    @Test
+    void corruptParseShouldFailCorrupted() {
+        ParsePipeline pipeline = fixture.pipeline(fixture.throwingParser(new RuntimeException("broken")));
+
+        ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
+
+        assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
+        assertEquals(PipelineTaskErrorCode.PARSE_CORRUPTED.name(), outcome.getErrorCode());
+    }
+
+    /**
+     * 页产物存储失败属于执行异常，不能伪装成文件损坏。
+     */
+    @Test
+    void artifactStoreFailureShouldFailParseFailed() {
+        ParsePipeline pipeline = fixture.pipeline(fixture.throwingParser(
+                new IllegalStateException("PDF 解析失败", new PageArtifactStoreException("页产物写入失败"))));
+
+        ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
+
+        assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
+        assertEquals(PipelineTaskErrorCode.PARSE_FAILED.name(), outcome.getErrorCode());
+    }
+
+    /**
+     * 图片资产写入失败属于执行异常，不能伪装成文件损坏。
+     */
+    @Test
+    void assetStoreFailureShouldFailParseFailed() {
+        ParsePipeline pipeline = fixture.pipeline(fixture.throwingParser(
+                new IllegalStateException("解析失败", new ParseAssetException("资产写入失败"))));
+
+        ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
 
         assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
         assertEquals(PipelineTaskErrorCode.PARSE_FAILED.name(), outcome.getErrorCode());

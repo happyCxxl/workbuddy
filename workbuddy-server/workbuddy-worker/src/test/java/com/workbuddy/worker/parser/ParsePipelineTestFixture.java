@@ -79,6 +79,18 @@ final class ParsePipelineTestFixture {
     }
 
     /**
+     * 假解析器（指定支持的 MIME）。
+     *
+     * @param supportedMime 支持的 MIME
+     * @param metrics       页级指标
+     * @param facts         解析事实
+     * @return 假解析器
+     */
+    DocumentParserPort fakeParser(String supportedMime, List<PageMetric> metrics, List<ParseFact> facts) {
+        return fakeParser(supportedMime, metrics, facts, List.of());
+    }
+
+    /**
      * 假解析器（可带本路用到的能力引用）。
      *
      * @param metrics      页级指标
@@ -88,10 +100,24 @@ final class ParsePipelineTestFixture {
      */
     DocumentParserPort fakeParser(List<PageMetric> metrics, List<ParseFact> facts,
                                   List<CapabilityUsage> capabilities) {
+        return fakeParser("application/pdf", metrics, facts, capabilities);
+    }
+
+    /**
+     * 假解析器（指定支持的 MIME，可带本路用到的能力引用）。
+     *
+     * @param supportedMime 支持的 MIME
+     * @param metrics       页级指标
+     * @param facts         解析事实
+     * @param capabilities  能力引用
+     * @return 假解析器
+     */
+    DocumentParserPort fakeParser(String supportedMime, List<PageMetric> metrics, List<ParseFact> facts,
+                                  List<CapabilityUsage> capabilities) {
         return new DocumentParserPort() {
             @Override
             public boolean supports(String mime) {
-                return "application/pdf".equals(mime);
+                return supportedMime.equals(mime);
             }
 
             @Override
@@ -102,6 +128,36 @@ final class ParsePipelineTestFixture {
                 source.setFacts(facts);
                 source.setCapabilities(capabilities);
                 return source;
+            }
+
+            @Override
+            public String capabilityName() {
+                return "fake";
+            }
+
+            @Override
+            public String capabilityVersion() {
+                return "1.0";
+            }
+        };
+    }
+
+    /**
+     * 解析时抛指定异常的假解析器（失败分类单测用）。
+     *
+     * @param error 解析时抛出的异常
+     * @return 假解析器
+     */
+    DocumentParserPort throwingParser(RuntimeException error) {
+        return new DocumentParserPort() {
+            @Override
+            public boolean supports(String mime) {
+                return "application/pdf".equals(mime);
+            }
+
+            @Override
+            public ParseSource parse(ParseContext context) {
+                throw error;
             }
 
             @Override

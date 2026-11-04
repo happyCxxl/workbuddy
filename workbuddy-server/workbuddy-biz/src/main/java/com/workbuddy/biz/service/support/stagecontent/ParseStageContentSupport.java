@@ -62,6 +62,7 @@ public class ParseStageContentSupport {
         StageContentExtraVO extra = new StageContentExtraVO();
         extra.setSource(source.getSource());
         extra.setProvider(source.getProvider());
+        extra.setAssetRef(element.getAssetRef());
         knowledgeConverter.putPageGrid(extra, element.getPage(), element.getRows(), element.getCols());
         knowledgeConverter.putBbox(extra, element.getBbox());
         if (NullUtil.isNotNull(element.getDisplayBBox())) {

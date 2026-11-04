@@ -25,6 +25,12 @@ public class ParseResult {
     /** 按来源分组的结果（当前 native 为主；ocr 路留空 note 占位） */
     private List<ParseSource> sources = new ArrayList<>();
 
+    /** 图片资产清单（元素 assetRef 指向 assetId；按内容去重） */
+    private List<ParseAsset> assets = new ArrayList<>();
+
     /** 质量信息（告警只标记不阻断） */
     private QualityInfo quality;
+
+    /** 产物摘要（计数、失败页、阈值快照、配置哈希） */
+    private ParseSummary summary;
 }

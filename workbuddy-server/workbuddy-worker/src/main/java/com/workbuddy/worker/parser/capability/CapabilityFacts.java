@@ -4,13 +4,14 @@ import com.workbuddy.common.domain.parse.capability.LayoutResult;
 import com.workbuddy.common.domain.parse.capability.StructuredOcrResult;
 import com.workbuddy.common.domain.parse.capability.TableResult;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
+import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.common.utils.NullUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
- * 能力调用留痕：模型补强成功记一条「能力补强」事实，失败（未配置 / 非 2xx / 超时 / 结果不完整）记一条
- * 「能力失败已降级」事实 —— 两类都挂 `TABLE` 事实类型，靠证据文案区分，降级子类型仍由事实类型推导。
+ * 能力调用留痕：模型补强成功记一条 `INFO` 事实，失败（未配置 / 非 2xx / 超时 / 结果不完整）记一条
+ * `WARN` 事实；两类都挂原事实类型，级别决定是否进入信号判定。
  */
 public final class CapabilityFacts {
 
@@ -43,6 +44,7 @@ public final class CapabilityFacts {
      */
     public static ParseFact tableDegraded(String region, String reason) {
         ParseFact fact = fact(region);
+        fact.setLevel(ParseFactLevel.WARN);
         fact.setEvidence("表格能力未产出结构，已按内置规则降级（" + StrUtil.blankToDefault(reason, "未配置") + "）");
         return fact;
     }
@@ -72,6 +74,7 @@ public final class CapabilityFacts {
      */
     public static ParseFact layoutDegraded(String region, String reason) {
         ParseFact fact = fact(region, SignalType.LAYOUT);
+        fact.setLevel(ParseFactLevel.WARN);
         fact.setEvidence("版面能力未产出顺序，已按内置几何口径输出（" + StrUtil.blankToDefault(reason, "未配置") + "）");
         return fact;
     }
@@ -101,6 +104,7 @@ public final class CapabilityFacts {
      */
     public static ParseFact ocrDegraded(String region, String reason) {
         ParseFact fact = fact(region, SignalType.OCR_TEXT);
+        fact.setLevel(ParseFactLevel.WARN);
         fact.setEvidence("文字能力未补出内容（" + StrUtil.blankToDefault(reason, "未配置") + "）");
         return fact;
     }

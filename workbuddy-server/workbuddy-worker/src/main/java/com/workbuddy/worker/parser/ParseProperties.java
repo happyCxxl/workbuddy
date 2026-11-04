@@ -1,5 +1,6 @@
 package com.workbuddy.worker.parser;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -43,6 +44,9 @@ public class ParseProperties {
 
     /** PDF 图片元素门槛：图片占页面积达到该比例才产 IMAGE 元素与事实（Docling bitmap_area_threshold 口径：0.05） */
     private double imageMinAreaRatio;
+
+    /** PDF 页图渲染 DPI（扫描页 OCR 与图片裁剪输入） */
+    private int pageImageDpi;
 
     /** 乱码页判定：非 CJK/ASCII/常用中文标点字符占比 */
     private double garbledRateThreshold;
@@ -148,4 +152,139 @@ public class ParseProperties {
 
     /** 分栏：最大栏数 */
     private int columnMaxCount;
+
+    /**
+     * 启动期校验：配置面是唯一基线，缺键即 0 或越界必须在启动时暴露，不能等到解析判定才出错。
+     */
+    @PostConstruct
+    void validate() {
+        requirePositive("page-window-size", pageWindowSize);
+        requirePositive("large-file-min-bytes", largeFileMinBytes);
+        requireAtLeast("scan-page-min-chars", scanPageMinChars, 0);
+        requireRatio("scan-page-image-ratio", scanPageImageRatio);
+        requireRatio("vector-page-min-ratio", vectorPageMinRatio);
+        requirePositive("layout-spanning-gap-factor", layoutSpanningGapFactor);
+        requireAtLeast("layout-model-min-spanning-lines", layoutModelMinSpanningLines, 1);
+        requireNonNegative("layout-column-start-tolerance", layoutColumnStartTolerance);
+        requirePositive("office-page-chars", officePageChars);
+        requireRatio("image-min-area-ratio", imageMinAreaRatio);
+        requirePositive("page-image-dpi", pageImageDpi);
+        requireRatio("garbled-rate-threshold", garbledRateThreshold);
+        requireRatio("printable-garbled-rate-threshold", printableGarbledRateThreshold);
+        requireRatio("cid-mapping-min-ratio", cidMappingMinRatio);
+        requireRatio("text-area-ratio-threshold", textAreaRatioThreshold);
+        requireRatio("success-unit-ratio", successUnitRatio);
+        requireAtLeast("short-document-max-units", shortDocumentMaxUnits, 0);
+        requireAtLeast("short-document-max-failed-units", shortDocumentMaxFailedUnits, 0);
+        if (shortDocumentMaxUnits > 0 && shortDocumentMaxFailedUnits > shortDocumentMaxUnits) {
+            fail("short-document-max-failed-units", "不得大于 short-document-max-units",
+                    shortDocumentMaxFailedUnits);
+        }
+        requireRatio("quality-bad-page-ratio-threshold", qualityBadPageRatioThreshold);
+        requireNonNegative("line-ytolerance", lineYTolerance);
+        requirePositive("paragraph-gap-ratio", paragraphGapRatio);
+        requirePositive("character-spacing-floor-ratio", characterSpacingFloorRatio);
+        requirePositive("word-gap-ratio", wordGapRatio);
+        requireRatio("character-spacing-gap-share", characterSpacingGapShare);
+        requireAtLeast("running-text-min-pages", runningTextMinPages, 2);
+        requireNonNegative("page-number-xtolerance", pageNumberXTolerance);
+        requireAtLeast("page-number-min-pages", pageNumberMinPages, 2);
+        requirePositive("page-number-isolation-ratio", pageNumberIsolationRatio);
+        requireRatio("header-area-ratio", headerAreaRatio);
+        requireRatio("footer-area-ratio", footerAreaRatio);
+        if (headerAreaRatio + footerAreaRatio >= 1) {
+            fail("header-area-ratio/footer-area-ratio", "两者之和必须小于 1",
+                    headerAreaRatio + footerAreaRatio);
+        }
+        requireRatio("table-line-cover-ratio", tableLineCoverRatio);
+        requireRatio("table-column-support-ratio", tableColumnSupportRatio);
+        requireNonNegative("table-column-tolerance-ratio", tableColumnToleranceRatio);
+        requireAtLeast("table-alignment-min-rows", tableAlignmentMinRows, 1);
+        requireAtLeast("table-row-min-columns", tableRowMinColumns, 2);
+        requireNonNegative("table-row-inner-gap-share", tableRowInnerGapShare);
+        requireRatio("table-column-max-fill-ratio", tableColumnMaxFillRatio);
+        requireRatio("table-continuation-overlap-ratio", tableContinuationOverlapRatio);
+        requireRatio("table-min-filled-ratio", tableMinFilledRatio);
+        requireRatio("table-header-max-numeric-ratio", tableHeaderMaxNumericRatio);
+        requireNonNegative("column-gutter-min-width", columnGutterMinWidth);
+        requireRatio("column-gutter-max-coverage", columnGutterMaxCoverage);
+        requireRatio("column-min-share", columnMinShare);
+        requireAtLeast("column-min-chars", columnMinChars, 0);
+        requireAtLeast("column-min-page-chars", columnMinPageChars, 0);
+        requireAtLeast("column-max-count", columnMaxCount, 1);
+        requireAtMost("column-max-count", columnMaxCount, 8);
+    }
+
+    /**
+     * 比例字段必须在 [0,1] 内。
+     *
+     * @param key   配置键
+     * @param value 当前值
+     */
+    private void requireRatio(String key, double value) {
+        if (Double.isNaN(value) || value < 0 || value > 1) {
+            fail(key, "必须在 [0,1] 内", value);
+        }
+    }
+
+    /**
+     * 字段必须大于 0。
+     *
+     * @param key   配置键
+     * @param value 当前值
+     */
+    private void requirePositive(String key, double value) {
+        if (!(value > 0)) {
+            fail(key, "必须大于 0", value);
+        }
+    }
+
+    /**
+     * 字段不得为负。
+     *
+     * @param key   配置键
+     * @param value 当前值
+     */
+    private void requireNonNegative(String key, double value) {
+        if (Double.isNaN(value) || value < 0) {
+            fail(key, "不得小于 0", value);
+        }
+    }
+
+    /**
+     * 整数字段不得小于下限。
+     *
+     * @param key   配置键
+     * @param value 当前值
+     * @param min   下限
+     */
+    private void requireAtLeast(String key, int value, int min) {
+        if (value < min) {
+            fail(key, "不得小于 " + min, value);
+        }
+    }
+
+    /**
+     * 整数字段不得大于上限。
+     *
+     * @param key   配置键
+     * @param value 当前值
+     * @param max   上限
+     */
+    private void requireAtMost(String key, int value, int max) {
+        if (value > max) {
+            fail(key, "不得大于 " + max, value);
+        }
+    }
+
+    /**
+     * 抛出带配置键的启动失败。
+     *
+     * @param key   配置键
+     * @param rule  违反的规则
+     * @param value 当前值
+     */
+    private void fail(String key, String rule, Object value) {
+        throw new IllegalStateException("knowledge.parse." + key + " " + rule + "，当前值=" + value);
+    }
 }

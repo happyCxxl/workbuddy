@@ -3,6 +3,8 @@ package com.workbuddy.worker.parser.office.impl;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.testkit.RecordingAssetSink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -31,14 +33,18 @@ class ExcelMetricsTest {
     /** 工作表内嵌图片：产 IMAGE 元素（needsOcr）并按表记一条 OCR_IMAGE 事实（{@code embeddedPictureShouldEmitImageAndFact}）。 */
     @Test
     void embeddedPictureShouldEmitImageAndFact() throws Exception {
-        ParseSource source = fixture.parse(buildXlsxWithPicture(), MIME_XLSX);
+        RecordingAssetSink sink = new RecordingAssetSink();
+        ParseContext context = fixture.context(buildXlsxWithPicture(), MIME_XLSX);
+        context.setAssetSink(sink);
+        ParseSource source = fixture.parser().parse(context);
 
         List<ParseElement> images = source.getElements().stream()
                 .filter(e -> ElementType.IMAGE.name().equals(e.getType())).toList();
         assertEquals(1, images.size(), () -> "elements=" + source.getElements());
         assertEquals(Boolean.TRUE, images.getFirst().getNeedsOcr());
-        assertTrue(images.getFirst().getAssetRef().startsWith("image-0"),
+        assertTrue(images.getFirst().getAssetRef().startsWith("asset-"),
                 () -> "asset=" + images.getFirst().getAssetRef());
+        assertTrue(sink.bytes(images.getFirst().getAssetRef()) != null);
         assertEquals("office#sheet[图表]/picture[0]", images.getFirst().getProvenance().getPath());
         assertTrue(source.getFacts().stream()
                         .anyMatch(fact -> fact.getEvidence().contains("本表 1 张")),

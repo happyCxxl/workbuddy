@@ -54,6 +54,27 @@ class FileUtilTest {
     }
 
     /**
+     * 守护 {@code normalizeMimeShouldMapAliases}：明确别名直映射，泛容器按后缀选子类型，未知组合返回 null。
+     */
+    @Test
+    void normalizeMimeShouldMapAliases() {
+        assertEquals(FileFormat.PDF.getMimeType(),
+                FileUtil.normalizeMime("Application/PDF; charset=binary", "a.pdf"));
+        assertEquals(FileFormat.DOCX.getMimeType(),
+                FileUtil.normalizeMime("application/x-tika-ooxml", "a.docx"));
+        assertEquals(FileFormat.XLSX.getMimeType(),
+                FileUtil.normalizeMime("application/zip", "a.xlsx"));
+        assertEquals(FileFormat.PPTX.getMimeType(),
+                FileUtil.normalizeMime("application/x-tika-ooxml", "a.pptx"));
+        assertEquals(FileFormat.DOC.getMimeType(),
+                FileUtil.normalizeMime("application/x-tika-msoffice", "a.doc"));
+        assertNull(FileUtil.normalizeMime("application/x-tika-ooxml", "a.zip"));
+        assertNull(FileUtil.normalizeMime("application/x-tika-ooxml", null));
+        assertNull(FileUtil.normalizeMime("application/octet-stream", "a.docx"));
+        assertEquals(FileFormat.DOCX, FileUtil.ofFormat("application/x-tika-ooxml", "a.docx"));
+    }
+
+    /**
      * 守护 {@code isEmpty}：空值非空判定，0 视为空。
      */
     @Test

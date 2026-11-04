@@ -2,6 +2,7 @@ package com.workbuddy.common.enums.task;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -42,10 +43,28 @@ class PipelineTaskErrorCodeTest {
         assertNotNull(PipelineTaskErrorCode.TASK_SHUTDOWN_INTERRUPTED);
         assertNotNull(PipelineTaskErrorCode.TASK_STORAGE_MISMATCH);
         assertNotNull(PipelineTaskErrorCode.PARSE_CORRUPTED);
+        assertNotNull(PipelineTaskErrorCode.PARSE_UNSUPPORTED_FORMAT);
+        assertNotNull(PipelineTaskErrorCode.PARSE_ENCRYPTED);
+        assertNotNull(PipelineTaskErrorCode.PARSE_TOO_LARGE);
+        assertNotNull(PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE);
+        assertNotNull(PipelineTaskErrorCode.PARSE_TIMEOUT);
         assertNotNull(PipelineTaskErrorCode.SCANNED_UNSUPPORTED);
         assertNotNull(PipelineTaskErrorCode.RATIO_BELOW_THRESHOLD);
         assertNotNull(PipelineTaskErrorCode.EMBED_MODEL_INCOMPATIBLE);
         assertNotNull(PipelineTaskErrorCode.EMBED_CONSISTENCY_FAILED);
         assertNotNull(PipelineTaskErrorCode.INDEX_BUILD_FAILED);
+    }
+
+    /**
+     * 解析环节超时必须使用专用码，其余环节沿用通用码。
+     *
+     * <p>守护 {@code timeoutCode}：解析超时与通用执行超时混淆即失败。
+     */
+    @Test
+    void parseTimeoutShouldUseStageSpecificCode() {
+        assertEquals(PipelineTaskErrorCode.PARSE_TIMEOUT,
+                PipelineTaskErrorCode.timeoutCode(PipelineStage.PARSE.name()));
+        assertEquals(PipelineTaskErrorCode.EXECUTOR_TIMEOUT,
+                PipelineTaskErrorCode.timeoutCode(PipelineStage.STRUCTURE.name()));
     }
 }

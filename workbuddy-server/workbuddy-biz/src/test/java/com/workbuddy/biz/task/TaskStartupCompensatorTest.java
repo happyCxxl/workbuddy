@@ -96,12 +96,12 @@ class TaskStartupCompensatorTest {
         orphan.setStartedAt(LocalDateTime.now().minusMinutes(30));
         when(pipelineTaskDbService.listStaleRunning(any(LocalDateTime.class))).thenReturn(List.of(orphan));
         when(pipelineTaskDbService.finish(eq(7L), eq(PipelineTaskStatus.FAILED),
-                eq(PipelineTaskErrorCode.EXECUTOR_TIMEOUT.name()), anyString())).thenReturn(1);
+                eq(PipelineTaskErrorCode.PARSE_TIMEOUT.name()), anyString())).thenReturn(1);
 
         compensator.onStartup();
 
         verify(pipelineTaskDbService).finish(eq(7L), eq(PipelineTaskStatus.FAILED),
-                eq(PipelineTaskErrorCode.EXECUTOR_TIMEOUT.name()), anyString());
+                eq(PipelineTaskErrorCode.PARSE_TIMEOUT.name()), anyString());
         assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }

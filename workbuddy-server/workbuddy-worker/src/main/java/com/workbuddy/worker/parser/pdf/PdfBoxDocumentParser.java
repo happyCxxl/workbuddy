@@ -15,11 +15,13 @@ import com.workbuddy.worker.parser.pdf.assemble.PdfBodyAssembler;
 import com.workbuddy.worker.parser.pdf.assemble.TableContinuationSupport;
 import com.workbuddy.worker.parser.pdf.assemble.TableDeduplicator;
 import com.workbuddy.worker.parser.pdf.assemble.PdfImageEmitter;
+import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
 import com.workbuddy.worker.parser.pdf.extract.PdfPageExtractor;
 import com.workbuddy.worker.parser.pdf.layout.PageLayoutAnalyzer;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLines;
+import com.workbuddy.worker.parser.pdf.store.PageArtifactStore;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.IOUtils;
@@ -34,6 +36,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
 /**
  * PDFBox 原生解析器（数字 PDF）：编排三段 —— 逐页提取（{@link PdfPageExtractor}）→
@@ -67,7 +70,17 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
      */
     @Autowired
     public PdfBoxDocumentParser(PageLayoutAnalyzer layoutAnalyzer, CapabilityRegistry capabilityRegistry) {
-        this.pageExtractor = new PdfPageExtractor(layoutAnalyzer);
+        this(capabilityRegistry, new PdfPageExtractor(layoutAnalyzer));
+    }
+
+    /**
+     * 测试构造器：注入页提取器，便于断言每页只提取一次。
+     *
+     * @param capabilityRegistry 模型能力注册表（可空）
+     * @param pageExtractor      页提取器
+     */
+    PdfBoxDocumentParser(CapabilityRegistry capabilityRegistry, PdfPageExtractor pageExtractor) {
+        this.pageExtractor = pageExtractor;
         this.capabilityRegistry = capabilityRegistry;
     }
 
@@ -110,6 +123,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
      */
     @Override
     public ParseSource parse(ParseContext context) {
+        context.getCancellationToken().throwIfCancelled();
         String fileId = context.getFileRef().getFileId();
         ParseSource source = ParseSource.nativeSource(CAPABILITY + "-" + CAPABILITY_VERSION);
         Path tempFile = null;
@@ -128,6 +142,8 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
             try (PDDocument document = doc) {
                 parseDocument(document, source, context, fileId);
             }
+        } catch (CancellationException e) {
+            throw e;
         } catch (Exception e) {
             log.warn("===> PdfBoxDocumentParser PDF 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("PDF 解析失败: " + e.getMessage(), e);
@@ -137,7 +153,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
         return source;
     }
 
-    /** 逐页提取 + 跨页识别 + 分窗装配（窗口大小 = `pageWindowSize`，全档只留行级轻量摘要） */
+    /** 逐页提取 + 跨页识别 + 分窗装配（窗口大小 = `pageWindowSize`，页产物按窗口存取） */
     private void parseDocument(PDDocument doc, ParseSource source, ParseContext context, String fileId)
             throws IOException {
         ParseProperties properties = context.getProperties();
@@ -145,55 +161,53 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
         source.setUnitCount(pageCount);
         context.getFileRef().setPageCount(pageCount);
 
-        // ① 全档轻量行摘要 + 页级指标：跨页页眉页脚识别需要全档视野
         int windowSize = Math.max(properties.getPageWindowSize(), 1);
-        boolean singleWindow = pageCount <= windowSize;
-        List<PageLines> pageLines = new ArrayList<>();
-        List<PageContent> cached = singleWindow ? new ArrayList<>() : null;
-        for (int p = 1; p <= pageCount; p++) {
-            PageContent pageContent = pageExtractor.extractPage(doc, p, context);
-            pageLines.add(PageLines.of(pageContent));
-            source.getPageMetrics().add(pageContent.metric());
-            source.getPageDimensions().add(new PageDimension(pageContent.pageNo(),
-                    pageContent.geometry().viewportWidth(), pageContent.geometry().viewportHeight()));
-            if (singleWindow) {
-                cached.add(pageContent);
+        PdfPageImageRenderer renderer = context.getAssetSink().enabled()
+                ? new PdfPageImageRenderer(doc, properties.getPageImageDpi()) : null;
+        try (PageArtifactStore store = PageArtifactStore.open(pageCount, windowSize)) {
+            log.info("===> PdfBoxDocumentParser 页产物存储, fileId={}, store={}, pageCount={}, windowSize={}",
+                    fileId, store.getClass().getSimpleName(), pageCount, windowSize);
+
+            // ① 逐页提取一次：全档只留行摘要与页指标，页产物按窗口写入 store
+            List<PageLines> pageLines = new ArrayList<>(pageCount);
+            List<PageContent> window = new ArrayList<>(windowSize);
+            for (int p = 1; p <= pageCount; p++) {
+                context.getCancellationToken().throwIfCancelled();
+                PageContent pageContent = pageExtractor.extractPage(doc, p, context);
+                pageLines.add(PageLines.of(pageContent));
+                source.getPageMetrics().add(pageContent.metric());
+                source.getPageDimensions().add(new PageDimension(pageContent.pageNo(),
+                        pageContent.geometry().viewportWidth(), pageContent.geometry().viewportHeight()));
+                window.add(pageContent);
+                if (window.size() == windowSize || p == pageCount) {
+                    store.writeWindow(p - window.size() + 1, window);
+                    window = new ArrayList<>(windowSize);
+                }
             }
-        }
 
-        // ② HEADER/FOOTER 识别：页顶/页底区域内跨页重复文本与页码模式（先算，正文聚合时排除）
-        Set<String> headers = HeaderFooterDetector.detectHeaders(pageLines, context);
-        HeaderFooterDetector.FooterKeys footers = HeaderFooterDetector.detectFooters(pageLines, context);
+            // ② HEADER/FOOTER 识别：页顶/页底区域内跨页重复文本与页码模式（先算，正文聚合时排除）
+            Set<String> headers = HeaderFooterDetector.detectHeaders(pageLines, context);
+            HeaderFooterDetector.FooterKeys footers = HeaderFooterDetector.detectFooters(pageLines, context);
 
-        // ③ 分窗装配元素：页眉页脚 → 正文（段落与两条表格路径）→ 页内图片 → 本页补元素 ID 与表格溯源
-        List<ParseElement> elements = new ArrayList<>();
-        for (int from = 1; from <= pageCount; from += windowSize) {
-            List<PageContent> window = singleWindow
-                    ? cached
-                    : extractWindow(doc, from, Math.min(from + windowSize - 1, pageCount), context);
-            for (PageContent page : window) {
-                int mark = elements.size();
-                PdfBodyAssembler.assemble(page, headers, footers, elements, source, fileId, properties,
-                        capabilityRegistry);
-                PdfImageEmitter.emit(page, elements, source, fileId, properties);
-                List<ParseElement> pageElements = elements.subList(mark, elements.size());
-                TableDeduplicator.mergeInPlace(pageElements, source, page.pageNo());
-                PageElementIds.assign(pageElements, page.pageNo());
-                PageTableProvenance.assign(pageElements, fileId, page.pageNo());
+            // ③ 分窗装配元素：读页产物，不重新解析 PDF；页眉页脚 → 正文 → 图片 → 本页 ID 与表格溯源
+            List<ParseElement> elements = new ArrayList<>();
+            for (int from = 1; from <= pageCount; from += windowSize) {
+                for (PageContent page : store.readWindow(from)) {
+                    context.getCancellationToken().throwIfCancelled();
+                    int mark = elements.size();
+                    PdfBodyAssembler.assemble(page, headers, footers, elements, source, fileId, properties,
+                            capabilityRegistry);
+                    PdfImageEmitter.emit(page, elements, source, fileId, properties, context, renderer);
+                    List<ParseElement> pageElements = elements.subList(mark, elements.size());
+                    TableDeduplicator.mergeInPlace(pageElements, source, page.pageNo());
+                    PageElementIds.assign(pageElements, page.pageNo());
+                    PageTableProvenance.assign(pageElements, fileId, page.pageNo());
+                }
             }
+            source.setElements(elements);
+            TableContinuationSupport.markContinuedTables(elements,
+                    properties.getTableContinuationOverlapRatio());
         }
-        source.setElements(elements);
-        TableContinuationSupport.markContinuedTables(elements, properties.getTableContinuationOverlapRatio());
-    }
-
-    /** 窗口内逐页提取（窗口外的重数据不保留） */
-    private List<PageContent> extractWindow(PDDocument doc, int from, int to, ParseContext context)
-            throws IOException {
-        List<PageContent> window = new ArrayList<>();
-        for (int p = from; p <= to; p++) {
-            window.add(pageExtractor.extractPage(doc, p, context));
-        }
-        return window;
     }
 
     /** 已读入的头部再加流剩余部分落到临时文件 */

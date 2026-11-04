@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.parser.pdf.extract.PdfPageExtractor;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -24,6 +25,11 @@ import java.util.List;
 import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * 大文件分窗：窗口大小不影响产物（全档行摘要用于跨页识别、窗口只定装配粒度），
@@ -44,6 +50,33 @@ class PdfParseWindowTest {
 
         assertEquals(fingerprint(parse(data, 50, IN_MEMORY_BYTES)),
                 fingerprint(parse(data, 1, IN_MEMORY_BYTES)));
+    }
+
+    /** 第二遍读页产物，不重新提取 PDF（每页 extractPage 只调用一次）。 */
+    @Test
+    void secondPassShouldReadArtifactsWithoutExtractingAgain() throws Exception {
+        PdfPageExtractor extractor = spy(new PdfPageExtractor(new ProjectionPageLayoutAnalyzer()));
+        PdfBoxDocumentParser artifactParser = new PdfBoxDocumentParser(
+                null, extractor);
+        ParseContext context = context(buildThreePageDocument());
+        context.getProperties().setPageWindowSize(1);
+
+        artifactParser.parse(context);
+
+        verify(extractor, times(3)).extractPage(any(PDDocument.class), anyInt(), any(ParseContext.class));
+    }
+
+    /** 页产物临时目录在解析结束后清理。 */
+    @Test
+    void pageArtifactTempDirectoryShouldBeRemovedAfterParse() throws Exception {
+        Path tempDir = Path.of(System.getProperty("java.io.tmpdir"));
+        List<String> before = tempFiles(tempDir);
+
+        parse(buildThreePageDocument(), 1, IN_MEMORY_BYTES);
+
+        List<String> after = tempFiles(tempDir);
+        after.removeAll(before);
+        assertEquals(List.of(), after, "页产物临时目录未清理");
     }
 
     /** 分窗后跨页识别仍覆盖全档：页脚文本与页码按页各产一条（{@code footerDetectionShouldCoverAllPagesWhenWindowed}）。 */

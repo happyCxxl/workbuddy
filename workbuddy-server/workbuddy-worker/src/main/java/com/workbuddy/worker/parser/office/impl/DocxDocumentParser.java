@@ -9,6 +9,7 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.parser.asset.ParseAssetSupport;
 import com.workbuddy.worker.parser.office.AbstractPoiDocumentParser;
 import com.workbuddy.worker.parser.support.TocLineFeature;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFHeaderFooter;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFPicture;
+import org.apache.poi.xwpf.usermodel.XWPFPictureData;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.concurrent.CancellationException;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -61,19 +64,21 @@ public class DocxDocumentParser extends AbstractPoiDocumentParser {
      */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
+        context.getCancellationToken().throwIfCancelled();
         String fileId = context.getFileRef().getFileId();
         try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(data))) {
             List<IBodyElement> bodyElements = doc.getBodyElements();
             int paragraphIndex = 0;
             int tableIndex = 0;
             for (IBodyElement bodyElement : bodyElements) {
+                context.getCancellationToken().throwIfCancelled();
                 if (bodyElement instanceof XWPFParagraph paragraph) {
                     ParseElement element = toDocxParagraphElement(paragraph, paragraphIndex, fileId);
                     if (NullUtil.isNotNull(element)) {
                         source.getElements().add(element);
                     }
                     // 段落内嵌图片：仅记引用 + needsOcr（OCR 预留）
-                    appendDocxPictures(source, paragraph, paragraphIndex, fileId);
+                    appendDocxPictures(source, paragraph, paragraphIndex, fileId, context);
                     paragraphIndex++;
                 } else if (bodyElement instanceof XWPFTable table) {
                     source.getElements().add(toDocxTableElement(table, tableIndex, fileId));
@@ -83,6 +88,8 @@ public class DocxDocumentParser extends AbstractPoiDocumentParser {
             // 页眉页脚部件（DOCX header/footer parts）：独立产出 HEADER/FOOTER 元素，处置归预处理环节
             appendDocxHeaderFooter(source, doc, fileId);
             fillVirtualPageMetrics(source, context.getProperties().getOfficePageChars());
+        } catch (CancellationException e) {
+            throw e;
         } catch (Exception e) {
             log.warn("===> DocxDocumentParser DOCX 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("DOCX 解析失败: " + e.getMessage(), e);
@@ -201,15 +208,20 @@ public class DocxDocumentParser extends AbstractPoiDocumentParser {
         return element;
     }
 
-    /** 段落内嵌图片：仅记引用 + needsOcr；OCR_IMAGE 事实按段落聚合（一段多图只产一条，证据带张数）。 */
-    private void appendDocxPictures(ParseSource source, XWPFParagraph paragraph, int index, String fileId) {
+    /** 段落内嵌图片：写原始图片字节并记 assetRef + needsOcr；事实按段落聚合（一段多图只产一条）。 */
+    private void appendDocxPictures(ParseSource source, XWPFParagraph paragraph, int index, String fileId,
+                                    ParseContext context) {
         int pictureIndex = 0;
         for (XWPFRun run : paragraph.getRuns()) {
             if (NullUtil.isNull(run) || run.getEmbeddedPictures().isEmpty()) {
                 continue;
             }
             for (XWPFPicture picture : run.getEmbeddedPictures()) {
-                String assetRef = picture.getPictureData().getFileName();
+                XWPFPictureData pictureData = picture.getPictureData();
+                String assetRef = NullUtil.isNull(pictureData) ? null
+                        : storeEmbeddedImage(context, pictureData.getData(),
+                        ParseAssetSupport.imageMime(pictureData.getPictureTypeEnum().getContentType(),
+                                pictureData.suggestFileExtension()), null, null, null, null);
                 ParseElement image = ParseElement.of("img" + index + "_" + pictureIndex, ElementType.IMAGE);
                 image.setAssetRef(assetRef);
                 image.setNeedsOcr(true);

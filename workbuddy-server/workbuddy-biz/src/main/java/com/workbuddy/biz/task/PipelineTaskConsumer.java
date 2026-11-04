@@ -33,7 +33,7 @@ import java.time.Duration;
 
 /**
  * 解析消费循环：BRPOP 阻塞叫醒（空队零开销睡眠）→ 扫库领批 QUEUED 的 PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED 任务 →
- * 按 stage 分发到对应 Runner，线程池执行（看门狗按环节超时，超时回写 FAILED(EXECUTOR_TIMEOUT)）。
+ * 按 stage 分发到对应 Runner，线程池执行（看门狗按环节超时，超时回写 FAILED(PARSE_TIMEOUT/EXECUTOR_TIMEOUT)）。
  * 多实例防重靠"条件更新领任务"（受影响行数=1 才执行，见各 Runner）。
  * 停机：停领批 → 关池等在跑任务至多 knowledge.task.shutdown-wait → 中断并回写 FAILED(TASK_SHUTDOWN_INTERRUPTED)。
  * 其他环节任务的领批与分发随各自环节 Runner 落地后接入。
@@ -159,7 +159,7 @@ public class PipelineTaskConsumer {
             watchdogExecutor.execute(() -> {
                 inFlight.add(task.getId());
                 try {
-                    runWithTimeout(task.getId(), properties.timeoutOf(task.getStage()), action);
+                    runWithTimeout(task.getId(), task.getStage(), properties.timeoutOf(task.getStage()), action);
                 } finally {
                     inFlight.remove(task.getId());
                 }
@@ -188,6 +188,7 @@ public class PipelineTaskConsumer {
     private int markInFlightFailed() {
         int marked = 0;
         for (Long taskId : inFlight) {
+            runner.cancel(taskId);
             pipelineTaskDbService.finish(taskId, PipelineTaskStatus.FAILED,
                     PipelineTaskErrorCode.TASK_SHUTDOWN_INTERRUPTED.name(), "服务停机中断，任务未完成");
             marked++;
@@ -195,17 +196,18 @@ public class PipelineTaskConsumer {
         return marked;
     }
 
-    /** 看门狗：Future 限时等待；超时协作中断并回写 FAILED(EXECUTOR_TIMEOUT) */
-    private void runWithTimeout(Long taskId, Duration timeout, Runnable action) {
+    /** 看门狗：Future 限时等待；超时协作中断并按环节回写超时码 */
+    private void runWithTimeout(Long taskId, String stage, Duration timeout, Runnable action) {
         Future<?> future = null;
         try {
             future = runnerExecutor.submit(action);
             future.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
+            runner.cancel(taskId);
             future.cancel(true);
             // 终态回写带 RUNNING 条件：与 runner 的兜底回写互斥，后到者受影响行数为 0
             pipelineTaskDbService.finish(taskId, PipelineTaskStatus.FAILED,
-                    PipelineTaskErrorCode.EXECUTOR_TIMEOUT.name(), "单任务超时（看门狗判定）");
+                    PipelineTaskErrorCode.timeoutCode(stage).name(), "单任务超时（看门狗判定）");
             log.warn("===> PipelineTaskConsumer 任务超时, taskId={}", taskId);
         } catch (RejectedExecutionException e) {
             // 执行池满：任务保持 QUEUED

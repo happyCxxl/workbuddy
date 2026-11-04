@@ -4,6 +4,7 @@ import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.domain.parse.signal.Signal;
+import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalSubtype;
 import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.common.utils.NullUtil;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 信号判定器实现：页级指标按阈值判定（先便宜后贵）+ 解析事实直接转信号。
+ * 信号判定器实现：页级指标按阈值判定（先便宜后贵）+ WARN 级解析事实转信号（INFO 仅留痕）。
  * 全链执行、聚合信号（命中不中断，一个文件可同时命中多类信号）。
  * 每个信号显式携带子类型（SignalSubtype），管线分支不依赖 evidence 文案。
  */
@@ -82,7 +83,8 @@ public class SignalDetectorImpl implements SignalDetector {
         // ② 解析事实 → 信号（表格规则失败 / 版面异常 / 结构缺口；子类型按事实类型推导）
     if (NullUtil.isNotNull(nativeSource.getFacts())) {
             for (ParseFact fact : nativeSource.getFacts()) {
-                if (NullUtil.isNull(fact.getType())) {
+                if (NullUtil.isNull(fact.getType()) || NullUtil.isNull(fact.getLevel())
+                        || fact.getLevel() == ParseFactLevel.INFO) {
                     continue;
                 }
                 signals.add(Signal.of(fact.getType(), fact.getRegion(), fact.getEvidence(), "-",

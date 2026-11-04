@@ -1,5 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
+import com.workbuddy.biz.service.ParseAssetContent;
 import com.workbuddy.biz.service.db.WbKnowledgeBaseDbService;
 import com.workbuddy.biz.service.db.WbFileResultDbService;
 import com.workbuddy.biz.service.db.WbPipelineProductDbService;
@@ -37,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -277,6 +279,39 @@ class ParseControlServiceImplTest {
         assertEquals(1, detail.getWarningItems().size());
         assertEquals("SCANNED_PAGE", detail.getWarningItems().getFirst().getCode());
         assertEquals(2, detail.getWarningItems().getFirst().getPage());
+    }
+
+    /**
+     * 校验点：{@code assetShouldReturnStoredBytes}。
+     */
+    @Test
+    void assetShouldReturnStoredBytes() {
+        WbPipelineTask task = new WbPipelineTask();
+        task.setId(20L);
+        task.setFileResultId(10L);
+        task.setStage(PipelineStage.PARSE.name());
+        task.setStatus(PipelineTaskStatus.SUCCESS.name());
+        task.setProductId(50L);
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        when(pipelineTaskDbService.getByFileResultIdAndStage(10L, PipelineStage.PARSE.name())).thenReturn(task);
+        WbPipelineProduct product = new WbPipelineProduct();
+        product.setArtifactId("9f2c".repeat(16));
+        product.setStorageType(StorageType.MINIO.getCode());
+        product.setStorageSourceId(SOURCE_ID);
+        product.setBucket("artifacts");
+        when(pipelineProductDbService.getById(50L)).thenReturn(product);
+        String json = "{\"assets\":[{\"assetId\":\"asset-abc\",\"mimeType\":\"image/png\","
+                + "\"storageSourceId\":1,\"storageType\":\"minio\",\"bucket\":\"artifacts\","
+                + "\"objectKey\":\"abc\"}]}";
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "abc"))).thenReturn(new byte[]{1, 2, 3});
+        when(fileStorage.getObject(ObjectRef.of(SOURCE_ID, StorageType.MINIO.getCode(),
+                "artifacts", "9f2c".repeat(16)))).thenReturn(json.getBytes(StandardCharsets.UTF_8));
+
+        ParseAssetContent content = service.asset(10L, "asset-abc", null);
+
+        assertEquals("image/png", content.mimeType());
+        assertArrayEquals(new byte[]{1, 2, 3}, content.content());
     }
 
     /**

@@ -8,6 +8,7 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.parser.asset.ParseAssetSupport;
 import com.workbuddy.worker.parser.office.AbstractPoiDocumentParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hslf.usermodel.HSLFSlideShow;
@@ -26,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CancellationException;
 
 /**
  * PPT / PPTX 解析器：幻灯片对象模型走 POI 的 `sl.usermodel` 公共接口（XSLF 与 HSLF 两条读取路径只在开档处分流），
@@ -56,6 +58,7 @@ public class PptDocumentParser extends AbstractPoiDocumentParser {
      */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
+        context.getCancellationToken().throwIfCancelled();
         String fileId = context.getFileRef().getFileId();
         String fileName = StrUtil.blankToDefault(context.getFileRef().getFileName(), "");
         boolean legacy = fileName.toLowerCase(Locale.ROOT).endsWith(".ppt");
@@ -64,6 +67,7 @@ public class PptDocumentParser extends AbstractPoiDocumentParser {
             List<Integer> unitImages = new ArrayList<>();
             int slideNo = 0;
             for (Slide<?, ?> slide : show.getSlides()) {
+                context.getCancellationToken().throwIfCancelled();
                 slideNo++;
                 StringBuilder text = new StringBuilder();
                 int paragraphs = 0;
@@ -87,7 +91,7 @@ public class PptDocumentParser extends AbstractPoiDocumentParser {
                         tables++;
                     } else if (shape instanceof PictureShape<?, ?> picture) {
                         source.getElements().add(imageElement("img" + slideNo + "_" + pictures,
-                                assetRef(picture.getPictureData(), pictures), slideNo,
+                                assetRef(context, picture.getPictureData(), slideNo), slideNo,
                                 "office#slide[" + slideNo + "]/picture[" + pictures + "]", fileId));
                         pictures++;
                     }
@@ -100,6 +104,8 @@ public class PptDocumentParser extends AbstractPoiDocumentParser {
                 unitImages.add(pictures);
             }
             fillUnitMetrics(source, unitTexts, unitImages);
+        } catch (CancellationException e) {
+            throw e;
         } catch (Exception e) {
             log.warn("===> PptDocumentParser 演示文稿解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("演示文稿解析失败: " + e.getMessage(), e);
@@ -171,48 +177,13 @@ public class PptDocumentParser extends AbstractPoiDocumentParser {
         return text.toString();
     }
 
-    /** 图片引用：`image-序号.扩展名`，扩展名按内容类型推断、取不到再按字节头兜底、最终给 png */
-    private String assetRef(PictureData pictureData, int index) {
-        return "image-" + index + "." + suffix(pictureData);
-    }
-
-    private String suffix(PictureData pictureData) {
+    /** 图片资产：写原始字节并返回 assetId；无图片数据时为 null，扩展名按内容类型/枚举兜底。 */
+    private String assetRef(ParseContext context, PictureData pictureData, int slideNo) {
         if (NullUtil.isNull(pictureData)) {
-            return "png";
+            return null;
         }
-        String contentType = StrUtil.blankToDefault(pictureData.getContentType(), "").toLowerCase(Locale.ROOT);
-        if (contentType.contains("jpeg") || contentType.contains("jpg")) {
-            return "jpg";
-        }
-        if (contentType.contains("gif")) {
-            return "gif";
-        }
-        if (contentType.contains("bmp")) {
-            return "bmp";
-        }
-        if (contentType.contains("tiff")) {
-            return "tiff";
-        }
-        if (contentType.contains("png")) {
-            return "png";
-        }
-        return suffixByMagic(pictureData.getData());
-    }
-
-    /** 字节头兜底：PNG / JPEG / GIF / BMP 之外一律按 png */
-    private String suffixByMagic(byte[] bytes) {
-        if (NullUtil.isNull(bytes) || bytes.length < 3) {
-            return "png";
-        }
-        if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8) {
-            return "jpg";
-        }
-        if (bytes[0] == 'G' && bytes[1] == 'I' && bytes[2] == 'F') {
-            return "gif";
-        }
-        if (bytes[0] == 'B' && bytes[1] == 'M') {
-            return "bmp";
-        }
-        return "png";
+        String extension = NullUtil.isNull(pictureData.getType()) ? null : pictureData.getType().extension;
+        return storeEmbeddedImage(context, pictureData.getData(),
+                ParseAssetSupport.imageMime(pictureData.getContentType(), extension), slideNo, null, null, null);
     }
 }

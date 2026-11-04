@@ -4,6 +4,7 @@ import com.workbuddy.common.domain.parse.CapabilitySnapshot;
 import com.workbuddy.common.domain.parse.ParseOutcome;
 import com.workbuddy.common.domain.parse.capability.CapabilityUsage;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
+import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ class ParsePipelineFactTest {
     void tableFactShouldWarnWithoutFailing() {
         ParseFact fact = new ParseFact();
         fact.setType(SignalType.TABLE);
+        fact.setLevel(ParseFactLevel.WARN);
         fact.setRegion("page 1");
         fact.setEvidence("列对齐聚类失败（疑似无边框/复杂表格）");
         ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(List.of(fixture.normalPage(1)), List.of(fact)));
@@ -46,6 +48,7 @@ class ParsePipelineFactTest {
     void layoutFactShouldWarnWithoutFailing() {
         ParseFact fact = new ParseFact();
         fact.setType(SignalType.LAYOUT);
+        fact.setLevel(ParseFactLevel.WARN);
         fact.setRegion("page 1");
         fact.setEvidence("版面规则失败");
         ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(List.of(fixture.normalPage(1)), List.of(fact)));
@@ -64,6 +67,7 @@ class ParsePipelineFactTest {
     void embeddedImageFactShouldWarnWithoutFailing() {
         ParseFact fact = new ParseFact();
         fact.setType(SignalType.OCR_IMAGE);
+        fact.setLevel(ParseFactLevel.WARN);
         fact.setRegion("图 1");
         fact.setEvidence("-");
         ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(List.of(fixture.normalPage(1)), List.of(fact)));
@@ -74,6 +78,24 @@ class ParsePipelineFactTest {
         assertEquals(0, outcome.getFailedUnits());
         assertEquals("IMAGE_TEXT_UNRECOGNIZED",
                 outcome.getParseResult().getQuality().getWarnings().getFirst().getCode());
+    }
+
+    /**
+     * 守护 {@code infoFactShouldBeIgnored}：正常去重/剪枝等信息级事实不产生质量告警。
+     */
+    @Test
+    void infoFactShouldBeIgnored() {
+        ParseFact fact = new ParseFact();
+        fact.setType(SignalType.TABLE);
+        fact.setLevel(ParseFactLevel.INFO);
+        fact.setRegion("page 1");
+        fact.setEvidence("合并同 bbox 重复表 2→1");
+        ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(List.of(fixture.normalPage(1)), List.of(fact)));
+
+        ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
+
+        assertEquals(PipelineTaskStatus.SUCCESS, outcome.getSuggestedStatus());
+        assertEquals(0, outcome.getParseResult().getQuality().getWarnings().size());
     }
 
     /**

@@ -77,7 +77,8 @@ public class TaskStartupCompensator {
                 if (NullUtil.isNotNull(task.getStartedAt())
                         && task.getStartedAt().isBefore(LocalDateTime.now().minus(stageTimeout))) {
                     pipelineTaskDbService.finish(task.getId(), PipelineTaskStatus.FAILED,
-                            PipelineTaskErrorCode.EXECUTOR_TIMEOUT.name(), "孤儿任务恢复：RUNNING 超过环节超时阈值");
+                            PipelineTaskErrorCode.timeoutCode(task.getStage()).name(),
+                            "孤儿任务恢复：RUNNING 超过环节超时阈值");
                     recovered++;
                 }
             }

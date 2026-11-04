@@ -2,11 +2,15 @@ package com.workbuddy.worker.parser.office;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.workbuddy.common.domain.parse.BBox;
+import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.common.enums.parse.ParseAssetKind;
+import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.common.utils.TextUtil;
@@ -34,7 +38,9 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
      */
     @Override
     public final ParseSource parse(ParseContext context) {
+        context.getCancellationToken().throwIfCancelled();
         byte[] data = ParserStreamSupport.readAll(context);
+        context.getCancellationToken().throwIfCancelled();
         ParseSource source = ParseSource.nativeSource(capabilityName() + "-" + capabilityVersion());
         parseNative(source, data, context);
         return source;
@@ -48,6 +54,28 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
      * @param context 解析上下文（文件引用等）
      */
     protected abstract void parseNative(ParseSource source, byte[] data, ParseContext context);
+
+    /**
+     * 写一张嵌入图片并返回 assetRef：空白字节或未启用资产写入时返回 null。
+     *
+     * @param context  解析上下文
+     * @param content  图片字节
+     * @param mimeType 图片 MIME
+     * @param page     文档页（可空）
+     * @param bbox     图片区域（可空）
+     * @param width    像素宽（可空）
+     * @param height   像素高（可空）
+     * @return 资产 ID；未写入时为 null
+     */
+    protected static String storeEmbeddedImage(ParseContext context, byte[] content, String mimeType,
+                                               Integer page, BBox bbox, Integer width, Integer height) {
+        if (NullUtil.isNull(content) || content.length == 0) {
+            return null;
+        }
+        ParseAsset asset = context.getAssetSink().put(ParseAssetKind.EMBEDDED_IMAGE, content, mimeType,
+                page, bbox, width, height);
+        return NullUtil.isNull(asset) ? null : asset.getAssetId();
+    }
 
     /**
      * 表格元素追加单元格（cells 惰性建表）。
@@ -111,6 +139,7 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
     protected ParseFact fact(String region, String evidence) {
         ParseFact fact = new ParseFact();
         fact.setType(SignalType.OCR_IMAGE);
+        fact.setLevel(ParseFactLevel.WARN);
         fact.setRegion(region);
         fact.setEvidence(evidence);
         return fact;

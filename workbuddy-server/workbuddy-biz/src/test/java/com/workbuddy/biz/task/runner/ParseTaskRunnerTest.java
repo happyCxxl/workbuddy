@@ -14,6 +14,7 @@ import com.workbuddy.common.domain.entity.WbPipelineTask;
 import com.workbuddy.common.domain.entity.WbSourceFile;
 import com.workbuddy.common.domain.parse.ParseOutcome;
 import com.workbuddy.common.domain.parse.ParseResult;
+import com.workbuddy.common.domain.parse.ParseSummary;
 import com.workbuddy.common.domain.storage.ObjectRef;
 import com.workbuddy.common.domain.task.StepLogInfo;
 import com.workbuddy.common.enums.storage.StorageType;
@@ -86,14 +87,27 @@ class ParseTaskRunnerTest {
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
                         , new PipelineConverterImpl()),
                 fileStorage, parsePipeline,
-                ConfigFixtures.parse(), new StepLogPersistence(stepLogDbService, new PipelineConverterImpl()));
+                ConfigFixtures.parse(), ConfigFixtures.fileValidation(),
+                new StepLogPersistence(stepLogDbService, new PipelineConverterImpl()));
     }
 
     private WbPipelineTask queuedTask() {
+        return taskWithStatus(PipelineTaskStatus.QUEUED);
+    }
+
+    private WbPipelineTask runningTask() {
+        return taskWithStatus(PipelineTaskStatus.RUNNING);
+    }
+
+    private WbPipelineTask failedTask() {
+        return taskWithStatus(PipelineTaskStatus.FAILED);
+    }
+
+    private WbPipelineTask taskWithStatus(PipelineTaskStatus status) {
         WbPipelineTask task = new WbPipelineTask();
         task.setId(20L);
         task.setFileResultId(10L);
-        task.setStatus(PipelineTaskStatus.QUEUED.name());
+        task.setStatus(status.name());
         return task;
     }
 
@@ -125,6 +139,10 @@ class ParseTaskRunnerTest {
         outcome.setUnitCount(3);
         ParseResult parseResult = new ParseResult();
         parseResult.setResultId(10L);
+        ParseSummary summary = new ParseSummary();
+        summary.setUnitCount(3);
+        summary.setReadableUnits(3);
+        parseResult.setSummary(summary);
         outcome.setParseResult(parseResult);
         StepLogInfo step = new StepLogInfo();
         step.setStepName("原生解析");
@@ -172,7 +190,7 @@ class ParseTaskRunnerTest {
      */
     @Test
     void successPathShouldPersistProductAndFinish() {
-        when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
+        when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask(), runningTask());
         when(pipelineTaskDbService.claim(20L)).thenReturn(1);
         stubFileChain();
         when(parsePipeline.run(any(ParseContext.class))).thenReturn(successOutcome());
@@ -184,6 +202,11 @@ class ParseTaskRunnerTest {
         });
 
         runner.run(20L);
+
+        ArgumentCaptor<byte[]> contentCaptor = ArgumentCaptor.forClass(byte[].class);
+        verify(fileStorage).putObject(contentCaptor.capture());
+        String productJson = new String(contentCaptor.getValue(), StandardCharsets.UTF_8);
+        assertTrue(productJson.contains("\"summary\""), () -> productJson);
 
         ArgumentCaptor<WbPipelineProduct> captor = ArgumentCaptor.forClass(WbPipelineProduct.class);
         verify(pipelineProductDbService).save(captor.capture());
@@ -200,6 +223,22 @@ class ParseTaskRunnerTest {
         // 手动逐环节口径：PARSE 完成后停在终态，不再自动登记 STRUCTURE
         verify(pipelineTaskDbService, never()).save(any(WbPipelineTask.class));
         verify(stepLogDbService).save(any());
+    }
+
+    /**
+     * 守护 {@code taskNoLongerRunningShouldSkipProduct}：任务已被看门狗置 FAILED 时不再写产物。
+     */
+    @Test
+    void taskNoLongerRunningShouldSkipProduct() {
+        when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask(), failedTask());
+        when(pipelineTaskDbService.claim(20L)).thenReturn(1);
+        stubFileChain();
+        when(parsePipeline.run(any(ParseContext.class))).thenReturn(successOutcome());
+
+        runner.run(20L);
+
+        verify(fileStorage, never()).putObject(any(byte[].class));
+        verify(pipelineProductDbService, never()).save(any());
     }
 
     /**
@@ -237,7 +276,7 @@ class ParseTaskRunnerTest {
         runner.run(20L);
 
         verify(pipelineTaskDbService).finish(eq(20L), eq(PipelineTaskStatus.FAILED),
-                eq(PipelineTaskErrorCode.PARSE_FAILED.name()), any());
+                eq(PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name()), any());
         assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
     }
@@ -249,15 +288,51 @@ class ParseTaskRunnerTest {
     void fileGoneShouldFailWithClearReason() {
         when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
         when(pipelineTaskDbService.claim(20L)).thenReturn(1);
-        stubFileChain();
-        when(parsePipeline.run(any(ParseContext.class)))
-                .thenThrow(new WorkbuddyException(ErrorCode.FILE_NOT_FOUND));
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        when(sourceFileDbService.getById(5L)).thenReturn(sourceFile());
+        when(fileStorage.open("F-88")).thenThrow(new WorkbuddyException(ErrorCode.FILE_NOT_FOUND));
 
         runner.run(20L);
 
         verify(pipelineTaskDbService).finish(eq(20L), eq(PipelineTaskStatus.FAILED),
-                eq(PipelineTaskErrorCode.PARSE_FAILED.name()), any());
+                eq(PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name()), any());
         assertTrue(mockingDetails(pipelineTaskDbService).getInvocations().stream()
                 .anyMatch(inv -> "finish".equals(inv.getMethod().getName())));
+    }
+
+    /**
+     * 守护 {@code missingSourceFileShouldFailInputUnreadable}：该场景行为改动即失败。
+     */
+    @Test
+    void missingSourceFileShouldFailInputUnreadable() {
+        when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
+        when(pipelineTaskDbService.claim(20L)).thenReturn(1);
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        when(sourceFileDbService.getById(5L)).thenReturn(null);
+
+        runner.run(20L);
+
+        verify(pipelineTaskDbService).finish(eq(20L), eq(PipelineTaskStatus.FAILED),
+                eq(PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name()), any());
+    }
+
+    /**
+     * 守护 {@code tooLargeFileShouldFailBeforeOpen}：该场景行为改动即失败。
+     */
+    @Test
+    void tooLargeFileShouldFailBeforeOpen() {
+        when(pipelineTaskDbService.getById(20L)).thenReturn(queuedTask());
+        when(pipelineTaskDbService.claim(20L)).thenReturn(1);
+        WbSourceFile sourceFile = sourceFile();
+        sourceFile.setFileSize(ConfigFixtures.fileValidation().getMaxSize() + 1);
+        when(fileResultDbService.getById(10L)).thenReturn(fileResult());
+        when(sourceFileDbService.getById(5L)).thenReturn(sourceFile);
+
+        runner.run(20L);
+
+        verify(pipelineTaskDbService).finish(eq(20L), eq(PipelineTaskStatus.FAILED),
+                eq(PipelineTaskErrorCode.PARSE_TOO_LARGE.name()), any());
+        verify(fileStorage, never()).open(any());
+        verify(parsePipeline, never()).run(any());
     }
 }

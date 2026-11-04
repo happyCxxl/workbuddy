@@ -166,6 +166,72 @@ public final class FileUtil {
     }
 
     /**
+     * Tika 媒体类型归一：明确别名直接映射到字典 MIME；泛 OOXML/OLE2/zip 容器按文件名后缀在容器族内选子类型。
+     * 泛容器无后缀或后缀不属于该容器族时返回 null，由调用方按未知格式处理。
+     *
+     * @param mediaType Tika 媒体类型
+     * @param fileName  文件名（仅用于泛容器的子类型提示）
+     * @return 归一后的标准 MIME；无法判断时为 null
+     */
+    public static String normalizeMime(String mediaType, String fileName) {
+        if (NullUtil.isNull(mediaType)) {
+            return null;
+        }
+        String normalized = mediaType.trim().toLowerCase(Locale.ROOT);
+        int params = normalized.indexOf(';');
+        if (params >= 0) {
+            normalized = normalized.substring(0, params).trim();
+        }
+        FileFormat exact = FileFormat.ofMimeType(normalized);
+        if (NullUtil.isNotNull(exact)) {
+            return exact.getMimeType();
+        }
+        FileFormat byContainer = switch (normalized) {
+            case "application/x-tika-ooxml", "application/zip" -> ooxmlByExtension(extensionOf(fileName));
+            case "application/x-tika-msoffice" -> msofficeByExtension(extensionOf(fileName));
+            default -> null;
+        };
+        return NullUtil.isNull(byContainer) ? null : byContainer.getMimeType();
+    }
+
+    /**
+     * 按文件名后缀查格式（归一化用；未知后缀返回 null）。
+     *
+     * @param mediaType Tika 媒体类型
+     * @param fileName  文件名
+     * @return 归一后的格式；无法判断时为 null
+     */
+    public static FileFormat ofFormat(String mediaType, String fileName) {
+        return FileFormat.ofMimeType(normalizeMime(mediaType, fileName));
+    }
+
+    /** OOXML 泛容器按后缀选子类型。 */
+    private static FileFormat ooxmlByExtension(String extension) {
+        if (NullUtil.isNull(extension)) {
+            return null;
+        }
+        return switch (extension.toLowerCase(Locale.ROOT)) {
+            case "docx" -> FileFormat.DOCX;
+            case "xlsx" -> FileFormat.XLSX;
+            case "pptx" -> FileFormat.PPTX;
+            default -> null;
+        };
+    }
+
+    /** OLE2 泛容器按后缀选子类型。 */
+    private static FileFormat msofficeByExtension(String extension) {
+        if (NullUtil.isNull(extension)) {
+            return null;
+        }
+        return switch (extension.toLowerCase(Locale.ROOT)) {
+            case "doc" -> FileFormat.DOC;
+            case "xls" -> FileFormat.XLS;
+            case "ppt" -> FileFormat.PPT;
+            default -> null;
+        };
+    }
+
+    /**
      * 白名单判定：FileFormat 枚举名在启用清单内。
      *
      * @param format  文件格式

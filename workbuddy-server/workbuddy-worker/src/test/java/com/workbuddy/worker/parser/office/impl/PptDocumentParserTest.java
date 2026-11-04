@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.testkit.RecordingAssetSink;
 import org.apache.poi.sl.usermodel.PictureData;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFPictureData;
@@ -37,7 +38,10 @@ class PptDocumentParserTest {
     /** 一页含文本框 + 表格 + 图片：元素与事实齐备，指标按页回填（{@code pptxSlideShouldYieldTextTablePictureAndMetrics}）。 */
     @Test
     void pptxSlideShouldYieldTextTablePictureAndMetrics() throws Exception {
-        ParseSource source = parser.parse(context(buildPptx()));
+        RecordingAssetSink sink = new RecordingAssetSink();
+        ParseContext context = context(buildPptx());
+        context.setAssetSink(sink);
+        ParseSource source = parser.parse(context);
 
         List<ParseElement> paragraphs = elements(source, ElementType.PARAGRAPH);
         assertEquals(1, paragraphs.size(), () -> "elements=" + source.getElements());
@@ -54,8 +58,9 @@ class PptDocumentParserTest {
         List<ParseElement> images = elements(source, ElementType.IMAGE);
         assertEquals(1, images.size());
         assertEquals(Boolean.TRUE, images.getFirst().getNeedsOcr());
-        assertTrue(images.getFirst().getAssetRef().startsWith("image-0."),
+        assertTrue(images.getFirst().getAssetRef().startsWith("asset-"),
                 () -> "asset=" + images.getFirst().getAssetRef());
+        assertTrue(sink.bytes(images.getFirst().getAssetRef()) != null);
         assertTrue(source.getFacts().stream().anyMatch(fact -> fact.getEvidence().contains("本页 1 张")),
                 () -> "facts=" + source.getFacts());
 

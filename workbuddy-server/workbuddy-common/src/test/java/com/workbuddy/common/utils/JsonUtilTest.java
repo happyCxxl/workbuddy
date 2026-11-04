@@ -1,5 +1,8 @@
 package com.workbuddy.common.utils;
 
+import com.workbuddy.common.domain.parse.ParseAsset;
+import com.workbuddy.common.domain.parse.ParseResult;
+import com.workbuddy.common.enums.parse.ParseAssetKind;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -85,5 +88,36 @@ class JsonUtilTest {
         List<Stamp> list = JsonUtil.toList("[{\"name\":\"c\"}]", Stamp.class);
         assertEquals(1, list.size());
         assertEquals("c", list.get(0).name);
+    }
+
+    /**
+     * 解析产物资产往返：平铺对象位置与枚举字段不因 Hutool 转换丢失。
+     *
+     * <p>守护 {@code ParseResult.assets} 落库后能被读取路径还原。
+     */
+    @Test
+    void parseAssetShouldRoundTripThroughJson() {
+        ParseAsset asset = new ParseAsset();
+        asset.setAssetId("asset-abc");
+        asset.setKind(ParseAssetKind.PAGE_IMAGE);
+        asset.setStorageSourceId(1L);
+        asset.setStorageType("minio");
+        asset.setBucket("artifacts");
+        asset.setObjectKey("abc");
+        asset.setMimeType("image/png");
+        asset.setSize(3L);
+        ParseResult result = new ParseResult();
+        result.setAssets(new java.util.ArrayList<>(List.of(asset)));
+
+        ParseResult restored = JsonUtil.toObject(JsonUtil.toJsonStr(result), ParseResult.class);
+
+        assertEquals(1, restored.getAssets().size());
+        ParseAsset parsed = restored.getAssets().get(0);
+        assertEquals("asset-abc", parsed.getAssetId());
+        assertEquals(ParseAssetKind.PAGE_IMAGE, parsed.getKind());
+        assertEquals(1L, parsed.getStorageSourceId());
+        assertEquals("minio", parsed.getStorageType());
+        assertEquals("artifacts", parsed.getBucket());
+        assertEquals("abc", parsed.getObjectKey());
     }
 }

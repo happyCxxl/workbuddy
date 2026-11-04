@@ -10,8 +10,7 @@ import com.workbuddy.worker.parser.signal.SignalFallbackHandler;
 import org.springframework.stereotype.Component;
 
 /**
- * 扫描页降级处置：写 SCANNED_PAGE 告警 + 登记扫描页与失败页，计 1 个失败单元。
- * OCR 能力接入后由能力调用替换本处置（扩展点）。
+ * 扫描页降级处置：写 SCANNED_PAGE 告警并登记扫描页；是否计失败由质量门槛结合 OCR 覆盖统一裁决。
  */
 @Component
 public class ScannedFallbackHandler implements SignalFallbackHandler {
@@ -27,20 +26,19 @@ public class ScannedFallbackHandler implements SignalFallbackHandler {
     }
 
     /**
-     * 扫描件：登记告警并标记该页需 OCR。
+     * 扫描件：登记告警与扫描页；失败判定留给质量门槛（OCR 覆盖的页可恢复）。
      *
      * @param signal  降级信号
      * @param quality 质量信息（追加告警与标记）
-     * @return 计入失败单元的条数
+     * @return 计入失败单元的条数（固定 0，由门禁统一裁决）
      */
     @Override
     public int handle(Signal signal, QualityInfo quality) {
         String region = StrUtil.blankToDefault(signal.getRegion(), "");
         Integer page = FallbackSupport.parsePage(region);
         quality.getWarnings().add(QualityWarning.of(QualityWarningCode.SCANNED_PAGE, null, "WARN",
-                region + " 无文本层（扫描页），OCR 暂未支持"));
+                region + " 无文本层（扫描页）"));
         FallbackSupport.addScannedPage(quality, page);
-        FallbackSupport.addFailedPage(quality, page);
-        return 1;
+        return 0;
     }
 }

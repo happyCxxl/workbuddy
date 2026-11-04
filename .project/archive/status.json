@@ -50,9 +50,9 @@
     },
     "07": {
       "status": "已复核",
-      "reviewed": "2026-11-01",
-      "baseline": "b3f9606a",
-      "note": "删除 /model/* 管理接口；模型管理改由灵犀 /model-admin 提供"
+      "reviewed": "2026-11-04",
+      "baseline": "e052f115",
+      "note": "新增 /file-results/{fileResultId}/parse-assets/{assetId} 资产读取子路径，仍归 /file-results/*；接口分组未变"
     },
     "08": {
       "status": "已复核",
@@ -62,9 +62,9 @@
     },
     "09": {
       "status": "已复核",
-      "reviewed": "2026-11-01",
-      "baseline": "b3f9606a",
-      "note": "新增 workbuddy.lingxi 配置与 EmbeddingClient；删除模型厂商目录与启动校验；补齐 CSRF/改密 Javadoc"
+      "reviewed": "2026-11-04",
+      "baseline": "e052f115",
+      "note": "复核解析配置新增 page-image-dpi 启动期校验与资产读取路径；鉴权、异常与事务机制未变"
     }
   }
 }

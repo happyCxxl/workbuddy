@@ -8,6 +8,7 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.parser.asset.ParseAssetSupport;
 import com.workbuddy.worker.parser.office.AbstractPoiDocumentParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.concurrent.CancellationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,7 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
      */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
+        context.getCancellationToken().throwIfCancelled();
         String fileId = context.getFileRef().getFileId();
         boolean xlsx = FileFormat.XLSX.getMimeType().equals(context.getFileRef().getMimeType());
         try (Workbook workbook = xlsx ? new XSSFWorkbook(new ByteArrayInputStream(data))
@@ -76,15 +79,18 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
             List<String> sheetTexts = new ArrayList<>();
             List<Integer> sheetImages = new ArrayList<>();
             for (int s = 0; s < sheetCount; s++) {
+                context.getCancellationToken().throwIfCancelled();
                 ParseElement tableElement = toSheetTableElement(workbook, formatter, evaluator, s, fileId);
                 source.getElements().add(tableElement);
                 appendSheetHeaderFooter(source, workbook.getSheetAt(s), s, fileId);
-                appendSheetPictures(source, workbook.getSheetAt(s), fileId);
+                appendSheetPictures(source, workbook.getSheetAt(s), fileId, context);
                 sheetTexts.add(tableText(tableElement));
                 sheetImages.add(pictureCount(workbook.getSheetAt(s)));
             }
             fillUnitMetrics(source, sheetTexts, sheetImages);
             appendXlsFormulaNote(source, workbook);
+        } catch (CancellationException e) {
+            throw e;
         } catch (Exception e) {
             log.warn("===> ExcelDocumentParser Excel 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("Excel 解析失败: " + e.getMessage(), e);
@@ -92,10 +98,10 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
     }
 
     /**
-     * 工作表图片：逐张产 `IMAGE` 元素（`assetRef` 取图片文件名、`needsOcr=true`）并按表记一条
-     * `OCR_IMAGE` 事实（证据带本表张数），与 PDF / DOCX 的图片口径一致。
+     * 工作表图片：逐张写原始图片字节并产 `IMAGE` 元素（`assetRef` 指向资产、`needsOcr=true`），
+     * 按表记一条 `OCR_IMAGE` 事实（证据带本表张数），与 PDF / DOCX 的图片口径一致。
      */
-    private void appendSheetPictures(ParseSource source, Sheet sheet, String fileId) {
+    private void appendSheetPictures(ParseSource source, Sheet sheet, String fileId, ParseContext context) {
         Drawing<?> drawing = sheet.getDrawingPatriarch();
         if (NullUtil.isNull(drawing)) {
             return;
@@ -107,8 +113,10 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
             }
             ParseElement image = ParseElement.of("img" + index, ElementType.IMAGE);
             PictureData data = picture.getPictureData();
-            image.setAssetRef(NullUtil.isNull(data) ? "image-" + index
-                    : "image-" + index + "." + data.suggestFileExtension());
+            image.setAssetRef(NullUtil.isNull(data) ? null
+                    : storeEmbeddedImage(context, data.getData(),
+                    ParseAssetSupport.imageMime(data.getMimeType(), data.suggestFileExtension()),
+                    null, null, null, null));
             image.setNeedsOcr(true);
             image.setProvenance(new Provenance(fileId,
                     "office#sheet[" + sheet.getSheetName() + "]/picture[" + index + "]"));

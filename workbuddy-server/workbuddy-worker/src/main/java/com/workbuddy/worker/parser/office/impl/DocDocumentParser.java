@@ -9,6 +9,7 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.parser.asset.ParseAssetSupport;
 import com.workbuddy.worker.parser.office.AbstractPoiDocumentParser;
 import com.workbuddy.worker.parser.support.TocLineFeature;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.apache.poi.hwpf.usermodel.TableIterator;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
+import java.util.concurrent.CancellationException;
 
 /**
  * DOC（HWPF 二进制）原生结构解析器（POI 路径）。
@@ -54,11 +56,13 @@ public class DocDocumentParser extends AbstractPoiDocumentParser {
      */
     @Override
     protected void parseNative(ParseSource source, byte[] data, ParseContext context) {
+        context.getCancellationToken().throwIfCancelled();
         String fileId = context.getFileRef().getFileId();
         try (HWPFDocument doc = new HWPFDocument(new ByteArrayInputStream(data))) {
             Range range = doc.getRange();
             int paragraphIndex = 0;
             for (int i = 0; i < range.numParagraphs(); i++) {
+                context.getCancellationToken().throwIfCancelled();
                 Paragraph paragraph = range.getParagraph(i);
                 if (paragraph.isInTable()) {
                     // 表格内容由 TableIterator 统一输出
@@ -75,7 +79,9 @@ public class DocDocumentParser extends AbstractPoiDocumentParser {
             for (int p = 0; p < pictures.getAllPictures().size(); p++) {
                 Picture picture = pictures.getAllPictures().get(p);
                 ParseElement image = ParseElement.of("img" + p, ElementType.IMAGE);
-                image.setAssetRef(StrUtil.blankToDefault(picture.getDescription(), "image-" + p));
+                image.setAssetRef(storeEmbeddedImage(context, picture.getContent(),
+                        ParseAssetSupport.imageMime(picture.getMimeType(), picture.suggestFileExtension()),
+                        null, null, null, null));
                 image.setNeedsOcr(true);
                 image.setProvenance(new Provenance(fileId, "office#document/picture[" + p + "]"));
                 source.getElements().add(image);
@@ -95,6 +101,8 @@ public class DocDocumentParser extends AbstractPoiDocumentParser {
                 tableIndex++;
             }
             fillVirtualPageMetrics(source, context.getProperties().getOfficePageChars());
+        } catch (CancellationException e) {
+            throw e;
         } catch (Exception e) {
             log.warn("===> DocDocumentParser DOC 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("DOC 解析失败: " + e.getMessage(), e);

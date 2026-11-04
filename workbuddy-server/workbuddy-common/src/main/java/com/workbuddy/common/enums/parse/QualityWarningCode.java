@@ -14,7 +14,7 @@ public enum QualityWarningCode {
     /** 乱码页（CID 映射失败）：字体缺 ToUnicode 映射，计失败页 */
     CID_MAPPING_FAILED_PAGE,
 
-    /** 扫描页：无文本层且图片覆盖高，OCR 预留暂不支持，计失败页 */
+    /** 扫描页：无文本层且图片覆盖高，由质量门槛结合 OCR 覆盖判定是否计失败 */
     SCANNED_PAGE,
 
     /** 空白页：无文本且无图片覆盖，不计失败页 */

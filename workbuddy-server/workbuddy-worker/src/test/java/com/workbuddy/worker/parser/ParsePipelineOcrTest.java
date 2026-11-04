@@ -2,16 +2,21 @@ package com.workbuddy.worker.parser;
 
 import com.workbuddy.common.domain.parse.ParseOutcome;
 import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseSummary;
 import com.workbuddy.common.domain.parse.capability.OcrLine;
 import com.workbuddy.common.domain.parse.capability.StructuredOcrResult;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
+import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
+import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.capability.LayoutProvider;
 import com.workbuddy.worker.parser.capability.StructuredOcrProvider;
 import com.workbuddy.worker.parser.capability.TableStructureProvider;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -45,6 +50,12 @@ class ParsePipelineOcrTest {
                 () -> "facts=" + ocr.getFacts());
         assertEquals("stub-ocr", ocr.getCapabilities().getFirst().model());
         assertEquals("stub-ocr", outcome.getParseResult().getCapabilitySnapshot().getOcr().getModel());
+        assertEquals(PipelineTaskStatus.PARTIAL_SUCCESS, outcome.getSuggestedStatus());
+        assertTrue(outcome.getParseResult().getQuality().getFailedPages().isEmpty());
+        ParseSummary summary = outcome.getParseResult().getSummary();
+        assertEquals(1, summary.getOcrPages());
+        assertEquals(1, summary.getOcrRecoveredUnits());
+        assertEquals(0, summary.getFailedUnits());
     }
 
     /** 未接入 OCR：ocr 路保持预留占位（无元素、文案不变）（{@code withoutOcrCapabilityShouldKeepPlaceholderSource}）。 */
@@ -63,14 +74,43 @@ class ParsePipelineOcrTest {
         assertTrue(ocr.getElements().isEmpty());
         assertTrue(ocr.getNote().contains("预留未开放"), () -> "note=" + ocr.getNote());
         assertNull(outcome.getParseResult().getCapabilitySnapshot().getOcr());
+        assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
+        assertEquals(PipelineTaskErrorCode.SCANNED_UNSUPPORTED.name(), outcome.getErrorCode());
+    }
+
+    /** 部分扫描页被 OCR 覆盖：只把未覆盖页计入失败（{@code partiallyRecoveredScannedPagesShouldLeaveOnlyUncoveredAsFailed}）。 */
+    @Test
+    void partiallyRecoveredScannedPagesShouldLeaveOnlyUncoveredAsFailed() {
+        List<PageMetric> metrics = new ArrayList<>();
+        metrics.add(fixture.scannedPage(1));
+        metrics.add(fixture.scannedPage(2));
+        for (int i = 3; i <= 10; i++) {
+            metrics.add(fixture.normalPage(i));
+        }
+        ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(metrics, List.of()),
+                stubOcrRegistry(page -> page == 1));
+
+        ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
+
+        assertEquals(PipelineTaskStatus.PARTIAL_SUCCESS, outcome.getSuggestedStatus());
+        assertEquals(1, outcome.getFailedUnits());
+        assertEquals(List.of(2), outcome.getParseResult().getQuality().getFailedPages());
     }
 
     /** 只接 OCR 能力的注册表：桩为每页返回两行（页码随区域走） */
     private CapabilityRegistry stubOcrRegistry() {
+        return stubOcrRegistry(page -> true);
+    }
+
+    /** 只接 OCR 能力的注册表：仅对 predicate 命中的页返回识别行，其余页返回 null。 */
+    private CapabilityRegistry stubOcrRegistry(Predicate<Integer> covered) {
         return new CapabilityRegistry() {
             @Override
             public StructuredOcrProvider ocr() {
                 return (region, ctx) -> {
+                    if (!covered.test(region.getPage())) {
+                        return null;
+                    }
                     StructuredOcrResult result = new StructuredOcrResult();
                     result.setModel("stub-ocr");
                     result.setVersion("1.2");

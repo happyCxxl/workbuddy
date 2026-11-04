@@ -1,17 +1,24 @@
 package com.workbuddy.worker.parser.pdf.assemble;
 
 import com.workbuddy.common.domain.parse.BBox;
+import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.Provenance;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.common.enums.parse.ParseAssetKind;
+import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalType;
+import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
+import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
 import com.workbuddy.worker.parser.pdf.detect.RuleSegments;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.Region;
 
+import java.awt.image.BufferedImage;
 import java.util.Comparator;
 import java.util.List;
 
@@ -32,9 +39,12 @@ public final class PdfImageEmitter {
      * @param source     解析结果
      * @param fileId     文件 ID
      * @param properties 解析阈值配置
+     * @param context    解析上下文（资产写入口）
+     * @param renderer   页图渲染器（未启用资产时为 null）
      */
     public static void emit(PageContent page, List<ParseElement> elements, ParseSource source,
-                     String fileId, ParseProperties properties) {
+                     String fileId, ParseProperties properties, ParseContext context,
+                     PdfPageImageRenderer renderer) {
         if (page.imageBoxes().isEmpty()) {
             return;
         }
@@ -49,14 +59,16 @@ public final class PdfImageEmitter {
                 .toList();
         int index = 0;
         double totalRatio = 0;
+        BufferedImage pageImage = writePageImage(page, context, renderer, properties);
         for (Region box : boxes) {
             double ratio = RuleSegments.imageArea(box, page.pageWidth(), page.pageHeight()) / pageArea;
             ParseElement image = ParseElement.of(ElementType.IMAGE);
             image.setPage(page.pageNo());
-            image.setAssetRef("page" + page.pageNo() + "-image" + index);
+            BBox bbox = page.geometry().toViewport(new BBox(box.left(), box.top(),
+                    box.right() - box.left(), box.bottom() - box.top()));
+            image.setAssetRef(writeCrop(page, pageImage, bbox, context, renderer));
             image.setNeedsOcr(true);
-            image.setBbox(page.geometry().toViewport(new BBox(box.left(), box.top(),
-                    box.right() - box.left(), box.bottom() - box.top())));
+            image.setBbox(bbox);
             image.setProvenance(new Provenance(fileId,
                     "pdf#page(" + page.pageNo() + ")/image[" + index + "]"));
             elements.add(image);
@@ -67,10 +79,39 @@ public final class PdfImageEmitter {
         if (index > 0) {
             ParseFact fact = new ParseFact();
             fact.setType(SignalType.OCR_IMAGE);
+            fact.setLevel(ParseFactLevel.WARN);
             fact.setRegion("page " + page.pageNo());
             fact.setEvidence(String.format("嵌入图片仅引用无文字（本页 %d 张，合计占页面积 %.2f）",
                     index, totalRatio));
             source.getFacts().add(fact);
         }
+    }
+
+    /** 扫描页整页图：无文本且图片覆盖达扫描页门槛时写 PAGE_IMAGE，供 OCR 与预览使用。 */
+    private static BufferedImage writePageImage(PageContent page, ParseContext context,
+                                                PdfPageImageRenderer renderer, ParseProperties properties) {
+        if (NullUtil.isNull(renderer) || page.metric().getCharCount() > 0
+                || page.metric().getImageAreaRatio() < properties.getScanPageImageRatio()) {
+            return null;
+        }
+        BufferedImage pageImage = renderer.pageImage(page.pageNo());
+        BBox full = new BBox(0, 0, page.geometry().viewportWidth(), page.geometry().viewportHeight());
+        context.getAssetSink().put(ParseAssetKind.PAGE_IMAGE, renderer.png(pageImage), "image/png",
+                page.pageNo(), full, pageImage.getWidth(), pageImage.getHeight());
+        return pageImage;
+    }
+
+    /** 图片区域裁剪资产：未启用资产写入或渲染器缺失时返回 null。 */
+    private static String writeCrop(PageContent page, BufferedImage pageImage, BBox bbox,
+                                    ParseContext context, PdfPageImageRenderer renderer) {
+        if (NullUtil.isNull(renderer)) {
+            return null;
+        }
+        BufferedImage source = NullUtil.isNotNull(pageImage) ? pageImage : renderer.pageImage(page.pageNo());
+        BufferedImage crop = renderer.crop(source, bbox,
+                page.geometry().viewportWidth(), page.geometry().viewportHeight());
+        ParseAsset asset = context.getAssetSink().put(ParseAssetKind.IMAGE_CROP, renderer.png(crop), "image/png",
+                page.pageNo(), bbox, crop.getWidth(), crop.getHeight());
+        return NullUtil.isNull(asset) ? null : asset.getAssetId();
     }
 }

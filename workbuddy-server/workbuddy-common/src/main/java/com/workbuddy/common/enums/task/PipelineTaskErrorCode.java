@@ -23,6 +23,21 @@ public enum PipelineTaskErrorCode {
     /** 文件深层损坏（入口探测未发现，解析时暴露） */
     PARSE_CORRUPTED,
 
+    /** 解析格式不支持（文件级路由无匹配解析器） */
+    PARSE_UNSUPPORTED_FORMAT,
+
+    /** 文件已加密（需要密码或未加密版本） */
+    PARSE_ENCRYPTED,
+
+    /** 文件超过解析阶段大小上限 */
+    PARSE_TOO_LARGE,
+
+    /** 解析输入不可读（文件结果/来源文件缺失、对象存储打开失败） */
+    PARSE_INPUT_UNREADABLE,
+
+    /** 解析超时（看门狗/孤儿恢复判定；其他环节沿用 EXECUTOR_TIMEOUT） */
+    PARSE_TIMEOUT,
+
     /** 扫描件暂不支持（OCR 预留，暂未接入） */
     SCANNED_UNSUPPORTED,
 
@@ -75,5 +90,15 @@ public enum PipelineTaskErrorCode {
     INDEX_CONSISTENCY_FAILED,
 
     /** 索引构建执行异常兜底（Milvus 写失败等） */
-    INDEX_BUILD_FAILED
+    INDEX_BUILD_FAILED;
+
+    /**
+     * 按环节取超时错误码：解析用专用码，其余环节沿用通用码。
+     *
+     * @param stage 环节名
+     * @return 超时错误码
+     */
+    public static PipelineTaskErrorCode timeoutCode(String stage) {
+        return PipelineStage.PARSE.name().equals(stage) ? PARSE_TIMEOUT : EXECUTOR_TIMEOUT;
+    }
 }

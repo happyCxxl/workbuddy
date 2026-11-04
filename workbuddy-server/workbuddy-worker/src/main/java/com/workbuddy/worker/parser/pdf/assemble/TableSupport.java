@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
+import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
@@ -75,6 +76,7 @@ final class TableSupport {
                         ParseSource source, String fileId, String evidence) {
         ParseFact fact = new ParseFact();
         fact.setType(SignalType.TABLE);
+        fact.setLevel(ParseFactLevel.WARN);
         fact.setRegion("page " + page.pageNo());
         fact.setEvidence(evidence);
         source.getFacts().add(fact);

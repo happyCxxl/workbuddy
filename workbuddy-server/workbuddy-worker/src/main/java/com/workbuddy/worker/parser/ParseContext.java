@@ -1,6 +1,7 @@
 package com.workbuddy.worker.parser;
 
 import com.workbuddy.common.domain.input.FileReference;
+import com.workbuddy.worker.parser.asset.ParseAssetSink;
 import lombok.Data;
 
 import java.io.InputStream;
@@ -23,4 +24,10 @@ public class ParseContext {
 
     /** 解析阈值配置 */
     private ParseProperties properties;
+
+    /** 取消令牌（看门狗超时/服务停机时置位；默认未取消） */
+    private CancellationToken cancellationToken = new CancellationToken();
+
+    /** 资产写入口（biz 注入对象存储实现；单测/未接存储时为空实现） */
+    private ParseAssetSink assetSink = ParseAssetSink.noop();
 }

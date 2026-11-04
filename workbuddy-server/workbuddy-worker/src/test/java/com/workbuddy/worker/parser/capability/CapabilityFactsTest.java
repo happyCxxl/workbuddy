@@ -2,6 +2,7 @@ package com.workbuddy.worker.parser.capability;
 
 import com.workbuddy.common.domain.parse.capability.TableResult;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
+import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalType;
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +26,7 @@ class CapabilityFactsTest {
         ParseFact fact = CapabilityFacts.tableEnhanced("page 2", result);
 
         assertEquals(SignalType.TABLE, fact.getType());
+        assertEquals(ParseFactLevel.INFO, fact.getLevel());
         assertEquals("page 2", fact.getRegion());
         assertTrue(fact.getEvidence().contains("tableformer 1.0"), () -> "evidence=" + fact.getEvidence());
         assertTrue(fact.getEvidence().contains("3 行 × 4 列"), () -> "evidence=" + fact.getEvidence());
@@ -46,6 +48,7 @@ class CapabilityFactsTest {
         ParseFact blank = CapabilityFacts.tableDegraded("page 4", null);
 
         assertEquals(SignalType.TABLE, timeout.getType());
+        assertEquals(ParseFactLevel.WARN, timeout.getLevel());
         assertTrue(timeout.getEvidence().contains("读超时"), () -> "evidence=" + timeout.getEvidence());
         assertTrue(timeout.getEvidence().contains("已按内置规则降级"), () -> "evidence=" + timeout.getEvidence());
         assertTrue(blank.getEvidence().contains("未配置"), () -> "evidence=" + blank.getEvidence());

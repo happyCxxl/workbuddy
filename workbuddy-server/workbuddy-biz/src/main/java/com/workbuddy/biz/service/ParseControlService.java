@@ -21,4 +21,14 @@ public interface ParseControlService {
      * @param taskId       可选：指定某次运行的任务查看历史详情；为空取最新任务
      */
     ParseDetailVO parseDetail(Long fileResultId, Long taskId);
+
+    /**
+     * 读取解析资产：按产物内的 assetId 定位对象并回读字节。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param assetId      资产 ID
+     * @param taskId       可选：指定某次运行的任务；为空取最新任务
+     * @return 资产 MIME 与字节
+     */
+    ParseAssetContent asset(Long fileResultId, String assetId, Long taskId);
 }

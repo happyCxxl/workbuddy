@@ -1,8 +1,9 @@
 # 解析环节配置：PDF 与 Office 的解析阈值与质量判定参数。
 # 键的来源：knowledge-worker 的 ParseProperties（前缀 knowledge.parse）。
-# 本环节配置的默认值在此处维护；配置面覆盖全部字段由 PropertiesConfigCoverageTest 对账。
+# 本环节配置的默认值在此处维护；ParseProperties 不带代码侧默认值，配置面是唯一基线。
+# 配置面覆盖全部字段由 PropertiesConfigCoverageTest 对账，值域由 ParseProperties#validate 启动期校验。
 knowledge:
-  # 解析阈值全量默认值（与 knowledge-worker 的 ParseProperties 同名 kebab-case；配置来源 = 本文件与 ParseProperties 内置默认值）
+  # 解析阈值全量默认值（与 knowledge-worker 的 ParseProperties 同名 kebab-case；配置来源 = 本文件）
   parse:
     # 大文件分窗：单窗口装配的页数
     page-window-size: 50
@@ -21,6 +22,8 @@ knowledge:
     office-page-chars: 3000
     # 图片元素门槛：占页面积比（低于该比例的图片不产元素）
     image-min-area-ratio: 0.05
+    # PDF 页图渲染 DPI（扫描页 OCR 与图片裁剪输入）
+    page-image-dpi: 200
     # 乱码页判定：不可读码点占比、可打印乱码带占比、缺 Unicode 映射的 CID 字体字符占比
     garbled-rate-threshold: 0.2
     printable-garbled-rate-threshold: 0.3

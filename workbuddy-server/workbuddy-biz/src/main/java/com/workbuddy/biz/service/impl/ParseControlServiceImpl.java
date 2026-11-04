@@ -1,5 +1,6 @@
 package com.workbuddy.biz.service.impl;
 
+import com.workbuddy.biz.service.ParseAssetContent;
 import com.workbuddy.biz.service.ParseControlService;
 import com.workbuddy.biz.service.support.access.FileResultAccessGuard;
 import com.workbuddy.biz.service.support.stats.ParseStatsSupport;
@@ -7,6 +8,7 @@ import com.workbuddy.biz.service.support.task.TaskDetailSupport;
 import com.workbuddy.biz.task.support.TaskTriggerSupport;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
+import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.QualityWarning;
 import com.workbuddy.common.domain.storage.ObjectRef;
@@ -14,6 +16,8 @@ import com.workbuddy.common.dto.response.parse.ParseDetailVO;
 import com.workbuddy.common.dto.response.parse.ParseWarningVO;
 import com.workbuddy.common.dto.response.task.StageTriggerVO;
 import com.workbuddy.common.enums.task.PipelineStage;
+import com.workbuddy.common.error.ErrorCode;
+import com.workbuddy.common.exception.ThrowUtil;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.filecenter.storage.FileStorage;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +93,36 @@ public class ParseControlServiceImpl implements ParseControlService {
             vo.setParseSummary(ParseStatsSupport.summary(vo.getErrorMsg(), vo.getParseStats(), vo.getStatus()));
         }
         return vo;
+    }
+
+    /**
+     * 读取解析资产：任务/产物归属校验后按 assetId 回读对象存储字节。
+     *
+     * @param fileResultId 文件结果 ID
+     * @param assetId      资产 ID
+     * @param taskId       指定任务（可空取最新）
+     * @return 资产 MIME 与字节
+     */
+    @Override
+    public ParseAssetContent asset(Long fileResultId, String assetId, Long taskId) {
+        accessGuard.requireExisting(fileResultId);
+        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.PARSE, taskId,
+                PipelineStage.PARSE.getLabel());
+        WbPipelineProduct product = detailSupport.productOfTask(task);
+        ThrowUtil.throwIf(NullUtil.isNull(product), ErrorCode.FILE_NOT_FOUND, "解析产物不存在");
+        ParseResult parseResult = ParseStatsSupport.readArtifact(fileStorage, ObjectRef.ofProduct(product));
+        ThrowUtil.throwIf(NullUtil.isNull(parseResult), ErrorCode.FILE_NOT_FOUND, "解析产物不存在");
+        ParseAsset asset = (NullUtil.isNull(parseResult.getAssets()) ? List.<ParseAsset>of()
+                : parseResult.getAssets()).stream()
+                .filter(item -> assetId.equals(item.getAssetId()))
+                .findFirst()
+                .orElse(null);
+        ThrowUtil.throwIf(NullUtil.isNull(asset), ErrorCode.FILE_NOT_FOUND, "解析资产不存在: " + assetId);
+        String mimeType = NullUtil.isNull(asset.getMimeType()) || asset.getMimeType().isBlank()
+                ? "application/octet-stream" : asset.getMimeType();
+        ObjectRef ref = ObjectRef.of(asset.getStorageSourceId(), asset.getStorageType(),
+                asset.getBucket(), asset.getObjectKey());
+        return new ParseAssetContent(mimeType, fileStorage.getObject(ref));
     }
 
     /** 产物本体 → 告警文案（展示用；无产物或无告警返回空列表） */

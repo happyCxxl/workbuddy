@@ -79,7 +79,7 @@ public class FileServiceImpl implements FileService {
                 ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.FILE_ENCRYPTED.label());
         ThrowUtil.throwIf(FileUtil.isReservedImage(mediaType),
                 ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.IMAGE_OCR_RESERVED.label());
-        FileFormat real = FileUtil.ofFormat(mediaType);
+        FileFormat real = FileUtil.ofFormat(mediaType, file.getOriginalFilename());
         ThrowUtil.throwIf(NullUtil.isNull(real) || !FileUtil.whitelisted(real, enabled),
                 ErrorCode.FILE_UPLOAD_REJECTED, FileValidationFailReason.FORMAT_NOT_ALLOWED.label());
         return fileStorage.putFile(file);
@@ -131,7 +131,8 @@ public class FileServiceImpl implements FileService {
             if (FileUtil.isReservedImage(mediaType)) {
                 return FileValidationResult.fail(FileValidationFailReason.IMAGE_OCR_RESERVED);
             }
-            FileFormat format = FileUtil.ofFormat(mediaType);
+            String normalizedMime = FileUtil.normalizeMime(mediaType, metadata.getFileName());
+            FileFormat format = FileUtil.ofFormat(normalizedMime, metadata.getFileName());
             if (NullUtil.isNull(format) || !FileUtil.whitelisted(format, fileProperties.getEnabledFormats())) {
                 return FileValidationResult.fail(FileValidationFailReason.FORMAT_NOT_ALLOWED);
             }
@@ -147,7 +148,7 @@ public class FileServiceImpl implements FileService {
                         fileId, mediaType, probeReason);
                 return FileValidationResult.fail(probeReason);
             }
-            return FileValidationResult.pass(format, mediaType, size, buffer.sha256Hex());
+            return FileValidationResult.pass(format, normalizedMime, size, buffer.sha256Hex());
         } catch (IOException e) {
             log.warn("===> FileServiceImpl 读取文件流失败, fileId={}", fileId, e);
             return FileValidationResult.fail(FileValidationFailReason.FILE_CORRUPTED);
