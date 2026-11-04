@@ -128,7 +128,7 @@
           </button>
         </div>
       </div>
-      <p v-if="props.empty" class="session-empty">暂无工作区 暂无工作区</p>
+      <p v-if="props.empty" class="session-empty">暂无工作区</p>
     </div>
   </div>
 </template>
