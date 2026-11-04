@@ -730,6 +730,9 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { createChunkPane } from '@/composables/useChunkPane';
 import type { ChunkPane } from '@/composables/useChunkPane';
+import { useDocBlocks } from '@/composables/useDocBlocks';
+import { useExcludedPane } from '@/composables/useExcludedPane';
+import { useSourcePreview } from '@/composables/useSourcePreview';
 import { useSplitter } from '@/composables/useSplitter';
 import { pushEntityTitle, restoreTitle } from '@/utils/page-title';
 import { getStageContent, getStageDetail, getSourceFile } from '@/api/pipeline';
@@ -815,11 +818,6 @@ const PAGE_SIZE = 100;
 
 // ---- 左栏：组装产物文档（组装环节用） ----
 
-/** 文档块一次渲染多少条：大文档不做一次性全渲染，滚动到底再追加 */
-const DOC_RENDER_STEP = 80;
-/** 距底部多远触发追加渲染 */
-const DOC_LOAD_MARGIN = 240;
-
 /** 表格渲染的格数上限：超过只按行列数占位，不做整表渲染 */
 const DOC_TABLE_MAX_CELLS = 1200;
 
@@ -860,8 +858,15 @@ interface DocBlock {
 /** 文档滚动容器（左栏定位用） */
 const docRef = ref<HTMLElement | null>(null);
 
-/** 文档已渲染到第几条（滚动递增；定位时按目标块补足） */
-const docRenderLimit = ref(DOC_RENDER_STEP);
+/** 左栏文档的渲染窗口（滚到底追加、定位补足、按 key 滚动） */
+const {
+  renderLimit: docRenderLimit,
+  rendered: renderedDocBlocks,
+  onScroll: onDocScroll,
+  ensureRendered: ensureDocRendered,
+  scrollToBlock,
+  reset: resetDocWindow,
+} = useDocBlocks<DocBlock>({ blocks: () => docBlocks.value, boxRef: docRef });
 
 /** 详情：按环节取到的是各自的结构（解析 / 组装 / 预处理 / 切片），页面按 `in` 判别专属字段 */
 const detail = ref<ParseDetail | StructureDetail | PreprocessDetail | ChunkDetail | null>(null);
@@ -887,9 +892,25 @@ const expanded = ref(new Set<string>());
 
 // ---- 原文预览与双栏联动 ----
 
-/** 原文件字节（预览用）与加载态；与解析详情各自独立取数 */
-const sourceBlob = ref<Blob | null>(null);
-const sourceError = ref('');
+/** 原文件字节与预览状态（判形态、取字节、记页数）；与解析详情各自独立取数 */
+const {
+  sourceBlob,
+  sourceError,
+  previewPage,
+  previewReady,
+  previewTotal,
+  fileKindText,
+  fileSizeText,
+  previewKind,
+  canPreview,
+  loadSource,
+  onPreviewLoaded,
+  onOfficeLoaded,
+  reset: resetSource,
+} = useSourcePreview({
+  fileName: () => props.fileName,
+  sourceFileId: () => props.sourceFileId,
+});
 /** 预览组件的联合引用：按当前类型取到的那一个会被赋值 */
 const previewRef = ref<InstanceType<typeof PdfSourcePreview> | null>(null);
 const docxRef = ref<InstanceType<typeof DocxSourcePreview> | null>(null);
@@ -917,65 +938,12 @@ const {
   taskId: () => props.taskId,
   onResize: measureRenderedTexts,
 });
-/** 预览当前页（0 = 预览还没就绪） */
-const previewPage = ref(0);
-const previewReady = computed(() => previewPage.value > 0);
-/** 原文件总页数（预览加载完成后由子组件告知） */
-const previewTotal = ref(0);
 /** 是否只列预览当前页的元素 */
 const followPreview = ref(true);
 /** 在原文上点中的元素（与"选中"分开：点选保留高亮，选中随交互移动） */
 const pickedKey = ref('');
 /** 当前重点标注的元素 */
 const activeKey = ref('');
-
-/** 文件名后缀（大写下发给判断）；无后缀时为空 */
-const fileExt = computed(() => {
-  const name = props.fileName;
-  const dot = name.lastIndexOf('.');
-  return dot < 0 ? '' : name.slice(dot + 1).toUpperCase();
-});
-
-const fileKindText = computed(() => (fileExt.value ? `${fileExt.value} 文件` : '该文件'));
-
-const fileSizeText = computed(() => {
-  const size = sourceBlob.value?.size ?? 0;
-  if (size <= 0) {
-    return '';
-  }
-  if (size < 1024) {
-    return `${size} B`;
-  }
-  if (size < 1024 * 1024) {
-    return `${(size / 1024).toFixed(1)} KB`;
-  }
-  return `${(size / 1024 / 1024).toFixed(1)} MB`;
-});
-
-/**
- * 预览形态：按当前支持的文件类型分派到对应渲染器。
- *
- * <p>白名单（`knowledge.file.enabled-formats`）= PDF/DOC/DOCX/XLS/XLSX；
- * 其中只有 PDF/DOCX/XLSX 有可用的浏览器端渲染器，DOC/XLS 与图片走降级
- * （图片在建档校验期就被拒，不会到这里）。
- */
-type PreviewKind = 'pdf' | 'docx' | 'xlsx' | 'none';
-
-const previewKind = computed<PreviewKind>(() => {
-  if (fileExt.value === 'PDF') {
-    return 'pdf';
-  }
-  if (fileExt.value === 'DOCX') {
-    return 'docx';
-  }
-  if (fileExt.value === 'XLSX') {
-    return 'xlsx';
-  }
-  return 'none';
-});
-
-/** 当前类型是否支持内嵌预览（决定提示文案与是否显示"可定位 N 个元素"） */
-const canPreview = computed(() => previewKind.value !== 'none');
 
 /** DOCX 元素 id 形如 `p12` / `t3`，其中数字即段落 / 表格序号（与解析产物同口径） */
 function docxAnchorOf(item: StageContentItem, key: string): DocxAnchor | null {
@@ -1270,9 +1238,6 @@ const docTitleCount = computed(
 
 /** 不进切片的块数（清洗后的正文栏头展示口径） */
 const docDroppedCount = computed(() => docAllBlocks.value.filter((block) => block.dropped).length);
-
-/** 已渲染的文档块：滚动到哪渲染到哪 */
-const renderedDocBlocks = computed(() => docBlocks.value.slice(0, docRenderLimit.value));
 
 /** 产物元素 → 文档块：排版口径来自类型，序号 / 说明 / 标签由入参给（切片用） */
 function docBlockOf(item: DocSource): DocBlock {
@@ -1835,38 +1800,24 @@ const docEmptyText = computed(() => {
     : '本次运行没有可展示的组装产物内容';
 });
 
-/** 剔除内容：页码与数据（与「清洗结果」各自独立取数） */
-const excludedPage = ref(1);
-const excludedItems = ref<StageContentItem[]>([]);
-const excludedTotal = ref(0);
-const excludedLoading = ref(false);
-const excludedError = ref('');
-/** 是否已取过（切到该页签时按需加载） */
-const excludedLoaded = ref(false);
-
-/** 拉「剔除内容」某一页：只取不进切片的元素（剔除态 + 重复份） */
-async function loadExcluded(): Promise<void> {
-  excludedLoading.value = true;
-  excludedError.value = '';
-  try {
-    const data = await getStageContent(props.fileResultId, props.stage, {
-      taskId: props.taskId,
-      status: PREPROCESS_CHUNK_SKIP_STATUSES.join(','),
-      current: excludedPage.value,
-      size: PAGE_SIZE,
-    });
-    excludedItems.value = data.items ?? [];
-    excludedTotal.value = data.total ?? 0;
-    excludedLoaded.value = true;
-  } catch {
-    // 失败提示已由接口层统一拦截处理
-    excludedItems.value = [];
-    excludedTotal.value = 0;
-    excludedError.value = '剔除内容加载失败';
-  } finally {
-    excludedLoading.value = false;
-  }
-}
+/** 「剔除内容」页签：只取不进切片的元素（剔除态 + 重复份），与「清洗结果」各自独立取数 */
+const {
+  page: excludedPage,
+  items: excludedItems,
+  total: excludedTotal,
+  loading: excludedLoading,
+  error: excludedError,
+  loaded: excludedLoaded,
+  pageCount: excludedPageCount,
+  load: loadExcluded,
+  go: goExcludedPage,
+  reset: resetExcluded,
+} = useExcludedPane({
+  fileResultId: () => props.fileResultId,
+  stage: () => props.stage,
+  taskId: () => props.taskId,
+  pageSize: PAGE_SIZE,
+});
 
 /** 剔除内容行 */
 interface ExcludedRow {
@@ -1909,18 +1860,6 @@ function traceReason(raw: unknown): string {
   } catch {
     return '';
   }
-}
-
-const excludedPageCount = computed(() => Math.max(1, Math.ceil(excludedTotal.value / PAGE_SIZE)));
-
-/** 剔除内容翻页 */
-function goExcludedPage(next: number): void {
-  const target = Math.min(Math.max(next, 1), excludedPageCount.value);
-  if (target === excludedPage.value) {
-    return;
-  }
-  excludedPage.value = target;
-  void loadExcluded();
 }
 
 /** 字段行（预处理） */
@@ -2362,53 +2301,6 @@ async function loadItems(): Promise<void> {
 }
 
 /**
- * 取原文件字节：只依赖文件引用，与解析详情各自独立（解析失败也照常预览）。
- *
- * <p>失败分三类报，各自的下一步动作不同：
- * 没有文件引用 → 数据问题；HTTP 非 2xx → 取文件问题；拿到 JSON 错误信封 → 后端拒了这次读取。
- */
-async function loadSource(): Promise<void> {
-  sourceError.value = '';
-  sourceBlob.value = null;
-  previewPage.value = 0;
-  if (!props.sourceFileId) {
-    sourceError.value = '这条文件结果没有可用的源文件引用';
-    return;
-  }
-  try {
-    const blob = await getSourceFile(props.sourceFileId);
-    if (blob.size === 0) {
-      sourceError.value = '原文件内容为空（服务端返回 0 字节）';
-      return;
-    }
-    // 下载失败时后端仍以 200 + JSON 错误信封返回，这里把它认出来
-    if (blob.type.includes('json')) {
-      sourceError.value = `取原文件失败：${await errorEnvelopeText(blob)}`;
-      return;
-    }
-    sourceBlob.value = blob;
-  } catch (err) {
-    sourceError.value = `取原文件失败${httpStatusText(err)}`;
-  }
-}
-
-/** 取 axios 错误里的 HTTP 状态码，拼成可读后缀 */
-function httpStatusText(err: unknown): string {
-  const status = (err as { response?: { status?: number } }).response?.status;
-  return typeof status === 'number' ? `（HTTP ${status}）` : '';
-}
-
-/** 把 JSON 错误信封读成 `code msg`；读不出来时给原文串 */
-async function errorEnvelopeText(blob: Blob): Promise<string> {
-  try {
-    const body = JSON.parse(await blob.text()) as { code?: number; msg?: string };
-    return `${body.code ?? '—'} ${body.msg ?? '服务端返回了错误信息'}`;
-  } catch {
-    return '服务端返回的不是文件内容';
-  }
-}
-
-/**
  * 左栏翻页 → 右栏切到该页元素。
  *
  * <p>跟随开关打开时按页重取（后端 docPage 过滤）；关闭时右栏保持全量列表，只移动选中项。
@@ -2421,19 +2313,6 @@ function onPreviewPage(pageNo: number): void {
   page.value = 1;
   expanded.value = new Set<string>();
   void loadItems();
-}
-
-/** 预览文档就绪：记下总页数 / 工作表数，并把首开页上报为第 1 页 */
-function onPreviewLoaded(total: number): void {
-  previewTotal.value = total;
-  if (previewPage.value === 0) {
-    previewPage.value = 1;
-  }
-}
-
-/** Word / Excel 预览就绪：这两类没有页概念，栏头只显示文件信息与可定位元素数 */
-function onOfficeLoaded(): void {
-  previewTotal.value = 0;
 }
 
 /**
@@ -2497,14 +2376,8 @@ async function revealDocBlock(key: string): Promise<void> {
   if (index < 0) {
     return;
   }
-  if (index >= docRenderLimit.value) {
-    docRenderLimit.value = Math.min(docBlocks.value.length, index + DOC_RENDER_STEP);
-  }
-  await nextTick();
-  const block = docRef.value?.querySelector(`[data-key="${CSS.escape(key)}"]`);
-  if (block instanceof HTMLElement) {
-    block.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  }
+  ensureDocRendered(index);
+  await scrollToBlock(key);
 }
 
 /**
@@ -2531,17 +2404,6 @@ async function revealRightRow(key: string): Promise<void> {
     }
   }
   await scrollElementIntoView(key);
-}
-
-/** 文档滚动到接近底部时追加渲染窗口 */
-function onDocScroll(event: Event): void {
-  const box = event.currentTarget as HTMLElement | null;
-  if (box === null || docRenderLimit.value >= docBlocks.value.length) {
-    return;
-  }
-  if (box.scrollTop + box.clientHeight >= box.scrollHeight - DOC_LOAD_MARGIN) {
-    docRenderLimit.value = Math.min(docBlocks.value.length, docRenderLimit.value + DOC_RENDER_STEP);
-  }
 }
 
 /** 左栏点原文 → 命中的元素滚到右栏并选中 */
@@ -2704,19 +2566,14 @@ watch(
     expanded.value = new Set<string>();
     copyHint.value = '';
     followPreview.value = true;
-    previewPage.value = 0;
     activeKey.value = '';
     pickedKey.value = '';
-    sourceError.value = '';
+    resetSource();
     // 文档渲染窗口回到起点：换运行后按新产物重新按需渲染
-    docRenderLimit.value = DOC_RENDER_STEP;
+    resetDocWindow();
     // 清洗后的正文回到"只看保留"档；剔除内容重新按需取
     cleanedMode.value = 'kept';
-    excludedPage.value = 1;
-    excludedItems.value = [];
-    excludedTotal.value = 0;
-    excludedError.value = '';
-    excludedLoaded.value = false;
+    resetExcluded();
     // 切片结果回到"全部"档；两个切片过滤页签重新按需取数
     chunkMode.value = 'all';
     fallbackPane.reset();
