@@ -97,23 +97,25 @@ public final class TextUtil {
 
     /**
      * 字符集 Jaccard 相似度（忽略空白字符）：去重合并与续表表头判定的公共口径。
-     * 两端均为空文本视为同一（返回 1）。
+     * null 视为空文本；两端均为空文本视为同一（返回 1）。
      *
-     * @param a 文本 A
-     * @param b 文本 B
+     * @param a 文本 A（可空）
+     * @param b 文本 B（可空）
      * @return 字符集 Jaccard 相似度
      */
     public static double jaccardCharSet(String a, String b) {
-        if (a.isBlank() && b.isBlank()) {
+        String left = NullUtil.isNull(a) ? "" : a;
+        String right = NullUtil.isNull(b) ? "" : b;
+        if (left.isBlank() && right.isBlank()) {
             return 1;
         }
-        if (a.isBlank() || b.isBlank()) {
+        if (left.isBlank() || right.isBlank()) {
             return 0;
         }
         Set<Character> setA = new HashSet<>();
-        a.chars().filter(c -> !Character.isWhitespace(c)).forEach(c -> setA.add((char) c));
+        left.chars().filter(c -> !Character.isWhitespace(c)).forEach(c -> setA.add((char) c));
         Set<Character> setB = new HashSet<>();
-        b.chars().filter(c -> !Character.isWhitespace(c)).forEach(c -> setB.add((char) c));
+        right.chars().filter(c -> !Character.isWhitespace(c)).forEach(c -> setB.add((char) c));
         return jaccardRatio(setA, setB);
     }
 
