@@ -19,7 +19,6 @@ import com.workbuddy.common.domain.parse.capability.OcrRegion;
 import com.workbuddy.common.domain.parse.capability.ProviderContext;
 import com.workbuddy.common.domain.parse.capability.StructuredOcrResult;
 import com.workbuddy.common.enums.parse.ParseAssetKind;
-import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.task.StepLogInfo;
 import com.workbuddy.common.domain.parse.signal.Signal;
 import com.workbuddy.common.enums.parse.ElementType;
@@ -54,6 +53,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
 
@@ -172,7 +172,7 @@ public class ParsePipeline {
         result.setCapabilitySnapshot(snapshot);
         ParseSource ocrSource;
         try {
-            ocrSource = ocrSource(nativeSource, context);
+            ocrSource = ocrSource(nativeSource, quality, context);
         } catch (CancellationException e) {
             outcome.fail(PipelineTaskErrorCode.PARSE_TIMEOUT.name(), "解析已取消（超时/停机）");
             return outcome;
@@ -250,31 +250,42 @@ public class ParsePipeline {
     }
 
     /**
-     * ocr 路：整页无文本且含图片的页交结构化 OCR，识别结果按行产 PARAGRAPH 元素（`needsOcr=false`）并记补强事实；
-     * 未接入能力、无可识别页或某页失败时按页记降级事实，路说明沿用占位文案。
+     * ocr 路：触发集 = 扫描页 ∪ 失败页（乱码/CID 缺映射）；整页图交结构化 OCR，识别结果按行产
+     * PARAGRAPH 元素（`needsOcr=false`）并记补强事实；未接入能力、无可识别页或某页失败时按页记降级事实。
      * 与 native 路的重叠区域仍由组装环节裁决，本路不做合并。
      */
-    private ParseSource ocrSource(ParseSource nativeSource, ParseContext context) {
+    private ParseSource ocrSource(ParseSource nativeSource, QualityInfo quality, ParseContext context) {
         ParseSource ocr = new ParseSource();
         ocr.setSource("ocr");
         ocr.setCandidateOrder(false);
-        ocr.setNote("预留未开放：接入后扫描/图片区域文字走本路，与 native 路重叠区域由组装环节裁决");
+        ocr.setNote("OCR 能力未接入：接入后扫描/乱码页文字走本路，与 native 路重叠区域由组装环节裁决");
         StructuredOcrProvider provider = NullUtil.isNull(capabilityRegistry) ? null : capabilityRegistry.ocr();
         if (NullUtil.isNull(provider)) {
             return ocr;
         }
+        Set<Integer> candidates = new TreeSet<>();
+        candidates.addAll(quality.getScannedPages());
+        candidates.addAll(quality.getFailedPages());
         int filledPages = 0;
-        for (PageMetric metric : ObjectUtil.defaultIfNull(nativeSource.getPageMetrics(), List.<PageMetric>of())) {
+        for (Integer pageNo : candidates) {
             context.getCancellationToken().throwIfCancelled();
-            if (metric.getCharCount() > 0 || !hasImage(metric)) {
-                continue;
-            }
-            String region = "page " + metric.getPage();
+            String region = "page " + pageNo;
             OcrRegion ocrRegion = new OcrRegion();
-            ocrRegion.setPage(metric.getPage());
-            ocrRegion.setImageRef(pageAssetId(context, metric.getPage()));
-            ocrRegion.setBbox(pageBox(nativeSource, metric.getPage()));
-            StructuredOcrResult recognized = provider.recognize(ocrRegion, new ProviderContext());
+            ocrRegion.setPage(pageNo);
+            ocrRegion.setImageRef(pageAssetId(context, pageNo));
+            ocrRegion.setBbox(pageBox(nativeSource, pageNo));
+            ProviderContext providerContext = new ProviderContext();
+            providerContext.setTaskId(context.getFileResultId());
+            providerContext.setAssetBytes(imageRef -> context.getAssetSink().read(imageRef));
+            StructuredOcrResult recognized;
+            try {
+                recognized = provider.recognize(ocrRegion, providerContext);
+            } catch (RuntimeException e) {
+                log.warn("===> ParsePipeline OCR 识别失败, fileResultId={}, region={}, error={}",
+                        context.getFileResultId(), region,
+                        StrUtil.maxLength(String.valueOf(e.getMessage()), 200));
+                recognized = null;
+            }
             if (NullUtil.isNull(recognized) || NullUtil.isNull(recognized.getLines())
                     || recognized.getLines().isEmpty()) {
                 ocr.getFacts().add(CapabilityFacts.ocrDegraded(region, "调用失败或结果不完整"));
@@ -282,7 +293,7 @@ public class ParsePipeline {
             }
             filledPages++;
             for (OcrLine line : recognized.getLines()) {
-                ocr.getElements().add(ocrParagraph(line, metric.getPage()));
+                ocr.getElements().add(ocrParagraph(line, pageNo));
             }
             ocr.getFacts().add(CapabilityFacts.ocrEnhanced(region, recognized));
             if (ocr.getCapabilities().isEmpty()) {
@@ -290,9 +301,9 @@ public class ParsePipeline {
                         new CapabilityUsage(CapabilityUsage.KIND_OCR, recognized.getModel(), recognized.getVersion()));
             }
         }
-        if (filledPages == 0) {
-            ocr.setNote("OCR 能力已接入但本档无可补文字的页（整页无文本且含图片的页）");
-        }
+        ocr.setNote(filledPages == 0
+                ? "OCR 能力已接入但本档无可补文字的页（扫描页与乱码/CID 失败页）"
+                : "OCR 能力已接入：" + filledPages + " 页文字由能力补出，与 native 路重叠区域由组装环节裁决");
         return ocr;
     }
 
@@ -318,14 +329,6 @@ public class ParsePipeline {
                 .map(ParseAsset::getAssetId)
                 .findFirst()
                 .orElse(null);
-    }
-
-    /** 该单元是否含图片：Office 看内嵌图片数，PDF 看图片覆盖占比 */
-    private boolean hasImage(PageMetric metric) {
-        if (NullUtil.isNotNull(metric.getImageCount()) && metric.getImageCount() > 0) {
-            return true;
-        }
-        return metric.getImageAreaRatio() >= properties.getScanPageImageRatio();
     }
 
     /** 页包围盒：按页尺寸取整页（页尺寸缺失时给 null，区域仍可发起调用） */
@@ -496,7 +499,12 @@ public class ParsePipeline {
                 additionalFailedUnits++;
             }
         }
-        int effectiveFailedUnits = failedUnits + additionalFailedUnits;
+        // 乱码/CID 失败页被 OCR 覆盖即恢复：从失败计数扣除并移出失败页清单
+        int recoveredFailedUnits = (int) quality.getFailedPages().stream()
+                .filter(ocrPages::contains)
+                .count();
+        quality.getFailedPages().removeIf(ocrPages::contains);
+        int effectiveFailedUnits = failedUnits + additionalFailedUnits - recoveredFailedUnits;
         outcome.setFailedUnits(effectiveFailedUnits);
 
         // 纯扫描件且 OCR 一页未恢复：能力未覆盖，整任务 FAILED；部分恢复时继续按占比判定

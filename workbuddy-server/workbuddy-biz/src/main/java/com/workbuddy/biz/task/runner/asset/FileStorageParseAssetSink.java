@@ -29,6 +29,9 @@ public class FileStorageParseAssetSink implements ParseAssetSink {
 
     private final Map<String, ParseAsset> assets = new LinkedHashMap<>();
 
+    /** 资产 ID → 对象位置（写入时登记，读回按位置取） */
+    private final Map<String, ObjectRef> refs = new LinkedHashMap<>();
+
     /**
      * 构造资产写入实现。
      *
@@ -81,6 +84,7 @@ public class FileStorageParseAssetSink implements ParseAssetSink {
             asset.setWidth(width);
             asset.setHeight(height);
             assets.put(assetId, asset);
+            refs.put(assetId, ref);
             return asset;
         } catch (RuntimeException e) {
             throw new ParseAssetException("解析资产写入失败: " + mimeType, e);
@@ -105,5 +109,17 @@ public class FileStorageParseAssetSink implements ParseAssetSink {
     @Override
     public boolean enabled() {
         return true;
+    }
+
+    /**
+     * 按资产 ID 读回字节。
+     *
+     * @param assetId 资产 ID
+     * @return 字节；未登记为 null
+     */
+    @Override
+    public byte[] read(String assetId) {
+        ObjectRef ref = refs.get(assetId);
+        return NullUtil.isNull(ref) ? null : fileStorage.getObject(ref);
     }
 }

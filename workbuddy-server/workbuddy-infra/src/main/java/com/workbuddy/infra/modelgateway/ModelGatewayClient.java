@@ -73,24 +73,28 @@ public class ModelGatewayClient {
     }
 
     /**
-     * 图片 OCR（网关直译返回）：prompt 与 schema 由调用方定义，单页图 pdfPageLimit 恒 1。
+     * 图片 OCR（网关直译返回）：提示词与 schema 均按业务键统一管理（网关 prompts/schemas 目录），
+     * 调用方只传 key 与占位符参数；单页图 pdfPageLimit 恒 1。
      *
      * @param requestId    调用追踪 ID
      * @param source       调用来源标识
      * @param image        图片字节
      * @param mimeType     图片 MIME
-     * @param prompt       识别提示词
-     * @param schema       期望返回的 JSON schema
+     * @param promptKey    业务提示词键（网关侧模板）
+     * @param promptParams 提示词占位符参数（可空）
+     * @param schemaKey    业务 schema 键（网关 schemas 目录；空为纯文本输出）
      * @param pdfPageLimit PDF 输入页数上限（图片输入不生效）
      * @return 模型原文与结构化字段
      */
     public OcrResponse ocrLines(String requestId, String source, byte[] image, String mimeType,
-                                String prompt, Map<String, Object> schema, int pdfPageLimit) {
+                                String promptKey, Map<String, Object> promptParams,
+                                String schemaKey, int pdfPageLimit) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("file_base64", Base64.getEncoder().encodeToString(image));
         payload.put("mime_type", mimeType);
-        payload.put("prompt", prompt);
-        payload.put("schema", schema);
+        payload.put("prompt_key", promptKey);
+        payload.put("prompt_params", promptParams);
+        payload.put("schema_key", schemaKey);
         payload.put("pdf_page_limit", pdfPageLimit);
         return OcrResponse.from(post(OCR_PATH, requestId, source, "OCR", payload));
     }
@@ -132,8 +136,12 @@ public class ModelGatewayClient {
         return data;
     }
 
-    /** 网关失败消息：message 缺失时给通用文案。 */
+    /** 网关失败消息：msg 字段（灵犀信封口径），缺失时回落 message，再缺给通用文案。 */
     private static String gatewayMessage(Map<?, ?> response) {
+        Object msg = response.get("msg");
+        if (msg != null) {
+            return String.valueOf(msg);
+        }
         Object message = response.get("message");
         return message == null ? "模型网关调用失败" : String.valueOf(message);
     }

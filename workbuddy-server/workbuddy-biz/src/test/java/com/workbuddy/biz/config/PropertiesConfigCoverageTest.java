@@ -62,6 +62,7 @@ class PropertiesConfigCoverageTest {
 
     static {
         TARGETS.put("knowledge.parse", ParseProperties.class);
+        TARGETS.put("knowledge.parse.capabilities", ParseProperties.Capabilities.class);
         TARGETS.put("knowledge.structure", StructureProperties.class);
         TARGETS.put("knowledge.preprocess", PreprocessProperties.class);
         TARGETS.put("knowledge.chunk", ChunkProperties.class);

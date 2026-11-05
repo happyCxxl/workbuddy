@@ -72,7 +72,7 @@ class ParsePipelineOcrTest {
         ParseSource ocr = outcome.getParseResult().getSources().get(1);
         assertEquals("ocr", ocr.getSource());
         assertTrue(ocr.getElements().isEmpty());
-        assertTrue(ocr.getNote().contains("预留未开放"), () -> "note=" + ocr.getNote());
+        assertTrue(ocr.getNote().contains("能力未接入"), () -> "note=" + ocr.getNote());
         assertNull(outcome.getParseResult().getCapabilitySnapshot().getOcr());
         assertEquals(PipelineTaskStatus.FAILED, outcome.getSuggestedStatus());
         assertEquals(PipelineTaskErrorCode.SCANNED_UNSUPPORTED.name(), outcome.getErrorCode());
@@ -95,6 +95,33 @@ class ParsePipelineOcrTest {
         assertEquals(PipelineTaskStatus.PARTIAL_SUCCESS, outcome.getSuggestedStatus());
         assertEquals(1, outcome.getFailedUnits());
         assertEquals(List.of(2), outcome.getParseResult().getQuality().getFailedPages());
+    }
+
+    /**
+     * 乱码页也交 OCR 且恢复后不计失败单元（{@code garbledPageShouldBeRecoveredByOcr}）。
+     */
+    @Test
+    void garbledPageShouldBeRecoveredByOcr() {
+        fixture.properties().setGarbledRateThreshold(0.2);
+        PageMetric garbled = new PageMetric();
+        garbled.setPage(1);
+        garbled.setCharCount(200);
+        garbled.setGarbledRatio(0.5);
+        List<PageMetric> metrics = new ArrayList<>();
+        metrics.add(garbled);
+        for (int i = 2; i <= 10; i++) {
+            metrics.add(fixture.normalPage(i));
+        }
+        ParsePipeline pipeline = fixture.pipeline(fixture.fakeParser(metrics, List.of()), stubOcrRegistry());
+
+        ParseOutcome outcome = pipeline.run(fixture.context("application/pdf"));
+
+        ParseSource ocr = outcome.getParseResult().getSources().get(1);
+        assertEquals(2, ocr.getElements().size());
+        assertEquals(1, ocr.getElements().getFirst().getPage());
+        assertEquals(PipelineTaskStatus.SUCCESS, outcome.getSuggestedStatus());
+        assertEquals(0, outcome.getFailedUnits());
+        assertTrue(outcome.getParseResult().getQuality().getFailedPages().isEmpty());
     }
 
     /** 只接 OCR 能力的注册表：桩为每页返回两行（页码随区域走） */

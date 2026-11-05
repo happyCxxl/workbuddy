@@ -70,3 +70,8 @@ knowledge:
     column-min-chars: 10
     column-min-page-chars: 100
     column-max-count: 4
+    # 能力开关：候选 = Spring Bean 集合 ∩ 本开关（默认关，接入验证后开）
+    capabilities:
+      ocr: false
+      layout: false
+      table: false

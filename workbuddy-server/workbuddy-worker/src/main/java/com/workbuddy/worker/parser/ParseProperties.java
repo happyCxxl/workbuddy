@@ -156,6 +156,9 @@ public class ParseProperties {
     /** 分栏：最大栏数 */
     private int columnMaxCount;
 
+    /** 能力开关：候选 = Spring Bean 集合 ∩ 本开关（默认关，接入验证后开） */
+    private Capabilities capabilities = new Capabilities();
+
     /**
      * 启动期校验：配置面是唯一基线，缺键即 0 或越界必须在启动时暴露，不能等到解析判定才出错。
      */
@@ -290,5 +293,21 @@ public class ParseProperties {
      */
     private void fail(String key, String rule, Object value) {
         throw new IllegalStateException("knowledge.parse." + key + " " + rule + "，当前值=" + value);
+    }
+
+    /**
+     * 解析能力开关（knowledge.parse.capabilities 前缀）：实现类随模块注册，开关决定是否启用。
+     */
+    @Data
+    public static class Capabilities {
+
+        /** 结构化 OCR：扫描页/乱码页/CID 缺映射页补文字 */
+        private boolean ocr;
+
+        /** 版面分析：复杂页阅读顺序（接入后启用） */
+        private boolean layout;
+
+        /** 表格结构识别：规则失败表格（接入后启用） */
+        private boolean table;
     }
 }

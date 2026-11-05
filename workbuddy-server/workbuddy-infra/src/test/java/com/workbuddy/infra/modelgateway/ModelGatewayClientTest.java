@@ -105,7 +105,7 @@ class ModelGatewayClientTest {
      */
     @Test
     void embedFailureCodeNonZeroMapsToServerError() {
-        nextResponse.set("{\"code\":500,\"message\":\"候选模型全部失败\"}");
+        nextResponse.set("{\"code\":500,\"msg\":\"候选模型全部失败\"}");
 
         WorkbuddyException error = assertThrows(WorkbuddyException.class,
                 () -> new ModelGatewayClient(properties).embed(embedRequest("rid-2")));
@@ -135,18 +135,19 @@ class ModelGatewayClientTest {
         nextResponse.set("{\"code\":0,\"data\":{\"text\":\"t\",\"pages\":1,"
                 + "\"fields\":{\"text_lines\":[{\"text\":\"行\"}]},\"meta\":{\"model_key\":\"ocr\"}}}");
         byte[] image = {1, 2, 3};
-        Map<String, Object> schema = Map.of("text_lines", "array");
+        Map<String, Object> params = Map.of("k", "v");
 
         OcrResponse response = new ModelGatewayClient(properties)
-                .ocrLines("rid-4", "parse.ocr", image, "image/png", "识别图片", schema, 1);
+                .ocrLines("rid-4", "parse.ocr", image, "image/png", "ocr_lines", params, "ocr_lines", 1);
 
         assertEquals("OCR", capturedBody.get().get("capability"));
         assertEquals("parse.ocr", capturedBody.get().get("source"));
         Map<?, ?> payload = (Map<?, ?>) capturedBody.get().get("payload");
         assertEquals(Base64.getEncoder().encodeToString(image), payload.get("file_base64"));
         assertEquals("image/png", payload.get("mime_type"));
-        assertEquals("识别图片", payload.get("prompt"));
-        assertEquals(schema, payload.get("schema"));
+        assertEquals("ocr_lines", payload.get("prompt_key"));
+        assertEquals(params, payload.get("prompt_params"));
+        assertEquals("ocr_lines", payload.get("schema_key"));
         assertEquals(1.0, payload.get("pdf_page_limit"));
         assertEquals("t", response.text());
         assertEquals(1, response.pages());

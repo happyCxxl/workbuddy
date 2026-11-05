@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.Provenance;
+import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.ParseAssetKind;
@@ -45,6 +46,8 @@ public final class PdfImageEmitter {
     public static void emit(PageContent page, List<ParseElement> elements, ParseSource source,
                      String fileId, ParseProperties properties, ParseContext context,
                      PdfPageImageRenderer renderer) {
+        // OCR 候选页（扫描/乱码/CID 缺映射）先产整页图：无嵌入图片的乱码页也需要页图供 OCR 与预览
+        BufferedImage pageImage = writePageImage(page, context, renderer, properties);
         if (page.imageBoxes().isEmpty()) {
             return;
         }
@@ -59,7 +62,6 @@ public final class PdfImageEmitter {
                 .toList();
         int index = 0;
         double totalRatio = 0;
-        BufferedImage pageImage = writePageImage(page, context, renderer, properties);
         for (Region box : boxes) {
             double ratio = RuleSegments.imageArea(box, page.pageWidth(), page.pageHeight()) / pageArea;
             ParseElement image = ParseElement.of(ElementType.IMAGE);
@@ -87,11 +89,19 @@ public final class PdfImageEmitter {
         }
     }
 
+    /** 页图发射条件：扫描页（无文本且图片覆盖达门槛）或乱码/CID 缺映射页（OCR 候选页，供 OCR 与预览使用）。 */
+    private static boolean needsPageImage(PageMetric metric, ParseProperties properties) {
+        if (metric.getCharCount() == 0) {
+            return metric.getImageAreaRatio() >= properties.getScanPageImageRatio();
+        }
+        return metric.getGarbledRatio() > properties.getGarbledRateThreshold()
+                || metric.getCidMappingRatio() >= properties.getCidMappingMinRatio();
+    }
+
     /** 扫描页整页图：无文本且图片覆盖达扫描页门槛时写 PAGE_IMAGE，供 OCR 与预览使用。 */
     private static BufferedImage writePageImage(PageContent page, ParseContext context,
                                                 PdfPageImageRenderer renderer, ParseProperties properties) {
-        if (NullUtil.isNull(renderer) || page.metric().getCharCount() > 0
-                || page.metric().getImageAreaRatio() < properties.getScanPageImageRatio()) {
+        if (NullUtil.isNull(renderer) || !needsPageImage(page.metric(), properties)) {
             return null;
         }
         BufferedImage pageImage = renderer.pageImage(page.pageNo());

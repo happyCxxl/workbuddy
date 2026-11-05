@@ -43,6 +43,16 @@ public interface ParseAssetSink {
     boolean enabled();
 
     /**
+     * 按资产 ID 读回字节（本任务已写入的资产）。
+     *
+     * @param assetId 资产 ID
+     * @return 字节；未登记或实现不保留字节时为 null
+     */
+    default byte[] read(String assetId) {
+        return null;
+    }
+
+    /**
      * 不写资产的口径（单测与未接存储的解析路径）。
      *
      * @return 空实现
