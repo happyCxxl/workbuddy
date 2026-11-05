@@ -2,7 +2,6 @@
 
 # pyright: reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false
 
-import json
 import logging
 import time
 from collections.abc import AsyncIterator
@@ -13,6 +12,7 @@ from openai import APIStatusError
 
 from lingxi.app.config import Settings
 from lingxi.contract import REQUEST_ID, SESSION_ID, ApiError, ErrorCode
+from lingxi.core.prompts import render_prompt
 from lingxi.db.engine import session_scope
 from lingxi.db.models import ModelCall
 from lingxi.db.repo.model_call_repo import ModelCallRepo
@@ -91,8 +91,11 @@ class LlmGateway:
                         ) from exc
         raise ApiError(ErrorCode.MODEL_UNAVAILABLE, f"模型出口全部候选不可用：{type(last_error).__name__}")
 
-    async def structured(self, prompt: str, model_type: type[ModelT]) -> ModelT:
-        """结构化输出：有可用模型时走能力层，否则回落直连通道。"""
+    async def structured(
+        self, prompt_key: str, model_type: type[ModelT], params: dict[str, str] | None = None
+    ) -> ModelT:
+        """结构化输出：提示词按业务键统一管理（lingxi/prompts/），本地渲染后走能力层或直连通道。"""
+        prompt = render_prompt(prompt_key, **(params or {}))
         if await self._use_gateway(None):
             return await self._gateway_structured(prompt, model_type)
         last_error: Exception | None = None
@@ -199,16 +202,15 @@ class LlmGateway:
             )
 
     async def _gateway_structured(self, prompt: str, model_type: type[ModelT]) -> ModelT:
-        """能力层结构化输出：JSON 模式 + 本地 schema 校验。"""
-        schema = json.dumps(model_type.model_json_schema(), ensure_ascii=False)
+        """能力层结构化输出：只传 prompt 与 schema，合规由网关分层机制保证，本地 Pydantic 校验兜底。"""
         try:
             result, _meta = await service.chat(
                 request_id=REQUEST_ID.get() or uuid4().hex,
                 source="assistant.structured",
                 model_id=None,
                 payload={
-                    "messages": [{"role": "user", "content": f"{prompt}\n只输出 JSON，符合以下 schema：{schema}"}],
-                    "response_format": {"type": "json_object"},
+                    "messages": [{"role": "user", "content": prompt}],
+                    "schema": model_type.model_json_schema(),
                 },
             )
         except GatewayError as exc:

@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "properties": {
+    "text_lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {"type": "string"},
+          "bbox": {"type": "array", "items": {"type": "number"}},
+          "confidence": {"type": "number"}
+        },
+        "required": ["text", "bbox"]
+      }
+    }
+  },
+  "required": ["text_lines"]
+}

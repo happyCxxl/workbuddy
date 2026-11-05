@@ -25,6 +25,7 @@ async def create_vendor(payload: VendorCreate) -> ModelVendor:
         row = ModelVendor(**payload.model_dump())
         s.add(row)
         await s.commit()
+        await s.refresh(row)
         return row
 
 
@@ -39,6 +40,7 @@ async def update_vendor(vendor_id: int, payload: VendorUpdate) -> ModelVendor:
                 continue
             setattr(row, field, value)
         await s.commit()
+        await s.refresh(row)
         return row
 
 
@@ -50,6 +52,7 @@ async def set_vendor_enabled(vendor_id: int, enabled: bool) -> ModelVendor:
             raise ApiError(ErrorCode.NOT_FOUND, f"厂商不存在：{vendor_id}")
         row.enabled = enabled
         await s.commit()
+        await s.refresh(row)
         return row
 
 
@@ -105,6 +108,7 @@ async def create_model(payload: ModelCreate) -> Model:
         row = Model(**payload.model_dump())
         s.add(row)
         await s.commit()
+        await s.refresh(row)
         return row
 
 
@@ -131,6 +135,7 @@ async def update_model(model_id: int, payload: ModelUpdate) -> Model:
         for field, value in data.items():
             setattr(row, field, value)
         await s.commit()
+        await s.refresh(row)
         return row
 
 
@@ -142,6 +147,7 @@ async def set_model_enabled(model_id: int, enabled: bool) -> Model:
             raise ApiError(ErrorCode.NOT_FOUND, f"模型不存在：{model_id}")
         row.enabled = enabled
         await s.commit()
+        await s.refresh(row)
         return row
 
 

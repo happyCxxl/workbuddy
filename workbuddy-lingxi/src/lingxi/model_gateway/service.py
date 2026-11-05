@@ -6,6 +6,8 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import cast
 
+from lingxi.core.prompts import render_prompt
+from lingxi.core.schemas import load_schema
 from lingxi.db.engine import session_scope
 from lingxi.db.models import Model, ModelGatewayCall, ModelVendor
 from lingxi.model_gateway import catalog, providers
@@ -51,11 +53,7 @@ def _matches(model: Model, capability: str, constraints: Mapping[str, object]) -
             return False
         if constraints.get("tools") and not _feature(model, "tools"):
             return False
-        if constraints.get("response_format") and not _feature(model, "response_format"):
-            return False
-    return not (
-        capability == "OCR" and constraints.get("schema") is not None and not _feature(model, "structured_output")
-    )
+    return True
 
 
 async def _candidates(
@@ -119,8 +117,11 @@ async def _run(
     source: str,
     model_id: int | None,
     constraints: Mapping[str, object],
-    call: Callable[[Model, ModelVendor], Awaitable[object]],
+    call: Callable[[Model, ModelVendor, str | None], Awaitable[object]],
 ) -> tuple[object, CallMeta]:
+    schema = constraints.get("schema")
+    if schema is not None:
+        return await _run_schema(capability, request_id, source, model_id, schema, call)
     candidates = await _candidates(capability, model_id, constraints)
     if not candidates:
         raise GatewayError("MODEL_UNAVAILABLE", f"没有可用的 {capability} 模型")
@@ -132,7 +133,7 @@ async def _run(
         attempts += 1
         started = time.perf_counter()
         try:
-            result = await call(model, vendor)  # type: ignore[operator]
+            result = await call(model, vendor, None)  # type: ignore[operator]
             latency = int((time.perf_counter() - started) * 1000)
             usage = getattr(result, "usage", {})
             routing_state.record_success(model.id, latency, usage)
@@ -181,6 +182,89 @@ async def _run(
     raise GatewayError("MODEL_UNAVAILABLE", "全部候选模型调用失败", failures)
 
 
+_SCHEMA_LAYERS: list[tuple[str | None, str]] = [
+    ("json_schema", "strict"),
+    ("json_object", "json_object"),
+    (None, "manual"),
+]
+
+
+async def _run_schema(
+    capability: str,
+    request_id: str,
+    source: str,
+    model_id: int | None,
+    schema: object,
+    call: Callable[[Model, ModelVendor, str], Awaitable[object]],
+) -> tuple[object, CallMeta]:
+    """带 schema 的分层候选：每降一层候选池扩大（嵌套），上一层的模型在下一层换机制重试。
+
+    三层：支持 json_schema 的模型走 strict 直通；支持 json_object 的模型走 json_object + 校验重试；
+    全部模型走手写解析 + 校验重试。任何一层成功即止；全败按 MODEL_UNAVAILABLE 收口。
+    """
+    candidates = await _candidates(capability, model_id, {})
+    if not candidates:
+        raise GatewayError("MODEL_UNAVAILABLE", f"没有可用的 {capability} 模型")
+    failures: list[dict[str, object]] = []
+    attempts = 0
+    for feature_name, mechanism in _SCHEMA_LAYERS:
+        pool = [item for item in candidates if feature_name is None or _feature(item[0], feature_name)]
+        for model, vendor in pool:
+            if not routing_state.acquire(model):
+                continue
+            attempts += 1
+            started = time.perf_counter()
+            try:
+                result = await call(model, vendor, mechanism)  # type: ignore[operator]
+                latency = int((time.perf_counter() - started) * 1000)
+                usage = getattr(result, "usage", {})
+                routing_state.record_success(model.id, latency, usage)
+                meta = CallMeta(
+                    model_id=model.id,
+                    vendor=vendor.code,
+                    model_key=model.model_key,
+                    latency_ms=latency,
+                    attempts=attempts,
+                    fallback_used=attempts > 1,
+                    usage=usage,
+                )
+                await _record_call(
+                    request_id=request_id,
+                    source=source,
+                    capability=capability,
+                    meta=meta,
+                    status="SUCCESS",
+                    error_code=None,
+                    error_message=None,
+                )
+                return result, meta
+            except ProviderError as exc:
+                routing_state.record_failure(model)
+                failures.append(
+                    {
+                        "model_id": model.id,
+                        "vendor": vendor.code,
+                        "model_key": model.model_key,
+                        "mechanism": mechanism,
+                        "code": exc.code,
+                        "message": exc.message,
+                        "retryable": exc.retryable,
+                    }
+                )
+                if not exc.retryable:
+                    break
+    await _record_call(
+        request_id=request_id,
+        source=source,
+        capability=capability,
+        meta=None,
+        status="FAILED",
+        error_code="MODEL_UNAVAILABLE",
+        error_message="；".join(str(item["message"]) for item in failures),
+    )
+    raise GatewayError("MODEL_UNAVAILABLE", "全部候选模型调用失败", failures)
+
+
 async def chat(
     *,
     request_id: str,
@@ -188,14 +272,14 @@ async def chat(
     model_id: int | None,
     payload: dict[str, object],
 ) -> tuple[ChatOutput, CallMeta]:
-    """对话：指定模型或按能力自动切换。"""
+    """对话：指定模型或按能力自动切换；带 schema 时走分层机制，否则普通对话。"""
     constraints = {
         "tools": bool(payload.get("tools")),
-        "response_format": bool(payload.get("response_format")),
+        "schema": payload.get("schema"),
     }
 
-    async def call(model: Model, vendor: ModelVendor) -> ChatOutput:
-        return await providers.chat(model, vendor, payload)
+    async def call(model: Model, vendor: ModelVendor, mechanism: str | None = None) -> ChatOutput:
+        return await providers.chat(model, vendor, payload, mechanism)
 
     result, meta = await _run("CHAT", request_id, source, model_id, constraints, call)
     return result, meta  # type: ignore[return-value]
@@ -284,16 +368,26 @@ async def ocr(
     model_id: int | None,
     data: bytes,
     mime_type: str,
-    prompt: str,
-    schema: dict[str, object] | None,
+    prompt_key: str,
+    prompt_params: Mapping[str, str] | None = None,
+    schema_key: str | None = None,
     page_limit: int,
 ) -> tuple[OcrOutput, CallMeta]:
-    """OCR：指定模型或按能力自动切换。"""
+    """OCR：提示词与 schema 均按业务键统一管理（lingxi/prompts/、lingxi/schemas/），渲染/加载后走分层机制。"""
+    prompt = render_prompt(prompt_key, **(prompt_params or {}))
+    schema = load_schema(schema_key) if schema_key else None
     constraints = {"schema": schema}
 
-    async def call(model: Model, vendor: ModelVendor) -> OcrOutput:
+    async def call(model: Model, vendor: ModelVendor, mechanism: str | None = None) -> OcrOutput:
         return await providers.ocr(
-            model, vendor, data=data, mime_type=mime_type, prompt=prompt, schema=schema, page_limit=page_limit
+            model,
+            vendor,
+            data=data,
+            mime_type=mime_type,
+            prompt=prompt,
+            schema=schema,
+            page_limit=page_limit,
+            mechanism=mechanism,
         )
 
     result, meta = await _run("OCR", request_id, source, model_id, constraints, call)
@@ -311,7 +405,7 @@ async def rerank(
 ) -> tuple[RerankOutput, CallMeta]:
     """重排：指定模型或按能力自动切换。"""
 
-    async def call(model: Model, vendor: ModelVendor) -> RerankOutput:
+    async def call(model: Model, vendor: ModelVendor, mechanism: str | None = None) -> RerankOutput:
         return await providers.rerank(model, vendor, query, documents, top_n)
 
     result, meta = await _run("RERANK", request_id, source, model_id, {}, call)
@@ -329,7 +423,6 @@ async def stream_chat(
     constraints = {
         "stream": True,
         "tools": bool(payload.get("tools")),
-        "response_format": bool(payload.get("response_format")),
     }
     candidates = await _candidates("CHAT", model_id, constraints)
     if not candidates:

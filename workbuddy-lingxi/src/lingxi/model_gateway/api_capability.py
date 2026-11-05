@@ -28,7 +28,8 @@ class ChatPayload(BaseModel):
     stream: bool = False
     temperature: float | None = None
     max_output_tokens: int | None = None
-    response_format: dict[str, object] | None = None
+    # 别名避免与 BaseModel.schema 属性同名；序列化后为 "schema"
+    output_schema: dict[str, object] | None = Field(default=None, alias="schema")
 
 
 class ChatCall(BaseModel):
@@ -65,8 +66,9 @@ class OcrPayload(BaseModel):
 
     file_base64: str
     mime_type: str
-    prompt: str = "识别图片文字"
-    schema_: dict[str, object] | None = Field(default=None, alias="schema")
+    prompt_key: str
+    prompt_params: dict[str, str] = Field(default_factory=dict[str, str])
+    schema_key: str | None = None
     pdf_page_limit: int = 20
 
 
@@ -126,7 +128,7 @@ async def require_internal(request: Request) -> None:
 @router.post("/chat")
 async def chat(call: ChatCall, _auth: None = Depends(require_internal)) -> object:
     """对话：非流式返回结果，流式返回 SSE。"""
-    payload = call.payload.model_dump()
+    payload = call.payload.model_dump(by_alias=True)
     if not call.payload.stream:
         try:
             result, meta = await service.chat(
@@ -193,8 +195,9 @@ async def ocr(call: OcrCall, _auth: None = Depends(require_internal)) -> dict[st
             model_id=call.model_id,
             data=data,
             mime_type=call.payload.mime_type,
-            prompt=call.payload.prompt,
-            schema=call.payload.schema_,
+            prompt_key=call.payload.prompt_key,
+            prompt_params=call.payload.prompt_params,
+            schema_key=call.payload.schema_key,
             page_limit=call.payload.pdf_page_limit,
         )
     except GatewayError as exc:

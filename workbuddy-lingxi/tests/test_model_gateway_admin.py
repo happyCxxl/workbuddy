@@ -23,7 +23,9 @@ async def cleanup(engine_fixture: None) -> None:
     yield
     async with session_scope() as s:
         await s.execute(delete(AiSession).where(AiSession.title == "模型切换"))
-        await s.execute(delete(Model).where(Model.model_key.in_(["same-embedding", "chat-a", "chat-b", "ocr-a"])))
+        await s.execute(
+            delete(Model).where(Model.model_key.in_(["same-embedding", "chat-a", "chat-b", "ocr-a", "upd-a"]))
+        )
         await s.execute(
             delete(ModelVendor).where(
                 or_(
@@ -31,6 +33,7 @@ async def cleanup(engine_fixture: None) -> None:
                     ModelVendor.code.like("v2-%"),
                     ModelVendor.code.like("chat-%"),
                     ModelVendor.code.like("ocr-%"),
+                    ModelVendor.code.like("upd-%"),
                 )
             )
         )
@@ -86,6 +89,31 @@ async def test_vendor_and_model_crud(client: AsyncClient) -> None:
 
     removed = await client.delete(f"/model-admin/vendors/{vendor_one}")
     assert removed.json()["code"] == ErrorCode.INVALID_ARGUMENT.code
+
+
+@pytest.mark.usefixtures("engine_fixture")
+async def test_model_update_serializes_after_commit(client: AsyncClient) -> None:
+    """编辑模型后响应可完整序列化：updated_at 为服务端 onupdate，提交后必须回读（防 DetachedInstanceError）。"""
+    suffix = uuid4().hex[:8]
+    vendor = await client.post("/model-admin/vendors", json=_vendor(f"upd-{suffix}"))
+    vendor_id = vendor.json()["data"]["id"]
+    created = await client.post("/model-admin/models", json=_model(vendor_id, "upd-a", "OCR"))
+    assert created.json()["code"] == 0
+    model_id = created.json()["data"]["id"]
+
+    updated = await client.put(
+        f"/model-admin/models/{model_id}",
+        json={
+            "model_key": "upd-a",
+            "display_name": "改名",
+            "enabled": True,
+            "features": {"json_schema": True},
+        },
+    )
+
+    assert updated.json()["code"] == 0
+    assert updated.json()["data"]["updated_at"]
+    assert updated.json()["data"]["features"]["json_schema"] is True
 
 
 @pytest.mark.usefixtures("engine_fixture")

@@ -45,26 +45,6 @@ class MemoryDecision(BaseModel):
     updates: list[MemoryUpdate]
 
 
-def _build_prompt(work_dir: str, user_content: str, assistant_content: str, existing: list[Memory]) -> str:
-    """抽取判定提示：自动判断口径 + 指令必办 + 敏感硬过滤 + 现有记忆供冲突合并。"""
-    lines = [
-        "判断本轮对话是否需要写入、更新或删除记忆，输出结构化决策。",
-        "口径：",
-        "- 用户明确要求记住或忘掉的内容必须照办（action 取 forget 或 remember，优先级最高）。",
-        "- 用户没有明说但属于稳定偏好、长期项目进展、用户稳定事实的信息也要记住。",
-        "- 会话内一次性、临时性的细节不要记。",
-        f"- 以下内容禁止入记忆：{SENSITIVE_BAN}。",
-        "- confidence 低于 0.6 的内容不要输出。",
-        "- 与现有记忆语义重复或冲突时，用 updates 给出 memory_id 与新内容，不要重复新增。",
-        f"工作目录：{work_dir}",
-        f"用户消息：{user_content}",
-        f"助手回复：{assistant_content}",
-        "现有记忆：",
-        *[f"[记忆{m.id}]（{m.kind}，{m.scope}）{m.content}" for m in existing],
-    ]
-    return "\n".join(lines)
-
-
 async def extract_and_store(
     session_id: int,
     work_dir: str,
@@ -78,7 +58,15 @@ async def extract_and_store(
     async with session_scope() as s:
         existing = await MemoryRepo(s).list_for_scope(user_id, work_dir)
     decision = await gateway.structured(
-        _build_prompt(work_dir, user_content, assistant_content, existing), MemoryDecision
+        "memory_decision",
+        MemoryDecision,
+        {
+            "work_dir": work_dir,
+            "user_content": user_content,
+            "assistant_content": assistant_content,
+            "sensitive_ban": SENSITIVE_BAN,
+            "existing": "\n".join(f"[记忆{m.id}]（{m.kind}，{m.scope}）{m.content}" for m in existing),
+        },
     )
     async with session_scope() as s:
         repo = MemoryRepo(s)

@@ -168,8 +168,7 @@ async def test_model(model_id: int, _admin: AdminDep) -> dict[str, object]:
                 model_id=model_id,
                 data=base64.b64decode(OCR_PROBE_PNG),
                 mime_type="image/png",
-                prompt="识别图片",
-                schema=None,
+                prompt_key="ocr_lines",
                 page_limit=1,
             )
         else:

@@ -11,6 +11,8 @@
 | `source_chat.md` / `source_sub.md` | 来源声明（对话 / 子会话）      | 灵犀自有（四段装配约定）                                                                                    | 无                                                                                                    |
 | `runtime.md`                       | 运行时上下文（动态尾巴）        | 灵犀自有；字段结构参考 Claude Code Environment 段（cwd/平台/时间）                                                | `time` `work_dir` `platform` `platform_code`                                                         |
 | `memory.md`                        | 记忆资料段（动态尾巴）         | 灵犀需求文档 §记忆（编号 + 类型 + 来源日期）                                                                      | `items`                                                                                              |
+| `ocr_lines.md`                     | OCR 行识别（解析环节扫描/乱码页补文字） | 灵犀自有（模型能力调用业务模板）                                                                                     | 无                                                                                                    |
+| `memory_decision.md`               | 记忆抽取判定（回合结束结构化决策）   | 灵犀需求文档 §记忆（抽取口径与敏感过滤），自 `memory/service.py` 内联迁移                                              | `sensitive_ban` `work_dir` `user_content` `assistant_content` `existing`                              |
 
 说明：Claude Code 的系统提示词没有官方完整发布，行为准则参考的是社区整理的泄露版主提示（结构与原则），均为**中文改写**而非逐字复制；外部提示词只作为设计参考，落地内容以灵犀需求与工具边界为准。
 

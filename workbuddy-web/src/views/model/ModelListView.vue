@@ -323,8 +323,8 @@
           <el-checkbox-group v-model="featureList">
             <el-checkbox label="stream" />
             <el-checkbox label="tools" />
-            <el-checkbox label="response_format" />
-            <el-checkbox label="structured_output" />
+            <el-checkbox label="json_object" />
+            <el-checkbox label="json_schema" />
           </el-checkbox-group>
         </el-form-item>
         <el-form-item label="查询前缀">
