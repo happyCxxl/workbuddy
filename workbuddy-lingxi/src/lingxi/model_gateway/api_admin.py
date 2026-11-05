@@ -25,10 +25,9 @@ from lingxi.model_gateway.service import GatewayError
 
 router = APIRouter(prefix="/model-admin")
 
-# 1x1 透明 PNG：OCR 连通性测试用
-_PNG_1X1 = base64.b64encode(
-    base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
-).decode("ascii")
+# OCR 连通性探针：80×32 白底黑字「测试」PNG。
+# 不能用 1×1 空图：qwen-vl-ocr 校验图片宽高必须大于 10px，空图返回 400。
+OCR_PROBE_PNG = "iVBORw0KGgoAAAANSUhEUgAAAFAAAAAgCAIAAAAKUWg7AAAEeUlEQVR4nO2Zbyh7bRjHr3PIrEUaLfbCkj/JC1lY1KRkjCZ/Okh52miR8oLEK280XkhYlGKMaG1pL7bS8i8s8mJRj9kykuQ/mf+zvWDnKadOst+Gfs/s17Pn8+q+r+91X1fXOfc593U6CI7j4E+g4Geg4Geg4Geg4Geg4Geg4Geg4Geg4Geg4GegPswdGRlZW1u7urrK5XL39vZ8X3B7e3tbW9vXYzU2NiYmJhLjsbGxsrIyu93+SXoUZTKZFxcXqampMzMz4NuCAwICenp66uvrcRzHMAxxQSAQuFuL47hWq+XxeA8PD25zoyiCILGxsevr6+np6REREeB9Aj1oHR0dNputt7eX+MBISkpqbW0lValUSgxEItHh4eHKysr7tWKxODg4WCgU8ni8hYWF0NBQ1/gIghADBoOxtLQEP0KgZ7mnp8dqtRYUFCgUiqioKJFIREpqtdrz2urq6sfHx+PjYwqFQtb2gdE3yGl/f39TUxP4sGAEQcbHxwFAoVAQFpFI9PcbX4ne0NBAbO/BwUFXVSKRREdHC4VC0pKVlQVeJtCdIJVKzWbz8PAwiv7umxxBkMbGRle7TCZjsVi/lLwH6k5gs9kKhUIoFL6+vn43KJ/PJ19sDofDnRuNRnt+foafBXUnZGdnq9VqlUpVVVX18vLyraDNzc0ymay8vNyzW1hY2P39PfwsqAetsLBQLpdTKBSn00kacRz/dJPn5+eLxWIOh0NMr6+vXY80DMPCw8Nvb2/hZwn0LP/1xnuL3W4PCgr6Vo6QkBCZTAYAZrNZKpVKJJLIyMiYmBidTnd5eQl/VMGTk5N6vb67u5u0WK1WOp3+rRwUCkUsFgPA7OysVCrFMIxoyIxG483Njd1up1Kp8FOgnuXl5eWJiYn3p+ju7m5MTMy/kpuIc3BwAD8I6lleW1tLS0sLDw8nphaL5fT0lHw4v4jFYpmenna1E/fZbDbDH1LwxcXF/v5+Xl4e0VctLi729fUR7dfZ2dnMG58mODk54fP5W1tbrlJCQgKNRtvY2CCmGIb19/eDDwvW6XQAQBQMABqNZnR0tL6+HkEQLpdLbsWJiYkPjfR7+Hz+6+trXV3dL3KjaGZmJtlF7+7uGo1G8GHBGo0mJCQkIyODaC0rKytzc3MHBgZWVlbodDqXy7VYLB6WHx8fA8Dd3d38/DyLxQIA4nhTKpVisTg5OVmj0QgEgs3Nzf39fWJDEW7eBXeDzWajUqlFRUXn5+fV1dXEx8Dz8zOh3t/fczgcBoNhNBqtVqvD4bDZbFwul81mEw4OhyMiIoJGoxkMhu3t7dLS0vj4ePIAj46OLi4uNplMV1dXVCq1pqaG6ECmpqZwLwPuhKenp6GhIa1WazKZUlJSVCrVB4fb29ucnBy9Xl9YWEhevpaWFtJBIpEolUocx4+OjphMZklJSVdX19zc3PX19fs4nZ2dAJCWlgYAOzs7uJdBfv9n2sLCgsFgcDqdcXFxFRUVAQEB31rudDpbW1tHRkbKy8vlcjl4GeT/v4fw3+YfEijpPGPQzg4AAAAASUVORK5CYII="
 
 
 @router.get("/vendors")
@@ -167,7 +166,7 @@ async def test_model(model_id: int, _admin: AdminDep) -> dict[str, object]:
                 request_id=f"test-{model_id}",
                 source="model.test",
                 model_id=model_id,
-                data=base64.b64decode(_PNG_1X1),
+                data=base64.b64decode(OCR_PROBE_PNG),
                 mime_type="image/png",
                 prompt="识别图片",
                 schema=None,
@@ -184,7 +183,7 @@ async def test_model(model_id: int, _admin: AdminDep) -> dict[str, object]:
             )
     except GatewayError as exc:
         await _mark_status(model_id, "DOWN")
-        return R.ok({"ok": False, "message": exc.message}).to_dict()
+        return R.ok({"ok": False, "message": exc.message, "attempts": exc.attempts}).to_dict()
     await _mark_status(model_id, "HEALTHY")
     return R.ok({"ok": True}).to_dict()
 

@@ -641,13 +641,29 @@ async function removeModel(raw: unknown): Promise<void> {
   await loadModels();
 }
 
+/** 厂商错误码 → 用户可读原因（原始报错只留接口层供排查，不上页面） */
+const PROVIDER_REASON: Record<string, string> = {
+  PROVIDER_AUTH: '鉴权失败，请检查 API Key',
+  PROVIDER_UNAVAILABLE: '服务不可达（超时/网络/限流）',
+  PROVIDER_BAD_REQUEST: '请求被模型拒绝（参数或输入错误）',
+  PROVIDER_ERROR: '模型服务异常',
+};
+
 async function runTest(raw: unknown): Promise<void> {
   const row = raw as GatewayModel;
   const result = await getModelTest(row.id);
   if (result.ok) {
     ElMessage.success(`${row.display_name} 连通正常`);
   } else {
-    ElMessage.error(result.message ?? '连通失败');
+    const reasons = [
+      ...new Set(
+        (result.attempts ?? []).map((item) => PROVIDER_REASON[item.code ?? ''] ?? '模型返回错误'),
+      ),
+    ];
+    ElMessage.error(
+      `${row.display_name} 连通失败：${result.message ?? '未知原因'}` +
+        (reasons.length ? `（${reasons.join('；')}）` : ''),
+    );
   }
   await loadModels();
 }

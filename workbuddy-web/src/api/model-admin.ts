@@ -91,10 +91,21 @@ export async function deleteModel(id: string): Promise<null> {
   return response.data;
 }
 
-export async function getModelTest(id: string): Promise<{ ok: boolean; message?: string }> {
-  const response = await http.post<{ ok: boolean; message?: string }>(
-    `/model-admin/models/${id}/test`,
-  );
+/** 连通测试失败时的厂商级尝试明细 */
+export interface GatewayTestAttempt {
+  model_key?: string;
+  code?: string;
+  message?: string;
+}
+
+export async function getModelTest(
+  id: string,
+): Promise<{ ok: boolean; message?: string; attempts?: GatewayTestAttempt[] }> {
+  const response = await http.post<{
+    ok: boolean;
+    message?: string;
+    attempts?: GatewayTestAttempt[];
+  }>(`/model-admin/models/${id}/test`);
   return response.data;
 }
 

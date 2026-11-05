@@ -1,5 +1,8 @@
 """模型能力层：厂商/模型 CRUD、可用模型与会话模型切换。"""
 
+import base64
+import struct
+import zlib
 from uuid import uuid4
 
 import pytest
@@ -9,6 +12,9 @@ from sqlalchemy import delete, or_
 from lingxi.contract import ErrorCode
 from lingxi.db.engine import session_scope
 from lingxi.db.models import AiSession, Model, ModelVendor
+from lingxi.model_gateway import api_admin
+from lingxi.model_gateway import service as gateway_service
+from lingxi.model_gateway.service import GatewayError
 
 
 @pytest.fixture(autouse=True)
@@ -17,13 +23,14 @@ async def cleanup(engine_fixture: None) -> None:
     yield
     async with session_scope() as s:
         await s.execute(delete(AiSession).where(AiSession.title == "模型切换"))
-        await s.execute(delete(Model).where(Model.model_key.in_(["same-embedding", "chat-a", "chat-b"])))
+        await s.execute(delete(Model).where(Model.model_key.in_(["same-embedding", "chat-a", "chat-b", "ocr-a"])))
         await s.execute(
             delete(ModelVendor).where(
                 or_(
                     ModelVendor.code.like("v1-%"),
                     ModelVendor.code.like("v2-%"),
                     ModelVendor.code.like("chat-%"),
+                    ModelVendor.code.like("ocr-%"),
                 )
             )
         )
@@ -119,3 +126,72 @@ async def test_session_model_switch(client: AsyncClient, tmp_path) -> None:
     assert switched.json()["code"] == 0
     detail = await client.get(f"/sessions/{session_id}")
     assert detail.json()["data"]["model_id"] == model_two
+
+
+def _png_chunks(raw: bytes) -> list[tuple[bytes, bytes]]:
+    """解析 PNG 全部块：逐块校验 CRC 并解压 IDAT，任何损坏抛断言。"""
+    cursor = 8
+    chunks: list[tuple[bytes, bytes]] = []
+    idat = bytearray()
+    while cursor < len(raw):
+        (length,) = struct.unpack(">I", raw[cursor : cursor + 4])
+        chunk_type = raw[cursor + 4 : cursor + 8]
+        data = raw[cursor + 8 : cursor + 8 + length]
+        crc = struct.unpack(">I", raw[cursor + 8 + length : cursor + 12 + length])[0]
+        assert zlib.crc32(chunk_type + data) & 0xFFFFFFFF == crc
+        chunks.append((chunk_type, data))
+        if chunk_type == b"IDAT":
+            idat += data
+        if chunk_type == b"IEND":
+            break
+        cursor += 12 + length
+    zlib.decompress(bytes(idat))
+    return chunks
+
+
+def test_ocr_probe_image_meets_model_min_size() -> None:
+    """OCR 探针图须为可完整解码的 PNG 且宽高大于 10px：qwen-vl-ocr 对过小/损坏图片返回 400。"""
+    raw = base64.b64decode(api_admin.OCR_PROBE_PNG, validate=True)
+    assert raw[:8] == b"\x89PNG\r\n\x1a\n"
+    width = int.from_bytes(raw[16:20], "big")
+    height = int.from_bytes(raw[20:24], "big")
+    assert width > 10
+    assert height > 10
+    assert _png_chunks(raw)
+
+
+@pytest.mark.usefixtures("engine_fixture")
+async def test_model_test_returns_provider_failure_details(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """连通测试失败时透出厂商原始错误（attempts），前端可见 400 真因。"""
+    suffix = uuid4().hex[:8]
+    vendor = await client.post("/model-admin/vendors", json=_vendor(f"ocr-{suffix}"))
+    vendor_id = vendor.json()["data"]["id"]
+    created = await client.post("/model-admin/models", json=_model(vendor_id, "ocr-a", "OCR"))
+    model_id = created.json()["data"]["id"]
+
+    async def fail_ocr(**kwargs: object) -> tuple[object, object]:
+        raise GatewayError(
+            "MODEL_UNAVAILABLE",
+            "全部候选模型调用失败",
+            [
+                {
+                    "model_id": model_id,
+                    "vendor": f"ocr-{suffix}",
+                    "model_key": "ocr-a",
+                    "code": "PROVIDER_BAD_REQUEST",
+                    "message": "Error code: 400 - image too small",
+                    "retryable": False,
+                }
+            ],
+        )
+
+    monkeypatch.setattr(gateway_service, "ocr", fail_ocr)
+    result = await client.post(f"/model-admin/models/{model_id}/test")
+    assert result.json()["code"] == 0
+    data = result.json()["data"]
+    assert data["ok"] is False
+    attempts = data["attempts"]
+    assert attempts[0]["code"] == "PROVIDER_BAD_REQUEST"
+    assert "image too small" in attempts[0]["message"]
