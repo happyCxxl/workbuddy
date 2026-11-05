@@ -6,7 +6,6 @@ import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.embed.EmbedOutcome;
-import com.workbuddy.common.domain.embed.EmbeddingClient;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
 import com.workbuddy.common.domain.embed.EmbeddingRequest;
 import com.workbuddy.common.domain.embed.EmbeddingResult;
@@ -18,6 +17,8 @@ import com.workbuddy.common.enums.embed.EmbedRecordStatus;
 import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.infra.modelgateway.EmbedResponse;
+import com.workbuddy.infra.modelgateway.ModelGatewayClient;
 import com.workbuddy.worker.chunking.strategy.ChunkStrategy;
 import com.workbuddy.worker.embedding.EmbedContext;
 import com.workbuddy.worker.embedding.EmbedWindowRules;
@@ -51,16 +52,35 @@ public class EmbedPipeline implements EmbedderPort {
     private final EmbedProperties properties;
     private final ConsistencyChecker checker;
     private final InputTemplatePort template;
-    private final EmbeddingClient embeddingClient;
+    private final ModelGatewayClient modelGatewayClient;
 
     /**
-     * 一批文本的向量编码：交给模型门面，按请求里的模型名精确选模型。
+     * 一批文本的向量编码：交给模型网关，按请求里的模型名精确选模型。
      *
      * @param request 本批入参
      * @return 向量结果
      */
     private EmbeddingResult embedBatch(EmbeddingRequest request) {
-        return embeddingClient.embed(request);
+        EmbedResponse response = modelGatewayClient.embed(request);
+        return toResult(request, response);
+    }
+
+    /**
+     * 网关直译 → EmbeddingResult：向量与输入同序；维度取首条实际值（空批回退请求维度），
+     * 模型与 requestId 按请求回显。
+     *
+     * @param request  本批入参
+     * @param response 网关直译响应
+     * @return 向量结果
+     */
+    private EmbeddingResult toResult(EmbeddingRequest request, EmbedResponse response) {
+        EmbeddingResult result = new EmbeddingResult();
+        result.setEmbeddings(response.vectors());
+        result.setDimension(response.vectors().isEmpty()
+                ? request.getDimension() : response.vectors().getFirst().size());
+        result.setModel(request.getModel());
+        result.setRequestId(request.getRequestId());
+        return result;
     }
 
     /**

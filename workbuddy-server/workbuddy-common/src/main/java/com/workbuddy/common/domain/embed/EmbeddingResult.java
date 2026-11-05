@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 向量化结果（EmbeddingClient.embed 出参）：向量列表（与输入顺序一一对应）+ 维度 + 模型回显 + requestId。
+ * 向量化结果（模型网关 embed 出参）：向量列表（与输入顺序一一对应）+ 维度 + 模型回显 + requestId。
  * 四关校验在管线侧消费本对象。
  */
 @Data

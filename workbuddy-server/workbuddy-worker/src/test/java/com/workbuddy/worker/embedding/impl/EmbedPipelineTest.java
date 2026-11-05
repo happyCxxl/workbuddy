@@ -3,9 +3,7 @@ package com.workbuddy.worker.embedding.impl;
 import com.workbuddy.common.domain.chunk.Chunk;
 import com.workbuddy.common.domain.chunk.ChunkSet;
 import com.workbuddy.common.domain.embed.EmbedOutcome;
-import com.workbuddy.common.domain.embed.EmbeddingClient;
 import com.workbuddy.common.domain.embed.EmbeddingRecord;
-import com.workbuddy.common.domain.embed.EmbeddingResult;
 import com.workbuddy.common.domain.embed.EmbeddingSet;
 import com.workbuddy.common.domain.task.StepLogInfo;
 import com.workbuddy.common.enums.chunk.ChunkContentType;
@@ -15,6 +13,8 @@ import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
+import com.workbuddy.infra.modelgateway.EmbedResponse;
+import com.workbuddy.infra.modelgateway.ModelGatewayClient;
 import com.workbuddy.worker.embedding.EmbedContext;
 import com.workbuddy.worker.embedding.EmbedProperties;
 import com.workbuddy.worker.embedding.check.ConsistencyChecker;
@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +56,7 @@ class EmbedPipelineTest {
     private InputTemplatePort template;
 
     @Mock
-    private EmbeddingClient embeddingClient;
+    private ModelGatewayClient modelGatewayClient;
 
     private EmbedProperties properties;
 
@@ -73,8 +74,8 @@ class EmbedPipelineTest {
         properties = PropertiesFixtures.embed();
         properties.setMaxRetries(0);
         lenient().doThrow(new WorkbuddyException(ErrorCode.MODEL_SERVER_ERROR, "fake down"))
-                .when(embeddingClient).embed(any());
-        pipeline = new EmbedPipeline(properties, checker, template, embeddingClient);
+                .when(modelGatewayClient).embed(any());
+        pipeline = new EmbedPipeline(properties, checker, template, modelGatewayClient);
 
         strategy = new EmbedStrategy();
         strategy.setName("embed");
@@ -299,7 +300,7 @@ class EmbedPipelineTest {
     void succeedsWhenModelReturnsVectors() {
         context.setChunkSet(chunkSet(textChunk("c1", "正文一"), textChunk("c2", "正文二")));
         when(template.render(any(), any())).thenReturn("正文一");
-        doReturn(embeddingResult(2, DIMENSION)).when(embeddingClient).embed(any());
+        doReturn(embedResponse(2, DIMENSION)).when(modelGatewayClient).embed(any());
         when(checker.check(any(), any(), any())).thenReturn(ConsistencyResult.pass());
 
         EmbedOutcome outcome = pipeline.embed(context);
@@ -314,14 +315,13 @@ class EmbedPipelineTest {
     }
 
     /**
-     * 构造向量结果。
+     * 构造网关向量直译响应。
      *
      * @param count     条数
      * @param dimension 维度
-     * @return 向量结果
+     * @return 网关响应
      */
-    private EmbeddingResult embeddingResult(int count, int dimension) {
-        EmbeddingResult result = new EmbeddingResult();
+    private EmbedResponse embedResponse(int count, int dimension) {
         List<List<Float>> vectors = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             List<Float> vector = new ArrayList<>();
@@ -330,11 +330,7 @@ class EmbedPipelineTest {
             }
             vectors.add(vector);
         }
-        result.setEmbeddings(vectors);
-        result.setDimension(dimension);
-        result.setModel("text-embedding-v4");
-        result.setRequestId("rid");
-        return result;
+        return new EmbedResponse(vectors, Map.of());
     }
 
     /**

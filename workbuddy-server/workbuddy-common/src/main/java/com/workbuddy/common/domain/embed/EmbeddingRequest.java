@@ -5,8 +5,8 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 向量化请求（EmbeddingClient.embed 入参）：一批输入文本 + 模型 + 调用口径。
- * 调用方按此组装 EmbeddingClient 调用（实际实现 PythonEmbeddingClient）。
+ * 向量化请求（模型网关 embed 入参）：一批输入文本 + 模型 + 调用口径。
+ * 调用方按此组装向量化调用（实现见 infra 模型网关客户端）。
  */
 @Data
 public class EmbeddingRequest {

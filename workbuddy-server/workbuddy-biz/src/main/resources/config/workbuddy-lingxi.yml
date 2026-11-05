@@ -1,5 +1,5 @@
 # 灵犀（Python）服务接入：模型能力统一由灵犀提供。
-# 键的来源：LingxiProperties（前缀 workbuddy.lingxi）。
+# 键的来源：infra 的 ModelGatewayProperties（前缀 workbuddy.lingxi）。
 
 workbuddy:
   lingxi:

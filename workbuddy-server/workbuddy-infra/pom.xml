@@ -60,6 +60,12 @@
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- Spring Web（RestClient：模型网关 HTTP 客户端；版本由根 pom 钉版） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+
         <!-- Redis（队列组件与分布式锁：StringRedisTemplate / RedisScript） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
