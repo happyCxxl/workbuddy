@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "properties": {
+    "layout_areas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {"type": "string"},
+          "bbox": {"type": "array", "items": {"type": "number"}},
+          "confidence": {"type": "number"}
+        },
+        "required": ["type", "bbox"]
+      }
+    }
+  },
+  "required": ["layout_areas"]
+}

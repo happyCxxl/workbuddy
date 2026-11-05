@@ -1,6 +1,7 @@
 package com.workbuddy.worker.parser.capability;
 
 import com.workbuddy.common.domain.parse.ParseElement;
+import com.workbuddy.common.domain.parse.capability.ProviderContext;
 import com.workbuddy.common.domain.parse.capability.TableCell;
 import com.workbuddy.common.domain.parse.capability.TableRegion;
 import com.workbuddy.common.domain.parse.capability.TableResult;
@@ -37,7 +38,7 @@ class TableCapabilityAttemptTest {
         result.setCells(List.of(header));
 
         TableCapabilityAttempt.Outcome outcome =
-                TableCapabilityAttempt.attempt(registry(result), region(), 4);
+                TableCapabilityAttempt.attempt(registry(result), region(), 4, new ProviderContext());
 
         assertTrue(outcome.enhanced());
         ParseElement table = outcome.table();
@@ -53,7 +54,8 @@ class TableCapabilityAttemptTest {
     /** 未接入能力：无表格元素，留痕为降级（{@code missingRegistryShouldYieldDegradedFactOnly}）。 */
     @Test
     void missingRegistryShouldYieldDegradedFactOnly() {
-        TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(null, region(), 1);
+        TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(null, region(), 1,
+                new ProviderContext());
 
         assertFalse(outcome.enhanced());
         assertNull(outcome.table());
@@ -64,7 +66,8 @@ class TableCapabilityAttemptTest {
     /** 区域为空：降级留痕点名原因（{@code emptyRegionShouldYieldDegradedFact}）。 */
     @Test
     void emptyRegionShouldYieldDegradedFact() {
-        TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(registry(new TableResult()), null, 2);
+        TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(registry(new TableResult()), null, 2,
+                new ProviderContext());
 
         assertFalse(outcome.enhanced());
         assertTrue(outcome.fact().getEvidence().contains("区域为空"), () -> outcome.fact().getEvidence());
@@ -74,7 +77,7 @@ class TableCapabilityAttemptTest {
     @Test
     void unusableResultShouldYieldDegradedFact() {
         TableCapabilityAttempt.Outcome outcome =
-                TableCapabilityAttempt.attempt(registry(null), region(), 3);
+                TableCapabilityAttempt.attempt(registry(null), region(), 3, new ProviderContext());
 
         assertFalse(outcome.enhanced());
         assertTrue(outcome.fact().getEvidence().contains("调用失败或结果不完整"),

@@ -4,13 +4,17 @@ import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.capability.ProviderContext;
+import com.workbuddy.common.domain.parse.capability.TableRegion;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.capability.TableCapabilityAttempt;
+import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
 import com.workbuddy.worker.parser.pdf.detect.TableAlignmentPruner;
 import com.workbuddy.worker.parser.pdf.detect.TableCandidateDetector;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
@@ -48,9 +52,14 @@ public final class TextTableBuilder {
     private static void settleFailedTable(List<PageLine> block, PageContent page, List<ParseElement> elements,
                                           ParseSource source, String fileId,
                                           CapabilityRegistry capabilityRegistry,
-                                          LineTexts.Options lineTextOptions, String evidence) {
+                                          LineTexts.Options lineTextOptions, String evidence,
+                                          ParseContext context, PdfPageImageRenderer renderer) {
+        TableRegion region = TableRegionSupport.of(block, page, lineTextOptions);
+        ProviderContext providerContext = new ProviderContext();
+        providerContext.setTaskId(context.getFileResultId());
+        providerContext.setAssetBytes(ref -> cropPng(page, region, renderer));
         TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(capabilityRegistry,
-                TableRegionSupport.of(block, page, lineTextOptions), page.pageNo());
+                region, page.pageNo(), providerContext);
         source.getFacts().add(outcome.fact());
         if (outcome.enhanced()) {
             elements.add(outcome.table());
@@ -60,10 +69,23 @@ public final class TextTableBuilder {
         TableSupport.degrade(block, page, elements, source, fileId, evidence);
     }
 
+    /** 区域裁剪图字节：渲染页图后按视口 bbox 裁剪；渲染器缺失返回 null（真实实现按需取值，桩实现可忽略） */
+    private static byte[] cropPng(PageContent page, TableRegion region, PdfPageImageRenderer renderer) {
+        if (NullUtil.isNull(renderer) || NullUtil.isNull(region) || NullUtil.isNull(region.getBbox())) {
+            return null;
+        }
+        java.awt.image.BufferedImage source = renderer.pageImage(page.pageNo());
+        java.awt.image.BufferedImage crop = NullUtil.isNull(source) ? null
+                : renderer.crop(source, region.getBbox(), page.geometry().viewportWidth(),
+                        page.geometry().viewportHeight());
+        return NullUtil.isNull(crop) ? null : renderer.png(crop);
+    }
+
     /** 文本路径结算：列对齐聚类成表；失败或空白率过高则降级为段落 */
     static void flush(List<PageLine> block, PageContent page, List<ParseElement> elements,
                       ParseSource source, String fileId, ParseProperties properties,
-                      CapabilityRegistry capabilityRegistry) {
+                      CapabilityRegistry capabilityRegistry, ParseContext context,
+                      PdfPageImageRenderer renderer) {
         if (block.size() < 2) {
             PdfBodyAssembler.addParagraph(block, elements, fileId, page);
             return;
@@ -84,7 +106,7 @@ public final class TextTableBuilder {
         if (columns.size() < TableCandidateDetector.MIN_TOKENS
                 || !TableCandidateDetector.enoughLinesCoverColumns(rowTokens, columns)) {
             settleFailedTable(block, page, elements, source, fileId, capabilityRegistry,
-                    lineTextOptions, "列对齐聚类失败（疑似无边框/复杂表格）");
+                    lineTextOptions, "列对齐聚类失败（疑似无边框/复杂表格）", context, renderer);
             return;
         }
         // 假表门限：正文分栏的每列被整行文字填满，表格单元格相对列宽是稀疏的
@@ -100,7 +122,7 @@ public final class TextTableBuilder {
         }
         if (rows.size() < 2) {
             settleFailedTable(block, page, elements, source, fileId, capabilityRegistry,
-                    lineTextOptions, "对齐图剪枝后不足两行（疑似正文）");
+                    lineTextOptions, "对齐图剪枝后不足两行（疑似正文）", context, renderer);
             return;
         }
         List<List<String>> rowTexts = new ArrayList<>();

@@ -63,8 +63,8 @@ class PdfLayoutCapabilityTraceTest {
                 .parse(context());
 
         assertEquals(1, source.getCapabilities().size(), () -> "capabilities=" + source.getCapabilities());
-        assertEquals(CapabilityUsage.KIND_LAYOUT, source.getCapabilities().getFirst().kind());
-        assertEquals("stub-layout", source.getCapabilities().getFirst().model());
+        assertEquals(CapabilityUsage.KIND_LAYOUT, source.getCapabilities().getFirst().getKind());
+        assertEquals("stub-layout", source.getCapabilities().getFirst().getModel());
         assertTrue(source.getFacts().stream().anyMatch(fact -> fact.getEvidence().contains("能力补强")),
                 () -> "facts=" + source.getFacts());
     }

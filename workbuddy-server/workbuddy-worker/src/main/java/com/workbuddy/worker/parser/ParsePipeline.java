@@ -351,8 +351,8 @@ public class ParsePipeline {
             for (CapabilityUsage usage : ObjectUtil.defaultIfNull(source.getCapabilities(),
                     List.<CapabilityUsage>of())) {
                 CapabilitySnapshot.CapabilityRef ref = new CapabilitySnapshot.CapabilityRef();
-                ref.setModel(usage.model());
-                ref.setVersion(usage.version());
+                ref.setModel(usage.getModel());
+                ref.setVersion(usage.getVersion());
                 if (usage.isKind(CapabilityUsage.KIND_OCR)) {
                     snapshot.setOcr(ref);
                 } else if (usage.isKind(CapabilityUsage.KIND_LAYOUT)) {

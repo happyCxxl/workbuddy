@@ -48,9 +48,10 @@ public final class TableCapabilityAttempt {
      * @param registry 能力注册表（null 表示未接入）
      * @param region   表格区域（null 表示区域为空）
      * @param pageNo   页码
+     * @param ctx      调用上下文（含任务 ID 与裁剪图字节解析入口）
      * @return 尝试结果（永不为 null）
      */
-    public static Outcome attempt(CapabilityRegistry registry, TableRegion region, int pageNo) {
+    public static Outcome attempt(CapabilityRegistry registry, TableRegion region, int pageNo, ProviderContext ctx) {
         String traceRegion = "page " + pageNo;
         TableStructureProvider provider = NullUtil.isNull(registry) ? null : registry.table();
         if (NullUtil.isNull(provider)) {
@@ -59,7 +60,7 @@ public final class TableCapabilityAttempt {
         if (NullUtil.isNull(region)) {
             return new Outcome(null, CapabilityFacts.tableDegraded(traceRegion, "区域为空"));
         }
-        TableResult result = provider.recognize(region, new ProviderContext());
+        TableResult result = provider.recognize(region, ctx);
         ParseElement table = TableStructureSupport.toTableElement(result, pageNo);
         if (NullUtil.isNull(table)) {
             return new Outcome(null, CapabilityFacts.tableDegraded(traceRegion, "调用失败或结果不完整"));

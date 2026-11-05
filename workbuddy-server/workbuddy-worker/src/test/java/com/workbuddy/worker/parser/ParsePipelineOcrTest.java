@@ -48,7 +48,7 @@ class ParsePipelineOcrTest {
         assertEquals(0.94, ocr.getElements().getFirst().getConfidence(), 0.0001);
         assertTrue(ocr.getFacts().stream().anyMatch(fact -> fact.getEvidence().contains("文字由能力补出")),
                 () -> "facts=" + ocr.getFacts());
-        assertEquals("stub-ocr", ocr.getCapabilities().getFirst().model());
+        assertEquals("stub-ocr", ocr.getCapabilities().getFirst().getModel());
         assertEquals("stub-ocr", outcome.getParseResult().getCapabilitySnapshot().getOcr().getModel());
         assertEquals(PipelineTaskStatus.PARTIAL_SUCCESS, outcome.getSuggestedStatus());
         assertTrue(outcome.getParseResult().getQuality().getFailedPages().isEmpty());

@@ -22,9 +22,9 @@ class CapabilityUsageTest {
     void tableUsageShouldCarryKindModelVersion() {
         CapabilityUsage usage = CapabilityUsage.table("table-v3", "3");
 
-        assertEquals(CapabilityUsage.KIND_TABLE, usage.kind());
-        assertEquals("table-v3", usage.model());
-        assertEquals("3", usage.version());
+        assertEquals(CapabilityUsage.KIND_TABLE, usage.getKind());
+        assertEquals("table-v3", usage.getModel());
+        assertEquals("3", usage.getVersion());
         assertTrue(usage.isKind(CapabilityUsage.KIND_TABLE));
         assertFalse(usage.isKind(CapabilityUsage.KIND_OCR));
     }

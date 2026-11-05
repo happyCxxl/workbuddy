@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.parse.capability.CapabilityUsage;
 import com.workbuddy.common.domain.parse.capability.LayoutRegion;
 import com.workbuddy.common.domain.parse.capability.LayoutResult;
 import com.workbuddy.common.domain.parse.capability.PageImage;
+import com.workbuddy.common.domain.parse.capability.ProviderContext;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -30,13 +31,13 @@ class LayoutCapabilityAttemptTest {
         result.setRegions(List.of(region("title"), region("text")));
 
         LayoutCapabilityAttempt.Outcome outcome =
-                LayoutCapabilityAttempt.attempt(registry(result), page(), 5);
+                LayoutCapabilityAttempt.attempt(registry(result), page(), 5, new ProviderContext());
 
         assertTrue(outcome.enhanced());
         assertEquals(List.of(1, 0), outcome.order());
         assertEquals(2, outcome.regions().size());
-        assertEquals("stub-layout 2.1", outcome.usage().model() + " " + outcome.usage().version());
-        assertEquals(CapabilityUsage.KIND_LAYOUT, outcome.usage().kind());
+        assertEquals("stub-layout 2.1", outcome.usage().getModel() + " " + outcome.usage().getVersion());
+        assertEquals(CapabilityUsage.KIND_LAYOUT, outcome.usage().getKind());
         assertTrue(outcome.fact().getEvidence().contains("能力补强"), () -> outcome.fact().getEvidence());
         assertTrue(outcome.fact().getEvidence().contains("2 个区域"), () -> outcome.fact().getEvidence());
     }
@@ -44,7 +45,8 @@ class LayoutCapabilityAttemptTest {
     /** 未接入能力：无顺序、降级留痕，事实类型为 LAYOUT（{@code missingRegistryShouldYieldDegradedFactOnly}）。 */
     @Test
     void missingRegistryShouldYieldDegradedFactOnly() {
-        LayoutCapabilityAttempt.Outcome outcome = LayoutCapabilityAttempt.attempt(null, page(), 1);
+        LayoutCapabilityAttempt.Outcome outcome = LayoutCapabilityAttempt.attempt(null, page(), 1,
+                new ProviderContext());
 
         assertFalse(outcome.enhanced());
         assertNull(outcome.order());
@@ -57,7 +59,7 @@ class LayoutCapabilityAttemptTest {
     @Test
     void emptyPageShouldYieldDegradedFact() {
         LayoutCapabilityAttempt.Outcome outcome =
-                LayoutCapabilityAttempt.attempt(registry(new LayoutResult()), null, 2);
+                LayoutCapabilityAttempt.attempt(registry(new LayoutResult()), null, 2, new ProviderContext());
 
         assertFalse(outcome.enhanced());
         assertTrue(outcome.fact().getEvidence().contains("页面为空"), () -> outcome.fact().getEvidence());
@@ -70,7 +72,7 @@ class LayoutCapabilityAttemptTest {
         withoutOrder.setRegions(List.of(region("text")));
 
         LayoutCapabilityAttempt.Outcome outcome =
-                LayoutCapabilityAttempt.attempt(registry(withoutOrder), page(), 3);
+                LayoutCapabilityAttempt.attempt(registry(withoutOrder), page(), 3, new ProviderContext());
 
         assertFalse(outcome.enhanced());
         assertTrue(outcome.fact().getEvidence().contains("调用失败或结果不完整"),

@@ -139,20 +139,24 @@ public class PipelineTaskConsumer {
 
     /** 按 stage 选 Runner 动作，提交看门狗池；未知环节跳过并告警 */
     private void dispatch(WbPipelineTask task) {
-        Runnable action;
-        if (PipelineStage.PARSE.name().equals(task.getStage())) {
-            action = () -> runner.run(task.getId());
-        } else if (PipelineStage.STRUCTURE.name().equals(task.getStage())) {
-            action = () -> structureRunner.run(task.getId());
-        } else if (PipelineStage.PREPROCESS.name().equals(task.getStage())) {
-            action = () -> preprocessRunner.run(task.getId());
-        } else if (PipelineStage.CHUNK.name().equals(task.getStage())) {
-            action = () -> chunkRunner.run(task.getId());
-        } else if (PipelineStage.EMBED.name().equals(task.getStage())) {
-            action = () -> embedRunner.run(task.getId());
-        } else {
-            // 未知环节：跳过并告警（后续环节加 Runner 即接入，主循环零改动）
-            log.warn("===> PipelineTaskConsumer 未知环节任务跳过, taskId={}, stage={}", task.getId(), task.getStage());
+        PipelineStage stage = PipelineStage.of(task.getStage());
+        if (NullUtil.isNull(stage)) {
+            log.warn("===> PipelineTaskConsumer 未知环节任务跳过, taskId={}, stage={}", task.getId(),
+                    task.getStage());
+            return;
+        }
+        Runnable action = switch (stage) {
+            case PARSE -> () -> runner.run(task.getId());
+            case STRUCTURE -> () -> structureRunner.run(task.getId());
+            case PREPROCESS -> () -> preprocessRunner.run(task.getId());
+            case CHUNK -> () -> chunkRunner.run(task.getId());
+            case EMBED -> () -> embedRunner.run(task.getId());
+            case BUILD_INDEX -> null;
+        };
+        if (NullUtil.isNull(action)) {
+            // 库级环节（BUILD_INDEX）不在本消费循环：跳过并告警
+            log.warn("===> PipelineTaskConsumer 未知环节任务跳过, taskId={}, stage={}", task.getId(),
+                    task.getStage());
             return;
         }
         try {

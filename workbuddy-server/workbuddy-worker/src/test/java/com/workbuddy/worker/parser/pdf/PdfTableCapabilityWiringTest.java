@@ -65,7 +65,7 @@ class PdfTableCapabilityWiringTest {
         assertTrue(source.getFacts().stream().anyMatch(fact -> fact.getEvidence().contains("能力补强")),
                 () -> "facts=" + source.getFacts());
         assertEquals(1, source.getCapabilities().size(), () -> "capabilities=" + source.getCapabilities());
-        assertEquals("stub-table", source.getCapabilities().getFirst().model());
+        assertEquals("stub-table", source.getCapabilities().getFirst().getModel());
     }
 
     private ParseSource parse(byte[] data, CapabilityRegistry registry) {

@@ -13,3 +13,5 @@
 | 文件              | 用途                              | 消费方                                    | 结构要点                                        |
 |-------------------|-----------------------------------|-------------------------------------------|-------------------------------------------------|
 | `ocr_lines.json`  | OCR 行识别输出（解析环节扫描/乱码页补文字） | Java `ModelGatewayStructuredOcrProvider` | `text_lines[]`：`text` + `bbox`（像素坐标，4 元）+ `confidence`（可选） |
+| `layout.json`     | 版面区域输出（复杂页阅读顺序补强）       | Java `ModelGatewayStructuredLayoutProvider` | `layout_areas[]`：`type` + `bbox`（像素坐标）+ `confidence`（可选） |
+| `table.json`      | 表格结构输出（规则失败表格补强）         | Java `ModelGatewayStructuredTableProvider` | `tables[]`：`rows`/`cols` + `cells[]`（`row`/`col`/`rowSpan`/`colSpan`/`text`/`isHeader`/`bbox`） |

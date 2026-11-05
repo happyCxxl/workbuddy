@@ -60,7 +60,7 @@ class PdfBodyAssemblerRegionGroupingTest {
         List<ParseElement> elements = new ArrayList<>();
         PdfBodyAssembler.assemble(page(lines), Set.of(),
                 new HeaderFooterDetector.FooterKeys(Set.of(), List.of()),
-                elements, ParseSource.nativeSource("test"), "F-1", properties(), null);
+                elements, ParseSource.nativeSource("test"), "F-1", properties(), null, null, null);
 
         List<ParseElement> tables = elements.stream()
                 .filter(element -> ElementType.TABLE.name().equals(element.getType()))

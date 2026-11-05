@@ -6,11 +6,14 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.Provenance;
 import com.workbuddy.common.domain.parse.capability.PageImage;
+import com.workbuddy.common.domain.parse.capability.ProviderContext;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.capability.LayoutCapabilityAttempt;
+import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
 import com.workbuddy.worker.parser.pdf.detect.RuleRegions;
 import com.workbuddy.worker.parser.pdf.detect.TableCandidateDetector;
@@ -53,7 +56,8 @@ public final class PdfBodyAssembler {
      */
     private static List<PageLine> applyLayoutCapability(List<PageLine> bodyLines, PageContent page,
                                                         ParseSource source, ParseProperties properties,
-                                                        CapabilityRegistry capabilityRegistry) {
+                                                        CapabilityRegistry capabilityRegistry,
+                                                        ParseContext context, PdfPageImageRenderer renderer) {
         if (NullUtil.isNull(capabilityRegistry) || !LayoutComplexity.isComplex(bodyLines, properties)) {
             return bodyLines;
         }
@@ -61,8 +65,13 @@ public final class PdfBodyAssembler {
         image.setPage(page.pageNo());
         image.setWidth(page.pageWidth());
         image.setHeight(page.pageHeight());
+        image.setImageRef("page-" + page.pageNo() + "-layout");
+        ProviderContext providerContext = new ProviderContext();
+        providerContext.setTaskId(context.getFileResultId());
+        providerContext.setAssetBytes(ref -> NullUtil.isNull(renderer)
+                ? null : renderer.png(renderer.pageImage(page.pageNo())));
         LayoutCapabilityAttempt.Outcome outcome =
-                LayoutCapabilityAttempt.attempt(capabilityRegistry, image, page.pageNo());
+                LayoutCapabilityAttempt.attempt(capabilityRegistry, image, page.pageNo(), providerContext);
         source.getFacts().add(outcome.fact());
         if (!outcome.enhanced()) {
             return bodyLines;
@@ -85,7 +94,8 @@ public final class PdfBodyAssembler {
      */
     public static void assemble(PageContent page, Set<String> headers, HeaderFooterDetector.FooterKeys footers,
                          List<ParseElement> elements, ParseSource source, String fileId,
-                         ParseProperties properties, CapabilityRegistry capabilityRegistry) {
+                         ParseProperties properties, CapabilityRegistry capabilityRegistry,
+                         ParseContext context, PdfPageImageRenderer renderer) {
         double headerBandY = page.pageHeight() * properties.getHeaderAreaRatio();
         double footerBandY = page.pageHeight() * (1 - properties.getFooterAreaRatio());
         PageLines pageLines = PageLines.of(page);
@@ -135,7 +145,8 @@ public final class PdfBodyAssembler {
         // 打散到不同位置，按顺序切段会让同一区域结算多次（表格缺格、残段被当成表格失败降级）。
         List<Region> regions = RuleRegions.regions(page.segments(), properties.getTableLineCoverRatio(),
                 page.pageWidth(), page.pageHeight());
-        List<PageLine> ordered = applyLayoutCapability(bodyLines, page, source, properties, capabilityRegistry);
+        List<PageLine> ordered = applyLayoutCapability(bodyLines, page, source, properties, capabilityRegistry,
+                context, renderer);
         Map<Region, List<PageLine>> regionLines = new LinkedHashMap<>();
         for (PageLine line : ordered) {
             Region region = regionOf(regions, line);
@@ -154,16 +165,16 @@ public final class PdfBodyAssembler {
                 continue;
             }
             if (!run.isEmpty()) {
-                flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry);
+                flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry, context, renderer);
                 run = new ArrayList<>();
             }
             if (settled.add(region)) {
                 RuledTableBuilder.flush(regionLines.get(region), region, page, elements, source, fileId,
-                        properties, capabilityRegistry);
+                        properties, capabilityRegistry, context, renderer);
             }
         }
         if (!run.isEmpty()) {
-            flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry);
+            flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry, context, renderer);
         }
         elements.addAll(footerElements);
     }
@@ -183,7 +194,8 @@ public final class PdfBodyAssembler {
     /** 无边框路径：段落聚合 + 文本表格候选块（行距超阈值结算段落；候选行连续成块） */
     static void flushTextRun(List<PageLine> run, PageContent page, List<ParseElement> elements,
                              ParseSource source, String fileId, ParseProperties properties,
-                             CapabilityRegistry capabilityRegistry) {
+                             CapabilityRegistry capabilityRegistry, ParseContext context,
+                             PdfPageImageRenderer renderer) {
         List<PageLine> block = new ArrayList<>();
         List<PageLine> paragraph = new ArrayList<>();
         PageLine prev = null;
@@ -199,7 +211,8 @@ public final class PdfBodyAssembler {
                     paragraph = new ArrayList<>();
                 }
                 if (!block.isEmpty() && (movedUp || !TableCandidateDetector.isCandidate(line))) {
-                    TextTableBuilder.flush(block, page, elements, source, fileId, properties, capabilityRegistry);
+                    TextTableBuilder.flush(block, page, elements, source, fileId, properties, capabilityRegistry,
+                            context, renderer);
                     block = new ArrayList<>();
                 }
             }
@@ -225,14 +238,16 @@ public final class PdfBodyAssembler {
                 block.add(line);
             } else {
                 if (!block.isEmpty()) {
-                    TextTableBuilder.flush(block, page, elements, source, fileId, properties, capabilityRegistry);
+                    TextTableBuilder.flush(block, page, elements, source, fileId, properties, capabilityRegistry,
+                            context, renderer);
                     block = new ArrayList<>();
                 }
                 paragraph.add(line);
             }
             prev = line;        }
         if (!block.isEmpty()) {
-            TextTableBuilder.flush(block, page, elements, source, fileId, properties, capabilityRegistry);
+            TextTableBuilder.flush(block, page, elements, source, fileId, properties, capabilityRegistry,
+                    context, renderer);
         }
         if (!paragraph.isEmpty()) {
             addParagraph(paragraph, elements, fileId, page);

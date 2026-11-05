@@ -5,8 +5,10 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
+import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
 import com.workbuddy.worker.parser.pdf.detect.RuleGrid;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
 import com.workbuddy.worker.parser.pdf.extract.PdfGeometry;
@@ -32,10 +34,12 @@ public final class RuledTableBuilder {
     /** 线框路径结算：线网格 → 合并格 → 格内文本 → 表元素（保底退回无边框路径） */
     static void flush(List<PageLine> run, Region region, PageContent page, List<ParseElement> elements,
                       ParseSource source, String fileId, ParseProperties properties,
-                      CapabilityRegistry capabilityRegistry) {
+                      CapabilityRegistry capabilityRegistry, ParseContext context,
+                      PdfPageImageRenderer renderer) {
         Grid grid = RuleGrid.fit(page.segments(), region, properties.getTableLineCoverRatio());
         if (NullUtil.isNull(grid)) {
-            PdfBodyAssembler.flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry);
+            PdfBodyAssembler.flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry,
+                    context, renderer);
             return;
         }
         List<CellRect> rects = mergedCells(grid);

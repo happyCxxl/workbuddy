@@ -196,7 +196,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
                     context.getCancellationToken().throwIfCancelled();
                     int mark = elements.size();
                     PdfBodyAssembler.assemble(page, headers, footers, elements, source, fileId, properties,
-                            capabilityRegistry);
+                            capabilityRegistry, context, renderer);
                     PdfImageEmitter.emit(page, elements, source, fileId, properties, context, renderer);
                     List<ParseElement> pageElements = elements.subList(mark, elements.size());
                     TableDeduplicator.mergeInPlace(pageElements, source, page.pageNo());

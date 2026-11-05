@@ -1,5 +1,6 @@
 package com.workbuddy.common.enums.task;
 
+import com.workbuddy.common.utils.NullUtil;
 import lombok.Getter;
 
 import java.util.Set;
@@ -41,4 +42,22 @@ public enum PipelineStage {
      */
     public static final Set<String> FILE_CHAIN_STAGES = Set.of(
             PARSE.name(), STRUCTURE.name(), PREPROCESS.name(), CHUNK.name(), EMBED.name());
+
+    /**
+     * 按英文码解析环节（大小写不敏感）。
+     *
+     * @param name 环节英文码（可空/未知）
+     * @return 匹配的环节；空值与未知码值返回 null
+     */
+    public static PipelineStage of(String name) {
+        if (NullUtil.isNull(name)) {
+            return null;
+        }
+        for (PipelineStage stage : values()) {
+            if (stage.name().equalsIgnoreCase(name.trim())) {
+                return stage;
+            }
+        }
+        return null;
+    }
 }

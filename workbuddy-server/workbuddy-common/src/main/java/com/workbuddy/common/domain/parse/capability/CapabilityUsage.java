@@ -1,13 +1,15 @@
 package com.workbuddy.common.domain.parse.capability;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * 本次解析实际用到的能力引用：能力类别 + 模型名 + 版本，用于回填产物的能力快照。
- *
- * @param kind    能力类别（{@link #KIND_OCR} / {@link #KIND_LAYOUT} / {@link #KIND_TABLE}）
- * @param model   模型名
- * @param version 模型版本
+ * 用普通类而非 record：本对象随解析产物 JSON 落库并反序列化，hutool 对 record 不支持（会丢类型）。
  */
-public record CapabilityUsage(String kind, String model, String version) {
+@Data
+@NoArgsConstructor
+public class CapabilityUsage {
 
     /** 结构化 OCR */
     public static final String KIND_OCR = "ocr";
@@ -17,6 +19,28 @@ public record CapabilityUsage(String kind, String model, String version) {
 
     /** 表格结构识别 */
     public static final String KIND_TABLE = "table";
+
+    /** 能力类别 */
+    private String kind;
+
+    /** 模型名 */
+    private String model;
+
+    /** 模型版本 */
+    private String version;
+
+    /**
+     * 构造一次能力使用记录。
+     *
+     * @param kind    能力类别
+     * @param model   模型名
+     * @param version 模型版本
+     */
+    public CapabilityUsage(String kind, String model, String version) {
+        this.kind = kind;
+        this.model = model;
+        this.version = version;
+    }
 
     /**
      * 表格结构识别的一次使用记录。

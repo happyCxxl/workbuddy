@@ -8,7 +8,13 @@ package com.workbuddy.common.enums.modelgateway;
 public enum ModelScenarioKey {
 
     /** OCR 行识别（解析环节扫描/乱码页补文字） */
-    OCR_LINES("ocr_lines", "ocr_lines");
+    OCR_LINES("ocr_lines", "ocr_lines"),
+
+    /** 版面分析（复杂页阅读顺序补强） */
+    LAYOUT_ANALYZE("layout_analyze", "layout"),
+
+    /** 表格结构识别（规则失败表格补强） */
+    TABLE_STRUCTURE("table_structure", "table");
 
     /** 业务提示词键（灵犀 prompts 目录文件名） */
     private final String promptKey;
