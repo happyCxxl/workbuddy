@@ -20,6 +20,9 @@ public final class PdfLineSupport {
     /** 跨栏行判定：中心落在非主栏的字符占比下限（长行只是溢出栏宽，越栏字符很少） */
     private static final double SPANNING_COLUMN_MIN_SHARE = 0.3;
 
+    /** 换栏回跳容差（pt）：回跳量超过一个字符格再加该容差才算换栏，否则视为同一行续排 */
+    private static final double RESTART_TOLERANCE = 1.0;
+
     private PdfLineSupport() {
     }
 
@@ -86,9 +89,9 @@ public final class PdfLineSupport {
     }
 
     /**
-     * 跨沟行占比：整行横越栏沟（越沟字符占比达门槛）的行数 ÷ 行数。
-     * 真栏沟两侧是各自成块的正文，占比接近 0；局部几何空隙（如表格内部的列间隙）会把正文行统统
-     * 算成跨沟行，据此判定该栏沟不成立。
+     * 越沟行占比：横向范围横越栏沟的行数 ÷ 行数。
+     * 真栏沟两侧是各自成块的正文，行不会横越栏沟，占比接近 0（整页宽标题造成的极少数越沟行不影响判定）；
+     * 参差排版的单栏页、表格内部列间隙这类局部几何空隙会让大量正文行横越该位置，据此判定栏沟不成立。
      *
      * @param lines   行
      * @param gutters 栏沟中心 x
@@ -107,7 +110,8 @@ public final class PdfLineSupport {
 
     /**
      * 在栏沟处的断口切分一条 y 带：沿字符产出顺序走，相邻字符之间出现断口（间隙达词间间隙口径）
-     * 或起点回跳/重叠，且下一字符已落到另一栏时切一刀。返回各组字符（未切时为单组）。
+     * 或回跳超过一个字符格（等于换栏回跳到另一栏），且下一字符已落到另一栏时切一刀。
+     * 回跳不足一个字符格时是同一行的文本对象续排（排版重叠/字距收缩），不切。返回各组字符（未切时为单组）。
      */
     private static List<List<CharInfo>> splitAtGutterBreaks(List<CharInfo> lineChars, List<Double> gutters,
                                                             ParseProperties properties) {
@@ -115,11 +119,14 @@ public final class PdfLineSupport {
         List<CharInfo> group = new ArrayList<>();
         Map<Integer, Integer> columns = new LinkedHashMap<>();
         double right = -1;
+        double lastWidth = 0;
         double fontSize = 0;
         for (CharInfo c : lineChars) {
             if (!group.isEmpty()) {
-                double breakAt = c.x() - right;
-                boolean broken = breakAt >= properties.getWordGapRatio() * Math.max(fontSize, 1) || breakAt < 0;
+                double gap = c.x() - right;
+                double jumpLeft = -gap;
+                boolean broken = gap >= properties.getWordGapRatio() * Math.max(fontSize, 1)
+                        || jumpLeft > Math.max(c.width(), lastWidth) + RESTART_TOLERANCE;
                 if (broken && dominantColumn(columns)
                         != PageLayoutAnalyzer.columnOfCenter(c.x() + c.width() / 2, gutters)) {
                     groups.add(group);
@@ -134,6 +141,7 @@ public final class PdfLineSupport {
             group.add(c);
             columns.merge(PageLayoutAnalyzer.columnOfCenter(c.x() + c.width() / 2, gutters), 1, Integer::sum);
             right = Math.max(right, c.x() + c.width());
+            lastWidth = c.width();
             fontSize = Math.max(fontSize, c.fontSize());
         }
         if (!group.isEmpty()) {

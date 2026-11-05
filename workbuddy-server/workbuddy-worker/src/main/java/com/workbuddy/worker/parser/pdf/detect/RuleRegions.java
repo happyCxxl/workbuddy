@@ -24,17 +24,23 @@ public final class RuleRegions {
     /** 单页参与线网格的线段上限：超出即跳过线检测（矢量密集页退回文本表格路径） */
     private static final int MAX_RULE_SEGMENTS = 2000;
 
+    /** 线框区域占页面面积的上限：占满/接近整页的框是页面边框或背景框，不是表格 */
+    private static final double MAX_TABLE_PAGE_AREA_RATIO = 0.9;
+
     private RuleRegions() {
     }
 
     /**
-     * 线框区域：相交线条聚成组件，取外接矩形并保留能形成至少 2 列 2 行网格的组件。
+     * 线框区域：相交线条聚成组件，取外接矩形并保留能形成至少 2 列 2 行网格、且不是页面边框的组件。
      *
-     * @param segments       线段
+     * @param segments       线段（已裁到可见页面）
      * @param lineCoverRatio 线段覆盖率门槛
+     * @param pageWidth      页面宽度
+     * @param pageHeight     页面高度
      * @return 线框区域，按上边界升序
      */
-    public static List<Region> regions(List<Segment> segments, double lineCoverRatio) {
+    public static List<Region> regions(List<Segment> segments, double lineCoverRatio,
+                                       double pageWidth, double pageHeight) {
         List<Segment> usable = segments.stream()
                 .filter(s -> s.length() >= MIN_SEGMENT_LENGTH)
                 .toList();
@@ -44,6 +50,9 @@ public final class RuleRegions {
         List<Region> regions = new ArrayList<>();
         for (List<Segment> component : RuleSegments.components(usable)) {
             Region region = bounds(component);
+            if (isPageFrame(region, pageWidth, pageHeight)) {
+                continue;
+            }
             Grid grid = RuleGrid.fit(component, region, lineCoverRatio);
             if (NullUtil.isNotNull(grid)) {
                 regions.add(region);
@@ -51,6 +60,15 @@ public final class RuleRegions {
         }
         regions.sort(Comparator.comparingDouble(Region::top));
         return regions;
+    }
+
+    /** 页面边框判定：区域面积占页面比例达到上限（整页框、整页背景）即不是表格 */
+    private static boolean isPageFrame(Region region, double pageWidth, double pageHeight) {
+        if (pageWidth <= 0 || pageHeight <= 0) {
+            return false;
+        }
+        double area = (region.right() - region.left()) * (region.bottom() - region.top());
+        return area / (pageWidth * pageHeight) >= MAX_TABLE_PAGE_AREA_RATIO;
     }
 
     /** 区域内的线：按方向筛出，并要求其长度覆盖区域对应边长的比例 */

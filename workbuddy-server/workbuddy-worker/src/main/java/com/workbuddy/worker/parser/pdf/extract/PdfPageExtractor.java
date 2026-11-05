@@ -93,7 +93,7 @@ public class PdfPageExtractor {
         double printableRatio = ratio(printableMojibake, nonBlank);
         metric.setGarbledRatio(printableRatio >= context.getProperties().getPrintableGarbledRateThreshold()
                 ? Math.max(unreadableRatio, printableRatio) : unreadableRatio);
-        RuleSegments.Graphics graphics = RuleSegments.collect(page, pageHeight);
+        RuleSegments.Graphics graphics = RuleSegments.collect(page, pageWidth, pageHeight);
         metric.setImageAreaRatio(RuleSegments.imageAreaRatio(graphics.imageBoxes(), pageWidth, pageHeight));
         metric.setVectorAreaRatio(RuleSegments.vectorAreaRatio(graphics.segments(), pageWidth, pageHeight));
 
@@ -115,8 +115,9 @@ public class PdfPageExtractor {
         // 栏沟复核：真栏沟把正文分成互不横越的栏块。只看线框区域外的行（表格内的行由线网格决定，
         // 其列间隙不是栏沟）；正文行成片横越「栏沟」时，该栏沟只是局部几何空隙，按单栏重建行
         if (!gutters.isEmpty()
-                && PdfLineSupport.spanningShare(outsideRegions(mergedLines, graphics.segments(), properties),
-                        gutters) > properties.getColumnGutterMaxSpanShare()) {
+                && PdfLineSupport.spanningShare(outsideRegions(mergedLines, graphics.segments(),
+                        pageWidth, pageHeight, properties), gutters)
+                > properties.getColumnGutterMaxSpanShare()) {
             gutters = List.of();
             rawLines = buildLines(pageNo, bands, tableBands, gutters, lineTextOptions, properties);
             mergedLines = LineFragmentMerger.merge(rawLines, pageWidth,
@@ -166,13 +167,17 @@ public class PdfPageExtractor {
      * 线框区域外的行：栏沟复核只看正文行——区域内的行由线网格行列决定，其列间隙不是栏沟。
      *
      * @param lines      行
-     * @param segments   页面线段
+     * @param segments   页面线段（已裁到可见页面）
+     * @param pageWidth  页面宽度
+     * @param pageHeight 页面高度
      * @param properties 解析阈值配置
      * @return 行中心不在任何线框区域内的行
      */
     private static List<PageLine> outsideRegions(List<PageLine> lines, List<Segment> segments,
+                                                 double pageWidth, double pageHeight,
                                                  ParseProperties properties) {
-        List<Region> regions = RuleRegions.regions(segments, properties.getTableLineCoverRatio());
+        List<Region> regions = RuleRegions.regions(segments, properties.getTableLineCoverRatio(),
+                pageWidth, pageHeight);
         if (regions.isEmpty()) {
             return lines;
         }

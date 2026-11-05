@@ -36,20 +36,58 @@ public final class RuleSegments {
     }
 
     /**
-     * 采集页面图元；页面内容流异常时返回空结果（该页走文本表格路径）。
+     * 采集页面图元（线段按可见页面裁剪）；页面内容流异常时返回空结果（该页走文本表格路径）。
      *
      * @param page       页面
-     * @param pageHeight 页面高度（坐标系换算用）
+     * @param pageWidth  页面宽度（裁剪用）
+     * @param pageHeight 页面高度（坐标系换算与裁剪用）
      * @return 页面图元
      */
-    public static Graphics collect(PDPage page, double pageHeight) {
+    public static Graphics collect(PDPage page, double pageWidth, double pageHeight) {
         Collector collector = new Collector(page, pageHeight);
         try {
             collector.processPage(page);
         } catch (IOException e) {
             return new Graphics(List.of(), List.of());
         }
-        return new Graphics(RuleSegmentMerger.merge(collector.segments), collector.imageBoxes);
+        List<Segment> clipped = new ArrayList<>(collector.segments.size());
+        for (Segment segment : collector.segments) {
+            Segment visible = clip(segment, pageWidth, pageHeight);
+            if (visible != null) {
+                clipped.add(visible);
+            }
+        }
+        return new Graphics(RuleSegmentMerger.merge(clipped), collector.imageBoxes);
+    }
+
+    /**
+     * 线段裁到可见页面：整条落在页外（被页面裁剪、渲染时不可见）的丢弃，跨边界的截到页内。
+     *
+     * @param segment    线段（左上原点）
+     * @param pageWidth  页面宽度
+     * @param pageHeight 页面高度
+     * @return 可见部分；完全不可见或为斜线时返回 null
+     */
+    static Segment clip(Segment segment, double pageWidth, double pageHeight) {
+        if (segment.horizontal()) {
+            double y = segment.y1();
+            if (y < 0 || y > pageHeight) {
+                return null;
+            }
+            double x1 = Math.max(Math.min(segment.x1(), segment.x2()), 0);
+            double x2 = Math.min(Math.max(segment.x1(), segment.x2()), pageWidth);
+            return x2 - x1 <= TOLERANCE ? null : new Segment(x1, y, x2, y);
+        }
+        if (segment.vertical()) {
+            double x = segment.x1();
+            if (x < 0 || x > pageWidth) {
+                return null;
+            }
+            double y1 = Math.max(Math.min(segment.y1(), segment.y2()), 0);
+            double y2 = Math.min(Math.max(segment.y1(), segment.y2()), pageHeight);
+            return y2 - y1 <= TOLERANCE ? null : new Segment(x, y1, x, y2);
+        }
+        return null;
     }
 
     /**

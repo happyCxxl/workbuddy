@@ -24,7 +24,7 @@ public final class RuleGrid {
      * @param segments       区域内的线段
      * @param region         区域
      * @param lineCoverRatio 线段覆盖率门槛
-     * @return 网格；列或行不足 2 段时为 null
+     * @return 网格；列或行不足 3 个边界时为 null
      */
     public static Grid fit(List<Segment> segments, Region region, double lineCoverRatio) {
         List<Segment> verticals = RuleRegions.fullyInside(segments, region, true, lineCoverRatio);

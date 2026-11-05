@@ -133,7 +133,8 @@ public final class PdfBodyAssembler {
         // 线框区域：区域内行按区域归组后一次性结算，其余行按段落与文本表格候选推进。
         // 归组按「行中心落在哪个区域」判定，不用「阅读顺序里连续」作代理：分栏重排会把同一区域的行
         // 打散到不同位置，按顺序切段会让同一区域结算多次（表格缺格、残段被当成表格失败降级）。
-        List<Region> regions = RuleRegions.regions(page.segments(), properties.getTableLineCoverRatio());
+        List<Region> regions = RuleRegions.regions(page.segments(), properties.getTableLineCoverRatio(),
+                page.pageWidth(), page.pageHeight());
         List<PageLine> ordered = applyLayoutCapability(bodyLines, page, source, properties, capabilityRegistry);
         Map<Region, List<PageLine>> regionLines = new LinkedHashMap<>();
         for (PageLine line : ordered) {
