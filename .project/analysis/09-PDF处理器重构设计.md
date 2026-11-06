@@ -565,7 +565,7 @@ flowchart TD
 
 ### 6.3 单步契约测试
 
-每个步骤至少一个测试：
+每个有独立断言的步骤至少一个直接测试；接线型步骤由集成测试与黄金对拍覆盖，不为凑覆盖率补纯接线测试。当前落地：`HeaderBandStep`、`FooterCollectStep`、`RegionStep`、`ReadingOrderStep` 有直接契约测试（`PageStepContractTest`）；其余页面步骤由 `PageAssemblyRegionGroupingTest`、`Pdf*Test` 与 `PdfParseGoldenTest` 覆盖；P3 的表格 resolver 尚未实现，对应行暂不适用。
 
 | 步骤                  | 测试输入                        | 断言                             |
 |-----------------------|---------------------------------|----------------------------------|
@@ -849,4 +849,5 @@ Pass 3：
 - **黄金对拍**：新增 `PdfParseGoldenTest`，覆盖 `multi-column.pdf`、`scanned.pdf`、`mixed.pdf`、`borderless-table.pdf`；`StructureRealProductAssemblyTest` 增加 `parse-product-real.json` 组装快照。基线用 `GOLDEN_UPDATE=true` 生成，日常只读。
 - **单步契约**：新增 `PageStepContractTest`，覆盖页眉/页脚带内命中、区域归组、阅读顺序无能力保持/有能力重排。
 - **验证**：`mvn -o -pl workbuddy-worker -am verify` 通过（含测试、覆盖率、CPD、SpotBugs、Checkstyle）；`check-javadoc`、`check-docs`、`check-encoding` 通过。
+- **测试口径**：6.3 已按现状收口——直接契约测试覆盖 Header/Footer/Region/ReadingOrder，其余页面步骤由集成与黄金测试覆盖；P3 resolver 未实现，对应行不适用。
 - **存量门禁**：本次修复 CPD 5 处（三个结构化 provider 的 bbox/模型键重复）与 SpotBugs 2 个 Low（`ParseAssetSink.read`、`TextTableBuilder.cropPng` 的 null 数组返回），全量 `verify` 已不再被存量问题拦截。
