@@ -1,0 +1,87 @@
+{
+    "source": "native",
+    "provider": "pdfbox-3.0.4",
+    "candidateOrder": true,
+    "elements": [
+        {
+            "id": "p1_0_60_42",
+            "type": "PARAGRAPH",
+            "text": "Left column line one with some text. Left column line two with more text. Left column line three continues here. Left column line four ends the column.",
+            "page": 1,
+            "bbox": {
+                "x": 60,
+                "y": 42,
+                "width": 185.866943359375,
+                "height": 54.3580002784729
+            },
+            "displayBBox": {
+                "x": 60,
+                "y": 33.2,
+                "width": 185.866943359375,
+                "height": 56.8
+            },
+            "font": {
+                "name": "Helvetica",
+                "size": 11,
+                "bold": false
+            },
+            "tocCandidate": false,
+            "provenance": {
+                "file": "F-1",
+                "path": "pdf#page(1)/chars[0..147]"
+            }
+        },
+        {
+            "id": "p1_1_320_42",
+            "type": "PARAGRAPH",
+            "text": "Right column line one with some text. Right column line two with more text. Right column line three continues here.",
+            "page": 1,
+            "bbox": {
+                "x": 320,
+                "y": 42,
+                "width": 190.7509765625,
+                "height": 38.3580002784729
+            },
+            "displayBBox": {
+                "x": 320,
+                "y": 33.2,
+                "width": 190.7509765625,
+                "height": 40.8
+            },
+            "font": {
+                "name": "Helvetica",
+                "size": 11,
+                "bold": false
+            },
+            "tocCandidate": false,
+            "provenance": {
+                "file": "F-1",
+                "path": "pdf#page(1)/chars[148..260]"
+            }
+        }
+    ],
+    "pageMetrics": [
+        {
+            "page": 1,
+            "charCount": 221,
+            "garbledRatio": 0,
+            "cidMappingRatio": 0,
+            "textAreaRatio": 0.034531067243588516,
+            "imageAreaRatio": 0,
+            "vectorAreaRatio": 0,
+            "imageCount": 0
+        }
+    ],
+    "facts": [
+    ],
+    "unitCount": 1,
+    "pageDimensions": [
+        {
+            "page": 1,
+            "width": 612,
+            "height": 792
+        }
+    ],
+    "capabilities": [
+    ]
+}

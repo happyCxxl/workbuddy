@@ -1,16 +1,32 @@
 package com.workbuddy.worker.parser.pdf.assemble;
 
+import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
+import com.workbuddy.worker.parser.pdf.detect.HeaderFooterKeys;
 import com.workbuddy.worker.parser.pdf.model.CharInfo;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
 import com.workbuddy.worker.parser.pdf.model.Segment;
+import com.workbuddy.worker.parser.pdf.page.BlockClassifyStep;
+import com.workbuddy.worker.parser.pdf.page.BlockRenderStep;
+import com.workbuddy.worker.parser.pdf.page.BodyLineStep;
+import com.workbuddy.worker.parser.pdf.page.DuplicateTableStep;
+import com.workbuddy.worker.parser.pdf.page.ElementIdStep;
+import com.workbuddy.worker.parser.pdf.page.FooterAppendStep;
+import com.workbuddy.worker.parser.pdf.page.FooterCollectStep;
+import com.workbuddy.worker.parser.pdf.page.HeaderBandStep;
+import com.workbuddy.worker.parser.pdf.page.ImageStep;
+import com.workbuddy.worker.parser.pdf.page.PageContext;
+import com.workbuddy.worker.parser.pdf.page.PagePipeline;
+import com.workbuddy.worker.parser.pdf.page.ReadingOrderStep;
+import com.workbuddy.worker.parser.pdf.page.RegionStep;
+import com.workbuddy.worker.parser.pdf.page.TableProvenanceStep;
 import com.workbuddy.worker.testkit.PropertiesFixtures;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 线框区域结算不看行序：区域内行被阅读顺序打散（分栏重排把单元格续行挪到页尾）时，
  * 表格仍须一次性结算全部行，不得产出缺格表格 + 残段降级段落。
  */
-class PdfBodyAssemblerRegionGroupingTest {
+class PageAssemblyRegionGroupingTest {
 
     /** 网格列线 x（4 列） */
     private static final double[] COLUMNS = {74, 110, 190, 250, 520};
@@ -57,10 +73,23 @@ class PdfBodyAssemblerRegionGroupingTest {
         // 阅读顺序把同一单元格的续行挪到了页尾（分栏重排后的位置），它仍属于表格区域
         lines.add(line("T2", 260, 355));
 
-        List<ParseElement> elements = new ArrayList<>();
-        PdfBodyAssembler.assemble(page(lines), Set.of(),
-                new HeaderFooterDetector.FooterKeys(Set.of(), List.of()),
-                elements, ParseSource.nativeSource("test"), "F-1", properties(), null, null, null);
+        PageContext context = new PageContext(page(lines),
+                new HeaderFooterKeys(Set.of(), new HeaderFooterDetector.FooterKeys(Set.of(), List.of())),
+                properties(), null, parseContext(properties()), null, "F-1");
+        new PagePipeline(List.of(
+                new HeaderBandStep(),
+                new FooterCollectStep(),
+                new BodyLineStep(),
+                new RegionStep(),
+                new ReadingOrderStep(),
+                new BlockClassifyStep(),
+                new BlockRenderStep(),
+                new FooterAppendStep(),
+                new ImageStep(),
+                new DuplicateTableStep(),
+                new ElementIdStep(),
+                new TableProvenanceStep())).run(context);
+        List<ParseElement> elements = context.getElements();
 
         List<ParseElement> tables = elements.stream()
                 .filter(element -> ElementType.TABLE.name().equals(element.getType()))
@@ -111,5 +140,15 @@ class PdfBodyAssemblerRegionGroupingTest {
     /** 解析阈值（真实配置面） */
     private static ParseProperties properties() {
         return PropertiesFixtures.parse();
+    }
+
+    /** 解析上下文：只需文件 ID 与阈值配置。 */
+    private static ParseContext parseContext(ParseProperties properties) {
+        ParseContext context = new ParseContext();
+        FileReference fileRef = new FileReference();
+        fileRef.setFileId("F-1");
+        context.setFileRef(fileRef);
+        context.setProperties(properties);
+        return context;
     }
 }

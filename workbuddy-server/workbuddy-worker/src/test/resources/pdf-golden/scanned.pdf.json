@@ -1,0 +1,53 @@
+{
+    "source": "native",
+    "provider": "pdfbox-3.0.4",
+    "candidateOrder": true,
+    "elements": [
+        {
+            "id": "i1_0_0_0",
+            "type": "IMAGE",
+            "page": 1,
+            "bbox": {
+                "x": 0,
+                "y": 0,
+                "width": 612,
+                "height": 792
+            },
+            "needsOcr": true,
+            "provenance": {
+                "file": "F-1",
+                "path": "pdf#page(1)/image[0]"
+            }
+        }
+    ],
+    "pageMetrics": [
+        {
+            "page": 1,
+            "charCount": 0,
+            "garbledRatio": 0,
+            "cidMappingRatio": 0,
+            "textAreaRatio": 0,
+            "imageAreaRatio": 1,
+            "vectorAreaRatio": 0,
+            "imageCount": 0
+        }
+    ],
+    "facts": [
+        {
+            "type": "OCR_IMAGE",
+            "level": "WARN",
+            "region": "page 1",
+            "evidence": "嵌入图片仅引用无文字（本页 1 张，合计占页面积 1.00）"
+        }
+    ],
+    "unitCount": 1,
+    "pageDimensions": [
+        {
+            "page": 1,
+            "width": 612,
+            "height": 792
+        }
+    ],
+    "capabilities": [
+    ]
+}

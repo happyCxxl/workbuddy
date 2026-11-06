@@ -11,6 +11,9 @@ import java.util.Map;
 /**
  * 向量化网关响应（data 段直译）：vectors 与输入同序，meta 为网关元信息。
  * 组装业务实体（EmbeddingResult）归调用方，本类只承载网关返回形态。
+ *
+ * @param vectors 向量行，与输入同序
+ * @param meta 网关元信息
  */
 public record EmbedResponse(List<List<Float>> vectors, Map<String, Object> meta) {
 

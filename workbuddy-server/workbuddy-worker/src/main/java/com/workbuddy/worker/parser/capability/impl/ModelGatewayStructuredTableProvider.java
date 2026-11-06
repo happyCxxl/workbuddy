@@ -1,6 +1,5 @@
 package com.workbuddy.worker.parser.capability.impl;
 
-import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.capability.ProviderContext;
 import com.workbuddy.common.domain.parse.capability.TableCell;
 import com.workbuddy.common.domain.parse.capability.TableRegion;
@@ -92,14 +91,8 @@ public class ModelGatewayStructuredTableProvider implements TableStructureProvid
                 result.setConfidence(confidence.doubleValue());
             }
             List<?> box = cell.get("bbox") instanceof List<?> list ? list : null;
-            if (!NullUtil.isNull(box) && box.size() >= 4
-                    && box.get(0) instanceof Number && box.get(1) instanceof Number
-                    && box.get(2) instanceof Number && box.get(3) instanceof Number) {
-                double x0 = ((Number) box.get(0)).doubleValue() / pixelsPerPt;
-                double y0 = ((Number) box.get(1)).doubleValue() / pixelsPerPt;
-                double x1 = ((Number) box.get(2)).doubleValue() / pixelsPerPt;
-                double y1 = ((Number) box.get(3)).doubleValue() / pixelsPerPt;
-                result.setBbox(new BBox(x0, y0, x1 - x0, y1 - y0));
+            if (ModelResponseSupport.hasBbox(box)) {
+                result.setBbox(ModelResponseSupport.bbox(box, pixelsPerPt, "表格单元格 bbox 非法"));
             }
             cells.add(result);
         }
@@ -107,8 +100,8 @@ public class ModelGatewayStructuredTableProvider implements TableStructureProvid
         result.setRows(rows);
         result.setCols(cols);
         result.setCells(cells);
-        Object rawModel = NullUtil.isNull(response.meta()) ? null : response.meta().get("model_key");
-        if (rawModel instanceof String model) {
+        String model = ModelResponseSupport.modelKey(response);
+        if (!NullUtil.isNull(model)) {
             result.setModel(model);
         }
         return result;

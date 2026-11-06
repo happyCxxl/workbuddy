@@ -1,47 +1,29 @@
 package com.workbuddy.worker.parser.pdf;
 
-import com.workbuddy.common.domain.parse.PageDimension;
-import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.input.FileFormat;
-import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.DocumentParserPort;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
-import com.workbuddy.worker.parser.pdf.assemble.PageElementIds;
-import com.workbuddy.worker.parser.pdf.assemble.PageTableProvenance;
-import com.workbuddy.worker.parser.pdf.assemble.PdfBodyAssembler;
-import com.workbuddy.worker.parser.pdf.assemble.TableContinuationSupport;
-import com.workbuddy.worker.parser.pdf.assemble.TableDeduplicator;
-import com.workbuddy.worker.parser.pdf.assemble.PdfImageEmitter;
-import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
-import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
 import com.workbuddy.worker.parser.pdf.extract.PdfPageExtractor;
 import com.workbuddy.worker.parser.pdf.layout.PageLayoutAnalyzer;
-import com.workbuddy.worker.parser.pdf.model.PageContent;
-import com.workbuddy.worker.parser.pdf.model.PageLines;
-import com.workbuddy.worker.parser.pdf.store.PageArtifactStore;
+import com.workbuddy.worker.parser.pdf.pipeline.DocumentLoadStep;
+import com.workbuddy.worker.parser.pdf.pipeline.HeaderFooterStep;
+import com.workbuddy.worker.parser.pdf.pipeline.PageAssemblyStep;
+import com.workbuddy.worker.parser.pdf.pipeline.PageExtractionStep;
+import com.workbuddy.worker.parser.pdf.pipeline.PdfDocumentPipeline;
+import com.workbuddy.worker.parser.pdf.pipeline.SourceAssemblyStep;
+import com.workbuddy.worker.parser.pdf.pipeline.TableContinuationStep;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.io.IOUtils;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 
 /**
- * PDFBox 原生解析器（数字 PDF）：编排三段 —— 逐页提取（{@link PdfPageExtractor}）→
- * 页眉页脚识别（{@link HeaderFooterDetector}）→ 逐页装配元素（{@link PdfBodyAssembler} +
- * {@link RuledTableBuilder}/{@link TextTableBuilder} + {@link PdfImageEmitter}）。
+ * PDFBox 原生解析器（数字 PDF）：实现文档解析端口，内部委托 {@link PdfDocumentPipeline}。
+ *
+ * <p>本类只保留 MIME 适配、能力标识与异常边界；加载、提取、跨页识别、装配与结果组装由流水线步骤完成。
  */
 @Slf4j
 @Component
@@ -50,8 +32,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
     private static final String CAPABILITY = "pdfbox";
     private static final String CAPABILITY_VERSION = "3.0.4";
 
-    private final PdfPageExtractor pageExtractor;
-    private final CapabilityRegistry capabilityRegistry;
+    private final PdfDocumentPipeline pipeline;
 
     /**
      * 只跑规则路径（不接模型能力）的构造器。
@@ -65,7 +46,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
     /**
      * 运行期构造器：注入能力注册表（未开启或未接入时注册表返回 null）。
      *
-     * @param layoutAnalyzer     版面分析器
+     * @param layoutAnalyzer 版面分析器
      * @param capabilityRegistry 模型能力注册表（可空）
      */
     @Autowired
@@ -77,11 +58,16 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
      * 测试构造器：注入页提取器，便于断言每页只提取一次。
      *
      * @param capabilityRegistry 模型能力注册表（可空）
-     * @param pageExtractor      页提取器
+     * @param pageExtractor 页提取器
      */
     PdfBoxDocumentParser(CapabilityRegistry capabilityRegistry, PdfPageExtractor pageExtractor) {
-        this.pageExtractor = pageExtractor;
-        this.capabilityRegistry = capabilityRegistry;
+        this.pipeline = new PdfDocumentPipeline(
+                new DocumentLoadStep(),
+                new PageExtractionStep(pageExtractor),
+                new HeaderFooterStep(),
+                new PageAssemblyStep(capabilityRegistry),
+                new TableContinuationStep(),
+                new SourceAssemblyStep(CAPABILITY + "-" + CAPABILITY_VERSION));
     }
 
     /**
@@ -116,7 +102,7 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
     }
 
     /**
-     * 解析入口：大文件落临时文件按页读取，逐页提取后交给组装器。
+     * 解析入口：委托文档流水线；取消原样抛出，其它异常统一包装。
      *
      * @param context 解析上下文
      * @return 解析结果
@@ -125,110 +111,13 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
     public ParseSource parse(ParseContext context) {
         context.getCancellationToken().throwIfCancelled();
         String fileId = context.getFileRef().getFileId();
-        ParseSource source = ParseSource.nativeSource(CAPABILITY + "-" + CAPABILITY_VERSION);
-        Path tempFile = null;
         try {
-            // 输入：小文件整档留内存；大文件落临时文件后按需读取（PDFBox 按页取对象，不整档驻留）
-            int largeFileMinBytes = context.getProperties().getLargeFileMinBytes();
-            int probe = largeFileMinBytes >= Integer.MAX_VALUE ? Integer.MAX_VALUE : largeFileMinBytes + 1;
-            byte[] head = context.getInputStream().readNBytes(probe);
-            PDDocument doc;
-            if (head.length <= largeFileMinBytes) {
-                doc = Loader.loadPDF(head);
-            } else {
-                tempFile = spoolToTempFile(context, head);
-                doc = Loader.loadPDF(tempFile.toFile(), IOUtils.createTempFileOnlyStreamCache());
-            }
-            try (PDDocument document = doc) {
-                parseDocument(document, source, context, fileId);
-            }
+            return pipeline.run(context);
         } catch (CancellationException e) {
             throw e;
         } catch (Exception e) {
             log.warn("===> PdfBoxDocumentParser PDF 解析失败, fileId={}", fileId, e);
             throw new IllegalStateException("PDF 解析失败: " + e.getMessage(), e);
-        } finally {
-            deleteQuietly(tempFile);
-        }
-        return source;
-    }
-
-    /** 逐页提取 + 跨页识别 + 分窗装配（窗口大小 = `pageWindowSize`，页产物按窗口存取） */
-    private void parseDocument(PDDocument doc, ParseSource source, ParseContext context, String fileId)
-            throws IOException {
-        ParseProperties properties = context.getProperties();
-        int pageCount = doc.getNumberOfPages();
-        source.setUnitCount(pageCount);
-        context.getFileRef().setPageCount(pageCount);
-
-        int windowSize = Math.max(properties.getPageWindowSize(), 1);
-        PdfPageImageRenderer renderer = context.getAssetSink().enabled()
-                ? new PdfPageImageRenderer(doc, properties.getPageImageDpi()) : null;
-        try (PageArtifactStore store = PageArtifactStore.open(pageCount, windowSize)) {
-            log.info("===> PdfBoxDocumentParser 页产物存储, fileId={}, store={}, pageCount={}, windowSize={}",
-                    fileId, store.getClass().getSimpleName(), pageCount, windowSize);
-
-            // ① 逐页提取一次：全档只留行摘要与页指标，页产物按窗口写入 store
-            List<PageLines> pageLines = new ArrayList<>(pageCount);
-            List<PageContent> window = new ArrayList<>(windowSize);
-            for (int p = 1; p <= pageCount; p++) {
-                context.getCancellationToken().throwIfCancelled();
-                PageContent pageContent = pageExtractor.extractPage(doc, p, context);
-                pageLines.add(PageLines.of(pageContent));
-                source.getPageMetrics().add(pageContent.metric());
-                source.getPageDimensions().add(new PageDimension(pageContent.pageNo(),
-                        pageContent.geometry().viewportWidth(), pageContent.geometry().viewportHeight()));
-                window.add(pageContent);
-                if (window.size() == windowSize || p == pageCount) {
-                    store.writeWindow(p - window.size() + 1, window);
-                    window = new ArrayList<>(windowSize);
-                }
-            }
-
-            // ② HEADER/FOOTER 识别：页顶/页底区域内跨页重复文本与页码模式（先算，正文聚合时排除）
-            Set<String> headers = HeaderFooterDetector.detectHeaders(pageLines, context);
-            HeaderFooterDetector.FooterKeys footers = HeaderFooterDetector.detectFooters(pageLines, context);
-
-            // ③ 分窗装配元素：读页产物，不重新解析 PDF；页眉页脚 → 正文 → 图片 → 本页 ID 与表格溯源
-            List<ParseElement> elements = new ArrayList<>();
-            for (int from = 1; from <= pageCount; from += windowSize) {
-                for (PageContent page : store.readWindow(from)) {
-                    context.getCancellationToken().throwIfCancelled();
-                    int mark = elements.size();
-                    PdfBodyAssembler.assemble(page, headers, footers, elements, source, fileId, properties,
-                            capabilityRegistry, context, renderer);
-                    PdfImageEmitter.emit(page, elements, source, fileId, properties, context, renderer);
-                    List<ParseElement> pageElements = elements.subList(mark, elements.size());
-                    TableDeduplicator.mergeInPlace(pageElements, source, page.pageNo());
-                    PageElementIds.assign(pageElements, page.pageNo());
-                    PageTableProvenance.assign(pageElements, fileId, page.pageNo());
-                }
-            }
-            source.setElements(elements);
-            TableContinuationSupport.markContinuedTables(elements,
-                    properties.getTableContinuationOverlapRatio());
-        }
-    }
-
-    /** 已读入的头部再加流剩余部分落到临时文件 */
-    private static Path spoolToTempFile(ParseContext context, byte[] head) throws IOException {
-        Path path = Files.createTempFile("kb-parse-", ".pdf");
-        try (OutputStream out = Files.newOutputStream(path)) {
-            out.write(head);
-            context.getInputStream().transferTo(out);
-        }
-        return path;
-    }
-
-    /** 临时文件清理：失败不掩盖解析异常 */
-    private static void deleteQuietly(Path path) {
-        if (NullUtil.isNull(path)) {
-            return;
-        }
-        try {
-            Files.deleteIfExists(path);
-        } catch (IOException e) {
-            log.warn("===> PdfBoxDocumentParser 解析临时文件删除失败, path={}", path, e);
         }
     }
 }

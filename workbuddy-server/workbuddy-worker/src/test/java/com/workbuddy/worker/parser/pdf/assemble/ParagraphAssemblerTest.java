@@ -7,6 +7,7 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
+import com.workbuddy.worker.parser.pdf.page.ParagraphAssembler;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 段落落地判空：空白文本不产 PARAGRAPH，正常文本保留。
  */
-class PdfBodyAssemblerParagraphTest {
+class ParagraphAssemblerTest {
 
     /**
      * 守护 {@code blankParagraphShouldNotBeEmitted}：纯空白段落不产元素。
@@ -28,7 +29,7 @@ class PdfBodyAssemblerParagraphTest {
         List<ParseElement> elements = new ArrayList<>();
         PageLine blank = line("   ");
 
-        PdfBodyAssembler.addParagraph(List.of(blank), elements, "F-1", page(List.of(blank)));
+        ParagraphAssembler.addParagraph(List.of(blank), elements, "F-1", page(List.of(blank)));
 
         assertEquals(0, elements.size(), () -> "elements=" + elements);
     }
@@ -41,7 +42,7 @@ class PdfBodyAssemblerParagraphTest {
         List<ParseElement> elements = new ArrayList<>();
         PageLine normal = line("Real paragraph text");
 
-        PdfBodyAssembler.addParagraph(List.of(normal), elements, "F-1", page(List.of(normal)));
+        ParagraphAssembler.addParagraph(List.of(normal), elements, "F-1", page(List.of(normal)));
 
         assertEquals(1, elements.size(), () -> "elements=" + elements);
         assertEquals(ElementType.PARAGRAPH.name(), elements.getFirst().getType());

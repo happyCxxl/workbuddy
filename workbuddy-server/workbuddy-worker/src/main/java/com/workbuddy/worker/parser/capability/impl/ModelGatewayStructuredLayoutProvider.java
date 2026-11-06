@@ -1,6 +1,5 @@
 package com.workbuddy.worker.parser.capability.impl;
 
-import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.capability.LayoutRegion;
 import com.workbuddy.common.domain.parse.capability.LayoutResult;
 import com.workbuddy.common.domain.parse.capability.PageImage;
@@ -66,17 +65,9 @@ public class ModelGatewayStructuredLayoutProvider implements LayoutProvider {
             String type = row.get("type") instanceof String s ? s : null;
             ThrowUtil.throwIf(NullUtil.isNull(type), ErrorCode.MODEL_SERVER_ERROR, "版面区域缺少 type");
             List<?> box = row.get("bbox") instanceof List<?> list ? list : null;
-            ThrowUtil.throwIf(NullUtil.isNull(box) || box.size() < 4
-                            || !(box.get(0) instanceof Number) || !(box.get(1) instanceof Number)
-                            || !(box.get(2) instanceof Number) || !(box.get(3) instanceof Number),
-                    ErrorCode.MODEL_SERVER_ERROR, "版面区域缺少合法 bbox");
-            double x0 = ((Number) box.get(0)).doubleValue() / pixelsPerPt;
-            double y0 = ((Number) box.get(1)).doubleValue() / pixelsPerPt;
-            double x1 = ((Number) box.get(2)).doubleValue() / pixelsPerPt;
-            double y1 = ((Number) box.get(3)).doubleValue() / pixelsPerPt;
             LayoutRegion region = new LayoutRegion();
             region.setType(type);
-            region.setBbox(new BBox(x0, y0, x1 - x0, y1 - y0));
+            region.setBbox(ModelResponseSupport.bbox(box, pixelsPerPt, "版面区域缺少合法 bbox"));
             if (row.get("confidence") instanceof Number confidence) {
                 region.setConfidence(confidence.doubleValue());
             }
@@ -86,8 +77,8 @@ public class ModelGatewayStructuredLayoutProvider implements LayoutProvider {
         LayoutResult result = new LayoutResult();
         result.setRegions(regions);
         result.setOrder(order);
-        Object rawModel = NullUtil.isNull(response.meta()) ? null : response.meta().get("model_key");
-        if (rawModel instanceof String model) {
+        String model = ModelResponseSupport.modelKey(response);
+        if (!NullUtil.isNull(model)) {
             result.setModel(model);
         }
         return result;

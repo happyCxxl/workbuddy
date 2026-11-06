@@ -1,5 +1,6 @@
 package com.workbuddy.worker.structure.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.utils.JsonUtil;
@@ -23,10 +24,13 @@ import com.workbuddy.worker.testkit.PropertiesFixtures;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * 结构环节真实产物回归：混合 PDF 的解析产物（native 数字页 + ocr 扫描页，含无文本的 IMAGE 元素）
@@ -58,5 +62,28 @@ class StructureRealProductAssemblyTest {
 
         assertEquals(PipelineTaskStatus.SUCCESS, outcome.getSuggestedStatus());
         assertEquals(4, outcome.getDocument().getElements().size());
+        assertGoldenSnapshot(JSONUtil.toJsonPrettyStr(outcome.getDocument()));
+    }
+
+    /** 真实产物组装结果与黄金快照逐行一致；{@code GOLDEN_UPDATE=true} 时重建基线。 */
+    private void assertGoldenSnapshot(String actual) throws Exception {
+        Path golden = Path.of("src", "test", "resources", "structure-golden", "parse-product-real.json");
+        Files.createDirectories(golden.getParent());
+        if ("true".equalsIgnoreCase(System.getenv("GOLDEN_UPDATE"))) {
+            Files.writeString(golden, actual, StandardCharsets.UTF_8);
+        }
+        String expected = Files.readString(golden, StandardCharsets.UTF_8);
+        String[] expectedLines = expected.split("\\R", -1);
+        String[] actualLines = actual.split("\\R", -1);
+        int max = Math.max(expectedLines.length, actualLines.length);
+        for (int index = 0; index < max; index++) {
+            String left = index < expectedLines.length ? expectedLines[index] : "<缺失>";
+            String right = index < actualLines.length ? actualLines[index] : "<缺失>";
+            if (!left.equals(right)) {
+                fail("parse-product-real 黄金快照第一处差异在第 " + (index + 1) + " 行\n期望: "
+                        + left + "\n实际: " + right);
+            }
+        }
+        assertEquals(expected, actual, "parse-product-real 黄金快照不一致");
     }
 }

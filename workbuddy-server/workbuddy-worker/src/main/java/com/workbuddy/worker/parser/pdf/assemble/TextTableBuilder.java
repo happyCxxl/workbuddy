@@ -33,6 +33,8 @@ import java.util.List;
  */
 public final class TextTableBuilder {
 
+    private static final byte[] EMPTY_BYTES = new byte[0];
+
     private TextTableBuilder() {
     }
 
@@ -69,16 +71,17 @@ public final class TextTableBuilder {
         TableSupport.degrade(block, page, elements, source, fileId, evidence);
     }
 
-    /** 区域裁剪图字节：渲染页图后按视口 bbox 裁剪；渲染器缺失返回 null（真实实现按需取值，桩实现可忽略） */
+    /** 区域裁剪图字节：渲染页图后按视口 bbox 裁剪；渲染器缺失返回空数组（真实实现按需取值，桩实现可忽略） */
     private static byte[] cropPng(PageContent page, TableRegion region, PdfPageImageRenderer renderer) {
         if (NullUtil.isNull(renderer) || NullUtil.isNull(region) || NullUtil.isNull(region.getBbox())) {
-            return null;
+            return EMPTY_BYTES;
         }
         java.awt.image.BufferedImage source = renderer.pageImage(page.pageNo());
         java.awt.image.BufferedImage crop = NullUtil.isNull(source) ? null
                 : renderer.crop(source, region.getBbox(), page.geometry().viewportWidth(),
                         page.geometry().viewportHeight());
-        return NullUtil.isNull(crop) ? null : renderer.png(crop);
+        byte[] png = NullUtil.isNull(crop) ? null : renderer.png(crop);
+        return NullUtil.isNull(png) ? EMPTY_BYTES : png;
     }
 
     /** 文本路径结算：列对齐聚类成表；失败或空白率过高则降级为段落 */
@@ -87,7 +90,7 @@ public final class TextTableBuilder {
                       CapabilityRegistry capabilityRegistry, ParseContext context,
                       PdfPageImageRenderer renderer) {
         if (block.size() < 2) {
-            PdfBodyAssembler.addParagraph(block, elements, fileId, page);
+            com.workbuddy.worker.parser.pdf.page.ParagraphAssembler.addParagraph(block, elements, fileId, page);
             return;
         }
         LineTexts.Options lineTextOptions = LineTexts.Options.of(properties);

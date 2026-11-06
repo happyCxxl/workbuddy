@@ -38,7 +38,7 @@ public final class RuledTableBuilder {
                       PdfPageImageRenderer renderer) {
         Grid grid = RuleGrid.fit(page.segments(), region, properties.getTableLineCoverRatio());
         if (NullUtil.isNull(grid)) {
-            PdfBodyAssembler.flushTextRun(run, page, elements, source, fileId, properties, capabilityRegistry,
+            TextRunRenderer.flush(run, page, elements, source, fileId, properties, capabilityRegistry,
                     context, renderer);
             return;
         }

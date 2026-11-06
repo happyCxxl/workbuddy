@@ -1,0 +1,96 @@
+{
+    "source": "native",
+    "provider": "pdfbox-3.0.4",
+    "candidateOrder": true,
+    "elements": [
+        {
+            "id": "i1_0_0_0",
+            "type": "IMAGE",
+            "page": 1,
+            "bbox": {
+                "x": 0,
+                "y": 0,
+                "width": 612,
+                "height": 792
+            },
+            "needsOcr": true,
+            "provenance": {
+                "file": "F-1",
+                "path": "pdf#page(1)/image[0]"
+            }
+        },
+        {
+            "id": "p2_0_60_42",
+            "type": "PARAGRAPH",
+            "text": "This page is born digital and readable.",
+            "page": 2,
+            "bbox": {
+                "x": 60,
+                "y": 42,
+                "width": 203.43594360351562,
+                "height": 6.935999870300293
+            },
+            "displayBBox": {
+                "x": 60,
+                "y": 32.4,
+                "width": 203.43594360351562,
+                "height": 9.600000000000001
+            },
+            "font": {
+                "name": "Helvetica",
+                "size": 12,
+                "bold": false
+            },
+            "tocCandidate": false,
+            "provenance": {
+                "file": "F-1",
+                "path": "pdf#page(2)/chars[0..38]"
+            }
+        }
+    ],
+    "pageMetrics": [
+        {
+            "page": 1,
+            "charCount": 0,
+            "garbledRatio": 0,
+            "cidMappingRatio": 0,
+            "textAreaRatio": 0,
+            "imageAreaRatio": 1,
+            "vectorAreaRatio": 0,
+            "imageCount": 0
+        },
+        {
+            "page": 2,
+            "charCount": 33,
+            "garbledRatio": 0,
+            "cidMappingRatio": 0,
+            "textAreaRatio": 0.006043848591904801,
+            "imageAreaRatio": 0,
+            "vectorAreaRatio": 0,
+            "imageCount": 0
+        }
+    ],
+    "facts": [
+        {
+            "type": "OCR_IMAGE",
+            "level": "WARN",
+            "region": "page 1",
+            "evidence": "嵌入图片仅引用无文字（本页 1 张，合计占页面积 1.00）"
+        }
+    ],
+    "unitCount": 2,
+    "pageDimensions": [
+        {
+            "page": 1,
+            "width": 612,
+            "height": 792
+        },
+        {
+            "page": 2,
+            "width": 612,
+            "height": 792
+        }
+    ],
+    "capabilities": [
+    ]
+}

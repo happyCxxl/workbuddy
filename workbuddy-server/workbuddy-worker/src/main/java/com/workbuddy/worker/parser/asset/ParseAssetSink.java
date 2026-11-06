@@ -49,7 +49,7 @@ public interface ParseAssetSink {
      * @return 字节；未登记或实现不保留字节时为 null
      */
     default byte[] read(String assetId) {
-        return null;
+        return new byte[0];
     }
 
     /**

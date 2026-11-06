@@ -6,6 +6,11 @@ import java.util.Map;
  * OCR 网关响应（data 段直译）：text 为模型原文，fields 为按调用方 schema 解析出的结构化字段
  * （bbox 为输入图像像素坐标），pages 为识别页数，meta 为网关元信息。
  * 映射业务实体（如 StructuredOcrResult）归调用方，本类只承载网关返回形态。
+ *
+ * @param text 模型原文
+ * @param fields 按调用方 schema 解析出的结构化字段
+ * @param pages 识别页数
+ * @param meta 网关元信息
  */
 public record OcrResponse(String text, Map<String, Object> fields, int pages, Map<String, Object> meta) {
 
