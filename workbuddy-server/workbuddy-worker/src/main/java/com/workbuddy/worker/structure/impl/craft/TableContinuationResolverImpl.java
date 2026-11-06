@@ -64,20 +64,24 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
 
         for (int i = 0; i < elements.size() - 1; i++) {
             // 链式推进：合并结果留在原位继续与后一条比较，同一张表可跨任意页数
-            while (i + 1 < elements.size()) {
-                ContinuationDecision decision = decide(elements.get(i), elements.get(i + 1), context);
+            while (true) {
+                int next = nextTableIndex(elements, i);
+                if (next < 0) {
+                    break;
+                }
+                ContinuationDecision decision = decide(elements.get(i), elements.get(next), context);
                 if (!decision.merged()) {
                     break;
                 }
                 UnifiedElement a = elements.get(i);
-                UnifiedElement b = elements.get(i + 1);
+                UnifiedElement b = elements.get(next);
                 int firstPage = firstPageOf(a);
                 int nextPage = b.getPage();
                 mergeTables(a, b);
                 outcome.getRelations().add(new DocumentRelation(RelationType.CONTINUATION_OF.name(),
                         a.getId() + "#p" + nextPage, a.getId() + "#p" + firstPage,
                         (decision.suspected() ? "疑似续表（放宽规则）" : "续表四条件命中") + "，表头继承"));
-                elements.remove(i + 1);
+                elements.remove(next);
                 outcome.setContinuationCount(outcome.getContinuationCount() + 1);
                 if (decision.suspected()) {
                     outcome.setSuspectedCount(outcome.getSuspectedCount() + 1);
@@ -105,6 +109,10 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
         if (columnsKnown && !Objects.equals(a.getCols(), b.getCols())) {
             // 列数已知且不同
             return NOT_MERGED;
+        }
+        // 解析器已判定续页表头重复：跳过表头文本相似度，直接按主规则接续
+        if (isHeaderRepeated(b)) {
+            return MERGED;
         }
         // 主规则要求列数已知且表头可读且相似；任一条件不可判定即落放宽规则（按参考行列宽判定）
         if (columnsKnown && headerSimilarity(a, b) >= context.getProperties().getContinuationHeaderSimilarity()) {
@@ -232,6 +240,33 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
     private Integer lastPageOf(UnifiedElement element) {
         List<Integer> pageRange = element.getPageRange();
         return NullUtil.isNotNull(pageRange) && !pageRange.isEmpty() ? pageRange.getLast() : element.getPage();
+    }
+
+    /**
+     * 下一个候选表：跳过页眉页脚，遇到首个正文元素即停。
+     * 页尾表与下一页首表之间通常夹着 FOOTER/HEADER；遇到其他正文元素则不跨过，避免误接。
+     */
+    private int nextTableIndex(List<UnifiedElement> elements, int current) {
+        for (int i = current + 1; i < elements.size(); i++) {
+            UnifiedElement candidate = elements.get(i);
+            if (isHeaderOrFooter(candidate)) {
+                continue;
+            }
+            return UnifiedElementType.TABLE.name().equals(candidate.getType()) ? i : -1;
+        }
+        return -1;
+    }
+
+    private boolean isHeaderOrFooter(UnifiedElement element) {
+        return UnifiedElementType.HEADER.name().equals(element.getType())
+                || UnifiedElementType.FOOTER.name().equals(element.getType());
+    }
+
+    /** 解析器标记的续页表头重复（PDF 续表事实，优先于表头文本相似度） */
+    private boolean isHeaderRepeated(UnifiedElement element) {
+        Object flag = NullUtil.isNull(element.getExtension()) ? null
+                : element.getExtension().get(ElementExtensionKey.HEADER_REPEATED.key());
+        return Boolean.TRUE.equals(flag);
     }
 
     /** 是否非 PDF 表格（非 TABLE 类型或无页码；接续判定只针对 PDF 表格） */

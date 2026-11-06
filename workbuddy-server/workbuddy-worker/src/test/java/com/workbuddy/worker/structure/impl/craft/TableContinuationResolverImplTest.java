@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -386,5 +387,85 @@ class TableContinuationResolverImplTest {
 
         assertEquals(2, outcome.getElements().size());
         assertEquals(0, outcome.getContinuationCount());
+    }
+
+    /**
+     * 守护 {@code footerAndHeaderBetweenPagesShouldStillMerge}：页尾表与下一页首表之间夹着
+     * FOOTER/HEADER 时，仍须跳过页眉页脚完成接续。
+     */
+    @Test
+    void footerAndHeaderBetweenPagesShouldStillMerge() {
+        UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
+        UnifiedElement footer = pageBand(2, UnifiedElementType.FOOTER, 800);
+        UnifiedElement header = pageBand(3, UnifiedElementType.HEADER, 20);
+        UnifiedElement b = table(3, 20, false, "评分项", "评分标准", "分值");
+
+        ContinuationOutcome outcome = resolver.joinContinuations(
+                new ArrayList<>(List.of(a, footer, header, b)), context());
+
+        assertEquals(3, outcome.getElements().size());
+        assertEquals(1, outcome.getContinuationCount());
+        assertEquals(0, outcome.getSuspectedCount());
+        assertEquals(List.of(2, 3), outcome.getElements().getFirst().getPageRange());
+    }
+
+    /**
+     * 守护 {@code headerRepeatedFlagShouldBypassHeaderTextSimilarity}：解析器已标记
+     * {@code headerRepeated} 时，不再依赖表头文本相似度，也不降级为疑似接续。
+     */
+    @Test
+    void headerRepeatedFlagShouldBypassHeaderTextSimilarity() {
+        UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
+        UnifiedElement b = table(3, 20, false, "B1 售后承诺", "质保期不少于 3 年", "10");
+        withHeaderRepeated(b);
+
+        ContinuationOutcome outcome = resolver.joinContinuations(new ArrayList<>(List.of(a, b)), context());
+
+        assertEquals(1, outcome.getElements().size());
+        assertEquals(1, outcome.getContinuationCount());
+        assertEquals(0, outcome.getSuspectedCount());
+    }
+
+    /**
+     * 守护 {@code bodyElementBetweenTablesShouldStopMerge}：页眉页脚之后出现正文段落时，
+     * 不得越过该段落继续向后找表，避免把两张独立表误接。
+     */
+    @Test
+    void bodyElementBetweenTablesShouldStopMerge() {
+        UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
+        UnifiedElement footer = pageBand(2, UnifiedElementType.FOOTER, 800);
+        UnifiedElement header = pageBand(3, UnifiedElementType.HEADER, 20);
+        UnifiedElement paragraph = pageElement(3, UnifiedElementType.PARAGRAPH, 80, "正文说明");
+        UnifiedElement b = table(3, 200, false, "评分项", "评分标准", "分值");
+
+        ContinuationOutcome outcome = resolver.joinContinuations(
+                new ArrayList<>(List.of(a, footer, header, paragraph, b)), context());
+
+        assertEquals(5, outcome.getElements().size());
+        assertEquals(0, outcome.getContinuationCount());
+    }
+
+    /** 页眉/页脚元素 */
+    private UnifiedElement pageBand(int page, UnifiedElementType type, double y) {
+        return pageElement(page, type, y, "");
+    }
+
+    /** 页面元素（无单元格） */
+    private UnifiedElement pageElement(int page, UnifiedElementType type, double y, String text) {
+        UnifiedElement element = new UnifiedElement();
+        element.setId(type.name().toLowerCase() + "-" + page + "-" + y);
+        element.setType(type.name());
+        element.setPage(page);
+        element.setText(text);
+        element.setBbox(new BBox(72, y, 400, 20));
+        return element;
+    }
+
+    /** 标记解析器写入的续页表头重复事实 */
+    private UnifiedElement withHeaderRepeated(UnifiedElement table) {
+        Map<String, Object> extension = new HashMap<>(table.getExtension());
+        extension.put("headerRepeated", true);
+        table.setExtension(extension);
+        return table;
     }
 }
