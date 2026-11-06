@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PagePipelineTest {
 
-    /** 校验点：重名页面步骤在构造期直接失败。 */
+    /** 校验点：{@code PageStep#name()} 重名时，{@code PagePipeline} 构造期直接失败。 */
     @Test
     void shouldRejectDuplicateStepNames() {
         PageStep first = step("same", Set.of());
@@ -25,7 +25,7 @@ class PagePipelineTest {
         assertTrue(error.getMessage().contains("重复页面步骤"));
     }
 
-    /** 校验点：依赖的步骤不在流水线中时在构造期直接失败。 */
+    /** 校验点：{@code PageStep#requires()} 指向的步骤缺失时，{@code PagePipeline} 构造期直接失败。 */
     @Test
     void shouldRejectMissingDependency() {
         PageStep step = step("render", Set.of("classify"));

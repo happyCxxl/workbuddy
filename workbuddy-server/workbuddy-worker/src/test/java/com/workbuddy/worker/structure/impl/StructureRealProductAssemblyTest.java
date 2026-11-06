@@ -34,10 +34,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * 结构环节真实产物回归：混合 PDF 的解析产物（native 数字页 + ocr 扫描页，含无文本的 IMAGE 元素）
- * 经 hutool 反序列化后组装不抛异常——守护去重合并对 null 文本的容错（IMAGE 元素无 text）。
+ * 经 hutool 反序列化后组装不抛异常——守护 {@code DedupMergerImpl} 对 null 文本的容错（IMAGE 元素无 text）。
  */
 class StructureRealProductAssemblyTest {
 
+    /** 守护 {@code DedupMergerImpl}：真实产物含无 text 的 IMAGE 元素时组装不抛异常。 */
     @Test
     void realProductAssemblyShouldNotThrow() throws Exception {
         String json = new String(getClass().getClassLoader()

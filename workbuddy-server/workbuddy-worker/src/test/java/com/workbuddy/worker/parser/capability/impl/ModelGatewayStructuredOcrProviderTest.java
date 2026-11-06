@@ -48,7 +48,7 @@ class ModelGatewayStructuredOcrProviderTest {
     }
 
     /**
-     * 页图字节缺失：返回 null，不发模型调用。
+     * 页图字节缺失：{@code ModelGatewayStructuredOcrProvider#recognize} 返回 null，不发模型调用。
      */
     @Test
     void recognizeWithoutBytesReturnsNull() {
@@ -63,7 +63,7 @@ class ModelGatewayStructuredOcrProviderTest {
     }
 
     /**
-     * 正常响应：行文本与置信度原样，bbox 像素→pt（dpi 144 → ÷2），模型名取 meta.model_key。
+     * 正常响应：{@code OcrLine} 的文本与置信度原样，bbox 像素→pt（dpi 144 → ÷2），模型名取 meta.model_key。
      */
     @Test
     void recognizeMapsLinesAndConvertsPixelsToPt() {
@@ -95,7 +95,7 @@ class ModelGatewayStructuredOcrProviderTest {
     }
 
     /**
-     * bbox 五元素（模型把置信度塞尾部）：前四项作包围盒，值域内尾项作置信度。
+     * bbox 五元素（模型把置信度塞尾部）：{@code OcrLine} 取前四项，值域内尾项作置信度。
      */
     @Test
     void recognizeUsesBboxTailAsConfidence() {
@@ -120,7 +120,7 @@ class ModelGatewayStructuredOcrProviderTest {
     }
 
     /**
-     * 响应缺 text_lines：按 MODEL_SERVER_ERROR 抛出。
+     * 响应缺 text_lines：按 {@code ErrorCode#MODEL_SERVER_ERROR} 抛出。
      */
     @Test
     void recognizeFailsWhenTextLinesMissing() {
