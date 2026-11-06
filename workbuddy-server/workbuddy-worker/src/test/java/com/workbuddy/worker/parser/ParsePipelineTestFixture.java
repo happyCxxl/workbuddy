@@ -190,7 +190,8 @@ final class ParsePipelineTestFixture {
      * @return 管线
      */
     ParsePipeline pipeline(DocumentParserPort parser, CapabilityRegistry capabilityRegistry) {
-        return new ParsePipeline(List.of(parser), signalDetector, fallbackHandlers(), properties, capabilityRegistry);
+        return new ParsePipeline(List.of(parser), signalDetector, fallbackHandlers(), properties, capabilityRegistry,
+                new OcrFallbackCoordinator(capabilityRegistry), new ParseSummaryFactory(properties));
     }
 
     /**

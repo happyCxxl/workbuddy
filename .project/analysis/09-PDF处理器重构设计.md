@@ -843,6 +843,7 @@ Pass 3：
 
 - **已落地**：P0 文档流水线、P1 提取器 4 步、P2 页面流水线 12 步、P4 去重/ID/溯源/续表步骤、P5 旧单页装配器删除。
 - **兼容层已清零**：`LegacyPageStep` 与 `PdfBodyAssembler` 不再存在；`PdfBoxDocumentParser` 只保留端口适配职责。
+- **解析编排拆分**：`ParsePipeline` 由 571 行收敛到 344 行，OCR 回退抽到 `OcrFallbackCoordinator`，质量汇总与产物摘要抽到 `ParseSummaryFactory`，扫描页/OCR 页集合口径抽到 `ParsePageSets`；`run` 保留路由 → 原生解析 → 信号回退 → 结果封装 → 门禁评估模板。
 - **表格实现（P3 决策）**：`RuledTableBuilder` / `TextTableBuilder` 继续承担线框与文本两条算法路径，由 `BlockRenderStep` 按块类型调用。当前没有新增表格 provider 的需求，现有表格测试已覆盖线框、无框、去重、续表与模型能力接线；再抽 `TableDraft` + resolver 会增加 5 个类而不减少调用方。P3 暂缓，等出现多 provider 或表格边界频繁变更时再做。
 - **并发（P6 决策）**：P6 未启用，`page-parallelism` 默认串行；当前串行路径满足功能与门禁，未测得页面处理是瓶颈，暂不引入 `PageExecutor`/`PageWorker`/`ParseAssetCollector`。需要时按第 8.9 节先做串行/并行对拍。
 - **黄金对拍**：新增 `PdfParseGoldenTest`，覆盖 `multi-column.pdf`、`scanned.pdf`、`mixed.pdf`、`borderless-table.pdf`；`StructureRealProductAssemblyTest` 增加 `parse-product-real.json` 组装快照。基线用 `GOLDEN_UPDATE=true` 生成，日常只读。
