@@ -1,5 +1,6 @@
 package com.workbuddy.worker.parser;
 
+import com.workbuddy.worker.structure.craft.HeaderFooterDetector.BandRules;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -286,5 +287,15 @@ public class ParseProperties {
      */
     private void fail(String key, String rule, Object value) {
         throw new IllegalStateException("knowledge.parse." + key + " " + rule + "，当前值=" + value);
+    }
+
+    /**
+     * 页眉页脚带判定阈值（判定实现在组装侧，解析只按同一组阈值取判定结果）。
+     *
+     * @return 判定阈值
+     */
+    public BandRules bandRules() {
+        return new BandRules(headerAreaRatio, footerAreaRatio, runningTextMinPages,
+                pageNumberMinPages, pageNumberXTolerance, pageNumberIsolationRatio);
     }
 }

@@ -3,7 +3,7 @@ package com.workbuddy.worker.parser.pdf.pipeline;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.pdf.detect.HeaderFooterKeys;
+import com.workbuddy.worker.structure.craft.HeaderFooterKeys;
 
 import java.io.IOException;
 

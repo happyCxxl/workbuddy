@@ -6,7 +6,7 @@ import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
-import com.workbuddy.worker.parser.pdf.detect.HeaderFooterKeys;
+import com.workbuddy.worker.structure.craft.HeaderFooterKeys;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.page.BlockClassifyStep;
 import com.workbuddy.worker.parser.pdf.page.BlockRenderStep;

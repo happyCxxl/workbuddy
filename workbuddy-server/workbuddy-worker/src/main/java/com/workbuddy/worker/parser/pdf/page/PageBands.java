@@ -1,7 +1,7 @@
 package com.workbuddy.worker.parser.pdf.page;
 
 import com.workbuddy.common.domain.parse.UnitLine;
-import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
+import com.workbuddy.worker.structure.craft.HeaderFooterDetector;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 
 /**
@@ -57,7 +57,7 @@ public final class PageBands {
         }
         String footerKey = HeaderFooterDetector.footerBase(HeaderFooterDetector.normalizeKey(line.text()));
         return context.getKeys().footers().matches(footerKey, unitLine(line), context.getUnit(),
-                context.getProperties());
+                context.getProperties().bandRules());
     }
 
     /** 页面行 → 单元行摘要（同为版面坐标口径，字段一一对应） */

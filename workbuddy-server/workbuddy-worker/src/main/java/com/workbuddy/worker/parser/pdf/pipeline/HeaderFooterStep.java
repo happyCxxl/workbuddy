@@ -2,8 +2,9 @@ package com.workbuddy.worker.parser.pdf.pipeline;
 
 import com.workbuddy.common.domain.parse.ParseUnitResult;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
-import com.workbuddy.worker.parser.pdf.detect.HeaderFooterKeys;
+import com.workbuddy.worker.structure.craft.HeaderFooterDetector;
+import com.workbuddy.worker.structure.craft.HeaderFooterDetector.BandRules;
+import com.workbuddy.worker.structure.craft.HeaderFooterKeys;
 
 import java.util.List;
 import java.util.Set;
@@ -31,9 +32,9 @@ public final class HeaderFooterStep implements DocumentStep<HeaderFooterStep.Inp
      */
     @Override
     public HeaderFooterKeys execute(Input input) {
-        Set<String> headers = HeaderFooterDetector.detectHeaders(input.units(), input.context());
-        HeaderFooterDetector.FooterKeys footers = HeaderFooterDetector.detectFooters(
-                input.units(), input.context());
+        BandRules rules = input.context().getProperties().bandRules();
+        Set<String> headers = HeaderFooterDetector.detectHeaders(input.units(), rules);
+        HeaderFooterDetector.FooterKeys footers = HeaderFooterDetector.detectFooters(input.units(), rules);
         return new HeaderFooterKeys(headers, footers);
     }
 }
