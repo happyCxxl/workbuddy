@@ -6,6 +6,7 @@ import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseUnitResult;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.input.FileFormat;
@@ -13,6 +14,7 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.ParseAssetKind;
 import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalType;
+import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.common.utils.TextUtil;
 import com.workbuddy.worker.parser.DocumentParserPort;
@@ -213,29 +215,58 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
             pages.add(page.toString());
             imageCounts.add(pendingImages);
         }
-        fillUnitMetrics(source, pages, imageCounts);
+        fillMetricOnly(source, pages, imageCounts);
     }
 
     /**
-     * 逐单元指标回填（Excel 每 worksheet = 1 单元）。
+     * 逐单元指标回填（Excel 每 worksheet = 1 单元）：单元集合是明细来源，汇总指标与单元数由单元重算。
+     *
+     * @param source           解析结果（待回填单元与汇总）
+     * @param unitTexts        各单元文本
+     * @param unitImageCounts  各单元内嵌图片数
+     * @param unitType         单元类型
+     */
+    protected void fillUnitMetrics(ParseSource source, List<String> unitTexts, List<Integer> unitImageCounts,
+                                   UnitType unitType) {
+        List<ParseUnitResult> units = new ArrayList<>();
+        for (int i = 0; i < unitTexts.size(); i++) {
+            ParseUnitResult unit = new ParseUnitResult();
+            unit.setUnitIndex(i + 1);
+            unit.setType(unitType);
+            unit.setMetric(metric(i, unitTexts.get(i),
+                    i < unitImageCounts.size() ? unitImageCounts.get(i) : 0));
+            units.add(unit);
+        }
+        source.setUnitType(unitType);
+        source.setUnits(units);
+        source.summarizeUnits();
+    }
+
+    /**
+     * 逐单元指标回填（只有指标，不建单元）：用于尚未建模单元边界的格式，单元数仍按折算口径计入。
      *
      * @param source           解析结果（待回填页指标）
      * @param unitTexts        各单元文本
      * @param unitImageCounts  各单元内嵌图片数
      */
-    protected void fillUnitMetrics(ParseSource source, List<String> unitTexts, List<Integer> unitImageCounts) {
+    protected void fillMetricOnly(ParseSource source, List<String> unitTexts, List<Integer> unitImageCounts) {
         List<PageMetric> metrics = new ArrayList<>();
         for (int i = 0; i < unitTexts.size(); i++) {
-            String text = StrUtil.blankToDefault(unitTexts.get(i), "");
-            PageMetric metric = new PageMetric();
-            metric.setPage(i + 1);
-            metric.setCharCount(nonBlankCount(text));
-            metric.setGarbledRatio(TextUtil.garbledRatio(text));
-            metric.setImageCount(i < unitImageCounts.size() ? unitImageCounts.get(i) : 0);
-            metrics.add(metric);
+            metrics.add(metric(i, unitTexts.get(i), i < unitImageCounts.size() ? unitImageCounts.get(i) : 0));
         }
         source.setPageMetrics(metrics);
         source.setUnitCount(metrics.size());
+    }
+
+    /** 单元指标：序号从 1 起，字符数、乱码率与内嵌图片数 */
+    private static PageMetric metric(int index, String text, int imageCount) {
+        String bounded = StrUtil.blankToDefault(text, "");
+        PageMetric metric = new PageMetric();
+        metric.setPage(index + 1);
+        metric.setCharCount(nonBlankCount(bounded));
+        metric.setGarbledRatio(TextUtil.garbledRatio(bounded));
+        metric.setImageCount(imageCount);
+        return metric;
     }
 
     /**

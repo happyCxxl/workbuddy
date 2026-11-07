@@ -3,7 +3,9 @@ package com.workbuddy.worker.parser.office.impl;
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseUnitResult;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.testkit.RecordingAssetSink;
 import org.apache.poi.sl.usermodel.PictureData;
@@ -65,6 +67,9 @@ class PptDocumentParserTest {
                 () -> "facts=" + source.getFacts());
 
         assertEquals(1, source.getUnitCount());
+        assertEquals(UnitType.SLIDE, source.getUnitType());
+        assertEquals(1, source.getUnits().size());
+        assertEquals(List.of(1), source.getUnits().stream().map(ParseUnitResult::getUnitIndex).toList());
         assertEquals(1, source.getPageMetrics().getFirst().getPage());
         assertTrue(source.getPageMetrics().getFirst().getCharCount() > 0);
         assertEquals(1, source.getPageMetrics().getFirst().getImageCount());

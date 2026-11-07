@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.Provenance;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.ParseContext;
@@ -80,12 +81,12 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
                 context.getCancellationToken().throwIfCancelled();
                 ParseElement tableElement = toSheetTableElement(workbook, formatter, evaluator, s, fileId);
                 source.getElements().add(tableElement);
-                appendSheetHeaderFooter(source, workbook.getSheetAt(s), s, fileId);
+                appendSheetHeaderFooter(source, workbook.getSheetAt(s), s + 1, fileId);
                 appendSheetPictures(source, workbook.getSheetAt(s), fileId, context);
                 sheetTexts.add(tableText(tableElement));
                 sheetImages.add(pictureCount(workbook.getSheetAt(s)));
             }
-            fillUnitMetrics(source, sheetTexts, sheetImages);
+            fillUnitMetrics(source, sheetTexts, sheetImages, UnitType.SHEET);
             appendXlsFormulaNote(source, workbook);
         } catch (CancellationException e) {
             throw e;
@@ -133,7 +134,7 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
         Sheet sheet = workbook.getSheetAt(sheetIndex);
         String sheetName = sheet.getSheetName();
         ParseElement tableElement = ParseElement.of("sheet" + sheetIndex, ElementType.TABLE);
-        tableElement.setPage(sheetIndex);
+        tableElement.setPage(sheetIndex + 1);
         tableElement.setSheetName(sheetName);
         // 合并区域：origin 单元格记 span，被覆盖格记归属（其文本并入 origin，不丢）
         Map<Long, int[]> mergeSpans = new HashMap<>();
@@ -275,11 +276,11 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
         addSheetPart(source, sheetHeaderFooterText(sheetPartText(sheet.getHeader().getLeft(),
                         sheet.getHeader().getCenter(), sheet.getHeader().getRight())),
                 ElementType.HEADER, "h" + sheetIndex,
-                "office#sheet[" + sheet.getSheetName() + "]/header", fileId);
+                "office#sheet[" + sheet.getSheetName() + "]/header", fileId, sheetIndex);
         addSheetPart(source, sheetHeaderFooterText(sheetPartText(sheet.getFooter().getLeft(),
                         sheet.getFooter().getCenter(), sheet.getFooter().getRight())),
                 ElementType.FOOTER, "f" + sheetIndex,
-                "office#sheet[" + sheet.getSheetName() + "]/footer", fileId);
+                "office#sheet[" + sheet.getSheetName() + "]/footer", fileId, sheetIndex);
     }
 
     /** 页眉页脚三区拼接（POI 按左中右三区承载文本） */
@@ -290,12 +291,13 @@ public class ExcelDocumentParser extends AbstractPoiDocumentParser {
 
     /** 页眉/页脚元素入列 */
     private void addSheetPart(ParseSource source, String text, ElementType type, String id, String path,
-                              String fileId) {
+                              String fileId, int sheetNo) {
         if (StrUtil.isBlank(text)) {
             return;
         }
         ParseElement element = ParseElement.of(id, type);
         element.setText(text);
+        element.setPage(sheetNo);
         element.setProvenance(new Provenance(fileId, path));
         source.getElements().add(element);
     }

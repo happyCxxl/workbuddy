@@ -3,6 +3,7 @@ package com.workbuddy.worker.parser.office.impl;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.common.enums.parse.UnitType;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -143,11 +144,14 @@ class ExcelStructureParserTest {
         ParseSource source = fixture.parse(buildXlsx(), ExcelTestFixture.MIME_XLSX);
 
         assertEquals(1, source.getUnitCount());
+        assertEquals(UnitType.SHEET, source.getUnitType());
+        assertEquals(1, source.getUnits().size());
+        assertEquals(1, source.getUnits().getFirst().getUnitIndex());
         ParseElement table = source.getElements().stream()
                 .filter(e -> ElementType.TABLE.name().equals(e.getType()))
                 .findFirst().orElse(null);
         assertNotNull(table);
-        assertEquals(0, table.getPage());
+        assertEquals(1, table.getPage());
         ParseElement merged = table.getCells().stream()
                 .filter(c -> "合并单元格".equals(c.getText()))
                 .findFirst().orElse(null);

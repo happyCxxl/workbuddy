@@ -5,6 +5,7 @@ import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.Provenance;
 import com.workbuddy.common.enums.parse.ElementType;
+import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.ParseContext;
@@ -102,7 +103,7 @@ public class PptDocumentParser extends AbstractPoiDocumentParser {
                 unitTexts.add(text.toString());
                 unitImages.add(pictures);
             }
-            fillUnitMetrics(source, unitTexts, unitImages);
+            fillUnitMetrics(source, unitTexts, unitImages, UnitType.SLIDE);
         } catch (CancellationException e) {
             throw e;
         } catch (Exception e) {
