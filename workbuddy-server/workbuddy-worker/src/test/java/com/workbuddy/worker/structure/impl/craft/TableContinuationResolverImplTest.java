@@ -95,6 +95,7 @@ class TableContinuationResolverImplTest {
     void relaxedRuleShouldMergeAsSuspected() {
         UnifiedElement a = table(2, 700, true, "评分项", "评分标准", "分值");
         UnifiedElement b = table(3, 20, false, "B1 售后承诺", "质保期不少于 3 年", "10");
+        detachHorizontally(b);
 
         ContinuationOutcome outcome = resolver.joinContinuations(new ArrayList<>(List.of(a, b)), context());
 
@@ -303,6 +304,12 @@ class TableContinuationResolverImplTest {
         }
     }
 
+    /** 把续页表移出前表列区间：续页表头重复的预标记按列区间重合判定，本类放宽规则用例需先排除它 */
+    private void detachHorizontally(UnifiedElement table) {
+        table.setBbox(new BBox(600, table.getBbox().getY(), table.getBbox().getWidth(),
+                table.getBbox().getHeight()));
+    }
+
     /**
      * 守护 {@code unreadableHeadersShouldMergeAsSuspectedWhenWidthsMatch}：该场景行为改动即失败。
      */
@@ -313,6 +320,7 @@ class TableContinuationResolverImplTest {
                 List.of(List.of("甲", "10"), List.of("乙", "20")));
         UnifiedElement b = multiRowTable(3, 20, false, null,
                 List.of(List.of("丙", "30"), List.of("丁", "40")));
+        detachHorizontally(b);
 
         ContinuationOutcome outcome = resolver.joinContinuations(new ArrayList<>(List.of(a, b)), context());
 
@@ -331,6 +339,7 @@ class TableContinuationResolverImplTest {
         UnifiedElement a = multiRowTable(2, 700, true, null,
                 List.of(List.of("甲", "10"), List.of("乙", "20")));
         UnifiedElement b = multiRowTable(3, 20, false, null, List.of(List.of("丙", "30")));
+        detachHorizontally(b);
         setColumnWidth(b, 300);
 
         ContinuationOutcome outcome = resolver.joinContinuations(new ArrayList<>(List.of(a, b)), context());
@@ -347,6 +356,7 @@ class TableContinuationResolverImplTest {
         UnifiedElement a = multiRowTable(2, 700, true, 0,
                 List.of(List.of("评分项", "分值"), List.of("甲", "10")));
         UnifiedElement b = multiRowTable(3, 20, false, null, List.of(List.of("丙", "30")));
+        detachHorizontally(b);
 
         ContinuationOutcome outcome = resolver.joinContinuations(new ArrayList<>(List.of(a, b)), context());
 

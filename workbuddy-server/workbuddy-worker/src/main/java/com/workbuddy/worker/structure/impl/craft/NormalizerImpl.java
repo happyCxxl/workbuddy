@@ -110,9 +110,6 @@ public class NormalizerImpl implements ElementNormalizer {
         if (NullUtil.isNotNull(element.getCutAtPageBottom())) {
             extension.put(ElementExtensionKey.CUT_AT_PAGE_BOTTOM.key(), element.getCutAtPageBottom());
         }
-        if (NullUtil.isNotNull(element.getHeaderRepeated())) {
-            extension.put(ElementExtensionKey.HEADER_REPEATED.key(), element.getHeaderRepeated());
-        }
         unified.setExtension(extension);
         unified.setProvenance(element.getProvenance());
 

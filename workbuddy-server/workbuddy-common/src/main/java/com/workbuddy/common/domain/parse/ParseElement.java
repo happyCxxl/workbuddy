@@ -51,9 +51,6 @@ public class ParseElement {
     /** 表格页尾截断标记（跨页接续判定归组装环节） */
     private Boolean cutAtPageBottom;
 
-    /** 表头重复标记（续表新页开头重复表头；跨页续表判定写入，供组装环节使用） */
-    private Boolean headerRepeated;
-
     /** 表格行数（TABLE 元素专用） */
     private Integer rows;
 

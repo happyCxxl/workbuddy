@@ -13,6 +13,8 @@ knowledge:
     xy-cut-block-gap: 12.0
     # 续表表头一致阈值
     continuation-header-similarity: 0.8
+    # 续表标记：上一页表格贴页底时，两表列 x 区间重合比例下限
+    continuation-overlap-ratio: 0.5
     # 续表放宽规则：列宽容差（pt）
     continuation-column-width-tolerance: 3.0
     # 续表放宽规则：列宽命中率下限

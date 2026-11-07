@@ -1,48 +1,79 @@
-package com.workbuddy.worker.parser.pdf;
+package com.workbuddy.worker.structure.impl.craft;
 
 import com.workbuddy.common.domain.input.FileReference;
-import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.structure.UnifiedElement;
+import com.workbuddy.common.enums.structure.ElementExtensionKey;
+import com.workbuddy.common.enums.structure.UnifiedElementType;
 import com.workbuddy.worker.parser.ParseContext;
+import com.workbuddy.worker.parser.pdf.PdfBoxDocumentParser;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
+import com.workbuddy.worker.structure.AssembleContext;
+import com.workbuddy.worker.structure.StructureProperties;
+import com.workbuddy.worker.structure.impl.StructureJudgeRegistry;
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * 跨页续表单测：下一页重复表头时，该表标为续表（{@code headerRepeated=true}）；首表不标。
+ * 跨页续表标记单测：真实 PDF 的两页同表，解析只产单页表格事实，续页重复表头由组装环节标记。
  */
-class PdfTableContinuationTest {
+class TableContinuationMarkingTest {
 
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
-    /**
-     * 守护 {@code repeatedHeaderShouldMarkContinuationTable}：该场景行为改动即失败。
-     */
-    @Test
-    void repeatedHeaderShouldMarkContinuationTable() throws Exception {
-        List<ParseElement> tables = tables(parse(twoPages()));
+    private StructureProperties properties;
 
-        assertEquals(2, tables.size());
-        assertNull(tables.getFirst().getHeaderRepeated());
-        assertEquals(Boolean.TRUE, tables.getLast().getHeaderRepeated());
+    @BeforeEach
+    void setUp() {
+        properties = PropertiesFixtures.structure();
     }
 
-    private List<ParseElement> tables(ParseSource source) {
-        return source.getElements().stream().filter(element -> "TABLE".equals(element.getType())).toList();
+    /** 下一页重复表头：解析不产续表标记，组装按表头重复标记续页表（{@code repeatedHeaderShouldBeMarkedByAssembly}）。 */
+    @Test
+    void repeatedHeaderShouldBeMarkedByAssembly() throws Exception {
+        List<UnifiedElement> elements = new NormalizerImpl()
+                .normalize(List.of(parse(twoPages())), context()).getElements();
+
+        List<UnifiedElement> tables = tables(elements);
+        assertEquals(2, tables.size());
+        assertNull(tables.getFirst().getExtension().get(ElementExtensionKey.HEADER_REPEATED.key()));
+
+        resolver().markRepeatedHeaders(elements, properties.getContinuationOverlapRatio());
+
+        assertEquals(Boolean.TRUE, tables.getLast().getExtension().get(ElementExtensionKey.HEADER_REPEATED.key()));
+        assertNull(tables.getFirst().getExtension().get(ElementExtensionKey.HEADER_REPEATED.key()));
+    }
+
+    private TableContinuationResolverImpl resolver() {
+        return new TableContinuationResolverImpl(new StructureJudgeRegistry(new ArrayList<>(), properties));
+    }
+
+    private AssembleContext context() {
+        AssembleContext context = new AssembleContext();
+        context.setProperties(properties);
+        return context;
+    }
+
+    private List<UnifiedElement> tables(List<UnifiedElement> elements) {
+        return elements.stream()
+                .filter(element -> UnifiedElementType.TABLE.name().equals(element.getType()))
+                .toList();
     }
 
     private ParseSource parse(byte[] data) {

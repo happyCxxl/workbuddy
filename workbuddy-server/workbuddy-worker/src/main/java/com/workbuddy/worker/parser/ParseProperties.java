@@ -126,9 +126,6 @@ public class ParseProperties {
     /** 假表门限：列内文本跨度占列宽的中位数超过该值即判正文分栏（表格单元格相对列宽是稀疏的） */
     private double tableColumnMaxFillRatio;
 
-    /** 跨页续表：上一页表格贴页底时，两表列 x 区间重合比例下限 */
-    private double tableContinuationOverlapRatio;
-
     /** 假表门限：非空单元格占比低于该值即弃表（空白率门禁） */
     private double tableMinFilledRatio;
 
@@ -206,7 +203,6 @@ public class ParseProperties {
         requireAtLeast("table-row-min-columns", tableRowMinColumns, 2);
         requireNonNegative("table-row-inner-gap-share", tableRowInnerGapShare);
         requireRatio("table-column-max-fill-ratio", tableColumnMaxFillRatio);
-        requireRatio("table-continuation-overlap-ratio", tableContinuationOverlapRatio);
         requireRatio("table-min-filled-ratio", tableMinFilledRatio);
         requireRatio("table-header-max-numeric-ratio", tableHeaderMaxNumericRatio);
         requireNonNegative("column-gutter-min-width", columnGutterMinWidth);

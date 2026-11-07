@@ -59,6 +59,7 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
      */
     @Override
     public ContinuationOutcome joinContinuations(List<UnifiedElement> ordered, AssembleContext context) {
+        markRepeatedHeaders(ordered, context.getProperties().getContinuationOverlapRatio());
         ContinuationOutcome outcome = new ContinuationOutcome();
         List<UnifiedElement> elements = new ArrayList<>(ordered);
 
@@ -90,6 +91,71 @@ public class TableContinuationResolverImpl implements TableContinuationResolver 
         }
         outcome.setElements(elements);
         return outcome;
+    }
+
+    /**
+     * 跨页续表标记：文档序相邻表格列数一致，且表头行文本重复、或上一张表贴页底且列区间重合，
+     * 即把本表标为续页重复表头（接续判定优先采用，跳过表头文本相似度）。
+     *
+     * @param elements     文档序元素（原地写 {@code headerRepeated} 扩展）
+     * @param overlapRatio 贴页底续表的列区间重合比例下限
+     */
+    void markRepeatedHeaders(List<UnifiedElement> elements, double overlapRatio) {
+        UnifiedElement previous = null;
+        for (UnifiedElement element : elements) {
+            if (!UnifiedElementType.TABLE.name().equals(element.getType())) {
+                continue;
+            }
+            if (isHeaderRepetition(previous, element, overlapRatio)) {
+                markHeaderRepeated(element);
+            }
+            previous = element;
+        }
+    }
+
+    /** 续页重复表头判据：列数一致，且表头行文本重复、或上一页表格贴页底且列区间重合 */
+    private boolean isHeaderRepetition(UnifiedElement previous, UnifiedElement current, double overlapRatio) {
+        if (NullUtil.isNull(previous) || NullUtil.isNull(current.getCols())
+                || !current.getCols().equals(previous.getCols())) {
+            return false;
+        }
+        if (!firstRow(current).isEmpty() && firstRow(current).equals(firstRow(previous))) {
+            return true;
+        }
+        return isCutAtPageBottom(previous) && overlaps(previous, current, overlapRatio);
+    }
+
+    /** 表头行文本（第 0 行单元格） */
+    private List<String> firstRow(UnifiedElement table) {
+        if (NullUtil.isNull(table.getCells())) {
+            return List.of();
+        }
+        return table.getCells().stream()
+                .filter(cell -> Integer.valueOf(0).equals(cell.getRow()))
+                .map(cell -> NullUtil.isNull(cell.getText()) ? "" : cell.getText())
+                .toList();
+    }
+
+    /** 列区间重合：两表 bbox 的 x 投影交集占较窄一侧的比例 */
+    private boolean overlaps(UnifiedElement previous, UnifiedElement current, double overlapRatio) {
+        if (NullUtil.isNull(previous.getBbox()) || NullUtil.isNull(current.getBbox())) {
+            return false;
+        }
+        double left = Math.max(previous.getBbox().getX(), current.getBbox().getX());
+        double right = Math.min(previous.getBbox().getX() + previous.getBbox().getWidth(),
+                current.getBbox().getX() + current.getBbox().getWidth());
+        double narrower = Math.min(previous.getBbox().getWidth(), current.getBbox().getWidth());
+        return narrower > 0 && (right - left) / narrower >= overlapRatio;
+    }
+
+    /** 写续页表头重复标记（扩展区按副本写，不依赖来源 Map 可变性） */
+    private void markHeaderRepeated(UnifiedElement table) {
+        Map<String, Object> extension = new HashMap<>();
+        if (NullUtil.isNotNull(table.getExtension())) {
+            extension.putAll(table.getExtension());
+        }
+        extension.put(ElementExtensionKey.HEADER_REPEATED.key(), true);
+        table.setExtension(extension);
     }
 
     /** 接续判定（四条件 + 表头一致或列宽模式放宽规则）；页码相邻性按当前末页比较，表头或列数不可判定时不进主规则 */

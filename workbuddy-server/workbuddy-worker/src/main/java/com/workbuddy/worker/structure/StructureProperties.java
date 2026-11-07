@@ -29,6 +29,9 @@ public class StructureProperties {
     /** 续表表头一致阈值 */
     private double continuationHeaderSimilarity;
 
+    /** 续表标记：上一页表格贴页底时，两表列 x 区间重合比例下限 */
+    private double continuationOverlapRatio;
+
     /** 续表放宽规则列宽容差 */
     private double continuationColumnWidthTolerance;
 

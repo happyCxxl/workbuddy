@@ -13,7 +13,6 @@ import com.workbuddy.worker.parser.pdf.pipeline.PageAssemblyStep;
 import com.workbuddy.worker.parser.pdf.pipeline.PageExtractionStep;
 import com.workbuddy.worker.parser.pdf.pipeline.PdfDocumentPipeline;
 import com.workbuddy.worker.parser.pdf.pipeline.SourceAssemblyStep;
-import com.workbuddy.worker.parser.pdf.pipeline.TableContinuationStep;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -66,7 +65,6 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
                 new PageExtractionStep(pageExtractor),
                 new HeaderFooterStep(),
                 new PageAssemblyStep(capabilityRegistry),
-                new TableContinuationStep(),
                 new SourceAssemblyStep(CAPABILITY + "-" + CAPABILITY_VERSION));
     }
 
