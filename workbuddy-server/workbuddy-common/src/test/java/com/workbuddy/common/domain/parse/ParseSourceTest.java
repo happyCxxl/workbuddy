@@ -52,7 +52,7 @@ class ParseSourceTest {
         assertEquals(List.of(1, 2), source.getPageDimensions().stream().map(PageDimension::getPage).toList());
     }
 
-    /** 重复汇总不应累加旧汇总值。 */
+    /** {@link ParseSource#summarizeUnits} 重复汇总不应累加旧汇总值。 */
     @Test
     void summarizeUnitsShouldBeIdempotent() {
         ParseSource source = ParseSource.nativeSource("pdfbox-3.0.4");

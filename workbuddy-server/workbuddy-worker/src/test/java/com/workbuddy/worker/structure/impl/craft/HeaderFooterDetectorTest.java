@@ -24,7 +24,7 @@ class HeaderFooterDetectorTest {
     private static final double PAGE_HEIGHT = 800;
     private static final BandRules RULES = new BandRules(0.1, 0.1, 2, 2, 20, 1.5);
 
-    /** 页顶/页底重复文本达阈值：各单元同行判为页眉页脚。 */
+    /** {@link HeaderFooterDetector#detect} 页顶/页底重复文本达阈值：各单元同行判为页眉页脚。 */
     @Test
     void detectShouldMarkRepeatedHeaderAndFooter() {
         List<UnitBands> bands = HeaderFooterDetector.detect(List.of(
@@ -39,7 +39,7 @@ class HeaderFooterDetectorTest {
         }
     }
 
-    /** 只在单页出现的页带文本不判页眉（正文首行常落在页顶带）。 */
+    /** {@link HeaderFooterDetector#detect} 只在单页出现的页带文本不判页眉（正文首行常落在页顶带）。 */
     @Test
     void detectShouldIgnoreOneOffBandText() {
         List<UnitBands> bands = HeaderFooterDetector.detect(List.of(
@@ -50,7 +50,7 @@ class HeaderFooterDetectorTest {
         assertTrue(bands.get(1).headers().isEmpty(), () -> "headers=" + texts(bands.get(1).headers()));
     }
 
-    /** 页脚带内重复文本剥离行尾页码后仍能聚合（「项目名称 1」与「项目名称 2」同键）。 */
+    /** {@link HeaderFooterDetector#detect} 页脚带内重复文本剥离行尾页码后仍能聚合（「项目名称 1」与「项目名称 2」同键）。 */
     @Test
     void detectShouldAggregateFooterByBaseText() {
         List<UnitBands> bands = HeaderFooterDetector.detect(List.of(
@@ -61,7 +61,7 @@ class HeaderFooterDetectorTest {
         assertEquals(List.of("项目名称 2"), texts(bands.get(1).footers()));
     }
 
-    /** 孤立页码：同地址跨单元出现且与正文留白，判页脚。 */
+    /** {@link HeaderFooterDetector#detect} 孤立页码：同地址跨单元出现且与正文留白，判页脚。 */
     @Test
     void detectShouldMarkIsolatedPageNumber() {
         List<UnitBands> bands = HeaderFooterDetector.detect(List.of(
@@ -74,7 +74,7 @@ class HeaderFooterDetectorTest {
         }
     }
 
-    /** 紧贴正文的页底数字行不判页码（内容不空洞）。 */
+    /** {@link HeaderFooterDetector#detect} 紧贴正文的页底数字行不判页码（内容不空洞）。 */
     @Test
     void detectShouldIgnorePageNumberTouchingBody() {
         List<UnitBands> bands = HeaderFooterDetector.detect(List.of(
@@ -86,7 +86,7 @@ class HeaderFooterDetectorTest {
         }
     }
 
-    /** 无版面高度的单元（Office 无物理页）不做带判定。 */
+    /** {@link HeaderFooterDetector#detect} 无版面高度的单元（Office 无物理页）不做带判定。 */
     @Test
     void detectShouldSkipUnitWithoutGeometry() {
         ParseUnitResult unit = new ParseUnitResult();
