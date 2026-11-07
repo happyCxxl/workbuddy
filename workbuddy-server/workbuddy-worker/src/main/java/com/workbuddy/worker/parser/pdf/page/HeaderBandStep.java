@@ -3,7 +3,6 @@ package com.workbuddy.worker.parser.pdf.page;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 
-import java.util.Set;
 
 /**
  * 页眉元素：本页页眉带内命中已确认键的行各产一条 HEADER。
@@ -18,16 +17,6 @@ public final class HeaderBandStep implements PageStep {
     @Override
     public String name() {
         return "header-band";
-    }
-
-    /**
-     * 不依赖其他页面步骤。
-     *
-     * @return 空集合
-     */
-    @Override
-    public Set<String> requires() {
-        return Set.of();
     }
 
     /**

@@ -2,6 +2,7 @@ package com.workbuddy.worker.parser.pdf.page;
 
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseUnitResult;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
@@ -22,6 +23,7 @@ import java.util.Map;
 public final class PageContext {
 
     private final PageContent page;
+    private final ParseUnitResult unit;
     private final HeaderFooterKeys keys;
     private final ParseProperties properties;
     private final CapabilityRegistry capabilityRegistry;
@@ -43,6 +45,7 @@ public final class PageContext {
      * 构造单页工作区。
      *
      * @param page 页内容
+     * @param unit 所属单元（行摘要与尺寸）
      * @param keys 页眉/页脚键
      * @param properties 解析配置
      * @param capabilityRegistry 能力注册表
@@ -50,10 +53,12 @@ public final class PageContext {
      * @param renderer 页图渲染器；资产关闭时为 null
      * @param fileId 文件 ID
      */
-    public PageContext(PageContent page, HeaderFooterKeys keys, ParseProperties properties,
+    public PageContext(PageContent page, ParseUnitResult unit, HeaderFooterKeys keys,
+                       ParseProperties properties,
                        CapabilityRegistry capabilityRegistry, ParseContext parseContext,
                        PdfPageImageRenderer renderer, String fileId) {
         this.page = page;
+        this.unit = unit;
         this.keys = keys;
         this.properties = properties;
         this.capabilityRegistry = capabilityRegistry;
@@ -69,6 +74,15 @@ public final class PageContext {
      */
     public PageContent getPage() {
         return page;
+    }
+
+    /**
+     * 返回所属单元。
+     *
+     * @return 所属单元
+     */
+    public ParseUnitResult getUnit() {
+        return unit;
     }
 
     /**

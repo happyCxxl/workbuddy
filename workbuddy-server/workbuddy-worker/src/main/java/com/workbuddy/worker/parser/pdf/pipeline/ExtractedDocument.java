@@ -1,43 +1,30 @@
 package com.workbuddy.worker.parser.pdf.pipeline;
 
-import com.workbuddy.common.domain.parse.PageDimension;
-import com.workbuddy.common.domain.parse.signal.PageMetric;
-import com.workbuddy.worker.parser.pdf.model.PageLines;
+import com.workbuddy.common.domain.parse.ParseUnitResult;
 import com.workbuddy.worker.parser.pdf.store.PageArtifactStore;
 
 import java.util.List;
 
 /**
- * 逐页提取结果：页产物存储 + 全档行摘要 + 页指标 + 页面尺寸。
+ * 逐页提取结果：单元集合（每页一个单元，已带行摘要、指标与页尺寸）与页产物存储。
  *
  * <p>页产物按窗口存入 {@link PageArtifactStore}，装配阶段只读不重解析；
- * 行摘要与指标保持全档，供跨页识别和最终结果组装。
+ * 单元内容在装配阶段回填元素，行摘要与指标在提取阶段即定型。
  */
 public final class ExtractedDocument implements AutoCloseable {
 
     private final PageArtifactStore store;
-    private final List<PageLines> pageLines;
-    private final List<PageMetric> pageMetrics;
-    private final List<PageDimension> pageDimensions;
-    private final int pageCount;
+    private final List<ParseUnitResult> units;
 
     /**
      * 构造提取结果。
      *
      * @param store 页产物存储
-     * @param pageLines 全档行摘要
-     * @param pageMetrics 全档页指标
-     * @param pageDimensions 全档页面尺寸
-     * @param pageCount 页数
+     * @param units 单元集合（按页序）
      */
-    public ExtractedDocument(PageArtifactStore store, List<PageLines> pageLines,
-                             List<PageMetric> pageMetrics, List<PageDimension> pageDimensions,
-                             int pageCount) {
+    public ExtractedDocument(PageArtifactStore store, List<ParseUnitResult> units) {
         this.store = store;
-        this.pageLines = List.copyOf(pageLines);
-        this.pageMetrics = List.copyOf(pageMetrics);
-        this.pageDimensions = List.copyOf(pageDimensions);
-        this.pageCount = pageCount;
+        this.units = units;
     }
 
     /**
@@ -50,30 +37,12 @@ public final class ExtractedDocument implements AutoCloseable {
     }
 
     /**
-     * 全档行摘要。
+     * 单元集合（按页序；元素在装配阶段回填）。
      *
-     * @return 按页顺序的行摘要
+     * @return 单元集合
      */
-    public List<PageLines> pageLines() {
-        return pageLines;
-    }
-
-    /**
-     * 全档页指标。
-     *
-     * @return 按页顺序的指标
-     */
-    public List<PageMetric> pageMetrics() {
-        return pageMetrics;
-    }
-
-    /**
-     * 全档页面尺寸。
-     *
-     * @return 按页顺序的尺寸
-     */
-    public List<PageDimension> pageDimensions() {
-        return pageDimensions;
+    public List<ParseUnitResult> units() {
+        return units;
     }
 
     /**
@@ -82,7 +51,7 @@ public final class ExtractedDocument implements AutoCloseable {
      * @return 文档页数
      */
     public int pageCount() {
-        return pageCount;
+        return units.size();
     }
 
     /**

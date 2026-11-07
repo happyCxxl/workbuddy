@@ -1,6 +1,7 @@
 package com.workbuddy.worker.parser.pdf.pipeline;
 
-import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseDocument;
+import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterKeys;
 
@@ -10,50 +11,56 @@ import java.io.IOException;
  * PDF 文档流水线：按固定顺序执行加载、逐页提取、跨页页眉/页脚、逐页装配与结果组装。
  *
  * <p>顺序写在字段与 {@link #run(ParseContext)} 里，不用运行期排序；资源由 try-with-resources 关闭。
+ * 产出按单元组织（每页一个单元）：元素、行摘要、单元指标与页尺寸都挂在单元上。
  */
 public final class PdfDocumentPipeline {
 
+    private final String provider;
     private final DocumentLoadStep load;
     private final PageExtractionStep extract;
     private final HeaderFooterStep headerFooter;
     private final PageAssemblyStep assemble;
-    private final SourceAssemblyStep source;
 
     /**
      * 构造文档流水线。
      *
+     * @param provider 解析提供方标识（能力名 + 版本）
      * @param load 文档加载步骤
      * @param extract 逐页提取步骤
      * @param headerFooter 跨页页眉/页脚步骤
      * @param assemble 逐页装配步骤
-     * @param source 结果组装步骤
      */
-    public PdfDocumentPipeline(DocumentLoadStep load, PageExtractionStep extract,
-                               HeaderFooterStep headerFooter, PageAssemblyStep assemble,
-                               SourceAssemblyStep source) {
+    public PdfDocumentPipeline(String provider, DocumentLoadStep load, PageExtractionStep extract,
+                               HeaderFooterStep headerFooter, PageAssemblyStep assemble) {
+        this.provider = provider;
         this.load = load;
         this.extract = extract;
         this.headerFooter = headerFooter;
         this.assemble = assemble;
-        this.source = source;
     }
 
     /**
      * 执行 PDF 解析。
      *
      * @param context 解析上下文
-     * @return 原生解析路结果
+     * @return 单元集合形式的解析结果
      * @throws IOException 加载、提取或装配失败
      */
-    public ParseSource run(ParseContext context) throws IOException {
+    public ParseDocument run(ParseContext context) throws IOException {
         try (LoadedPdf loaded = load.execute(context)) {
             try (ExtractedDocument extracted = extract.execute(
                     new PageExtractionStep.Input(loaded, context))) {
                 HeaderFooterKeys keys = headerFooter.execute(
-                        new HeaderFooterStep.Input(extracted.pageLines(), context));
+                        new HeaderFooterStep.Input(extracted.units(), context));
                 PageAssemblyResult assembled = assemble.execute(
                         new PageAssemblyStep.Input(extracted, keys, loaded, context));
-                return source.execute(new SourceAssemblyStep.Input(extracted, assembled));
+                ParseDocument document = new ParseDocument();
+                document.setProvider(provider);
+                document.setUnitType(UnitType.PAGE);
+                document.setUnits(extracted.units());
+                document.setFacts(assembled.facts());
+                document.setCapabilities(assembled.capabilities());
+                return document;
             }
         }
     }

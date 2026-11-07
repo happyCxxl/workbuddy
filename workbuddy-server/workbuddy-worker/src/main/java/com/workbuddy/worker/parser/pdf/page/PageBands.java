@@ -1,9 +1,8 @@
 package com.workbuddy.worker.parser.pdf.page;
 
+import com.workbuddy.common.domain.parse.UnitLine;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterDetector;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
-import com.workbuddy.worker.parser.pdf.model.PageLines;
-import com.workbuddy.worker.parser.pdf.model.TextLine;
 
 /**
  * 页眉/页脚带判定：带边界与命中条件集中在一处，供收集与正文过滤共用。
@@ -50,15 +49,19 @@ public final class PageBands {
      *
      * @param context 页面工作区
      * @param line 页面行
-     * @param pageLines 全页行
      * @return 命中为 true
      */
-    public static boolean isFooterLine(PageContext context, PageLine line, PageLines pageLines) {
+    public static boolean isFooterLine(PageContext context, PageLine line) {
         if (line.y() + line.height() < footerBandY(context)) {
             return false;
         }
         String footerKey = HeaderFooterDetector.footerBase(HeaderFooterDetector.normalizeKey(line.text()));
-        return context.getKeys().footers().matches(footerKey, TextLine.of(line), pageLines,
+        return context.getKeys().footers().matches(footerKey, unitLine(line), context.getUnit(),
                 context.getProperties());
+    }
+
+    /** 页面行 → 单元行摘要（同为版面坐标口径，字段一一对应） */
+    private static UnitLine unitLine(PageLine line) {
+        return new UnitLine(line.text(), line.x(), line.y(), line.width(), line.height());
     }
 }

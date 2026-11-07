@@ -59,4 +59,29 @@ public class ParseSource {
         source.candidateOrder = true;
         return source;
     }
+
+    /**
+     * 由单元集合派生文档级汇总视图（兼容下游既有契约）：元素按单元序展平，
+     * 单元指标与尺寸按单元序汇总，事实与能力沿用路级结果。
+     *
+     * @param document 单元集合
+     * @return 原生解析路结果
+     */
+    public static ParseSource fromDocument(ParseDocument document) {
+        ParseSource source = nativeSource(document.getProvider());
+        List<ParseUnitResult> units = document.getUnits();
+        source.setUnitCount(units.size());
+        for (ParseUnitResult unit : units) {
+            source.getElements().addAll(unit.getElements());
+            if (unit.getMetric() != null) {
+                source.getPageMetrics().add(unit.getMetric());
+            }
+            if (unit.getDimension() != null) {
+                source.getPageDimensions().add(unit.getDimension());
+            }
+        }
+        source.setFacts(new ArrayList<>(document.getFacts()));
+        source.setCapabilities(new ArrayList<>(document.getCapabilities()));
+        return source;
+    }
 }

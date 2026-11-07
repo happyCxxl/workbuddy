@@ -22,6 +22,7 @@ import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
 import com.workbuddy.worker.parser.pdf.model.Segment;
 import com.workbuddy.worker.parser.pdf.model.Token;
+import com.workbuddy.worker.testkit.PageUnitFixtures;
 import com.workbuddy.worker.testkit.PropertiesFixtures;
 import org.junit.jupiter.api.Test;
 
@@ -137,8 +138,8 @@ class PageStepContractTest {
         context.setBodyLines(List.of(top, bottom));
         context.getSource().setCapabilities(new ArrayList<>());
 
-        PageContext capable = new PageContext(context.getPage(), context.getKeys(), properties(),
-                layoutRegistry(), parseContext(properties()), null, "F-1");
+        PageContext capable = new PageContext(context.getPage(), context.getUnit(), context.getKeys(),
+                properties(), layoutRegistry(), parseContext(properties()), null, "F-1");
         capable.setBodyLines(List.of(top, bottom));
         capable.getSource().setCapabilities(new ArrayList<>());
 
@@ -191,7 +192,8 @@ class PageStepContractTest {
     /** 构造页面工作区（无能力、无渲染器）。 */
     private static PageContext context(PageContent page, HeaderFooterKeys keys) {
         ParseProperties properties = properties();
-        return new PageContext(page, keys, properties, null, parseContext(properties), null, "F-1");
+        return new PageContext(page, PageUnitFixtures.of(page), keys, properties, null,
+                parseContext(properties), null, "F-1");
     }
 
     /** 造一行；token 可为空。 */

@@ -27,6 +27,7 @@ import com.workbuddy.worker.parser.pdf.page.PagePipeline;
 import com.workbuddy.worker.parser.pdf.page.ReadingOrderStep;
 import com.workbuddy.worker.parser.pdf.page.RegionStep;
 import com.workbuddy.worker.parser.pdf.page.TableProvenanceStep;
+import com.workbuddy.worker.testkit.PageUnitFixtures;
 import com.workbuddy.worker.testkit.PropertiesFixtures;
 import org.junit.jupiter.api.Test;
 
@@ -73,7 +74,8 @@ class PageAssemblyRegionGroupingTest {
         // 阅读顺序把同一单元格的续行挪到了页尾（分栏重排后的位置），它仍属于表格区域
         lines.add(line("T2", 260, 355));
 
-        PageContext context = new PageContext(page(lines),
+        PageContent page = page(lines);
+        PageContext context = new PageContext(page, PageUnitFixtures.of(page),
                 new HeaderFooterKeys(Set.of(), new HeaderFooterDetector.FooterKeys(Set.of(), List.of())),
                 properties(), null, parseContext(properties()), null, "F-1");
         new PagePipeline(List.of(

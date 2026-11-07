@@ -1,7 +1,6 @@
 package com.workbuddy.worker.parser.pdf.page;
 
 import com.workbuddy.worker.parser.pdf.model.PageLine;
-import com.workbuddy.worker.parser.pdf.model.PageLines;
 
 import java.util.List;
 import java.util.Set;
@@ -38,10 +37,9 @@ public final class BodyLineStep implements PageStep {
      */
     @Override
     public void apply(PageContext context) {
-        PageLines pageLines = PageLines.of(context.getPage());
         List<PageLine> bodyLines = context.getPage().lines().stream()
                 .filter(line -> !PageBands.isHeaderLine(context, line))
-                .filter(line -> !PageBands.isFooterLine(context, line, pageLines))
+                .filter(line -> !PageBands.isFooterLine(context, line))
                 .toList();
         context.setBodyLines(bodyLines);
     }

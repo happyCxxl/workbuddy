@@ -1,5 +1,6 @@
 package com.workbuddy.worker.parser.pdf;
 
+import com.workbuddy.common.domain.parse.ParseDocument;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.worker.parser.DocumentParserPort;
@@ -12,7 +13,6 @@ import com.workbuddy.worker.parser.pdf.pipeline.HeaderFooterStep;
 import com.workbuddy.worker.parser.pdf.pipeline.PageAssemblyStep;
 import com.workbuddy.worker.parser.pdf.pipeline.PageExtractionStep;
 import com.workbuddy.worker.parser.pdf.pipeline.PdfDocumentPipeline;
-import com.workbuddy.worker.parser.pdf.pipeline.SourceAssemblyStep;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -60,12 +60,11 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
      * @param pageExtractor 页提取器
      */
     PdfBoxDocumentParser(CapabilityRegistry capabilityRegistry, PdfPageExtractor pageExtractor) {
-        this.pipeline = new PdfDocumentPipeline(
+        this.pipeline = new PdfDocumentPipeline(CAPABILITY + "-" + CAPABILITY_VERSION,
                 new DocumentLoadStep(),
                 new PageExtractionStep(pageExtractor),
                 new HeaderFooterStep(),
-                new PageAssemblyStep(capabilityRegistry),
-                new SourceAssemblyStep(CAPABILITY + "-" + CAPABILITY_VERSION));
+                new PageAssemblyStep(capabilityRegistry));
     }
 
     /**
@@ -103,10 +102,20 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
      * 解析入口：委托文档流水线；取消原样抛出，其它异常统一包装。
      *
      * @param context 解析上下文
-     * @return 解析结果
+     * @return 解析结果（由单元集合派生的文档级汇总视图）
      */
     @Override
     public ParseSource parse(ParseContext context) {
+        return ParseSource.fromDocument(parseDocument(context));
+    }
+
+    /**
+     * 单元集合形式的解析入口（包内可见：单元契约的测试与后续组装消费）。
+     *
+     * @param context 解析上下文
+     * @return 单元集合形式的解析结果
+     */
+    ParseDocument parseDocument(ParseContext context) {
         context.getCancellationToken().throwIfCancelled();
         String fileId = context.getFileRef().getFileId();
         try {

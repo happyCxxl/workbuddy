@@ -15,11 +15,13 @@ public interface PageStep {
     String name();
 
     /**
-     * 依赖的先前步骤名；启动校验发现缺失即失败。
+     * 依赖的先前步骤名；启动校验发现缺失即失败。默认不依赖其他步骤。
      *
      * @return 依赖步骤名集合
      */
-    Set<String> requires();
+    default Set<String> requires() {
+        return Set.of();
+    }
 
     /**
      * 对页面工作区执行本步骤。

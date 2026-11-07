@@ -1,12 +1,14 @@
 package com.workbuddy.worker.parser.pdf.pipeline;
 
 import com.workbuddy.common.domain.parse.PageDimension;
-import com.workbuddy.common.domain.parse.signal.PageMetric;
+import com.workbuddy.common.domain.parse.ParseUnitResult;
+import com.workbuddy.common.domain.parse.UnitLine;
+import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.extract.PdfPageExtractor;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
-import com.workbuddy.worker.parser.pdf.model.PageLines;
+import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.store.PageArtifactStore;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,27 +63,39 @@ public final class PageExtractionStep implements DocumentStep<PageExtractionStep
             log.info("===> PdfBoxDocumentParser 页产物存储, fileId={}, store={}, pageCount={}, windowSize={}",
                     context.getFileRef().getFileId(), store.getClass().getSimpleName(), pageCount, windowSize);
 
-            List<PageLines> pageLines = new ArrayList<>(pageCount);
-            List<PageMetric> pageMetrics = new ArrayList<>(pageCount);
-            List<PageDimension> pageDimensions = new ArrayList<>(pageCount);
+            List<ParseUnitResult> units = new ArrayList<>(pageCount);
             List<PageContent> window = new ArrayList<>(windowSize);
             for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
                 context.getCancellationToken().throwIfCancelled();
                 PageContent pageContent = pageExtractor.extractPage(loaded.document(), pageNo, context);
-                pageLines.add(PageLines.of(pageContent));
-                pageMetrics.add(pageContent.metric());
-                pageDimensions.add(new PageDimension(pageContent.pageNo(),
-                        pageContent.geometry().viewportWidth(), pageContent.geometry().viewportHeight()));
+                units.add(toUnit(pageContent));
                 window.add(pageContent);
                 if (window.size() == windowSize || pageNo == pageCount) {
                     store.writeWindow(pageNo - window.size() + 1, window);
                     window = new ArrayList<>(windowSize);
                 }
             }
-            return new ExtractedDocument(store, pageLines, pageMetrics, pageDimensions, pageCount);
+            return new ExtractedDocument(store, units);
         } catch (IOException | RuntimeException e) {
             store.close();
             throw e;
         }
+    }
+
+    /** 页提取内容 → 单元结果（行摘要 + 指标 + 页尺寸；元素在装配阶段回填） */
+    private static ParseUnitResult toUnit(PageContent page) {
+        ParseUnitResult unit = new ParseUnitResult();
+        unit.setUnitIndex(page.pageNo());
+        unit.setType(UnitType.PAGE);
+        unit.setMetric(page.metric());
+        unit.setDimension(new PageDimension(page.pageNo(),
+                page.geometry().viewportWidth(), page.geometry().viewportHeight()));
+        unit.setLayoutHeight(page.pageHeight());
+        List<UnitLine> lines = new ArrayList<>(page.lines().size());
+        for (PageLine line : page.lines()) {
+            lines.add(new UnitLine(line.text(), line.x(), line.y(), line.width(), line.height()));
+        }
+        unit.setLines(lines);
+        return unit;
     }
 }

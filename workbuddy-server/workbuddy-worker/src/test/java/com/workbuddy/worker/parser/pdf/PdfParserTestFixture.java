@@ -1,6 +1,7 @@
 package com.workbuddy.worker.parser.pdf;
 
 import com.workbuddy.common.domain.input.FileReference;
+import com.workbuddy.common.domain.parse.ParseDocument;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
@@ -56,6 +57,16 @@ final class PdfParserTestFixture {
      */
     ParseSource parse(ParseContext context) {
         return parser.parse(context);
+    }
+
+    /**
+     * 按给定上下文解析为单元集合。
+     *
+     * @param context 解析上下文
+     * @return 单元集合形式的解析结果
+     */
+    ParseDocument parseDocument(ParseContext context) {
+        return parser.parseDocument(context);
     }
 
     /**
