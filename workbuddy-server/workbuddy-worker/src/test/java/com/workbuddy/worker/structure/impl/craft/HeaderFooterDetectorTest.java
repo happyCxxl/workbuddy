@@ -91,11 +91,11 @@ class HeaderFooterDetectorTest {
     void detectShouldSkipUnitWithoutGeometry() {
         ParseUnitResult unit = new ParseUnitResult();
         unit.setUnitIndex(1);
-        unit.setType(UnitType.BLOCK_STREAM);
+        unit.setType(UnitType.VIRTUAL_PAGE);
         unit.setLines(List.of(line("招标文件", 60, 40), line("某某公司", 60, 750)));
         ParseUnitResult same = new ParseUnitResult();
         same.setUnitIndex(2);
-        same.setType(UnitType.BLOCK_STREAM);
+        same.setType(UnitType.VIRTUAL_PAGE);
         same.setLines(List.of(line("招标文件", 60, 40), line("某某公司", 60, 750)));
 
         List<UnitBands> bands = HeaderFooterDetector.detect(List.of(unit, same), RULES);

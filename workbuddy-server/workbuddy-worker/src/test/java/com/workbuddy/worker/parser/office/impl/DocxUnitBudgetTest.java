@@ -1,6 +1,9 @@
 package com.workbuddy.worker.parser.office.impl;
 
+import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseUnitResult;
+import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.worker.parser.ParseContext;
 import org.apache.poi.util.Units;
@@ -89,6 +92,9 @@ class DocxUnitBudgetTest {
         ParseSource source = fixture.parse(fixture.buildDocx());
 
         assertEquals(1, source.getUnitCount());
+        assertEquals(UnitType.VIRTUAL_PAGE, source.getUnitType());
+        assertEquals(1, source.getUnits().size());
+        assertEquals(1, source.getUnits().getFirst().getUnitIndex());
         PageMetric metric = source.getPageMetrics().getFirst();
         assertTrue(metric.getCharCount() > 0);
         assertEquals(0, metric.getImageCount());
@@ -108,6 +114,9 @@ class DocxUnitBudgetTest {
             // Azure 页单位口径：3000 字符 = 1 个判定单元 → 6001 字符 = 3 个单元
             assertEquals(3, source.getUnitCount());
             assertEquals(3, source.getPageMetrics().size());
+            assertEquals(List.of(1, 2, 3), source.getUnits().stream().map(ParseUnitResult::getUnitIndex).toList());
+            // 长段落跨单元：元素按其起始单元记页
+            assertEquals(List.of(1), source.getElements().stream().map(ParseElement::getPage).distinct().toList());
         }
     }
 

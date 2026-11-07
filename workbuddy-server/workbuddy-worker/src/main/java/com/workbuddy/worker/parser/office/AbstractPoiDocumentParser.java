@@ -180,19 +180,23 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
     }
 
     /**
-     * Word 系单元指标：整档正文按 pageChars 折算虚拟页（页单位口径），逐单元回填字符数、乱码率与内嵌图片数；
-     * 图片按它在正文里的**位置**归属当前单元（文本先推进、遇到图片计入当前单元），不再一律记在首个单元。
+     * Word 系单元：整档正文按 pageChars 折算虚拟页（单元边界 = 字符预算切块），逐单元回填字符数、乱码率与
+     * 内嵌图片数，并把元素按其在预算里的起始单元记 page；图片按它在正文里的**位置**归属当前单元
+     * （文本先推进、遇到图片计入当前单元），不再一律记在首个单元。
      *
-     * @param source    解析结果（待回填页指标）
+     * <p>Word 物理页由排版引擎决定、POI 读不到，虚拟页只表示内容体量与质量口径，与 Word 实际页码不保证一致。
+     *
+     * @param source    解析结果（待回填单元与汇总）
      * @param pageChars 每虚拟页的字符数
      */
     protected void fillVirtualPageMetrics(ParseSource source, int pageChars) {
-        List<String> pages = new ArrayList<>();
-        List<Integer> imageCounts = new ArrayList<>();
+        List<ParseUnitResult> units = new ArrayList<>();
         StringBuilder page = new StringBuilder();
         int budget = 0;
         int pendingImages = 0;
+        int unitIndex = 1;
         for (ParseElement element : budgetElements(source)) {
+            element.setPage(unitIndex);
             if (ElementType.IMAGE.name().equals(element.getType())) {
                 pendingImages++;
                 continue;
@@ -202,20 +206,30 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
                 int codePoint = elementText.codePointAt(i);
                 page.appendCodePoint(codePoint);
                 if (!Character.isWhitespace(codePoint) && ++budget >= pageChars) {
-                    pages.add(page.toString());
-                    imageCounts.add(pendingImages);
+                    units.add(unit(unitIndex, page.toString(), pendingImages));
                     pendingImages = 0;
                     page = new StringBuilder();
                     budget = 0;
+                    unitIndex++;
                 }
                 i += Character.charCount(codePoint);
             }
         }
-        if (!page.isEmpty() || pages.isEmpty()) {
-            pages.add(page.toString());
-            imageCounts.add(pendingImages);
+        if (!page.isEmpty() || units.isEmpty()) {
+            units.add(unit(unitIndex, page.toString(), pendingImages));
         }
-        fillMetricOnly(source, pages, imageCounts);
+        source.setUnitType(UnitType.VIRTUAL_PAGE);
+        source.setUnits(units);
+        source.summarizeUnits();
+    }
+
+    /** 虚拟页单元：序号 + 文本 + 内嵌图片数 */
+    private static ParseUnitResult unit(int unitIndex, String text, int imageCount) {
+        ParseUnitResult unit = new ParseUnitResult();
+        unit.setUnitIndex(unitIndex);
+        unit.setType(UnitType.VIRTUAL_PAGE);
+        unit.setMetric(metric(unitIndex - 1, text, imageCount));
+        return unit;
     }
 
     /**
@@ -240,22 +254,6 @@ public abstract class AbstractPoiDocumentParser implements DocumentParserPort {
         source.setUnitType(unitType);
         source.setUnits(units);
         source.summarizeUnits();
-    }
-
-    /**
-     * 逐单元指标回填（只有指标，不建单元）：用于尚未建模单元边界的格式，单元数仍按折算口径计入。
-     *
-     * @param source           解析结果（待回填页指标）
-     * @param unitTexts        各单元文本
-     * @param unitImageCounts  各单元内嵌图片数
-     */
-    protected void fillMetricOnly(ParseSource source, List<String> unitTexts, List<Integer> unitImageCounts) {
-        List<PageMetric> metrics = new ArrayList<>();
-        for (int i = 0; i < unitTexts.size(); i++) {
-            metrics.add(metric(i, unitTexts.get(i), i < unitImageCounts.size() ? unitImageCounts.get(i) : 0));
-        }
-        source.setPageMetrics(metrics);
-        source.setUnitCount(metrics.size());
     }
 
     /** 单元指标：序号从 1 起，字符数、乱码率与内嵌图片数 */

@@ -14,6 +14,9 @@ public enum UnitType {
     /** 工作表（XLSX / XLS） */
     SHEET,
 
-    /** 段落/表格流（DOCX / DOC），不承诺物理页 */
-    BLOCK_STREAM
+    /**
+     * 虚拟页（DOCX / DOC）：Word 物理页由排版引擎决定、POI 读不到，按每单元字符预算折算切块，
+     * 单元序号与 Word 实际页码不保证一致，只作内容体量与质量口径。
+     */
+    VIRTUAL_PAGE
 }
