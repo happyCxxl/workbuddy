@@ -1,8 +1,7 @@
 package com.workbuddy.worker.parser.pdf.pipeline;
 
+import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.ParseUnitResult;
-import com.workbuddy.common.domain.parse.capability.CapabilityUsage;
-import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
@@ -25,14 +24,13 @@ import com.workbuddy.worker.parser.pdf.page.RegionStep;
 import com.workbuddy.worker.parser.pdf.page.TableProvenanceStep;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 逐页装配步骤：按窗口读取页产物，逐页执行页面流水线，把元素回填进对应单元，并汇总路级事实/能力。
+ * 逐页装配步骤：按窗口读取页产物，逐页执行页面流水线，把元素按序回填进解析结果。
  */
 public final class PageAssemblyStep
-        implements DocumentStep<PageAssemblyStep.Input, PageAssemblyResult> {
+        implements DocumentStep<PageAssemblyStep.Input, ParseSource> {
 
     private final CapabilityRegistry capabilityRegistry;
     private final PagePipeline pagePipeline = new PagePipeline(List.of(
@@ -65,20 +63,21 @@ public final class PageAssemblyStep
      * @param keys 页眉/页脚键
      * @param loaded 已加载文档
      * @param context 解析上下文
+     * @param source 解析结果（元素、事实与能力直接记在该结果上）
      */
     public record Input(ExtractedDocument extracted, HeaderFooterKeys keys,
-                        LoadedPdf loaded, ParseContext context) {
+                        LoadedPdf loaded, ParseContext context, ParseSource source) {
     }
 
     /**
      * 执行逐页装配。
      *
      * @param input 装配输入
-     * @return 路级事实与能力
+     * @return 解析结果（元素已按序回填）
      * @throws IOException 读取页产物或渲染页图失败
      */
     @Override
-    public PageAssemblyResult execute(Input input) throws IOException {
+    public ParseSource execute(Input input) throws IOException {
         ExtractedDocument extracted = input.extracted();
         ParseContext context = input.context();
         ParseProperties properties = context.getProperties();
@@ -89,21 +88,18 @@ public final class PageAssemblyStep
                 ? new PdfPageImageRenderer(input.loaded().document(), properties.getPageImageDpi())
                 : null;
 
-        List<ParseFact> facts = new ArrayList<>();
-        List<CapabilityUsage> capabilities = new ArrayList<>();
+        ParseSource source = input.source();
         List<ParseUnitResult> units = extracted.units();
         for (int from = 1; from <= extracted.pageCount(); from += windowSize) {
             for (PageContent page : extracted.store().readWindow(from)) {
                 context.getCancellationToken().throwIfCancelled();
                 ParseUnitResult unit = units.get(page.pageNo() - 1);
                 PageContext pageContext = new PageContext(page, unit, input.keys(), properties,
-                        capabilityRegistry, context, renderer, fileId);
+                        capabilityRegistry, context, renderer, fileId, source);
                 pagePipeline.run(pageContext);
-                unit.getElements().addAll(pageContext.getElements());
-                facts.addAll(pageContext.getSource().getFacts());
-                capabilities.addAll(pageContext.getSource().getCapabilities());
+                source.getElements().addAll(pageContext.getElements());
             }
         }
-        return new PageAssemblyResult(facts, capabilities);
+        return source;
     }
 }

@@ -31,7 +31,7 @@ public final class PageContext {
     private final PdfPageImageRenderer renderer;
     private final String fileId;
 
-    private final ParseSource source = new ParseSource();
+    private final ParseSource source;
     private final List<ParseElement> elements = new ArrayList<>();
     private final List<ParseElement> footerElements = new ArrayList<>();
 
@@ -52,11 +52,12 @@ public final class PageContext {
      * @param parseContext 解析上下文
      * @param renderer 页图渲染器；资产关闭时为 null
      * @param fileId 文件 ID
+     * @param source 解析结果（步骤把元素、事实与能力直接记在该结果上）
      */
     public PageContext(PageContent page, ParseUnitResult unit, HeaderFooterKeys keys,
                        ParseProperties properties,
                        CapabilityRegistry capabilityRegistry, ParseContext parseContext,
-                       PdfPageImageRenderer renderer, String fileId) {
+                       PdfPageImageRenderer renderer, String fileId, ParseSource source) {
         this.page = page;
         this.unit = unit;
         this.keys = keys;
@@ -65,6 +66,7 @@ public final class PageContext {
         this.parseContext = parseContext;
         this.renderer = renderer;
         this.fileId = fileId;
+        this.source = source;
     }
 
     /**
@@ -140,9 +142,9 @@ public final class PageContext {
     }
 
     /**
-     * 返回页级源数据。
+     * 返回解析结果（步骤把元素、事实与能力记在这里）。
      *
-     * @return 页级源数据
+     * @return 解析结果
      */
     public ParseSource getSource() {
         return source;

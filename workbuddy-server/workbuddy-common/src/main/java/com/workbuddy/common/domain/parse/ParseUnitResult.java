@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 单元解析结果：一个单元的内容、位置与单元质量，自包含、可序列化（不携带解析器句柄）。
- * 单元归属由单元序号表达，元素上的 {@code page} 与之对应。
+ * 单元解析结果：一个单元的位置与单元质量，自包含、可序列化（不携带解析器句柄）。
+ * 单元归属由单元序号表达，元素上的 {@code page} 与之对应；元素本身只在路结果上存一份。
  */
 @Data
 public class ParseUnitResult {
@@ -19,9 +19,6 @@ public class ParseUnitResult {
 
     /** 单元类型 */
     private UnitType type;
-
-    /** 单元内元素（按产出顺序） */
-    private List<ParseElement> elements = new ArrayList<>();
 
     /** 单元内行摘要（跨页运行文本/页码判定输入；文档级判定只读本字段） */
     private List<UnitLine> lines = new ArrayList<>();

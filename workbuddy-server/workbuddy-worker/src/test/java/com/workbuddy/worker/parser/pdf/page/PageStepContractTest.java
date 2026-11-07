@@ -3,6 +3,7 @@ package com.workbuddy.worker.parser.pdf.page;
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
+import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.capability.LayoutRegion;
 import com.workbuddy.common.domain.parse.capability.LayoutResult;
 import com.workbuddy.common.domain.parse.capability.PageImage;
@@ -139,7 +140,8 @@ class PageStepContractTest {
         context.getSource().setCapabilities(new ArrayList<>());
 
         PageContext capable = new PageContext(context.getPage(), context.getUnit(), context.getKeys(),
-                properties(), layoutRegistry(), parseContext(properties()), null, "F-1");
+                properties(), layoutRegistry(), parseContext(properties()), null, "F-1",
+                ParseSource.nativeSource("test"));
         capable.setBodyLines(List.of(top, bottom));
         capable.getSource().setCapabilities(new ArrayList<>());
 
@@ -193,7 +195,7 @@ class PageStepContractTest {
     private static PageContext context(PageContent page, HeaderFooterKeys keys) {
         ParseProperties properties = properties();
         return new PageContext(page, PageUnitFixtures.of(page), keys, properties, null,
-                parseContext(properties), null, "F-1");
+                parseContext(properties), null, "F-1", ParseSource.nativeSource("test"));
     }
 
     /** 造一行；token 可为空。 */

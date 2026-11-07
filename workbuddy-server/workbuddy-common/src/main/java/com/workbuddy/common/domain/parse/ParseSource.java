@@ -4,6 +4,7 @@ import com.workbuddy.common.domain.parse.capability.CapabilityUsage;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ParseSourceType;
+import com.workbuddy.common.enums.parse.UnitType;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -25,7 +26,13 @@ public class ParseSource {
     /** 该路是否带候选顺序信息（预留未实现：组装环节阅读顺序当前不消费该字段） */
     private Boolean candidateOrder;
 
-    /** 该路产出的元素列表 */
+    /** 单元类型（同一路解析内一致；单元字段见 {@link ParseUnitResult}） */
+    private UnitType unitType;
+
+    /** 单元集合（按文档序）：行摘要、单元指标与尺寸；元素按 {@code ParseElement.page} 归属单元 */
+    private List<ParseUnitResult> units = new ArrayList<>();
+
+    /** 该路产出的元素列表（按单元序展平；文档级视图，供下游按序消费） */
     private List<ParseElement> elements = new ArrayList<>();
 
     /** 单元级原始指标（PDF 与 Office 都回填；判定器按阈值转信号） */
@@ -61,27 +68,21 @@ public class ParseSource {
     }
 
     /**
-     * 由单元集合派生文档级汇总视图（兼容下游既有契约）：元素按单元序展平，
-     * 单元指标与尺寸按单元序汇总，事实与能力沿用路级结果。
+     * 按单元集合重算文档级汇总：单元总数、单元指标与尺寸按单元序汇总。
      *
-     * @param document 单元集合
-     * @return 原生解析路结果
+     * <p>汇总字段是下游既有消费口径，单元集合才是明细来源；元素不复制（按页归属单元）。
      */
-    public static ParseSource fromDocument(ParseDocument document) {
-        ParseSource source = nativeSource(document.getProvider());
-        List<ParseUnitResult> units = document.getUnits();
-        source.setUnitCount(units.size());
+    public void summarizeUnits() {
+        unitCount = units.size();
+        pageMetrics.clear();
+        pageDimensions.clear();
         for (ParseUnitResult unit : units) {
-            source.getElements().addAll(unit.getElements());
             if (unit.getMetric() != null) {
-                source.getPageMetrics().add(unit.getMetric());
+                pageMetrics.add(unit.getMetric());
             }
             if (unit.getDimension() != null) {
-                source.getPageDimensions().add(unit.getDimension());
+                pageDimensions.add(unit.getDimension());
             }
         }
-        source.setFacts(new ArrayList<>(document.getFacts()));
-        source.setCapabilities(new ArrayList<>(document.getCapabilities()));
-        return source;
     }
 }

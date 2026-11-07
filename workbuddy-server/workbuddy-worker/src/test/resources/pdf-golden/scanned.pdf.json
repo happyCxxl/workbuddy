@@ -2,6 +2,31 @@
     "source": "native",
     "provider": "pdfbox-3.0.4",
     "candidateOrder": true,
+    "unitType": "PAGE",
+    "units": [
+        {
+            "unitIndex": 1,
+            "type": "PAGE",
+            "lines": [
+            ],
+            "metric": {
+                "page": 1,
+                "charCount": 0,
+                "garbledRatio": 0,
+                "cidMappingRatio": 0,
+                "textAreaRatio": 0,
+                "imageAreaRatio": 1,
+                "vectorAreaRatio": 0,
+                "imageCount": 0
+            },
+            "dimension": {
+                "page": 1,
+                "width": 612,
+                "height": 792
+            },
+            "layoutHeight": 792
+        }
+    ],
     "elements": [
         {
             "id": "i1_0_0_0",

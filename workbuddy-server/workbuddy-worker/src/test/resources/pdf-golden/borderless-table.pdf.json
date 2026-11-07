@@ -2,6 +2,59 @@
     "source": "native",
     "provider": "pdfbox-3.0.4",
     "candidateOrder": true,
+    "unitType": "PAGE",
+    "units": [
+        {
+            "unitIndex": 1,
+            "type": "PAGE",
+            "lines": [
+                {
+                    "text": "Item Price Qty Amount",
+                    "x": 60,
+                    "y": 42,
+                    "width": 170.74795532226562,
+                    "height": 6.935999870300293
+                },
+                {
+                    "text": "Apple 3.00 10 30.00",
+                    "x": 60,
+                    "y": 64,
+                    "width": 160.78793334960938,
+                    "height": 6.935999870300293
+                },
+                {
+                    "text": "Banana 2.50 8 20.00",
+                    "x": 60,
+                    "y": 86,
+                    "width": 164.79592895507812,
+                    "height": 6.935999870300293
+                },
+                {
+                    "text": "Orange 4.00 5 20.00",
+                    "x": 60,
+                    "y": 108,
+                    "width": 163.45193481445312,
+                    "height": 6.935999870300293
+                }
+            ],
+            "metric": {
+                "page": 1,
+                "charCount": 66,
+                "garbledRatio": 0,
+                "cidMappingRatio": 0,
+                "textAreaRatio": 0.019601418670273506,
+                "imageAreaRatio": 0,
+                "vectorAreaRatio": 0,
+                "imageCount": 0
+            },
+            "dimension": {
+                "page": 1,
+                "width": 612,
+                "height": 792
+            },
+            "layoutHeight": 792
+        }
+    ],
     "elements": [
         {
             "id": "p1_0_60_42",

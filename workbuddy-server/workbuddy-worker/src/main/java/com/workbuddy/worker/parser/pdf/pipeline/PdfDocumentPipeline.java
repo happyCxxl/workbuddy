@@ -1,6 +1,6 @@
 package com.workbuddy.worker.parser.pdf.pipeline;
 
-import com.workbuddy.common.domain.parse.ParseDocument;
+import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.pdf.detect.HeaderFooterKeys;
@@ -43,24 +43,21 @@ public final class PdfDocumentPipeline {
      * 执行 PDF 解析。
      *
      * @param context 解析上下文
-     * @return 单元集合形式的解析结果
+     * @return 解析结果（单元集合 + 文档级汇总）
      * @throws IOException 加载、提取或装配失败
      */
-    public ParseDocument run(ParseContext context) throws IOException {
+    public ParseSource run(ParseContext context) throws IOException {
         try (LoadedPdf loaded = load.execute(context)) {
             try (ExtractedDocument extracted = extract.execute(
                     new PageExtractionStep.Input(loaded, context))) {
+                ParseSource source = ParseSource.nativeSource(provider);
+                source.setUnitType(UnitType.PAGE);
+                source.setUnits(extracted.units());
+                source.summarizeUnits();
                 HeaderFooterKeys keys = headerFooter.execute(
                         new HeaderFooterStep.Input(extracted.units(), context));
-                PageAssemblyResult assembled = assemble.execute(
-                        new PageAssemblyStep.Input(extracted, keys, loaded, context));
-                ParseDocument document = new ParseDocument();
-                document.setProvider(provider);
-                document.setUnitType(UnitType.PAGE);
-                document.setUnits(extracted.units());
-                document.setFacts(assembled.facts());
-                document.setCapabilities(assembled.capabilities());
-                return document;
+                assemble.execute(new PageAssemblyStep.Input(extracted, keys, loaded, context, source));
+                return source;
             }
         }
     }

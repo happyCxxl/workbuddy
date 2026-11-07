@@ -2,6 +2,60 @@
     "source": "native",
     "provider": "pdfbox-3.0.4",
     "candidateOrder": true,
+    "unitType": "PAGE",
+    "units": [
+        {
+            "unitIndex": 1,
+            "type": "PAGE",
+            "lines": [
+            ],
+            "metric": {
+                "page": 1,
+                "charCount": 0,
+                "garbledRatio": 0,
+                "cidMappingRatio": 0,
+                "textAreaRatio": 0,
+                "imageAreaRatio": 1,
+                "vectorAreaRatio": 0,
+                "imageCount": 0
+            },
+            "dimension": {
+                "page": 1,
+                "width": 612,
+                "height": 792
+            },
+            "layoutHeight": 792
+        },
+        {
+            "unitIndex": 2,
+            "type": "PAGE",
+            "lines": [
+                {
+                    "text": "This page is born digital and readable.",
+                    "x": 60,
+                    "y": 42,
+                    "width": 203.43594360351562,
+                    "height": 6.935999870300293
+                }
+            ],
+            "metric": {
+                "page": 2,
+                "charCount": 33,
+                "garbledRatio": 0,
+                "cidMappingRatio": 0,
+                "textAreaRatio": 0.006043848591904801,
+                "imageAreaRatio": 0,
+                "vectorAreaRatio": 0,
+                "imageCount": 0
+            },
+            "dimension": {
+                "page": 2,
+                "width": 612,
+                "height": 792
+            },
+            "layoutHeight": 792
+        }
+    ],
     "elements": [
         {
             "id": "i1_0_0_0",

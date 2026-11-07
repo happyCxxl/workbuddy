@@ -1,6 +1,5 @@
 package com.workbuddy.worker.parser.pdf;
 
-import com.workbuddy.common.domain.parse.ParseDocument;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.input.FileFormat;
 import com.workbuddy.worker.parser.DocumentParserPort;
@@ -102,20 +101,10 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
      * 解析入口：委托文档流水线；取消原样抛出，其它异常统一包装。
      *
      * @param context 解析上下文
-     * @return 解析结果（由单元集合派生的文档级汇总视图）
+     * @return 解析结果（单元集合 + 文档级汇总）
      */
     @Override
     public ParseSource parse(ParseContext context) {
-        return ParseSource.fromDocument(parseDocument(context));
-    }
-
-    /**
-     * 单元集合形式的解析入口（包内可见：单元契约的测试与后续组装消费）。
-     *
-     * @param context 解析上下文
-     * @return 单元集合形式的解析结果
-     */
-    ParseDocument parseDocument(ParseContext context) {
         context.getCancellationToken().throwIfCancelled();
         String fileId = context.getFileRef().getFileId();
         try {

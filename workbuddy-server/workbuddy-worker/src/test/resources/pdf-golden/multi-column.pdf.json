@@ -2,6 +2,80 @@
     "source": "native",
     "provider": "pdfbox-3.0.4",
     "candidateOrder": true,
+    "unitType": "PAGE",
+    "units": [
+        {
+            "unitIndex": 1,
+            "type": "PAGE",
+            "lines": [
+                {
+                    "text": "Left column line one with some text.",
+                    "x": 60,
+                    "y": 42,
+                    "width": 174.85595703125,
+                    "height": 6.3580002784729
+                },
+                {
+                    "text": "Left column line two with more text.",
+                    "x": 60,
+                    "y": 58,
+                    "width": 171.78695678710938,
+                    "height": 6.3580002784729
+                },
+                {
+                    "text": "Left column line three continues here.",
+                    "x": 60,
+                    "y": 74,
+                    "width": 183.42494201660156,
+                    "height": 6.3580002784729
+                },
+                {
+                    "text": "Left column line four ends the column.",
+                    "x": 60,
+                    "y": 90,
+                    "width": 185.866943359375,
+                    "height": 6.3580002784729
+                },
+                {
+                    "text": "Right column line one with some text.",
+                    "x": 320,
+                    "y": 42,
+                    "width": 182.1820068359375,
+                    "height": 6.3580002784729
+                },
+                {
+                    "text": "Right column line two with more text.",
+                    "x": 320,
+                    "y": 58,
+                    "width": 179.11300659179688,
+                    "height": 6.3580002784729
+                },
+                {
+                    "text": "Right column line three continues here.",
+                    "x": 320,
+                    "y": 74,
+                    "width": 190.7509765625,
+                    "height": 6.3580002784729
+                }
+            ],
+            "metric": {
+                "page": 1,
+                "charCount": 221,
+                "garbledRatio": 0,
+                "cidMappingRatio": 0,
+                "textAreaRatio": 0.034531067243588516,
+                "imageAreaRatio": 0,
+                "vectorAreaRatio": 0,
+                "imageCount": 0
+            },
+            "dimension": {
+                "page": 1,
+                "width": 612,
+                "height": 792
+            },
+            "layoutHeight": 792
+        }
+    ],
     "elements": [
         {
             "id": "p1_0_60_42",
