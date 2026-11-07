@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 /**
  * 解析成功占比门禁：按内容单元、空白页、扫描页与 OCR 恢复情况判定任务状态。
  * 会就地修正失败页清单与失败单元数，并把结论写入 {@link ParseOutcome}。
+ * 文档级内容充分性终态只在此判定；组装环节的质量告警不改变终态，其失败仅限空树或上游产物缺失。
  */
 @Slf4j
 @Component
