@@ -49,7 +49,7 @@ public final class TableCapabilityAttempt {
      * @param region   表格区域（null 表示区域为空）
      * @param pageNo   页码
      * @param ctx      调用上下文（含任务 ID 与裁剪图字节解析入口）
-     * @return 尝试结果（永不为 null）
+     * @return 尝试结果（永不为 null；provider 抛异常按降级返回，不向上传播）
      */
     public static Outcome attempt(CapabilityRegistry registry, TableRegion region, int pageNo, ProviderContext ctx) {
         String traceRegion = "page " + pageNo;
@@ -60,7 +60,13 @@ public final class TableCapabilityAttempt {
         if (NullUtil.isNull(region)) {
             return new Outcome(null, CapabilityFacts.tableDegraded(traceRegion, "区域为空"));
         }
-        TableResult result = provider.recognize(region, ctx);
+        TableResult result;
+        try {
+            result = provider.recognize(region, ctx);
+        } catch (RuntimeException exception) {
+            return new Outcome(null,
+                    CapabilityFacts.tableDegraded(traceRegion, CapabilityFacts.degradedReason(exception)));
+        }
         ParseElement table = TableStructureSupport.toTableElement(result, pageNo);
         if (NullUtil.isNull(table)) {
             return new Outcome(null, CapabilityFacts.tableDegraded(traceRegion, "调用失败或结果不完整"));

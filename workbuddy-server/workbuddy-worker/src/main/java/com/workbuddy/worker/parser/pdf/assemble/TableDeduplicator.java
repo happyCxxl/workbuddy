@@ -2,7 +2,7 @@ package com.workbuddy.worker.parser.pdf.assemble;
 
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseFactSink;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.SignalType;
@@ -31,7 +31,7 @@ public final class TableDeduplicator {
      * @param source   解析结果（写合并事实）
      * @param pageNo   页码
      */
-    public static void mergeInPlace(List<ParseElement> elements, ParseSource source, int pageNo) {
+    public static void mergeInPlace(List<ParseElement> elements, ParseFactSink source, int pageNo) {
         for (int i = 0; i < elements.size(); i++) {
             ParseElement base = elements.get(i);
             if (!ElementType.TABLE.name().equals(base.getType())) {
@@ -75,7 +75,7 @@ public final class TableDeduplicator {
     }
 
     /** 合并一组重复表 */
-    private static ParseElement merge(List<ParseElement> group, int pageNo, ParseSource source) {
+    private static ParseElement merge(List<ParseElement> group, int pageNo, ParseFactSink source) {
         ParseElement base = group.stream()
                 .max((a, b) -> Integer.compare(nonEmptyCells(a), nonEmptyCells(b)))
                 .orElse(group.getFirst());

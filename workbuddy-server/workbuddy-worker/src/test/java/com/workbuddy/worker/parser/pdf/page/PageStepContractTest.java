@@ -2,7 +2,6 @@ package com.workbuddy.worker.parser.pdf.page;
 
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.BBox;
-import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.capability.LayoutRegion;
 import com.workbuddy.common.domain.parse.capability.LayoutResult;
 import com.workbuddy.common.domain.parse.capability.PageImage;
@@ -88,21 +87,18 @@ class PageStepContractTest {
                 List.of(new Token("left", 100, 120), new Token("right", 300, 320)));
         PageContext context = context(page(List.of(top, bottom)));
         context.setBodyLines(List.of(top, bottom));
-        context.getSource().setCapabilities(new ArrayList<>());
 
         PageContext capable = new PageContext(context.getPage(), context.getUnit(),
-                properties(), layoutRegistry(), parseContext(properties()), null, "F-1",
-                ParseSource.nativeSource("test"));
+                properties(), layoutRegistry(), parseContext(properties()), null, "F-1");
         capable.setBodyLines(List.of(top, bottom));
-        capable.getSource().setCapabilities(new ArrayList<>());
 
         new ReadingOrderStep().apply(capable);
 
         assertEquals(List.of("bottom", "top"), capable.getOrderedLines().stream().map(PageLine::text).toList(),
                 () -> "ordered=" + capable.getOrderedLines());
-        assertTrue(capable.getSource().getFacts().stream()
+        assertTrue(capable.getFacts().stream()
                 .anyMatch(fact -> fact.getEvidence().contains("版面")), "缺少版面补强事实");
-        assertFalse(capable.getSource().getCapabilities().isEmpty(), "缺少能力引用");
+        assertFalse(capable.getCapabilities().isEmpty(), "缺少能力引用");
     }
 
     /** 版面能力：两个区域，模型顺序与几何顺序相反。 */
@@ -146,7 +142,7 @@ class PageStepContractTest {
     private static PageContext context(PageContent page) {
         ParseProperties properties = properties();
         return new PageContext(page, PageUnitFixtures.of(page), properties, null,
-                parseContext(properties), null, "F-1", ParseSource.nativeSource("test"));
+                parseContext(properties), null, "F-1");
     }
 
     /** 造一行；token 可为空。 */

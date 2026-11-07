@@ -2,7 +2,6 @@ package com.workbuddy.worker.parser.pdf.assemble;
 
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.ParseContext;
@@ -70,8 +69,7 @@ class PageAssemblyRegionGroupingTest {
 
         PageContent page = page(lines);
         PageContext context = new PageContext(page, PageUnitFixtures.of(page),
-                properties(), null, parseContext(properties()), null, "F-1",
-                ParseSource.nativeSource("test"));
+                properties(), null, parseContext(properties()), null, "F-1");
         new PagePipeline(List.of(
                 new RegionStep(),
                 new ReadingOrderStep(),

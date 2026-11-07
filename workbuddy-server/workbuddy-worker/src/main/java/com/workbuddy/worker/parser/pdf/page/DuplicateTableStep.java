@@ -36,7 +36,7 @@ public final class DuplicateTableStep implements PageStep {
      */
     @Override
     public void apply(PageContext context) {
-        TableDeduplicator.mergeInPlace(context.getElements(), context.getSource(),
+        TableDeduplicator.mergeInPlace(context.getElements(), context,
                 context.getPage().pageNo());
     }
 }

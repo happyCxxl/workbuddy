@@ -19,6 +19,19 @@ public final class CapabilityFacts {
     }
 
     /**
+     * 降级原因：能力调用抛异常时取异常消息，缺失时回落到异常类型。
+     *
+     * @param exception 能力调用异常
+     * @return 降级原因文案
+     */
+    static String degradedReason(RuntimeException exception) {
+        String message = exception.getMessage();
+        return NullUtil.isNull(message) || StrUtil.isBlank(message)
+                ? "调用异常 " + exception.getClass().getSimpleName()
+                : "调用异常 " + message;
+    }
+
+    /**
      * 补强事实：模型给出了可用结构。
      *
      * @param region 表格区域

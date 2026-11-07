@@ -2,7 +2,7 @@ package com.workbuddy.worker.parser.pdf.assemble;
 
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseFactSink;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.utils.NullUtil;
 import com.workbuddy.worker.parser.ParseContext;
@@ -33,7 +33,7 @@ public final class RuledTableBuilder {
 
     /** 线框路径结算：线网格 → 合并格 → 格内文本 → 表元素（保底退回无边框路径） */
     static void flush(List<PageLine> run, Region region, PageContent page, List<ParseElement> elements,
-                      ParseSource source, String fileId, ParseProperties properties,
+                      ParseFactSink source, String fileId, ParseProperties properties,
                       CapabilityRegistry capabilityRegistry, ParseContext context,
                       PdfPageImageRenderer renderer) {
         Grid grid = RuleGrid.fit(page.segments(), region, properties.getTableLineCoverRatio());

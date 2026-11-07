@@ -37,7 +37,7 @@ public final class BlockRenderStep implements PageStep {
     @Override
     public void apply(PageContext context) {
         TextRunRenderer.render(context.getBlocks(), context.getPage(), context.getElements(),
-                context.getSource(), context.getFileId(), context.getProperties(),
+                context, context.getFileId(), context.getProperties(),
                 context.getCapabilityRegistry(), context.getParseContext(), context.getRenderer());
     }
 }

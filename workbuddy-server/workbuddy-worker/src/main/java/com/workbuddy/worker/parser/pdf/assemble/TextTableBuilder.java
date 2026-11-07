@@ -3,7 +3,7 @@ package com.workbuddy.worker.parser.pdf.assemble;
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseFactSink;
 import com.workbuddy.common.domain.parse.capability.ProviderContext;
 import com.workbuddy.common.domain.parse.capability.TableRegion;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
@@ -52,7 +52,7 @@ public final class TextTableBuilder {
      * 拿到可用结构就出 TABLE 元素并记补强事实；能力未给出可用结构时按内置口径出 TABLE 事实 + 区域降级为段落，并记降级事实。
      */
     private static void settleFailedTable(List<PageLine> block, PageContent page, List<ParseElement> elements,
-                                          ParseSource source, String fileId,
+                                          ParseFactSink source, String fileId,
                                           CapabilityRegistry capabilityRegistry,
                                           LineTexts.Options lineTextOptions, String evidence,
                                           ParseContext context, PdfPageImageRenderer renderer) {
@@ -86,7 +86,7 @@ public final class TextTableBuilder {
 
     /** 文本路径结算：列对齐聚类成表；失败或空白率过高则降级为段落 */
     static void flush(List<PageLine> block, PageContent page, List<ParseElement> elements,
-                      ParseSource source, String fileId, ParseProperties properties,
+                      ParseFactSink source, String fileId, ParseProperties properties,
                       CapabilityRegistry capabilityRegistry, ParseContext context,
                       PdfPageImageRenderer renderer) {
         if (block.size() < 2) {

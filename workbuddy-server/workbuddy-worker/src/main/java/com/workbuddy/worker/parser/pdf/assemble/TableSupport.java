@@ -2,7 +2,7 @@ package com.workbuddy.worker.parser.pdf.assemble;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseFactSink;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ParseFactLevel;
 import com.workbuddy.common.enums.parse.SignalType;
@@ -73,7 +73,7 @@ final class TableSupport {
 
     /** 表格规则失败：出 TABLE 事实并把区域降级为段落 */
     static void degrade(List<PageLine> lines, PageContent page, List<ParseElement> elements,
-                        ParseSource source, String fileId, String evidence) {
+                        ParseFactSink source, String fileId, String evidence) {
         ParseFact fact = new ParseFact();
         fact.setType(SignalType.TABLE);
         fact.setLevel(ParseFactLevel.WARN);

@@ -1,7 +1,7 @@
 package com.workbuddy.worker.parser.pdf.assemble;
 
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseFactSink;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
@@ -39,7 +39,7 @@ public final class TextRunRenderer {
      * @param renderer 页图渲染器
      */
     public static void render(List<PageBlock> blocks, PageContent page, List<ParseElement> elements,
-                              ParseSource source, String fileId, ParseProperties properties,
+                              ParseFactSink source, String fileId, ParseProperties properties,
                               CapabilityRegistry capabilityRegistry, ParseContext context,
                               PdfPageImageRenderer renderer) {
         for (PageBlock block : blocks) {
@@ -70,7 +70,7 @@ public final class TextRunRenderer {
      * @param renderer 页图渲染器
      */
     public static void flush(List<PageLine> run, PageContent page, List<ParseElement> elements,
-                             ParseSource source, String fileId, ParseProperties properties,
+                             ParseFactSink source, String fileId, ParseProperties properties,
                              CapabilityRegistry capabilityRegistry, ParseContext context,
                              PdfPageImageRenderer renderer) {
         render(BlockClassifier.classify(run, properties), page, elements, source, fileId, properties,

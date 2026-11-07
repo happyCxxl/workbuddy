@@ -36,7 +36,7 @@ public final class ImageStep implements PageStep {
      */
     @Override
     public void apply(PageContext context) {
-        PdfImageEmitter.emit(context.getPage(), context.getElements(), context.getSource(),
+        PdfImageEmitter.emit(context.getPage(), context.getElements(), context,
                 context.getFileId(), context.getProperties(), context.getParseContext(), context.getRenderer());
     }
 }

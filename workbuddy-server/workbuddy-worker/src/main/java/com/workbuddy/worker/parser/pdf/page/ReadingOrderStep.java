@@ -63,12 +63,12 @@ public final class ReadingOrderStep implements PageStep {
                 ? null : context.getRenderer().png(context.getRenderer().pageImage(page.pageNo())));
         LayoutCapabilityAttempt.Outcome outcome = LayoutCapabilityAttempt.attempt(
                 context.getCapabilityRegistry(), image, page.pageNo(), providerContext);
-        context.getSource().getFacts().add(outcome.fact());
+        context.getFacts().add(outcome.fact());
         if (!outcome.enhanced()) {
             context.setOrderedLines(bodyLines);
             return;
         }
-        context.getSource().getCapabilities().add(outcome.usage());
+        context.getCapabilities().add(outcome.usage());
         context.setOrderedLines(LayoutOrderSupport.reorder(bodyLines, outcome.regions(), outcome.order()));
     }
 

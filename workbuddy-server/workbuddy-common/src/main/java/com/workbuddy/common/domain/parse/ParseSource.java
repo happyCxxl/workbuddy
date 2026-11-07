@@ -15,7 +15,7 @@ import java.util.List;
  * 当前只有 native 路；ocr/layout/table 路随能力接入新增。
  */
 @Data
-public class ParseSource {
+public class ParseSource implements ParseFactSink {
 
     /** 路名（ParseSourceType 枚举值：native / ocr / layout / table；与事实类型 SignalType 同名的取值语义不同） */
     private String source;

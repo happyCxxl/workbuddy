@@ -18,6 +18,9 @@ public class ParseProperties {
     /** 大文件分窗：单窗口装配的页数（全档只留行级轻量摘要，字符与 token 只在窗口内保留） */
     private int pageWindowSize;
 
+    /** 页间并发：单窗口内同时装配的页数上限（模型调用占大头，按能力网关的并发承载设定） */
+    private int pageConcurrency;
+
     /** 大文件阈值：输入大于该字节数时落临时文件后按需读取（小于则整档留内存） */
     private int largeFileMinBytes;
 
@@ -141,6 +144,7 @@ public class ParseProperties {
     @PostConstruct
     void validate() {
         requirePositive("page-window-size", pageWindowSize);
+        requirePositive("page-concurrency", pageConcurrency);
         requirePositive("large-file-min-bytes", largeFileMinBytes);
         requireAtLeast("scan-page-min-chars", scanPageMinChars, 0);
         requireRatio("scan-page-image-ratio", scanPageImageRatio);

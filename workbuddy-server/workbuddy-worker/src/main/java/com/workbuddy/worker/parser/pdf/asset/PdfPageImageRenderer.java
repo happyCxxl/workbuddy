@@ -15,6 +15,8 @@ import java.io.IOException;
  * PDF 页图渲染：按 DPI 渲染整页并缓存当前页，按视口 bbox 裁剪图片区域。
  *
  * <p>只缓存最近一页，解析按页推进时不会把整档页图留在堆里。
+ * <p>页间并发装配时，渲染与裁剪串行执行：PDFRenderer 与缓存槽都不是线程安全的，
+ * 串行只锁住渲染本身，不阻塞模型调用。
  */
 public final class PdfPageImageRenderer {
 
@@ -43,7 +45,7 @@ public final class PdfPageImageRenderer {
      * @param pageNo 页码（从 1 开始）
      * @return 页图
      */
-    public BufferedImage pageImage(int pageNo) {
+    public synchronized BufferedImage pageImage(int pageNo) {
         if (pageNo == cachedPageNo) {
             return cachedPage;
         }
@@ -65,7 +67,8 @@ public final class PdfPageImageRenderer {
      * @param viewportHeight  视口高（pt）
      * @return 裁剪图
      */
-    public BufferedImage crop(BufferedImage pageImage, BBox bbox, double viewportWidth, double viewportHeight) {
+    public synchronized BufferedImage crop(BufferedImage pageImage, BBox bbox, double viewportWidth,
+                                           double viewportHeight) {
         if (NullUtil.isNull(bbox) || viewportWidth <= 0 || viewportHeight <= 0) {
             return pageImage;
         }

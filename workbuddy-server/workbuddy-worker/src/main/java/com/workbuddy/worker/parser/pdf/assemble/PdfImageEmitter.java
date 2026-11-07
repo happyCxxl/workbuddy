@@ -3,7 +3,7 @@ package com.workbuddy.worker.parser.pdf.assemble;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseAsset;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseFactSink;
 import com.workbuddy.common.domain.parse.Provenance;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
@@ -43,7 +43,7 @@ public final class PdfImageEmitter {
      * @param context    解析上下文（资产写入口）
      * @param renderer   页图渲染器（未启用资产时为 null）
      */
-    public static void emit(PageContent page, List<ParseElement> elements, ParseSource source,
+    public static void emit(PageContent page, List<ParseElement> elements, ParseFactSink source,
                      String fileId, ParseProperties properties, ParseContext context,
                      PdfPageImageRenderer renderer) {
         // OCR 候选页（扫描/乱码/CID 缺映射）先产整页图：无嵌入图片的乱码页也需要页图供 OCR 与预览

@@ -1,8 +1,10 @@
 package com.workbuddy.worker.parser.pdf.page;
 
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.common.domain.parse.ParseFactSink;
 import com.workbuddy.common.domain.parse.ParseUnitResult;
+import com.workbuddy.common.domain.parse.capability.CapabilityUsage;
+import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
@@ -22,7 +24,7 @@ import java.util.Map;
  * 单页工作区：一页的输入、外设口与页面局部产物；不持有全档聚合列表。
  */
 @Getter
-public final class PageContext {
+public final class PageContext implements ParseFactSink {
 
     /**
      * -- GETTER --
@@ -69,16 +71,16 @@ public final class PageContext {
 
     /**
      * -- GETTER --
-     *  返回解析结果（步骤把元素、事实与能力记在这里）。
-     *
-     */
-    private final ParseSource source;
-    /**
-     * -- GETTER --
      *  返回页内元素。
      *
      */
     private final List<ParseElement> elements = new ArrayList<>();
+
+    /** 页内事实信号（跨页合并由调用方按页序完成） */
+    private final List<ParseFact> facts = new ArrayList<>();
+
+    /** 页内能力使用记录（跨页合并由调用方按页序完成） */
+    private final List<CapabilityUsage> capabilities = new ArrayList<>();
 
     /**
      * -- SETTER --
@@ -136,12 +138,11 @@ public final class PageContext {
      * @param parseContext 解析上下文
      * @param renderer 页图渲染器；资产关闭时为 null
      * @param fileId 文件 ID
-     * @param source 解析结果（步骤把元素、事实与能力直接记在该结果上）
      */
     public PageContext(PageContent page, ParseUnitResult unit,
                        ParseProperties properties,
                        CapabilityRegistry capabilityRegistry, ParseContext parseContext,
-                       PdfPageImageRenderer renderer, String fileId, ParseSource source) {
+                       PdfPageImageRenderer renderer, String fileId) {
         this.page = page;
         this.unit = unit;
         this.properties = properties;
@@ -149,7 +150,6 @@ public final class PageContext {
         this.parseContext = parseContext;
         this.renderer = renderer;
         this.fileId = fileId;
-        this.source = source;
         this.bodyLines = page.lines();
     }
 

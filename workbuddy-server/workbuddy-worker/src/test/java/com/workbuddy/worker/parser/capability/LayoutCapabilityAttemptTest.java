@@ -65,6 +65,42 @@ class LayoutCapabilityAttemptTest {
         assertTrue(outcome.fact().getEvidence().contains("页面为空"), () -> outcome.fact().getEvidence());
     }
 
+    /** provider 抛异常（网关不可达/超时）：降级留痕并点名异常，不向上抛出（{@code throwingProviderShouldDegrade}）。 */
+    @Test
+    void throwingProviderShouldDegrade() {
+        LayoutProvider throwing = new LayoutProvider() {
+            @Override
+            public LayoutResult analyze(PageImage page, ProviderContext ctx) {
+                throw new IllegalStateException("模型网关不可达");
+            }
+        };
+        CapabilityRegistry registry = new CapabilityRegistry() {
+            @Override
+            public StructuredOcrProvider ocr() {
+                return null;
+            }
+
+            @Override
+            public LayoutProvider layout() {
+                return throwing;
+            }
+
+            @Override
+            public TableStructureProvider table() {
+                return null;
+            }
+        };
+
+        LayoutCapabilityAttempt.Outcome outcome =
+                LayoutCapabilityAttempt.attempt(registry, page(), 4, new ProviderContext());
+
+        assertFalse(outcome.enhanced());
+        assertNull(outcome.order());
+        assertNull(outcome.usage());
+        assertTrue(outcome.fact().getEvidence().contains("调用异常"), () -> outcome.fact().getEvidence());
+        assertTrue(outcome.fact().getEvidence().contains("模型网关不可达"), () -> outcome.fact().getEvidence());
+    }
+
     /** 桩 provider 返回只有区域没有顺序：不可用，降级原因写「调用失败或结果不完整」（{@code unorderedResultShouldYieldDegradedFact}）。 */
     @Test
     void unorderedResultShouldYieldDegradedFact() {

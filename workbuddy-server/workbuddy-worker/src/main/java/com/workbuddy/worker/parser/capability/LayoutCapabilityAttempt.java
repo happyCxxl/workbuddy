@@ -53,7 +53,7 @@ public final class LayoutCapabilityAttempt {
      * @param page     页面图像（null 表示页面为空）
      * @param pageNo   页码
      * @param ctx      调用上下文（含任务 ID 与页图字节解析入口）
-     * @return 尝试结果（永不为 null）
+     * @return 尝试结果（永不为 null；provider 抛异常按降级返回，不向上传播）
      */
     public static Outcome attempt(CapabilityRegistry registry, PageImage page, int pageNo, ProviderContext ctx) {
         String traceRegion = "page " + pageNo;
@@ -64,7 +64,13 @@ public final class LayoutCapabilityAttempt {
         if (NullUtil.isNull(page)) {
             return new Outcome(null, null, CapabilityFacts.layoutDegraded(traceRegion, "页面为空"));
         }
-        LayoutResult result = provider.analyze(page, ctx);
+        LayoutResult result;
+        try {
+            result = provider.analyze(page, ctx);
+        } catch (RuntimeException exception) {
+            return new Outcome(null, null,
+                    CapabilityFacts.layoutDegraded(traceRegion, CapabilityFacts.degradedReason(exception)));
+        }
         if (NullUtil.isNull(result) || NullUtil.isNull(result.getOrder()) || result.getOrder().isEmpty()
                 || NullUtil.isNull(result.getRegions()) || result.getRegions().isEmpty()) {
             return new Outcome(null, null, CapabilityFacts.layoutDegraded(traceRegion, "调用失败或结果不完整"));
