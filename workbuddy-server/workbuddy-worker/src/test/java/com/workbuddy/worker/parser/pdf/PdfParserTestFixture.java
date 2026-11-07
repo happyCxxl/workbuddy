@@ -2,6 +2,7 @@ package com.workbuddy.worker.parser.pdf;
 
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseSource;
+import com.workbuddy.worker.structure.craft.HeaderFooterMarker;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -56,6 +57,28 @@ final class PdfParserTestFixture {
      */
     ParseSource parse(ParseContext context) {
         return parser.parse(context);
+    }
+
+    /**
+     * 解析并按组装侧判定标注页眉页脚（文档级判定已移出解析）。
+     *
+     * @param context 解析上下文
+     * @return 判定后的解析结果
+     */
+    ParseSource parseMarked(ParseContext context) {
+        ParseSource source = parser.parse(context);
+        HeaderFooterMarker.mark(java.util.List.of(source), PropertiesFixtures.structure().headerFooterRules());
+        return source;
+    }
+
+    /**
+     * 解析并按组装侧判定标注页眉页脚。
+     *
+     * @param data PDF 字节
+     * @return 判定后的解析结果
+     */
+    ParseSource parseMarked(byte[] data) {
+        return parseMarked(context(data));
     }
 
     /**

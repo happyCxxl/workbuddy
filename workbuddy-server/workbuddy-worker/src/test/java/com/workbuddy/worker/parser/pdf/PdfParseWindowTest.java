@@ -7,6 +7,8 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.pdf.extract.PdfPageExtractor;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
+import com.workbuddy.worker.structure.craft.HeaderFooterMarker;
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -22,7 +24,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -79,7 +80,7 @@ class PdfParseWindowTest {
         assertEquals(List.of(), after, "页产物临时目录未清理");
     }
 
-    /** 分窗后跨页识别仍覆盖全档：页脚文本与页码按页各产一条（{@code footerDetectionShouldCoverAllPagesWhenWindowed}）。 */
+    /** 分窗后跨页识别仍覆盖全档：每页页脚一条（页脚文本与页码合并）（{@code footerDetectionShouldCoverAllPagesWhenWindowed}）。 */
     @Test
     void footerDetectionShouldCoverAllPagesWhenWindowed() throws Exception {
         ParseSource source = parse(buildThreePageDocument(), 1, IN_MEMORY_BYTES);
@@ -87,9 +88,9 @@ class PdfParseWindowTest {
         List<String> footers = source.getElements().stream()
                 .filter(element -> ElementType.FOOTER.name().equals(element.getType()))
                 .map(ParseElement::getText).toList();
-        assertEquals(6, footers.size(), () -> "footers=" + footers);
-        assertTrue(footers.containsAll(List.of("1", "2", "3")), () -> "footers=" + footers);
-        assertEquals(3, footers.stream().filter(text -> text.contains("Footer")).count(),
+        assertEquals(3, footers.size(), () -> "footers=" + footers);
+        assertTrue(footers.stream().allMatch(text -> text.contains("Footer")), () -> "footers=" + footers);
+        assertTrue(footers.containsAll(List.of("XX Project Footer 1", "XX Project Footer 2", "XX Project Footer 3")),
                 () -> "footers=" + footers);
     }
 
@@ -128,7 +129,9 @@ class PdfParseWindowTest {
         ParseContext context = context(data);
         context.getProperties().setPageWindowSize(windowSize);
         context.getProperties().setLargeFileMinBytes(largeFileMinBytes);
-        return parser.parse(context);
+        ParseSource source = parser.parse(context);
+        HeaderFooterMarker.mark(java.util.List.of(source), PropertiesFixtures.structure().headerFooterRules());
+        return source;
     }
 
     /** 产物指纹：元素与单元格的类型 + ID + 文本 + 页码 + 溯源路径 */

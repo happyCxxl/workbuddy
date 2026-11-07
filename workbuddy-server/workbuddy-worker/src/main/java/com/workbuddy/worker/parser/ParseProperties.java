@@ -1,6 +1,5 @@
 package com.workbuddy.worker.parser;
 
-import com.workbuddy.worker.structure.craft.HeaderFooterDetector.BandRules;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -88,24 +87,6 @@ public class ParseProperties {
     /** 行文本重建：显著间隙占该行字符间隙的比例达到该值即判为字距加宽排版（词边界不再补空格） */
     private double characterSpacingGapShare;
 
-    /** 页眉/页脚判定：同文本重复出现的最小页数（按不同页计） */
-    private int runningTextMinPages;
-
-    /** 页码判定：跨页同址判定的横向中心容差（pt） */
-    private double pageNumberXTolerance;
-
-    /** 页码判定：跨页同址成组所需的最少页数 */
-    private int pageNumberMinPages;
-
-    /** 页码判定：内容空洞度——页码行与其正上方最近正文行之间的空白下限（行高倍数） */
-    private double pageNumberIsolationRatio;
-
-    /** 页眉候选区域：页面顶部高度占比 */
-    private double headerAreaRatio;
-
-    /** 页脚候选区域：页面底部高度占比 */
-    private double footerAreaRatio;
-
     /** 线网格：线段需覆盖区域边长的比例（低于该比例的线不参与网格） */
     private double tableLineCoverRatio;
 
@@ -187,16 +168,6 @@ public class ParseProperties {
         requirePositive("character-spacing-floor-ratio", characterSpacingFloorRatio);
         requirePositive("word-gap-ratio", wordGapRatio);
         requireRatio("character-spacing-gap-share", characterSpacingGapShare);
-        requireAtLeast("running-text-min-pages", runningTextMinPages, 2);
-        requireNonNegative("page-number-xtolerance", pageNumberXTolerance);
-        requireAtLeast("page-number-min-pages", pageNumberMinPages, 2);
-        requirePositive("page-number-isolation-ratio", pageNumberIsolationRatio);
-        requireRatio("header-area-ratio", headerAreaRatio);
-        requireRatio("footer-area-ratio", footerAreaRatio);
-        if (headerAreaRatio + footerAreaRatio >= 1) {
-            fail("header-area-ratio/footer-area-ratio", "两者之和必须小于 1",
-                    headerAreaRatio + footerAreaRatio);
-        }
         requireRatio("table-line-cover-ratio", tableLineCoverRatio);
         requireRatio("table-column-support-ratio", tableColumnSupportRatio);
         requireNonNegative("table-column-tolerance-ratio", tableColumnToleranceRatio);
@@ -287,15 +258,5 @@ public class ParseProperties {
      */
     private void fail(String key, String rule, Object value) {
         throw new IllegalStateException("knowledge.parse." + key + " " + rule + "，当前值=" + value);
-    }
-
-    /**
-     * 页眉页脚带判定阈值（判定实现在组装侧，解析只按同一组阈值取判定结果）。
-     *
-     * @return 判定阈值
-     */
-    public BandRules bandRules() {
-        return new BandRules(headerAreaRatio, footerAreaRatio, runningTextMinPages,
-                pageNumberMinPages, pageNumberXTolerance, pageNumberIsolationRatio);
     }
 }

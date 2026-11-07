@@ -33,7 +33,7 @@ class PdfLayoutParserTest {
     @Test
     void pdfShouldParseParagraphsAndHeader() throws Exception {
         ParseContext context = parser.context(pages.buildPdf());
-        ParseSource source = parser.parse(context);
+        ParseSource source = parser.parseMarked(context);
 
         assertEquals(2, source.getUnitCount());
         assertEquals(2, context.getFileRef().getPageCount());
@@ -94,16 +94,15 @@ class PdfLayoutParserTest {
                     cs.endText();
                 }
             }
-            ParseSource source = parser.parse(PdfParserTestFixture.save(doc));
+            ParseSource source = parser.parseMarked(PdfParserTestFixture.save(doc));
 
             List<ParseElement> footers = source.getElements().stream()
                     .filter(e -> ElementType.FOOTER.name().equals(e.getType()))
                     .toList();
-            // 页脚文本每页一条 + 页码每页一条（两页页码同址，跨页判定通过）
-            assertEquals(4, footers.size(), () -> "footers=" + footers + " all=" + source.getElements());
-            assertTrue(footers.stream().anyMatch(f -> "XXProjectFooter".equals(f.getText())));
-            assertTrue(footers.stream().anyMatch(f -> "1".equals(f.getText())), () -> "footers=" + footers);
-            assertTrue(footers.stream().anyMatch(f -> "2".equals(f.getText())), () -> "footers=" + footers);
+            // 页脚文本与同行区页码按段落合并（与正文同一套行合并规则），每页一条
+            assertEquals(2, footers.size(), () -> "footers=" + footers + " all=" + source.getElements());
+            assertTrue(footers.get(0).getText().startsWith("XXProjectFooter"), () -> "footers=" + footers);
+            assertTrue(footers.get(1).getText().startsWith("XXProjectFooter"), () -> "footers=" + footers);
             // 页脚不进正文流
             List<ParseElement> paragraphs = source.getElements().stream()
                     .filter(e -> ElementType.PARAGRAPH.name().equals(e.getType()))
@@ -162,7 +161,7 @@ class PdfLayoutParserTest {
                     cs.endText();
                 }
             }
-            ParseSource source = parser.parse(PdfParserTestFixture.save(doc));
+            ParseSource source = parser.parseMarked(PdfParserTestFixture.save(doc));
 
             List<ParseElement> footers = source.getElements().stream()
                     .filter(e -> ElementType.FOOTER.name().equals(e.getType()))
@@ -203,7 +202,7 @@ class PdfLayoutParserTest {
                 cs.showText("This is body paragraph text");
                 cs.endText();
             }
-            ParseSource source = parser.parse(PdfParserTestFixture.save(doc));
+            ParseSource source = parser.parseMarked(PdfParserTestFixture.save(doc));
 
             assertTrue(source.getElements().stream()
                     .filter(e -> ElementType.PARAGRAPH.name().equals(e.getType()))
@@ -227,7 +226,7 @@ class PdfLayoutParserTest {
      */
     @Test
     void bodyLineEqualToHeaderTextShouldStayInBody() throws Exception {
-        ParseSource source = parser.parse(pages.buildPages(List.of(List.of(), List.of()),
+        ParseSource source = parser.parseMarked(pages.buildPages(List.of(List.of(), List.of()),
                 "XX Project Header", "XX Project Header"));
 
         List<ParseElement> headers = source.getElements().stream()
@@ -246,7 +245,7 @@ class PdfLayoutParserTest {
      */
     @Test
     void bottomNumberOnSinglePageShouldStayInBody() throws Exception {
-        ParseSource source = parser.parse(pages.buildPages(
+        ParseSource source = parser.parseMarked(pages.buildPages(
                 List.of(List.of(PdfLayoutPageFixture.bottomNumber("2024", 100))), null, "Body text"));
 
         assertEquals(0, source.getElements().stream()
@@ -262,7 +261,7 @@ class PdfLayoutParserTest {
      */
     @Test
     void pageNumberShouldRequireSamePositionAcrossPages() throws Exception {
-        ParseSource source = parser.parse(pages.buildPages(List.of(
+        ParseSource source = parser.parseMarked(pages.buildPages(List.of(
                 List.of(PdfLayoutPageFixture.bottomNumber("1", 290)),
                 List.of(PdfLayoutPageFixture.bottomNumber("2", 290))), null, "Body text"));
 
@@ -279,7 +278,7 @@ class PdfLayoutParserTest {
      */
     @Test
     void pageNumberAtDifferentPositionsShouldStayInBody() throws Exception {
-        ParseSource source = parser.parse(pages.buildPages(List.of(
+        ParseSource source = parser.parseMarked(pages.buildPages(List.of(
                 List.of(PdfLayoutPageFixture.bottomNumber("1", 500)),
                 List.of(PdfLayoutPageFixture.bottomNumber("2", 100))), null, "Body text"));
 
@@ -298,7 +297,7 @@ class PdfLayoutParserTest {
      */
     @Test
     void multipleNumbersOnOnePageShouldNotAbortOtherPages() throws Exception {
-        ParseSource source = parser.parse(pages.buildPages(List.of(
+        ParseSource source = parser.parseMarked(pages.buildPages(List.of(
                 List.of(PdfLayoutPageFixture.bottomNumber("10", 100),
                         PdfLayoutPageFixture.bottomNumber("20", 400)),
                 List.of(PdfLayoutPageFixture.bottomNumber("2", 290)),
@@ -321,7 +320,7 @@ class PdfLayoutParserTest {
      */
     @Test
     void multipleBottomNumbersOnSamePageShouldNotBePageNumbers() throws Exception {
-        ParseSource source = parser.parse(pages.buildPages(List.of(
+        ParseSource source = parser.parseMarked(pages.buildPages(List.of(
                 List.of(PdfLayoutPageFixture.bottomNumber("10", 100),
                         PdfLayoutPageFixture.bottomNumber("20", 400))), null, "Body text"));
 
@@ -338,7 +337,7 @@ class PdfLayoutParserTest {
      */
     @Test
     void twoColumnPageShouldReadByColumnAndNotBecomeTable() throws Exception {
-        ParseSource source = parser.parse(pages.buildTwoColumnPage());
+        ParseSource source = parser.parseMarked(pages.buildTwoColumnPage());
 
         List<String> paragraphs = source.getElements().stream()
                 .filter(e -> ElementType.PARAGRAPH.name().equals(e.getType()))
@@ -356,7 +355,7 @@ class PdfLayoutParserTest {
      */
     @Test
     void spanningHeadingShouldSplitBandsInTwoColumnPage() throws Exception {
-        ParseSource source = parser.parse(pages.buildSpanningHeadingPage());
+        ParseSource source = parser.parseMarked(pages.buildSpanningHeadingPage());
 
         List<String> paragraphs = source.getElements().stream()
                 .filter(e -> ElementType.PARAGRAPH.name().equals(e.getType()))

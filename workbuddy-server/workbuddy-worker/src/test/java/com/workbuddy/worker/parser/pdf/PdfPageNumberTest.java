@@ -7,6 +7,9 @@ import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.layout.ProjectionPageLayoutAnalyzer;
+import com.workbuddy.worker.structure.craft.HeaderFooterDetector.BandRules;
+import com.workbuddy.worker.structure.craft.HeaderFooterMarker;
+import com.workbuddy.worker.testkit.PropertiesFixtures;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -19,22 +22,21 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
-import com.workbuddy.worker.testkit.PropertiesFixtures;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 页码判定的内容空洞度门限：贴正文的页底数字行按正文处理，与正文留出空白的才按页码。
+ * 页码判定（组装侧标注）：贴正文的页底数字行按正文处理，与正文留出空白且跨页同址的才标页码。
  */
 class PdfPageNumberTest {
 
     private final PdfBoxDocumentParser parser =
             new PdfBoxDocumentParser(new ProjectionPageLayoutAnalyzer());
 
-    /** 页底数字行紧贴上方正文（与正文间无空白）→ 留在正文，不判页码（{@code bottomNumberTouchingBodyShouldStayInBody}）。 */
+    /** 页底数字行紧贴上方正文（与正文间无空白）→ 留在正文，不标页码（{@code bottomNumberTouchingBodyShouldStayInBody}）。 */
     @Test
     void bottomNumberTouchingBodyShouldStayInBody() throws Exception {
-        ParseSource source = parser.parse(context(buildBodyTouchingNumbers(), PropertiesFixtures.parse()));
+        ParseSource source = mark(buildBodyTouchingNumbers(), rules());
 
         assertEquals(List.of(), footerTexts(source), () -> "footers=" + footerTexts(source));
         assertTrue(bodyTexts(source).stream().anyMatch(text -> text.contains("2024")),
@@ -43,25 +45,36 @@ class PdfPageNumberTest {
                 () -> "paragraphs=" + bodyTexts(source));
     }
 
-    /** 页底数字行与上方正文留出空白（孤立在页脚区）→ 判页码（{@code isolatedBottomNumberShouldBePageNumber}）。 */
+    /** 页底数字行与上方正文留出空白（孤立在页脚区）→ 标页码（{@code isolatedBottomNumberShouldBePageNumber}）。 */
     @Test
     void isolatedBottomNumberShouldBePageNumber() throws Exception {
-        ParseSource source = parser.parse(context(buildIsolatedNumbers(), PropertiesFixtures.parse()));
+        ParseSource source = mark(buildIsolatedNumbers(), rules());
 
         assertEquals(List.of("1", "2"), footerTexts(source), () -> "footers=" + footerTexts(source));
     }
 
-    /** 空洞度比例上收到配置：比例放大后同一份文档不再判页码（{@code isolationRatioShouldComeFromProperties}）。 */
+    /** 空洞度比例决定标注：比例放大后同一份文档不再标页码（{@code isolationRatioShouldDriveMarking}）。 */
     @Test
-    void isolationRatioShouldComeFromProperties() throws Exception {
-        ParseProperties properties = PropertiesFixtures.parse();
-        properties.setPageNumberIsolationRatio(100.0);
+    void isolationRatioShouldDriveMarking() throws Exception {
+        BandRules strict = new BandRules(0.08, 0.08, 2, 2, 5.0, 100.0);
 
-        ParseSource source = parser.parse(context(buildIsolatedNumbers(), properties));
+        ParseSource source = mark(buildIsolatedNumbers(), strict);
 
         assertEquals(List.of(), footerTexts(source), () -> "footers=" + footerTexts(source));
         assertTrue(bodyTexts(source).stream().anyMatch(text -> text.contains("1")),
                 () -> "paragraphs=" + bodyTexts(source));
+    }
+
+    /** 默认判定阈值（配置面） */
+    private BandRules rules() {
+        return PropertiesFixtures.structure().headerFooterRules();
+    }
+
+    /** 解析 + 组装侧标注 */
+    private ParseSource mark(byte[] data, BandRules rules) {
+        ParseSource source = parser.parse(context(data, PropertiesFixtures.parse()));
+        HeaderFooterMarker.mark(List.of(source), rules);
+        return source;
     }
 
     private List<String> footerTexts(ParseSource source) {

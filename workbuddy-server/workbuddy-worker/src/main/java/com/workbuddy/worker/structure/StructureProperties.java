@@ -1,5 +1,7 @@
 package com.workbuddy.worker.structure;
 
+import com.workbuddy.worker.structure.craft.HeaderFooterDetector;
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -70,4 +72,82 @@ public class StructureProperties {
 
     /** 重复判定：按需重建的 bigram 集合缓存条数上限（内存有界；退化场景减少重复重建） */
     private int repeatSetCacheSize;
+
+    /** 页眉页脚判定：同文本重复出现的最小单元数（按不同单元计） */
+    private int runningTextMinPages;
+
+    /** 页码判定：跨单元同址判定的横向中心容差（pt） */
+    private double pageNumberXTolerance;
+
+    /** 页码判定：跨单元同址成组所需的最少单元数 */
+    private int pageNumberMinPages;
+
+    /** 页码判定：内容空洞度——页码行与其正上方最近正文行之间的空白下限（行高倍数） */
+    private double pageNumberIsolationRatio;
+
+    /** 页眉候选区域：单元顶部高度占比 */
+    private double headerAreaRatio;
+
+    /** 页脚候选区域：单元底部高度占比 */
+    private double footerAreaRatio;
+
+    /**
+     * 页眉页脚带判定阈值。
+     *
+     * @return 判定阈值
+     */
+    public HeaderFooterDetector.BandRules headerFooterRules() {
+        return new HeaderFooterDetector.BandRules(headerAreaRatio, footerAreaRatio, runningTextMinPages,
+                pageNumberMinPages, pageNumberXTolerance, pageNumberIsolationRatio);
+    }
+
+    /**
+     * 启动期校验页眉页脚阈值（配置面是唯一基线，越界必须在启动时报错而不是运行期静默）。
+     */
+    @PostConstruct
+    void validate() {
+        requireAtLeast("running-text-min-pages", runningTextMinPages, 2);
+        requireNonNegative("page-number-xtolerance", pageNumberXTolerance);
+        requireAtLeast("page-number-min-pages", pageNumberMinPages, 2);
+        requirePositive("page-number-isolation-ratio", pageNumberIsolationRatio);
+        requireRatio("header-area-ratio", headerAreaRatio);
+        requireRatio("footer-area-ratio", footerAreaRatio);
+        if (headerAreaRatio + footerAreaRatio >= 1) {
+            fail("header-area-ratio/footer-area-ratio", "两者之和必须小于 1",
+                    headerAreaRatio + footerAreaRatio);
+        }
+    }
+
+    /** 整数下限校验 */
+    private void requireAtLeast(String key, int value, int min) {
+        if (value < min) {
+            fail(key, "不得小于 " + min, value);
+        }
+    }
+
+    /** 非负校验 */
+    private void requireNonNegative(String key, double value) {
+        if (value < 0) {
+            fail(key, "不得为负", value);
+        }
+    }
+
+    /** 正数校验 */
+    private void requirePositive(String key, double value) {
+        if (value <= 0) {
+            fail(key, "必须大于 0", value);
+        }
+    }
+
+    /** 比例校验（0, 1) 区间） */
+    private void requireRatio(String key, double value) {
+        if (value <= 0 || value >= 1) {
+            fail(key, "必须在 (0, 1) 区间", value);
+        }
+    }
+
+    /** 抛出带配置键的启动失败 */
+    private void fail(String key, String rule, Object value) {
+        throw new IllegalStateException("knowledge.structure." + key + " " + rule + "，当前值=" + value);
+    }
 }

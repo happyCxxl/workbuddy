@@ -6,16 +6,11 @@ import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
-import com.workbuddy.worker.structure.craft.HeaderFooterKeys;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.page.BlockClassifyStep;
 import com.workbuddy.worker.parser.pdf.page.BlockRenderStep;
-import com.workbuddy.worker.parser.pdf.page.BodyLineStep;
 import com.workbuddy.worker.parser.pdf.page.DuplicateTableStep;
 import com.workbuddy.worker.parser.pdf.page.ElementIdStep;
-import com.workbuddy.worker.parser.pdf.page.FooterAppendStep;
-import com.workbuddy.worker.parser.pdf.page.FooterCollectStep;
-import com.workbuddy.worker.parser.pdf.page.HeaderBandStep;
 import com.workbuddy.worker.parser.pdf.page.ImageStep;
 import com.workbuddy.worker.parser.pdf.page.PageContext;
 import com.workbuddy.worker.parser.pdf.page.PagePipeline;
@@ -34,14 +29,10 @@ public final class PageAssemblyStep
 
     private final CapabilityRegistry capabilityRegistry;
     private final PagePipeline pagePipeline = new PagePipeline(List.of(
-            new HeaderBandStep(),
-            new FooterCollectStep(),
-            new BodyLineStep(),
             new RegionStep(),
             new ReadingOrderStep(),
             new BlockClassifyStep(),
             new BlockRenderStep(),
-            new FooterAppendStep(),
             new ImageStep(),
             new DuplicateTableStep(),
             new ElementIdStep(),
@@ -60,13 +51,12 @@ public final class PageAssemblyStep
      * 逐页装配输入。
      *
      * @param extracted 逐页提取结果（含单元集合）
-     * @param keys 页眉/页脚键
      * @param loaded 已加载文档
      * @param context 解析上下文
      * @param source 解析结果（元素、事实与能力直接记在该结果上）
      */
-    public record Input(ExtractedDocument extracted, HeaderFooterKeys keys,
-                        LoadedPdf loaded, ParseContext context, ParseSource source) {
+    public record Input(ExtractedDocument extracted, LoadedPdf loaded, ParseContext context,
+                        ParseSource source) {
     }
 
     /**
@@ -94,7 +84,7 @@ public final class PageAssemblyStep
             for (PageContent page : extracted.store().readWindow(from)) {
                 context.getCancellationToken().throwIfCancelled();
                 ParseUnitResult unit = units.get(page.pageNo() - 1);
-                PageContext pageContext = new PageContext(page, unit, input.keys(), properties,
+                PageContext pageContext = new PageContext(page, unit, properties,
                         capabilityRegistry, context, renderer, fileId, source);
                 pagePipeline.run(pageContext);
                 source.getElements().addAll(pageContext.getElements());

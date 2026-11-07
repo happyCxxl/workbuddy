@@ -3,22 +3,21 @@ package com.workbuddy.worker.parser.pdf.pipeline;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.enums.parse.UnitType;
 import com.workbuddy.worker.parser.ParseContext;
-import com.workbuddy.worker.structure.craft.HeaderFooterKeys;
 
 import java.io.IOException;
 
 /**
- * PDF 文档流水线：按固定顺序执行加载、逐页提取、跨页页眉/页脚、逐页装配与结果组装。
+ * PDF 文档流水线：按固定顺序执行加载、逐页提取、逐页装配与结果组装。
  *
  * <p>顺序写在字段与 {@link #run(ParseContext)} 里，不用运行期排序；资源由 try-with-resources 关闭。
- * 产出按单元组织（每页一个单元）：元素、行摘要、单元指标与页尺寸都挂在单元上。
+ * 产出按单元组织（每页一个单元）：元素、行摘要、单元指标与页尺寸都挂在单元上；
+ * 页眉页脚属文档级判定，由组装环节按单元行摘要识别。
  */
 public final class PdfDocumentPipeline {
 
     private final String provider;
     private final DocumentLoadStep load;
     private final PageExtractionStep extract;
-    private final HeaderFooterStep headerFooter;
     private final PageAssemblyStep assemble;
 
     /**
@@ -27,15 +26,13 @@ public final class PdfDocumentPipeline {
      * @param provider 解析提供方标识（能力名 + 版本）
      * @param load 文档加载步骤
      * @param extract 逐页提取步骤
-     * @param headerFooter 跨页页眉/页脚步骤
      * @param assemble 逐页装配步骤
      */
     public PdfDocumentPipeline(String provider, DocumentLoadStep load, PageExtractionStep extract,
-                               HeaderFooterStep headerFooter, PageAssemblyStep assemble) {
+                               PageAssemblyStep assemble) {
         this.provider = provider;
         this.load = load;
         this.extract = extract;
-        this.headerFooter = headerFooter;
         this.assemble = assemble;
     }
 
@@ -54,9 +51,7 @@ public final class PdfDocumentPipeline {
                 source.setUnitType(UnitType.PAGE);
                 source.setUnits(extracted.units());
                 source.summarizeUnits();
-                HeaderFooterKeys keys = headerFooter.execute(
-                        new HeaderFooterStep.Input(extracted.units(), context));
-                assemble.execute(new PageAssemblyStep.Input(extracted, keys, loaded, context, source));
+                assemble.execute(new PageAssemblyStep.Input(extracted, loaded, context, source));
                 return source;
             }
         }

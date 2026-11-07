@@ -8,7 +8,6 @@ import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.pdf.extract.PdfPageExtractor;
 import com.workbuddy.worker.parser.pdf.layout.PageLayoutAnalyzer;
 import com.workbuddy.worker.parser.pdf.pipeline.DocumentLoadStep;
-import com.workbuddy.worker.parser.pdf.pipeline.HeaderFooterStep;
 import com.workbuddy.worker.parser.pdf.pipeline.PageAssemblyStep;
 import com.workbuddy.worker.parser.pdf.pipeline.PageExtractionStep;
 import com.workbuddy.worker.parser.pdf.pipeline.PdfDocumentPipeline;
@@ -62,7 +61,6 @@ public class PdfBoxDocumentParser implements DocumentParserPort {
         this.pipeline = new PdfDocumentPipeline(CAPABILITY + "-" + CAPABILITY_VERSION,
                 new DocumentLoadStep(),
                 new PageExtractionStep(pageExtractor),
-                new HeaderFooterStep(),
                 new PageAssemblyStep(capabilityRegistry));
     }
 

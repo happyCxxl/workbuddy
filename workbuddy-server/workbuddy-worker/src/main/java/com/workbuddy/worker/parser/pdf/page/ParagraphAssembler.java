@@ -15,7 +15,7 @@ import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
 import java.util.List;
 
 /**
- * 段落与页眉/页脚元素组装：只负责把行变成元素，不决定段落边界。
+ * 段落元素组装：只负责把行变成元素，不决定段落边界。
  */
 public final class ParagraphAssembler {
 
@@ -82,35 +82,6 @@ public final class ParagraphAssembler {
         element.setFont(font);
         element.setTocCandidate(lines.stream().anyMatch(PageLine::tocCandidate));
         element.setProvenance(new Provenance(fileId, charRangePath(page, lines)));
-        return element;
-    }
-
-    /**
-     * 页眉/页脚元素：文本 + 页码 + 包围盒 + 区域溯源。
-     *
-     * @param type HEADER / FOOTER
-     * @param text 元素文本
-     * @param area 区域溯源
-     * @param pageNo 页码
-     * @param line 来源行
-     * @param fileId 文件 ID
-     * @param geometry 页几何
-     * @return 页眉/页脚元素
-     */
-    public static ParseElement bandElement(ElementType type, String text, String area,
-                                           int pageNo, PageLine line, String fileId,
-                                           PdfPageGeometry geometry) {
-        ParseElement element = ParseElement.of(type);
-        element.setText(text);
-        element.setPage(pageNo);
-        element.setBbox(geometry.toViewport(line.x(), line.y(), line.width(), line.height()));
-        element.setDisplayBBox(visibleLineBBox(line, geometry));
-        FontInfo font = new FontInfo();
-        font.setName(line.fontName());
-        font.setSize(line.fontSize());
-        font.setBold(line.bold());
-        element.setFont(font);
-        element.setProvenance(new Provenance(fileId, area));
         return element;
     }
 

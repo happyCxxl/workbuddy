@@ -26,7 +26,7 @@ public final class ImageStep implements PageStep {
      */
     @Override
     public Set<String> requires() {
-        return Set.of("footer-append");
+        return Set.of("block-render");
     }
 
     /**

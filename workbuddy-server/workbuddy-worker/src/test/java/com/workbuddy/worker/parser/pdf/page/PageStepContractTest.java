@@ -2,22 +2,18 @@ package com.workbuddy.worker.parser.pdf.page;
 
 import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.BBox;
-import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.capability.LayoutRegion;
 import com.workbuddy.common.domain.parse.capability.LayoutResult;
 import com.workbuddy.common.domain.parse.capability.PageImage;
 import com.workbuddy.common.domain.parse.capability.ProviderContext;
 import com.workbuddy.common.domain.parse.signal.PageMetric;
-import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.capability.LayoutProvider;
 import com.workbuddy.worker.parser.capability.StructuredOcrProvider;
 import com.workbuddy.worker.parser.capability.TableStructureProvider;
-import com.workbuddy.worker.structure.craft.HeaderFooterDetector;
-import com.workbuddy.worker.structure.craft.HeaderFooterKeys;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
@@ -29,14 +25,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 页面步骤契约：页眉/页脚只收带内命中行，区域按线框归组，阅读顺序无能力时不变、有能力时按模型顺序。
+ * 页面步骤契约：区域按线框归组，阅读顺序无能力时不变、有能力时按模型顺序。
  */
 class PageStepContractTest {
 
@@ -47,47 +42,6 @@ class PageStepContractTest {
     private static final double[] ROWS = {200, 300, 380};
 
     /**
-     * 守护 {@code headerBandShouldOnlyEmitInBand}：页眉带内命中键的行产 HEADER，正文行不产。
-     */
-    @Test
-    void headerBandShouldOnlyEmitInBand() {
-        PageContext context = context(page(List.of(
-                line("Report", 100, 42, List.of()),
-                line("Body text", 100, 200, List.of()))),
-                new HeaderFooterKeys(Set.of("Report"),
-                        new HeaderFooterDetector.FooterKeys(Set.of(), List.of())));
-
-        new HeaderBandStep().apply(context);
-
-        assertEquals(1, context.getElements().size(), () -> "elements=" + context.getElements());
-        ParseElement header = context.getElements().getFirst();
-        assertEquals(ElementType.HEADER.name(), header.getType());
-        assertEquals("Report", header.getText());
-        assertEquals("pdf#top-area", header.getProvenance().getPath());
-    }
-
-    /**
-     * 守护 {@code footerCollectShouldOnlyStageInBand}：页底带内命中页脚键的行暂存为 FOOTER，正文行不暂存。
-     */
-    @Test
-    void footerCollectShouldOnlyStageInBand() {
-        PageContext context = context(page(List.of(
-                line("Body text", 100, 700, List.of()),
-                line("Footer", 100, 800, List.of()))),
-                new HeaderFooterKeys(Set.of(),
-                        new HeaderFooterDetector.FooterKeys(Set.of("Footer"), List.of())));
-
-        new FooterCollectStep().apply(context);
-
-        assertEquals(1, context.getFooterElements().size(),
-                () -> "footers=" + context.getFooterElements());
-        ParseElement footer = context.getFooterElements().getFirst();
-        assertEquals(ElementType.FOOTER.name(), footer.getType());
-        assertEquals("Footer", footer.getText());
-        assertEquals("pdf#bottom-area", footer.getProvenance().getPath());
-    }
-
-    /**
      * 守护 {@code regionStepShouldGroupBodyLinesByRegion}：正文行按中心落入线框区域，
      * 区域内行按 y 排序。
      */
@@ -96,8 +50,7 @@ class PageStepContractTest {
         List<PageLine> lines = new ArrayList<>();
         lines.add(line("lower", 80, 345, List.of()));
         lines.add(line("upper", 80, 305, List.of()));
-        PageContext context = context(gridPage(lines),
-                new HeaderFooterKeys(Set.of(), new HeaderFooterDetector.FooterKeys(Set.of(), List.of())));
+        PageContext context = context(gridPage(lines));
         context.setBodyLines(lines);
 
         new RegionStep().apply(context);
@@ -116,8 +69,7 @@ class PageStepContractTest {
     void readingOrderShouldKeepGeometryWithoutCapability() {
         List<PageLine> body = List.of(line("first", 100, 100, List.of()),
                 line("second", 100, 300, List.of()));
-        PageContext context = context(page(body),
-                new HeaderFooterKeys(Set.of(), new HeaderFooterDetector.FooterKeys(Set.of(), List.of())));
+        PageContext context = context(page(body));
         context.setBodyLines(body);
 
         new ReadingOrderStep().apply(context);
@@ -134,12 +86,11 @@ class PageStepContractTest {
                 List.of(new Token("left", 100, 120), new Token("right", 300, 320)));
         PageLine bottom = line("bottom", 100, 300,
                 List.of(new Token("left", 100, 120), new Token("right", 300, 320)));
-        PageContext context = context(page(List.of(top, bottom)),
-                new HeaderFooterKeys(Set.of(), new HeaderFooterDetector.FooterKeys(Set.of(), List.of())));
+        PageContext context = context(page(List.of(top, bottom)));
         context.setBodyLines(List.of(top, bottom));
         context.getSource().setCapabilities(new ArrayList<>());
 
-        PageContext capable = new PageContext(context.getPage(), context.getUnit(), context.getKeys(),
+        PageContext capable = new PageContext(context.getPage(), context.getUnit(),
                 properties(), layoutRegistry(), parseContext(properties()), null, "F-1",
                 ParseSource.nativeSource("test"));
         capable.setBodyLines(List.of(top, bottom));
@@ -192,9 +143,9 @@ class PageStepContractTest {
     }
 
     /** 构造页面工作区（无能力、无渲染器）。 */
-    private static PageContext context(PageContent page, HeaderFooterKeys keys) {
+    private static PageContext context(PageContent page) {
         ParseProperties properties = properties();
-        return new PageContext(page, PageUnitFixtures.of(page), keys, properties, null,
+        return new PageContext(page, PageUnitFixtures.of(page), properties, null,
                 parseContext(properties), null, "F-1", ParseSource.nativeSource("test"));
     }
 

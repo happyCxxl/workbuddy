@@ -44,13 +44,6 @@ knowledge:
     character-spacing-floor-ratio: 0.12
     word-gap-ratio: 0.15
     character-spacing-gap-share: 0.75
-    # 页眉页脚与页码判定
-    running-text-min-pages: 2
-    page-number-xtolerance: 5.0
-    page-number-min-pages: 2
-    page-number-isolation-ratio: 1.5
-    header-area-ratio: 0.08
-    footer-area-ratio: 0.08
     # 表格：线网格覆盖比例、列支持度与容差、行带与行归并、假表门限、续表与表头判定
     table-line-cover-ratio: 0.6
     table-column-support-ratio: 0.5

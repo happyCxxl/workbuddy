@@ -29,7 +29,7 @@ class PdfLineFragmentMergeTest {
      */
     @Test
     void splitFragmentsShouldMerge() throws Exception {
-        ParseSource source = parser.parse(buildSplitFragmentsPage());
+        ParseSource source = parser.parseMarked(buildSplitFragmentsPage());
 
         assertEquals(2, count(source, ElementType.HEADER), () -> "headers=" + source.getElements());
         assertEquals(2, count(source, ElementType.FOOTER), () -> "footers=" + source.getElements());
@@ -47,7 +47,7 @@ class PdfLineFragmentMergeTest {
      */
     @Test
     void shadedTableShouldStayDetected() throws Exception {
-        ParseSource source = parser.parse(buildShadedTablePage());
+        ParseSource source = parser.parseMarked(buildShadedTablePage());
         assertEquals(2, count(source, ElementType.TABLE), () -> "tables=" + source.getElements());
     }
 
@@ -56,7 +56,7 @@ class PdfLineFragmentMergeTest {
      */
     @Test
     void narrowGutterTwoColumnsShouldStaySeparate() throws Exception {
-        ParseSource source = parser.parse(buildNarrowTwoColumnPage());
+        ParseSource source = parser.parseMarked(buildNarrowTwoColumnPage());
         List<String> paragraphs = texts(source, ElementType.PARAGRAPH);
         int left = indexOf(paragraphs, "Left narrow first line");
         int right = indexOf(paragraphs, "Right narrow first line");
@@ -69,7 +69,7 @@ class PdfLineFragmentMergeTest {
      */
     @Test
     void twoColumnWithTableShouldKeepColumnsAndTable() throws Exception {
-        ParseSource source = parser.parse(buildTwoColumnWithTable());
+        ParseSource source = parser.parseMarked(buildTwoColumnWithTable());
         List<String> paragraphs = texts(source, ElementType.PARAGRAPH);
         int left = indexOf(paragraphs, "Left column first line here");
         int right = indexOf(paragraphs, "Right column first line here");

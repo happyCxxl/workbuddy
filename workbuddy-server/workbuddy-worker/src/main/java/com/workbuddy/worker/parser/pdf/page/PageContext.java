@@ -7,7 +7,6 @@ import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
 import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
-import com.workbuddy.worker.structure.craft.HeaderFooterKeys;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.model.Region;
@@ -37,12 +36,6 @@ public final class PageContext {
      *
      */
     private final ParseUnitResult unit;
-    /**
-     * -- GETTER --
-     *  返回页眉页脚识别键。
-     *
-     */
-    private final HeaderFooterKeys keys;
     /**
      * -- GETTER --
      *  返回解析阈值配置。
@@ -86,12 +79,6 @@ public final class PageContext {
      *
      */
     private final List<ParseElement> elements = new ArrayList<>();
-    /**
-     * -- GETTER --
-     *  返回暂存的页脚元素。
-     *
-     */
-    private final List<ParseElement> footerElements = new ArrayList<>();
 
     /**
      * -- SETTER --
@@ -101,7 +88,7 @@ public final class PageContext {
      *
      */
     @Setter
-    private List<PageLine> bodyLines = List.of();
+    private List<PageLine> bodyLines;
     /**
      * -- SETTER --
      *  设置线框区域。
@@ -144,7 +131,6 @@ public final class PageContext {
      *
      * @param page 页内容
      * @param unit 所属单元（行摘要与尺寸）
-     * @param keys 页眉/页脚键
      * @param properties 解析配置
      * @param capabilityRegistry 能力注册表
      * @param parseContext 解析上下文
@@ -152,19 +138,19 @@ public final class PageContext {
      * @param fileId 文件 ID
      * @param source 解析结果（步骤把元素、事实与能力直接记在该结果上）
      */
-    public PageContext(PageContent page, ParseUnitResult unit, HeaderFooterKeys keys,
+    public PageContext(PageContent page, ParseUnitResult unit,
                        ParseProperties properties,
                        CapabilityRegistry capabilityRegistry, ParseContext parseContext,
                        PdfPageImageRenderer renderer, String fileId, ParseSource source) {
         this.page = page;
         this.unit = unit;
-        this.keys = keys;
         this.properties = properties;
         this.capabilityRegistry = capabilityRegistry;
         this.parseContext = parseContext;
         this.renderer = renderer;
         this.fileId = fileId;
         this.source = source;
+        this.bodyLines = page.lines();
     }
 
 }

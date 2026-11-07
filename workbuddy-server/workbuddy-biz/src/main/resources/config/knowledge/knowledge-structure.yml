@@ -23,6 +23,16 @@ knowledge:
     font-backed-size-ratio: 1.05
     # 字号/加粗标题规则比例：字号 ≥ 文档中位数 × 该值才成标题
     font-signal-size-ratio: 1.15
+    # 页眉页脚判定：同文本重复出现的最小单元数（按不同单元计）
+    running-text-min-pages: 2
+    # 页码判定：跨单元同址的横向中心容差（pt）与成组最少单元数
+    page-number-xtolerance: 5.0
+    page-number-min-pages: 2
+    # 页码判定：与正上方正文行之间的空白下限（行高倍数）
+    page-number-isolation-ratio: 1.5
+    # 页眉/页脚候选区域：单元顶部/底部高度占比
+    header-area-ratio: 0.08
+    footer-area-ratio: 0.08
     # 页首判定阈值（pt）：表格 bbox.y 低于该值视为页首
     page-top-threshold: 50.0
     # 标题候选短句长度上限（防编号误判）

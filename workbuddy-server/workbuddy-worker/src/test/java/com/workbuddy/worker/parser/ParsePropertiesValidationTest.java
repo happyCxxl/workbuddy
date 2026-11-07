@@ -70,20 +70,6 @@ class ParsePropertiesValidationTest {
     }
 
     /**
-     * 守护 {@code headerFooterOverlapShouldFail}：页眉页脚区域之和达到 1 启动失败。
-     */
-    @Test
-    void headerFooterOverlapShouldFail() {
-        ParseProperties properties = PropertiesFixtures.parse();
-        properties.setHeaderAreaRatio(0.6);
-        properties.setFooterAreaRatio(0.6);
-
-        IllegalStateException error = assertThrows(IllegalStateException.class, properties::validate);
-
-        assertTrue(error.getMessage().contains("header-area-ratio"), () -> "message=" + error.getMessage());
-    }
-
-    /**
      * 守护 {@code zeroDisableRulesShouldPass}：允许 0 的计数门槛可关闭规则。
      */
     @Test

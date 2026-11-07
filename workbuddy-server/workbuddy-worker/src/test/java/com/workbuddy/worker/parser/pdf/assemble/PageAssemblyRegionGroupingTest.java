@@ -7,8 +7,6 @@ import com.workbuddy.common.domain.parse.signal.PageMetric;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
-import com.workbuddy.worker.structure.craft.HeaderFooterDetector;
-import com.workbuddy.worker.structure.craft.HeaderFooterKeys;
 import com.workbuddy.worker.parser.pdf.model.CharInfo;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
@@ -16,12 +14,8 @@ import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
 import com.workbuddy.worker.parser.pdf.model.Segment;
 import com.workbuddy.worker.parser.pdf.page.BlockClassifyStep;
 import com.workbuddy.worker.parser.pdf.page.BlockRenderStep;
-import com.workbuddy.worker.parser.pdf.page.BodyLineStep;
 import com.workbuddy.worker.parser.pdf.page.DuplicateTableStep;
 import com.workbuddy.worker.parser.pdf.page.ElementIdStep;
-import com.workbuddy.worker.parser.pdf.page.FooterAppendStep;
-import com.workbuddy.worker.parser.pdf.page.FooterCollectStep;
-import com.workbuddy.worker.parser.pdf.page.HeaderBandStep;
 import com.workbuddy.worker.parser.pdf.page.ImageStep;
 import com.workbuddy.worker.parser.pdf.page.PageContext;
 import com.workbuddy.worker.parser.pdf.page.PagePipeline;
@@ -34,7 +28,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -77,18 +70,13 @@ class PageAssemblyRegionGroupingTest {
 
         PageContent page = page(lines);
         PageContext context = new PageContext(page, PageUnitFixtures.of(page),
-                new HeaderFooterKeys(Set.of(), new HeaderFooterDetector.FooterKeys(Set.of(), List.of())),
                 properties(), null, parseContext(properties()), null, "F-1",
                 ParseSource.nativeSource("test"));
         new PagePipeline(List.of(
-                new HeaderBandStep(),
-                new FooterCollectStep(),
-                new BodyLineStep(),
                 new RegionStep(),
                 new ReadingOrderStep(),
                 new BlockClassifyStep(),
                 new BlockRenderStep(),
-                new FooterAppendStep(),
                 new ImageStep(),
                 new DuplicateTableStep(),
                 new ElementIdStep(),

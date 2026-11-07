@@ -29,6 +29,7 @@ import com.workbuddy.worker.structure.DocumentAssemblerPort;
 import com.workbuddy.worker.structure.craft.ContinuationOutcome;
 import com.workbuddy.worker.structure.craft.DedupMerger;
 import com.workbuddy.worker.structure.craft.ElementNormalizer;
+import com.workbuddy.worker.structure.craft.HeaderFooterMarker;
 import com.workbuddy.worker.structure.craft.MarkOutcome;
 import com.workbuddy.worker.structure.craft.MergeOutcome;
 import com.workbuddy.worker.structure.craft.NormalizeOutcome;
@@ -89,6 +90,12 @@ public class AssemblerPipeline implements DocumentAssemblerPort {
         context.setSourceFileType(parseResult.getFile().getMimeType());
         log.info("===> AssemblerPipeline 开始组装, taskId={}, fileResultId={}, mimeType={}",
                 context.getTaskId(), context.getFileResultId(), context.getSourceFileType());
+
+        // 页眉页脚标注：文档级判定，解析只按正文产出元素
+        if (NullUtil.isNotNull(context.getProperties())) {
+            int marked = HeaderFooterMarker.mark(parseResult.getSources(), context.getProperties().headerFooterRules());
+            log.info("===> AssemblerPipeline 页眉页脚标注, taskId={}, marked={}", context.getTaskId(), marked);
+        }
 
         // ① 元素标准化
         StepLogInfo normalizeLog = StepLogHelper.begin(StructureStepName.NORMALIZE.value());
