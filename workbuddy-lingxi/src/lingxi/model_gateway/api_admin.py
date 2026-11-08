@@ -171,6 +171,18 @@ async def test_model(model_id: int, _admin: AdminDep) -> dict[str, object]:
                 prompt_key="ocr_lines",
                 page_limit=1,
             )
+        elif model.capability == "LAYOUT":
+            await service.ocr(
+                request_id=f"test-{model_id}",
+                source="model.test",
+                capability="LAYOUT",
+                model_id=model_id,
+                data=base64.b64decode(OCR_PROBE_PNG),
+                mime_type="image/png",
+                prompt_key="layout_analyze",
+                schema_key="layout",
+                page_limit=1,
+            )
         else:
             await service.rerank(
                 request_id=f"test-{model_id}",

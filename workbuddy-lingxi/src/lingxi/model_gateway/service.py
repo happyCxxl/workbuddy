@@ -372,8 +372,12 @@ async def ocr(
     prompt_params: Mapping[str, str] | None = None,
     schema_key: str | None = None,
     page_limit: int,
+    capability: str = "OCR",
 ) -> tuple[OcrOutput, CallMeta]:
-    """OCR：提示词与 schema 均按业务键统一管理（lingxi/prompts/、lingxi/schemas/），渲染/加载后走分层机制。"""
+    """图片能力：提示词与 schema 均按业务键统一管理（lingxi/prompts/、lingxi/schemas/），渲染/加载后走分层机制。
+
+    能力名决定候选模型池：文字识别走 OCR，版面分析走 LAYOUT（两者熔断与路由互不影响）。
+    """
     prompt = render_prompt(prompt_key, **(prompt_params or {}))
     schema = load_schema(schema_key) if schema_key else None
     constraints = {"schema": schema}
@@ -390,7 +394,7 @@ async def ocr(
             mechanism=mechanism,
         )
 
-    result, meta = await _run("OCR", request_id, source, model_id, constraints, call)
+    result, meta = await _run(capability, request_id, source, model_id, constraints, call)
     return result, meta  # type: ignore[return-value]
 
 

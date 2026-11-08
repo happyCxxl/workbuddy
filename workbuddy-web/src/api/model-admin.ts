@@ -13,7 +13,7 @@ export interface ModelVendor {
   enabled: boolean;
 }
 
-export type ModelCapability = 'CHAT' | 'EMBEDDING' | 'OCR' | 'RERANK';
+export type ModelCapability = 'CHAT' | 'EMBEDDING' | 'OCR' | 'LAYOUT' | 'RERANK';
 
 /** 模型：厂商 + 模型名 + 能力 */
 export interface GatewayModel {

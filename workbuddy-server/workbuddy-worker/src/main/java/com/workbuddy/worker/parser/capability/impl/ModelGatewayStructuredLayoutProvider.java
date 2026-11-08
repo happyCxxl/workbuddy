@@ -46,8 +46,8 @@ public class ModelGatewayStructuredLayoutProvider implements LayoutProvider {
             return null;
         }
         String requestId = "parse-layout-" + ctx.getTaskId() + "-p" + page.getPage();
-        OcrResponse response = modelGatewayClient.ocrLines(requestId, "parse.layout", image, "image/png",
-                SCENARIO.promptKey(), Map.of(), SCENARIO.schemaKey(), 1);
+        OcrResponse response = modelGatewayClient.layoutAreas(requestId, "parse.layout", image, "image/png",
+                SCENARIO.promptKey(), Map.of(), SCENARIO.schemaKey());
         return toResult(response);
     }
 

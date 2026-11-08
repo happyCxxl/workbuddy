@@ -73,11 +73,11 @@ class OcrPayload(BaseModel):
 
 
 class OcrCall(BaseModel):
-    """OCR 调用。"""
+    """图片能力调用（文字识别 / 版面分析共用同一端点，能力名决定候选模型）。"""
 
     request_id: str
     source: str
-    capability: Literal["OCR"] = "OCR"
+    capability: Literal["OCR", "LAYOUT"] = "OCR"
     model_id: int | None = None
     payload: OcrPayload
 
@@ -192,6 +192,7 @@ async def ocr(call: OcrCall, _auth: None = Depends(require_internal)) -> dict[st
         result, meta = await service.ocr(
             request_id=call.request_id,
             source=call.source,
+            capability=call.capability,
             model_id=call.model_id,
             data=data,
             mime_type=call.payload.mime_type,

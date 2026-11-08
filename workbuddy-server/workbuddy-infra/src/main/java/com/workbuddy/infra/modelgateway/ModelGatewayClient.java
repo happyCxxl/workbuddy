@@ -89,6 +89,43 @@ public class ModelGatewayClient {
     public OcrResponse ocrLines(String requestId, String source, byte[] image, String mimeType,
                                 String promptKey, Map<String, Object> promptParams,
                                 String schemaKey, int pdfPageLimit) {
+        return OcrResponse.from(post(OCR_PATH, requestId, source, "OCR",
+                imagePayload(image, mimeType, promptKey, promptParams, schemaKey, pdfPageLimit)));
+    }
+
+    /**
+     * 版面分析：与文字识别共用图片端点与入参格式，能力名不同（LAYOUT）以便网关按独立模型池与熔断路由。
+     *
+     * @param requestId    调用追踪 ID
+     * @param source       调用来源标识
+     * @param image        图片字节
+     * @param mimeType     图片 MIME
+     * @param promptKey    业务提示词键（网关侧模板）
+     * @param promptParams 提示词占位符参数（可空）
+     * @param schemaKey    业务 schema 键（网关 schemas 目录）
+     * @return 模型原文与结构化字段
+     */
+    public OcrResponse layoutAreas(String requestId, String source, byte[] image, String mimeType,
+                                   String promptKey, Map<String, Object> promptParams,
+                                   String schemaKey) {
+        return OcrResponse.from(post(OCR_PATH, requestId, source, "LAYOUT",
+                imagePayload(image, mimeType, promptKey, promptParams, schemaKey, 1)));
+    }
+
+    /**
+     * 图片能力入参：文字识别与版面分析共用同一 payload 结构。
+     *
+     * @param image        图片字节
+     * @param mimeType     图片 MIME
+     * @param promptKey    业务提示词键
+     * @param promptParams 提示词占位符参数
+     * @param schemaKey    业务 schema 键
+     * @param pdfPageLimit PDF 输入页数上限
+     * @return 能力 payload
+     */
+    private Map<String, Object> imagePayload(byte[] image, String mimeType, String promptKey,
+                                             Map<String, Object> promptParams, String schemaKey,
+                                             int pdfPageLimit) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("file_base64", Base64.getEncoder().encodeToString(image));
         payload.put("mime_type", mimeType);
@@ -96,7 +133,7 @@ public class ModelGatewayClient {
         payload.put("prompt_params", promptParams);
         payload.put("schema_key", schemaKey);
         payload.put("pdf_page_limit", pdfPageLimit);
-        return OcrResponse.from(post(OCR_PATH, requestId, source, "OCR", payload));
+        return payload;
     }
 
     /**

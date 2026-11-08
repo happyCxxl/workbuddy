@@ -157,6 +157,28 @@ class ModelGatewayClientTest {
     }
 
     /**
+     * layoutAreas：与文字识别同端点，capability 记为 LAYOUT（网关按独立模型池路由）。
+     */
+    @Test
+    void layoutAreasSendsLayoutCapability() {
+        nextResponse.set("{\"code\":0,\"data\":{\"text\":\"t\",\"pages\":1,"
+                + "\"fields\":{\"layout_areas\":[{\"type\":\"text\",\"bbox\":[1,2,3,4]}]},\"meta\":{}}}");
+
+        OcrResponse response = new ModelGatewayClient(properties)
+                .layoutAreas("rid-5", "parse.layout", new byte[] {9}, "image/png",
+                        "layout_analyze", Map.of(), "layout");
+
+        assertEquals("LAYOUT", capturedBody.get().get("capability"));
+        assertEquals("parse.layout", capturedBody.get().get("source"));
+        Map<?, ?> payload = (Map<?, ?>) capturedBody.get().get("payload");
+        assertEquals("layout_analyze", payload.get("prompt_key"));
+        assertEquals("layout", payload.get("schema_key"));
+        assertEquals(1.0, payload.get("pdf_page_limit"));
+        assertNotNull(response.fields());
+        assertEquals(1, ((List<?>) response.fields().get("layout_areas")).size());
+    }
+
+    /**
      * 网关不可达（连接拒绝）：按 MODEL_UNREACHABLE 归一。
      */
     @Test

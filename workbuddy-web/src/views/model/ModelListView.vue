@@ -378,6 +378,7 @@ const capabilities = [
   { value: 'CHAT', label: '对话' },
   { value: 'EMBEDDING', label: '向量化' },
   { value: 'OCR', label: '文字识别' },
+  { value: 'LAYOUT', label: '版面分析' },
   { value: 'RERANK', label: '重排' },
 ];
 
