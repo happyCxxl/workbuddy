@@ -54,10 +54,13 @@ async def test_stream_all_candidates_fail(fake_server: tuple[Settings, list[dict
     assert exc_info.value.error.code == 60201
 
 
-async def test_structured_degrades_to_flash(fake_server: tuple[Settings, list[dict[str, object]]]) -> None:
+async def test_structured_degrades_to_flash(
+    fake_server: tuple[Settings, list[dict[str, object]]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """结构化任务 pro 持续失败 → 降级 flash 成功。"""
     settings, captured = fake_server
-    result = await LlmGateway(settings).structured("fail_pro 请输出", Sample)
+    monkeypatch.setattr("lingxi.domain.llm.gateway.render_prompt", lambda prompt_key, **params: "fail_pro 请输出")
+    result = await LlmGateway(settings).structured("test_structured", Sample)
     assert result == Sample(name="可乐", score=1)
     assert any(c.get("model") == "deepseek-flash" for c in captured)
 
