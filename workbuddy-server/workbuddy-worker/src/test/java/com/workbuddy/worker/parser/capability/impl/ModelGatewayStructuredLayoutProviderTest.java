@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * 版面分析模型网关实现单测：字节缺失返回 null、区域映射与像素→pt 换算、形态错误归一。
+ * 版面分析模型网关实现单测：字节缺失返回 null、区域映射与像素→pt 换算、形态错误归一（JAVA-TEST-011）。
  */
 @ExtendWith(MockitoExtension.class)
 class ModelGatewayStructuredLayoutProviderTest {
@@ -47,6 +47,7 @@ class ModelGatewayStructuredLayoutProviderTest {
 
     /**
      * 页图字节缺失：返回 null，不发模型调用。
+     * <p>守护 {@link ModelGatewayStructuredLayoutProvider#analyze} 的缺字节短路；改为空调用网关时失败。
      */
     @Test
     void analyzeWithoutBytesReturnsNull() {
@@ -62,6 +63,7 @@ class ModelGatewayStructuredLayoutProviderTest {
 
     /**
      * 正常响应：区域类型与置信度原样，bbox 像素→pt（dpi 144 → ÷2），阅读顺序按输出序，模型名取 meta。
+     * <p>守护 {@link ModelGatewayStructuredLayoutProvider#analyze} 的映射约定；区域顺序、bbox 换算或模型名取值变化时失败。
      */
     @Test
     void analyzeMapsRegionsAndConvertsPixelsToPt() {
@@ -93,6 +95,7 @@ class ModelGatewayStructuredLayoutProviderTest {
 
     /**
      * 响应缺 layout_areas：按 MODEL_SERVER_ERROR 抛出。
+     * <p>守护错误码 {@code MODEL_SERVER_ERROR}；缺 layout_areas 不再拒绝时失败。
      */
     @Test
     void analyzeFailsWhenLayoutAreasMissing() {

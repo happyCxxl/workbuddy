@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * 模型网关客户端单测：本地 HttpServer 充当网关，守护信封组装、鉴权头、错误归一与响应直译。
+ * 模型网关客户端单测：本地 HttpServer 充当网关，守护信封组装、鉴权头、错误归一与响应直译（JAVA-TEST-011）。
  */
 class ModelGatewayClientTest {
 
@@ -80,6 +80,7 @@ class ModelGatewayClientTest {
 
     /**
      * embed 成功路径：信封字段、鉴权头与 payload 原样发出，vectors 按序直译返回。
+     * <p>守护 {@link ModelGatewayClient#embed} 的请求信封与响应直译；信封字段或向量顺序变化时失败。
      */
     @Test
     void embedSendsEnvelopeAndParsesVectors() {
@@ -102,6 +103,7 @@ class ModelGatewayClientTest {
 
     /**
      * 网关 code≠0：按 MODEL_SERVER_ERROR 归一，message 透传。
+     * <p>守护错误码 {@code MODEL_SERVER_ERROR}；归一码或 message 透传策略变化时失败。
      */
     @Test
     void embedFailureCodeNonZeroMapsToServerError() {
@@ -116,6 +118,7 @@ class ModelGatewayClientTest {
 
     /**
      * 网关 code=0 但缺 data：按 MODEL_SERVER_ERROR 归一。
+     * <p>守护错误码 {@code MODEL_SERVER_ERROR}；缺 data 不再拒绝时失败。
      */
     @Test
     void embedMissingDataMapsToServerError() {
@@ -129,6 +132,7 @@ class ModelGatewayClientTest {
 
     /**
      * ocrLines：图片字节以 base64 进 file_base64，text/fields/pages/meta 直译返回。
+     * <p>守护 {@link ModelGatewayClient#ocrLines} 的入参映射与响应直译；base64、schema 或字段直译变化时失败。
      */
     @Test
     void ocrLinesSendsBase64AndParsesFields() {
@@ -158,6 +162,7 @@ class ModelGatewayClientTest {
 
     /**
      * layoutAreas：与文字识别同端点，capability 记为 LAYOUT（网关按独立模型池路由）。
+     * <p>守护 {@link ModelGatewayClient#layoutAreas} 的 LAYOUT 能力路由；并入 OCR 模型池时失败。
      */
     @Test
     void layoutAreasSendsLayoutCapability() {
@@ -180,6 +185,7 @@ class ModelGatewayClientTest {
 
     /**
      * 网关不可达（连接拒绝）：按 MODEL_UNREACHABLE 归一。
+     * <p>守护错误码 {@code MODEL_UNREACHABLE}；连接拒绝不再归一或码值变化时失败。
      */
     @Test
     void unreachableGatewayMapsToUnreachable() throws IOException {
