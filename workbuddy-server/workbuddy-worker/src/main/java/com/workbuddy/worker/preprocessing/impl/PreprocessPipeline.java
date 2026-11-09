@@ -124,6 +124,10 @@ public class PreprocessPipeline implements PreprocessorPort {
                     RuleOutcome ruleOutcome = rule.apply(view, ruleContext);
                     stat.nanos += System.nanoTime() - startedNanos;
                     if (ruleOutcome.isMatched()) {
+                        if (NullUtil.isNull(ruleOutcome.getConfidence())) {
+                            // 规则未上报置信度：按轨迹动作占比兜底（MANUAL_REVIEW 之外的动作数 / 总轨迹数）
+                            ruleOutcome.setConfidence(RuleOutcome.confidenceOf(ruleOutcome.getTraces()));
+                        }
                         stat.matched++;
                         stat.changed += ruleOutcome.getChangedCount();
                         stat.warnings += countManualReview(ruleOutcome.getTraces());
