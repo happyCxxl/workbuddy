@@ -52,7 +52,7 @@
       "status": "已复核",
       "reviewed": "2026-11-04",
       "baseline": "b884e056",
-      "note": "复核 /file-results/* 接口组；解析资产改为 URL 下发，不新增字节读取接口"
+      "note": "复核 /knowledge-files/* 接口组；解析资产改为 URL 下发，不新增字节读取接口"
     },
     "08": {
       "status": "已复核",

@@ -58,7 +58,9 @@ public class ParseTaskRunner {
     private final FileProperties fileProperties;
     private final StepLogPersistence stepLogPersistence;
 
-    /** 执行中的解析任务取消令牌（taskId → token） */
+    /**
+     * 执行中的解析任务取消令牌（taskId → token）
+     */
     private final Map<Long, CancellationToken> runningTokens = new ConcurrentHashMap<>();
 
     /**
@@ -77,21 +79,24 @@ public class ParseTaskRunner {
             // 查询上传的文件记录结果
             WbFileResult fileResult = fileResultDbService.getById(task.getFileResultId());
             if (NullUtil.isNull(fileResult)) {
-                finishFailed(taskId, PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
+                TaskRunnerSupport.finishFailed(pipelineTaskDbService, taskId,
+                        PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
                         "知识库文件不存在: " + task.getFileResultId());
                 return;
             }
             // 获取上传的源文件
             WbSourceFile sourceFile = sourceFileDbService.getById(fileResult.getSourceFileId());
             if (NullUtil.isNull(sourceFile)) {
-                finishFailed(taskId, PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
+                TaskRunnerSupport.finishFailed(pipelineTaskDbService, taskId,
+                        PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
                         "来源文件不存在: " + fileResult.getSourceFileId());
                 return;
             }
             // 校验文件大小上限 <= 100M
             if (NullUtil.isNotNull(sourceFile.getFileSize()) && fileProperties.getMaxSize() > 0
                     && sourceFile.getFileSize() > fileProperties.getMaxSize()) {
-                finishFailed(taskId, PipelineTaskErrorCode.PARSE_TOO_LARGE.name(),
+                TaskRunnerSupport.finishFailed(pipelineTaskDbService, taskId,
+                        PipelineTaskErrorCode.PARSE_TOO_LARGE.name(),
                         "文件过大: " + sourceFile.getFileSize() + " 字节，超过上限 "
                                 + fileProperties.getMaxSize() + " 字节");
                 return;
@@ -108,6 +113,7 @@ public class ParseTaskRunner {
             context.setCancellationToken(token);
             context.setAssetSink(ParseAssetSink.of(fileStorage, fileAssetArchive, fileResult.getId()));
 
+            // 验证文件流是否可以打开
             InputStream in;
             try {
                 in = fileStorage.open(sourceFile.getFileId());
@@ -115,17 +121,20 @@ public class ParseTaskRunner {
                 if (e.getErrorCode() == ErrorCode.STORAGE_TYPE_MISMATCH) {
                     throw e;
                 }
-                finishFailed(taskId, PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
+                TaskRunnerSupport.finishFailed(pipelineTaskDbService, taskId,
+                        PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
                         e.getErrorCode() == ErrorCode.FILE_NOT_FOUND
                                 ? "文件不存在或不可读（提交后可能被删除）"
                                 : "无法打开文件流: " + TaskRunnerSupport.failureText(e));
                 return;
             } catch (Exception e) {
-                finishFailed(taskId, PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
+                TaskRunnerSupport.finishFailed(pipelineTaskDbService, taskId,
+                        PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
                         "无法打开文件流: " + TaskRunnerSupport.failureText(e));
                 return;
             }
 
+            // 正式跑文件解析环节
             ParseOutcome outcome;
             try (InputStream closeable = in) {
                 context.setInputStream(closeable);
@@ -137,9 +146,11 @@ public class ParseTaskRunner {
                     this::finishFailed);
         } catch (Exception e) {
             log.error("===> ParseTaskRunner 解析任务执行异常, taskId={}", taskId, e);
-            finishFailed(taskId, TaskRunnerSupport.failureCode(e, PipelineTaskErrorCode.PARSE_FAILED),
+            TaskRunnerSupport.finishFailed(pipelineTaskDbService, taskId,
+                    TaskRunnerSupport.failureCode(e, PipelineTaskErrorCode.PARSE_FAILED),
                     TaskRunnerSupport.failureText(e));
         } finally {
+            //
             runningTokens.remove(taskId);
         }
     }
@@ -156,7 +167,9 @@ public class ParseTaskRunner {
         }
     }
 
-    /** 写产物存储 + 阶段产物引用 + 子步骤记录（成功/PARTIAL_SUCCESS 路径） */
+    /**
+     * 写产物存储 + 阶段产物引用 + 子步骤记录（成功/PARTIAL_SUCCESS 路径）
+     */
     private void persistProduct(WbPipelineTask task, WbFileResult fileResult, ParseOutcome outcome) {
         WbPipelineTask current = pipelineTaskDbService.getById(task.getId());
         if (NullUtil.isNull(current) || !PipelineTaskStatus.RUNNING.name().equals(current.getStatus())) {
@@ -172,7 +185,9 @@ public class ParseTaskRunner {
                 product.getArtifactId());
     }
 
-    /** 失败终态回写：统一留痕（带 taskId + 错误码）。 */
+    /**
+     * 失败终态回写：统一留痕（带 taskId + 错误码）。
+     */
     private void finishFailed(Long taskId, String errorCode, String errorMsg) {
         log.warn("===> ParseTaskRunner 解析任务失败, taskId={}, errorCode={}, errorMsg={}",
                 taskId, errorCode, errorMsg);

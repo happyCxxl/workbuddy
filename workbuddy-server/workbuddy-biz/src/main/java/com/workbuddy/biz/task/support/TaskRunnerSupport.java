@@ -204,6 +204,8 @@ public final class TaskRunnerSupport {
      */
     public static void finishFailed(WbPipelineTaskDbService pipelineTaskDbService, Long taskId,
                                     String errorCode, String errorMsg) {
+        log.warn("===> ParseTaskRunner 解析任务失败, taskId={}, errorCode={}, errorMsg={}",
+                taskId, errorCode, errorMsg);
         pipelineTaskDbService.finish(taskId, PipelineTaskStatus.FAILED, errorCode,
                 StrUtil.isBlank(errorMsg) ? null : StrUtil.maxLength(errorMsg, MAX_ERROR_MESSAGE_LENGTH));
     }
