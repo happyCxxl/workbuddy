@@ -23,6 +23,12 @@ tools/**/*.sh text eol=lf
 # 判为格式不符——与改动内容无关，只与检出环境有关。钉死 LF 后索引、工作区与校验口径一致。
 workbuddy-web/** text eol=lf
 
+# golden 快照钉死 LF：core.autocrlf=true 会把测试资源里的 golden JSON 检出成 CRLF，
+# 而解析产物（hutool JSONUtil）恒为 LF，逐行/逐字节对拍必挂——与内容无关、只随检出环境漂移。
+# 钉 LF 后任何平台检出都与产物一致，GOLDEN_UPDATE 重录也不会被 autocrlf 再翻回 CRLF。
+workbuddy-server/**/pdf-golden/*.json text eol=lf
+workbuddy-server/**/structure-golden/*.json text eol=lf
+
 # 二进制资源不做行尾转换：上面的 `workbuddy-web/** text eol=lf` 会把 workbuddy-web/public 下的 PNG / ICO 也当文本，
 # core.autocrlf=true 在入库时把恰好出现的 0D 0A 字节对压成 0A —— 索引里的图少一两个字节，
 # 检出后直接打不开（favicon 三件套命中过：1324 → 1323 字节，Pillow 报 UnidentifiedImageError）。
