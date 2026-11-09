@@ -8,6 +8,7 @@ import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
 import com.workbuddy.worker.parser.pdf.model.PdfPageGeometry;
 import com.workbuddy.worker.parser.pdf.page.ParagraphAssembler;
+import com.workbuddy.worker.parser.pdf.page.table.TableSupport;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

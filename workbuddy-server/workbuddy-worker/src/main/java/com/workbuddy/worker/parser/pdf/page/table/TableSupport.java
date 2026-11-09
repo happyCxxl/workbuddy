@@ -1,4 +1,4 @@
-package com.workbuddy.worker.parser.pdf.assemble;
+package com.workbuddy.worker.parser.pdf.page.table;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.ParseElement;
@@ -9,14 +9,16 @@ import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
+import com.workbuddy.worker.parser.pdf.page.ParagraphAssembler;
 
 import java.util.List;
 
 /**
  * 表格两条路径（线框 / 文本）共用的门限与降级留痕：
  * 假表门限判定，以及规则失败时「出 TABLE 事实 + 区域降级为段落」的统一口径。
+ * 降级是回退链的终止动作，只在所有策略都未产出表格时由 {@link TableBuildChain} 执行。
  */
-final class TableSupport {
+public final class TableSupport {
 
     private TableSupport() {
     }
@@ -71,17 +73,25 @@ final class TableSupport {
         return colon && (value.length() <= 12 || value.endsWith("：") || value.endsWith(":"));
     }
 
-    /** 表格规则失败：出 TABLE 事实并把区域降级为段落 */
-    static void degrade(List<PageLine> lines, PageContent page, List<ParseElement> elements,
-                        ParseFactSink source, String fileId, String evidence) {
+    /**
+     * 表格规则失败：出 TABLE 事实并把区域降级为段落。
+     *
+     * @param lines    区域行块
+     * @param page     所在页
+     * @param elements 产物元素（追加降级段落）
+     * @param source   页面局部解析结果（追加 TABLE 事实）
+     * @param fileId   文件 ID
+     * @param evidence 失败证据文案
+     */
+    public static void degrade(List<PageLine> lines, PageContent page, List<ParseElement> elements,
+                               ParseFactSink source, String fileId, String evidence) {
         ParseFact fact = new ParseFact();
         fact.setType(SignalType.TABLE);
         fact.setLevel(ParseFactLevel.WARN);
         fact.setRegion("page " + page.pageNo());
         fact.setEvidence(evidence);
         source.getFacts().add(fact);
-        ParseElement paragraph = com.workbuddy.worker.parser.pdf.page.ParagraphAssembler
-                .addParagraph(lines, elements, fileId, page);
+        ParseElement paragraph = ParagraphAssembler.addParagraph(lines, elements, fileId, page);
         if (paragraph != null) {
             paragraph.setDegraded(true);
             paragraph.setDegradeReason(evidence);

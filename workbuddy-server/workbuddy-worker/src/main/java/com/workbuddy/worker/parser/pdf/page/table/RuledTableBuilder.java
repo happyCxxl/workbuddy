@@ -1,21 +1,16 @@
-package com.workbuddy.worker.parser.pdf.assemble;
+package com.workbuddy.worker.parser.pdf.page.table;
 
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseFactSink;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
-import com.workbuddy.worker.parser.capability.CapabilityRegistry;
-import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
 import com.workbuddy.worker.parser.pdf.detect.RuleGrid;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
 import com.workbuddy.worker.parser.pdf.extract.PdfGeometry;
 import com.workbuddy.worker.parser.pdf.model.Grid;
 import com.workbuddy.worker.parser.pdf.model.PageContent;
 import com.workbuddy.worker.parser.pdf.model.PageLine;
-import com.workbuddy.worker.parser.pdf.model.Region;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -23,24 +18,29 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 有边框表（线网格路径）：线网格定行列与合并跨度，格内文本按格矩形归属
- * （行中心落带 + 字符落列区间）；网格拟合不出来时退回文本路径。
+ * 有边框表策略（线网格路径）：线网格定行列与合并跨度，格内文本按格矩形归属
+ * （行中心落带 + 字符落列区间）；网格拟合不出来时按 {@link Failure#GRID_UNFIT}
+ * 交回退链重新分类走文本路径，空白/表单形态按不可成表降级。
  */
-public final class RuledTableBuilder {
+public final class RuledTableBuilder implements TableBuilder {
 
-    private RuledTableBuilder() {
+    RuledTableBuilder() {
     }
 
-    /** 线框路径结算：线网格 → 合并格 → 格内文本 → 表元素（保底退回无边框路径） */
-    static void flush(List<PageLine> run, Region region, PageContent page, List<ParseElement> elements,
-                      ParseFactSink source, String fileId, ParseProperties properties,
-                      CapabilityRegistry capabilityRegistry, ParseContext context,
-                      PdfPageImageRenderer renderer) {
-        Grid grid = RuleGrid.fit(page.segments(), region, properties.getTableLineCoverRatio());
+    /**
+     * 线框路径结算：线网格 → 合并格 → 格内文本 → 表元素。
+     *
+     * @param input 构建输入（region 为所属线框区域）
+     * @return 构建结果
+     */
+    @Override
+    public Result build(Input input) {
+        List<PageLine> run = input.lines();
+        PageContent page = input.context().getPage();
+        ParseProperties properties = input.context().getProperties();
+        Grid grid = RuleGrid.fit(page.segments(), input.region(), properties.getTableLineCoverRatio());
         if (NullUtil.isNull(grid)) {
-            TextRunRenderer.flush(run, page, elements, source, fileId, properties, capabilityRegistry,
-                    context, renderer);
-            return;
+            return Result.failed(Failure.GRID_UNFIT, null);
         }
         List<CellRect> rects = mergedCells(grid);
         Map<CellRect, String> texts = new LinkedHashMap<>();
@@ -54,12 +54,10 @@ public final class RuledTableBuilder {
             rowTexts.get(rect.row()).add(text);
         }
         if (TableSupport.blankTable(rowTexts, properties)) {
-            TableSupport.degrade(run, page, elements, source, fileId, "空白率过高（疑似框线/表单区域）");
-            return;
+            return Result.failed(Failure.UNWORTHY, "空白率过高（疑似框线/表单区域）");
         }
         if (TableSupport.formLike(rowTexts)) {
-            TableSupport.degrade(run, page, elements, source, fileId, "短表单元格为标签形态（疑似表单）");
-            return;
+            return Result.failed(Failure.UNWORTHY, "短表单元格为标签形态（疑似表单）");
         }
         List<Double> rowFontSizes = new ArrayList<>();
         for (int r = 0; r < grid.rowCount(); r++) {
@@ -105,7 +103,7 @@ public final class RuledTableBuilder {
             cells.add(cell);
         }
         table.setCells(cells);
-        elements.add(table);
+        return Result.built(table);
     }
 
     /**

@@ -1,20 +1,13 @@
-package com.workbuddy.worker.parser.pdf.assemble;
+package com.workbuddy.worker.parser.pdf.page.table;
 
 import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.ParseElement;
-import com.workbuddy.common.domain.parse.ParseFactSink;
-import com.workbuddy.common.domain.parse.capability.ProviderContext;
-import com.workbuddy.common.domain.parse.capability.TableRegion;
 import com.workbuddy.common.domain.parse.signal.ParseFact;
 import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.SignalType;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
-import com.workbuddy.worker.parser.capability.CapabilityRegistry;
-import com.workbuddy.worker.parser.capability.TableCapabilityAttempt;
-import com.workbuddy.worker.parser.pdf.asset.PdfPageImageRenderer;
 import com.workbuddy.worker.parser.pdf.detect.TableAlignmentPruner;
 import com.workbuddy.worker.parser.pdf.detect.TableCandidateDetector;
 import com.workbuddy.worker.parser.pdf.extract.LineTexts;
@@ -28,14 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 无边框表（文本对齐路径）：列对齐聚类（支持度过滤）成表，格内文本按列区间归属；
- * 列对齐失败或空白率过高时出 TABLE 事实并把块降级为段落。
+ * 无边框表策略（文本对齐路径）：列对齐聚类（支持度过滤）成表，格内文本按列区间归属；
+ * 列对齐失败交模型策略，空白率过高/正文分栏/表单形态按不可成表降级为段落。
  */
-public final class TextTableBuilder {
+public final class TextTableBuilder implements TableBuilder {
 
-    private static final byte[] EMPTY_BYTES = new byte[0];
-
-    private TextTableBuilder() {
+    TextTableBuilder() {
     }
 
     /** 剪枝留痕：记出被剔除的行数（疑似混入正文），表格仍按保留的行产出 */
@@ -48,51 +39,16 @@ public final class TextTableBuilder {
     }
 
     /**
-     * 规则判不出结构时的结算：先试表格结构能力（`CapabilityRegistry.table()`），
-     * 拿到可用结构就出 TABLE 元素并记补强事实；能力未给出可用结构时按内置口径出 TABLE 事实 + 区域降级为段落，并记降级事实。
+     * 文本路径结算：列对齐聚类成表；聚类失败或空白率过高时按失败类别交回退链裁决。
+     *
+     * @param input 构建输入
+     * @return 构建结果
      */
-    private static void settleFailedTable(List<PageLine> block, PageContent page, List<ParseElement> elements,
-                                          ParseFactSink source, String fileId,
-                                          CapabilityRegistry capabilityRegistry,
-                                          LineTexts.Options lineTextOptions, String evidence,
-                                          ParseContext context, PdfPageImageRenderer renderer) {
-        TableRegion region = TableRegionSupport.of(block, page, lineTextOptions);
-        ProviderContext providerContext = new ProviderContext();
-        providerContext.setTaskId(context.getFileResultId());
-        providerContext.setAssetBytes(ref -> cropPng(page, region, renderer));
-        TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(capabilityRegistry,
-                region, page.pageNo(), providerContext);
-        source.getFacts().add(outcome.fact());
-        if (outcome.enhanced()) {
-            elements.add(outcome.table());
-            source.getCapabilities().add(outcome.usage());
-            return;
-        }
-        TableSupport.degrade(block, page, elements, source, fileId, evidence);
-    }
-
-    /** 区域裁剪图字节：渲染页图后按视口 bbox 裁剪；渲染器缺失返回空数组（真实实现按需取值，桩实现可忽略） */
-    private static byte[] cropPng(PageContent page, TableRegion region, PdfPageImageRenderer renderer) {
-        if (NullUtil.isNull(renderer) || NullUtil.isNull(region) || NullUtil.isNull(region.getBbox())) {
-            return EMPTY_BYTES;
-        }
-        java.awt.image.BufferedImage source = renderer.pageImage(page.pageNo());
-        java.awt.image.BufferedImage crop = NullUtil.isNull(source) ? null
-                : renderer.crop(source, region.getBbox(), page.geometry().viewportWidth(),
-                        page.geometry().viewportHeight());
-        byte[] png = NullUtil.isNull(crop) ? null : renderer.png(crop);
-        return NullUtil.isNull(png) ? EMPTY_BYTES : png;
-    }
-
-    /** 文本路径结算：列对齐聚类成表；失败或空白率过高则降级为段落 */
-    static void flush(List<PageLine> block, PageContent page, List<ParseElement> elements,
-                      ParseFactSink source, String fileId, ParseProperties properties,
-                      CapabilityRegistry capabilityRegistry, ParseContext context,
-                      PdfPageImageRenderer renderer) {
-        if (block.size() < 2) {
-            com.workbuddy.worker.parser.pdf.page.ParagraphAssembler.addParagraph(block, elements, fileId, page);
-            return;
-        }
+    @Override
+    public Result build(Input input) {
+        List<PageLine> block = input.lines();
+        PageContent page = input.context().getPage();
+        ParseProperties properties = input.context().getProperties();
         LineTexts.Options lineTextOptions = LineTexts.Options.of(properties);
         List<List<PageLine>> rows = groupRows(block, properties.getTableRowInnerGapShare());
         List<List<Token>> rowTokens = rows.stream()
@@ -108,25 +64,20 @@ public final class TextTableBuilder {
                 columnTolerance);
         if (columns.size() < TableCandidateDetector.MIN_TOKENS
                 || !TableCandidateDetector.enoughLinesCoverColumns(rowTokens, columns)) {
-            settleFailedTable(block, page, elements, source, fileId, capabilityRegistry,
-                    lineTextOptions, "列对齐聚类失败（疑似无边框/复杂表格）", context, renderer);
-            return;
+            return Result.failed(Failure.STRUCTURE_FAILED, "列对齐聚类失败（疑似无边框/复杂表格）");
         }
         // 假表门限：正文分栏的每列被整行文字填满，表格单元格相对列宽是稀疏的
         if (!TableCandidateDetector.sparseColumns(rowTokens, columns, properties.getTableColumnMaxFillRatio())) {
-            TableSupport.degrade(block, page, elements, source, fileId, "列内文本过密（疑似正文分栏）");
-            return;
+            return Result.failed(Failure.UNWORTHY, "列内文本过密（疑似正文分栏）");
         }
         // 对齐图剪枝：剪掉不与表格主体共享列的行（混入的正文行），剪完不足两行按规则失败结算
         List<Integer> kept = TableAlignmentPruner.keptRows(rowTokens, columns);
         if (kept.size() < rows.size()) {
-            source.getFacts().add(prunedFact(page.pageNo(), rows.size() - kept.size()));
+            input.context().getFacts().add(prunedFact(page.pageNo(), rows.size() - kept.size()));
             rows = kept.stream().map(rows::get).toList();
         }
         if (rows.size() < 2) {
-            settleFailedTable(block, page, elements, source, fileId, capabilityRegistry,
-                    lineTextOptions, "对齐图剪枝后不足两行（疑似正文）", context, renderer);
-            return;
+            return Result.failed(Failure.STRUCTURE_FAILED, "对齐图剪枝后不足两行（疑似正文）");
         }
         List<List<String>> rowTexts = new ArrayList<>();
         List<Double> rowFontSizes = new ArrayList<>();
@@ -146,12 +97,10 @@ public final class TextTableBuilder {
             rowFontSizes.add(row.stream().mapToDouble(PageLine::fontSize).average().orElse(0));
         }
         if (TableSupport.blankTable(rowTexts, properties)) {
-            TableSupport.degrade(block, page, elements, source, fileId, "空白率过高（疑似框线/表单区域）");
-            return;
+            return Result.failed(Failure.UNWORTHY, "空白率过高（疑似框线/表单区域）");
         }
         if (TableSupport.formLike(rowTexts)) {
-            TableSupport.degrade(block, page, elements, source, fileId, "短表单元格为标签形态（疑似表单）");
-            return;
+            return Result.failed(Failure.UNWORTHY, "短表单元格为标签形态（疑似表单）");
         }
         Integer headerRow = detectHeaderRow(rowTexts, rowFontSizes, properties.getTableHeaderMaxNumericRatio());
         ParseElement table = ParseElement.of(ElementType.TABLE);
@@ -182,7 +131,7 @@ public final class TextTableBuilder {
             }
         }
         table.setCells(cells);
-        elements.add(table);
+        return Result.built(table);
     }
 
     /**
@@ -254,7 +203,7 @@ public final class TextTableBuilder {
      * @return 表头行号；无表头时为 null
      */
     public static Integer detectHeaderRow(List<List<String>> rowTexts, List<Double> rowFontSizes,
-                                   double maxNumericRatio) {
+                                          double maxNumericRatio) {
         if (rowTexts.size() < 2) {
             return null;
         }

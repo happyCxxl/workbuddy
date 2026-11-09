@@ -1,13 +1,17 @@
 package com.workbuddy.worker.parser.pdf.page;
 
-import com.workbuddy.worker.parser.pdf.assemble.TextRunRenderer;
+import com.workbuddy.worker.parser.pdf.page.table.TableBuildChain;
+import com.workbuddy.worker.parser.pdf.page.table.TableBuilder;
 
 import java.util.Set;
 
 /**
- * 页面块渲染：按块顺序产出段落/表格元素，不决定块边界。
+ * 页面块渲染：按块类型做块→策略选择——段落块走段落组装，表格块交表格回退链。
  */
 public final class BlockRenderStep implements PageStep {
+
+    /** 表格回退链：无状态，跨页并发复用 */
+    private final TableBuildChain tableChain = new TableBuildChain();
 
     /**
      * 步骤名。
@@ -36,8 +40,16 @@ public final class BlockRenderStep implements PageStep {
      */
     @Override
     public void apply(PageContext context) {
-        TextRunRenderer.render(context.getBlocks(), context.getPage(), context.getElements(),
-                context, context.getFileId(), context.getProperties(),
-                context.getCapabilityRegistry(), context.getParseContext(), context.getRenderer());
+        for (PageBlock block : context.getBlocks()) {
+            switch (block) {
+                case ParagraphBlock paragraph ->
+                        ParagraphAssembler.addParagraph(paragraph.lines(), context.getElements(),
+                                context.getFileId(), context.getPage());
+                case TableBlock table ->
+                        tableChain.buildText(new TableBuilder.Input(context, table.lines(), null));
+                case RegionTableBlock region ->
+                        tableChain.buildRuled(new TableBuilder.Input(context, region.lines(), region.region()));
+            }
+        }
     }
 }
