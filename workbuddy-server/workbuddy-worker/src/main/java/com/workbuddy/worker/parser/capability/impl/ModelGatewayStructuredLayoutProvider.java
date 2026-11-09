@@ -12,7 +12,6 @@ import com.workbuddy.infra.modelgateway.ModelGatewayClient;
 import com.workbuddy.infra.modelgateway.OcrResponse;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.LayoutProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -24,13 +23,20 @@ import java.util.Map;
  * layout_areas 映射为版面区域（bbox 像素→pt，阅读顺序按模型输出序）。提示词与 schema 文案在灵犀统一管理。
  */
 @Component
-@RequiredArgsConstructor
-public class ModelGatewayStructuredLayoutProvider implements LayoutProvider {
+public class ModelGatewayStructuredLayoutProvider extends ModelGatewayStructuredProviderSupport<LayoutResult>
+        implements LayoutProvider {
 
     private static final ModelScenarioKey SCENARIO = ModelScenarioKey.LAYOUT_ANALYZE;
 
-    private final ModelGatewayClient modelGatewayClient;
-    private final ParseProperties properties;
+    /**
+     * 构造版面分析提供方。
+     *
+     * @param modelGatewayClient 模型网关客户端
+     * @param properties         解析配置
+     */
+    public ModelGatewayStructuredLayoutProvider(ModelGatewayClient modelGatewayClient, ParseProperties properties) {
+        super(modelGatewayClient, properties);
+    }
 
     /**
      * 分析页面版面：页图字节缺失返回 null（取用方走几何口径）；模型响应形态错误按 MODEL_SERVER_ERROR 抛出。
@@ -41,22 +47,26 @@ public class ModelGatewayStructuredLayoutProvider implements LayoutProvider {
      */
     @Override
     public LayoutResult analyze(PageImage page, ProviderContext ctx) {
-        byte[] image = CapabilityByteSupport.resolve(ctx, page.getImageRef());
-        if (NullUtil.isNull(image)) {
-            return null;
-        }
-        String requestId = "parse-layout-" + ctx.getTaskId() + "-p" + page.getPage();
-        OcrResponse response = modelGatewayClient.layoutAreas(requestId, "parse.layout", image, "image/png",
-                SCENARIO.promptKey(), Map.of(), SCENARIO.schemaKey());
-        return toResult(response);
+        return super.recognize(ctx, page.getImageRef(), page.getPage());
     }
 
-    /** 网关直译 → LayoutResult：区域类型与置信度原样，bbox 像素→pt（÷ dpi/72），顺序按模型输出序。 */
-    private LayoutResult toResult(OcrResponse response) {
+    @Override
+    String requestIdPrefix() {
+        return "parse-layout-";
+    }
+
+    @Override
+    OcrResponse invokeGateway(String requestId, byte[] image) {
+        return modelGatewayClient.layoutAreas(requestId, "parse.layout", image, "image/png",
+                SCENARIO.promptKey(), Map.of(), SCENARIO.schemaKey());
+    }
+
+    /** 网关直译 → LayoutResult：区域类型与置信度原样，bbox 像素→pt，顺序按模型输出序。 */
+    @Override
+    LayoutResult mapResponse(OcrResponse response, double pixelsPerPt) {
         Object rawAreas = NullUtil.isNull(response.fields()) ? null : response.fields().get("layout_areas");
         List<?> rows = rawAreas instanceof List<?> list ? list : null;
         ThrowUtil.throwIf(NullUtil.isNull(rows), ErrorCode.MODEL_SERVER_ERROR, "版面响应缺少 layout_areas");
-        double pixelsPerPt = properties.getPageImageDpi() / 72.0;
         List<LayoutRegion> regions = new ArrayList<>(rows.size());
         List<Integer> order = new ArrayList<>(rows.size());
         for (int index = 0; index < rows.size(); index++) {
@@ -77,7 +87,7 @@ public class ModelGatewayStructuredLayoutProvider implements LayoutProvider {
         LayoutResult result = new LayoutResult();
         result.setRegions(regions);
         result.setOrder(order);
-        String model = ModelResponseSupport.modelKey(response);
+        String model = modelKey(response);
         if (!NullUtil.isNull(model)) {
             result.setModel(model);
         }

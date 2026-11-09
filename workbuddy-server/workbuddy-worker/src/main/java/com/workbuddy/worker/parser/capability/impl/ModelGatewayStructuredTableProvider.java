@@ -12,7 +12,6 @@ import com.workbuddy.infra.modelgateway.ModelGatewayClient;
 import com.workbuddy.infra.modelgateway.OcrResponse;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.TableStructureProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -24,13 +23,20 @@ import java.util.Map;
  * 首个表格的行列与单元格映射为 TableResult（格 bbox 像素→pt，相对裁剪图左上）。提示词与 schema 文案在灵犀统一管理。
  */
 @Component
-@RequiredArgsConstructor
-public class ModelGatewayStructuredTableProvider implements TableStructureProvider {
+public class ModelGatewayStructuredTableProvider extends ModelGatewayStructuredProviderSupport<TableResult>
+        implements TableStructureProvider {
 
     private static final ModelScenarioKey SCENARIO = ModelScenarioKey.TABLE_STRUCTURE;
 
-    private final ModelGatewayClient modelGatewayClient;
-    private final ParseProperties properties;
+    /**
+     * 构造表格结构提供方。
+     *
+     * @param modelGatewayClient 模型网关客户端
+     * @param properties         解析配置
+     */
+    public ModelGatewayStructuredTableProvider(ModelGatewayClient modelGatewayClient, ParseProperties properties) {
+        super(modelGatewayClient, properties);
+    }
 
     /**
      * 识别表格结构：裁剪图字节缺失返回 null（取用方按规则降级）；模型响应形态错误按 MODEL_SERVER_ERROR 抛出。
@@ -41,18 +47,23 @@ public class ModelGatewayStructuredTableProvider implements TableStructureProvid
      */
     @Override
     public TableResult recognize(TableRegion region, ProviderContext ctx) {
-        byte[] image = CapabilityByteSupport.resolve(ctx, region.getImageRef());
-        if (NullUtil.isNull(image)) {
-            return null;
-        }
-        String requestId = "parse-table-" + ctx.getTaskId() + "-p" + region.getPage();
-        OcrResponse response = modelGatewayClient.ocrLines(requestId, "parse.table", image, "image/png",
-                SCENARIO.promptKey(), Map.of(), SCENARIO.schemaKey(), 1);
-        return toResult(response);
+        return super.recognize(ctx, region.getImageRef(), region.getPage());
     }
 
-    /** 网关直译 → TableResult：取首个表格，行列、跨度、文本与表头标记原样，格 bbox 像素→pt（÷ dpi/72）。 */
-    private TableResult toResult(OcrResponse response) {
+    @Override
+    String requestIdPrefix() {
+        return "parse-table-";
+    }
+
+    @Override
+    OcrResponse invokeGateway(String requestId, byte[] image) {
+        return modelGatewayClient.ocrLines(requestId, "parse.table", image, "image/png",
+                SCENARIO.promptKey(), Map.of(), SCENARIO.schemaKey(), 1);
+    }
+
+    /** 网关直译 → TableResult：取首个表格，行列、跨度、文本与表头标记原样，格 bbox 像素→pt。 */
+    @Override
+    TableResult mapResponse(OcrResponse response, double pixelsPerPt) {
         Object rawTables = NullUtil.isNull(response.fields()) ? null : response.fields().get("tables");
         List<?> tables = rawTables instanceof List<?> list ? list : null;
         ThrowUtil.throwIf(NullUtil.isNull(tables) || tables.isEmpty(), ErrorCode.MODEL_SERVER_ERROR,
@@ -64,7 +75,6 @@ public class ModelGatewayStructuredTableProvider implements TableStructureProvid
         List<?> rawCells = table.get("cells") instanceof List<?> list ? list : null;
         ThrowUtil.throwIf(NullUtil.isNull(rows) || NullUtil.isNull(cols) || NullUtil.isNull(rawCells),
                 ErrorCode.MODEL_SERVER_ERROR, "表格响应缺少 rows/cols/cells");
-        double pixelsPerPt = properties.getPageImageDpi() / 72.0;
         List<TableCell> cells = new ArrayList<>(rawCells.size());
         for (Object rawCell : rawCells) {
             Map<?, ?> cell = rawCell instanceof Map<?, ?> map ? map : null;
@@ -100,7 +110,7 @@ public class ModelGatewayStructuredTableProvider implements TableStructureProvid
         result.setRows(rows);
         result.setCols(cols);
         result.setCells(cells);
-        String model = ModelResponseSupport.modelKey(response);
+        String model = modelKey(response);
         if (!NullUtil.isNull(model)) {
             result.setModel(model);
         }

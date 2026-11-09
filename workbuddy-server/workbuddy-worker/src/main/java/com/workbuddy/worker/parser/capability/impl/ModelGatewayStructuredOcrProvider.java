@@ -12,13 +12,11 @@ import com.workbuddy.infra.modelgateway.ModelGatewayClient;
 import com.workbuddy.infra.modelgateway.OcrResponse;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.capability.StructuredOcrProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * 结构化 OCR 的模型网关实现：经 ProviderContext 的资产字节入口取页图 → 网关 ocrLines →
@@ -26,14 +24,21 @@ import java.util.function.Function;
  * 本类不感知模型名。
  */
 @Component
-@RequiredArgsConstructor
-public class ModelGatewayStructuredOcrProvider implements StructuredOcrProvider {
+public class ModelGatewayStructuredOcrProvider extends ModelGatewayStructuredProviderSupport<StructuredOcrResult>
+        implements StructuredOcrProvider {
 
     /** 业务场景键：提示词与 schema 文案在灵犀按业务统一管理，Java 侧不写死（见 ModelScenarioKey） */
     private static final ModelScenarioKey SCENARIO = ModelScenarioKey.OCR_LINES;
 
-    private final ModelGatewayClient modelGatewayClient;
-    private final ParseProperties properties;
+    /**
+     * 构造结构化 OCR 提供方。
+     *
+     * @param modelGatewayClient 模型网关客户端
+     * @param properties         解析配置
+     */
+    public ModelGatewayStructuredOcrProvider(ModelGatewayClient modelGatewayClient, ParseProperties properties) {
+        super(modelGatewayClient, properties);
+    }
 
     /**
      * 识别页面区域：页图字节缺失返回 null（管线按页记降级事实）；模型响应形态错误按 MODEL_SERVER_ERROR 抛出。
@@ -44,23 +49,26 @@ public class ModelGatewayStructuredOcrProvider implements StructuredOcrProvider 
      */
     @Override
     public StructuredOcrResult recognize(OcrRegion region, ProviderContext ctx) {
-        Function<String, byte[]> resolver = NullUtil.isNull(ctx) ? null : ctx.getAssetBytes();
-        byte[] image = NullUtil.isNull(resolver) ? null : resolver.apply(region.getImageRef());
-        if (NullUtil.isNull(image) || image.length == 0) {
-            return null;
-        }
-        String requestId = "parse-ocr-" + ctx.getTaskId() + "-p" + region.getPage();
-        OcrResponse response = modelGatewayClient.ocrLines(requestId, "parse.ocr", image, "image/png",
-                SCENARIO.promptKey(), Map.of(), SCENARIO.schemaKey(), 1);
-        return toResult(response);
+        return super.recognize(ctx, region.getImageRef(), region.getPage());
     }
 
-    /** 网关直译 → StructuredOcrResult：文本与置信度原样，bbox 像素→pt（÷ dpi/72），模型名取 meta.model_key。 */
-    private StructuredOcrResult toResult(OcrResponse response) {
+    @Override
+    String requestIdPrefix() {
+        return "parse-ocr-";
+    }
+
+    @Override
+    OcrResponse invokeGateway(String requestId, byte[] image) {
+        return modelGatewayClient.ocrLines(requestId, "parse.ocr", image, "image/png",
+                SCENARIO.promptKey(), Map.of(), SCENARIO.schemaKey(), 1);
+    }
+
+    /** 网关直译 → StructuredOcrResult：文本与置信度原样，bbox 像素→pt，模型名取 meta.model_key。 */
+    @Override
+    StructuredOcrResult mapResponse(OcrResponse response, double pixelsPerPt) {
         Object rawLines = NullUtil.isNull(response.fields()) ? null : response.fields().get("text_lines");
         List<?> rows = rawLines instanceof List<?> list ? list : null;
         ThrowUtil.throwIf(NullUtil.isNull(rows), ErrorCode.MODEL_SERVER_ERROR, "OCR 响应缺少 text_lines");
-        double pixelsPerPt = properties.getPageImageDpi() / 72.0;
         List<OcrLine> lines = new ArrayList<>(rows.size());
         for (Object rawRow : rows) {
             Map<?, ?> row = rawRow instanceof Map<?, ?> map ? map : null;
@@ -82,7 +90,7 @@ public class ModelGatewayStructuredOcrProvider implements StructuredOcrProvider 
         }
         StructuredOcrResult result = new StructuredOcrResult();
         result.setLines(lines);
-        String model = ModelResponseSupport.modelKey(response);
+        String model = modelKey(response);
         if (!NullUtil.isNull(model)) {
             result.setModel(model);
         }
