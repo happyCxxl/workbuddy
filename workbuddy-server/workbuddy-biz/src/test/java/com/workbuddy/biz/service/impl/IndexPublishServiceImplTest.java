@@ -217,7 +217,7 @@ class IndexPublishServiceImplTest {
         WbIndexVersion version = versionRow(20L, "v2", IndexVersionStatus.ONLINE.name());
         ComboSnapshot combo = comboAll();
         combo.setFileScopeMode("LIST");
-        combo.setFileResultIds(List.of(10L, 20L));
+        combo.setKnowledgeFileIds(List.of(10L, 20L));
         version.setComboSnapshot(JsonUtil.toJsonStr(combo));
         version.setBuildError("历史失败原因");
         version.setTaskId(200L);
@@ -235,7 +235,7 @@ class IndexPublishServiceImplTest {
         assertEquals(20L, vo.getId());
         assertEquals("v2", vo.getVersionNo());
         assertEquals("LIST", vo.getFileScopeMode());
-        assertEquals(List.of(10L, 20L), vo.getFileResultIds());
+        assertEquals(List.of(10L, 20L), vo.getKnowledgeFileIds());
         assertEquals(IndexShape.FULL_VECTOR, vo.getShape());
         assertEquals("chunk-hybrid-v1", vo.getChunkStrategy());
         assertEquals("embed-default-v1", vo.getEmbedStrategy());

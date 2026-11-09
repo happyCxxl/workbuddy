@@ -32,7 +32,7 @@ public enum PipelineTaskErrorCode {
     /** 文件超过解析阶段大小上限 */
     PARSE_TOO_LARGE,
 
-    /** 解析输入不可读（文件结果/来源文件缺失、对象存储打开失败） */
+    /** 解析输入不可读（知识库文件/来源文件缺失、对象存储打开失败） */
     PARSE_INPUT_UNREADABLE,
 
     /** 解析超时（看门狗/孤儿恢复判定；其他环节沿用 EXECUTOR_TIMEOUT） */

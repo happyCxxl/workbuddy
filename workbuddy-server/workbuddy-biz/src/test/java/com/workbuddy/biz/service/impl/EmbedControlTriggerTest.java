@@ -376,7 +376,7 @@ class EmbedControlTriggerTest {
     }
 
     /**
-     * 越权文件结果按 40401 拒绝。
+     * 越权知识库文件按 40401 拒绝。
      *
      * <p>守护 {@code embedDetail}：越权可读即失败。
      */

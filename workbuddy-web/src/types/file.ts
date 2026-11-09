@@ -10,8 +10,8 @@ export interface SubmitLog {
   fileId: string;
   sha256: string;
   fileName: string;
-  /** 文件结果 ID（失败时为空） */
-  fileResultId: string | null;
+  /** 知识库文件 ID（失败时为空） */
+  knowledgeFileId: string | null;
   /** 提交结果 */
   status: string;
   /** 失败原因（PASS 时为空） */

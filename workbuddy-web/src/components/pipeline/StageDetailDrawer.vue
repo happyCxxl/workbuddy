@@ -782,15 +782,15 @@ import type {
 // 环节详情抽屉：只看不改 —— 不发任何写请求，也不改链图的选中与轮询。
 const props = defineProps<{
   visible: boolean;
-  /** 当前文件结果 */
-  fileResultId: string;
+  /** 当前知识库文件 */
+  knowledgeFileId: string;
   /** 被查看的那次运行（必填：看的是"这一张卡"，不是"最新一次"） */
   taskId: string;
   /** 被查看的环节（PipelineStage 枚举名）：决定详情接口、页签、统计项与左栏形态 */
   stage: string;
   /** 文件名（头部展示与下载保存名；由页面从文件列表带进来） */
   fileName: string;
-  /** 源文件引用（原文件下载用：文件结果里的 fileId；缺失时下载按钮置灰） */
+  /** 源文件引用（原文件下载用：知识库文件里的 fileId；缺失时下载按钮置灰） */
   sourceFileId: string;
 }>();
 
@@ -934,7 +934,7 @@ const {
   onWindowResize,
 } = useSplitter({
   bodyRef: splitBodyRef,
-  fileResultId: () => props.fileResultId,
+  knowledgeFileId: () => props.knowledgeFileId,
   taskId: () => props.taskId,
   onResize: measureRenderedTexts,
 });
@@ -1635,7 +1635,7 @@ function chunkOrderOf(key: string): number | null {
 
 /** 切片页签取数的上下文：选中的文件与运行变了就按新值取，页签状态不必重建 */
 const chunkPaneContext = {
-  fileResultId: () => props.fileResultId,
+  knowledgeFileId: () => props.knowledgeFileId,
   stage: () => props.stage,
   taskId: () => props.taskId,
   pageSize: PAGE_SIZE,
@@ -1813,7 +1813,7 @@ const {
   go: goExcludedPage,
   reset: resetExcluded,
 } = useExcludedPane({
-  fileResultId: () => props.fileResultId,
+  knowledgeFileId: () => props.knowledgeFileId,
   stage: () => props.stage,
   taskId: () => props.taskId,
   pageSize: PAGE_SIZE,
@@ -2116,7 +2116,7 @@ function fieldCount(): number {
 /** 失败建议：按错误码给下一步动作（同一执行键只能跑一次，重来要么换输入要么换策略） */
 const FAIL_ADVICE: Record<string, string> = {
   PARSE_CORRUPTED:
-    '文件内容无法解析：确认文件未损坏，或用带文本层的版本重新导出后，重新提交该文件（同一份文件重新提交会产生新的文件结果）',
+    '文件内容无法解析：确认文件未损坏，或用带文本层的版本重新导出后，重新提交该文件（同一份文件重新提交会产生新的知识库文件）',
   PARSE_UNSUPPORTED_FORMAT:
     '格式不支持：请转换为 PDF / DOC / DOCX / XLS / XLSX / PPT / PPTX 后重新提交',
   PARSE_ENCRYPTED: '文件已加密：请去除密码或导出为未加密版本后重新提交',
@@ -2136,13 +2136,13 @@ const failAdvice = computed(() => {
   const code = detail.value?.errorCode ?? '';
   return (
     FAIL_ADVICE[code] ??
-    '本次运行没有产物：确认文件可用后重新提交文件（同一份文件重新提交会产生新的文件结果）'
+    '本次运行没有产物：确认文件可用后重新提交文件（同一份文件重新提交会产生新的知识库文件）'
   );
 });
 
-/** 下载入口：后端 `GET /files/{fileId}` 流式返回原文件，fileId 由页面从文件结果带进来 */
+/** 下载入口：后端 `GET /files/{fileId}` 流式返回原文件，fileId 由页面从知识库文件带进来 */
 const downloadReason = computed(() =>
-  props.sourceFileId ? '' : '这条文件结果没有可用的源文件引用，暂时下载不了',
+  props.sourceFileId ? '' : '这条知识库文件没有可用的源文件引用，暂时下载不了',
 );
 
 const canDownload = computed(() => Boolean(props.sourceFileId));
@@ -2263,7 +2263,7 @@ async function loadItems(): Promise<void> {
   itemsLoading.value = true;
   itemsError.value = '';
   try {
-    const data = await getStageContent(props.fileResultId, props.stage, {
+    const data = await getStageContent(props.knowledgeFileId, props.stage, {
       taskId: props.taskId,
       docPage: followPreview.value && previewReady.value ? previewPage.value : undefined,
       current: page.value,
@@ -2546,7 +2546,7 @@ watch(() => [props.visible, props.fileName, props.stage] as const, syncDrawerTit
 
 // 打开或切换到另一次运行时重新取数；关闭时不请求
 watch(
-  () => [props.visible, props.fileResultId, props.taskId, props.stage] as const,
+  () => [props.visible, props.knowledgeFileId, props.taskId, props.stage] as const,
   ([visible]) => {
     if (!visible) {
       // 关闭时忘掉已落位的环节，再次打开仍从默认页签开始
@@ -2583,7 +2583,7 @@ watch(
       activeTab.value = defaultTab.value;
       tabStage = props.stage;
     }
-    void getStageDetail(props.stage, props.fileResultId, props.taskId)
+    void getStageDetail(props.stage, props.knowledgeFileId, props.taskId)
       .then((data) => {
         detail.value = data;
       })

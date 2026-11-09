@@ -76,7 +76,7 @@ public class ParseTaskRunner {
             WbFileResult fileResult = fileResultDbService.getById(task.getFileResultId());
             if (NullUtil.isNull(fileResult)) {
                 finishFailed(taskId, PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
-                        "文件结果不存在: " + task.getFileResultId());
+                        "知识库文件不存在: " + task.getFileResultId());
                 return;
             }
             // 获取上传的源文件
@@ -93,12 +93,12 @@ public class ParseTaskRunner {
                                 + fileProperties.getMaxSize() + " 字节");
                 return;
             }
-            log.info("===> ParseTaskRunner 开始解析, taskId={}, fileResultId={}, fileId={}, mimeType={}",
+            log.info("===> ParseTaskRunner 开始解析, taskId={}, knowledgeFileId={}, fileId={}, mimeType={}",
                     taskId, fileResult.getId(), sourceFile.getFileId(), sourceFile.getMimeType());
 
             // 构建解析上下文
             ParseContext context = new ParseContext();
-            context.setFileResultId(fileResult.getId());
+            context.setKnowledgeFileId(fileResult.getId());
             context.setFileRef(toFileRef(sourceFile));
             context.setProperties(parseProperties);
             context.setCancellationToken(token);

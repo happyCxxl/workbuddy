@@ -32,16 +32,16 @@ public class WbPipelineProductDbServiceImpl extends InfraDbServiceImpl<WbPipelin
     }
 
     /**
-     * 按文件结果与环节取产物。
+     * 按知识库文件与环节取产物。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param stage        环节名
      * @return 产物行；没有则为 null
      */
     @Override
-    public WbPipelineProduct getByFileResultIdAndStage(Long fileResultId, String stage) {
+    public WbPipelineProduct getByFileResultIdAndStage(Long knowledgeFileId, String stage) {
         LambdaQueryWrapper<WbPipelineProduct> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbPipelineProduct::getFileResultId, fileResultId)
+        queryWrapper.eq(WbPipelineProduct::getFileResultId, knowledgeFileId)
                 .eq(WbPipelineProduct::getStage, stage)
                 .orderByDesc(WbPipelineProduct::getId)
                 .last("LIMIT 1");
@@ -51,13 +51,13 @@ public class WbPipelineProductDbServiceImpl extends InfraDbServiceImpl<WbPipelin
     /**
      * 取某文件的全部产物，按 ID 升序。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 产物列表
      */
     @Override
-    public List<WbPipelineProduct> listByFileResultId(Long fileResultId) {
+    public List<WbPipelineProduct> listByFileResultId(Long knowledgeFileId) {
         LambdaQueryWrapper<WbPipelineProduct> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbPipelineProduct::getFileResultId, fileResultId)
+        queryWrapper.eq(WbPipelineProduct::getFileResultId, knowledgeFileId)
                 .orderByAsc(WbPipelineProduct::getId);
         return list(queryWrapper);
     }

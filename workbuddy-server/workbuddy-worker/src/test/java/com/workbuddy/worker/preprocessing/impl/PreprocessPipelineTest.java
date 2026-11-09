@@ -70,7 +70,7 @@ class PreprocessPipelineTest {
         context.setDocument(document);
         context.setStrategy(strategy);
         context.setProperties(PropertiesFixtures.preprocess());
-        context.setFileResultId(10L);
+        context.setKnowledgeFileId(10L);
         context.setUpstreamProductRef(50L);
         return context;
     }
@@ -150,7 +150,7 @@ class PreprocessPipelineTest {
         assertEquals(PipelineTaskStatus.SUCCESS, outcome.getSuggestedStatus());
         PreprocessView view = outcome.getView();
         assertEquals("pv-doc-10-preproc-default-v1", view.getViewId());
-        assertEquals(10L, view.getFileResultId());
+        assertEquals(10L, view.getKnowledgeFileId());
         assertEquals(50L, view.getUpstreamProductRef());
         assertEquals("F-1", view.getSourceFileRef());
         assertEquals(9, outcome.getStepLogs().size());

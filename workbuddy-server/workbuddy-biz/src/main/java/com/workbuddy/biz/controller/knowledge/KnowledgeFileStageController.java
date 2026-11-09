@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/file-results")
+@RequestMapping("/knowledge-files")
 public class KnowledgeFileStageController {
 
     private final StageContentQueryService stageContentQueryService;
@@ -32,20 +32,20 @@ public class KnowledgeFileStageController {
      * 不传分页参数时按第 1 页 + 默认上限返回，响应里的 total 与 truncated 说明总量与是否还有。
      * docPage 按文档页收窄（原文预览与解析结果按页联动用），收窄后 total 即该页条数。
      *
-     * @param fileResultId 文件结果 ID（路径参数）
+     * @param knowledgeFileId 知识库文件 ID（路径参数）
      * @param stage        环节（白名单 PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED）
      * @param query        查询条件：taskId 可选（缺省最新任务）；docPage 可选（只取该文档页）；
      *                     status 可选（逗号分隔，只取这些处置状态）；current 从 1 起；size 为每页条数；
      *                     contentType / fallback / hasParent 可选，只对 CHUNK 生效（按类型 / 兜底 / 父子收窄）
      * @return 产物内容（当前页）
-     * @apiNote 文件结果不存在 40432；环节非法或任务不属于该文件该环节 40001
+     * @apiNote 知识库文件不存在 40432；环节非法或任务不属于该文件该环节 40001
      */
-    @GetMapping("/{fileResultId}/stage-content")
+    @GetMapping("/{knowledgeFileId}/stage-content")
     public R<StageContentVO> stageContent(
-            @PathVariable("fileResultId") Long fileResultId,
+            @PathVariable("knowledgeFileId") Long knowledgeFileId,
             @RequestParam("stage") String stage,
             StageDetailQueryDTO query) {
-        return R.ok(stageContentQueryService.stageContent(fileResultId, stage, query.getTaskId(),
+        return R.ok(stageContentQueryService.stageContent(knowledgeFileId, stage, query.getTaskId(),
                 docPageOf(query), intOrNull(query.getCurrent()), intOrNull(query.getSize()),
                 query.getStatus(), chunkFilterOf(query)));
     }

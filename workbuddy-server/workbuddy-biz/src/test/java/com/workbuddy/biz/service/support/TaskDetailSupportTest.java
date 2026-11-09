@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 /**
  * 环节详情助手单测。
  *
- * <p>守护三件事：详情骨架必须回填文件结果 ID（无任务时也要回填）、子步骤按任务映射、
+ * <p>守护三件事：详情骨架必须回填知识库文件 ID（无任务时也要回填）、子步骤按任务映射、
  * 产物公共三字段随产物行下发；无任务/无产物时留空而不是伪造。
  */
 @ExtendWith(MockitoExtension.class)
@@ -53,9 +53,9 @@ class TaskDetailSupportTest {
     }
 
     /**
-     * 有任务：回填文件结果、任务态字段与子步骤；返回传入的 VO 本身。
+     * 有任务：回填知识库文件、任务态字段与子步骤；返回传入的 VO 本身。
      *
-     * <p>守护 {@code withTask}：文件结果 ID 漏填或子步骤丢失即失败。
+     * <p>守护 {@code withTask}：知识库文件 ID 漏填或子步骤丢失即失败。
      */
     @Test
     void withTaskShouldFillSkeletonAndSteps() {
@@ -75,7 +75,7 @@ class TaskDetailSupportTest {
         StageDetailVO<StageStatsVO> result = support.withTask(vo, 10L, task);
 
         assertSame(vo, result);
-        assertEquals(10L, vo.getFileResultId());
+        assertEquals(10L, vo.getKnowledgeFileId());
         assertEquals(41L, vo.getTaskId());
         assertEquals("CHUNK", vo.getStage());
         assertEquals("SUCCESS", vo.getStatus());
@@ -84,7 +84,7 @@ class TaskDetailSupportTest {
     }
 
     /**
-     * 无任务：只回填文件结果 ID，其余留空且不查步骤日志。
+     * 无任务：只回填知识库文件 ID，其余留空且不查步骤日志。
      *
      * <p>守护 {@code withTask} 的无任务分支：空任务还查步骤会让详情多打一次库。
      */
@@ -94,7 +94,7 @@ class TaskDetailSupportTest {
 
         support.withTask(vo, 10L, null);
 
-        assertEquals(10L, vo.getFileResultId());
+        assertEquals(10L, vo.getKnowledgeFileId());
         assertNull(vo.getTaskId());
         assertNull(vo.getSteps());
         verify(stepLogDbService, never()).listByTaskId(org.mockito.ArgumentMatchers.any());

@@ -31,11 +31,11 @@ public class IndexSetServiceImpl implements IndexSetService {
     /**
      * 文件产物就绪回调。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      */
     @Override
-    public void onFileProductsReady(Long fileResultId) {
-        buildService.onFileProductsReady(fileResultId);
+    public void onFileProductsReady(Long knowledgeFileId) {
+        buildService.onFileProductsReady(knowledgeFileId);
     }
 
     /**
@@ -116,12 +116,12 @@ public class IndexSetServiceImpl implements IndexSetService {
      * 列出可构建的索引组合。
      *
      * @param knowledgeBaseId 知识库 ID
-     * @param fileResultIds   限定参与的文件结果 ID（可空）
+     * @param knowledgeFileIds   限定参与的知识库文件 ID（可空）
      * @return 组合列表
      */
     @Override
-    public List<IndexComboVO> listCombos(Long knowledgeBaseId, List<Long> fileResultIds) {
-        return comboQueryService.listCombos(knowledgeBaseId, fileResultIds);
+    public List<IndexComboVO> listCombos(Long knowledgeBaseId, List<Long> knowledgeFileIds) {
+        return comboQueryService.listCombos(knowledgeBaseId, knowledgeFileIds);
     }
 
     /**

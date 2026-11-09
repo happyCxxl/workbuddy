@@ -51,7 +51,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * 知识库文档输入用例实现：提交建档、提交记录分页、文件结果分页。
+ * 知识库文档输入用例实现：提交建档、提交记录分页、知识库文件分页。
  *
  * <p>提交链路的实现要点：
  * <ul>
@@ -136,7 +136,7 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
                 System.currentTimeMillis() - validationStart);
 
         // ④ 元数据读取也在事务外；⑤ 建档三写放进短事务（不登记任务——解析由页面触发）。
-        // 同内容重复提交各自建行：每次提交是一条独立文件结果，存储层已按 sha256 内容寻址复用字节，此处不拦截
+        // 同内容重复提交各自建行：每次提交是一条独立知识库文件，存储层已按 sha256 内容寻址复用字节，此处不拦截
         long buildStart = System.currentTimeMillis();
         FileMetadata metadata = fileStorage.metadata(request.getFileId());
         Long userId = accessSupport.currentUserId();
@@ -157,9 +157,10 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
             return inputVoAssembler.toSubmitResponse(raced, findParseTaskId(raced.getFileResultId()));
         }
 
-        log.info("===> KnowledgeBaseFileServiceImpl submit 建档完成（待手动解析）, kbId={}, fileId={}, fileResultId={},"
-                        + " 建档耗时={}ms",
-                kb.getId(), request.getFileId(), submitLog.getFileResultId(), System.currentTimeMillis() - buildStart);
+        log.info("===> KnowledgeBaseFileServiceImpl submit 建档完成（待手动解析）, kbId={}, fileId={},"
+                        + " knowledgeFileId={}, 建档耗时={}ms",
+                kb.getId(), request.getFileId(), submitLog.getFileResultId(),
+                System.currentTimeMillis() - buildStart);
         return inputVoAssembler.toSubmitResponse(submitLog, null);
     }
 
@@ -178,14 +179,14 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
     }
 
     /**
-     * 文件结果分页查询：分页取 wb_file_result，批量装配来源文件信息、存储口径
+     * 知识库文件分页查询：分页取 wb_file_result，批量装配来源文件信息、存储口径
      * 与五环节（PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED）最新任务状态。
      *
      * <p>stage 参数经 {@link StageFunnelRules#resolveUpstreamStage(String)} 做合法性校验（非法值 40001）。
      *
      * @param knowledgeBaseId 知识库 ID
      * @param query           查询条件（环节可留空，页码与页长口径见父类）
-     * @return 文件结果分页 VO（含来源文件信息、数据源与各环节状态列表）
+     * @return 知识库文件分页 VO（含来源文件信息、数据源与各环节状态列表）
      */
     @Override
     public IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDTO query) {
@@ -227,13 +228,13 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
 
         // 环节状态：列表行附各环节最新任务状态（PARSE→STRUCTURE→PREPROCESS→CHUNK→EMBED 五环节）
         List<Long> resultIds = voPage.getRecords().stream().map(FileResultVO::getId).toList();
-        // ① 每环节一次 in 查询（id 倒序；按 fileResultId 去重取首条即最新任务）
+        // ① 每环节一次 in 查询（id 倒序；按 knowledgeFileId 去重取首条即最新任务）
         List<String> statusStages = List.of(PipelineStage.PARSE.name(), PipelineStage.STRUCTURE.name(),
                 PipelineStage.PREPROCESS.name(), PipelineStage.CHUNK.name(), PipelineStage.EMBED.name());
         Map<String, Map<Long, WbPipelineTask>> stageTaskMaps = new HashMap<>();
         for (String statusStage : statusStages) {
             Map<Long, WbPipelineTask> byFileResult = resultIds.isEmpty() ? Map.of()
-                    : pipelineTaskDbService.listByFileResultIdsAndStage(resultIds, statusStage).stream()
+                    : pipelineTaskDbService.listByKnowledgeFileIdsAndStage(resultIds, statusStage).stream()
                             .collect(Collectors.toMap(WbPipelineTask::getFileResultId, Function.identity(),
                                     (first, second) -> first));
             stageTaskMaps.put(statusStage, byFileResult);
@@ -267,7 +268,7 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
     }
 
     /**
-     * 建档三写（同一事务内）：来源文件复用/新建 → 文件结果 → 提交日志。
+     * 建档三写（同一事务内）：来源文件复用/新建 → 知识库文件 → 提交日志。
      *
      * <p>调用方用 {@link TransactionTemplate} 包住本方法；提交日志撞 uk_request_id 时异常向上抛，
      * 由事务模板回滚整组写入。
@@ -350,12 +351,13 @@ public class KnowledgeBaseFileServiceImpl implements KnowledgeBaseFileService {
         }
     }
 
-    /** 查文件结果已有的 PARSE 任务 ID（幂等回放响应用；fileResultId 为空或尚无任务返回 null）。 */
-    private Long findParseTaskId(Long fileResultId) {
-        if (NullUtil.isNull(fileResultId)) {
+    /** 查知识库文件已有的 PARSE 任务 ID（幂等回放响应用；knowledgeFileId 为空或尚无任务返回 null）。 */
+    private Long findParseTaskId(Long knowledgeFileId) {
+        if (NullUtil.isNull(knowledgeFileId)) {
             return null;
         }
-        WbPipelineTask task = pipelineTaskDbService.getByFileResultIdAndStage(fileResultId, PipelineStage.PARSE.name());
+        WbPipelineTask task = pipelineTaskDbService.getByFileResultIdAndStage(knowledgeFileId,
+                PipelineStage.PARSE.name());
         return NullUtil.isNull(task) ? null : task.getId();
     }
 }

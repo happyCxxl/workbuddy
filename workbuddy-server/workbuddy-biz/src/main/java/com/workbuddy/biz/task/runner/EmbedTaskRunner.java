@@ -89,7 +89,7 @@ public class EmbedTaskRunner {
         }
         WbPipelineTask task = claimed.task();
         WbFileResult fileResult = claimed.fileResult();
-        log.info("===> EmbedTaskRunner 领取向量化任务, taskId={}, fileResultId={}",
+        log.info("===> EmbedTaskRunner 领取向量化任务, taskId={}, knowledgeFileId={}",
                 taskId, task.getFileResultId());
         try {
             // 上游切片产物：只认任务行上的显式引用，缺引用按任务失败处理
@@ -129,7 +129,7 @@ public class EmbedTaskRunner {
             context.setChunkProperties(chunkProperties);
             context.setStrategy(strategy);
             context.setProperties(embedProperties);
-            context.setFileResultId(fileResult.getId());
+            context.setKnowledgeFileId(fileResult.getId());
             context.setReuseCandidates(loadReuseCandidates(fileResult.getId(), strategy, task.getId()));
 
             EmbedOutcome outcome = embedder.embed(context);
@@ -147,13 +147,13 @@ public class EmbedTaskRunner {
     }
 
     /** 复用候选账本：同文件同策略成功集合（新→旧，回溯上限）；账本文件读取失败跳过继续（复用是优化） */
-    private List<EmbeddingSet> loadReuseCandidates(Long fileResultId, EmbedStrategy strategy, Long taskId) {
+    private List<EmbeddingSet> loadReuseCandidates(Long knowledgeFileId, EmbedStrategy strategy, Long taskId) {
         if (!strategy.cacheOn()) {
             return List.of();
         }
         List<EmbeddingSet> candidates = new ArrayList<>();
         List<WbEmbeddingSet> rows = embeddingSetDbService.listHistoryByFileResultIdAndStrategyVersion(
-                fileResultId, strategy.fullVersion(), embedProperties.getReuseBacktrackLimit());
+                knowledgeFileId, strategy.fullVersion(), embedProperties.getReuseBacktrackLimit());
         for (WbEmbeddingSet row : rows) {
             try {
                 byte[] content = fileStorage.getObject(ObjectRef.ofEmbeddingSet(row));
@@ -169,8 +169,8 @@ public class EmbedTaskRunner {
         return candidates;
     }
 
-    private Long latestChunkSetRef(Long fileResultId) {
-        WbChunkSet chunkSet = chunkSetDbService.getLatestByFileResultId(fileResultId);
+    private Long latestChunkSetRef(Long knowledgeFileId) {
+        WbChunkSet chunkSet = chunkSetDbService.getLatestByFileResultId(knowledgeFileId);
         return NullUtil.isNull(chunkSet) ? null : chunkSet.getId();
     }
 
@@ -212,7 +212,7 @@ public class EmbedTaskRunner {
         embeddingRecordDbService.saveBatch(recordRows, BATCH_SIZE);
 
         stepLogPersistence.save(task.getId(), outcome.getStepLogs());
-        log.info("===> EmbedTaskRunner 向量化完成, taskId={}, fileResultId={}, status={}, recordCount={},"
+        log.info("===> EmbedTaskRunner 向量化完成, taskId={}, knowledgeFileId={}, status={}, recordCount={},"
                         + " cachedCount={}, artifactId={}",
                 task.getId(), fileResult.getId(), outcome.getSuggestedStatus().name(),
                 embeddingSet.getRecordCount(), embeddingSet.getCachedCount(), product.getArtifactId());
@@ -231,11 +231,11 @@ public class EmbedTaskRunner {
     }
 
     /** 文件产物就绪 → 索引自动构建判定（失败不阻断向量化任务终态） */
-    private void notifyIndexSet(Long fileResultId) {
+    private void notifyIndexSet(Long knowledgeFileId) {
         try {
-            indexSetService.onFileProductsReady(fileResultId);
+            indexSetService.onFileProductsReady(knowledgeFileId);
         } catch (Exception e) {
-            log.warn("===> EmbedTaskRunner 索引自动构建回调异常, fileResultId={}", fileResultId, e);
+            log.warn("===> EmbedTaskRunner 索引自动构建回调异常, knowledgeFileId={}", knowledgeFileId, e);
         }
     }
 }

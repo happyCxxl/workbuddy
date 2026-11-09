@@ -159,7 +159,7 @@ CREATE TABLE wb_knowledge_pipeline_task
     finished_at         DATETIME(3)          DEFAULT NULL   COMMENT '结束时间',
     PRIMARY KEY (id),
     -- 执行唯一键：同一份输入 + 同一策略只能有一条任务（0 表示"没有上游"与"无策略"两档，避开 NULL 不参与唯一比较）
-    -- 键包含 stage，与应用侧 getByExecKey(fileResultId, stage, 上游, 策略) 的查询键完全对齐
+    -- 键包含 stage，与应用侧 getByExecKey(knowledgeFileId, stage, 上游, 策略) 的查询键完全对齐
     -- 知识库级 BUILD_INDEX 任务的 file_result_id 为空，NULL 不参与唯一比较，不在本约束范围内
     UNIQUE KEY uk_exec (file_result_id, stage, upstream_product_id, strategy_version_id),
     KEY idx_fr_stage (file_result_id, stage),

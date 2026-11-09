@@ -17,7 +17,7 @@ public class FullTextHit implements IndexHit {
     /** 片 ID */
     private String chunkId;
 
-    /** 文件结果 ID */
+    /** 知识库文件 ID */
     private Long documentId;
 
     /** 片类型 */

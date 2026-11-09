@@ -23,7 +23,7 @@ class ChunkSetJsonTest {
     void chunkSetShouldRoundTrip() {
         ChunkSet chunkSet = new ChunkSet();
         chunkSet.setChunkSetId("cs-doc-1-chunk-hybrid-v1");
-        chunkSet.setFileResultId(10L);
+        chunkSet.setKnowledgeFileId(10L);
         chunkSet.setDocumentId("doc-1");
         chunkSet.setStrategyVersion("chunk-hybrid-v1");
         chunkSet.setUpstreamProductRef(50L);
@@ -59,7 +59,7 @@ class ChunkSetJsonTest {
 
         assertNotNull(restored);
         assertEquals("cs-doc-1-chunk-hybrid-v1", restored.getChunkSetId());
-        assertEquals(10L, restored.getFileResultId());
+        assertEquals(10L, restored.getKnowledgeFileId());
         assertEquals(2, restored.getChunkCount());
         assertEquals("chunk-0002", restored.getChunks().get(1).getChunkId());
         assertEquals("chunk-0001", restored.getChunks().get(1).getParentChunkId());

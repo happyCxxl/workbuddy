@@ -180,7 +180,7 @@ class IndexComboReconcilerTest {
      */
     @Test
     void latestChunkMapShouldKeepLatestById() {
-        when(chunkSetDbService.listByFileResultIds(anyList())).thenReturn(List.of(
+        when(chunkSetDbService.listByKnowledgeFileIds(anyList())).thenReturn(List.of(
                 chunkRow(1L, "chunk-a-v1"), chunkRow(3L, "chunk-a-v1")));
 
         Map<String, WbChunkSet> latest = reconciler.latestChunkMap(List.of(10L));
@@ -206,8 +206,8 @@ class IndexComboReconcilerTest {
         WbEmbeddingSet embed = embedRow();
         embed.setArtifactId("artifact-2");
         embed.setDimension(1024);
-        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(chunk));
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(embed));
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(chunk));
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(embed));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         EmbeddingSet artifact = new EmbeddingSet();
         EmbeddingRecord record = new EmbeddingRecord();
@@ -219,7 +219,7 @@ class IndexComboReconcilerTest {
         when(indexRowSupport.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed))).thenReturn(artifact);
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
         combo.setFileScopeMode("LIST");
-        combo.setFileResultIds(List.of(10L));
+        combo.setKnowledgeFileIds(List.of(10L));
 
         IndexComboReconciler.ComboExpectation expectation = reconciler.computeExpected(1L, combo);
 
@@ -229,7 +229,7 @@ class IndexComboReconcilerTest {
         assertEquals(1024, expectation.dimension());
         assertEquals("投标保证金叁...", expectation.sampleKeyword()); // StrUtil.maxLength 截断补省略号
         // 范围外文件 11 不参与（批次查询只取范围内文件）
-        verify(chunkSetDbService, never()).listByFileResultIds(List.of(11L));
+        verify(chunkSetDbService, never()).listByKnowledgeFileIds(List.of(11L));
     }
 
     /**
@@ -242,13 +242,13 @@ class IndexComboReconcilerTest {
         when(fileResultDbService.listByKb(1L)).thenReturn(List.of(fileRow(10L)));
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
         combo.setFileScopeMode("LIST");
-        combo.setFileResultIds(List.of());
+        combo.setKnowledgeFileIds(List.of());
 
         IndexComboReconciler.ComboExpectation expectation = reconciler.computeExpected(1L, combo);
 
         assertFalse(expectation.complete());
         assertEquals("组合范围内无文件", expectation.gap());
-        verify(chunkSetDbService, never()).listByFileResultIds(anyList());
+        verify(chunkSetDbService, never()).listByKnowledgeFileIds(anyList());
     }
 
     /**
@@ -261,7 +261,7 @@ class IndexComboReconcilerTest {
         when(fileResultDbService.listByKb(1L)).thenReturn(List.of(fileRow(10L)));
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
         combo.setFileScopeMode("LIST");
-        combo.setFileResultIds(List.of(99L));
+        combo.setKnowledgeFileIds(List.of(99L));
 
         IndexComboReconciler.ComboExpectation expectation = reconciler.computeExpected(1L, combo);
 
@@ -277,8 +277,8 @@ class IndexComboReconcilerTest {
     @Test
     void computeExpectedShouldReportGapWhenProductsMissing() {
         when(fileResultDbService.listByKb(1L)).thenReturn(List.of(fileRow(10L)));
-        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of());
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of());
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of());
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of());
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
 
         IndexComboReconciler.ComboExpectation expectation = reconciler.computeExpected(1L, combo);
@@ -296,9 +296,9 @@ class IndexComboReconcilerTest {
     void computeExpectedShouldReportUnreadableEmbeddingArtifact() {
         when(fileResultDbService.listByKb(1L)).thenReturn(List.of(fileRow(10L)));
         WbEmbeddingSet embed = embedRow();
-        when(chunkSetDbService.listByFileResultIds(List.of(10L)))
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L)))
                 .thenReturn(List.of(chunkRow(1L, "chunk-hybrid-v1")));
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(embed));
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(embed));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         when(indexRowSupport.readEmbeddingSet(ObjectRef.ofEmbeddingSet(embed))).thenReturn(null);
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", "embed-default-v1");
@@ -319,9 +319,9 @@ class IndexComboReconcilerTest {
         when(fileResultDbService.listByKb(1L)).thenReturn(List.of(fileRow(10L)));
         WbEmbeddingSet embed = embedRow();
         embed.setDimension(1024);
-        when(chunkSetDbService.listByFileResultIds(List.of(10L)))
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L)))
                 .thenReturn(List.of(chunkRow(1L, "chunk-hybrid-v1")));
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(embed));
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(embed));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         EmbeddingRecord success = record("chunk-1", "SUCCESS", List.of(1.0f, 2.0f), "投标保证金");
         EmbeddingRecord cached = record("chunk-2", "CACHED", List.of(3.0f, 4.0f), null);
@@ -358,9 +358,9 @@ class IndexComboReconcilerTest {
         embed11.setId(3L);
         embed11.setFileResultId(11L);
         embed11.setDimension(2048);
-        when(chunkSetDbService.listByFileResultIds(List.of(10L, 11L)))
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L, 11L)))
                 .thenReturn(List.of(chunk10, chunk11));
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L, 11L)))
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L, 11L)))
                 .thenReturn(List.of(embed10, embed11));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         EmbeddingSet artifact10 = new EmbeddingSet();
@@ -387,14 +387,14 @@ class IndexComboReconcilerTest {
         WbEmbeddingSet older = embedRow();
         WbEmbeddingSet newer = embedRow();
         newer.setId(9L);
-        when(embeddingSetDbService.listByFileResultIds(anyList())).thenReturn(List.of(older, newer));
+        when(embeddingSetDbService.listByKnowledgeFileIds(anyList())).thenReturn(List.of(older, newer));
 
         Map<String, WbEmbeddingSet> latest = reconciler.latestEmbedMap(List.of(10L));
 
         assertEquals(9L, latest.get("10#embed-default-v1").getId());
     }
 
-    /** 文件结果行夹具 */
+    /** 知识库文件行夹具 */
     private WbFileResult fileRow(Long id) {
         WbFileResult file = new WbFileResult();
         file.setId(id);

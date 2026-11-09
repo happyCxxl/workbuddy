@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class DocumentInfo {
 
-    /** 全局唯一文档 ID（doc- 前缀 + fileResultId） */
+    /** 全局唯一文档 ID（doc- 前缀 + knowledgeFileId） */
     private String documentId;
 
     /** 原始文件引用（file-manager 文件 ID） */
@@ -17,7 +17,7 @@ public class DocumentInfo {
     /** 原始文件类型（MIME） */
     private String sourceFileType;
 
-    /** 解析运行 ID（= fileResultId，血缘链：结构 ↔ 解析记录 ↔ 原文件） */
+    /** 解析运行 ID（= knowledgeFileId，血缘链：结构 ↔ 解析记录 ↔ 原文件） */
     private Long parserRunId;
 
     /** 结构 schema 语义化版本（字段只增不删不改） */

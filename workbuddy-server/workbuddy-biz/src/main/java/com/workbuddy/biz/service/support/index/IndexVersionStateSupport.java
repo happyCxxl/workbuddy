@@ -194,7 +194,7 @@ public class IndexVersionStateSupport {
     public boolean comboEquals(ComboSnapshot a, ComboSnapshot b) {
         return Objects.equals(a.getShape(), b.getShape())
                 && Objects.equals(a.getFileScopeMode(), b.getFileScopeMode())
-                && Objects.equals(a.getFileResultIds(), b.getFileResultIds())
+                && Objects.equals(a.getKnowledgeFileIds(), b.getKnowledgeFileIds())
                 && Objects.equals(a.getStageStrategies(), b.getStageStrategies());
     }
 }

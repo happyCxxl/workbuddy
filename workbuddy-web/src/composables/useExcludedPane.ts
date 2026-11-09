@@ -6,7 +6,7 @@ import { PREPROCESS_CHUNK_SKIP_STATUSES } from '@/types/pipeline-stage-view';
 
 /** 取数所需的上下文（用取值函数，组件里改选文件/任务后不必重建状态） */
 export interface ExcludedPaneContext {
-  fileResultId: () => string;
+  knowledgeFileId: () => string;
   stage: () => string;
   taskId: () => string;
   pageSize: number;
@@ -33,7 +33,7 @@ export function useExcludedPane(ctx: ExcludedPaneContext) {
     loading.value = true;
     error.value = '';
     try {
-      const data = await getStageContent(ctx.fileResultId(), ctx.stage(), {
+      const data = await getStageContent(ctx.knowledgeFileId(), ctx.stage(), {
         taskId: ctx.taskId(),
         status: PREPROCESS_CHUNK_SKIP_STATUSES.join(','),
         current: page.value,

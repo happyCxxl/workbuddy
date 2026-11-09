@@ -116,7 +116,7 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
         assertEquals(Long.valueOf(ME), savedSource.getUserId());
         assertNotNull(savedSource.getInputSnapshot());
 
-        // 文件结果：知识库、来源文件、归属缺一不可
+        // 知识库文件：知识库、来源文件、归属缺一不可
         ArgumentCaptor<WbFileResult> resultCaptor = ArgumentCaptor.forClass(WbFileResult.class);
         verify(kbFileResultDbService).save(resultCaptor.capture());
         WbFileResult savedResult = resultCaptor.getValue();
@@ -146,7 +146,7 @@ class KnowledgeBaseFileSubmitTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 同库同内容重复提交：各建一行文件结果、复用同一来源文件，不拦截。
+     * 同库同内容重复提交：各建一行知识库文件、复用同一来源文件，不拦截。
      *
      * <p>守护 {@code submit} 的入库口径：同内容重复导入必须落两行 wb_file_result
      * （按 sha256 拒绝的旧规则不得回归）。

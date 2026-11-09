@@ -50,7 +50,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * 提交记录与文件结果分页单测：行映射、五环节状态装配、存储口径与环节校验。
+ * 提交记录与知识库文件分页单测：行映射、五环节状态装配、存储口径与环节校验。
  */
 class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
 
@@ -88,7 +88,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 文件结果分页：五环节最新状态按管线顺序附着。
+     * 知识库文件分页：五环节最新状态按管线顺序附着。
      *
      * <p>守护 {@code pageFileResults}：取旧任务或乱序即失败。
      */
@@ -130,35 +130,35 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
         fr11Parse.setFileResultId(11L);
         fr11Parse.setStage(PipelineStage.PARSE.name());
         fr11Parse.setStatus(PipelineTaskStatus.RUNNING.name());
-        when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.PARSE.name()))
+        when(pipelineTaskDbService.listByKnowledgeFileIdsAndStage(List.of(10L, 11L), PipelineStage.PARSE.name()))
                 .thenReturn(List.of(parseNew, parseOld, fr11Parse));
         WbPipelineTask structure = new WbPipelineTask();
         structure.setId(51L);
         structure.setFileResultId(10L);
         structure.setStage(PipelineStage.STRUCTURE.name());
         structure.setStatus(PipelineTaskStatus.SUCCESS.name());
-        when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.STRUCTURE.name()))
+        when(pipelineTaskDbService.listByKnowledgeFileIdsAndStage(List.of(10L, 11L), PipelineStage.STRUCTURE.name()))
                 .thenReturn(List.of(structure));
         WbPipelineTask preprocess = new WbPipelineTask();
         preprocess.setId(61L);
         preprocess.setFileResultId(10L);
         preprocess.setStage(PipelineStage.PREPROCESS.name());
         preprocess.setStatus(PipelineTaskStatus.SUCCESS.name());
-        when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.PREPROCESS.name()))
+        when(pipelineTaskDbService.listByKnowledgeFileIdsAndStage(List.of(10L, 11L), PipelineStage.PREPROCESS.name()))
                 .thenReturn(List.of(preprocess));
         WbPipelineTask chunk = new WbPipelineTask();
         chunk.setId(71L);
         chunk.setFileResultId(10L);
         chunk.setStage(PipelineStage.CHUNK.name());
         chunk.setStatus(PipelineTaskStatus.SUCCESS.name());
-        when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.CHUNK.name()))
+        when(pipelineTaskDbService.listByKnowledgeFileIdsAndStage(List.of(10L, 11L), PipelineStage.CHUNK.name()))
                 .thenReturn(List.of(chunk));
         WbPipelineTask embed = new WbPipelineTask();
         embed.setId(81L);
         embed.setFileResultId(10L);
         embed.setStage(PipelineStage.EMBED.name());
         embed.setStatus(PipelineTaskStatus.SUCCESS.name());
-        when(pipelineTaskDbService.listByFileResultIdsAndStage(List.of(10L, 11L), PipelineStage.EMBED.name()))
+        when(pipelineTaskDbService.listByKnowledgeFileIdsAndStage(List.of(10L, 11L), PipelineStage.EMBED.name()))
                 .thenReturn(List.of(embed));
 
         IPage<FileResultVO> result = service.pageFileResults(1L, fileResultQuery(null));
@@ -193,7 +193,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 单条文件结果的存储口径桩：档案记着数据源 1，当前启用数据源 2。
+     * 单条知识库文件的存储口径桩：档案记着数据源 1，当前启用数据源 2。
      *
      * @param storageSourceName 档案数据源的显示名（数据源未注册时传 null）
      * @param currentSourceName 当前启用数据源的显示名（未启用或未注册时传 null）
@@ -219,7 +219,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 文件结果分页：两个数据源的显示名分别下发。
+     * 知识库文件分页：两个数据源的显示名分别下发。
      *
      * <p>守护 {@code pageFileResults}：同类型数据源无法区分即失败。
      */
@@ -235,7 +235,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 文件结果分页：数据源未注册时显示名留空。
+     * 知识库文件分页：数据源未注册时显示名留空。
      *
      * <p>守护 {@code pageFileResults}：空指针或错名即失败。
      */
@@ -252,7 +252,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 文件结果分页：合法环节只做校验不额外过滤。
+     * 知识库文件分页：合法环节只做校验不额外过滤。
      *
      * <p>守护 {@code pageFileResults}：误过滤或多次查询即失败。
      */
@@ -273,7 +273,7 @@ class KnowledgeBaseFilePageTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 文件结果分页：未知环节按 40001 拒绝。
+     * 知识库文件分页：未知环节按 40001 拒绝。
      *
      * <p>守护 {@code pageFileResults}：未知环节被放行即失败。
      */

@@ -20,7 +20,7 @@ public class VectorHit implements IndexHit {
     /** 相似度分数 */
     private Float score;
 
-    /** 文件结果 ID */
+    /** 知识库文件 ID */
     private Long documentId;
 
     /** 片类型 */

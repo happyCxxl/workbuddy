@@ -30,7 +30,7 @@ class PreprocessViewJsonTest {
         PreprocessView view = new PreprocessView();
         view.setViewId("pv-doc-1-preproc-default-v1");
         view.setDocumentId("doc-1");
-        view.setFileResultId(10L);
+        view.setKnowledgeFileId(10L);
         view.setSourceFileRef("F-1");
         view.setUpstreamProductRef(50L);
         view.setStrategyVersion("preproc-default-v1");
@@ -66,7 +66,7 @@ class PreprocessViewJsonTest {
         assertNotNull(restored);
         assertEquals("pv-doc-1-preproc-default-v1", restored.getViewId());
         assertEquals("doc-1", restored.getDocumentId());
-        assertEquals(10L, restored.getFileResultId());
+        assertEquals(10L, restored.getKnowledgeFileId());
         assertEquals(50L, restored.getUpstreamProductRef());
         assertEquals("MARK", restored.getOptions().get("pageHeaderFooter"));
         assertEquals(1, restored.getElements().size());

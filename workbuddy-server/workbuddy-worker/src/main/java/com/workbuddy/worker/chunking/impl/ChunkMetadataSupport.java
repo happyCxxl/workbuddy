@@ -37,7 +37,7 @@ public final class ChunkMetadataSupport {
     public static ChunkSet assembleChunkSet(ChunkContext context, ChunkStrategy strategy, List<Chunk> chunks) {
         ChunkSet chunkSet = new ChunkSet();
         chunkSet.setChunkSetId("cs-" + context.getView().getDocumentId() + "-" + strategy.fullVersion());
-        chunkSet.setFileResultId(context.getFileResultId());
+        chunkSet.setKnowledgeFileId(context.getKnowledgeFileId());
         chunkSet.setDocumentId(context.getView().getDocumentId());
         chunkSet.setStrategyVersion(strategy.fullVersion());
         chunkSet.setUpstreamProductRef(context.getUpstreamProductRef());

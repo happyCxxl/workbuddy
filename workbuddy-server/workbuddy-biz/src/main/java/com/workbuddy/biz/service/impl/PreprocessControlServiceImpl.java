@@ -60,41 +60,41 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
     /**
      * 触发预处理（手动逐环节，重跑同入口）：策略解析两档 → 上游组装产物校验（必填）→ 执行键查重（已有任务一律拒绝 40431）→ 新建 PREPROCESS 任务入队。
      *
-     * @param fileResultId      文件结果 ID
+     * @param knowledgeFileId      知识库文件 ID
      * @param strategyVersionId 策略版本行 ID（可选；不传用知识库绑定，两档都不命中报 40438）
      * @param upstreamProductId 上游组装产物 ID（必填，未指定或传 0 报 40436）
      * @return 触发响应（任务 ID + 生效策略版本）
      */
     @Override
-    public PreprocessTriggerVO preprocess(Long fileResultId, Long strategyVersionId, Long upstreamProductId) {
-        WbFileResult fileResult = accessGuard.requireExisting(fileResultId);
+    public PreprocessTriggerVO preprocess(Long knowledgeFileId, Long strategyVersionId, Long upstreamProductId) {
+        WbFileResult fileResult = accessGuard.requireExisting(knowledgeFileId);
         WbPipelineStrategyVersion strategyRow = resolveStrategyRow(fileResult, strategyVersionId);
         PreprocessStrategy strategy = toStrategy(strategyRow);
 
         // 上游组装产物：必须显式指定
-        WbPipelineProduct structureProduct = requireStructureProduct(fileResultId, upstreamProductId);
+        WbPipelineProduct structureProduct = requireStructureProduct(knowledgeFileId, upstreamProductId);
 
-        StageTriggerVO triggered = triggerSupport.trigger(fileResultId, PipelineStage.PREPROCESS,
+        StageTriggerVO triggered = triggerSupport.trigger(knowledgeFileId, PipelineStage.PREPROCESS,
                 structureProduct.getId(), strategyRow.getId(), JsonUtil.toJsonStr(strategy),
                 PipelineStage.PREPROCESS.getLabel());
-        return new PreprocessTriggerVO(fileResultId, triggered.getPipelineTaskId(), strategy.fullVersion());
+        return new PreprocessTriggerVO(knowledgeFileId, triggered.getPipelineTaskId(), strategy.fullVersion());
     }
 
     /**
      * 预处理详情：任务状态、子步骤、字段与剔除统计、产物引用。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param taskId       任务 ID（可空表示取最新）
      * @return 预处理详情
      */
     @Override
-    public PreprocessDetailVO preprocessDetail(Long fileResultId, Long taskId) {
-        accessGuard.requireExisting(fileResultId);
-        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.PREPROCESS, taskId,
+    public PreprocessDetailVO preprocessDetail(Long knowledgeFileId, Long taskId) {
+        accessGuard.requireExisting(knowledgeFileId);
+        WbPipelineTask task = detailSupport.resolveTask(knowledgeFileId, PipelineStage.PREPROCESS, taskId,
                 PipelineStage.PREPROCESS.getLabel());
 
         PreprocessDetailVO vo = new PreprocessDetailVO();
-        detailSupport.withTask(vo, fileResultId, task);
+        detailSupport.withTask(vo, knowledgeFileId, task);
 
         // 产物引用/统计/视图元素：按 task.productId 精确取该次运行的产物（历史任务同样可展示自己的产物；无任务/无产物留空）
         vo.setElements(new ArrayList<>());
@@ -147,15 +147,15 @@ public class PreprocessControlServiceImpl implements PreprocessControlService {
     }
 
     /** 上游组装产物校验：必须显式指定，校验存在/环节/归属；未指定直接拒绝（无按时间猜的兜底）。 */
-    private WbPipelineProduct requireStructureProduct(Long fileResultId, Long productId) {
+    private WbPipelineProduct requireStructureProduct(Long knowledgeFileId, Long productId) {
         ThrowUtil.throwIf(NullUtil.isNull(productId) || productId == 0L, ErrorCode.TASK_UPSTREAM_MISSING,
                 "未指定上游统一结构产物，请从组装产物的卡片发起触发");
         WbPipelineProduct product = pipelineProductDbService.getById(productId);
         ThrowUtil.throwIf(NullUtil.isNull(product), ErrorCode.FILE_RESULT_NOT_FOUND, "指定上游产物不存在");
         ThrowUtil.throwIf(!PipelineStage.STRUCTURE.name().equals(product.getStage()), ErrorCode.FILE_RESULT_NOT_FOUND,
                 "指定产物环节不匹配：期望 STRUCTURE");
-        ThrowUtil.throwIf(!fileResultId.equals(product.getFileResultId()), ErrorCode.FILE_RESULT_NOT_FOUND,
-                "指定产物不属于该文件结果");
+        ThrowUtil.throwIf(!knowledgeFileId.equals(product.getFileResultId()), ErrorCode.FILE_RESULT_NOT_FOUND,
+                "指定产物不属于该知识库文件");
         // 下游门禁：产出任务已成功或部分成功才放行（未成功的运行留下的产物不再被消费）
         upstreamProductGate.requireConsumable(product);
         return product;

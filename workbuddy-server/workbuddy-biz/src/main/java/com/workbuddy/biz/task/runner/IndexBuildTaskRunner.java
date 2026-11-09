@@ -173,7 +173,7 @@ public class IndexBuildTaskRunner {
      * 缺口文件跳过（computeExpected 对账报缺、不进集合）；账本不逐条更，READY 时以对账期望统一收敛。
      */
     private void backfillFrozenScope(ComboSnapshot combo, String collectionName) {
-        List<Long> scope = combo.getFileResultIds();
+        List<Long> scope = combo.getKnowledgeFileIds();
         if (NullUtil.isNull(scope) || scope.isEmpty()) {
             return;
         }
@@ -183,7 +183,7 @@ public class IndexBuildTaskRunner {
             IndexComboReconciler.ComboProducts products = indexComboReconciler
                     .selectComboProducts(combo, fileId, latestChunk, latestEmbed);
             if (!products.complete()) {
-                log.info("===> IndexBuildTaskRunner 冻结集回填跳过（缺口，对账将报缺）, fileResultId={}, gap={}",
+                log.info("===> IndexBuildTaskRunner 冻结集回填跳过（缺口，对账将报缺）, knowledgeFileId={}, gap={}",
                         fileId, products.gap());
                 continue;
             }

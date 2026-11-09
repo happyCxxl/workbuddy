@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * 向量化上下文：上游切片产物（只读）+ 策略快照（触发时固定）+ 参数配置 + 复用候选账本（新→旧）。
- * 复用候选账本由 biz 侧加载（同 fileResultId + 同策略 + 成功态，回溯上限内），worker 管线只做查表复用，不碰 DB/产物存储。
+ * 复用候选账本由 biz 侧加载（同 knowledgeFileId + 同策略 + 成功态，回溯上限内），worker 管线只做查表复用，不碰 DB/产物存储。
  * 切片策略快照（chunkStrategy/chunkProperties）供前置校验推算切片最大片长。
  */
 @Data
@@ -36,8 +36,8 @@ public class EmbedContext {
     /** 向量化参数（knowledge.embed 前缀，application.yml 同名 kebab-case 键） */
     private EmbedProperties properties;
 
-    /** 文件结果 ID（wb_file_result.id） */
-    private Long fileResultId;
+    /** 知识库文件 ID（wb_file_result.id） */
+    private Long knowledgeFileId;
 
     /** 复用候选账本：同文件同策略历史 EmbeddingSet（createTime 新→旧，回溯上限内；空=首次运行全量算） */
     private List<EmbeddingSet> reuseCandidates = new ArrayList<>();

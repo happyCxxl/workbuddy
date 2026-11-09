@@ -128,7 +128,7 @@ class StageContentQueryOrchestrationTest {
     }
 
     /**
-     * 他人文件结果按 40401 拒绝（越权与不存在同码）。
+     * 他人知识库文件按 40401 拒绝（越权与不存在同码）。
      *
      * <p>守护 {@code otherUserFileResultShouldReject40401}：归属校验被绕过即失败。
      */
@@ -189,7 +189,7 @@ class StageContentQueryOrchestrationTest {
 
         StageContentVO vo = service.stageContent(FILE_RESULT_ID, "PARSE", null, 0L, 0, 0);
 
-        assertEquals(FILE_RESULT_ID, vo.getFileResultId());
+        assertEquals(FILE_RESULT_ID, vo.getKnowledgeFileId());
         assertEquals("PARSE", vo.getStage());
         assertFalse(vo.getLatest());
         assertNull(vo.getTaskId());

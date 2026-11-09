@@ -34,8 +34,8 @@ public class ComboSnapshot implements Serializable {
     /** 文件范围模式：ALL（全部）/ LIST（评测冻结集） */
     private String fileScopeMode = "ALL";
 
-    /** LIST 模式下的文件结果 ID 列表（ALL 模式为 null） */
-    private List<Long> fileResultIds;
+    /** LIST 模式下的知识库文件 ID 列表（ALL 模式为 null） */
+    private List<Long> knowledgeFileIds;
 
     /** 索引形态（当前仅 FULL_VECTOR） */
     private IndexShape shape = IndexShape.FULL_VECTOR;

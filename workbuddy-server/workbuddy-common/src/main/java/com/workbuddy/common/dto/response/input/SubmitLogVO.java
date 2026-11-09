@@ -29,8 +29,8 @@ public class SubmitLogVO {
     /** 文件名 */
     private String fileName;
 
-    /** 文件结果 ID（失败时为空） */
-    private Long fileResultId;
+    /** 知识库文件 ID（失败时为空） */
+    private Long knowledgeFileId;
 
     /** 提交结果：PASS / FAIL */
     private String status;

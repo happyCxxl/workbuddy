@@ -30,20 +30,22 @@ export async function getIndexVersions(knowledgeBaseId: string): Promise<IndexVe
 /**
  * 枚举可构建的组合。
  *
- * <p>返回「组合 × 成员」口径：每个组合带 `fileResultIds` 成员清单，
+ * <p>返回「组合 × 成员」口径：每个组合带 `knowledgeFileIds` 成员清单，
  * 成员 = 该组合下有完整成功产物链的文件。没跑完环节的文件不属于任何组合、不会出现。
  *
- * @param fileResultIds 传入时把枚举范围收窄到这些文件；不传即全库
+ * @param knowledgeFileIds 传入时把枚举范围收窄到这些文件；不传即全库
  */
 export async function getIndexCombos(
   knowledgeBaseId: string,
-  fileResultIds?: string[],
+  knowledgeFileIds?: string[],
 ): Promise<IndexComboVO[]> {
   const response = await http.get<IndexComboVO[]>(
     `/knowledge-base/${knowledgeBaseId}/index-combos`,
     {
       params:
-        fileResultIds && fileResultIds.length > 0 ? { fileResultIds: fileResultIds.join(',') } : {},
+        knowledgeFileIds && knowledgeFileIds.length > 0
+          ? { knowledgeFileIds: knowledgeFileIds.join(',') }
+          : {},
     },
   );
   return response.data;

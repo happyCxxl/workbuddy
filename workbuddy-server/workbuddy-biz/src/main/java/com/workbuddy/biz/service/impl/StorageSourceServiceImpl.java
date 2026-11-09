@@ -168,7 +168,7 @@ public class StorageSourceServiceImpl implements StorageSourceService {
     /**
      * 影响面：属于其他数据源的排队中与执行中任务数。
      *
-     * <p>任务按状态一次批量取回，涉及的文件结果去重后一次批量取链的数据源 ID。
+     * <p>任务按状态一次批量取回，涉及的知识库文件去重后一次批量取链的数据源 ID。
      *
      * @param targetSourceId 目标数据源 ID
      * @return 长度为 2 的计数数组：0 为排队中，1 为执行中

@@ -74,7 +74,7 @@ export interface IndexVersionVO {
   versionNo: string;
   fileScopeMode: IndexFileScopeMode;
   /** LIST 范围的成员文件 ID；ALL 为空 */
-  fileResultIds: string[] | null;
+  knowledgeFileIds: string[] | null;
   /** 环节策略映射：stage → "策略名-版本" */
   stageStrategies: Record<string, string> | null;
   /** 切片策略 name-version */
@@ -106,7 +106,7 @@ export interface IndexVersionVO {
 export interface IndexComboVO {
   fileScopeMode: IndexFileScopeMode;
   /** 该组合血统匹配的成员文件（范围收窄时只含范围内文件） */
-  fileResultIds: string[] | null;
+  knowledgeFileIds: string[] | null;
   stageStrategies: Record<string, string> | null;
   chunkStrategy: string | null;
   embedStrategy: string | null;
@@ -126,12 +126,12 @@ export function isSubsetScope(version: Pick<IndexVersionVO, 'fileScopeMode'>): b
 
 /** 范围的中文描述：`全库` / `指定 N 个文件` */
 export function scopeText(
-  version: Pick<IndexVersionVO, 'fileScopeMode' | 'fileResultIds'>,
+  version: Pick<IndexVersionVO, 'fileScopeMode' | 'knowledgeFileIds'>,
 ): string {
   if (version.fileScopeMode !== 'LIST') {
     return '全库';
   }
-  const count = version.fileResultIds?.length ?? 0;
+  const count = version.knowledgeFileIds?.length ?? 0;
   return count > 0 ? `指定 ${count} 个文件` : '指定文件';
 }
 

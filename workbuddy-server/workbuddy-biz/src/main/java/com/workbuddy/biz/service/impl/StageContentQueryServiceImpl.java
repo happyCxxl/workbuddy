@@ -68,7 +68,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
     /**
      * 环节内容查询（不带状态与切片过滤的重载）。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param stage        环节名
      * @param taskId       任务 ID（可空）
      * @param docPage      文档页码（可空）
@@ -76,9 +76,9 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      * @param size         每页条数（可空）
      * @return 环节内容视图
      */
-    public StageContentVO stageContent(Long fileResultId, String stage, Long taskId, Long docPage,
+    public StageContentVO stageContent(Long knowledgeFileId, String stage, Long taskId, Long docPage,
                                        Integer current, Integer size) {
-        return stageContent(fileResultId, stage, taskId, docPage, current, size, null, null);
+        return stageContent(knowledgeFileId, stage, taskId, docPage, current, size, null, null);
     }
 
     /**
@@ -86,7 +86,7 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      *
      * <p>存储类读取失败（40454 / 40455）向上抛出；其余读取失败记日志并留空条目，不阻断详情。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param stage        环节（FILE_CHAIN_STAGES 白名单）
      * @param taskId       任务 ID（可空，缺省取该环节最新任务）
      * @param docPage      文档页过滤（可空）
@@ -97,18 +97,18 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
      * @return 产物内容分页
      */
     @Override
-    public StageContentVO stageContent(Long fileResultId, String stage, Long taskId, Long docPage,
+    public StageContentVO stageContent(Long knowledgeFileId, String stage, Long taskId, Long docPage,
                                        Integer current, Integer size, String status,
                                        ChunkContentFilterDTO chunkFilter) {
-        accessGuard.requireExisting(fileResultId);
+        accessGuard.requireExisting(knowledgeFileId);
         ThrowUtil.throwIf(StrUtil.isBlank(stage) || !PipelineStage.FILE_CHAIN_STAGES.contains(stage),
                 ErrorCode.PARAM_INVALID, "未知环节: " + stage);
-        WbPipelineTask task = detailSupport.resolveTask(fileResultId, stageOf(stage), taskId, stageLabel(stage));
+        WbPipelineTask task = detailSupport.resolveTask(knowledgeFileId, stageOf(stage), taskId, stageLabel(stage));
 
         int pageNo = StageContentPaginationSupport.resolveCurrent(current);
         int pageSize = StageContentPaginationSupport.resolveSize(size);
         StageContentVO vo = new StageContentVO();
-        vo.setFileResultId(fileResultId);
+        vo.setKnowledgeFileId(knowledgeFileId);
         vo.setStage(stage);
         vo.setLatest(false);
         vo.setDocPage(NullUtil.isNull(docPage) || docPage < 1 ? null : docPage.intValue());
@@ -152,8 +152,8 @@ public class StageContentQueryServiceImpl implements StageContentQueryService {
             if (NullUtil.isNotNull(storageFailure)) {
                 throw storageFailure;
             }
-            log.warn("产物内容读取失败, fileResultId={}, stage={}, artifactId={}",
-                    fileResultId, stage, product.getArtifactId(), e);
+            log.warn("产物内容读取失败, knowledgeFileId={}, stage={}, artifactId={}",
+                    knowledgeFileId, stage, product.getArtifactId(), e);
             vo.setItems(new ArrayList<>());
             vo.setTotal(0);
         }

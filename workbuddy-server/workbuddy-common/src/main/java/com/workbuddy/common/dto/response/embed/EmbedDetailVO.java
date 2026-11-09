@@ -13,8 +13,8 @@ import java.util.List;
 @Data
 public class EmbedDetailVO {
 
-    /** 文件结果 ID */
-    private Long fileResultId;
+    /** 知识库文件 ID */
+    private Long knowledgeFileId;
 
     /** 任务 ID（无任务时为空） */
     private Long taskId;

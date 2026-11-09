@@ -161,7 +161,7 @@ class LineageGraphTest {
         LineageVO vo = service.lineage(FILE_RESULT_ID);
 
         assertNotNull(vo.getNodes());
-        assertEquals(FILE_RESULT_ID, vo.getFileResultId());
+        assertEquals(FILE_RESULT_ID, vo.getKnowledgeFileId());
         assertEquals(7, vo.getNodes().size());
         // 环节顺序：PARSE, STRUCTURE, PREPROCESS×2, CHUNK×2, EMBED
         assertEquals("PARSE", vo.getNodes().get(0).getStage());
@@ -267,7 +267,7 @@ class LineageGraphTest {
     }
 
     /**
-     * 文件结果不存在按 40432 拒绝。
+     * 知识库文件不存在按 40432 拒绝。
      *
      * <p>守护 {@code lineage}：空文件可查即失败。
      */
@@ -280,7 +280,7 @@ class LineageGraphTest {
     }
 
     /**
-     * 越权文件结果按 40401 拒绝。
+     * 越权知识库文件按 40401 拒绝。
      *
      * <p>守护 {@code lineage}：越权可读即失败。
      */

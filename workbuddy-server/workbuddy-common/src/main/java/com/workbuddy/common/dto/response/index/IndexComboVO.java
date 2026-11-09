@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * 可构建组合枚举视图（测评模式构建弹窗数据源）：
  * 组合四维 + 产物完整标记 + 构建前预览统计（成员文件数 × 向量数）。
- * fileResultIds = 该组合血统匹配的成员文件（范围收窄时仅计范围内文件）；
+ * knowledgeFileIds = 该组合血统匹配的成员文件（范围收窄时仅计范围内文件）；
  * fileCount = 成员数；vectorCount = Σ 成员最新向量集合 recordCount
  * （含 FAILED/SKIPPED 少量偏差，构建以实际写入行数为准）。
  */
@@ -20,7 +20,7 @@ public class IndexComboVO {
     private String fileScopeMode;
 
     /** 该组合血统匹配的成员文件 ID 列表（范围收窄时仅计范围内文件；雪花字符串序列化） */
-    private List<Long> fileResultIds;
+    private List<Long> knowledgeFileIds;
     /** 切片策略 name-version */
     private String chunkStrategy;
 

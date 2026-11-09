@@ -58,7 +58,7 @@ public interface ChunkConverter {
     /**
      * 切片集合行：切片数与总字符由调用方算好传入。
      *
-     * @param fileResultId      文件结果 ID
+     * @param knowledgeFileId      知识库文件 ID
      * @param upstreamProductId 上游产物 ID
      * @param strategyVersion   切片策略完整版本
      * @param chunkCount        切片数
@@ -66,10 +66,10 @@ public interface ChunkConverter {
      * @param product           本环节产物行（提供产物引用列）
      * @return 切片集合行（未保存）
      */
-    default WbChunkSet toChunkSetRow(Long fileResultId, Long upstreamProductId, String strategyVersion,
+    default WbChunkSet toChunkSetRow(Long knowledgeFileId, Long upstreamProductId, String strategyVersion,
                                      Integer chunkCount, Integer totalChars, WbPipelineProduct product) {
         WbChunkSet row = new WbChunkSet();
-        row.setFileResultId(fileResultId);
+        row.setFileResultId(knowledgeFileId);
         row.setUpstreamProductId(upstreamProductId);
         row.setChunkStrategyVersion(strategyVersion);
         row.setChunkCount(chunkCount);

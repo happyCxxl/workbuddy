@@ -59,7 +59,7 @@ class IndexBuildBackfillTest {
         when(fixture.indexComboService.resolveBoundCombo(1L))
                 .thenReturn(com.workbuddy.worker.indexing.ComboSnapshot.of(
                         "preproc-default-v2", "chunk-hybrid-v2", "embed-default-v2"));
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of());
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of());
         WbPipelineStrategyVersion strategyRow = new WbPipelineStrategyVersion();
         strategyRow.setId(77L);
         when(fixture.strategyVersionDbService.getByTypeAndNameAndVersion("PREPROCESS", "preproc-default", "v1"))
@@ -82,7 +82,7 @@ class IndexBuildBackfillTest {
      */
     @Test
     void backfillShouldEnqueuePreprocessWhenNoMatchingChunk() {
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of());
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of());
         WbPipelineStrategyVersion preprocessStrategy = new WbPipelineStrategyVersion();
         preprocessStrategy.setId(77L);
         when(fixture.strategyVersionDbService.getByTypeAndNameAndVersion("PREPROCESS", "preproc-default", "v1"))
@@ -103,7 +103,7 @@ class IndexBuildBackfillTest {
     void backfillShouldEnqueueChunkWithMatchedUpstreamProduct() {
         // 已有一条目标预处理口径的切片（策略不同） → 缺目标切片
         WbChunkSet existing = IndexSetTestFixtures.chunkRowOf(1L, 10L, "chunk-hybrid-v2", 100L);
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(existing));
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(existing));
         when(fixture.lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         WbPipelineStrategyVersion chunkStrategy = new WbPipelineStrategyVersion();
         chunkStrategy.setId(88L);
@@ -134,7 +134,7 @@ class IndexBuildBackfillTest {
     @Test
     void backfillShouldSkipWhenTargetChunkAlreadyExists() {
         WbChunkSet matchedChunk = IndexSetTestFixtures.chunkRowOf(1L, 10L, "chunk-hybrid-v1", 100L);
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(matchedChunk));
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(matchedChunk));
         when(fixture.lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         // 对抗性夹具（宽松）：若「已齐」判定被写反，补齐分支会真的走到投递，用 verify 抓这段差异
         WbPipelineStrategyVersion chunkStrategy = new WbPipelineStrategyVersion();
@@ -161,7 +161,7 @@ class IndexBuildBackfillTest {
     @Test
     void backfillShouldStopWhenStrategyOrUpstreamMissing() {
         // ① 无任何切片 → 走预处理投递；目标策略行不存在 → 中止
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of());
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of());
         when(fixture.strategyVersionDbService.getByTypeAndNameAndVersion("PREPROCESS", "preproc-default", "v1"))
                 .thenReturn(null);
 
@@ -179,7 +179,7 @@ class IndexBuildBackfillTest {
     @Test
     void backfillShouldStopWhenChunkStrategyMissing() {
         WbChunkSet existing = IndexSetTestFixtures.chunkRowOf(1L, 10L, "chunk-hybrid-v2", 100L);
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(existing));
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(existing));
         when(fixture.lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         when(fixture.strategyVersionDbService.getByTypeAndNameAndVersion("CHUNK", "chunk-hybrid", "v1"))
                 .thenReturn(null);
@@ -198,7 +198,7 @@ class IndexBuildBackfillTest {
     @Test
     void backfillShouldDispatchPreprocessWhenExistingChunkHasOtherLineage() {
         WbChunkSet chunk = IndexSetTestFixtures.chunkRowOf(1L, 10L, "chunk-hybrid-v1", 100L);
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(chunk));
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(chunk));
         when(fixture.lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-legacy-v1");
         WbPipelineStrategyVersion preprocessStrategy = new WbPipelineStrategyVersion();
         preprocessStrategy.setId(77L);
@@ -224,7 +224,7 @@ class IndexBuildBackfillTest {
     @Test
     void backfillShouldStopWhenNoMatchingPreprocessProduct() {
         WbChunkSet existing = IndexSetTestFixtures.chunkRowOf(1L, 10L, "chunk-hybrid-v2", 100L);
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(existing));
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(existing));
         when(fixture.lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         WbPipelineStrategyVersion chunkStrategy = new WbPipelineStrategyVersion();
         chunkStrategy.setId(88L);

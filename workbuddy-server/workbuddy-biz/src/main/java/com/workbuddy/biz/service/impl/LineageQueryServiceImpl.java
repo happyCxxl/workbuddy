@@ -49,17 +49,17 @@ public class LineageQueryServiceImpl implements LineageQueryService {
     /**
      * 文件血缘：从解析到索引的环节节点与依赖边。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 血缘视图
      */
     @Override
-    public LineageVO lineage(Long fileResultId) {
-        accessGuard.requireExisting(fileResultId);
+    public LineageVO lineage(Long knowledgeFileId) {
+        accessGuard.requireExisting(knowledgeFileId);
 
-        List<WbPipelineTask> tasks = pipelineTaskDbService.listByFileResultId(fileResultId).stream()
+        List<WbPipelineTask> tasks = pipelineTaskDbService.listByFileResultId(knowledgeFileId).stream()
                 .filter(task -> PipelineStage.FILE_CHAIN_STAGES.contains(task.getStage()))
                 .toList();
-        List<WbPipelineProduct> products = pipelineProductDbService.listByFileResultId(fileResultId);
+        List<WbPipelineProduct> products = pipelineProductDbService.listByFileResultId(knowledgeFileId);
 
         Map<Long, WbPipelineProduct> productById = products.stream()
                 .collect(Collectors.toMap(WbPipelineProduct::getId, p -> p, (a, b) -> a));
@@ -73,7 +73,7 @@ public class LineageQueryServiceImpl implements LineageQueryService {
 
         Map<Long, long[]> stepAgg = LineageNodeSupport.aggregateStepLogs(tasks, stepLogDbService);
         LineageArtifactReader.NodeArtifacts artifacts = LineageArtifactReader.read(tasks, productById,
-                taskIdByProductId, fileResultId, fileStorage, chunkSetDbService, embeddingSetDbService);
+                taskIdByProductId, knowledgeFileId, fileStorage, chunkSetDbService, embeddingSetDbService);
 
         // 节点：环节顺序（PARSE→…→EMBED）再按任务 id 升序
         List<WbPipelineTask> ordered = tasks.stream()
@@ -101,7 +101,7 @@ public class LineageQueryServiceImpl implements LineageQueryService {
         }
 
         LineageVO vo = new LineageVO();
-        vo.setFileResultId(fileResultId);
+        vo.setKnowledgeFileId(knowledgeFileId);
         vo.setNodes(nodes);
         vo.setEdges(edges);
         return vo;

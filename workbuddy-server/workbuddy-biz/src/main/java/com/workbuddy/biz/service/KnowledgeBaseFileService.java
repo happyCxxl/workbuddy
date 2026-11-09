@@ -9,7 +9,7 @@ import com.workbuddy.common.dto.response.input.FileSubmitVO;
 import com.workbuddy.common.dto.response.input.SubmitLogVO;
 
 /**
- * 知识库文档输入用例：提交建档、提交记录分页、文件结果分页。
+ * 知识库文档输入用例：提交建档、提交记录分页、知识库文件分页。
  *
  * <p>提交以 requestId 幂等；文件校验与元数据读取在事务外，建档三写用短事务；
  * 文件校验不通过只记 FAIL 提交日志并正常返回。
@@ -23,7 +23,7 @@ public interface KnowledgeBaseFileService {
      * @param knowledgeBaseId 知识库 ID
      * @param request         提交请求（fileId + requestId）
      * @return 提交响应：新建提交 pipelineTaskId 为 null；
-     *         幂等回放时回填该文件结果已有的解析任务 ID（可能为 null）
+     *         幂等回放时回填该知识库文件已有的解析任务 ID（可能为 null）
      */
     FileSubmitVO submit(Long knowledgeBaseId, FileSubmitDTO request);
 
@@ -37,12 +37,12 @@ public interface KnowledgeBaseFileService {
     IPage<SubmitLogVO> pageSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDTO query);
 
     /**
-     * 文件结果分页查询（执行链工作台列表数据源）：每行附带各环节最新任务状态。
+     * 知识库文件分页查询（执行链工作台列表数据源）：每行附带各环节最新任务状态。
      *
      * @param knowledgeBaseId 知识库 ID
      * @param query           查询条件（环节可留空，页码与页长口径见父类；
      *                        环节合法值 PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED，非法值 40001）
-     * @return 文件结果分页 VO（含来源文件信息与各环节状态列表）
+     * @return 知识库文件分页 VO（含来源文件信息与各环节状态列表）
      */
     IPage<FileResultVO> pageFileResults(Long knowledgeBaseId, FileResultQueryDTO query);
 }

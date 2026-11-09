@@ -17,19 +17,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 文件结果数据访问服务实现。
+ * 知识库文件数据访问服务实现。
  */
 @Service
 public class WbFileResultDbServiceImpl extends InfraDbServiceImpl<WbFileResultMapper, WbFileResult>
         implements WbFileResultDbService {
 
     /**
-     * 按知识库分页查文件结果。
+     * 按知识库分页查知识库文件。
      *
      * @param current         页码
      * @param size            每页条数
      * @param knowledgeBaseId 知识库 ID
-     * @return 文件结果分页
+     * @return 知识库文件分页
      */
     @Override
     public IPage<WbFileResult> pageByKb(long current, long size, Long knowledgeBaseId) {
@@ -40,10 +40,10 @@ public class WbFileResultDbServiceImpl extends InfraDbServiceImpl<WbFileResultMa
     }
 
     /**
-     * 取某知识库下的全部文件结果。
+     * 取某知识库下的全部知识库文件。
      *
      * @param knowledgeBaseId 知识库 ID
-     * @return 文件结果列表
+     * @return 知识库文件列表
      */
     @Override
     public List<WbFileResult> listByKb(Long knowledgeBaseId) {

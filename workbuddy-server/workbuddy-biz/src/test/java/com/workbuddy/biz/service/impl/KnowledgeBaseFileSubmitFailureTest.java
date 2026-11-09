@@ -239,7 +239,7 @@ class KnowledgeBaseFileSubmitFailureTest extends KnowledgeBaseFileTestFixture {
     }
 
     /**
-     * 回放 FAIL 记录：失败日志没有文件结果，解析任务号保持 null（不是 0）。
+     * 回放 FAIL 记录：失败日志没有知识库文件，解析任务号保持 null（不是 0）。
      *
      * <p>守护 {@code findParseTaskId} 的 null 入参分支：返回 0 会让前端去轮询 0 号任务。
      */

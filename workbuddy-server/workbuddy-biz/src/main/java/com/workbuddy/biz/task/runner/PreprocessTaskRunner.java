@@ -64,7 +64,7 @@ public class PreprocessTaskRunner {
         }
         WbPipelineTask task = claimed.task();
         WbFileResult fileResult = claimed.fileResult();
-        log.info("===> PreprocessTaskRunner 领取预处理任务, taskId={}, fileResultId={}",
+        log.info("===> PreprocessTaskRunner 领取预处理任务, taskId={}, knowledgeFileId={}",
                 taskId, task.getFileResultId());
         try {
             // 上游组装产物：只认任务行上的显式引用，缺引用按任务失败处理
@@ -104,7 +104,7 @@ public class PreprocessTaskRunner {
             context.setDocument(document);
             context.setStrategy(strategy);
             context.setProperties(preprocessProperties);
-            context.setFileResultId(fileResult.getId());
+            context.setKnowledgeFileId(fileResult.getId());
             context.setUpstreamProductRef(structureProduct.getId());
 
             PreprocessOutcome outcome = preprocessor.preprocess(context);

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/file-results")
+@RequestMapping("/knowledge-files")
 public class KnowledgeFileChunkController {
 
     private final ChunkControlService chunkControlService;
@@ -28,32 +28,32 @@ public class KnowledgeFileChunkController {
     /**
      * 触发切片：登记 CHUNK 任务并按上游预处理产物出队执行。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param query        触发参数（策略版本与上游产物，可空）
      * @return 任务 ID 与生效策略版本
      */
-    @PostMapping("/{fileResultId}/chunk")
+    @PostMapping("/{knowledgeFileId}/chunk")
     public R<ChunkTriggerVO> chunk(
-            @PathVariable("fileResultId") Long fileResultId,
+            @PathVariable("knowledgeFileId") Long knowledgeFileId,
             StageTriggerQueryDTO query) {
-        log.info("===> KnowledgeFileChunkController chunk 触发切片, fileResultId={}, strategyVersionId={},"
+        log.info("===> KnowledgeFileChunkController chunk 触发切片, knowledgeFileId={}, strategyVersionId={},"
                         + " upstreamProductId={}",
-                fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId());
-        return R.ok(chunkControlService.chunk(fileResultId, query.getStrategyVersionId(),
+                knowledgeFileId, query.getStrategyVersionId(), query.getUpstreamProductId());
+        return R.ok(chunkControlService.chunk(knowledgeFileId, query.getStrategyVersionId(),
                 query.getUpstreamProductId()));
     }
 
     /**
      * 切片详情：任务状态、子步骤、切片统计与列表、产物引用。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param query        查询参数（任务 ID，可空表示取最新）
      * @return 切片详情
      */
-    @GetMapping("/{fileResultId}/chunk-detail")
+    @GetMapping("/{knowledgeFileId}/chunk-detail")
     public R<ChunkDetailVO> chunkDetail(
-            @PathVariable("fileResultId") Long fileResultId,
+            @PathVariable("knowledgeFileId") Long knowledgeFileId,
             StageDetailQueryDTO query) {
-        return R.ok(chunkControlService.chunkDetail(fileResultId, query.getTaskId()));
+        return R.ok(chunkControlService.chunkDetail(knowledgeFileId, query.getTaskId()));
     }
 }

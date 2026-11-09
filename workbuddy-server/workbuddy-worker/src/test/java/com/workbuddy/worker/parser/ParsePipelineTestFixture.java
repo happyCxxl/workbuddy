@@ -56,7 +56,7 @@ final class ParsePipelineTestFixture {
      */
     ParseContext context(String mimeType) {
         ParseContext context = new ParseContext();
-        context.setFileResultId(1L);
+        context.setKnowledgeFileId(1L);
         FileReference fileRef = new FileReference();
         fileRef.setFileId("F-1");
         fileRef.setFileName("t");

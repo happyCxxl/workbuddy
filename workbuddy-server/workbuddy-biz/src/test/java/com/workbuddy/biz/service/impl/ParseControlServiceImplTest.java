@@ -98,7 +98,7 @@ class ParseControlServiceImplTest {
         return fileResult;
     }
 
-    /** 解析执行键：文件结果 10 + 无上游（0）+ 无策略（0） */
+    /** 解析执行键：知识库文件 10 + 无上游（0）+ 无策略（0） */
     private void existingParseTask(WbPipelineTask task) {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.PARSE.name(), 0L, 0L)).thenReturn(task);
     }

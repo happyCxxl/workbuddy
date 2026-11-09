@@ -7,7 +7,7 @@ import lombok.Data;
 
 /**
  * 切片上下文：预处理视图（检索文本口径）+ 统一文档（结构参照：标题层级/图注/表格行）+
- * 策略快照（触发时固定）+ 参数配置。fileResultId/upstreamProductRef 由 biz 注入回填集合头。
+ * 策略快照（触发时固定）+ 参数配置。knowledgeFileId/upstreamProductRef 由 biz 注入回填集合头。
  */
 @Data
 public class ChunkContext {
@@ -24,8 +24,8 @@ public class ChunkContext {
     /** 切片参数（knowledge.chunk 前缀，application.yml 同名 kebab-case 键） */
     private ChunkProperties properties;
 
-    /** 文件结果 ID（wb_file_result.id） */
-    private Long fileResultId;
+    /** 知识库文件 ID（wb_file_result.id） */
+    private Long knowledgeFileId;
 
     /** 上游产物引用（PREPROCESS 视图产物 ID） */
     private Long upstreamProductRef;

@@ -25,7 +25,7 @@ public interface SystemConverter {
      * @param request          提交请求
      * @param validationResult 文件校验结果
      * @param metadata         文件元数据
-     * @param fileResultId     文件结果 ID
+     * @param knowledgeFileId     知识库文件 ID
      * @param userId           当前用户 ID（可空）
      * @return 提交日志（未保存）
      */
@@ -40,13 +40,13 @@ public interface SystemConverter {
     @Mapping(target = "fileId", source = "request.fileId")
     @Mapping(target = "sha256", source = "validationResult.sha256")
     @Mapping(target = "fileName", source = "metadata.fileName")
-    @Mapping(target = "fileResultId", source = "fileResultId")
+    @Mapping(target = "fileResultId", source = "knowledgeFileId")
     @Mapping(target = "status", expression = "java(com.workbuddy.common.enums.input.SubmitStatus.PASS.name())")
     @Mapping(target = "userId", source = "userId")
     @Mapping(target = "failReason", ignore = true)
     WbSubmitLog toSubmitLogPass(Long knowledgeBaseId, FileSubmitDTO request,
                                 FileValidationResult validationResult, FileMetadata metadata,
-                                Long fileResultId, Long userId);
+                                Long knowledgeFileId, Long userId);
 
     /**
      * 校验失败的提交日志：文件名尽力取（取不到空串），指纹算不出时存空串占位，状态 FAIL。

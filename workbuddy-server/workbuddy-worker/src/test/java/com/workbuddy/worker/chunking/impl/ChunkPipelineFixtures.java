@@ -93,7 +93,7 @@ final class ChunkPipelineFixtures {
         context.setDocument(document);
         ChunkProperties props = PropertiesFixtures.chunk();
         context.setStrategy(StrategyFixtures.chunkDefaults(props));
-        context.setFileResultId(10L);
+        context.setKnowledgeFileId(10L);
         context.setUpstreamProductRef(50L);
         return context;
     }

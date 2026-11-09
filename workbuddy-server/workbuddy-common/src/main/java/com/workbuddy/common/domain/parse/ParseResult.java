@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 public class ParseResult {
 
-    /** 文件结果 ID（血缘起点） */
+    /** 知识库文件 ID（血缘起点） */
     private Long resultId;
 
     /** 输入文件引用（fileId/fileName/sha256/mimeType） */

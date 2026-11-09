@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 /**
  * 处理链存储口径：一条链的源文件落在哪个数据源，与当前启用的数据源是否一致。
  *
- * <p>链的数据源取「文件结果 → 来源文件 → 文件档案」这条链。环节触发与产物写入两处入口共用本类，
+ * <p>链的数据源取「知识库文件 → 来源文件 → 文件档案」这条链。环节触发与产物写入两处入口共用本类，
  * 不一致时拒绝执行，同一条链的产物不会落到另一个数据源。
  *
  * <p>链路缺环、档案行缺失、档案未记数据源或当前没有启用的数据源时都不判定为不一致：这些情况取不到链的
@@ -44,11 +44,11 @@ public class ChainStorageSupport {
     /**
      * 处理链的数据源 ID。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 源文件档案的数据源 ID；链路缺环、fileId 为空或档案无数据源返回 null
      */
-    public Long chainSourceIdOf(Long fileResultId) {
-        WbFileResult fileResult = fileResultDbService.getById(fileResultId);
+    public Long chainSourceIdOf(Long knowledgeFileId) {
+        WbFileResult fileResult = fileResultDbService.getById(knowledgeFileId);
         if (NullUtil.isNull(fileResult) || NullUtil.isNull(fileResult.getSourceFileId())) {
             return null;
         }
@@ -57,13 +57,13 @@ public class ChainStorageSupport {
     }
 
     /**
-     * 批量取处理链的数据源 ID：文件结果与来源文件各按一次 in 查询取回，档案一次批量取。
+     * 批量取处理链的数据源 ID：知识库文件与来源文件各按一次 in 查询取回，档案一次批量取。
      *
-     * @param fileResultIds 文件结果 ID 集合
-     * @return 文件结果 ID → 链的数据源 ID；链路缺环与档案无数据源的结果 ID 不出现在映射中
+     * @param knowledgeFileIds 知识库文件 ID 集合
+     * @return 知识库文件 ID → 链的数据源 ID；链路缺环与档案无数据源的结果 ID 不出现在映射中
      */
-    public Map<Long, Long> chainSourceIdsOf(Collection<Long> fileResultIds) {
-        List<Long> distinctIds = fileResultIds.stream()
+    public Map<Long, Long> chainSourceIdsOf(Collection<Long> knowledgeFileIds) {
+        List<Long> distinctIds = knowledgeFileIds.stream()
                 .filter(NullUtil::isNotNull)
                 .distinct()
                 .toList();
@@ -122,11 +122,11 @@ public class ChainStorageSupport {
     /**
      * 链的数据源与当前启用的数据源是否已证实不一致。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 两侧数据源都取到且不同则为 true
      */
-    public boolean storageMismatch(Long fileResultId) {
-        return mismatch(chainSourceIdOf(fileResultId), currentSourceId());
+    public boolean storageMismatch(Long knowledgeFileId) {
+        return mismatch(chainSourceIdOf(knowledgeFileId), currentSourceId());
     }
 
     /**
@@ -142,11 +142,11 @@ public class ChainStorageSupport {
     /**
      * 存储一致性校验：不一致时拒绝执行。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @throws WorkbuddyException 链的数据源与当前启用的数据源不一致（40453）
      */
-    public void requireStorageMatch(Long fileResultId) {
-        Long chainSourceId = chainSourceIdOf(fileResultId);
+    public void requireStorageMatch(Long knowledgeFileId) {
+        Long chainSourceId = chainSourceIdOf(knowledgeFileId);
         Long currentSourceId = currentSourceId();
         ThrowUtil.throwIf(mismatch(chainSourceId, currentSourceId), ErrorCode.STORAGE_TYPE_MISMATCH,
                 "该任务属于 " + sourceName(chainSourceId) + "，当前启用的是 " + sourceName(currentSourceId)

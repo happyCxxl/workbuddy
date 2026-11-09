@@ -53,7 +53,7 @@ public class BuildOrderCommandFactory {
         if (NullUtil.isNotNull(dto.getShape())) {
             combo.setShape(dto.getShape());
         }
-        combo.setFileResultIds(dto.getFileResultIds());
+        combo.setKnowledgeFileIds(dto.getKnowledgeFileIds());
         if (NullUtil.isNotNull(dto.getStageStrategies())) {
             combo.setStageStrategies(new LinkedHashMap<>(dto.getStageStrategies()));
         }

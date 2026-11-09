@@ -82,7 +82,7 @@ public class ChunkTaskRunner {
         }
         WbPipelineTask task = claimed.task();
         WbFileResult fileResult = claimed.fileResult();
-        log.info("===> ChunkTaskRunner 领取切片任务, taskId={}, fileResultId={}",
+        log.info("===> ChunkTaskRunner 领取切片任务, taskId={}, knowledgeFileId={}",
                 taskId, task.getFileResultId());
         try {
             // 上游预处理视图产物：任务行缺引用与产出任务未成功都在助手里拒绝（门禁：未成功的运行不读也不落库）
@@ -122,7 +122,7 @@ public class ChunkTaskRunner {
             context.setDocument(document);
             context.setStrategy(strategy);
             context.setProperties(chunkProperties);
-            context.setFileResultId(fileResult.getId());
+            context.setKnowledgeFileId(fileResult.getId());
             context.setUpstreamProductRef(preprocessProduct.getId());
 
             ChunkOutcome outcome = chunker.chunk(context);
@@ -150,7 +150,7 @@ public class ChunkTaskRunner {
             byte[] content = fileStorage.getObject(ObjectRef.ofProduct(structureProduct));
             return JsonUtil.toObject(new String(content, StandardCharsets.UTF_8), UnifiedDocument.class);
         } catch (Exception e) {
-            log.warn("===> ChunkTaskRunner 读取结构参照产物失败（titlePath/图注降级）, fileResultId={}",
+            log.warn("===> ChunkTaskRunner 读取结构参照产物失败（titlePath/图注降级）, knowledgeFileId={}",
                     preprocessProduct.getFileResultId(), e);
             return null;
         }
@@ -176,7 +176,7 @@ public class ChunkTaskRunner {
         chunkDbService.saveBatch(chunkRows, BATCH_SIZE);
 
         stepLogPersistence.save(task.getId(), outcome.getStepLogs());
-        log.info("===> ChunkTaskRunner 切片完成, taskId={}, fileResultId={}, status={}, chunkCount={}, artifactId={}",
+        log.info("===> ChunkTaskRunner 切片完成, taskId={}, knowledgeFileId={}, status={}, chunkCount={}, artifactId={}",
                 task.getId(), fileResult.getId(), outcome.getSuggestedStatus().name(), chunkSet.getChunkCount(),
                 product.getArtifactId());
     }

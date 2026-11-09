@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
  * 向量集合数据访问单测。
  *
  * <p>守护 {@code getLatestByFileResultId}/{@code listHistoryByFileResultIdAndStrategyVersion}/
- * {@code getByArtifactId}/{@code listByFileResultIds} 的口径：最新一条按 ID 降序取一、
+ * {@code getByArtifactId}/{@code listByKnowledgeFileIds} 的口径：最新一条按 ID 降序取一、
  * 复用回溯按「文件 + 策略版本 + ACTIVE」过滤并限条、产物键定位。
  */
 @ExtendWith(MockitoExtension.class)
@@ -118,18 +118,18 @@ class WbEmbeddingSetDbServiceImplTest {
     /**
      * 批量查询：空入参短路。
      *
-     * <p>守护 {@code listByFileResultIds} 的空入参兜底。
+     * <p>守护 {@code listByKnowledgeFileIds} 的空入参兜底。
      */
     @Test
-    void listByFileResultIdsShouldShortCircuitOnEmpty() {
-        assertTrue(impl.listByFileResultIds(List.of()).isEmpty());
+    void listByKnowledgeFileIdsShouldShortCircuitOnEmpty() {
+        assertTrue(impl.listByKnowledgeFileIds(List.of()).isEmpty());
         verify(mapper, org.mockito.Mockito.never()).selectList(any(Wrapper.class));
     }
 
     /**
      * 按产物键命中时返回该行；按文件批量取时返回真实列表。
      *
-     * <p>守护 {@code getByArtifactId}/{@code listByFileResultIds} 的返回口径。
+     * <p>守护 {@code getByArtifactId}/{@code listByKnowledgeFileIds} 的返回口径。
      */
     @Test
     void artifactAndBatchQueriesShouldReturnRows() {
@@ -139,7 +139,7 @@ class WbEmbeddingSetDbServiceImplTest {
         assertEquals(8L, impl.getByArtifactId("embed-artifact").getId());
 
         when(mapper.selectList(any())).thenReturn(List.of(hit));
-        assertEquals(1, impl.listByFileResultIds(List.of(1L)).size());
+        assertEquals(1, impl.listByKnowledgeFileIds(List.of(1L)).size());
     }
 
     /**

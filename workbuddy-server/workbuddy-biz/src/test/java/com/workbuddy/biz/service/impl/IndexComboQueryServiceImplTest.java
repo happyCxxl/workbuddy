@@ -84,10 +84,10 @@ class IndexComboQueryServiceImplTest {
         assertEquals(IndexShape.FULL_VECTOR, a.getShape());
         assertEquals("preproc-default-v1", a.getStageStrategies().get("PREPROCESS"));
         assertTrue(a.isComplete());
-        assertEquals(List.of(10L, 20L), a.getFileResultIds());
+        assertEquals(List.of(10L, 20L), a.getKnowledgeFileIds());
         assertEquals(2, a.getFileCount());
         assertEquals(80, a.getVectorCount());
-        assertTrue(combos.stream().noneMatch(c -> c.getFileResultIds().isEmpty()));
+        assertTrue(combos.stream().noneMatch(c -> c.getKnowledgeFileIds().isEmpty()));
     }
 
     /**
@@ -114,7 +114,7 @@ class IndexComboQueryServiceImplTest {
         var combos = service.listCombos(1L, List.of(10L));
 
         assertEquals(1, combos.size());
-        assertEquals(List.of(10L), combos.getFirst().getFileResultIds());
+        assertEquals(List.of(10L), combos.getFirst().getKnowledgeFileIds());
         assertEquals(1, combos.getFirst().getFileCount());
         assertEquals(50, combos.getFirst().getVectorCount());
     }

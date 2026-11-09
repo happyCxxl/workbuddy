@@ -14,7 +14,7 @@ export interface SearchRequest {
   query: string;
   /** 覆盖规则里的 topK；不传用规则值 */
   topK?: number;
-  /** 按文件结果过滤 */
+  /** 按知识库文件过滤 */
   documentId?: string;
   /** 按归属人过滤 */
   owner?: string;
@@ -34,7 +34,7 @@ export interface SearchHit {
   titlePath: string | null;
   /** 源元素 ID（JSON 串） */
   sourceElementIds: string | null;
-  /** 文件结果 ID */
+  /** 知识库文件 ID */
   documentId: string | null;
   contentType: string | null;
   parentChunkId: string | null;

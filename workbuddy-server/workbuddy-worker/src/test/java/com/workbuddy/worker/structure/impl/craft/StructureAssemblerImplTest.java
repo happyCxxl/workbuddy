@@ -54,7 +54,7 @@ class StructureAssemblerImplTest {
 
     private AssembleContext context(String mimeType) {
         AssembleContext context = new AssembleContext();
-        context.setFileResultId(1L);
+        context.setKnowledgeFileId(1L);
         context.setSourceFileType(mimeType);
         context.setProperties(properties);
         return context;

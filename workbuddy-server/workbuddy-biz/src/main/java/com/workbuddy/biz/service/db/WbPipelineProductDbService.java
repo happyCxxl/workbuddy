@@ -11,13 +11,13 @@ import java.util.List;
 public interface WbPipelineProductDbService extends InfraDbService<WbPipelineProduct> {
 
     /**
-     * 按文件结果 + 环节查最新产物（id 倒序取一条）。
+     * 按知识库文件 + 环节查最新产物（id 倒序取一条）。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param stage        环节（PipelineStage 枚举名）
      * @return 产物实体；不存在返回 null
      */
-    WbPipelineProduct getByFileResultIdAndStage(Long fileResultId, String stage);
+    WbPipelineProduct getByFileResultIdAndStage(Long knowledgeFileId, String stage);
 
     /**
      * 按任务查产物（一次执行至多一份产物：重复执行按它复用，不新增行）。
@@ -30,8 +30,8 @@ public interface WbPipelineProductDbService extends InfraDbService<WbPipelinePro
     /**
      * 查单文件全部产物（id 升序）。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 产物列表
      */
-    List<WbPipelineProduct> listByFileResultId(Long fileResultId);
+    List<WbPipelineProduct> listByFileResultId(Long knowledgeFileId);
 }

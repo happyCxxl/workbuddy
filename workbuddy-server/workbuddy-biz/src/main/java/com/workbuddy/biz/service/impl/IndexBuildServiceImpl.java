@@ -80,51 +80,51 @@ public class IndexBuildServiceImpl implements IndexBuildService {
     /**
      * 文件产物就绪后的自动注册钩子：绑定开启时按最新产物登记组合。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      */
     @Override
-    public void onFileProductsReady(Long fileResultId) {
-        WbFileResult file = fileResultDbService.getById(fileResultId);
+    public void onFileProductsReady(Long knowledgeFileId) {
+        WbFileResult file = fileResultDbService.getById(knowledgeFileId);
         if (NullUtil.isNull(file)) {
-            log.warn("===> IndexBuildServiceImpl 文件产物就绪回调但文件结果不存在, fileResultId={}", fileResultId);
+            log.warn("===> IndexBuildServiceImpl 文件产物就绪回调但知识库文件不存在, knowledgeFileId={}", knowledgeFileId);
             return;
         }
         Long kbId = file.getKnowledgeBaseId();
 
         // ① 血缘解析：文件最新产物的组合（追加目标按产物实际组合决定，不按当前在线/绑定）
-        ProductCombo product = resolveProductCombo(fileResultId);
+        ProductCombo product = resolveProductCombo(knowledgeFileId);
         if (NullUtil.isNull(product)) {
-            log.info("===> IndexBuildServiceImpl 产物血统不完整，跳过追加, fileResultId={}", fileResultId);
+            log.info("===> IndexBuildServiceImpl 产物血统不完整，跳过追加, knowledgeFileId={}", knowledgeFileId);
             return;
         }
 
         // ② 定位/复用组合集合（绑定关=评测模式不自动注册新组合；无活跃版本时跳过追加）
         WbIndexVersion version = registerComboCollection(kbId, product.combo(), product.dimension());
-        List<IndexRow> rows = indexRowSupport.assemble(fileResultId,
+        List<IndexRow> rows = indexRowSupport.assemble(knowledgeFileId,
                 StrUtil.blankToDefault(file.getOwner(), ""), product.chunkRow(), product.embedRow());
         if (NullUtil.isNotNull(version)) {
             if (NullUtil.isNull(rows)) {
-                stateSupport.markFailed(version, "文件 " + fileResultId + " 向量产物读取失败");
+                stateSupport.markFailed(version, "文件 " + knowledgeFileId + " 向量产物读取失败");
                 return;
             }
             if (rows.isEmpty()) {
-                log.info("===> IndexBuildServiceImpl 无可写记录（SUCCESS/CACHED 子集为空），跳过追加, fileResultId={}",
-                        fileResultId);
+                log.info("===> IndexBuildServiceImpl 无可写记录（SUCCESS/CACHED 子集为空），跳过追加, knowledgeFileId={}",
+                        knowledgeFileId);
                 return;
             }
             String collectionName = MilvusIndexPort.collectionName(kbId, version.getVersionNo());
             milvusIndexPort.append(collectionName, rows);
             stateSupport.updateLedger(version, rows);
-            buildSupport.reconcileFile(collectionName, fileResultId, rows);
+            buildSupport.reconcileFile(collectionName, knowledgeFileId, rows);
             maybeAutoPublish(kbId, version, product.combo());
         }
 
         // ③ 规则三：产物组合 ≠ 在线组合 → 按在线组合全链补齐该文件（文件永不丢）
-        maybeBackfillToOnline(kbId, fileResultId, product.combo());
+        maybeBackfillToOnline(kbId, knowledgeFileId, product.combo());
 
-        // ④ 评测冻结集路由：范围内文件的活跃 LIST 版本同步追加（冻结语义：只认 fileResultIds）
+        // ④ 评测冻结集路由：范围内文件的活跃 LIST 版本同步追加（冻结语义：只认 knowledgeFileIds）
         if (NullUtil.isNotNull(rows) && !rows.isEmpty()) {
-            buildSupport.appendToFrozenScopes(kbId, fileResultId, product.combo(), rows);
+            buildSupport.appendToFrozenScopes(kbId, knowledgeFileId, product.combo(), rows);
         }
     }
 
@@ -144,8 +144,8 @@ public class IndexBuildServiceImpl implements IndexBuildService {
     }
 
     /** 血缘解析：最新 EMBED 行（EMBED 策略）→ 其 chunkSetRef 切片行（CHUNK 策略 + 上游链预处理策略）→ 组合 */
-    private ProductCombo resolveProductCombo(Long fileResultId) {
-        List<WbEmbeddingSet> embedSets = embeddingSetDbService.listByFileResultIds(List.of(fileResultId));
+    private ProductCombo resolveProductCombo(Long knowledgeFileId) {
+        List<WbEmbeddingSet> embedSets = embeddingSetDbService.listByKnowledgeFileIds(List.of(knowledgeFileId));
         WbEmbeddingSet embedRow = embedSets.stream().max(Comparator.comparing(WbEmbeddingSet::getId)).orElse(null);
         if (NullUtil.isNull(embedRow)) {
             return null;
@@ -222,7 +222,7 @@ public class IndexBuildServiceImpl implements IndexBuildService {
     }
 
     /** 规则三：产物组合 ≠ 在线组合 → 按在线组合全链补齐该文件（从缺失的最上游环节投递） */
-    private void maybeBackfillToOnline(Long kbId, Long fileResultId, ComboSnapshot productCombo) {
+    private void maybeBackfillToOnline(Long kbId, Long knowledgeFileId, ComboSnapshot productCombo) {
         WbIndexVersion online = publishService.currentPublished(kbId);
         if (NullUtil.isNull(online)) {
             return;
@@ -231,7 +231,7 @@ public class IndexBuildServiceImpl implements IndexBuildService {
         if (stateSupport.comboEquals(onlineCombo, productCombo)) {
             return;
         }
-        buildSupport.backfillFile(fileResultId, onlineCombo);
+        buildSupport.backfillFile(knowledgeFileId, onlineCombo);
     }
 
     /**
@@ -250,7 +250,7 @@ public class IndexBuildServiceImpl implements IndexBuildService {
         ComboSnapshot combo = order.getComboSnapshot();
         // 范围口径：LIST = 评测冻结集（文件列表非空且全属本 KB）；ALL = 范围字段归一化
         if (combo.isListScope()) {
-            List<Long> fileIds = combo.getFileResultIds();
+            List<Long> fileIds = combo.getKnowledgeFileIds();
             ThrowUtil.throwIf(NullUtil.isNull(fileIds) || fileIds.isEmpty(),
                     ErrorCode.PARAM_INVALID, "指定文件构建（LIST）需提供文件列表");
             Set<Long> kbFileIds = fileResultDbService.listByKb(kbId).stream()
@@ -259,7 +259,7 @@ public class IndexBuildServiceImpl implements IndexBuildService {
             ThrowUtil.throwIf(!foreign.isEmpty(), ErrorCode.PARAM_INVALID, "文件列表包含非本知识库文件: " + foreign);
         } else {
             combo.setFileScopeMode("ALL");
-            combo.setFileResultIds(null);
+            combo.setKnowledgeFileIds(null);
         }
         // 绑定开=按 KB 绑定策略集合：前端只传数据范围/形态时由后端解析绑定组合补齐策略口径
         if (!combo.hasCompleteStageStrategies()) {
@@ -355,8 +355,8 @@ public class IndexBuildServiceImpl implements IndexBuildService {
         Long kbId = set.getKnowledgeBaseId();
         ComboSnapshot combo = stateSupport.requireCombo(target);
         List<Long> scope = scopeFileIds(kbId, combo);
-        List<WbChunkSet> chunkSets = chunkSetDbService.listByFileResultIds(scope);
-        List<WbEmbeddingSet> embedSets = embeddingSetDbService.listByFileResultIds(scope);
+        List<WbChunkSet> chunkSets = chunkSetDbService.listByKnowledgeFileIds(scope);
+        List<WbEmbeddingSet> embedSets = embeddingSetDbService.listByKnowledgeFileIds(scope);
         Map<String, Long> latestEmbed = latestEmbedIdMap(embedSets);
 
         // 差异文件 = 缺目标组合产物（血缘感知：切片策略匹配且上游预处理血缘匹配才算齐）+ 缺向量产物
@@ -383,8 +383,8 @@ public class IndexBuildServiceImpl implements IndexBuildService {
     }
 
     private List<Long> scopeFileIds(Long kbId, ComboSnapshot combo) {
-        if ("LIST".equals(combo.getFileScopeMode()) && NullUtil.isNotNull(combo.getFileResultIds())) {
-            return combo.getFileResultIds();
+        if ("LIST".equals(combo.getFileScopeMode()) && NullUtil.isNotNull(combo.getKnowledgeFileIds())) {
+            return combo.getKnowledgeFileIds();
         }
         return fileResultDbService.listByKb(kbId).stream().map(WbFileResult::getId).toList();
     }

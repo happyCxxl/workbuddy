@@ -239,12 +239,12 @@ class WbPipelineTaskDbServiceImplTest {
     /**
      * 批量同环节查询：空入参短路不落 SQL，非空走 IN。
      *
-     * <p>守护 {@code listByFileResultIdsAndStage} 的空入参兜底。
+     * <p>守护 {@code listByKnowledgeFileIdsAndStage} 的空入参兜底。
      */
     @Test
-    void listByFileResultIdsAndStageShouldShortCircuitOnEmpty() {
-        assertEquals(List.of(), impl.listByFileResultIdsAndStage(List.of(), "PARSE"));
-        assertEquals(List.of(), impl.listByFileResultIdsAndStage(null, "PARSE"));
+    void listByKnowledgeFileIdsAndStageShouldShortCircuitOnEmpty() {
+        assertEquals(List.of(), impl.listByKnowledgeFileIdsAndStage(List.of(), "PARSE"));
+        assertEquals(List.of(), impl.listByKnowledgeFileIdsAndStage(null, "PARSE"));
         verify(mapper, never()).selectList(any());
     }
 
@@ -377,15 +377,15 @@ class WbPipelineTaskDbServiceImplTest {
     /**
      * 按文件集合与环节取任务：非空入参返回真实列表。
      *
-     * <p>守护 {@code listByFileResultIdsAndStage} 的返回口径：恒空会让批量详情丢任务。
+     * <p>守护 {@code listByKnowledgeFileIdsAndStage} 的返回口径：恒空会让批量详情丢任务。
      */
     @Test
-    void listByFileResultIdsAndStageShouldReturnRows() {
+    void listByKnowledgeFileIdsAndStageShouldReturnRows() {
         WbPipelineTask row = new WbPipelineTask();
         row.setId(12L);
         when(mapper.selectList(any())).thenReturn(List.of(row));
 
-        var rows = impl.listByFileResultIdsAndStage(List.of(10L, 11L), "CHUNK");
+        var rows = impl.listByKnowledgeFileIdsAndStage(List.of(10L, 11L), "CHUNK");
 
         assertEquals(1, rows.size());
         assertEquals(12L, rows.getFirst().getId());

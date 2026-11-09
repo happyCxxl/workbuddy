@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/file-results")
+@RequestMapping("/knowledge-files")
 public class KnowledgeLineageController {
 
     private final LineageQueryService lineageQueryService;
@@ -22,12 +22,12 @@ public class KnowledgeLineageController {
     /**
      * 文件血缘：从解析到索引的环节节点与依赖边。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 血缘视图
      */
-    @GetMapping("/{fileResultId}/lineage")
+    @GetMapping("/{knowledgeFileId}/lineage")
     public R<LineageVO> lineage(
-            @PathVariable("fileResultId") Long fileResultId) {
-        return R.ok(lineageQueryService.lineage(fileResultId));
+            @PathVariable("knowledgeFileId") Long knowledgeFileId) {
+        return R.ok(lineageQueryService.lineage(knowledgeFileId));
     }
 }

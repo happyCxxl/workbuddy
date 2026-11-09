@@ -79,7 +79,7 @@ final class IndexBuildFixture {
         embedRow.setChunkSetRef(1L);
         embedRow.setStrategyVersion(embed);
         embedRow.setDimension(1024);
-        when(embeddingSetDbService.listByFileResultIds(List.of(file.getId()))).thenReturn(List.of(embedRow));
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(file.getId()))).thenReturn(List.of(embedRow));
         WbChunkSet chunkRow = new WbChunkSet();
         chunkRow.setId(1L);
         chunkRow.setFileResultId(file.getId());
@@ -94,12 +94,12 @@ final class IndexBuildFixture {
     void stubCompleteCombo(WbFileResult file) {
         when(fileResultDbService.listByKb(IndexSetTestFixtures.KB_ID)).thenReturn(List.of(file));
         WbChunkSet chunkSet = IndexSetTestFixtures.chunkRowOf(1L, file.getId(), "chunk-hybrid-v1", 100L);
-        when(chunkSetDbService.listByFileResultIds(List.of(file.getId()))).thenReturn(List.of(chunkSet));
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(file.getId()))).thenReturn(List.of(chunkSet));
         WbEmbeddingSet embedSet = new WbEmbeddingSet();
         embedSet.setId(2L);
         embedSet.setFileResultId(file.getId());
         embedSet.setStrategyVersion("embed-default-v1");
-        when(embeddingSetDbService.listByFileResultIds(List.of(file.getId()))).thenReturn(List.of(embedSet));
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(file.getId()))).thenReturn(List.of(embedSet));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
     }
 

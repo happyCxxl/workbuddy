@@ -35,13 +35,13 @@ public class IndexRowSupport {
     /**
      * 装配单文件索引行：只取 SUCCESS/CACHED 记录，切片产物用于补标题路径与来源元素。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param owner        归属方标识
      * @param chunkRow     切片集合行
      * @param embedRow     向量集合行
      * @return 索引行；产物读取失败时返回 null，无 SUCCESS/CACHED 记录时返回空列表
      */
-    public List<IndexRow> assemble(Long fileResultId, String owner, WbChunkSet chunkRow, WbEmbeddingSet embedRow) {
+    public List<IndexRow> assemble(Long knowledgeFileId, String owner, WbChunkSet chunkRow, WbEmbeddingSet embedRow) {
         EmbeddingSet embedSet = readEmbeddingSet(ObjectRef.ofEmbeddingSet(embedRow));
         if (NullUtil.isNull(embedSet) || NullUtil.isNull(embedSet.getRecords())) {
             log.warn("===> IndexRowSupport 向量产物缺失或记录为空, artifactId={}", embedRow.getArtifactId());
@@ -56,7 +56,7 @@ public class IndexRowSupport {
             Chunk chunk = NullUtil.isNull(chunkById) ? null : chunkById.get(record.getChunkId());
             IndexRow row = new IndexRow();
             row.setChunkId(record.getChunkId());
-            row.setDocumentId(fileResultId);
+            row.setDocumentId(knowledgeFileId);
             row.setOwner(owner);
             row.setContentType(record.getContentType());
             row.setParentChunkId(record.getParentChunkId());

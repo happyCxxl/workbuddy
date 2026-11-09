@@ -17,7 +17,7 @@ export async function addFile(file: File, onProgress?: (percent: number) => void
 }
 
 /**
- * 提交文件引用到知识库：建档三写（源文件 / 文件结果 / 提交日志）。
+ * 提交文件引用到知识库：建档三写（源文件 / 知识库文件 / 提交日志）。
  *
  * <p>只建档，不创建处理任务——解析由环节页手动触发（手动逐环节口径）。
  *

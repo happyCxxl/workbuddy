@@ -37,16 +37,16 @@ public interface EmbedConverter {
     /**
      * 向量集合落库行：产物引用列取自对象存储位置。
      *
-     * @param fileResultId    文件结果 ID
+     * @param knowledgeFileId    知识库文件 ID
      * @param set             向量集合产物
      * @param strategyVersion 向量化策略完整版本
      * @param ref             产物对象位置
      * @return 向量集合行（未保存）
      */
-    default WbEmbeddingSet setRow(Long fileResultId, EmbeddingSet set, String strategyVersion,
+    default WbEmbeddingSet setRow(Long knowledgeFileId, EmbeddingSet set, String strategyVersion,
                                   ObjectRef ref) {
         WbEmbeddingSet row = new WbEmbeddingSet();
-        row.setFileResultId(fileResultId);
+        row.setFileResultId(knowledgeFileId);
         row.setChunkSetRef(set.getChunkSetRef());
         row.setEmbeddingSetId(set.getEmbeddingSetId());
         row.setStrategyVersion(strategyVersion);

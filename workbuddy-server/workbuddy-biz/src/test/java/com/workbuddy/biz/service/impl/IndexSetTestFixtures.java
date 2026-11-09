@@ -30,7 +30,7 @@ final class IndexSetTestFixtures {
     static ComboSnapshot comboList(List<Long> fileIds, String embedStrategy) {
         ComboSnapshot combo = ComboSnapshot.of("preproc-default-v1", "chunk-hybrid-v1", embedStrategy);
         combo.setFileScopeMode("LIST");
-        combo.setFileResultIds(fileIds);
+        combo.setKnowledgeFileIds(fileIds);
         return combo;
     }
 

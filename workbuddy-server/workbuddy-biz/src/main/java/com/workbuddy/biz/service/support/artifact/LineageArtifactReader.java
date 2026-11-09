@@ -64,19 +64,19 @@ public final class LineageArtifactReader {
      * @param tasks                本次血缘的任务列表
      * @param productById          产物 ID → 产物行
      * @param taskIdByProductId    产物 ID → 产出任务 ID
-     * @param fileResultId         文件结果 ID（集合行按文件取）
+     * @param knowledgeFileId         知识库文件 ID（集合行按文件取）
      * @param fileStorage          对象存储
      * @param chunkSetDbService    切片集合数据访问
      * @param embeddingSetDbService 向量集合数据访问
      * @return 按任务与产物键索引的产物集合
      */
     public static NodeArtifacts read(List<WbPipelineTask> tasks, Map<Long, WbPipelineProduct> productById,
-                                     Map<Long, Long> taskIdByProductId, Long fileResultId,
+                                     Map<Long, Long> taskIdByProductId, Long knowledgeFileId,
                                      FileStorage fileStorage, WbChunkSetDbService chunkSetDbService,
                                      WbEmbeddingSetDbService embeddingSetDbService) {
-        Map<String, WbChunkSet> chunkSetByArtifact = chunkSetDbService.listByFileResultId(fileResultId).stream()
+        Map<String, WbChunkSet> chunkSetByArtifact = chunkSetDbService.listByFileResultId(knowledgeFileId).stream()
                 .collect(Collectors.toMap(WbChunkSet::getArtifactId, s -> s, (a, b) -> a));
-        Map<String, WbEmbeddingSet> embedSetByArtifact = embeddingSetDbService.listByFileResultId(fileResultId)
+        Map<String, WbEmbeddingSet> embedSetByArtifact = embeddingSetDbService.listByFileResultId(knowledgeFileId)
                 .stream()
                 .collect(Collectors.toMap(WbEmbeddingSet::getArtifactId, s -> s, (a, b) -> a));
         Map<Long, ParseResult> parseResultByTaskId = readProductBodies(tasks, productById, PipelineStage.PARSE,

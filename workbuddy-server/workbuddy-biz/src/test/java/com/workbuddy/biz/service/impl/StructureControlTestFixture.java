@@ -74,7 +74,7 @@ final class StructureControlTestFixture {
         return service;
     }
 
-    /** 上游产物的产出任务（环节 PARSE、归属文件结果 10） */
+    /** 上游产物的产出任务（环节 PARSE、归属知识库文件 10） */
     WbPipelineTask upstreamTask(PipelineTaskStatus status) {
         WbPipelineTask task = new WbPipelineTask();
         task.setId(UPSTREAM_TASK_ID);
@@ -84,7 +84,7 @@ final class StructureControlTestFixture {
         return task;
     }
 
-    /** 文件结果行夹具（归属知识库 10） */
+    /** 知识库文件行夹具（归属知识库 10） */
     WbFileResult fileResult() {
         WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
@@ -92,7 +92,7 @@ final class StructureControlTestFixture {
         return fileResult;
     }
 
-    /** 上游解析产物夹具（id 50，归属文件结果 10） */
+    /** 上游解析产物夹具（id 50，归属知识库文件 10） */
     WbPipelineProduct parseProduct() {
         return parseProduct(50L);
     }
@@ -115,7 +115,7 @@ final class StructureControlTestFixture {
         return task;
     }
 
-    /** 组装执行键命中检查：文件结果 10 + 上游解析产物 + 无策略（0） */
+    /** 组装执行键命中检查：知识库文件 10 + 上游解析产物 + 无策略（0） */
     void existingStructureTask(Long upstreamProductId, WbPipelineTask task) {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.STRUCTURE.name(), upstreamProductId, 0L))
                 .thenReturn(task);

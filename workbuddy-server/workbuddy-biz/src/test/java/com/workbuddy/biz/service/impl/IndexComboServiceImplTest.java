@@ -145,10 +145,10 @@ class IndexComboServiceImplTest {
     @Test
     void enumerateCombosShouldExcludeIncompleteCombos() {
         when(fileResultDbService.listByKb(2L)).thenReturn(List.of(file(10L), file(11L)));
-        when(chunkSetDbService.listByFileResultIds(List.of(10L, 11L))).thenReturn(List.of(
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L, 11L))).thenReturn(List.of(
                 chunkSet(1L, 10L, "chunk-a-v1", 100L), chunkSet(2L, 10L, "chunk-b-v1", 200L),
                 chunkSet(3L, 11L, "chunk-a-v1", 300L))); // 文件 11 无 chunk-b
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L, 11L))).thenReturn(List.of(
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L, 11L))).thenReturn(List.of(
                 embedSet(1L, 10L, "embed-e1-v1"), embedSet(2L, 11L, "embed-e1-v1"),
                 embedSet(3L, 10L, "embed-e2-v1"), embedSet(4L, 11L, "embed-e2-v1")));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
@@ -171,9 +171,9 @@ class IndexComboServiceImplTest {
     @Test
     void enumerateCombosShouldExcludeLineageMissingStrategy() {
         when(fileResultDbService.listByKb(2L)).thenReturn(List.of(file(10L), file(11L)));
-        when(chunkSetDbService.listByFileResultIds(List.of(10L, 11L))).thenReturn(List.of(
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L, 11L))).thenReturn(List.of(
                 chunkSet(1L, 10L, "chunk-a-v1", 100L), chunkSet(2L, 11L, "chunk-a-v1", 300L)));
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L, 11L))).thenReturn(List.of(
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L, 11L))).thenReturn(List.of(
                 embedSet(1L, 10L, "embed-e1-v1"), embedSet(2L, 11L, "embed-e1-v1")));
         // 血统缺失：文件 11 的切片行上游预处理产物快照解析失败
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
@@ -198,9 +198,9 @@ class IndexComboServiceImplTest {
     @Test
     void enumerateCombosScopedShouldOnlyConsiderGivenFiles() {
         // 范围收窄：只枚举指定文件的组合（范围外文件缺失不影响完整性判定）
-        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(
                 chunkSet(1L, 10L, "chunk-a-v1", 100L), chunkSet(2L, 10L, "chunk-b-v1", 200L)));
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(
                 embedSet(1L, 10L, "embed-e1-v1"), embedSet(3L, 10L, "embed-e2-v1")));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         when(lineageResolver.resolvePreprocessStrategy(200L)).thenReturn("preproc-default-v1");
@@ -258,9 +258,9 @@ class IndexComboServiceImplTest {
         kb.setStrategyBindingEnabled(0);
         when(knowledgeBaseDbService.getById(5L)).thenReturn(kb);
         when(fileResultDbService.listByKb(5L)).thenReturn(List.of(file(10L)));
-        when(chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(
+        when(chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(
                 chunkSet(1L, 10L, "chunk-a-v1", 100L)));
-        when(embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(
+        when(embeddingSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(
                 embedSet(1L, 10L, "embed-e1-v1")));
         when(lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
 

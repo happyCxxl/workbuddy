@@ -71,7 +71,7 @@ const SLOT = NODE_ROW_HEIGHT + ROW_GAP;
 
 const props = defineProps<{
   lineage: Lineage | null;
-  /** 当前文件结果 ID：位置按文件分开记忆，切回来能恢复用户摆好的布局 */
+  /** 当前知识库文件 ID：位置按文件分开记忆，切回来能恢复用户摆好的布局 */
   fileKey: string;
   /** 各文件的节点坐标记忆（页面持有，跨文件切换持久） */
   positionStore: NodePositionStore;

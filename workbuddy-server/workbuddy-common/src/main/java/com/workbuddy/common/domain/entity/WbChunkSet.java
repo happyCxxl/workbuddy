@@ -19,7 +19,7 @@ public class WbChunkSet {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    /** 所属文件结果 */
+    /** 所属知识库文件 */
     private Long fileResultId;
 
     /** 上游产物（预处理视图产物） */

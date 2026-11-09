@@ -11,7 +11,7 @@ export interface ChunkPaneFilter {
 
 /** 取数所需的上下文（用取值函数，组件里改选文件/任务后不必重建页签） */
 export interface ChunkPaneContext {
-  fileResultId: () => string;
+  knowledgeFileId: () => string;
   stage: () => string;
   taskId: () => string;
   pageSize: number;
@@ -53,7 +53,7 @@ export function createChunkPane(filter: ChunkPaneFilter, ctx: ChunkPaneContext):
     pane.loading = true;
     pane.error = '';
     try {
-      const data = await getStageContent(ctx.fileResultId(), ctx.stage(), {
+      const data = await getStageContent(ctx.knowledgeFileId(), ctx.stage(), {
         taskId: ctx.taskId(),
         ...filter,
         current: pane.page,

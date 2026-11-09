@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/file-results")
+@RequestMapping("/knowledge-files")
 public class KnowledgeFilePreprocessController {
 
     private final PreprocessControlService preprocessControlService;
@@ -28,32 +28,32 @@ public class KnowledgeFilePreprocessController {
     /**
      * 触发预处理：登记 PREPROCESS 任务并按上游解析产物出队执行。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param query        触发参数（策略版本与上游产物，可空）
      * @return 任务 ID 与生效策略版本
      */
-    @PostMapping("/{fileResultId}/preprocess")
+    @PostMapping("/{knowledgeFileId}/preprocess")
     public R<PreprocessTriggerVO> preprocess(
-            @PathVariable("fileResultId") Long fileResultId,
+            @PathVariable("knowledgeFileId") Long knowledgeFileId,
             StageTriggerQueryDTO query) {
-        log.info("===> KnowledgeFilePreprocessController preprocess 触发预处理, fileResultId={},"
+        log.info("===> KnowledgeFilePreprocessController preprocess 触发预处理, knowledgeFileId={},"
                         + " strategyVersionId={}, upstreamProductId={}",
-                fileResultId, query.getStrategyVersionId(), query.getUpstreamProductId());
-        return R.ok(preprocessControlService.preprocess(fileResultId, query.getStrategyVersionId(),
+                knowledgeFileId, query.getStrategyVersionId(), query.getUpstreamProductId());
+        return R.ok(preprocessControlService.preprocess(knowledgeFileId, query.getStrategyVersionId(),
                 query.getUpstreamProductId()));
     }
 
     /**
      * 预处理详情：任务状态、子步骤、字段与剔除统计、产物引用。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param query        查询参数（任务 ID，可空表示取最新）
      * @return 预处理详情
      */
-    @GetMapping("/{fileResultId}/preprocess-detail")
+    @GetMapping("/{knowledgeFileId}/preprocess-detail")
     public R<PreprocessDetailVO> preprocessDetail(
-            @PathVariable("fileResultId") Long fileResultId,
+            @PathVariable("knowledgeFileId") Long knowledgeFileId,
             StageDetailQueryDTO query) {
-        return R.ok(preprocessControlService.preprocessDetail(fileResultId, query.getTaskId()));
+        return R.ok(preprocessControlService.preprocessDetail(knowledgeFileId, query.getTaskId()));
     }
 }

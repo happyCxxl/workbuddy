@@ -52,14 +52,14 @@ public class KnowledgeFileIndexController {
      * 列出可构建的索引组合。
      *
      * @param id            知识库 ID
-     * @param fileResultIds 限定参与的文件结果 ID（可空）
+     * @param knowledgeFileIds 限定参与的知识库文件 ID（可空）
      * @return 组合列表
      */
     @GetMapping("/{id}/index-combos")
     public R<List<IndexComboVO>> combos(
             @PathVariable("id") Long id,
-            @RequestParam(value = "fileResultIds", required = false) List<Long> fileResultIds) {
-        return R.ok(indexSetService.listCombos(id, fileResultIds));
+            @RequestParam(value = "knowledgeFileIds", required = false) List<Long> knowledgeFileIds) {
+        return R.ok(indexSetService.listCombos(id, knowledgeFileIds));
     }
 
     /**

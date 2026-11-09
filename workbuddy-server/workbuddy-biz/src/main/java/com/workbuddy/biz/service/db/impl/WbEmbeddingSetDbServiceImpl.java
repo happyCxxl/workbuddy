@@ -21,13 +21,13 @@ public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingS
     /**
      * 取该文件最新一条向量集合。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 最新向量集合；没有则为 null
      */
     @Override
-    public WbEmbeddingSet getLatestByFileResultId(Long fileResultId) {
+    public WbEmbeddingSet getLatestByFileResultId(Long knowledgeFileId) {
         LambdaQueryWrapper<WbEmbeddingSet> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbEmbeddingSet::getFileResultId, fileResultId)
+        queryWrapper.eq(WbEmbeddingSet::getFileResultId, knowledgeFileId)
                 .orderByDesc(WbEmbeddingSet::getId)
                 .last("LIMIT 1");
         return getOne(queryWrapper, false);
@@ -36,13 +36,13 @@ public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingS
     /**
      * 取该文件的全部向量集合，按 ID 升序。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 向量集合列表
      */
     @Override
-    public List<WbEmbeddingSet> listByFileResultId(Long fileResultId) {
+    public List<WbEmbeddingSet> listByFileResultId(Long knowledgeFileId) {
         LambdaQueryWrapper<WbEmbeddingSet> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbEmbeddingSet::getFileResultId, fileResultId)
+        queryWrapper.eq(WbEmbeddingSet::getFileResultId, knowledgeFileId)
                 .orderByAsc(WbEmbeddingSet::getId);
         return list(queryWrapper);
     }
@@ -50,16 +50,16 @@ public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingS
     /**
      * 取同策略的历史成功集合，按 ID 降序限制条数。
      *
-     * @param fileResultId    文件结果 ID
+     * @param knowledgeFileId    知识库文件 ID
      * @param strategyVersion 向量策略版本
      * @param limit           条数上限（小于 1 按 1 处理）
      * @return 命中的向量集合列表
      */
     @Override
-    public List<WbEmbeddingSet> listHistoryByFileResultIdAndStrategyVersion(Long fileResultId,
+    public List<WbEmbeddingSet> listHistoryByFileResultIdAndStrategyVersion(Long knowledgeFileId,
                                                                             String strategyVersion, int limit) {
         LambdaQueryWrapper<WbEmbeddingSet> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbEmbeddingSet::getFileResultId, fileResultId)
+        queryWrapper.eq(WbEmbeddingSet::getFileResultId, knowledgeFileId)
                 .eq(WbEmbeddingSet::getStrategyVersion, strategyVersion)
                 .eq(WbEmbeddingSet::getStatus, RowStatus.ACTIVE.name())
                 .orderByDesc(WbEmbeddingSet::getId)
@@ -85,16 +85,16 @@ public class WbEmbeddingSetDbServiceImpl extends InfraDbServiceImpl<WbEmbeddingS
     /**
      * 批量取向量集合，按 ID 升序。
      *
-     * @param fileResultIds 文件结果 ID 列表
+     * @param knowledgeFileIds 知识库文件 ID 列表
      * @return 命中的向量集合；入参为空时返回空列表
      */
     @Override
-    public List<WbEmbeddingSet> listByFileResultIds(List<Long> fileResultIds) {
-        if (NullUtil.isNull(fileResultIds) || fileResultIds.isEmpty()) {
+    public List<WbEmbeddingSet> listByKnowledgeFileIds(List<Long> knowledgeFileIds) {
+        if (NullUtil.isNull(knowledgeFileIds) || knowledgeFileIds.isEmpty()) {
             return List.of();
         }
         LambdaQueryWrapper<WbEmbeddingSet> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(WbEmbeddingSet::getFileResultId, fileResultIds)
+        queryWrapper.in(WbEmbeddingSet::getFileResultId, knowledgeFileIds)
                 .orderByAsc(WbEmbeddingSet::getId);
         return list(queryWrapper);
     }

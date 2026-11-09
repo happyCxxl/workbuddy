@@ -179,7 +179,7 @@
     <StageDetailDrawer
       v-if="detailNode"
       :visible="detailVisible"
-      :file-result-id="selectedFileId"
+      :knowledge-file-id="selectedFileId"
       :task-id="detailNode.taskId"
       :stage="detailNode.stage"
       :file-name="selectedFileName"

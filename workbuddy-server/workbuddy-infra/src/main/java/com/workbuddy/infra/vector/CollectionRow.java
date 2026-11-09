@@ -14,7 +14,7 @@ public class CollectionRow {
     /** 主键（chunkId） */
     private String id;
 
-    /** 文档 ID（文件结果，业务过滤用） */
+    /** 文档 ID（知识库文件，业务过滤用） */
     private Long documentId;
 
     /** 归属（业务过滤用） */

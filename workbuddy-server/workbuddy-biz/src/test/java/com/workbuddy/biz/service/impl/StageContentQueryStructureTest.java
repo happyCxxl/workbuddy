@@ -100,7 +100,7 @@ class StageContentQueryStructureTest {
     private StageContentQueryServiceImpl service;
 
     /**
-     * 每个用例重建登录态与服务（文件结果 10 挂在知识库 10 下）。
+     * 每个用例重建登录态与服务（知识库文件 10 挂在知识库 10 下）。
      */
     @BeforeEach
     void setUp() {
@@ -218,7 +218,7 @@ class StageContentQueryStructureTest {
     }
 
     /**
-     * 打桩：文件结果 10 的指定环节有成功任务与产物，产物内容为给定对象。
+     * 打桩：知识库文件 10 的指定环节有成功任务与产物，产物内容为给定对象。
      *
      * @param stage      环节名
      * @param artifactId 产物键
@@ -284,9 +284,9 @@ class StageContentQueryStructureTest {
     }
 
     /**
-     * 构造文件结果行。
+     * 构造知识库文件行。
      *
-     * @return 文件结果
+     * @return 知识库文件
      */
     private WbFileResult fileResultOfKb10() {
         WbFileResult fileResult = new WbFileResult();

@@ -26,17 +26,17 @@ public class WbPipelineTaskDbServiceImpl extends InfraDbServiceImpl<WbPipelineTa
     /**
      * 按执行键取任务：四段键完全相同才算同一次执行，取最近一条。
      *
-     * @param fileResultId      文件结果 ID
+     * @param knowledgeFileId      知识库文件 ID
      * @param stage             环节名
      * @param upstreamProductId 上游产物 ID
      * @param strategyVersionId 策略版本行 ID
      * @return 命中的任务；没有则为 null
      */
     @Override
-    public WbPipelineTask getByExecKey(Long fileResultId, String stage, Long upstreamProductId,
+    public WbPipelineTask getByExecKey(Long knowledgeFileId, String stage, Long upstreamProductId,
                                        Long strategyVersionId) {
         LambdaQueryWrapper<WbPipelineTask> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbPipelineTask::getFileResultId, fileResultId)
+        queryWrapper.eq(WbPipelineTask::getFileResultId, knowledgeFileId)
                 .eq(WbPipelineTask::getStage, stage)
                 .eq(WbPipelineTask::getUpstreamProductId, upstreamProductId)
                 .eq(WbPipelineTask::getStrategyVersionId, strategyVersionId)
@@ -48,14 +48,14 @@ public class WbPipelineTaskDbServiceImpl extends InfraDbServiceImpl<WbPipelineTa
     /**
      * 取某文件某环节最近一条任务。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param stage        环节名
      * @return 命中的任务；没有则为 null
      */
     @Override
-    public WbPipelineTask getByFileResultIdAndStage(Long fileResultId, String stage) {
+    public WbPipelineTask getByFileResultIdAndStage(Long knowledgeFileId, String stage) {
         LambdaQueryWrapper<WbPipelineTask> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbPipelineTask::getFileResultId, fileResultId)
+        queryWrapper.eq(WbPipelineTask::getFileResultId, knowledgeFileId)
                 .eq(WbPipelineTask::getStage, stage)
                 .orderByDesc(WbPipelineTask::getId)
                 .last("LIMIT 1");
@@ -65,24 +65,24 @@ public class WbPipelineTaskDbServiceImpl extends InfraDbServiceImpl<WbPipelineTa
     /**
      * 批量取同环节任务，按 ID 降序。
      *
-     * @param fileResultIds 文件结果 ID 列表
+     * @param knowledgeFileIds 知识库文件 ID 列表
      * @param stage         环节名
      * @return 命中的任务列表；入参为空时返回空列表
      */
     @Override
-    public List<WbPipelineTask> listByFileResultIdsAndStage(List<Long> fileResultIds, String stage) {
-        if (NullUtil.isNull(fileResultIds) || fileResultIds.isEmpty()) {
+    public List<WbPipelineTask> listByKnowledgeFileIdsAndStage(List<Long> knowledgeFileIds, String stage) {
+        if (NullUtil.isNull(knowledgeFileIds) || knowledgeFileIds.isEmpty()) {
             return List.of();
         }
         LambdaQueryWrapper<WbPipelineTask> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(WbPipelineTask::getFileResultId, fileResultIds)
+        queryWrapper.in(WbPipelineTask::getFileResultId, knowledgeFileIds)
                 .eq(WbPipelineTask::getStage, stage)
                 .orderByDesc(WbPipelineTask::getId);
         return list(queryWrapper);
     }
 
     /**
-     * 按状态集合取任务，只带 ID、文件结果 ID 与状态三个字段。
+     * 按状态集合取任务，只带 ID、知识库文件 ID 与状态三个字段。
      *
      * @param statuses 状态集合
      * @return 命中的任务列表；入参为空时返回空列表
@@ -226,13 +226,13 @@ public class WbPipelineTaskDbServiceImpl extends InfraDbServiceImpl<WbPipelineTa
     /**
      * 取某文件的全部任务，按 ID 升序（血缘与详情的时间线口径）。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 任务列表
      */
     @Override
-    public List<WbPipelineTask> listByFileResultId(Long fileResultId) {
+    public List<WbPipelineTask> listByFileResultId(Long knowledgeFileId) {
         LambdaQueryWrapper<WbPipelineTask> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbPipelineTask::getFileResultId, fileResultId)
+        queryWrapper.eq(WbPipelineTask::getFileResultId, knowledgeFileId)
                 .orderByAsc(WbPipelineTask::getId);
         return list(queryWrapper);
     }

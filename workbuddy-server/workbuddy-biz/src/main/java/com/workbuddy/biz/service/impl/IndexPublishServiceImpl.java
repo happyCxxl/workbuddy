@@ -136,7 +136,7 @@ public class IndexPublishServiceImpl implements IndexPublishService {
             ComboSnapshot combo = JsonUtil.toObject(version.getComboSnapshot(), ComboSnapshot.class);
             if (NullUtil.isNotNull(combo)) {
                 vo.setFileScopeMode(combo.getFileScopeMode());
-                vo.setFileResultIds(combo.getFileResultIds());
+                vo.setKnowledgeFileIds(combo.getKnowledgeFileIds());
                 vo.setChunkStrategy(combo.getChunkStrategy());
                 vo.setEmbedStrategy(combo.getEmbedStrategy());
                 vo.setShape(combo.getShape());

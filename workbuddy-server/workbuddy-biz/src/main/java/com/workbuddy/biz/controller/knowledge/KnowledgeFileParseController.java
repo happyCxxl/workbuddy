@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/file-results")
+@RequestMapping("/knowledge-files")
 public class KnowledgeFileParseController {
 
     private final ParseControlService parseControlService;
@@ -29,31 +29,31 @@ public class KnowledgeFileParseController {
     /**
      * 触发解析（手动逐环节，链路起点）。
      *
-     * <p>执行键 = 文件结果（解析没有上游产物与策略版本）：已有任务（任何状态，含执行中）一律拒绝 40431，
+     * <p>执行键 = 知识库文件（解析没有上游产物与策略版本）：已有任务（任何状态，含执行中）一律拒绝 40431，
      * 没有才新建 PARSE 任务并入队。完成后停在终态，不自动触发组装。
      *
-     * @param fileResultId 文件结果 ID（路径参数）
+     * @param knowledgeFileId 知识库文件 ID（路径参数）
      * @return 触发响应（新建任务 ID）
-     * @apiNote 文件结果不存在 40432；已有任务（含执行中）40431
+     * @apiNote 知识库文件不存在 40432；已有任务（含执行中）40431
      */
-    @PostMapping("/{fileResultId}/parse")
+    @PostMapping("/{knowledgeFileId}/parse")
     public R<StageTriggerVO> parse(
-            @PathVariable("fileResultId") Long fileResultId) {
-        log.info("===> KnowledgeFileParseController parse 触发解析, fileResultId={}", fileResultId);
-        return R.ok(parseControlService.parse(fileResultId));
+            @PathVariable("knowledgeFileId") Long knowledgeFileId) {
+        log.info("===> KnowledgeFileParseController parse 触发解析, knowledgeFileId={}", knowledgeFileId);
+        return R.ok(parseControlService.parse(knowledgeFileId));
     }
 
     /**
      * 解析详情：任务状态 + 子步骤列表 + 产物引用/告警/统计（告警与统计从产物 JSON 汇总）。
      *
-     * @param fileResultId 文件结果 ID（路径参数）
+     * @param knowledgeFileId 知识库文件 ID（路径参数）
      * @param query        查询条件：taskId 可选（缺省取最新任务，传了则查该次历史运行）
      * @return 解析详情 VO（无任务时 taskId/步骤/统计为空，告警为空列表）
      */
-    @GetMapping("/{fileResultId}/parse-detail")
+    @GetMapping("/{knowledgeFileId}/parse-detail")
     public R<ParseDetailVO> parseDetail(
-            @PathVariable("fileResultId") Long fileResultId,
+            @PathVariable("knowledgeFileId") Long knowledgeFileId,
             StageDetailQueryDTO query) {
-        return R.ok(parseControlService.parseDetail(fileResultId, query.getTaskId()));
+        return R.ok(parseControlService.parseDetail(knowledgeFileId, query.getTaskId()));
     }
 }

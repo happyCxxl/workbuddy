@@ -16,9 +16,9 @@ public interface IndexBuildService {
      * 文件产物就绪回调：血缘解析产物组合 → 定位/复用组合集合（绑定开才自动注册）→ 追加 →
      * 活账本与批次对账 → READY 与自动发布判定 → 按在线组合拓扑补齐 → 评测冻结集追加。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      */
-    void onFileProductsReady(Long fileResultId);
+    void onFileProductsReady(Long knowledgeFileId);
 
     /**
      * 显式注册/构建组合候选：组合映射缺省按知识库绑定补齐 → 同组合活跃版本防重 →

@@ -199,11 +199,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /**
-     * 文件结果分页查询（每行附带各环节最新任务状态）。
+     * 知识库文件分页查询（每行附带各环节最新任务状态）。
      *
      * @param knowledgeBaseId 知识库 ID
      * @param query           查询条件
-     * @return 文件结果分页
+     * @return 知识库文件分页
      */
     @Override
     public IPage<FileResultVO> pageKnowledgeBaseFileResults(Long knowledgeBaseId, FileResultQueryDTO query) {

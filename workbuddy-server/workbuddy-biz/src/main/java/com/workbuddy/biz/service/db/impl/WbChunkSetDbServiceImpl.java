@@ -35,13 +35,13 @@ public class WbChunkSetDbServiceImpl extends InfraDbServiceImpl<WbChunkSetMapper
     /**
      * 取该文件最新一条切片集合。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 最新切片集合；没有则为 null
      */
     @Override
-    public WbChunkSet getLatestByFileResultId(Long fileResultId) {
+    public WbChunkSet getLatestByFileResultId(Long knowledgeFileId) {
         LambdaQueryWrapper<WbChunkSet> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbChunkSet::getFileResultId, fileResultId)
+        queryWrapper.eq(WbChunkSet::getFileResultId, knowledgeFileId)
                 .orderByDesc(WbChunkSet::getId)
                 .last("LIMIT 1");
         return getOne(queryWrapper, false);
@@ -50,13 +50,13 @@ public class WbChunkSetDbServiceImpl extends InfraDbServiceImpl<WbChunkSetMapper
     /**
      * 取该文件的全部切片集合，按 ID 升序。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 切片集合列表
      */
     @Override
-    public List<WbChunkSet> listByFileResultId(Long fileResultId) {
+    public List<WbChunkSet> listByFileResultId(Long knowledgeFileId) {
         LambdaQueryWrapper<WbChunkSet> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WbChunkSet::getFileResultId, fileResultId)
+        queryWrapper.eq(WbChunkSet::getFileResultId, knowledgeFileId)
                 .orderByAsc(WbChunkSet::getId);
         return list(queryWrapper);
     }
@@ -64,16 +64,16 @@ public class WbChunkSetDbServiceImpl extends InfraDbServiceImpl<WbChunkSetMapper
     /**
      * 批量取切片集合，按 ID 升序。
      *
-     * @param fileResultIds 文件结果 ID 列表
+     * @param knowledgeFileIds 知识库文件 ID 列表
      * @return 命中的切片集合；入参为空时返回空列表
      */
     @Override
-    public List<WbChunkSet> listByFileResultIds(List<Long> fileResultIds) {
-        if (NullUtil.isNull(fileResultIds) || fileResultIds.isEmpty()) {
+    public List<WbChunkSet> listByKnowledgeFileIds(List<Long> knowledgeFileIds) {
+        if (NullUtil.isNull(knowledgeFileIds) || knowledgeFileIds.isEmpty()) {
             return List.of();
         }
         LambdaQueryWrapper<WbChunkSet> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(WbChunkSet::getFileResultId, fileResultIds)
+        queryWrapper.in(WbChunkSet::getFileResultId, knowledgeFileIds)
                 .orderByAsc(WbChunkSet::getId);
         return list(queryWrapper);
     }

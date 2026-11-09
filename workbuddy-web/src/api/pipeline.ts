@@ -12,21 +12,21 @@ import type {
   StructureDetail,
 } from '@/types/pipeline';
 
-/** 分页查询知识库下的文件结果（每行含各环节最新任务状态） */
+/** 分页查询知识库下的知识库文件（每行含各环节最新任务状态） */
 export async function getFileResults(
   knowledgeBaseId: string,
   query: { current: number; size: number; stage?: string },
 ): Promise<PageResult<FileResult>> {
   const response = await http.get<PageResult<FileResult>>(
-    `/knowledge-base/${knowledgeBaseId}/file-results`,
+    `/knowledge-base/${knowledgeBaseId}/knowledge-files`,
     { params: query },
   );
   return response.data;
 }
 
-/** 查询某个文件结果的执行树（全部环节节点 + 血缘边） */
-export async function getLineage(fileResultId: string): Promise<Lineage> {
-  const response = await http.get<Lineage>(`/file-results/${fileResultId}/lineage`);
+/** 查询某个知识库文件的执行树（全部环节节点 + 血缘边） */
+export async function getLineage(knowledgeFileId: string): Promise<Lineage> {
+  const response = await http.get<Lineage>(`/knowledge-files/${knowledgeFileId}/lineage`);
   return response.data;
 }
 
@@ -36,8 +36,11 @@ export async function getLineage(fileResultId: string): Promise<Lineage> {
  * <p>`taskId` 不传取该环节最新任务；传了则看该次历史运行 —— 详情抽屉是从某张卡片打开的，
  * 必须带上那张卡的 taskId，否则会显示成"最新一次"而不是"这一张"。
  */
-export async function getParseDetail(fileResultId: string, taskId?: string): Promise<ParseDetail> {
-  const response = await http.get<ParseDetail>(`/file-results/${fileResultId}/parse-detail`, {
+export async function getParseDetail(
+  knowledgeFileId: string,
+  taskId?: string,
+): Promise<ParseDetail> {
+  const response = await http.get<ParseDetail>(`/knowledge-files/${knowledgeFileId}/parse-detail`, {
     params: taskId ? { taskId } : {},
   });
   return response.data;
@@ -55,31 +58,34 @@ export async function getParseDetail(fileResultId: string, taskId?: string): Pro
  */
 export async function getStageDetail(
   stage: string,
-  fileResultId: string,
+  knowledgeFileId: string,
   taskId?: string,
 ): Promise<ParseDetail | StructureDetail | PreprocessDetail | ChunkDetail | null> {
   if (stage === 'PARSE') {
-    return getParseDetail(fileResultId, taskId);
+    return getParseDetail(knowledgeFileId, taskId);
   }
   const params = taskId ? { taskId } : {};
   if (stage === 'STRUCTURE') {
     const response = await http.get<StructureDetail>(
-      `/file-results/${fileResultId}/structure-detail`,
+      `/knowledge-files/${knowledgeFileId}/structure-detail`,
       { params },
     );
     return response.data;
   }
   if (stage === 'PREPROCESS') {
     const response = await http.get<PreprocessDetail>(
-      `/file-results/${fileResultId}/preprocess-detail`,
+      `/knowledge-files/${knowledgeFileId}/preprocess-detail`,
       { params },
     );
     return response.data;
   }
   if (stage === 'CHUNK') {
-    const response = await http.get<ChunkDetail>(`/file-results/${fileResultId}/chunk-detail`, {
-      params,
-    });
+    const response = await http.get<ChunkDetail>(
+      `/knowledge-files/${knowledgeFileId}/chunk-detail`,
+      {
+        params,
+      },
+    );
     return response.data;
   }
   return null;
@@ -112,7 +118,7 @@ export async function getSourceFile(fileId: string): Promise<Blob> {
  * `contentType` / `fallback` / `hasParent` 收窄切片内容（只对 CHUNK 生效，过滤在 DB 侧做）。
  */
 export async function getStageContent(
-  fileResultId: string,
+  knowledgeFileId: string,
   stage: string,
   query: {
     taskId?: string;
@@ -150,9 +156,12 @@ export async function getStageContent(
   if (query.size) {
     params.size = query.size;
   }
-  const response = await http.get<StageContentPage>(`/file-results/${fileResultId}/stage-content`, {
-    params,
-  });
+  const response = await http.get<StageContentPage>(
+    `/knowledge-files/${knowledgeFileId}/stage-content`,
+    {
+      params,
+    },
+  );
   return response.data;
 }
 
@@ -176,7 +185,7 @@ export async function getStrategyBinding(
  * 解析环节无上游产物，故不接受该参数。
  */
 export async function addStageTrigger(
-  fileResultId: string,
+  knowledgeFileId: string,
   stage: string,
   options: { strategyVersionId?: string | null; upstreamProductId?: string | null } = {},
 ): Promise<StageTriggerResult> {
@@ -188,7 +197,7 @@ export async function addStageTrigger(
   if (options.upstreamProductId) {
     params.upstreamProductId = options.upstreamProductId;
   }
-  const path = `/file-results/${fileResultId}/${stage.toLowerCase()}`;
+  const path = `/knowledge-files/${knowledgeFileId}/${stage.toLowerCase()}`;
   const response = await http.post<StageTriggerResult>(path, null, { params });
   return response.data;
 }

@@ -24,7 +24,7 @@ class EmbeddingSetJsonTest {
     void jsonRoundTripShouldPreserveRecordsAndVectors() {
         EmbeddingSet set = new EmbeddingSet();
         set.setEmbeddingSetId("es-cs-1-embed-default-v1");
-        set.setFileResultId(5L);
+        set.setKnowledgeFileId(5L);
         set.setChunkSetRef(9L);
         set.setChunkSetId("cs-1");
         set.setStrategyVersion("embed-default-v1");

@@ -143,11 +143,11 @@ public interface KnowledgeBaseService {
     IPage<SubmitLogVO> pageKnowledgeBaseSubmitLogs(Long knowledgeBaseId, SubmitLogQueryDTO query);
 
     /**
-     * 分页查询知识库文件结果。
+     * 分页查询知识库知识库文件。
      *
      * @param knowledgeBaseId 知识库 ID
      * @param query           查询条件
-     * @return 文件结果分页
+     * @return 知识库文件分页
      */
     IPage<FileResultVO> pageKnowledgeBaseFileResults(Long knowledgeBaseId, FileResultQueryDTO query);
 }

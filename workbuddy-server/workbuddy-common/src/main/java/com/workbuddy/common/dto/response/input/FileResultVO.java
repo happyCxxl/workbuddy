@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 文件结果 VO：执行链工作台列表行（wb_file_result + wb_source_file 摘要 + 各环节最新任务状态）。
+ * 知识库文件 VO：执行链工作台列表行（wb_file_result + wb_source_file 摘要 + 各环节最新任务状态）。
  * id 类字段由全局 Long 序列化口径转字符串（见 LongIdJsonConfig），防前端 JS 精度丢失。
  */
 @Data
 public class FileResultVO {
 
-    /** 文件结果 ID */
+    /** 知识库文件 ID */
     private Long id;
 
     /** 所属知识库 */
@@ -31,13 +31,13 @@ public class FileResultVO {
     /** 文件大小（字节） */
     private Long fileSize;
 
-    /** 该文件结果所属存储类型码值（wb_file_object.storage_type：minio / local；无档案时为空） */
+    /** 该知识库文件所属存储类型码值（wb_file_object.storage_type：minio / local；无档案时为空） */
     private String storageType;
 
-    /** 该文件结果所属数据源实例 ID（wb_file_object.storage_source_id；无档案时为空） */
+    /** 该知识库文件所属数据源实例 ID（wb_file_object.storage_source_id；无档案时为空） */
     private Long storageSourceId;
 
-    /** 该文件结果所属数据源显示名（数据源未注册时为空） */
+    /** 该知识库文件所属数据源显示名（数据源未注册时为空） */
     private String storageSourceName;
 
     /** 当前启用的数据源 ID（无启用的数据源时为空） */

@@ -93,7 +93,7 @@ class EmbedPipelineTest {
 
         context = new EmbedContext();
         context.setStrategy(strategy);
-        context.setFileResultId(7L);
+        context.setKnowledgeFileId(7L);
         context.setChunkSetRef(9L);
     }
 
@@ -219,7 +219,7 @@ class EmbedPipelineTest {
         assertEquals("c1", set.getRecords().getFirst().getChunkId());
         assertEquals(ChunkContentType.PARAGRAPH.name(), set.getRecords().getFirst().getContentType());
         // 组装字段与输入一一对应（漏写即失败）
-        assertEquals(7L, set.getFileResultId());
+        assertEquals(7L, set.getKnowledgeFileId());
         assertEquals(9L, set.getChunkSetRef());
         assertEquals("cs-1", set.getChunkSetId());
         assertEquals("embed-test", set.getStrategyVersion());

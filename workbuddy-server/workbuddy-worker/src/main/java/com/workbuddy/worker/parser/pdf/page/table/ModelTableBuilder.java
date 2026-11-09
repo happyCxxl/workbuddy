@@ -30,7 +30,7 @@ public final class ModelTableBuilder implements TableBuilder {
         TableRegion region = TableRegionSupport.of(input.lines(), page,
                 LineTexts.Options.of(input.context().getProperties()));
         ProviderContext providerContext = new ProviderContext();
-        providerContext.setTaskId(input.context().getParseContext().getFileResultId());
+        providerContext.setTaskId(input.context().getParseContext().getKnowledgeFileId());
         providerContext.setAssetBytes(ref -> cropPng(page, region, input.context().getRenderer()));
         TableCapabilityAttempt.Outcome outcome = TableCapabilityAttempt.attempt(
                 input.context().getCapabilityRegistry(), region, page.pageNo(), providerContext);

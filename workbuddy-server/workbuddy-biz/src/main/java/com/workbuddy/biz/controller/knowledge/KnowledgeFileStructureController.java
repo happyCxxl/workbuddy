@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/file-results")
+@RequestMapping("/knowledge-files")
 public class KnowledgeFileStructureController {
 
     private final StructureControlService structureControlService;
@@ -28,30 +28,30 @@ public class KnowledgeFileStructureController {
     /**
      * 触发结构化组装：登记 STRUCTURE 任务并按上游预处理产物出队执行。
      *
-     * @param fileResultId      文件结果 ID
+     * @param knowledgeFileId      知识库文件 ID
      * @param upstreamProductId 上游预处理产物 ID（可空）
      * @return 任务 ID 与生效策略版本
      */
-    @PostMapping("/{fileResultId}/structure")
+    @PostMapping("/{knowledgeFileId}/structure")
     public R<StageTriggerVO> structure(
-            @PathVariable("fileResultId") Long fileResultId,
+            @PathVariable("knowledgeFileId") Long knowledgeFileId,
             @RequestParam(value = "upstreamProductId", required = false) Long upstreamProductId) {
-        log.info("===> KnowledgeFileStructureController structure 触发组装, fileResultId={}, upstreamProductId={}",
-                fileResultId, upstreamProductId);
-        return R.ok(structureControlService.structure(fileResultId, upstreamProductId));
+        log.info("===> KnowledgeFileStructureController structure 触发组装, knowledgeFileId={}, upstreamProductId={}",
+                knowledgeFileId, upstreamProductId);
+        return R.ok(structureControlService.structure(knowledgeFileId, upstreamProductId));
     }
 
     /**
      * 结构化详情：任务状态、子步骤、统计与大纲、产物引用。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param query        查询参数（任务 ID，可空表示取最新）
      * @return 结构化详情
      */
-    @GetMapping("/{fileResultId}/structure-detail")
+    @GetMapping("/{knowledgeFileId}/structure-detail")
     public R<StructureDetailVO> structureDetail(
-            @PathVariable("fileResultId") Long fileResultId,
+            @PathVariable("knowledgeFileId") Long knowledgeFileId,
             StageDetailQueryDTO query) {
-        return R.ok(structureControlService.structureDetail(fileResultId, query.getTaskId()));
+        return R.ok(structureControlService.structureDetail(knowledgeFileId, query.getTaskId()));
     }
 }

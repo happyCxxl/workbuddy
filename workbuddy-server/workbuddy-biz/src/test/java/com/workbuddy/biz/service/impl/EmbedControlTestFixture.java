@@ -97,7 +97,7 @@ final class EmbedControlTestFixture {
         return service;
     }
 
-    /** 上游产物的产出任务（环节 CHUNK、归属文件结果 10） */
+    /** 上游产物的产出任务（环节 CHUNK、归属知识库文件 10） */
     WbPipelineTask upstreamTask(PipelineTaskStatus status) {
         WbPipelineTask task = new WbPipelineTask();
         task.setId(UPSTREAM_TASK_ID);
@@ -107,7 +107,7 @@ final class EmbedControlTestFixture {
         return task;
     }
 
-    /** 文件结果行夹具（归属知识库 10） */
+    /** 知识库文件行夹具（归属知识库 10） */
     WbFileResult fileResult() {
         WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);
@@ -130,7 +130,7 @@ final class EmbedControlTestFixture {
         return product;
     }
 
-    /** 触发用例共用桩：文件结果 + 上游产物 + 绑定策略档 */
+    /** 触发用例共用桩：知识库文件 + 上游产物 + 绑定策略档 */
     void stubCommon() {
         when(fileResultDbService.getById(10L)).thenReturn(fileResult());
         when(pipelineProductDbService.getById(50L)).thenReturn(chunkProduct(null));
@@ -144,7 +144,7 @@ final class EmbedControlTestFixture {
                 .thenReturn(embedVersion(66L, "embed-bound", "v3", RowStatus.ACTIVE.name()));
     }
 
-    /** 向量化执行键检查：文件结果 10 + 上游切片产物 + 策略版本（0 表示该环节无策略） */
+    /** 向量化执行键检查：知识库文件 10 + 上游切片产物 + 策略版本（0 表示该环节无策略） */
     void existingEmbedTask(Long upstreamProductId, Long strategyVersionId, WbPipelineTask task) {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.EMBED.name(), upstreamProductId,
                 strategyVersionId)).thenReturn(task);

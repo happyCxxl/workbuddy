@@ -19,7 +19,7 @@ public class VectorQuery {
     @Builder.Default
     private int topK = 10;
 
-    /** 可选过滤：文件结果 ID */
+    /** 可选过滤：知识库文件 ID */
     private Long documentId;
 
     /** 可选过滤：所有者 */

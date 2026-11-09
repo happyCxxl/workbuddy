@@ -1,8 +1,8 @@
 package com.workbuddy.common.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldStrategy;
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.workbuddy.common.domain.base.BaseInfo;
@@ -46,7 +46,7 @@ public class WbSubmitLog extends BaseInfo {
     @TableField(insertStrategy = FieldStrategy.ALWAYS)
     private String fileName;
 
-    /** 建档回填的文件结果 ID（校验失败为空） */
+    /** 建档回填的知识库文件 ID（校验失败为空） */
     private Long fileResultId;
 
     /** 提交结果：PASS / FAIL */

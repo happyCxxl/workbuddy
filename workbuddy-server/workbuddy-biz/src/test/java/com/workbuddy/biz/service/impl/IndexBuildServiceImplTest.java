@@ -199,7 +199,7 @@ class IndexBuildServiceImplTest {
         order.setKnowledgeBaseId(1L);
         ComboSnapshot combo = comboAll();
         combo.setFileScopeMode("LIST");
-        combo.setFileResultIds(List.of(10L));
+        combo.setKnowledgeFileIds(List.of(10L));
         order.setComboSnapshot(combo);
 
         WorkbuddyException ex = assertThrows(WorkbuddyException.class,
@@ -216,7 +216,7 @@ class IndexBuildServiceImplTest {
      */
     @Test
     void buildCandidateShouldNormalizeAllScopeRange() {
-        // ALL 范围归一化——残留 fileResultIds 置空，落库快照干净
+        // ALL 范围归一化——残留 knowledgeFileIds 置空，落库快照干净
         when(fixture.knowledgeBaseDbService.getById(1L)).thenReturn(new WbKnowledgeBase());
         when(fixture.indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
         when(fixture.indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of());
@@ -231,7 +231,7 @@ class IndexBuildServiceImplTest {
         BuildOrder order = new BuildOrder();
         order.setKnowledgeBaseId(1L);
         ComboSnapshot combo = comboAll();
-        combo.setFileResultIds(List.of(10L));
+        combo.setKnowledgeFileIds(List.of(10L));
         order.setComboSnapshot(combo);
         order.setTrigger(IndexBuildTrigger.REBUILD.name());
 
@@ -240,7 +240,7 @@ class IndexBuildServiceImplTest {
         ComboSnapshot savedCombo = JsonUtil.toObject(saved.get().getComboSnapshot(), ComboSnapshot.class);
         assertNotNull(savedCombo);
         assertEquals("ALL", savedCombo.getFileScopeMode());
-        assertNull(savedCombo.getFileResultIds());
+        assertNull(savedCombo.getKnowledgeFileIds());
     }
 
     /**
@@ -265,14 +265,14 @@ class IndexBuildServiceImplTest {
         order.setKnowledgeBaseId(1L);
         ComboSnapshot combo = comboAll();
         combo.setFileScopeMode(null);
-        combo.setFileResultIds(List.of(10L));
+        combo.setKnowledgeFileIds(List.of(10L));
         order.setComboSnapshot(combo);
 
         fixture.service.buildCandidate(order);
 
         ComboSnapshot savedCombo = JsonUtil.toObject(saved.get().getComboSnapshot(), ComboSnapshot.class);
         assertEquals("ALL", savedCombo.getFileScopeMode());
-        assertNull(savedCombo.getFileResultIds());
+        assertNull(savedCombo.getKnowledgeFileIds());
     }
 
     /**
@@ -344,7 +344,7 @@ class IndexBuildServiceImplTest {
         order.setKnowledgeBaseId(1L);
         ComboSnapshot combo = comboAll();
         combo.setFileScopeMode("LIST");
-        combo.setFileResultIds(List.of(10L, 20L));
+        combo.setKnowledgeFileIds(List.of(10L, 20L));
         order.setComboSnapshot(combo);
 
         var result = fixture.service.buildCandidate(order);

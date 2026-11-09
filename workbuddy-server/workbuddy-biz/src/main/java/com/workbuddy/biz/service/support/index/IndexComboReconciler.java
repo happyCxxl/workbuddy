@@ -98,12 +98,12 @@ public class IndexComboReconciler {
      * 组合枚举取数目录（批量预取 + 候选三元组生成，单一口径）：
      * 预处理策略由切片行的上游产物血缘解析（血统缺失 → 该切片策略不进入候选）。
      *
-     * @param fileResultIds 范围内的文件结果 ID
+     * @param knowledgeFileIds 范围内的知识库文件 ID
      * @return 批次取数目录
      */
-    public ComboCatalog catalog(List<Long> fileResultIds) {
-        Map<String, WbChunkSet> latestChunk = latestChunkMap(fileResultIds);
-        Map<String, WbEmbeddingSet> latestEmbed = latestEmbedMap(fileResultIds);
+    public ComboCatalog catalog(List<Long> knowledgeFileIds) {
+        Map<String, WbChunkSet> latestChunk = latestChunkMap(knowledgeFileIds);
+        Map<String, WbEmbeddingSet> latestEmbed = latestEmbedMap(knowledgeFileIds);
         Map<String, Set<String>> preprocessByChunk = new LinkedHashMap<>();
         for (WbChunkSet row : latestChunk.values()) {
             String preprocess = lineageResolver.resolvePreprocessStrategy(row.getUpstreamProductId());
@@ -122,12 +122,12 @@ public class IndexComboReconciler {
     /**
      * 文件级「同策略最新成功」切片行（追加表取 id 最大；对账/回填/枚举共用批次口径）。
      *
-     * @param fileResultIds 文件结果 ID
+     * @param knowledgeFileIds 知识库文件 ID
      * @return 「文件ID#切片策略」到最新切片行的映射
      */
-    public Map<String, WbChunkSet> latestChunkMap(List<Long> fileResultIds) {
+    public Map<String, WbChunkSet> latestChunkMap(List<Long> knowledgeFileIds) {
         Map<String, WbChunkSet> latest = new LinkedHashMap<>();
-        for (WbChunkSet set : chunkSetDbService.listByFileResultIds(fileResultIds)) {
+        for (WbChunkSet set : chunkSetDbService.listByKnowledgeFileIds(knowledgeFileIds)) {
             String key = set.getFileResultId() + "#" + set.getChunkStrategyVersion();
             latest.merge(key, set, (a, b) -> a.getId() >= b.getId() ? a : b);
         }
@@ -137,12 +137,12 @@ public class IndexComboReconciler {
     /**
      * 文件级「同策略最新成功」向量行（追加表取 id 最大；对账/回填/枚举共用批次口径）。
      *
-     * @param fileResultIds 文件结果 ID
+     * @param knowledgeFileIds 知识库文件 ID
      * @return 「文件ID#向量策略」到最新向量行的映射
      */
-    public Map<String, WbEmbeddingSet> latestEmbedMap(List<Long> fileResultIds) {
+    public Map<String, WbEmbeddingSet> latestEmbedMap(List<Long> knowledgeFileIds) {
         Map<String, WbEmbeddingSet> latest = new LinkedHashMap<>();
-        for (WbEmbeddingSet set : embeddingSetDbService.listByFileResultIds(fileResultIds)) {
+        for (WbEmbeddingSet set : embeddingSetDbService.listByKnowledgeFileIds(knowledgeFileIds)) {
             String key = set.getFileResultId() + "#" + set.getStrategyVersion();
             latest.merge(key, set, (a, b) -> a.getId() >= b.getId() ? a : b);
         }
@@ -155,23 +155,23 @@ public class IndexComboReconciler {
      * 切片血缘（上游预处理策略）必须匹配组合预处理策略——不匹配/缺失 → gap（血统纯净，不拿异血统顶替）。
      *
      * @param combo        组合快照
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param latestChunk  预取的切片行映射
      * @param latestEmbed  预取的向量行映射
      * @return 该文件在组合下的产物，缺口时 gap 非空
      */
-    public ComboProducts selectComboProducts(ComboSnapshot combo, Long fileResultId,
+    public ComboProducts selectComboProducts(ComboSnapshot combo, Long knowledgeFileId,
                                              Map<String, WbChunkSet> latestChunk,
                                              Map<String, WbEmbeddingSet> latestEmbed) {
-        WbChunkSet chunkRow = latestChunk.get(fileResultId + "#" + combo.getChunkStrategy());
-        WbEmbeddingSet embedRow = latestEmbed.get(fileResultId + "#" + combo.getEmbedStrategy());
+        WbChunkSet chunkRow = latestChunk.get(knowledgeFileId + "#" + combo.getChunkStrategy());
+        WbEmbeddingSet embedRow = latestEmbed.get(knowledgeFileId + "#" + combo.getEmbedStrategy());
         if (NullUtil.isNull(chunkRow) || NullUtil.isNull(embedRow)) {
-            return new ComboProducts(null, null, "文件 " + fileResultId + " 缺少组合产物（切片策略 "
+            return new ComboProducts(null, null, "文件 " + knowledgeFileId + " 缺少组合产物（切片策略 "
                     + combo.getChunkStrategy() + " / 向量策略 " + combo.getEmbedStrategy() + "）");
         }
         if (!combo.getPreprocessStrategy().equals(
                 lineageResolver.resolvePreprocessStrategy(chunkRow.getUpstreamProductId()))) {
-            return new ComboProducts(null, null, "文件 " + fileResultId + " 切片血统与组合预处理策略不符");
+            return new ComboProducts(null, null, "文件 " + knowledgeFileId + " 切片血统与组合预处理策略不符");
         }
         return new ComboProducts(chunkRow, embedRow, null);
     }
@@ -194,8 +194,8 @@ public class IndexComboReconciler {
             filesById.put(file.getId(), file);
         }
         List<Long> scope;
-        if (combo.isListScope() && NullUtil.isNotNull(combo.getFileResultIds())) {
-            scope = combo.getFileResultIds();
+        if (combo.isListScope() && NullUtil.isNotNull(combo.getKnowledgeFileIds())) {
+            scope = combo.getKnowledgeFileIds();
         } else {
             scope = new ArrayList<>(filesById.keySet());
         }

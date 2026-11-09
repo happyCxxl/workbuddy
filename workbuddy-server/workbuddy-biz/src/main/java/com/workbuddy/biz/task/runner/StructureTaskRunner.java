@@ -59,13 +59,13 @@ public class StructureTaskRunner {
         if (NullUtil.isNull(task)) {
             return;
         }
-        log.info("===> StructureTaskRunner 领取组装任务, taskId={}, fileResultId={}",
+        log.info("===> StructureTaskRunner 领取组装任务, taskId={}, knowledgeFileId={}",
                 taskId, task.getFileResultId());
         try {
             // 上游解析产物：只认任务行上的显式引用，缺引用按任务失败处理
             WbPipelineProduct parseProduct = resolveParseProduct(task);
             if (NullUtil.isNull(parseProduct)) {
-                log.warn("===> StructureTaskRunner 组装失败：任务未指定上游解析产物, taskId={}, fileResultId={}",
+                log.warn("===> StructureTaskRunner 组装失败：任务未指定上游解析产物, taskId={}, knowledgeFileId={}",
                         taskId, task.getFileResultId());
                 finishFailed(taskId, PipelineTaskErrorCode.TASK_UPSTREAM_MISSING.name(),
                         "任务未指定上游解析产物");
@@ -94,7 +94,7 @@ public class StructureTaskRunner {
 
             AssembleContext context = new AssembleContext();
             context.setTaskId(taskId);
-            context.setFileResultId(task.getFileResultId());
+            context.setKnowledgeFileId(task.getFileResultId());
             context.setProperties(structureProperties);
             AssembleOutcome outcome = documentAssembler.assemble(parseResult, context);
 
@@ -115,7 +115,7 @@ public class StructureTaskRunner {
         return TaskRunnerSupport.failureCode(e, PipelineTaskErrorCode.STRUCTURE_FAILED);
     }
 
-    /** 上游缺失判定：产物所在文件或文件结果已经不存在 */
+    /** 上游缺失判定：产物所在文件或知识库文件已经不存在 */
     private boolean isUpstreamMissing(ErrorCode errorCode) {
         return errorCode == ErrorCode.FILE_NOT_FOUND || errorCode == ErrorCode.FILE_RESULT_NOT_FOUND;
     }

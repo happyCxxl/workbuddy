@@ -117,15 +117,15 @@ public class IndexBuildSupport {
      * 批次对账：本文件产物 chunkId 集合 == 集合内本文件 chunkId 集合（不一致告警）。
      *
      * @param collectionName 集合名
-     * @param fileResultId   文件结果 ID
+     * @param knowledgeFileId   知识库文件 ID
      * @param rows           本文件追加行
      */
-    public void reconcileFile(String collectionName, Long fileResultId, List<IndexRow> rows) {
+    public void reconcileFile(String collectionName, Long knowledgeFileId, List<IndexRow> rows) {
         Set<String> expected = rows.stream().map(IndexRow::getChunkId).collect(Collectors.toSet());
-        List<String> actual = milvusIndexPort.listChunkIds(collectionName, fileResultId);
+        List<String> actual = milvusIndexPort.listChunkIds(collectionName, knowledgeFileId);
         if (!expected.equals(new HashSet<>(actual))) {
-            log.warn("===> IndexBuildSupport 批次对账不一致, collection={}, fileResultId={}, expected={}, actual={}",
-                    collectionName, fileResultId, expected.size(), actual.size());
+            log.warn("===> IndexBuildSupport 批次对账不一致, collection={}, knowledgeFileId={}, expected={}, actual={}",
+                    collectionName, knowledgeFileId, expected.size(), actual.size());
         }
     }
 
@@ -133,11 +133,11 @@ public class IndexBuildSupport {
      * 评测冻结集路由：三元组匹配且范围包含该文件的活跃 LIST 版本 → 幂等追加。
      *
      * @param kbId         知识库 ID
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param productCombo 产物组合
      * @param rows         本文件追加行
      */
-    public void appendToFrozenScopes(Long kbId, Long fileResultId, ComboSnapshot productCombo,
+    public void appendToFrozenScopes(Long kbId, Long knowledgeFileId, ComboSnapshot productCombo,
                                      List<IndexRow> rows) {
         WbIndexSet set = indexSetDbService.getByKb(kbId);
         if (NullUtil.isNull(set)) {
@@ -151,8 +151,8 @@ public class IndexBuildSupport {
             }
             ComboSnapshot combo = JsonUtil.toObject(version.getComboSnapshot(), ComboSnapshot.class);
             if (NullUtil.isNull(combo) || !combo.isListScope()
-                    || NullUtil.isNull(combo.getFileResultIds())
-                    || !combo.getFileResultIds().contains(fileResultId)) {
+                    || NullUtil.isNull(combo.getKnowledgeFileIds())
+                    || !combo.getKnowledgeFileIds().contains(knowledgeFileId)) {
                 continue;
             }
             if (!Objects.equals(combo.getShape(), productCombo.getShape())
@@ -162,11 +162,11 @@ public class IndexBuildSupport {
             String collectionName = MilvusIndexPort.collectionName(kbId, version.getVersionNo());
             try {
                 milvusIndexPort.append(collectionName, rows);
-                log.info("===> IndexBuildSupport 评测冻结集追加, collection={}, fileResultId={}",
-                        collectionName, fileResultId);
+                log.info("===> IndexBuildSupport 评测冻结集追加, collection={}, knowledgeFileId={}",
+                        collectionName, knowledgeFileId);
             } catch (Exception e) {
                 log.warn("===> IndexBuildSupport 评测冻结集追加失败（集合未就绪？重触发构建可补齐）, "
-                        + "collection={}, fileResultId={}", collectionName, fileResultId, e);
+                        + "collection={}, knowledgeFileId={}", collectionName, knowledgeFileId, e);
             }
         }
     }
@@ -176,16 +176,16 @@ public class IndexBuildSupport {
      * 有预处理缺切片 → 投递切片（目标切片策略 + 显式 upstreamProductId）；
      * 有切片缺向量 → 提示手动（逐环节口径不变）。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param target       目标组合
      */
-    public void backfillFile(Long fileResultId, ComboSnapshot target) {
+    public void backfillFile(Long knowledgeFileId, ComboSnapshot target) {
         String targetPreprocess = target.getPreprocessStrategy();
-        List<WbChunkSet> chunkSets = chunkSetDbService.listByFileResultIds(List.of(fileResultId));
+        List<WbChunkSet> chunkSets = chunkSetDbService.listByKnowledgeFileIds(List.of(knowledgeFileId));
         boolean preprocessOk = chunkSets.stream().anyMatch(s ->
                 targetPreprocess.equals(lineageResolver.resolvePreprocessStrategy(s.getUpstreamProductId())));
         if (!preprocessOk) {
-            dispatchPreprocess(fileResultId, targetPreprocess);
+            dispatchPreprocess(knowledgeFileId, targetPreprocess);
             return;
         }
         boolean chunkOk = chunkSets.stream().anyMatch(s ->
@@ -193,47 +193,47 @@ public class IndexBuildSupport {
                         && targetPreprocess.equals(
                                 lineageResolver.resolvePreprocessStrategy(s.getUpstreamProductId())));
         if (!chunkOk) {
-            dispatchChunk(fileResultId, target);
+            dispatchChunk(knowledgeFileId, target);
             return;
         }
         log.info("===> IndexBuildSupport 补齐提示：文件已具备目标组合切片产物，向量化需手动触发, "
-                + "fileResultId={}, chunkStrategy={}", fileResultId, target.getChunkStrategy());
+                + "knowledgeFileId={}, chunkStrategy={}", knowledgeFileId, target.getChunkStrategy());
     }
 
-    private void dispatchPreprocess(Long fileResultId, String targetPreprocess) {
+    private void dispatchPreprocess(Long knowledgeFileId, String targetPreprocess) {
         WbPipelineStrategyVersion strategyRow = strategyRowOf(PipelineStage.PREPROCESS.name(), targetPreprocess);
         if (NullUtil.isNull(strategyRow)) {
             log.warn("===> IndexBuildSupport 补齐中止：目标预处理策略不存在, strategy={}", targetPreprocess);
             return;
         }
         try {
-            preprocessControlService.preprocess(fileResultId, strategyRow.getId(), null);
-            log.info("===> IndexBuildSupport 补齐投递预处理, fileResultId={}, strategy={}",
-                    fileResultId, targetPreprocess);
+            preprocessControlService.preprocess(knowledgeFileId, strategyRow.getId(), null);
+            log.info("===> IndexBuildSupport 补齐投递预处理, knowledgeFileId={}, strategy={}",
+                    knowledgeFileId, targetPreprocess);
         } catch (Exception e) {
-            log.warn("===> IndexBuildSupport 补齐预处理投递失败, fileResultId={}", fileResultId, e);
+            log.warn("===> IndexBuildSupport 补齐预处理投递失败, knowledgeFileId={}", knowledgeFileId, e);
         }
     }
 
-    private void dispatchChunk(Long fileResultId, ComboSnapshot target) {
+    private void dispatchChunk(Long knowledgeFileId, ComboSnapshot target) {
         String targetPreprocess = target.getPreprocessStrategy();
         WbPipelineStrategyVersion strategyRow = strategyRowOf(PipelineStage.CHUNK.name(), target.getChunkStrategy());
         if (NullUtil.isNull(strategyRow)) {
             log.warn("===> IndexBuildSupport 补齐中止：目标切片策略不存在, strategy={}", target.getChunkStrategy());
             return;
         }
-        Long upstreamProductId = preprocessProductIdOf(fileResultId, targetPreprocess);
+        Long upstreamProductId = preprocessProductIdOf(knowledgeFileId, targetPreprocess);
         if (NullUtil.isNull(upstreamProductId)) {
-            log.warn("===> IndexBuildSupport 补齐中止：匹配预处理产物不存在, fileResultId={}, strategy={}",
-                    fileResultId, targetPreprocess);
+            log.warn("===> IndexBuildSupport 补齐中止：匹配预处理产物不存在, knowledgeFileId={}, strategy={}",
+                    knowledgeFileId, targetPreprocess);
             return;
         }
         try {
-            chunkControlService.chunk(fileResultId, strategyRow.getId(), upstreamProductId);
+            chunkControlService.chunk(knowledgeFileId, strategyRow.getId(), upstreamProductId);
             log.info("===> IndexBuildSupport 补齐投递切片（显式绑定上游预处理产物）, "
-                    + "fileResultId={}, strategy={}", fileResultId, target.getChunkStrategy());
+                    + "knowledgeFileId={}, strategy={}", knowledgeFileId, target.getChunkStrategy());
         } catch (Exception e) {
-            log.warn("===> IndexBuildSupport 补齐切片投递失败, fileResultId={}", fileResultId, e);
+            log.warn("===> IndexBuildSupport 补齐切片投递失败, knowledgeFileId={}", knowledgeFileId, e);
         }
     }
 
@@ -249,8 +249,8 @@ public class IndexBuildSupport {
     }
 
     /** 匹配目标预处理策略的预处理产物 ID（capabilitySnapshot 解析比对；无 → null） */
-    private Long preprocessProductIdOf(Long fileResultId, String targetPreprocess) {
-        for (WbPipelineProduct product : productDbService.listByFileResultId(fileResultId)) {
+    private Long preprocessProductIdOf(Long knowledgeFileId, String targetPreprocess) {
+        for (WbPipelineProduct product : productDbService.listByFileResultId(knowledgeFileId)) {
             if (!PipelineStage.PREPROCESS.name().equals(product.getStage())) {
                 continue;
             }

@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PreprocessTriggerVO {
 
-    /** 文件结果 ID（wb_file_result.id） */
-    private Long fileResultId;
+    /** 知识库文件 ID（wb_file_result.id） */
+    private Long knowledgeFileId;
 
     /** 处理链任务 ID（wb_knowledge_pipeline_task.id） */
     private Long pipelineTaskId;

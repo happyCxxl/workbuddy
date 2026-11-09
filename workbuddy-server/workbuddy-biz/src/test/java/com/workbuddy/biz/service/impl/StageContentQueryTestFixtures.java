@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
  */
 final class StageContentQueryTestFixtures {
 
-    /** 被测文件结果 ID */
+    /** 被测知识库文件 ID */
     static final Long FILE_RESULT_ID = 10L;
 
     /** 任务 ID */
@@ -46,7 +46,7 @@ final class StageContentQueryTestFixtures {
     private StageContentQueryTestFixtures() {
     }
 
-    /** 一次运行的文件结果（挂 10 号知识库，归属校验要能过） */
+    /** 一次运行的知识库文件（挂 10 号知识库，归属校验要能过） */
     static WbFileResult fileResultOfKb10() {
         WbFileResult fileResult = new WbFileResult();
         fileResult.setId(FILE_RESULT_ID);

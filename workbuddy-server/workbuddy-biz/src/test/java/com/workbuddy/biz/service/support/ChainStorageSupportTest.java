@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 /**
- * 处理链存储口径单测：链的数据源取「文件结果 → 来源文件 → 文件档案」三段；
+ * 处理链存储口径单测：链的数据源取「知识库文件 → 来源文件 → 文件档案」三段；
  * 链路缺环、档案数据源取不到、当前没有启用的数据源都不判定为不一致；两侧都取到且不同时拒绝执行（40453）。
  */
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +57,7 @@ class ChainStorageSupportTest {
         support = new ChainStorageSupport(fileResultDbService, sourceFileDbService, fileStorage, storageRouter);
     }
 
-    /** 链的各环齐全：文件结果 10 → 来源文件 5 → 文件档案 F-88 */
+    /** 链的各环齐全：知识库文件 10 → 来源文件 5 → 文件档案 F-88 */
     private void stubChain() {
         WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);

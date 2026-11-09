@@ -52,34 +52,34 @@ public class StructureControlServiceImpl implements StructureControlService {
     /**
      * 触发组装（手动逐环节）：上游解析产物校验（必填，未指定或传 0 报 40436）→ 执行键查重（已有任务一律拒绝 40431）→ 新建 STRUCTURE 任务入队。
      *
-     * @param fileResultId      文件结果 ID
+     * @param knowledgeFileId      知识库文件 ID
      * @param upstreamProductId 上游解析产物 ID（必填，须显式指定）
      * @return 触发响应（新建任务 ID）
      */
     @Override
-    public StageTriggerVO structure(Long fileResultId, Long upstreamProductId) {
-        accessGuard.requireExisting(fileResultId);
+    public StageTriggerVO structure(Long knowledgeFileId, Long upstreamProductId) {
+        accessGuard.requireExisting(knowledgeFileId);
         // 上游解析产物：必须显式指定，校验存在/环节/归属；未指定直接拒绝（无按时间猜的兜底）。
-        WbPipelineProduct parseProduct = requireParseProduct(fileResultId, upstreamProductId);
-        return triggerSupport.trigger(fileResultId, PipelineStage.STRUCTURE, parseProduct.getId(), null, null,
+        WbPipelineProduct parseProduct = requireParseProduct(knowledgeFileId, upstreamProductId);
+        return triggerSupport.trigger(knowledgeFileId, PipelineStage.STRUCTURE, parseProduct.getId(), null, null,
                 PipelineStage.STRUCTURE.getLabel());
     }
 
     /**
      * 结构化详情：任务状态、子步骤、统计与大纲、产物引用。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param taskId       任务 ID（可空表示取最新）
      * @return 结构化详情
      */
     @Override
-    public StructureDetailVO structureDetail(Long fileResultId, Long taskId) {
-        accessGuard.requireExisting(fileResultId);
-        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.STRUCTURE, taskId,
+    public StructureDetailVO structureDetail(Long knowledgeFileId, Long taskId) {
+        accessGuard.requireExisting(knowledgeFileId);
+        WbPipelineTask task = detailSupport.resolveTask(knowledgeFileId, PipelineStage.STRUCTURE, taskId,
                 PipelineStage.STRUCTURE.getLabel());
 
         StructureDetailVO vo = new StructureDetailVO();
-        detailSupport.withTask(vo, fileResultId, task);
+        detailSupport.withTask(vo, knowledgeFileId, task);
 
         // 产物引用/统计/冲突/文档内容：按 task.productId 精确取该次运行的产物（历史任务同样可展示自己的产物；无任务/无产物留空）
         vo.setWarnings(new ArrayList<>());
@@ -100,15 +100,15 @@ public class StructureControlServiceImpl implements StructureControlService {
     }
 
     /** 上游解析产物校验：必须显式指定，校验存在/环节/归属；未指定直接拒绝（无按时间猜的兜底）。 */
-    private WbPipelineProduct requireParseProduct(Long fileResultId, Long productId) {
+    private WbPipelineProduct requireParseProduct(Long knowledgeFileId, Long productId) {
         ThrowUtil.throwIf(NullUtil.isNull(productId) || productId == 0L, ErrorCode.TASK_UPSTREAM_MISSING,
                 "未指定上游解析产物，请从解析产物的卡片发起触发");
         WbPipelineProduct product = pipelineProductDbService.getById(productId);
         ThrowUtil.throwIf(NullUtil.isNull(product), ErrorCode.FILE_RESULT_NOT_FOUND, "指定上游产物不存在");
         ThrowUtil.throwIf(!PipelineStage.PARSE.name().equals(product.getStage()), ErrorCode.FILE_RESULT_NOT_FOUND,
                 "指定产物环节不匹配：期望 PARSE");
-        ThrowUtil.throwIf(!fileResultId.equals(product.getFileResultId()), ErrorCode.FILE_RESULT_NOT_FOUND,
-                "指定产物不属于该文件结果");
+        ThrowUtil.throwIf(!knowledgeFileId.equals(product.getFileResultId()), ErrorCode.FILE_RESULT_NOT_FOUND,
+                "指定产物不属于该知识库文件");
         // 下游门禁：产出任务已成功或部分成功才放行（未成功的运行留下的产物不再被消费）
         upstreamProductGate.requireConsumable(product);
         return product;

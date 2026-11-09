@@ -11,20 +11,20 @@ import java.util.List;
 public interface WbEmbeddingSetDbService extends InfraDbService<WbEmbeddingSet> {
 
     /**
-     * 取文件结果最新的向量集合（无 → null；详情摘要数据源）。
+     * 取知识库文件最新的向量集合（无 → null；详情摘要数据源）。
      */
-    WbEmbeddingSet getLatestByFileResultId(Long fileResultId);
+    WbEmbeddingSet getLatestByFileResultId(Long knowledgeFileId);
 
     /**
      * 查单文件全部向量集合（执行树统计按 artifactId 匹配用），id 升序。
      */
-    List<WbEmbeddingSet> listByFileResultId(Long fileResultId);
+    List<WbEmbeddingSet> listByFileResultId(Long knowledgeFileId);
 
     /**
-     * 取文件结果 + 同策略的历史成功集合（createTime 新→旧，上限 limit；账本复用回溯候选数据源）。
+     * 取知识库文件 + 同策略的历史成功集合（createTime 新→旧，上限 limit；账本复用回溯候选数据源）。
      */
     List<WbEmbeddingSet> listHistoryByFileResultIdAndStrategyVersion(
-            Long fileResultId, String strategyVersion, int limit);
+            Long knowledgeFileId, String strategyVersion, int limit);
 
     /**
      * 按产物指纹精确取向量集合（历史任务详情数据源；无 → null），id 降序取最新。
@@ -34,5 +34,5 @@ public interface WbEmbeddingSetDbService extends InfraDbService<WbEmbeddingSet> 
     /**
      * 批量查多文件全部向量集合（组合枚举数据源），id 升序。
      */
-    List<WbEmbeddingSet> listByFileResultIds(List<Long> fileResultIds);
+    List<WbEmbeddingSet> listByKnowledgeFileIds(List<Long> knowledgeFileIds);
 }

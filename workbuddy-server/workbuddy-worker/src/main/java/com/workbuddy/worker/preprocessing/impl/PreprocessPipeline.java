@@ -81,8 +81,8 @@ public class PreprocessPipeline implements PreprocessorPort {
             outcome.fail(PipelineTaskErrorCode.PREPROCESS_EMPTY.name(), "上游统一结构无任何可处理元素");
             return outcome;
         }
-        log.info("===> PreprocessPipeline 开始预处理, fileResultId={}, elements={}, strategy={}",
-                context.getFileResultId(), document.getElements().size(), strategy.fullVersion());
+        log.info("===> PreprocessPipeline 开始预处理, knowledgeFileId={}, elements={}, strategy={}",
+                context.getKnowledgeFileId(), document.getElements().size(), strategy.fullVersion());
 
         RuleContext ruleContext = buildRuleContext(document, strategy);
         if (!ruleContext.getNoisePageNumbers().isEmpty()) {
@@ -154,8 +154,8 @@ public class PreprocessPipeline implements PreprocessorPort {
                 outcome.getWarnings().size(), assemblyMillis));
         outcome.setSuggestedStatus(ruleFailure
                 ? PipelineTaskStatus.PARTIAL_SUCCESS : PipelineTaskStatus.SUCCESS);
-        log.info("===> PreprocessPipeline 预处理完成, fileResultId={}, elements={}, status={}, warningCount={}",
-                context.getFileResultId(), viewElements.size(), outcome.getSuggestedStatus().name(),
+        log.info("===> PreprocessPipeline 预处理完成, knowledgeFileId={}, elements={}, status={}, warningCount={}",
+                context.getKnowledgeFileId(), viewElements.size(), outcome.getSuggestedStatus().name(),
                 outcome.getWarnings().size());
         return outcome;
     }
@@ -265,7 +265,7 @@ public class PreprocessPipeline implements PreprocessorPort {
                 : context.getDocument().getDocumentInfo().getDocumentId();
         view.setViewId("pv-" + documentId + "-" + strategy.fullVersion());
         view.setDocumentId(documentId);
-        view.setFileResultId(context.getFileResultId());
+        view.setKnowledgeFileId(context.getKnowledgeFileId());
         view.setSourceFileRef(NullUtil.isNull(context.getDocument().getDocumentInfo()) ? null
                 : context.getDocument().getDocumentInfo().getSourceFileRef());
         view.setUpstreamProductRef(context.getUpstreamProductRef());

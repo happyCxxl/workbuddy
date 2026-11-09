@@ -16,7 +16,7 @@ export interface UseSplitterOptions {
   /** 双栏容器引用（由组件持有，模板 ref 绑定到它） */
   bodyRef: Ref<HTMLElement | null>;
   /** 结果文件 id：分隔条比例按此键持久化 */
-  fileResultId: () => string;
+  knowledgeFileId: () => string;
   /** 任务 id：分隔条比例按此键持久化 */
   taskId: () => string;
   /** 宽度调整后需要重新测量的回调 */
@@ -79,7 +79,7 @@ export function useSplitter(options: UseSplitterOptions) {
     const next = clampWidth(width);
     sourceWidth.value = next;
     if (persist) {
-      writeSplitRatio(options.fileResultId(), options.taskId(), next / Math.max(bodyWidth(), 1));
+      writeSplitRatio(options.knowledgeFileId(), options.taskId(), next / Math.max(bodyWidth(), 1));
     }
     void nextTick(() => options.onResize?.());
   }
@@ -130,7 +130,7 @@ export function useSplitter(options: UseSplitterOptions) {
     // 拖动结束才落盘：拖动过程中每帧写 localStorage 没有必要
     if (sourceWidth.value !== null) {
       writeSplitRatio(
-        options.fileResultId(),
+        options.knowledgeFileId(),
         options.taskId(),
         sourceWidth.value / Math.max(bodyWidth(), 1),
       );
@@ -139,7 +139,7 @@ export function useSplitter(options: UseSplitterOptions) {
 
   /** 双击：回到默认比例，并把记录清掉（"默认"与"没记录过"是同一种状态） */
   function resetSplit(): void {
-    removeSplitRatio(options.fileResultId(), options.taskId());
+    removeSplitRatio(options.knowledgeFileId(), options.taskId());
     applyDefaultWidth();
   }
 
@@ -170,7 +170,7 @@ export function useSplitter(options: UseSplitterOptions) {
     if (total <= 0) {
       return;
     }
-    const remembered = readSplitRatio(options.fileResultId(), options.taskId());
+    const remembered = readSplitRatio(options.knowledgeFileId(), options.taskId());
     sourceWidth.value = clampWidth(total * (remembered ?? SPLIT_DEFAULT_RATIO));
   }
 

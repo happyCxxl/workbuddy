@@ -30,7 +30,7 @@ public interface StageContentQueryService {
      * <p>切片过滤：chunkFilter 指定内容类型 / 是否兜底 / 有无父片，**过滤与分页都下推到 wb_knowledge_chunk**
      * （切片集合片数可能很大，不再整集合读进内存再分页），total 与 truncated 同样按过滤后的口径给。
      *
-     * @param fileResultId 文件结果 ID（不存在 40432）
+     * @param knowledgeFileId 知识库文件 ID（不存在 40432）
      * @param stage        环节（必填，白名单校验）
      * @param taskId       可选：缺省取最新任务；不属于该文件该环节 40001
      * @param docPage      可选：只取该文档页的元素（可空，按全部）
@@ -40,6 +40,6 @@ public interface StageContentQueryService {
      * @param chunkFilter  可选：切片内容过滤（仅 CHUNK 生效；空按不过滤）
      * @return 产物内容（当前页）
      */
-    StageContentVO stageContent(Long fileResultId, String stage, Long taskId, Long docPage, Integer current,
+    StageContentVO stageContent(Long knowledgeFileId, String stage, Long taskId, Long docPage, Integer current,
                                 Integer size, String status, ChunkContentFilterDTO chunkFilter);
 }

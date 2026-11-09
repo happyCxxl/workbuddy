@@ -8,7 +8,7 @@ export type PreviewKind = 'pdf' | 'docx' | 'xlsx' | 'none';
 export interface UseSourcePreviewOptions {
   /** 文件名（判后缀、拼展示文案用） */
   fileName: () => string;
-  /** 源文件引用（文件结果里的 fileId；缺失时预览与下载都不可用） */
+  /** 源文件引用（知识库文件里的 fileId；缺失时预览与下载都不可用） */
   sourceFileId: () => string;
 }
 
@@ -113,7 +113,7 @@ export function useSourcePreview(options: UseSourcePreviewOptions) {
     previewPage.value = 0;
     const fileId = options.sourceFileId();
     if (!fileId) {
-      sourceError.value = '这条文件结果没有可用的源文件引用';
+      sourceError.value = '这条知识库文件没有可用的源文件引用';
       return;
     }
     try {

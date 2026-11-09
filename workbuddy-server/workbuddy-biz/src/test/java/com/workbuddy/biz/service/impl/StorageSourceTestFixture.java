@@ -111,9 +111,9 @@ final class StorageSourceTestFixture {
     }
 
     /** 任务行夹具 */
-    WbPipelineTask task(Long fileResultId, PipelineTaskStatus status) {
+    WbPipelineTask task(Long knowledgeFileId, PipelineTaskStatus status) {
         WbPipelineTask task = new WbPipelineTask();
-        task.setFileResultId(fileResultId);
+        task.setFileResultId(knowledgeFileId);
         task.setStatus(status.name());
         return task;
     }

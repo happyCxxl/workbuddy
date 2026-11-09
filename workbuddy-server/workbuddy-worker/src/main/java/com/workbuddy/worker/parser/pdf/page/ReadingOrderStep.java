@@ -58,7 +58,7 @@ public final class ReadingOrderStep implements PageStep {
         image.setHeight(page.pageHeight());
         image.setImageRef("page-" + page.pageNo() + "-layout");
         ProviderContext providerContext = new ProviderContext();
-        providerContext.setTaskId(context.getParseContext().getFileResultId());
+        providerContext.setTaskId(context.getParseContext().getKnowledgeFileId());
         providerContext.setAssetBytes(ref -> NullUtil.isNull(context.getRenderer())
                 ? null : context.getRenderer().png(context.getRenderer().pageImage(page.pageNo())));
         LayoutCapabilityAttempt.Outcome outcome = LayoutCapabilityAttempt.attempt(

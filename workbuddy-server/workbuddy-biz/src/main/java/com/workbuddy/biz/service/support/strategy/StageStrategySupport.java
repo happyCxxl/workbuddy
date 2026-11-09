@@ -37,7 +37,7 @@ public class StageStrategySupport {
      * 解析生效策略版本行：显式指定优先，否则取知识库绑定；两档都不命中（绑定开关关闭、未绑定、
      * 绑定行缺失或已停用）一律拒绝 40438，不做兜底。
      *
-     * @param fileResult        文件结果（取所属知识库判定绑定开关）
+     * @param fileResult        知识库文件（取所属知识库判定绑定开关）
      * @param strategyVersionId 显式指定的策略版本行 ID（可空）
      * @param type              策略类型（PREPROCESS / CHUNK / EMBED）
      * @param stageLabel        环节中文名（失败文案用）

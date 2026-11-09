@@ -89,23 +89,23 @@ public class IndexComboServiceImpl implements IndexComboService {
      * 绑定关闭场景（评测冻结集）：枚举范围收窄到指定文件——
      * 只返回「范围内每个文件都完整」的三元组。
      *
-     * @param fileResultIds 范围内的文件结果 ID
+     * @param knowledgeFileIds 范围内的知识库文件 ID
      * @return 完整的组合列表；入参为空时返回空列表
      */
-    public List<ComboSnapshot> enumerateCombos(List<Long> fileResultIds) {
-        if (NullUtil.isNull(fileResultIds) || fileResultIds.isEmpty()) {
+    public List<ComboSnapshot> enumerateCombos(List<Long> knowledgeFileIds) {
+        if (NullUtil.isNull(knowledgeFileIds) || knowledgeFileIds.isEmpty()) {
             return List.of();
         }
         // 候选三元组 = 去重后的（预处理策略 × 切片策略）对 × 向量策略（目录批量取数，单一口径）；
         // 完整性判定复用 selectComboProducts（枚举/对账/回填同口径）
-        IndexComboReconciler.ComboCatalog catalog = indexComboReconciler.catalog(fileResultIds);
+        IndexComboReconciler.ComboCatalog catalog = indexComboReconciler.catalog(knowledgeFileIds);
         List<ComboSnapshot> combos = new ArrayList<>();
         for (Map.Entry<String, Set<String>> entry : catalog.preprocessByChunk().entrySet()) {
             String chunkStrategy = entry.getKey();
             for (String preprocess : entry.getValue()) {
                 for (String embedStrategy : catalog.embedStrategies()) {
                     ComboSnapshot candidate = ComboSnapshot.of(preprocess, chunkStrategy, embedStrategy);
-                    boolean complete = fileResultIds.stream().allMatch(f ->
+                    boolean complete = knowledgeFileIds.stream().allMatch(f ->
                             indexComboReconciler.selectComboProducts(candidate, f,
                                     catalog.latestChunk(), catalog.latestEmbed()).complete());
                     if (complete) {

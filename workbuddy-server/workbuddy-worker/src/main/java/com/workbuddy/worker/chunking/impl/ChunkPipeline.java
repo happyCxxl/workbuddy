@@ -80,8 +80,8 @@ public class ChunkPipeline implements ChunkerPort {
             return outcome;
         }
         SliceContext sliceContext = buildSliceContext(context, strategy);
-        log.info("===> ChunkPipeline 开始切片, fileResultId={}, elements={}, strategy={}",
-                context.getFileResultId(), view.getElements().size(), strategy.fullVersion());
+        log.info("===> ChunkPipeline 开始切片, knowledgeFileId={}, elements={}, strategy={}",
+                context.getKnowledgeFileId(), view.getElements().size(), strategy.fullVersion());
         ChunkMetadataSupport.Stats stats = new ChunkMetadataSupport.Stats();
         List<ChunkSectionAssembler.Section> sections = new ArrayList<>();
         List<Chunk> orphans = new ArrayList<>();
@@ -108,8 +108,8 @@ public class ChunkPipeline implements ChunkerPort {
         outcome.setStepLogs(ChunkMetadataSupport.buildStepLogs(stats, strategy));
         outcome.setSuggestedStatus(ruleFailure
                 ? PipelineTaskStatus.PARTIAL_SUCCESS : PipelineTaskStatus.SUCCESS);
-        log.info("===> ChunkPipeline 切片完成, fileResultId={}, chunkCount={}, status={}, warningCount={}",
-                context.getFileResultId(), ordered.size(), outcome.getSuggestedStatus().name(),
+        log.info("===> ChunkPipeline 切片完成, knowledgeFileId={}, chunkCount={}, status={}, warningCount={}",
+                context.getKnowledgeFileId(), ordered.size(), outcome.getSuggestedStatus().name(),
                 outcome.getWarnings().size());
         return outcome;
     }

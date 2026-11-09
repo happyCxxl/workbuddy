@@ -57,7 +57,7 @@ class PreprocessControlTriggerTest {
 
         var response = service.preprocess(10L, null, 50L);
 
-        assertEquals(10L, response.getFileResultId());
+        assertEquals(10L, response.getKnowledgeFileId());
         assertEquals(31L, response.getPipelineTaskId());
         assertEquals("preproc-bound-v3", response.getStrategyVersion());
         ArgumentCaptor<WbPipelineTask> captor = ArgumentCaptor.forClass(WbPipelineTask.class);
@@ -344,7 +344,7 @@ class PreprocessControlTriggerTest {
     }
 
     /**
-     * 越权文件结果按 40401 拒绝。
+     * 越权知识库文件按 40401 拒绝。
      *
      * <p>守护 {@code preprocessDetail}：越权可读即失败。
      */
@@ -388,7 +388,7 @@ class PreprocessControlTriggerTest {
         WorkbuddyException foreignError = assertThrows(WorkbuddyException.class,
                 () -> service.preprocess(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, foreignError.getErrorCode());
-        assertTrue(foreignError.getMessage().contains("不属于该文件结果"), foreignError.getMessage());
+        assertTrue(foreignError.getMessage().contains("不属于该知识库文件"), foreignError.getMessage());
 
         verify(fixture.pipelineTaskDbService, never()).save(any());
         verify(fixture.taskQueue, never()).enqueue(any());

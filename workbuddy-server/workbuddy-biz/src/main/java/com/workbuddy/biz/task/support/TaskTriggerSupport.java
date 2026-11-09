@@ -31,11 +31,11 @@ public class TaskTriggerSupport {
 
     /**
      * 触发环节任务：先校验存储一致性（链的数据源与当前启用的数据源不一致 → 40453），
-     * 再按「执行键」（文件结果 + 上游产物 + 策略版本）查重：已有任务一律拒绝 40431
+     * 再按「执行键」（知识库文件 + 上游产物 + 策略版本）查重：已有任务一律拒绝 40431
      * （不因任务状态分流、也不返回既有结果），没有才新建 QUEUED 任务并入队。
      * 上游产物与策略版本用 0 表示"没有"那两档（解析没有上游也没有策略、组装没有策略）。
      *
-     * @param fileResultId      文件结果 ID
+     * @param knowledgeFileId      知识库文件 ID
      * @param stage             环节（PipelineStage）
      * @param upstreamProductId 上游产物 ID（可空；解析是链路起点，没有上游）
      * @param strategyVersionId 策略版本 ID（可空；解析/组装没有策略）
@@ -43,28 +43,29 @@ public class TaskTriggerSupport {
      * @param stageLabel        环节中文名（日志与拒绝文案用）
      * @return 触发响应（新建任务 ID）
      */
-    public StageTriggerVO trigger(Long fileResultId, PipelineStage stage, Long upstreamProductId,
+    public StageTriggerVO trigger(Long knowledgeFileId, PipelineStage stage, Long upstreamProductId,
                                   Long strategyVersionId, String strategySnapshot, String stageLabel) {
-        chainStorageSupport.requireStorageMatch(fileResultId);
+        chainStorageSupport.requireStorageMatch(knowledgeFileId);
         long upstream = NullUtil.isNull(upstreamProductId) ? 0L : upstreamProductId;
         long strategyVersion = NullUtil.isNull(strategyVersionId) ? 0L : strategyVersionId;
-        WbPipelineTask existing = pipelineTaskDbService.getByExecKey(fileResultId, stage.name(),
+        WbPipelineTask existing = pipelineTaskDbService.getByExecKey(knowledgeFileId, stage.name(),
                 upstream, strategyVersion);
         ThrowUtil.throwIf(NullUtil.isNotNull(existing), ErrorCode.TASK_ALREADY_PENDING,
                 NullUtil.isNull(existing) ? null
                         : stageLabel + "任务已创建（taskId=" + existing.getId() + "，状态 "
                         + existing.getStatus() + "），请勿重复触发");
         WbPipelineTask task = new WbPipelineTask();
-        task.setFileResultId(fileResultId);
+        task.setFileResultId(knowledgeFileId);
         task.setStage(stage.name());
         task.setStatus(PipelineTaskStatus.QUEUED.name());
         task.setUpstreamProductId(upstream);
         task.setStrategyVersionId(strategyVersion);
         task.setStrategySnapshot(strategySnapshot);
         pipelineTaskDbService.save(task);
-        enqueueNewTask(task, stageLabel, fileResultId);
-        log.info("===> TaskTriggerSupport trigger 触发{}任务, fileResultId={}, taskId={}, upstream={}, strategyVersion={}",
-                stageLabel, fileResultId, task.getId(), upstream, strategyVersion);
+        enqueueNewTask(task, stageLabel, knowledgeFileId);
+        log.info("===> TaskTriggerSupport trigger 触发{}任务, knowledgeFileId={}, taskId={},"
+                        + " upstream={}, strategyVersion={}",
+                stageLabel, knowledgeFileId, task.getId(), upstream, strategyVersion);
         return new StageTriggerVO(task.getId());
     }
 
@@ -72,12 +73,12 @@ public class TaskTriggerSupport {
      * 新任务入队：无事务时写不进队列把任务落 FAILED（库里不留"永远排不上队"的 QUEUED），随后仍抛出；
      * 有事务时入队延迟到提交后，失败由启动补偿器补投（任务保持 QUEUED）。
      */
-    private void enqueueNewTask(WbPipelineTask task, String stageLabel, Long fileResultId) {
+    private void enqueueNewTask(WbPipelineTask task, String stageLabel, Long knowledgeFileId) {
         try {
             taskQueue.enqueue(task.getId());
         } catch (Exception e) {
-            log.error("===> TaskTriggerSupport 触发{}任务入队失败, fileResultId={}, taskId={}",
-                    stageLabel, fileResultId, task.getId(), e);
+            log.error("===> TaskTriggerSupport 触发{}任务入队失败, knowledgeFileId={}, taskId={}",
+                    stageLabel, knowledgeFileId, task.getId(), e);
             pipelineTaskDbService.failQueued(task.getId(), PipelineTaskErrorCode.TASK_ENQUEUE_FAILED.name(),
                     "任务入队失败，请重试");
             throw e;

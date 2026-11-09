@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * 知识库管理接口：知识库读写 + 文件提交（建档）、提交记录、文件结果查询
+ * 知识库管理接口：知识库读写 + 文件提交（建档）、提交记录、知识库文件查询
  * （三者归属与生命周期都由知识库决定，路径挂在 `/knowledge-base/{id}/**` 下）。
  * 业务由三个用例服务实现编排，`KnowledgeBaseService` 门面按 API 用例委托；本类只做薄转发。
  *
@@ -159,7 +159,7 @@ public class KnowledgeBaseController {
      * 删除知识库：逻辑删除（del_flag='1'），无恢复接口，同事务记 DELETE 审计。
      *
      * <p>非本人可访问的库按「不存在」处理（40401）。
-     * 删除只作用于知识库本体，历史提交记录与文件结果不做级联清理。
+     * 删除只作用于知识库本体，历史提交记录与知识库文件不做级联清理。
      *
      * @param id 知识库 ID（路径参数）
      * @return 是否删除成功（恒 true，失败以业务异常表达）
@@ -175,14 +175,14 @@ public class KnowledgeBaseController {
     /**
      * 提交文件：对文件引用做归属校验与文件校验后完成建档三写
      * （wb_source_file / wb_file_result / wb_submit_log，同一事务）；
-     * 本接口只建档，不创建处理任务——解析由页面在文件结果页手动触发（手动逐环节口径）。
+     * 本接口只建档，不创建处理任务——解析由页面在知识库文件页手动触发（手动逐环节口径）。
      *
      * <p>幂等语义：以 requestId 为幂等键；同键重复请求返回首次提交记录，
      * 不重复建档（并发冲突时回滚本事务并回放已有记录）。
      *
      * @param id      知识库 ID（路径参数）
      * @param request 提交请求体：fileId + requestId（幂等键）
-     * @return 提交响应：新建提交 pipelineTaskId 为 null；幂等回放时回填该文件结果已有的解析任务 ID（可能为 null）
+     * @return 提交响应：新建提交 pipelineTaskId 为 null；幂等回放时回填该知识库文件已有的解析任务 ID（可能为 null）
      */
     @PostMapping("/{id}/submit")
     public R<FileSubmitVO> submit(
@@ -209,14 +209,14 @@ public class KnowledgeBaseController {
     }
 
     /**
-     * 文件结果分页查询（执行链工作台列表数据源）：按知识库分页返回文件处理结果，
+     * 知识库文件分页查询（执行链工作台列表数据源）：按知识库分页返回文件处理结果，
      * 每行附带各环节最新任务状态（PARSE/STRUCTURE/PREPROCESS/CHUNK/EMBED 五环节）。
      *
      * @param id    知识库 ID（路径参数）
      * @param query 查询条件（环节可留空；current/size 缺省 1/10，小于 1 回落缺省）
-     * @return 文件结果分页 VO（含来源文件信息与各环节状态列表）
+     * @return 知识库文件分页 VO（含来源文件信息与各环节状态列表）
      */
-    @GetMapping("/{id}/file-results")
+    @GetMapping("/{id}/knowledge-files")
     public R<IPage<FileResultVO>> fileResults(
             @PathVariable("id") Long id,
             @Valid FileResultQueryDTO query) {

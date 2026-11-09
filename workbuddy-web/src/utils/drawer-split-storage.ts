@@ -4,7 +4,7 @@
  * <p>**定位**：这是一份「视图偏好缓存」，不是业务数据。丢了只影响「下次打开是否还记得
  * 你拖过的栏宽」，任何异常一律吞掉，页面照常按默认比例渲染。
  *
- * <p>**存储键**：`v1:drawer-split::{fileResultId}::{taskId}`，键带 `v1:` 前缀，
+ * <p>**存储键**：`v1:drawer-split::{knowledgeFileId}::{taskId}`，键带 `v1:` 前缀，
  * 换格式时可按前缀整体废弃，也与执行链坐标那份缓存区分得开。
  *
  * <p>**分键粒度**：按「文件 + 运行」分键。不同文档的排版宽窄不同（扫描件窄、宽表格宽），
@@ -24,8 +24,8 @@ const MAX_RATIO = 0.9;
 /** 分离文件维度与运行维度 */
 const SEPARATOR = '::';
 
-function storageKey(fileResultId: string, taskId: string): string {
-  return `${STORAGE_PREFIX}${fileResultId}${SEPARATOR}${taskId}`;
+function storageKey(knowledgeFileId: string, taskId: string): string {
+  return `${STORAGE_PREFIX}${knowledgeFileId}${SEPARATOR}${taskId}`;
 }
 
 /**
@@ -33,9 +33,9 @@ function storageKey(fileResultId: string, taskId: string): string {
  *
  * @returns 合法比例（0.2–0.9）；没有记录或记录损坏时返回 null，由调用方走默认比例
  */
-export function readSplitRatio(fileResultId: string, taskId: string): number | null {
+export function readSplitRatio(knowledgeFileId: string, taskId: string): number | null {
   try {
-    const raw = localStorage.getItem(storageKey(fileResultId, taskId));
+    const raw = localStorage.getItem(storageKey(knowledgeFileId, taskId));
     if (!raw) {
       return null;
     }
@@ -55,21 +55,21 @@ export function readSplitRatio(fileResultId: string, taskId: string): number | n
  *
  * @param ratio 左栏占双栏的比例（调用方已按最小宽度夹过，这里只再挡一次离谱值）
  */
-export function writeSplitRatio(fileResultId: string, taskId: string, ratio: number): void {
+export function writeSplitRatio(knowledgeFileId: string, taskId: string, ratio: number): void {
   if (!Number.isFinite(ratio) || ratio < MIN_RATIO || ratio > MAX_RATIO) {
     return;
   }
   try {
-    localStorage.setItem(storageKey(fileResultId, taskId), String(ratio));
+    localStorage.setItem(storageKey(knowledgeFileId, taskId), String(ratio));
   } catch {
     // 配额满或存储不可用：这次的栏宽没记住而已，不影响当前页面
   }
 }
 
 /** 忘掉某次运行的比例（双击恢复默认时用，让"默认"与"没记录过"是同一种状态） */
-export function removeSplitRatio(fileResultId: string, taskId: string): void {
+export function removeSplitRatio(knowledgeFileId: string, taskId: string): void {
   try {
-    localStorage.removeItem(storageKey(fileResultId, taskId));
+    localStorage.removeItem(storageKey(knowledgeFileId, taskId));
   } catch {
     // 同上：清理失败不影响功能
   }

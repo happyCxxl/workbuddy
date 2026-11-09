@@ -31,7 +31,7 @@ export interface IndexBuildOrder {
    *
    * <p>后端 `buildCandidate` 对非 LIST 会强制归一化置空，前端先送 null 语义更清楚。
    */
-  fileResultIds: string[] | null;
+  knowledgeFileIds: string[] | null;
   /** 环节策略映射（绑定开启时可省略，由后端按绑定补齐） */
   stageStrategies: Record<string, string>;
   shape: IndexShape;

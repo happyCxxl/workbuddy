@@ -29,34 +29,34 @@ public class TaskDetailSupport {
     /**
      * 解析详情任务：taskId 指定则查该次运行并校验归属与环节（不匹配 40001）；缺省取该环节最新任务（可为空）。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param stage        环节
      * @param taskId       指定任务 ID（可空，空则取该环节最新任务）
      * @param stageLabel   环节中文名（错误提示用）
      * @return 任务行；缺省取最新且没有任务时为 null
      */
-    public WbPipelineTask resolveTask(Long fileResultId, PipelineStage stage, Long taskId, String stageLabel) {
+    public WbPipelineTask resolveTask(Long knowledgeFileId, PipelineStage stage, Long taskId, String stageLabel) {
         if (NullUtil.isNull(taskId)) {
-            return pipelineTaskDbService.getByFileResultIdAndStage(fileResultId, stage.name());
+            return pipelineTaskDbService.getByFileResultIdAndStage(knowledgeFileId, stage.name());
         }
         WbPipelineTask task = pipelineTaskDbService.getById(taskId);
         ThrowUtil.throwIf(NullUtil.isNull(task)
-                || !fileResultId.equals(task.getFileResultId())
+                || !knowledgeFileId.equals(task.getFileResultId())
                 || !stage.name().equals(task.getStage()), ErrorCode.PARAM_INVALID,
                 "任务不存在或不属于该文件的" + stageLabel + "任务");
         return task;
     }
 
     /**
-     * 详情骨架回填：文件结果 ID + 任务态字段 + 子步骤列表（无任务时只回填文件结果 ID，其余留空）。
+     * 详情骨架回填：知识库文件 ID + 任务态字段 + 子步骤列表（无任务时只回填知识库文件 ID，其余留空）。
      *
      * @param vo           环节详情 VO（各环节自己的子类）
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param task         该次运行任务（可为空）
      * @return 传入的 vo（状态与子步骤已回填）
      */
-    public <T extends StageDetailVO<?>> T withTask(T vo, Long fileResultId, WbPipelineTask task) {
-        vo.setFileResultId(fileResultId);
+    public <T extends StageDetailVO<?>> T withTask(T vo, Long knowledgeFileId, WbPipelineTask task) {
+        vo.setKnowledgeFileId(knowledgeFileId);
         if (NullUtil.isNotNull(task)) {
             vo.applyFrom(task);
             vo.setSteps(stepLogDbService.listByTaskId(task.getId()).stream().map(StepLogVO::of).toList());

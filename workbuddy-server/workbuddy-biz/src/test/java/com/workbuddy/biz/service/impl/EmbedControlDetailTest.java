@@ -103,7 +103,7 @@ class EmbedControlDetailTest {
 
         EmbedDetailVO detail = service.embedDetail(10L, null);
 
-        assertEquals(10L, detail.getFileResultId());
+        assertEquals(10L, detail.getKnowledgeFileId());
         assertEquals(41L, detail.getTaskId());
         assertEquals(PipelineStage.EMBED.name(), detail.getStage());
         assertEquals(PipelineTaskStatus.FAILED.name(), detail.getTaskStatus());

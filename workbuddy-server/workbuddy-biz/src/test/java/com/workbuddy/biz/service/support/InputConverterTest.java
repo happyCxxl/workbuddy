@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * 文档输入 VO 组装器单测（纯映射无状态类，用真实实例断言）。
  *
  * <p>守护 {@code toSubmitLogVO}/{@code toFileResultVO}/{@code toSubmitResponse} 的逐列搬运：
- * 提交记录与文件结果列表的每一列都直接决定页面显示，漏搬即空白。
+ * 提交记录与知识库文件列表的每一列都直接决定页面显示，漏搬即空白。
  */
 class InputConverterTest {
 
@@ -42,7 +42,7 @@ class InputConverterTest {
         assertEquals("88", vo.getFileId());
         assertEquals("sha-abc", vo.getSha256());
         assertEquals("招标文件.pdf", vo.getFileName());
-        assertEquals(10L, vo.getFileResultId());
+        assertEquals(10L, vo.getKnowledgeFileId());
         assertEquals("FAIL", vo.getStatus());
         assertEquals("FORMAT_NOT_ALLOWED", vo.getFailReason());
         assertEquals("格式不在允许范围", vo.getFailReasonLabel());
@@ -67,7 +67,7 @@ class InputConverterTest {
     }
 
     /**
-     * 文件结果：实体列与来源文件列合并下发，来源文件缺失时来源列留空。
+     * 知识库文件：实体列与来源文件列合并下发，来源文件缺失时来源列留空。
      *
      * <p>守护 {@code toFileResultVO}：来源文件列漏搬或缺失时伪造都算错。
      */

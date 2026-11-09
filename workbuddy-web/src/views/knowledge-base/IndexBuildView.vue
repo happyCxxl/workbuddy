@@ -609,7 +609,7 @@ async function loadCombos(): Promise<void> {
     const nextChosen: Record<string, string[]> = {};
     combos.value = comboList.map((item: IndexComboVO) => {
       const key = comboKeyOf(item.stageStrategies);
-      const members = (item.fileResultIds ?? []).map((id) => ({
+      const members = (item.knowledgeFileIds ?? []).map((id) => ({
         id,
         fileName: nameById.get(id) ?? id,
       }));
@@ -670,13 +670,13 @@ async function openBuildConfirm(): Promise<void> {
 
 async function submitBuild(combo: BuildCombo, ids: string[]): Promise<void> {
   // 勾满成员 = ALL（会接纳后续新文件）；少勾 = LIST（只认这批 id）。
-  // ALL 时 fileResultIds 送 null：后端对非 LIST 会强制归一化置空（buildCandidate 第 442 行），
+  // ALL 时 knowledgeFileIds 送 null：后端对非 LIST 会强制归一化置空（buildCandidate 第 442 行），
   // 前端先送空，语义明确（非子集）
   const isAll = ids.length === combo.members.length;
   try {
     const result = await addIndexBuild(knowledgeBaseId.value, {
       fileScopeMode: isAll ? 'ALL' : 'LIST',
-      fileResultIds: isAll ? null : ids,
+      knowledgeFileIds: isAll ? null : ids,
       stageStrategies: combo.stageStrategies,
       shape: combo.shape,
       // 手动构建用 REBUILD：不会自动发布，构建完停在「就绪」等人工确认
@@ -806,7 +806,7 @@ async function retryBuild(version: IndexVersionVO): Promise<void> {
   try {
     await addIndexBuild(knowledgeBaseId.value, {
       fileScopeMode: version.fileScopeMode,
-      fileResultIds: version.fileResultIds,
+      knowledgeFileIds: version.knowledgeFileIds,
       stageStrategies: version.stageStrategies ?? {},
       shape: version.shape ?? 'FULL_VECTOR',
       trigger: 'REBUILD',

@@ -135,7 +135,7 @@ class StructureTaskRunnerTest {
         return outcome;
     }
 
-    /** 链的一环：文件结果 10 → 来源文件 5 */
+    /** 链的一环：知识库文件 10 → 来源文件 5 */
     private WbFileResult fileResult() {
         WbFileResult fileResult = new WbFileResult();
         fileResult.setId(10L);

@@ -51,7 +51,7 @@ class KnowledgeFileIndexControllerRoutingTest {
     }
 
     /**
-     * 版本列表与组合列表分别路由；组合列表的 fileResultIds 参数可选。
+     * 版本列表与组合列表分别路由；组合列表的 knowledgeFileIds 参数可选。
      *
      * <p>守护 {@code list}/{@code combos} 的映射与可选参数。
      */
@@ -62,7 +62,7 @@ class KnowledgeFileIndexControllerRoutingTest {
 
         mockMvc.perform(get("/knowledge-base/9/index-sets")).andExpect(status().isOk());
         mockMvc.perform(get("/knowledge-base/9/index-combos")
-                        .param("fileResultIds", "1", "2"))
+                        .param("knowledgeFileIds", "1", "2"))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/knowledge-base/9/index-combos")).andExpect(status().isOk());
 

@@ -14,8 +14,8 @@ public class ChunkSet {
     /** 集合 ID = "cs-" + documentId + "-" + strategyVersion（确定性） */
     private String chunkSetId;
 
-    /** 文件结果 ID（wb_file_result.id） */
-    private Long fileResultId;
+    /** 知识库文件 ID（wb_file_result.id） */
+    private Long knowledgeFileId;
 
     /** 统一文档 ID（UnifiedDocument.documentInfo.documentId） */
     private String documentId;

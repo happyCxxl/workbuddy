@@ -128,7 +128,7 @@ final class EmbedTaskRunnerFixtures {
     static ChunkSet chunkSet() {
         ChunkSet chunkSet = new ChunkSet();
         chunkSet.setChunkSetId("cs-doc-10-chunk-hybrid-v1");
-        chunkSet.setFileResultId(10L);
+        chunkSet.setKnowledgeFileId(10L);
         Chunk chunk = new Chunk();
         chunk.setChunkId("chunk-0001");
         chunk.setContent("正文片");
@@ -148,7 +148,7 @@ final class EmbedTaskRunnerFixtures {
         outcome.setSuggestedStatus(PipelineTaskStatus.SUCCESS);
         EmbeddingSet set = new EmbeddingSet();
         set.setEmbeddingSetId("es-cs-doc-10-embed-default-v1");
-        set.setFileResultId(10L);
+        set.setKnowledgeFileId(10L);
         set.setChunkSetRef(60L);
         set.setChunkSetId("cs-doc-10-chunk-hybrid-v1");
         set.setStrategyVersion("embed-default-v1");

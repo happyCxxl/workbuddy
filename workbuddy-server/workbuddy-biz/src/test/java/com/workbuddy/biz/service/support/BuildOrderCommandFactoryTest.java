@@ -49,7 +49,7 @@ class BuildOrderCommandFactoryTest {
         ComboSnapshotDTO snapshot = new ComboSnapshotDTO();
         snapshot.setFileScopeMode("LIST");
         snapshot.setShape(IndexShape.FULL_VECTOR);
-        snapshot.setFileResultIds(List.of(1L, 2L));
+        snapshot.setKnowledgeFileIds(List.of(1L, 2L));
         snapshot.setStageStrategies(new LinkedHashMap<>(Map.of(
                 "PREPROCESS", "preproc-default-v1",
                 "CHUNK", "chunk-hybrid-v1",
@@ -63,7 +63,7 @@ class BuildOrderCommandFactoryTest {
         ComboSnapshot combo = order.getComboSnapshot();
         assertEquals("LIST", combo.getFileScopeMode());
         assertEquals(IndexShape.FULL_VECTOR, combo.getShape());
-        assertEquals(List.of(1L, 2L), combo.getFileResultIds());
+        assertEquals(List.of(1L, 2L), combo.getKnowledgeFileIds());
         assertEquals(3, combo.getStageStrategies().size());
         assertEquals("chunk-hybrid-v1", combo.getStageStrategies().get("CHUNK"));
     }
@@ -114,7 +114,7 @@ class BuildOrderCommandFactoryTest {
         ComboSnapshotDTO snapshot = new ComboSnapshotDTO();
         snapshot.setFileScopeMode(null);
         snapshot.setShape(null);
-        snapshot.setFileResultIds(null);
+        snapshot.setKnowledgeFileIds(null);
         snapshot.setStageStrategies(null);
         BuildOrderDTO request = new BuildOrderDTO();
         request.setComboSnapshot(snapshot);
@@ -123,7 +123,7 @@ class BuildOrderCommandFactoryTest {
 
         assertEquals("ALL", combo.getFileScopeMode());
         assertEquals(IndexShape.FULL_VECTOR, combo.getShape());
-        assertNull(combo.getFileResultIds());
+        assertNull(combo.getKnowledgeFileIds());
         assertTrue(combo.getStageStrategies().isEmpty());
     }
 }

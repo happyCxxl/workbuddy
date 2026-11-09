@@ -24,7 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * 文件结果数据访问单测。
+ * 知识库文件数据访问单测。
  *
  * <p>守护 {@code pageByKb}/{@code listByKb}/{@code countByKb}/{@code countGroupByKb}/
  * {@code countByKbIds} 的可见范围口径：全部按 knowledge_base_id 过滤，分组统计的

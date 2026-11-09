@@ -4,7 +4,7 @@ import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.infra.persistence.InfraBaseMapper;
 
 /**
- * 文件结果 Mapper（表：wb_file_result）。
+ * 知识库文件 Mapper（表：wb_file_result）。
  */
 public interface WbFileResultMapper extends InfraBaseMapper<WbFileResult> {
 }

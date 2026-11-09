@@ -63,7 +63,7 @@ public class ParsePipeline {
     public ParseOutcome run(ParseContext context) {
         ParseOutcome outcome = new ParseOutcome();
         ParseResult result = new ParseResult();
-        result.setResultId(context.getFileResultId());
+        result.setResultId(context.getKnowledgeFileId());
         result.setFile(context.getFileRef());
         QualityInfo quality = new QualityInfo();
         result.setQuality(quality);
@@ -82,8 +82,8 @@ public class ParsePipeline {
                 .findFirst()
                 .orElse(null);
         if (NullUtil.isNull(parser)) {
-            log.warn("===> ParsePipeline 无匹配解析器, fileResultId={}, mimeType={}",
-                    context.getFileResultId(), mimeType);
+            log.warn("===> ParsePipeline 无匹配解析器, knowledgeFileId={}, mimeType={}",
+                    context.getKnowledgeFileId(), mimeType);
             routeLog.setStatus(StepStatus.FAILED.name());
             routeLog.setError("无匹配解析器: " + mimeType);
             StepLogHelper.finish(routeLog);
@@ -95,8 +95,8 @@ public class ParsePipeline {
         routeLog.setStatus(StepStatus.SUCCESS.name());
         StepLogHelper.finish(routeLog);
         outcome.getStepLogs().add(routeLog);
-        log.info("===> ParsePipeline 路由命中, fileResultId={}, mimeType={}, parser={}",
-                context.getFileResultId(), mimeType, parser.capabilityName() + "-" + parser.capabilityVersion());
+        log.info("===> ParsePipeline 路由命中, knowledgeFileId={}, mimeType={}, parser={}",
+                context.getKnowledgeFileId(), mimeType, parser.capabilityName() + "-" + parser.capabilityVersion());
 
         // ② 原生解析
         StepLogInfo parseLog = StepLogHelper.begin(ParseStepName.NATIVE_PARSE.value());
@@ -114,8 +114,8 @@ public class ParsePipeline {
             outcome.fail(PipelineTaskErrorCode.PARSE_TIMEOUT.name(), "解析已取消（超时/停机）");
             return outcome;
         } catch (Exception e) {
-            log.warn("===> ParsePipeline 原生解析失败, fileResultId={}, error={}",
-                    context.getFileResultId(), StrUtil.maxLength(String.valueOf(e.getMessage()), 500));
+            log.warn("===> ParsePipeline 原生解析失败, knowledgeFileId={}, error={}",
+                    context.getKnowledgeFileId(), StrUtil.maxLength(String.valueOf(e.getMessage()), 500));
             parseLog.setStatus(StepStatus.FAILED.name());
             parseLog.setError(StrUtil.maxLength(String.valueOf(e.getMessage()), 1000));
             StepLogHelper.finish(parseLog);
@@ -129,8 +129,8 @@ public class ParsePipeline {
         }
         StepLogHelper.finish(parseLog);
         outcome.getStepLogs().add(parseLog);
-        log.info("===> ParsePipeline 原生解析完成, fileResultId={}, parser={}, elements={}, unitCount={}",
-                context.getFileResultId(), parser.capabilityName() + "-" + parser.capabilityVersion(),
+        log.info("===> ParsePipeline 原生解析完成, knowledgeFileId={}, parser={}, elements={}, unitCount={}",
+                context.getKnowledgeFileId(), parser.capabilityName() + "-" + parser.capabilityVersion(),
                 nativeSource.getElements().size(), nativeSource.getUnitCount());
 
         // ③ 信号判定 + 内置降级处置
@@ -142,8 +142,8 @@ public class ParsePipeline {
         for (Signal signal : signals) {
             failedUnits += applyFallback(signal, quality);
         }
-        log.info("===> ParsePipeline 信号判定完成, fileResultId={}, signalCount={}, failedUnits={}",
-                context.getFileResultId(), signals.size(), failedUnits);
+        log.info("===> ParsePipeline 信号判定完成, knowledgeFileId={}, signalCount={}, failedUnits={}",
+                context.getKnowledgeFileId(), signals.size(), failedUnits);
 
         // ④ 结果封装：能力快照 + ocr 占位路
         CapabilitySnapshot snapshot = new CapabilitySnapshot();

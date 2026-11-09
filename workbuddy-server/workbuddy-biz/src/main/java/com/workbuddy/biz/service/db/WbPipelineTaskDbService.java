@@ -14,42 +14,42 @@ import java.util.List;
 public interface WbPipelineTaskDbService extends InfraDbService<WbPipelineTask> {
 
     /**
-     * 按文件结果 + 环节查最新任务（id 倒序取一条）。
+     * 按知识库文件 + 环节查最新任务（id 倒序取一条）。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param stage        环节（PipelineStage 枚举名）
      * @return 任务实体；不存在返回 null
      */
-    WbPipelineTask getByFileResultIdAndStage(Long fileResultId, String stage);
+    WbPipelineTask getByFileResultIdAndStage(Long knowledgeFileId, String stage);
 
     /**
      * 按执行键查任务：同一份输入（上游产物）与同一策略版本只允许一条任务（唯一键 uk_exec 的应用侧查询）。
      *
-     * @param fileResultId      文件结果 ID
+     * @param knowledgeFileId      知识库文件 ID
      * @param stage             环节（PipelineStage 枚举名）
      * @param upstreamProductId 上游产物 ID（0 表示没有上游）
      * @param strategyVersionId 策略版本 ID（0 表示该环节无策略）
      * @return 任务实体；不存在返回 null
      */
-    WbPipelineTask getByExecKey(Long fileResultId, String stage, Long upstreamProductId, Long strategyVersionId);
+    WbPipelineTask getByExecKey(Long knowledgeFileId, String stage, Long upstreamProductId, Long strategyVersionId);
 
     /**
-     * 按文件结果查全部环节任务（id 升序；执行链血缘数据源）。
+     * 按知识库文件查全部环节任务（id 升序；执行链血缘数据源）。
      */
-    List<WbPipelineTask> listByFileResultId(Long fileResultId);
+    List<WbPipelineTask> listByFileResultId(Long knowledgeFileId);
 
     /**
-     * 批量查指定环节任务（列表行环节状态用）：fileResultIds 内 + stage，id 倒序
-     * （同一 fileResultId 的首条即最新任务）。
+     * 批量查指定环节任务（列表行环节状态用）：knowledgeFileIds 内 + stage，id 倒序
+     * （同一 knowledgeFileId 的首条即最新任务）。
      *
-     * @param fileResultIds 文件结果 ID 列表（为空返回空列表，不查库）
+     * @param knowledgeFileIds 知识库文件 ID 列表（为空返回空列表，不查库）
      * @param stage         环节（PipelineStage 枚举名）
      * @return 任务列表
      */
-    List<WbPipelineTask> listByFileResultIdsAndStage(List<Long> fileResultIds, String stage);
+    List<WbPipelineTask> listByKnowledgeFileIdsAndStage(List<Long> knowledgeFileIds, String stage);
 
     /**
-     * 查指定状态的任务（id 升序；只取任务 ID、文件结果与状态三列）。
+     * 查指定状态的任务（id 升序；只取任务 ID、知识库文件与状态三列）。
      *
      * @param statuses 状态集合（为空返回空列表，不查库）
      * @return 任务列表

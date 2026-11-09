@@ -25,7 +25,7 @@ public class WbIndexVersion {
     /** 版本号（v1、v2…；组合注册序号，集合名 kb_{kbId}_{versionNo} 组成部分） */
     private String versionNo;
 
-    /** 组合快照（JSON 文本：fileScopeMode/fileResultIds/shape/stageStrategies） */
+    /** 组合快照（JSON 文本：fileScopeMode/knowledgeFileIds/shape/stageStrategies） */
     private String comboSnapshot;
 
     /** 纳入片数 */

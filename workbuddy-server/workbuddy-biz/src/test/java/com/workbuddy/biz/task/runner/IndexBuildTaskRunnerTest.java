@@ -108,7 +108,7 @@ class IndexBuildTaskRunnerTest {
     private WbPipelineTask queuedListBuildTask(String trigger) {
         ComboSnapshot combo = comboAll();
         combo.setFileScopeMode("LIST");
-        combo.setFileResultIds(new ArrayList<>(List.of(10L)));
+        combo.setKnowledgeFileIds(new ArrayList<>(List.of(10L)));
         BuildOrder order = new BuildOrder();
         order.setKnowledgeBaseId(1L);
         order.setComboSnapshot(combo);

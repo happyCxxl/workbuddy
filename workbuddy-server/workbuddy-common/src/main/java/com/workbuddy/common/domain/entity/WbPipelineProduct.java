@@ -22,7 +22,7 @@ public class WbPipelineProduct {
     /** 产出该产物的任务（一次执行至多一份产物；唯一键 uk_product_task） */
     private Long taskId;
 
-    /** 所属文件结果 */
+    /** 所属知识库文件 */
     private Long fileResultId;
 
     /** 产出环节（PipelineStage 枚举名） */

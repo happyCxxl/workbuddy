@@ -53,24 +53,24 @@ public final class TaskRunnerSupport {
     }
 
     /**
-     * 领任务与文件结果的结果对。
+     * 领任务与知识库文件的结果对。
      *
      * @param task       已抢占的任务（领不到时为 null）
-     * @param fileResult 任务对应的文件结果（缺失时为 null）
+     * @param fileResult 任务对应的知识库文件（缺失时为 null）
      */
     public record Claimed(WbPipelineTask task, WbFileResult fileResult) {
     }
 
     /**
-     * 领任务并取文件结果：任务未领到（不存在、非 QUEUED、未抢到）返回 null；
-     * 文件结果不存在按该环节失败收尾并返回 null。
+     * 领任务并取知识库文件：任务未领到（不存在、非 QUEUED、未抢到）返回 null；
+     * 知识库文件不存在按该环节失败收尾并返回 null。
      *
      * @param pipelineTaskDbService 任务数据访问
-     * @param fileResultDbService   文件结果数据访问
+     * @param fileResultDbService   知识库文件数据访问
      * @param taskId                任务 ID
      * @param failureCode           该环节的兜底任务错误码
      * @param finisher              该执行器的失败回写
-     * @return 领取到的任务与文件结果；未领取到或文件结果缺失时返回 null
+     * @return 领取到的任务与知识库文件；未领取到或知识库文件缺失时返回 null
      */
     public static Claimed claimFileResult(WbPipelineTaskDbService pipelineTaskDbService,
                                           WbFileResultDbService fileResultDbService, Long taskId,
@@ -81,7 +81,7 @@ public final class TaskRunnerSupport {
         }
         WbFileResult fileResult = fileResultDbService.getById(task.getFileResultId());
         if (NullUtil.isNull(fileResult)) {
-            finisher.finish(taskId, failureCode.name(), "文件结果不存在: " + task.getFileResultId());
+            finisher.finish(taskId, failureCode.name(), "知识库文件不存在: " + task.getFileResultId());
             return null;
         }
         return new Claimed(task, fileResult);
@@ -240,14 +240,14 @@ public final class TaskRunnerSupport {
      * @param log          调用方的 logger
      * @param label        日志前缀（含执行器与动作）
      * @param task         任务行
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param outcome      环节执行结果
      * @param artifactId   产物 ID（可空）
      */
-    public static void logPersisted(Logger log, String label, WbPipelineTask task, Long fileResultId,
+    public static void logPersisted(Logger log, String label, WbPipelineTask task, Long knowledgeFileId,
                                     StageOutcome outcome, String artifactId) {
-        log.info("===> {}, taskId={}, fileResultId={}, status={}, artifactId={}",
-                label, task.getId(), fileResultId, outcome.getSuggestedStatus().name(), artifactId);
+        log.info("===> {}, taskId={}, knowledgeFileId={}, status={}, artifactId={}",
+                label, task.getId(), knowledgeFileId, outcome.getSuggestedStatus().name(), artifactId);
     }
 
     /** 失败回写动作（各执行器自持回写口径）。 */

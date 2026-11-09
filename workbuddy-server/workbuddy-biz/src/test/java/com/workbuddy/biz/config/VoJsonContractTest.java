@@ -150,11 +150,11 @@ class VoJsonContractTest {
     @DisplayName("集合里的 ID 元素也走同一口径（成员文件 ID 列表）")
     void collectionIdsShouldFollowSameRule() throws Exception {
         IndexComboVO combo = new IndexComboVO();
-        combo.setFileResultIds(List.of(SNOWFLAKE_ID, SNOWFLAKE_ID + 1));
+        combo.setKnowledgeFileIds(List.of(SNOWFLAKE_ID, SNOWFLAKE_ID + 1));
 
         String json = objectMapper.writeValueAsString(combo);
 
-        assertTrue(json.contains("\"fileResultIds\":[\"" + SNOWFLAKE_ID + "\",\"" + (SNOWFLAKE_ID + 1) + "\"]"),
+        assertTrue(json.contains("\"knowledgeFileIds\":[\"" + SNOWFLAKE_ID + "\",\"" + (SNOWFLAKE_ID + 1) + "\"]"),
                 "数组元素应为字符串，实际: " + json);
     }
 

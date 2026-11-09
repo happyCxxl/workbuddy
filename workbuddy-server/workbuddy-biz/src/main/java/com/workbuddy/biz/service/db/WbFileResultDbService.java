@@ -8,20 +8,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 文件结果数据访问服务（wb_file_result）。
+ * 知识库文件数据访问服务（wb_file_result）。
  */
 public interface WbFileResultDbService extends InfraDbService<WbFileResult> {
 
-    /** 取知识库下全部文件结果（id 升序；索引构建枚举数据源） */
+    /** 取知识库下全部知识库文件（id 升序；索引构建枚举数据源） */
     List<WbFileResult> listByKb(Long knowledgeBaseId);
 
     /**
-     * 按知识库分页查文件结果（id 倒序，新→旧）。
+     * 按知识库分页查知识库文件（id 倒序，新→旧）。
      *
      * @param current        当前页，从 1 开始
      * @param size           每页条数
      * @param knowledgeBaseId 知识库 ID
-     * @return 文件结果分页
+     * @return 知识库文件分页
      */
     IPage<WbFileResult> pageByKb(long current, long size, Long knowledgeBaseId);
 

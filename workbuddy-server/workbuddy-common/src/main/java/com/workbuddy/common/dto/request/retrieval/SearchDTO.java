@@ -18,7 +18,7 @@ public class SearchDTO {
     /** 返回条数（可覆盖规则 topK） */
     private Integer topK;
 
-    /** 过滤：文件结果 ID */
+    /** 过滤：知识库文件 ID */
     private Long documentId;
 
     /** 过滤：所有者 */

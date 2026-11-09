@@ -70,8 +70,8 @@ public enum ErrorCode {
     /** 任务进行中（同环节已有排队/执行中任务，拒绝重复触发） */
     TASK_ALREADY_PENDING(40431, "任务进行中，请勿重复触发"),
 
-    /** 文件结果不存在 */
-    FILE_RESULT_NOT_FOUND(40432, "文件结果不存在"),
+    /** 知识库文件不存在 */
+    FILE_RESULT_NOT_FOUND(40432, "知识库文件不存在"),
 
     /** 策略版本不存在或未启用 */
     STRATEGY_VERSION_NOT_FOUND(40433, "策略版本不存在或未启用"),

@@ -168,7 +168,7 @@ class KnowledgeBaseControllerRoutingTest {
     }
 
     /**
-     * 提交记录与文件结果两个分页端点分别路由。
+     * 提交记录与知识库文件两个分页端点分别路由。
      *
      * <p>守护 {@code pageSubmitLogs}/{@code pageFileResults} 的映射。
      */
@@ -178,7 +178,7 @@ class KnowledgeBaseControllerRoutingTest {
         when(knowledgeBaseService.pageKnowledgeBaseFileResults(eq(9L), any())).thenReturn(new Page<FileResultVO>());
 
         mockMvc.perform(get("/knowledge-base/9/submit-logs")).andExpect(status().isOk());
-        mockMvc.perform(get("/knowledge-base/9/file-results")).andExpect(status().isOk());
+        mockMvc.perform(get("/knowledge-base/9/knowledge-files")).andExpect(status().isOk());
 
         verify(knowledgeBaseService).pageKnowledgeBaseSubmitLogs(eq(9L), any());
         verify(knowledgeBaseService).pageKnowledgeBaseFileResults(eq(9L), any());

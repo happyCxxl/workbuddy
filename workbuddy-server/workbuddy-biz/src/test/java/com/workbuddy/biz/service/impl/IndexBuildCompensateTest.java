@@ -49,12 +49,12 @@ class IndexBuildCompensateTest {
         set.setCurrentPublishedVersionId(10L);
         when(fixture.fileResultDbService.listByKb(1L)).thenReturn(List.of(file(10L)));
         WbChunkSet chunk = IndexSetTestFixtures.chunkRowOf(1L, 10L, "chunk-hybrid-v1", 100L);
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(chunk));
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(chunk));
         WbEmbeddingSet embed = new WbEmbeddingSet();
         embed.setId(2L);
         embed.setFileResultId(10L);
         embed.setStrategyVersion("embed-default-v1");
-        when(fixture.embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(embed));
+        when(fixture.embeddingSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(embed));
         when(fixture.lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         when(fixture.indexSetDbService.getOrCreateByKb(1L)).thenReturn(indexSet());
         when(fixture.indexVersionDbService.listByIndexSetId(5L)).thenReturn(List.of());
@@ -84,13 +84,13 @@ class IndexBuildCompensateTest {
         set.setCurrentPublishedVersionId(10L);
         when(fixture.fileResultDbService.listByKb(1L)).thenReturn(List.of(file(10L)));
         WbChunkSet chunk = IndexSetTestFixtures.chunkRowOf(1L, 10L, "chunk-legacy-v1", 100L);
-        when(fixture.chunkSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(chunk));
+        when(fixture.chunkSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(chunk));
         when(fixture.lineageResolver.resolvePreprocessStrategy(100L)).thenReturn("preproc-default-v1");
         WbEmbeddingSet embed = new WbEmbeddingSet();
         embed.setId(2L);
         embed.setFileResultId(10L);
         embed.setStrategyVersion("embed-default-v1");
-        when(fixture.embeddingSetDbService.listByFileResultIds(List.of(10L))).thenReturn(List.of(embed));
+        when(fixture.embeddingSetDbService.listByKnowledgeFileIds(List.of(10L))).thenReturn(List.of(embed));
         WbPipelineStrategyVersion chunkStrategy = new WbPipelineStrategyVersion();
         chunkStrategy.setId(88L);
         when(fixture.strategyVersionDbService.getByTypeAndNameAndVersion("CHUNK", "chunk-hybrid", "v1"))

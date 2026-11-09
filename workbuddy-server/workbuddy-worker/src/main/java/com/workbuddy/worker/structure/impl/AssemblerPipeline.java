@@ -88,8 +88,8 @@ public class AssemblerPipeline implements DocumentAssemblerPort {
             return outcome;
         }
         context.setSourceFileType(parseResult.getFile().getMimeType());
-        log.info("===> AssemblerPipeline 开始组装, taskId={}, fileResultId={}, mimeType={}",
-                context.getTaskId(), context.getFileResultId(), context.getSourceFileType());
+        log.info("===> AssemblerPipeline 开始组装, taskId={}, knowledgeFileId={}, mimeType={}",
+                context.getTaskId(), context.getKnowledgeFileId(), context.getSourceFileType());
 
         // 页眉页脚标注：文档级判定，解析只按正文产出元素
         if (NullUtil.isNotNull(context.getProperties())) {
@@ -169,8 +169,8 @@ public class AssemblerPipeline implements DocumentAssemblerPort {
         } else {
             outcome.setSuggestedStatus(PipelineTaskStatus.SUCCESS);
         }
-        log.info("===> AssemblerPipeline 组装完成, taskId={}, fileResultId={}, elements={}, status={}, warningCount={}",
-                context.getTaskId(), context.getFileResultId(), document.getElements().size(),
+        log.info("===> AssemblerPipeline 组装完成, taskId={}, knowledgeFileId={}, elements={}, status={}, warningCount={}",
+                context.getTaskId(), context.getKnowledgeFileId(), document.getElements().size(),
                 outcome.getSuggestedStatus().name(), document.getQuality().getWarnings().size());
         for (QualityWarning warning : document.getQuality().getWarnings()) {
             log.warn("===> AssemblerPipeline 组装告警, taskId={}, code={}, message={}",
@@ -240,7 +240,7 @@ public class AssemblerPipeline implements DocumentAssemblerPort {
                                           List<UnifiedElement> elements, List<DocumentRelation> relations) {
         UnifiedDocument document = new UnifiedDocument();
         DocumentInfo info = new DocumentInfo();
-        info.setDocumentId("doc-" + context.getFileResultId());
+        info.setDocumentId("doc-" + context.getKnowledgeFileId());
         info.setSourceFileRef(parseResult.getFile().getFileId());
         info.setSourceFileType(parseResult.getFile().getMimeType());
         info.setParserRunId(parseResult.getResultId());

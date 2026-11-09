@@ -21,7 +21,7 @@ public class WbPipelineTask {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    /** 所属文件结果 */
+    /** 所属知识库文件 */
     private Long fileResultId;
 
     /** 环节（PipelineStage 枚举名） */

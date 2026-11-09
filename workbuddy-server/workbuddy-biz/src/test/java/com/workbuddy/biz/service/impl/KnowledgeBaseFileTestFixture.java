@@ -57,7 +57,7 @@ abstract class KnowledgeBaseFileTestFixture extends KnowledgeBaseTestFixture {
     }
 
     /**
-     * 校验通过的 PDF 文件结果夹具。
+     * 校验通过的 PDF 知识库文件夹具。
      *
      * @return 文件校验结果
      */
@@ -78,10 +78,10 @@ abstract class KnowledgeBaseFileTestFixture extends KnowledgeBaseTestFixture {
     }
 
     /**
-     * 建档三写成功桩：来源文件 / 文件结果 / 提交日志回填自增 ID。
+     * 建档三写成功桩：来源文件 / 知识库文件 / 提交日志回填自增 ID。
      *
      * @param sourceFileDbService 来源文件数据访问替身
-     * @param fileResultDbService 文件结果数据访问替身
+     * @param fileResultDbService 知识库文件数据访问替身
      * @param submitLogDbService  提交日志数据访问替身
      */
     protected void stubSuccessWrites(WbSourceFileDbService sourceFileDbService,
@@ -103,7 +103,7 @@ abstract class KnowledgeBaseFileTestFixture extends KnowledgeBaseTestFixture {
     }
 
     /**
-     * 文件结果分页查询条件夹具（环节可空）。
+     * 知识库文件分页查询条件夹具（环节可空）。
      *
      * @param stage 环节（可空）
      * @return 查询条件
@@ -118,11 +118,11 @@ abstract class KnowledgeBaseFileTestFixture extends KnowledgeBaseTestFixture {
      * 五个环节的空任务查询桩（列表行没有任何任务）。
      *
      * @param pipelineTaskDbService 管线任务数据访问替身
-     * @param fileResultIds        文件结果 ID 列表
+     * @param knowledgeFileIds        知识库文件 ID 列表
      */
-    protected void stubNoStageTasks(WbPipelineTaskDbService pipelineTaskDbService, List<Long> fileResultIds) {
+    protected void stubNoStageTasks(WbPipelineTaskDbService pipelineTaskDbService, List<Long> knowledgeFileIds) {
         for (String statusStage : List.of("PARSE", "STRUCTURE", "PREPROCESS", "CHUNK", "EMBED")) {
-            when(pipelineTaskDbService.listByFileResultIdsAndStage(fileResultIds, statusStage))
+            when(pipelineTaskDbService.listByKnowledgeFileIdsAndStage(knowledgeFileIds, statusStage))
                     .thenReturn(List.of());
         }
     }

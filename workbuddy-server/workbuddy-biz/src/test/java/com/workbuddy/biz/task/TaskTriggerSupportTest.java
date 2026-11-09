@@ -83,7 +83,7 @@ class TaskTriggerSupportTest {
         when(sourceFileDbService.getById(5L)).thenReturn(sourceFile);
     }
 
-    /** 组装环节执行键（文件结果 10 + 上游产物 50 + 无策略 0）上没有任务 */
+    /** 组装环节执行键（知识库文件 10 + 上游产物 50 + 无策略 0）上没有任务 */
     private void noExistingTask() {
         when(pipelineTaskDbService.getByExecKey(10L, PipelineStage.STRUCTURE.name(), 50L, 0L))
                 .thenReturn(null);
@@ -240,7 +240,7 @@ class TaskTriggerSupportTest {
      */
     @Test
     void missingFileChainShouldNotBlockTrigger() {
-        // 链路缺环（无文件结果）时不拦：由读取路径按记录给出「存储后端未配置」
+        // 链路缺环（无知识库文件）时不拦：由读取路径按记录给出「存储后端未配置」
         when(fileResultDbService.getById(10L)).thenReturn(null);
         noExistingTask();
         savedTaskGetsId(63L);

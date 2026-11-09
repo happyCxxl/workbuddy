@@ -30,16 +30,16 @@ public class IndexComboQueryServiceImpl implements IndexComboQueryService {
      * 列出可构建的索引组合。
      *
      * @param knowledgeBaseId 知识库 ID
-     * @param fileResultIds   限定参与的文件结果 ID（可空）
+     * @param knowledgeFileIds   限定参与的知识库文件 ID（可空）
      * @return 组合列表
      */
     @Override
-    public List<IndexComboVO> listCombos(Long knowledgeBaseId, List<Long> fileResultIds) {
+    public List<IndexComboVO> listCombos(Long knowledgeBaseId, List<Long> knowledgeFileIds) {
         // 组合 × 成员口径（测评模式构建弹窗数据源）：候选三元组 = 范围内各文件各策略历史的并集；
         // 成员 = 该组合下有完整成功产物链的文件（selectComboProducts 单一取数口径，与构建对账同口径）。
         // 注意：与生产路径 enumerateCombos 的"全库交集"口径不同（本方法按成员子集返回，交集口径不动）。
-        boolean scoped = NullUtil.isNotNull(fileResultIds) && !fileResultIds.isEmpty();
-        List<Long> fileIds = scoped ? new ArrayList<>(fileResultIds)
+        boolean scoped = NullUtil.isNotNull(knowledgeFileIds) && !knowledgeFileIds.isEmpty();
+        List<Long> fileIds = scoped ? new ArrayList<>(knowledgeFileIds)
                 : fileResultDbService.listByKb(knowledgeBaseId).stream().map(WbFileResult::getId).toList();
         if (fileIds.isEmpty()) {
             return List.of();
@@ -80,7 +80,7 @@ public class IndexComboQueryServiceImpl implements IndexComboQueryService {
         vo.setShape(combo.getShape());
         vo.setStageStrategies(combo.getStageStrategies());
         vo.setComplete(true);
-        vo.setFileResultIds(members);
+        vo.setKnowledgeFileIds(members);
         vo.setFileCount(members.size());
         vo.setVectorCount(vectorCount);
         return vo;

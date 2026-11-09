@@ -300,7 +300,7 @@ class ChunkControlTriggerTest {
     }
 
     /**
-     * 越权文件结果按 40401 拒绝。
+     * 越权知识库文件按 40401 拒绝。
      *
      * <p>守护 {@code chunkDetail}：越权可读即失败。
      */
@@ -344,7 +344,7 @@ class ChunkControlTriggerTest {
         WorkbuddyException foreignError = assertThrows(WorkbuddyException.class,
                 () -> service.chunk(10L, null, 50L));
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, foreignError.getErrorCode());
-        assertTrue(foreignError.getMessage().contains("不属于该文件结果"), foreignError.getMessage());
+        assertTrue(foreignError.getMessage().contains("不属于该知识库文件"), foreignError.getMessage());
 
         verify(fixture.pipelineTaskDbService, never()).save(any());
         verify(fixture.taskQueue, never()).enqueue(any());

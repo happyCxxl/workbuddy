@@ -131,7 +131,7 @@ export interface StageStatus {
   finishedAt: string | null;
 }
 
-/** 文件结果（后端 FileResultVO）：执行链列表数据源 */
+/** 知识库文件（后端 FileResultVO）：执行链列表数据源 */
 export interface FileResult {
   id: string;
   knowledgeBaseId: string;
@@ -503,7 +503,7 @@ export interface LineageEdge {
 
 /** 执行树聚合（后端 LineageVO） */
 export interface Lineage {
-  fileResultId: string;
+  knowledgeFileId: string;
   nodes: LineageNode[];
   edges: LineageEdge[];
 }
@@ -529,7 +529,7 @@ export interface StageStep {
  * 公共部分在这里只声明一次。
  */
 export interface StageDetailCommon<TStats extends StageStats = StageStats> {
-  fileResultId: string;
+  knowledgeFileId: string;
   taskId: string | null;
   stage: string;
   status: string | null;
@@ -897,7 +897,7 @@ export function pageOf(extra: StageContentExtra | null): number | null {
 
 /** 产物内容分页响应（后端 StageContentVO） */
 export interface StageContentPage {
-  fileResultId: string;
+  knowledgeFileId: string;
   stage: string;
   taskId: string | null;
   /** 该次运行产物是否可用（false = 无任务/无产物，items 为空） */
@@ -925,7 +925,7 @@ export interface StageContentPage {
  */
 export interface StageTriggerResult {
   pipelineTaskId: string | null;
-  fileResultId?: string;
+  knowledgeFileId?: string;
   /** 实际使用的策略版本（仅预处理/切片/向量化返回），可核对是否与预期一致 */
   strategyVersion?: string | null;
 }

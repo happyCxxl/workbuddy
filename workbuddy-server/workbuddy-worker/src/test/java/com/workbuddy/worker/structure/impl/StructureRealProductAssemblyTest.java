@@ -56,7 +56,7 @@ class StructureRealProductAssemblyTest {
 
         AssembleContext context = new AssembleContext();
         context.setTaskId(1L);
-        context.setFileResultId(2L);
+        context.setKnowledgeFileId(2L);
         context.setProperties(properties);
 
         var outcome = pipeline.assemble(result, context);

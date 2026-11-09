@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
  * 切片集合数据访问单测。
  *
  * <p>守护 {@code getByArtifactId}/{@code getLatestByFileResultId}/{@code listByFileResultId}/
- * {@code listByFileResultIds} 的口径：产物键定位、最新一条、按文件列举、批量短路。
+ * {@code listByKnowledgeFileIds} 的口径：产物键定位、最新一条、按文件列举、批量短路。
  */
 @ExtendWith(MockitoExtension.class)
 class WbChunkSetDbServiceImplTest {
@@ -105,15 +105,15 @@ class WbChunkSetDbServiceImplTest {
     /**
      * 批量查询：空入参短路，非空走 IN。
      *
-     * <p>守护 {@code listByFileResultIds} 的空入参兜底。
+     * <p>守护 {@code listByKnowledgeFileIds} 的空入参兜底。
      */
     @Test
-    void listByFileResultIdsShouldShortCircuitOnEmpty() {
-        assertTrue(impl.listByFileResultIds(List.of()).isEmpty());
+    void listByKnowledgeFileIdsShouldShortCircuitOnEmpty() {
+        assertTrue(impl.listByKnowledgeFileIds(List.of()).isEmpty());
         verify(mapper, org.mockito.Mockito.never()).selectList(any(Wrapper.class));
 
         when(mapper.selectList(any(Wrapper.class))).thenReturn(List.of(new WbChunkSet()));
-        assertEquals(1, impl.listByFileResultIds(List.of(1L, 2L)).size());
+        assertEquals(1, impl.listByKnowledgeFileIds(List.of(1L, 2L)).size());
         ArgumentCaptor<Wrapper<WbChunkSet>> captor = ArgumentCaptor.forClass(Wrapper.class);
         verify(mapper).selectList(captor.capture());
         LambdaQueryWrapper<WbChunkSet> wrapper = (LambdaQueryWrapper<WbChunkSet>) captor.getValue();

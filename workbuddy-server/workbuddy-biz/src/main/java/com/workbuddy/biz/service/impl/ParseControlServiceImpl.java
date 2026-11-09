@@ -44,36 +44,36 @@ public class ParseControlServiceImpl implements ParseControlService {
 
     /**
      * 触发解析（手动逐环节，链路起点）：解析没有上游产物、也没有策略版本，
-     * 执行键即「文件结果」——一份文件结果只解析一次。
+     * 执行键即「知识库文件」——一份知识库文件只解析一次。
      *
      * <p>已有任务（任何状态，含执行中）一律拒绝 40431；没有才新建 PARSE 任务（QUEUED）落库并入队。
-     * 完成后停在终态，不自动触发组装；需要重新解析请重新提交文件（产生新的文件结果）。
+     * 完成后停在终态，不自动触发组装；需要重新解析请重新提交文件（产生新的知识库文件）。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @return 触发响应（新建任务 ID）
      */
     @Override
-    public StageTriggerVO parse(Long fileResultId) {
-        accessGuard.requireExisting(fileResultId);
-        return triggerSupport.trigger(fileResultId, PipelineStage.PARSE, null, null, null,
+    public StageTriggerVO parse(Long knowledgeFileId) {
+        accessGuard.requireExisting(knowledgeFileId);
+        return triggerSupport.trigger(knowledgeFileId, PipelineStage.PARSE, null, null, null,
                 PipelineStage.PARSE.getLabel());
     }
 
     /**
      * 解析详情：任务状态、子步骤、解析统计与产物引用。
      *
-     * @param fileResultId 文件结果 ID
+     * @param knowledgeFileId 知识库文件 ID
      * @param taskId       任务 ID（可空表示取最新）
      * @return 解析详情
      */
     @Override
-    public ParseDetailVO parseDetail(Long fileResultId, Long taskId) {
-        accessGuard.requireExisting(fileResultId);
-        WbPipelineTask task = detailSupport.resolveTask(fileResultId, PipelineStage.PARSE, taskId,
+    public ParseDetailVO parseDetail(Long knowledgeFileId, Long taskId) {
+        accessGuard.requireExisting(knowledgeFileId);
+        WbPipelineTask task = detailSupport.resolveTask(knowledgeFileId, PipelineStage.PARSE, taskId,
                 PipelineStage.PARSE.getLabel());
 
         ParseDetailVO vo = new ParseDetailVO();
-        detailSupport.withTask(vo, fileResultId, task);
+        detailSupport.withTask(vo, knowledgeFileId, task);
 
         // 产物引用/告警/统计：按 task.productId 精确取该次运行的产物（历史任务同样可展示自己的产物；无任务/无产物留空）
         // 解析的统计结构固定（LineageParseStatsVO），走 parseStats；通用 stageStats 只给没有专属结构的环节

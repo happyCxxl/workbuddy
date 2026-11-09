@@ -97,8 +97,8 @@ public class EmbedPipeline implements EmbedderPort {
             outcome.fail(PipelineTaskErrorCode.EMBED_FAILED.name(), "任务未带向量化策略快照，无法向量化");
             return outcome;
         }
-        log.info("===> EmbedPipeline 开始向量化, fileResultId={}, strategy={}",
-                context.getFileResultId(), strategy.fullVersion());
+        log.info("===> EmbedPipeline 开始向量化, knowledgeFileId={}, strategy={}",
+                context.getKnowledgeFileId(), strategy.fullVersion());
 
         // ① 前置校验（写前闸门）：窗口兼容 / 模型目录
         long precheckStartedNanos = System.nanoTime();
@@ -163,9 +163,9 @@ public class EmbedPipeline implements EmbedderPort {
         }
         outcome.setSuggestedStatus(batchResult.failedBatches > 0 || !outcome.getWarnings().isEmpty()
                 ? PipelineTaskStatus.PARTIAL_SUCCESS : PipelineTaskStatus.SUCCESS);
-        log.info("===> EmbedPipeline 向量化完成, fileResultId={}, status={}, recordCount={},"
+        log.info("===> EmbedPipeline 向量化完成, knowledgeFileId={}, status={}, recordCount={},"
                         + " cachedCount={}, warningCount={}",
-                context.getFileResultId(), outcome.getSuggestedStatus().name(), records.size(),
+                context.getKnowledgeFileId(), outcome.getSuggestedStatus().name(), records.size(),
                 cachedCount, outcome.getWarnings().size());
         return outcome;
     }
@@ -375,7 +375,7 @@ public class EmbedPipeline implements EmbedderPort {
         ChunkSet chunkSet = context.getChunkSet();
         EmbeddingSet set = new EmbeddingSet();
         set.setEmbeddingSetId("es-" + chunkSet.getChunkSetId() + "-" + strategy.fullVersion());
-        set.setFileResultId(context.getFileResultId());
+        set.setKnowledgeFileId(context.getKnowledgeFileId());
         set.setChunkSetRef(context.getChunkSetRef());
         set.setChunkSetId(chunkSet.getChunkSetId());
         set.setStrategyVersion(strategy.fullVersion());

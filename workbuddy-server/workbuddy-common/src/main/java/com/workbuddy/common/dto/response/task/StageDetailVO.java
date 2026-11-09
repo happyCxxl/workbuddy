@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 环节详情视图公共字段：文件结果与任务状态摘要、产物引用、子步骤列表。
+ * 环节详情视图公共字段：知识库文件与任务状态摘要、产物引用、子步骤列表。
  * 各环节详情 VO 继承本类并追加环节专属统计/列表字段。
  *
  * @param <T> 环节专属统计 VO 类型
@@ -14,8 +14,8 @@ import java.util.List;
 @Data
 public class StageDetailVO<T extends StageStatsVO> implements TaskStatusVO {
 
-    /** 文件结果 ID */
-    private Long fileResultId;
+    /** 知识库文件 ID */
+    private Long knowledgeFileId;
 
     /** 任务 ID（wb_knowledge_pipeline_task.id；无任务时为空） */
     private Long taskId;

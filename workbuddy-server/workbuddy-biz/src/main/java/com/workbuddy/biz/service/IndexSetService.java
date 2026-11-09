@@ -24,7 +24,7 @@ public interface IndexSetService {
      * 产物组合 ≠ 在线组合 → 按在线组合拓扑重放补齐该文件（文件永不丢）；
      * 评测冻结集（LIST）路由与规则三补齐不受注册开关影响，照常执行。
      */
-    void onFileProductsReady(Long fileResultId);
+    void onFileProductsReady(Long knowledgeFileId);
 
     /**
      * 显式注册/构建组合候选：组合映射缺省按 KB 绑定补齐（绑定不齐全 40444）→
@@ -66,9 +66,9 @@ public interface IndexSetService {
 
     /**
      * 可构建组合枚举清单（测评模式构建弹窗数据源：组合 + 产物完整标记 + 文件数 × 向量数预览）；
-     * fileResultIds 空 → 全库口径。
+     * knowledgeFileIds 空 → 全库口径。
      */
-    List<IndexComboVO> listCombos(Long knowledgeBaseId, List<Long> fileResultIds);
+    List<IndexComboVO> listCombos(Long knowledgeBaseId, List<Long> knowledgeFileIds);
 
     /**
      * 组合验证：全量对账（血缘感知 expected 实时重算）+ 抽样检索冒烟（向量 1 次 + 全文 1 次）；

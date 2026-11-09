@@ -16,15 +16,15 @@ public interface WbChunkSetDbService extends InfraDbService<WbChunkSet> {
     WbChunkSet getByArtifactId(String artifactId);
 
     /**
-     * 取文件结果最新的切片集合（无 → null；向量化血缘回填数据源）。
+     * 取知识库文件最新的切片集合（无 → null；向量化血缘回填数据源）。
      */
-    WbChunkSet getLatestByFileResultId(Long fileResultId);
+    WbChunkSet getLatestByFileResultId(Long knowledgeFileId);
 
     /** 批量查多文件全部切片集合（id 升序；组合枚举数据源） */
-    List<WbChunkSet> listByFileResultIds(List<Long> fileResultIds);
+    List<WbChunkSet> listByKnowledgeFileIds(List<Long> knowledgeFileIds);
 
     /**
      * 查单文件全部切片集合（id 升序；执行链血缘统计数据源）。
      */
-    List<WbChunkSet> listByFileResultId(Long fileResultId);
+    List<WbChunkSet> listByFileResultId(Long knowledgeFileId);
 }

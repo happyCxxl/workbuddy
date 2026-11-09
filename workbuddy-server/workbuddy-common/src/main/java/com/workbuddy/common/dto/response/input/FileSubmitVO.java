@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
  * 提交文件响应：submitLog 整条（含 requestId 回显）+ 处理链任务 ID。
  *
  * <p>手动逐环节口径：首次提交时 pipelineTaskId 为空
- * （解析由页面触发 POST /file-results/{id}/parse）；
- * 幂等回放时携带该文件结果已有的解析任务 ID（无任务时同样为空）。
+ * （解析由页面触发 POST /knowledge-files/{id}/parse）；
+ * 幂等回放时携带该知识库文件已有的解析任务 ID（无任务时同样为空）。
  */
 @Data
 @NoArgsConstructor

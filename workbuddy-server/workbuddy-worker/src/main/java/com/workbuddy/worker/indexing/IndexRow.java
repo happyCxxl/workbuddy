@@ -18,7 +18,7 @@ public class IndexRow implements Serializable {
     /** 片 ID（关联键） */
     private String chunkId;
 
-    /** 文件结果 ID */
+    /** 知识库文件 ID */
     private Long documentId;
 
     /** 所有者 */

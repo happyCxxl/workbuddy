@@ -54,7 +54,7 @@ public class OcrFallbackCoordinator {
         for (Integer pageNo : candidates) {
             context.getCancellationToken().throwIfCancelled();
             ProviderContext providerContext = new ProviderContext();
-            providerContext.setTaskId(context.getFileResultId());
+            providerContext.setTaskId(context.getKnowledgeFileId());
             providerContext.setAssetBytes(imageRef -> context.getAssetSink().read(imageRef));
             OcrCapabilityAttempt.Outcome outcome = OcrCapabilityAttempt.attempt(
                     capabilityRegistry, region(nativeSource, context, pageNo), pageNo, providerContext);

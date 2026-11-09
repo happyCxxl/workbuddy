@@ -13,8 +13,8 @@ import java.io.InputStream;
 @Data
 public class ParseContext {
 
-    /** 文件结果 ID（血缘起点，落 resultId） */
-    private Long fileResultId;
+    /** 知识库文件 ID（血缘起点，落 resultId） */
+    private Long knowledgeFileId;
 
     /** 文件引用（文档输入环节建档数据） */
     private FileReference fileRef;

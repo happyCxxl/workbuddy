@@ -202,7 +202,7 @@ class StructureTriggerTest {
     }
 
     /**
-     * 详情：本人文件结果通过归属校验。
+     * 详情：本人知识库文件通过归属校验。
      *
      * <p>守护 {@code structureDetail}：本人也被拦即失败。
      */
@@ -216,7 +216,7 @@ class StructureTriggerTest {
     }
 
     /**
-     * 指定上游产物属于别的文件结果：按 40404 拒绝。
+     * 指定上游产物属于别的知识库文件：按 40404 拒绝。
      *
      * <p>守护 {@code requireParseProduct} 的归属校验：跨文件产物被消费会把 A 的结构写进 B。
      */
@@ -230,7 +230,7 @@ class StructureTriggerTest {
         WorkbuddyException e = assertThrows(WorkbuddyException.class, () -> service.structure(10L, 88L));
 
         assertEquals(ErrorCode.FILE_RESULT_NOT_FOUND, e.getErrorCode());
-        assertTrue(e.getMessage().contains("不属于该文件结果"), e.getMessage());
+        assertTrue(e.getMessage().contains("不属于该知识库文件"), e.getMessage());
         verify(fixture.pipelineTaskDbService, never()).save(any());
     }
 }

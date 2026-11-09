@@ -78,7 +78,7 @@ class EmbedTaskRunnerFailureTest {
                 .thenReturn(upstreamTask(PipelineTaskStatus.SUCCESS));
     }
 
-    /** 领任务 + 文件结果 + 上游 CHUNK 产物（含切片归档读取） */
+    /** 领任务 + 知识库文件 + 上游 CHUNK 产物（含切片归档读取） */
     private void stubClaimAndUpstream() {
         when(pipelineTaskDbService.getById(70L)).thenReturn(queuedTask());
         when(pipelineTaskDbService.claim(70L)).thenReturn(1);

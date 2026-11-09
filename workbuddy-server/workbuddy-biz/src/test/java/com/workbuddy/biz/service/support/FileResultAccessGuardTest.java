@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 /**
- * 文件结果归属守卫单测。
+ * 知识库文件归属守卫单测。
  *
  * <p>守护三件事：未登录上下文先拒（40101）、记录不存在按 40432、归属的知识库不可访问统一按 40401；
  * 不可访问与不存在对调用方不可区分，避免把别人 ID 变成可探测的信息。

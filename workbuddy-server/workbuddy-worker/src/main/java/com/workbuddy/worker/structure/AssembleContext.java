@@ -11,8 +11,8 @@ public class AssembleContext {
     /** 处理链任务 ID（链路追踪用） */
     private Long taskId;
 
-    /** 文件结果 ID（血缘起点） */
-    private Long fileResultId;
+    /** 知识库文件 ID（血缘起点） */
+    private Long knowledgeFileId;
 
     /** 原始文件类型（MIME；Excel sheet→SECTION 判定用） */
     private String sourceFileType;

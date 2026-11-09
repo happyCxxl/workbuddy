@@ -24,8 +24,8 @@ public class IndexVersionVO {
     /** 文件范围模式：ALL（全部）/ LIST（指定文件） */
     private String fileScopeMode;
 
-    /** LIST 模式下的文件结果 ID 列表 */
-    private List<Long> fileResultIds;
+    /** LIST 模式下的知识库文件 ID 列表 */
+    private List<Long> knowledgeFileIds;
 
     /** 切片策略 name-version（如 chunk-hybrid-v1） */
     private String chunkStrategy;
