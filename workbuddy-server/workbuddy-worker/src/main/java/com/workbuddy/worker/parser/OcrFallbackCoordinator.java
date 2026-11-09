@@ -1,26 +1,19 @@
 package com.workbuddy.worker.parser;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.workbuddy.common.domain.parse.BBox;
 import com.workbuddy.common.domain.parse.PageDimension;
 import com.workbuddy.common.domain.parse.ParseAsset;
-import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.QualityInfo;
-import com.workbuddy.common.domain.parse.capability.CapabilityUsage;
-import com.workbuddy.common.domain.parse.capability.OcrLine;
 import com.workbuddy.common.domain.parse.capability.OcrRegion;
 import com.workbuddy.common.domain.parse.capability.ProviderContext;
-import com.workbuddy.common.domain.parse.capability.StructuredOcrResult;
-import com.workbuddy.common.enums.parse.ElementType;
 import com.workbuddy.common.enums.parse.ParseAssetKind;
 import com.workbuddy.common.utils.NullUtil;
-import com.workbuddy.worker.parser.capability.CapabilityFacts;
 import com.workbuddy.worker.parser.capability.CapabilityRegistry;
+import com.workbuddy.worker.parser.capability.OcrCapabilityAttempt;
 import com.workbuddy.worker.parser.capability.StructuredOcrProvider;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,10 +21,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * OCR 回退协作器：根据质量信号确定待补页，调用结构化 OCR 能力并把识别结果转为 ocr 路。
- * 只产出 ocr 路，不合并 native 路；未接入能力或单页失败按页记降级事实。
+ * OCR 回退协作器：根据质量信号确定待补页，逐页发起结构化 OCR 能力尝试并把识别结果转为 ocr 路。
+ * 只产出 ocr 路，不合并 native 路；单页失败由 {@link OcrCapabilityAttempt} 按页记降级事实。
  */
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OcrFallbackCoordinator {
@@ -61,36 +53,18 @@ public class OcrFallbackCoordinator {
         int filledPages = 0;
         for (Integer pageNo : candidates) {
             context.getCancellationToken().throwIfCancelled();
-            String region = "page " + pageNo;
-            OcrRegion ocrRegion = new OcrRegion();
-            ocrRegion.setPage(pageNo);
-            ocrRegion.setImageRef(pageAssetId(context, pageNo));
-            ocrRegion.setBbox(pageBox(nativeSource, pageNo));
             ProviderContext providerContext = new ProviderContext();
             providerContext.setTaskId(context.getFileResultId());
             providerContext.setAssetBytes(imageRef -> context.getAssetSink().read(imageRef));
-            StructuredOcrResult recognized;
-            try {
-                recognized = provider.recognize(ocrRegion, providerContext);
-            } catch (RuntimeException e) {
-                log.warn("===> OcrFallbackCoordinator OCR 识别失败, fileResultId={}, region={}, error={}",
-                        context.getFileResultId(), region,
-                        StrUtil.maxLength(String.valueOf(e.getMessage()), 200));
-                recognized = null;
-            }
-            if (NullUtil.isNull(recognized) || NullUtil.isNull(recognized.getLines())
-                    || recognized.getLines().isEmpty()) {
-                ocr.getFacts().add(CapabilityFacts.ocrDegraded(region, "调用失败或结果不完整"));
-                continue;
-            }
-            filledPages++;
-            for (OcrLine line : recognized.getLines()) {
-                ocr.getElements().add(ocrParagraph(line, pageNo));
-            }
-            ocr.getFacts().add(CapabilityFacts.ocrEnhanced(region, recognized));
-            if (ocr.getCapabilities().isEmpty()) {
-                ocr.getCapabilities().add(
-                        new CapabilityUsage(CapabilityUsage.KIND_OCR, recognized.getModel(), recognized.getVersion()));
+            OcrCapabilityAttempt.Outcome outcome = OcrCapabilityAttempt.attempt(
+                    capabilityRegistry, region(nativeSource, context, pageNo), pageNo, providerContext);
+            ocr.getFacts().add(outcome.fact());
+            if (outcome.enhanced()) {
+                filledPages++;
+                ocr.getElements().addAll(outcome.paragraphs());
+                if (ocr.getCapabilities().isEmpty()) {
+                    ocr.getCapabilities().add(outcome.usage());
+                }
             }
         }
         ocr.setNote(filledPages == 0
@@ -99,15 +73,13 @@ public class OcrFallbackCoordinator {
         return ocr;
     }
 
-    /** 识别行转段落元素：文本、页内包围盒与置信度，ID 与溯源归组装环节 */
-    private ParseElement ocrParagraph(OcrLine line, Integer pageNo) {
-        ParseElement element = ParseElement.of(ElementType.PARAGRAPH);
-        element.setText(line.getText());
-        element.setPage(pageNo);
-        element.setBbox(line.getBbox());
-        element.setConfidence(line.getConfidence());
-        element.setNeedsOcr(false);
-        return element;
+    /** 候选页的请求区域：页码 + 页图资产引用 + 整页包围盒；页图缺失时引用为 null（仍可按页发起） */
+    private OcrRegion region(ParseSource nativeSource, ParseContext context, Integer pageNo) {
+        OcrRegion ocrRegion = new OcrRegion();
+        ocrRegion.setPage(pageNo);
+        ocrRegion.setImageRef(pageAssetId(context, pageNo));
+        ocrRegion.setBbox(pageBox(nativeSource, pageNo));
+        return ocrRegion;
     }
 
     /** 页图资产 ID：同一页有多张时取第一张；没有页图时返回 null（OCR 仍可按页发起）。 */
