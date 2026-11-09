@@ -26,17 +26,7 @@ public final class TableBuildChain {
      * @param input 构建输入（region 为线框区域）
      */
     public void buildRuled(TableBuilder.Input input) {
-        TableBuilder.Result result = ruled.build(input);
-        if (result.table() != null) {
-            input.context().getElements().add(result.table());
-            return;
-        }
-        switch (result.failure()) {
-            case GRID_UNFIT -> renderAsText(input);
-            case STRUCTURE_FAILED -> tryModel(input, result.reason());
-            case UNWORTHY -> degrade(input, result.reason());
-            default -> throw new IllegalStateException("未预期的线框构建失败类别: " + result.failure());
-        }
+        settle(ruled.build(input), input);
     }
 
     /**
@@ -50,16 +40,23 @@ public final class TableBuildChain {
                     input.context().getFileId(), input.context().getPage());
             return;
         }
-        TableBuilder.Result result = text.build(input);
+        settle(text.build(input), input);
+    }
+
+    /**
+     * 统一结算：产出成功落元素；失败按类别沿链推进——
+     * 网格未拟合重新分类走文本（文本策略不返回该类），结构失败试模型，不可成表降级。
+     */
+    private void settle(TableBuilder.Result result, TableBuilder.Input input) {
         if (result.table() != null) {
             input.context().getElements().add(result.table());
             return;
         }
         switch (result.failure()) {
+            case GRID_UNFIT -> renderAsText(input);
             case STRUCTURE_FAILED -> tryModel(input, result.reason());
             case UNWORTHY -> degrade(input, result.reason());
-            case GRID_UNFIT -> throw new IllegalStateException("文本策略不返回线网格失败");
-            default -> throw new IllegalStateException("未预期的文本构建失败类别: " + result.failure());
+            default -> throw new IllegalStateException("未预期的表格构建失败类别: " + result.failure());
         }
     }
 

@@ -74,6 +74,23 @@ public final class TableSupport {
     }
 
     /**
+     * 空白率/表单形态统一门限：命中任一即返回不可成表结果，都未命中返回 null（继续构建）。
+     *
+     * @param rowTexts   行文本
+     * @param properties 解析配置
+     * @return 不可成表结果；可成表为 null
+     */
+    static TableBuilder.Result blankOrFormGate(List<List<String>> rowTexts, ParseProperties properties) {
+        if (blankTable(rowTexts, properties)) {
+            return TableBuilder.Result.failed(TableBuilder.Failure.UNWORTHY, "空白率过高（疑似框线/表单区域）");
+        }
+        if (formLike(rowTexts)) {
+            return TableBuilder.Result.failed(TableBuilder.Failure.UNWORTHY, "短表单元格为标签形态（疑似表单）");
+        }
+        return null;
+    }
+
+    /**
      * 表格规则失败：出 TABLE 事实并把区域降级为段落。
      *
      * @param lines    区域行块

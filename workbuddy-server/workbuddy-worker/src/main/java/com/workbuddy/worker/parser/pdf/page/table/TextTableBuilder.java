@@ -96,11 +96,9 @@ public final class TextTableBuilder implements TableBuilder {
             rowTexts.add(texts);
             rowFontSizes.add(row.stream().mapToDouble(PageLine::fontSize).average().orElse(0));
         }
-        if (TableSupport.blankTable(rowTexts, properties)) {
-            return Result.failed(Failure.UNWORTHY, "空白率过高（疑似框线/表单区域）");
-        }
-        if (TableSupport.formLike(rowTexts)) {
-            return Result.failed(Failure.UNWORTHY, "短表单元格为标签形态（疑似表单）");
+        TableBuilder.Result gate = TableSupport.blankOrFormGate(rowTexts, properties);
+        if (NullUtil.isNotNull(gate)) {
+            return gate;
         }
         Integer headerRow = detectHeaderRow(rowTexts, rowFontSizes, properties.getTableHeaderMaxNumericRatio());
         ParseElement table = ParseElement.of(ElementType.TABLE);

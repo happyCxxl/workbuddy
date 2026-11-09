@@ -53,11 +53,9 @@ public final class RuledTableBuilder implements TableBuilder {
             texts.put(rect, text);
             rowTexts.get(rect.row()).add(text);
         }
-        if (TableSupport.blankTable(rowTexts, properties)) {
-            return Result.failed(Failure.UNWORTHY, "空白率过高（疑似框线/表单区域）");
-        }
-        if (TableSupport.formLike(rowTexts)) {
-            return Result.failed(Failure.UNWORTHY, "短表单元格为标签形态（疑似表单）");
+        TableBuilder.Result gate = TableSupport.blankOrFormGate(rowTexts, properties);
+        if (NullUtil.isNotNull(gate)) {
+            return gate;
         }
         List<Double> rowFontSizes = new ArrayList<>();
         for (int r = 0; r < grid.rowCount(); r++) {
