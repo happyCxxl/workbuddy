@@ -1,5 +1,6 @@
 package com.workbuddy.common.domain.parse;
 
+import com.workbuddy.common.enums.parse.UnitType;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -16,6 +17,9 @@ public class ParseSummary {
 
     /** 判定单元总数（PDF 页数 / Excel sheet 数 / Word 虚拟页数） */
     private int unitCount;
+
+    /** 判定单元类型（PAGE/SLIDE/SHEET/VIRTUAL_PAGE），与 unitCount 配对，供展示与统计口径 */
+    private UnitType unitType;
 
     /** 可读单元数（内容单元 − 失败单元，下限 0） */
     private int readableUnits;

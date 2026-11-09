@@ -16,7 +16,7 @@ public class ParseResult {
     /** 文件结果 ID（血缘起点） */
     private Long resultId;
 
-    /** 输入文件引用（fileId/fileName/sha256/mimeType/pageCount） */
+    /** 输入文件引用（fileId/fileName/sha256/mimeType） */
     private FileReference file;
 
     /** 本次解析实际使用的能力快照（可复现） */

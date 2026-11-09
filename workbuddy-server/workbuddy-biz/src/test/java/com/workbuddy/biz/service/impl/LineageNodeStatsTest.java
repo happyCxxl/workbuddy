@@ -15,7 +15,6 @@ import com.workbuddy.common.domain.entity.WbKnowledgeBase;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
 import com.workbuddy.common.domain.entity.WbPipelineStepLog;
 import com.workbuddy.common.domain.entity.WbPipelineTask;
-import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.ParseSource;
 import com.workbuddy.common.domain.parse.QualityInfo;
@@ -157,31 +156,30 @@ class LineageNodeStatsTest {
     }
 
     /**
-     * 解析节点：无判定单元数时页数取文件引用，异常为空。
+     * 解析节点：无判定单元数时页数为空（不回落文件引用），摘要仍为"无异常"。
      *
-     * <p>守护 {@code lineage}：回退口径错即失败。
+     * <p>守护 {@code lineage}：页数口径取产物单元数，缺失不得显示 0。
      */
     @Test
-    void parseNodeWithoutArtifactShouldFallBackToPageCount() {
+    void parseNodeWithoutUnitCountShouldHaveNullPageCount() {
         WbPipelineTask parseTask = task(20L, PipelineStage.PARSE.name(), null, 10L, null);
         parseTask.setStatus(PipelineTaskStatus.SUCCESS.name());
         parseTask.setStartedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 0));
         parseTask.setFinishedAt(LocalDateTime.of(2024, 5, 1, 10, 0, 8));
         stubFile(List.of(parseTask), List.of(product(10L, PipelineStage.PARSE.name(), "art-p",
                 "{\"parserName\":\"pdfbox\",\"parserVersion\":\"3.0.4\"}")));
-        // 产物本体：无判定单元数，页数取文件引用；无问题单元 → 成功态摘要为"无异常"
+        // 产物本体：无判定单元数 → 页数缺项；无问题单元 → 成功态摘要为"无异常"
         ParseSource source = new ParseSource();
         source.setElements(List.of(element(ElementType.PARAGRAPH)));
         ParseResult parseResult = new ParseResult();
         parseResult.setSources(List.of(source));
         parseResult.setQuality(new QualityInfo());
-        parseResult.setFile(new FileReference("f-1", "a.pdf", "sha", "application/pdf", 128));
         stubBody(fileStorage, "art-p", parseResult);
 
         LineageVO vo = service.lineage(FILE_RESULT_ID);
 
         LineageNodeVO node = vo.getNodes().get(0);
-        assertEquals(128, node.getParseStats().getPageCount());
+        assertNull(node.getParseStats().getPageCount());
         assertEquals(1, node.getParseStats().getElementCount());
         assertNull(node.getParseStats().getFailedUnitCount());
         assertNull(node.getParseStats().getFailedFrom());

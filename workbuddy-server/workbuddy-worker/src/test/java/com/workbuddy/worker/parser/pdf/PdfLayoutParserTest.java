@@ -36,7 +36,6 @@ class PdfLayoutParserTest {
         ParseSource source = parser.parseMarked(context);
 
         assertEquals(2, source.getUnitCount());
-        assertEquals(2, context.getFileRef().getPageCount());
         assertEquals(2, source.getPageMetrics().size());
         assertTrue(source.getPageMetrics().getFirst().getCharCount() > 0);
         assertTrue(source.getPageMetrics().getFirst().getGarbledRatio() < 0.2);

@@ -14,10 +14,12 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,11 +67,12 @@ public class ParseSummaryFactory {
     public ParseSummary build(ParseOutcome outcome, ParseSource nativeSource,
                               ParseSource ocrSource, QualityInfo quality) {
         ParseSummary summary = new ParseSummary();
-        Set<Integer> blankPages = quality.getBlankPages().stream().distinct().collect(Collectors.toSet());
+        Set<Integer> blankPages = new HashSet<>(quality.getBlankPages());
         Set<Integer> scannedPages = ParsePageSets.scannedPages(quality, blankPages);
         Set<Integer> ocrPages = ParsePageSets.ocrPages(ocrSource);
         int unitCount = outcome.getUnitCount();
         summary.setUnitCount(unitCount);
+        summary.setUnitType(nativeSource.getUnitType());
         summary.setFailedUnits(outcome.getFailedUnits());
         summary.setBlankUnits(blankPages.size());
         summary.setScannedUnits(scannedPages.size());
@@ -131,7 +134,7 @@ public class ParseSummaryFactory {
     /** 全量解析配置序列化后的 SHA-256。 */
     private String configHash() {
         try {
-            byte[] bytes = JsonUtil.toJsonStr(properties).getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = Objects.requireNonNull(JsonUtil.toJsonStr(properties)).getBytes(StandardCharsets.UTF_8);
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 不可用", e);

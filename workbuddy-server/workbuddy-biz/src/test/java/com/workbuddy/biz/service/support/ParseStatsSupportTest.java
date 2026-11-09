@@ -1,6 +1,5 @@
 package com.workbuddy.biz.service.support;
 
-import com.workbuddy.common.domain.input.FileReference;
 import com.workbuddy.common.domain.parse.ParseElement;
 import com.workbuddy.common.domain.parse.ParseResult;
 import com.workbuddy.common.domain.parse.ParseSource;
@@ -47,30 +46,17 @@ class ParseStatsSupportTest {
     }
 
     /**
-     * 页数：判定单元数优先；缺失时取文件引用页数，页数为 0 视为缺失。
+     * 页数：取判定单元数；无单元时为空（展示缺项，不回落 0）。
      *
-     * <p>守护 {@code resolvePageCount} 的回退与边界：0 页当下发会让页面显示「第 0 页」。
+     * <p>守护 {@code resolvePageCount} 的取值与边界：0 页当下发会让页面显示「第 0 页」。
      */
     @Test
-    void statsShouldResolvePageCountWithFallback() {
+    void statsShouldResolvePageCountFromUnitCount() {
         ParseSource withUnits = new ParseSource();
         withUnits.setUnitCount(2);
         assertEquals(2, ParseStatsSupport.stats(null, null, result(withUnits)).getPageCount());
 
-        ParseSource noUnits = new ParseSource();
-        ParseResult withFile = result(noUnits);
-        FileReference file = new FileReference();
-        file.setPageCount(3);
-        withFile.setFile(file);
-        assertEquals(3, ParseStatsSupport.stats(null, null, withFile).getPageCount());
-
-        ParseResult zeroPages = result(new ParseSource());
-        FileReference zeroFile = new FileReference();
-        zeroFile.setPageCount(0);
-        zeroPageResult(zeroPages, zeroFile);
-        assertNull(ParseStatsSupport.stats(null, null, zeroPages).getPageCount());
-
-        // 文件引用缺失：页数为空
+        // 无判定单元：页数为空
         assertNull(ParseStatsSupport.stats(null, null, result(new ParseSource())).getPageCount());
     }
 
@@ -147,11 +133,6 @@ class ParseStatsSupportTest {
         ParseResult result = new ParseResult();
         result.setSources(new ArrayList<>(List.of(source)));
         return result;
-    }
-
-    /** 0 页文件引用的结果夹具（避免与主流程夹具混用） */
-    private void zeroPageResult(ParseResult result, FileReference file) {
-        result.setFile(file);
     }
 
     /** 解析元素夹具 */

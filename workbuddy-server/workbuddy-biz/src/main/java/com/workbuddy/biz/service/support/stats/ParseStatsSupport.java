@@ -41,7 +41,7 @@ public final class ParseStatsSupport {
 
     /**
      * 解析产物本体 → 统计：元素构成按顶层元素类型归类，问题单元取清单始末，
-     * 页数取解析器回填的单元数（缺失回落到文件引用的页数）。
+     * 页数取判定单元数（来自产物，缺失为空），单元类型随统计下发。
      *
      * @param startedAt   运行开始时间（提供耗时），可空
      * @param finishedAt  运行结束时间（提供耗时），可空
@@ -71,7 +71,8 @@ public final class ParseStatsSupport {
                 + typeCount.getOrDefault(ElementType.FOOTER.name(), 0);
 
         LineageParseStatsVO stats = new LineageParseStatsVO();
-        stats.setPageCount(resolvePageCount(unitCount, parseResult));
+        stats.setPageCount(resolvePageCount(unitCount));
+        stats.setUnitType(resolveUnitType(sources));
         stats.setElementCount(typeCount.values().stream().mapToInt(Integer::intValue).sum());
         stats.setBodyCount(body);
         stats.setTableCount(typeCount.getOrDefault(ElementType.TABLE.name(), 0));
@@ -118,16 +119,19 @@ public final class ParseStatsSupport {
         return "无异常";
     }
 
-    /** 页数：优先解析器回填的判定单元数，缺失时取文件引用里的页数 */
-    private static Integer resolvePageCount(int unitCount, ParseResult parseResult) {
-        if (unitCount > 0) {
-            return unitCount;
+    /** 页数 = 判定单元数；无单元时为空（展示缺项，不回落 0） */
+    private static Integer resolvePageCount(int unitCount) {
+        return unitCount > 0 ? unitCount : null;
+    }
+
+    /** 判定单元类型：取 sources 中第一个非空的单元类型（PAGE/SLIDE/SHEET/VIRTUAL_PAGE） */
+    private static String resolveUnitType(List<ParseSource> sources) {
+        for (ParseSource source : sources) {
+            if (NullUtil.isNotNull(source) && NullUtil.isNotNull(source.getUnitType())) {
+                return source.getUnitType().name();
+            }
         }
-        if (NullUtil.isNull(parseResult.getFile())) {
-            return null;
-        }
-        Integer pageCount = parseResult.getFile().getPageCount();
-        return ObjectUtil.defaultIfNull(pageCount, 0) > 0 ? pageCount : null;
+        return null;
     }
 
     /** 问题单元清单：去重升序，供始末单元号取值 */

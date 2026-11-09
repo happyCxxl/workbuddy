@@ -55,7 +55,6 @@ public final class PageExtractionStep implements DocumentStep<PageExtractionStep
         ParseContext context = input.context();
         ParseProperties properties = context.getProperties();
         int pageCount = loaded.pageCount();
-        context.getFileRef().setPageCount(pageCount);
 
         int windowSize = Math.max(properties.getPageWindowSize(), 1);
         PageArtifactStore store = PageArtifactStore.open(pageCount, windowSize);

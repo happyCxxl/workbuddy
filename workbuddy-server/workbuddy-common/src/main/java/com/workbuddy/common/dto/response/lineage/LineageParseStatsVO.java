@@ -11,8 +11,11 @@ import lombok.Data;
 @Data
 public class LineageParseStatsVO {
 
-    /** 页数（判定单元数） */
+    /** 页数（判定单元数；单元类型见 unitType） */
     private Integer pageCount;
+
+    /** 判定单元类型（PAGE/SLIDE/SHEET/VIRTUAL_PAGE），供前端按类型显示"页/张/个" */
+    private String unitType;
 
     /** 元素总数 */
     private Integer elementCount;

@@ -23,7 +23,4 @@ public class FileReference {
 
     /** 真实 MIME 类型 */
     private String mimeType;
-
-    /** 页数（PDF 解析器回填；Excel 无页码概念，恒 0） */
-    private Integer pageCount;
 }
