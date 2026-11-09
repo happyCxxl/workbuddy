@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class RuleOutcomeTest {
 
     /**
-     * 未命中：置信度 1.0（无动作无改写风险）。
+     * 守护 {@code noneShouldBeFullyConfident}：未命中恒置信度 1.0（无动作无改写风险）。
      */
     @Test
     void noneShouldBeFullyConfident() {
@@ -24,7 +24,7 @@ class RuleOutcomeTest {
     }
 
     /**
-     * 单轨迹命中：确定性动作 1.0。
+     * 守护 {@code deterministicHitShouldBeFullyConfident}：确定性动作单轨迹命中置信度 1.0。
      */
     @Test
     void deterministicHitShouldBeFullyConfident() {
@@ -35,7 +35,7 @@ class RuleOutcomeTest {
     }
 
     /**
-     * 单轨迹命中：人工复核动作 0.0。
+     * 守护 {@code manualReviewHitShouldBeZeroConfidence}：人工复核动作单轨迹命中置信度 0.0。
      */
     @Test
     void manualReviewHitShouldBeZeroConfidence() {
@@ -47,7 +47,7 @@ class RuleOutcomeTest {
     }
 
     /**
-     * 多轨迹：确定性动作占比（3 条确定 + 1 条复核 = 0.75）。
+     * 守护 {@code mixedTracesShouldUseDeterministicRatio}：多轨迹按确定性动作占比（3/4 = 0.75）。
      */
     @Test
     void mixedTracesShouldUseDeterministicRatio() {
@@ -61,7 +61,7 @@ class RuleOutcomeTest {
     }
 
     /**
-     * 空轨迹：未评估（null），不硬凑置信度。
+     * 守护 {@code emptyTracesShouldBeUnassessed}：空轨迹返回 null（未评估），不硬凑置信度。
      */
     @Test
     void emptyTracesShouldBeUnassessed() {
