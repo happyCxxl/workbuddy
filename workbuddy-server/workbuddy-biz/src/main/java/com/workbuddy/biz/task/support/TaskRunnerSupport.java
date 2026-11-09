@@ -161,17 +161,6 @@ public final class TaskRunnerSupport {
     }
 
     /**
-     * 任务行上的策略版本 ID：0 与 null 都表示"该环节无策略"（解析/组装），统一返回 null 表示没有。
-     *
-     * @param task 当前任务
-     * @return 策略版本 ID；该环节无策略时返回 null
-     */
-    public static Long strategyVersionOf(WbPipelineTask task) {
-        Long strategyVersionId = NullUtil.isNull(task) ? null : task.getStrategyVersionId();
-        return NullUtil.isNull(strategyVersionId) || strategyVersionId == 0L ? null : strategyVersionId;
-    }
-
-    /**
      * 失败归口的任务错误码：链的数据源与当前启用的数据源不一致（40453）单独归口为
      * {@link PipelineTaskErrorCode#TASK_STORAGE_MISMATCH}，其余情况用该环节的兜底码。
      *

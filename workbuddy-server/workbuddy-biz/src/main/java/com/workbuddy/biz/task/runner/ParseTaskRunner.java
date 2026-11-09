@@ -72,12 +72,14 @@ public class ParseTaskRunner {
         CancellationToken token = new CancellationToken();
         runningTokens.put(taskId, token);
         try {
+            // 查询上传的文件记录结果
             WbFileResult fileResult = fileResultDbService.getById(task.getFileResultId());
             if (NullUtil.isNull(fileResult)) {
                 finishFailed(taskId, PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
                         "文件结果不存在: " + task.getFileResultId());
                 return;
             }
+            // 获取上传的源文件
             WbSourceFile sourceFile = sourceFileDbService.getById(fileResult.getSourceFileId());
             if (NullUtil.isNull(sourceFile)) {
                 finishFailed(taskId, PipelineTaskErrorCode.PARSE_INPUT_UNREADABLE.name(),
@@ -94,6 +96,7 @@ public class ParseTaskRunner {
             log.info("===> ParseTaskRunner 开始解析, taskId={}, fileResultId={}, fileId={}, mimeType={}",
                     taskId, fileResult.getId(), sourceFile.getFileId(), sourceFile.getMimeType());
 
+            // 构建解析上下文
             ParseContext context = new ParseContext();
             context.setFileResultId(fileResult.getId());
             context.setFileRef(toFileRef(sourceFile));
