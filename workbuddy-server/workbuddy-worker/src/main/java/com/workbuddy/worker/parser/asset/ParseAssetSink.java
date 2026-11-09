@@ -61,6 +61,20 @@ public interface ParseAssetSink {
         return Noop.INSTANCE;
     }
 
+    /**
+     * 接入 file 模块的资产写入实现（内容寻址去重 + 档案登记）。
+     *
+     * @param fileStorage      对象存储
+     * @param fileAssetArchive 资产档案
+     * @param knowledgeFileId  归属知识库文件（一次解析）
+     * @return 资产写入口
+     */
+    static ParseAssetSink of(com.workbuddy.filecenter.storage.FileStorage fileStorage,
+                             com.workbuddy.filecenter.asset.FileAssetArchive fileAssetArchive,
+                             Long knowledgeFileId) {
+        return new FileStorageAssetSink(fileStorage, fileAssetArchive, knowledgeFileId);
+    }
+
     /** 空实现：不写资产、不返回 assetRef。 */
     final class Noop implements ParseAssetSink {
 

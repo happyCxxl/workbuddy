@@ -48,9 +48,6 @@ public interface FileStorage {
     /** 按对象位置读取 */
     byte[] getObject(ObjectRef ref);
 
-    /** 按对象位置判断存在 */
-    boolean objectExists(ObjectRef ref);
-
     /**
      * 对象的公开读取地址；后端不支持公开读（本地磁盘）时返回 null。
      *

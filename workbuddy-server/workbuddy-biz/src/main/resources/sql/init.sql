@@ -79,6 +79,32 @@ CREATE TABLE wb_file_object
     UNIQUE KEY uk_file_id (file_id)
 ) COMMENT ='文件档案：上传文件元数据（append-only）';
 
+CREATE TABLE wb_file_asset
+(
+    id                BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',
+    asset_id          VARCHAR(80)  NOT NULL                COMMENT '资产 ID（asset-<sha256>；同内容跨任务可重复）',
+    knowledge_file_id BIGINT       NOT NULL                COMMENT '归属知识库文件（一次解析）',
+    kind              VARCHAR(32)  NOT NULL                COMMENT '资产类型（PAGE_IMAGE / IMAGE_CROP / EMBEDDED_IMAGE）',
+    page              INT                   DEFAULT NULL   COMMENT '文档页（可空）',
+    bbox              VARCHAR(128)          DEFAULT NULL   COMMENT '区域（JSON 文本，可空）',
+    width             INT                   DEFAULT NULL   COMMENT '像素宽（可空）',
+    height            INT                   DEFAULT NULL   COMMENT '像素高（可空）',
+    mime_type         VARCHAR(128) NOT NULL                COMMENT 'MIME 类型',
+    file_size         BIGINT       NOT NULL                COMMENT '字节数',
+    sha256            CHAR(64)     NOT NULL                COMMENT '内容指纹（sha256）',
+    storage_type      VARCHAR(32)  NOT NULL                COMMENT '存储类型（StorageType 枚举码）',
+    storage_source_id BIGINT       NOT NULL                COMMENT '数据源实例 ID（读取按它定位后端）',
+    bucket            VARCHAR(64)  NOT NULL                COMMENT '存储桶名',
+    object_key        VARCHAR(160) NOT NULL                COMMENT '对象键',
+    url               VARCHAR(512)          DEFAULT NULL   COMMENT '公开读取地址（可空）',
+    create_by         VARCHAR(64)           DEFAULT NULL   COMMENT '写入人',
+    create_time       DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '写入时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_file_sha (knowledge_file_id, sha256),
+    KEY idx_knowledge_file (knowledge_file_id),
+    KEY idx_sha256 (sha256)
+) COMMENT ='解析资产档案：页图/裁剪图/嵌入图（随解析产物，按知识库文件归属）';
+
 CREATE TABLE wb_source_file
 (
     id             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键（雪花，应用显式传 id）',

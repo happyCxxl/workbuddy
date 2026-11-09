@@ -3,6 +3,6 @@
 # 本环节配置的默认值在此处维护。
 workbuddy:
   file:
-    max-size: 104857600
+    max-size: 104857600  # 1024*1024*100
     enabled-formats: PDF,DOC,DOCX,XLS,XLSX,PPT,PPTX
     temp-file-threshold: 10485760

@@ -22,6 +22,7 @@ import com.workbuddy.common.enums.task.PipelineTaskErrorCode;
 import com.workbuddy.common.enums.task.PipelineTaskStatus;
 import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
+import com.workbuddy.filecenter.asset.FileAssetArchive;
 import com.workbuddy.filecenter.provider.StorageRouter;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.parser.ParseContext;
@@ -72,6 +73,8 @@ class ParseTaskRunnerTest {
     @Mock
     private FileStorage fileStorage;
     @Mock
+    private FileAssetArchive fileAssetArchive;
+    @Mock
     private StorageRouter storageRouter;
     @Mock
     private ParsePipeline parsePipeline;
@@ -86,7 +89,7 @@ class ParseTaskRunnerTest {
         runner = new ParseTaskRunner(pipelineTaskDbService, fileResultDbService, sourceFileDbService,
                 new ProductPersistence(pipelineProductDbService, pipelineTaskDbService, chainStorage, fileStorage
                         , new PipelineConverterImpl()),
-                fileStorage, parsePipeline,
+                fileStorage, fileAssetArchive, parsePipeline,
                 ConfigFixtures.parse(), ConfigFixtures.fileValidation(),
                 new StepLogPersistence(stepLogDbService, new PipelineConverterImpl()));
     }

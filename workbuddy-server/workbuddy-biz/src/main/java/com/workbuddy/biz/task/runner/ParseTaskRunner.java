@@ -5,7 +5,6 @@ import com.workbuddy.biz.service.db.WbPipelineTaskDbService;
 import com.workbuddy.biz.service.db.WbSourceFileDbService;
 import com.workbuddy.biz.task.runner.persistence.ProductPersistence;
 import com.workbuddy.biz.task.runner.persistence.StepLogPersistence;
-import com.workbuddy.biz.task.runner.asset.FileStorageParseAssetSink;
 import com.workbuddy.biz.task.support.TaskRunnerSupport;
 import com.workbuddy.common.domain.entity.WbFileResult;
 import com.workbuddy.common.domain.entity.WbPipelineProduct;
@@ -21,12 +20,14 @@ import com.workbuddy.common.error.ErrorCode;
 import com.workbuddy.common.exception.WorkbuddyException;
 import com.workbuddy.common.utils.JsonUtil;
 import com.workbuddy.common.utils.NullUtil;
+import com.workbuddy.filecenter.asset.FileAssetArchive;
 import com.workbuddy.filecenter.config.FileProperties;
 import com.workbuddy.filecenter.storage.FileStorage;
 import com.workbuddy.worker.parser.CancellationToken;
 import com.workbuddy.worker.parser.ParseContext;
 import com.workbuddy.worker.parser.ParseProperties;
 import com.workbuddy.worker.parser.ParsePipeline;
+import com.workbuddy.worker.parser.asset.ParseAssetSink;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -51,6 +52,7 @@ public class ParseTaskRunner {
     private final WbSourceFileDbService sourceFileDbService;
     private final ProductPersistence productPersistence;
     private final FileStorage fileStorage;
+    private final FileAssetArchive fileAssetArchive;
     private final ParsePipeline parsePipeline;
     private final ParseProperties parseProperties;
     private final FileProperties fileProperties;
@@ -86,6 +88,7 @@ public class ParseTaskRunner {
                         "来源文件不存在: " + fileResult.getSourceFileId());
                 return;
             }
+            // 校验文件大小上限 <= 100M
             if (NullUtil.isNotNull(sourceFile.getFileSize()) && fileProperties.getMaxSize() > 0
                     && sourceFile.getFileSize() > fileProperties.getMaxSize()) {
                 finishFailed(taskId, PipelineTaskErrorCode.PARSE_TOO_LARGE.name(),
@@ -96,13 +99,14 @@ public class ParseTaskRunner {
             log.info("===> ParseTaskRunner 开始解析, taskId={}, knowledgeFileId={}, fileId={}, mimeType={}",
                     taskId, fileResult.getId(), sourceFile.getFileId(), sourceFile.getMimeType());
 
-            // 构建解析上下文
+            // 构建解析环节上下文
             ParseContext context = new ParseContext();
             context.setKnowledgeFileId(fileResult.getId());
-            context.setFileRef(toFileRef(sourceFile));
+            context.setFileRef(FileReference.from(sourceFile));
+            // 解析配置
             context.setProperties(parseProperties);
             context.setCancellationToken(token);
-            context.setAssetSink(new FileStorageParseAssetSink(fileStorage));
+            context.setAssetSink(ParseAssetSink.of(fileStorage, fileAssetArchive, fileResult.getId()));
 
             InputStream in;
             try {
@@ -173,14 +177,5 @@ public class ParseTaskRunner {
         log.warn("===> ParseTaskRunner 解析任务失败, taskId={}, errorCode={}, errorMsg={}",
                 taskId, errorCode, errorMsg);
         TaskRunnerSupport.finishFailed(pipelineTaskDbService, taskId, errorCode, errorMsg);
-    }
-
-    private FileReference toFileRef(WbSourceFile sourceFile) {
-        FileReference fileRef = new FileReference();
-        fileRef.setFileId(sourceFile.getFileId());
-        fileRef.setFileName(sourceFile.getFileName());
-        fileRef.setSha256(sourceFile.getSha256());
-        fileRef.setMimeType(sourceFile.getMimeType());
-        return fileRef;
     }
 }
